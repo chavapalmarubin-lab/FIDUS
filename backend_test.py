@@ -541,7 +541,7 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
         client_id = response['clients'][0]['id']
         
         # Test status update
-        success, response = self.run_test(
+        success, update_response = self.run_test(
             "Update Client Status",
             "PUT",
             f"api/admin/clients/{client_id}/status",
@@ -550,8 +550,8 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
         )
         
         if success:
-            print(f"   Status update success: {response.get('success')}")
-            print(f"   Message: {response.get('message')}")
+            print(f"   Status update success: {update_response.get('success')}")
+            print(f"   Message: {update_response.get('message')}")
             
             # Test with invalid status
             invalid_success, _ = self.run_test(
