@@ -2145,6 +2145,7 @@ class SendForSignatureRequest(BaseModel):
     recipients: List[Dict[str, str]]
     email_subject: str
     email_message: str
+    sender_id: str  # Added sender_id to the model
 
 # In-memory document storage (in production, use proper database)
 documents_storage = {}
