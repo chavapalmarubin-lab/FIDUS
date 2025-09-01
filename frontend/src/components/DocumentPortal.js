@@ -241,15 +241,15 @@ const DocumentPortal = ({ user, userType }) => {
     }
   };
 
-  const handleSendForSignature = async (documentId, recipients) => {
+  const handleSendForSignature = async (documentId, requestData) => {
     try {
       setLoading(true);
       
       const response = await axios.post(`${API}/documents/${documentId}/send-for-signature`, {
-        recipients: recipients,
-        sender_id: user.id,
-        email_subject: "Please sign this document",
-        email_message: "Please review and sign the attached document."
+        recipients: requestData.recipients,
+        email_subject: requestData.email_subject,
+        email_message: requestData.email_message,
+        sender_id: user.id
       });
 
       if (response.data.success) {
