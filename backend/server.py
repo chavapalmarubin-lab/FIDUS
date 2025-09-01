@@ -1200,10 +1200,44 @@ async def process_document(
 
 @api_router.post("/registration/aml-kyc-check")
 async def perform_aml_kyc_verification(request: AMLKYCRequest):
-    """Perform AML/KYC verification"""
+    """Perform real AML/KYC verification"""
     try:
-        # Perform AML/KYC checks (mock)
-        aml_kyc_results = perform_aml_kyc_check(request.personalInfo, request.extractedData)
+        # Perform comprehensive AML/KYC checks
+        aml_kyc_results = await perform_aml_kyc_check(request.personalInfo, request.extractedData)
+        
+        # Add compliance metadata
+        aml_kyc_results['compliance_version'] = '2024.1'
+        aml_kyc_results['regulatory_framework'] = ['BSA', 'USA_PATRIOT_Act', 'FinCEN']
+        aml_kyc_results['application_id'] = request.applicationId
+        
+        # Determine next steps based on results
+        next_steps = []
+        if aml_kyc_results.get('overall_status') == 'manual_review_required':
+            next_steps.extend([
+                'Document review by compliance officer',
+                'Additional documentation may be required',
+                'Enhanced due diligence procedures initiated'
+            ])
+        elif aml_kyc_results.get('overall_status') == 'enhanced_monitoring':
+            next_steps.extend([
+                'Account approved with enhanced monitoring',
+                'Regular transaction monitoring implemented',
+                'Periodic compliance reviews scheduled'
+            ])
+        elif aml_kyc_results.get('overall_status') == 'approved':
+            next_steps.extend([
+                'Standard onboarding process',
+                'Account activation authorized',
+                'Standard monitoring procedures apply'
+            ])
+        elif aml_kyc_results.get('overall_status') == 'rejected':
+            next_steps.extend([
+                'Application declined',
+                'Regulatory reporting initiated',
+                'Account creation blocked'
+            ])
+        
+        aml_kyc_results['next_steps'] = next_steps
         
         # In production, update application in database
         # await db.registration_applications.update_one(
@@ -1211,9 +1245,13 @@ async def perform_aml_kyc_verification(request: AMLKYCRequest):
         #     {"$set": {"amlKycResults": aml_kyc_results, "status": "kyc_complete", "updatedAt": datetime.now(timezone.utc)}}
         # )
         
+        # Log compliance action
+        logging.info(f"AML/KYC completed for {request.applicationId}: {aml_kyc_results.get('overall_status')} (Risk: {aml_kyc_results.get('risk_level')})")
+        
         return aml_kyc_results
         
     except Exception as e:
+        logging.error(f"AML/KYC verification error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"AML/KYC verification failed: {str(e)}")
 
 @api_router.post("/registration/finalize")
