@@ -436,18 +436,51 @@ const UserRegistration = ({ onBack, onComplete }) => {
       <div>
         <h3 className="text-xl font-semibold text-white mb-2">Processing Your Application</h3>
         <p className="text-slate-400">
-          We're analyzing your document and performing security checks...
+          {currentStep === REGISTRATION_STEPS.DOCUMENT_PROCESSING && 
+            "Using advanced OCR technology to extract data from your document..."
+          }
+          {currentStep === REGISTRATION_STEPS.AML_KYC_CHECK && 
+            "Performing comprehensive AML/KYC verification including sanctions screening..."
+          }
         </p>
       </div>
 
       <div className="space-y-3">
         <Progress value={progress} className="w-full" />
         <div className="text-sm text-slate-400">
-          {progress < 40 && "Creating application..."}
-          {progress >= 40 && progress < 60 && "Extracting document data..."}
-          {progress >= 60 && progress < 90 && "Performing AML/KYC verification..."}
-          {progress >= 90 && "Finalizing verification..."}
+          {progress < 40 && "Creating secure application..."}
+          {progress >= 40 && progress < 60 && "Real-time OCR document analysis..."}
+          {progress >= 60 && progress < 80 && "AML sanctions screening in progress..."}
+          {progress >= 80 && progress < 90 && "Identity verification checks..."}
+          {progress >= 90 && "Finalizing compliance verification..."}
         </div>
+      </div>
+
+      {/* Processing Details */}
+      <div className="bg-slate-800/50 rounded-lg p-4 text-left text-xs text-slate-400">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${progress >= 40 ? 'bg-green-400' : 'bg-slate-600'}`} />
+            <span>Document Processing: {progress >= 60 ? 'Complete' : 'In Progress'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${progress >= 80 ? 'bg-green-400' : progress >= 60 ? 'bg-yellow-400' : 'bg-slate-600'}`} />
+            <span>AML/KYC Verification: {progress >= 90 ? 'Complete' : progress >= 60 ? 'In Progress' : 'Pending'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${progress >= 90 ? 'bg-green-400' : 'bg-slate-600'}`} />
+            <span>Identity Verification: {progress >= 95 ? 'Complete' : progress >= 80 ? 'In Progress' : 'Pending'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-xs text-slate-500">
+        {currentStep === REGISTRATION_STEPS.DOCUMENT_PROCESSING && 
+          "Using Tesseract OCR and Google Cloud Vision for maximum accuracy"
+        }
+        {currentStep === REGISTRATION_STEPS.AML_KYC_CHECK && 
+          "Screening against OFAC, UN, and EU sanctions lists"
+        }
       </div>
     </motion.div>
   );
