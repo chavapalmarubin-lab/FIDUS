@@ -183,9 +183,9 @@ backend:
 frontend:
   - task: "DocumentPortal integration in dashboards"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/AdminDashboard.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -195,6 +195,9 @@ frontend:
         - working: false
         - agent: "testing"
         - comment: "❌ CRITICAL ISSUE: Login functionality is broken. Login form submission does not trigger network requests to backend. Manual API test confirms backend works (200 OK), but frontend login button click handler is not functioning. React key duplication errors detected in console. Cannot test Document Portal integration until login is fixed."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Document Portal admin integration FULLY WORKING! Login issue was resolved. Successfully tested: Document Portal tab loads correctly, Upload Document modal opens/closes, document upload with backend integration works (shows success message and document appears in list), Send for Signature modal opens with proper form fields, document download functionality works, document deletion works with confirmation, search functionality works, all filter dropdowns (status, category, sort) work properly. Admin can manage all document operations successfully."
 
   - task: "DocumentPortal integration in client dashboard"
     implemented: true
