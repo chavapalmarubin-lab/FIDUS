@@ -393,7 +393,7 @@ const CRMDashboard = ({ user }) => {
                         <SelectValue placeholder="Choose client to monitor" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-700 border-slate-600">
-                        <SelectItem value="">All Clients Overview</SelectItem>
+                        <SelectItem value="all_clients">All Clients Overview</SelectItem>
                         {crmData.trading.clients.map((client) => (
                           <SelectItem key={client.client_id} value={client.client_id}>
                             {client.client_name} - {client.account_number}
