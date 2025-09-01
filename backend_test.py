@@ -764,6 +764,199 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
         
         return success
 
+    def test_password_reset_client(self):
+        """Test client password reset flow"""
+        # Step 1: Initiate password reset
+        success, response = self.run_test(
+            "Client Password Reset - Initiate",
+            "POST",
+            "api/auth/forgot-password",
+            200,
+            data={
+                "email": "g.b@fidus.com",
+                "userType": "client"
+            }
+        )
+        
+        if not success:
+            return False
+            
+        reset_token = response.get("resetToken")
+        if not reset_token:
+            print("   ❌ No reset token received")
+            return False
+            
+        print(f"   Reset token received: {reset_token[:20]}...")
+        
+        # Step 2: Verify reset code (demo accepts any 6-digit code)
+        success, response = self.run_test(
+            "Client Password Reset - Verify Code",
+            "POST",
+            "api/auth/verify-reset-code",
+            200,
+            data={
+                "email": "g.b@fidus.com",
+                "resetCode": "123456",
+                "resetToken": reset_token
+            }
+        )
+        
+        if not success:
+            return False
+            
+        verified = response.get("verified", False)
+        if not verified:
+            print("   ❌ Code verification failed")
+            return False
+            
+        print("   ✅ Reset code verified successfully")
+        
+        # Step 3: Reset password
+        success, response = self.run_test(
+            "Client Password Reset - Complete",
+            "POST",
+            "api/auth/reset-password",
+            200,
+            data={
+                "email": "g.b@fidus.com",
+                "resetCode": "123456",
+                "resetToken": reset_token,
+                "newPassword": "NewPassword123!"
+            }
+        )
+        
+        if success:
+            print("   ✅ Password reset completed successfully")
+            
+        return success
+
+    def test_password_reset_admin(self):
+        """Test admin password reset flow"""
+        # Step 1: Initiate password reset
+        success, response = self.run_test(
+            "Admin Password Reset - Initiate",
+            "POST",
+            "api/auth/forgot-password",
+            200,
+            data={
+                "email": "ic@fidus.com",
+                "userType": "admin"
+            }
+        )
+        
+        if not success:
+            return False
+            
+        reset_token = response.get("resetToken")
+        if not reset_token:
+            print("   ❌ No reset token received")
+            return False
+            
+        print(f"   Reset token received: {reset_token[:20]}...")
+        
+        # Step 2: Verify reset code (demo accepts any 6-digit code)
+        success, response = self.run_test(
+            "Admin Password Reset - Verify Code",
+            "POST",
+            "api/auth/verify-reset-code",
+            200,
+            data={
+                "email": "ic@fidus.com",
+                "resetCode": "654321",
+                "resetToken": reset_token
+            }
+        )
+        
+        if not success:
+            return False
+            
+        verified = response.get("verified", False)
+        if not verified:
+            print("   ❌ Code verification failed")
+            return False
+            
+        print("   ✅ Reset code verified successfully")
+        
+        # Step 3: Reset password
+        success, response = self.run_test(
+            "Admin Password Reset - Complete",
+            "POST",
+            "api/auth/reset-password",
+            200,
+            data={
+                "email": "ic@fidus.com",
+                "resetCode": "654321",
+                "resetToken": reset_token,
+                "newPassword": "AdminNewPass456@"
+            }
+        )
+        
+        if success:
+            print("   ✅ Password reset completed successfully")
+            
+        return success
+
+    def test_password_reset_invalid_scenarios(self):
+        """Test password reset error scenarios"""
+        # Test invalid email format
+        success, _ = self.run_test(
+            "Password Reset - Invalid Email Format",
+            "POST",
+            "api/auth/forgot-password",
+            400,
+            data={
+                "email": "invalid-email",
+                "userType": "client"
+            }
+        )
+        
+        if not success:
+            print("   ❌ Invalid email format test failed")
+            return False
+            
+        print("   ✅ Invalid email format properly rejected")
+        
+        # Test invalid reset code format
+        success, _ = self.run_test(
+            "Password Reset - Invalid Code Format",
+            "POST",
+            "api/auth/verify-reset-code",
+            400,
+            data={
+                "email": "g.b@fidus.com",
+                "resetCode": "12345",  # Only 5 digits
+                "resetToken": "dummy-token"
+            }
+        )
+        
+        if not success:
+            print("   ❌ Invalid code format test failed")
+            return False
+            
+        print("   ✅ Invalid code format properly rejected")
+        
+        # Test weak password
+        success, _ = self.run_test(
+            "Password Reset - Weak Password",
+            "POST",
+            "api/auth/reset-password",
+            400,
+            data={
+                "email": "g.b@fidus.com",
+                "resetCode": "123456",
+                "resetToken": "dummy-token",
+                "newPassword": "weak"  # Too weak
+            }
+        )
+        
+        if not success:
+            print("   ❌ Weak password test failed")
+            return False
+            
+        print("   ✅ Weak password properly rejected")
+        
+        return True
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
