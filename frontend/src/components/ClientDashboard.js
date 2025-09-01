@@ -392,6 +392,12 @@ const ClientDashboard = ({ user, onLogout }) => {
             </CardContent>
           </Card>
         </motion.div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="mt-6">
+            <DocumentPortal user={user} userType="client" />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
