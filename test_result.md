@@ -101,3 +101,98 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Complete the Document Portal with DocuSign integration for document archiving and e-signature capabilities for both clients and administrators"
+
+backend:
+  - task: "Document upload endpoint"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Starting implementation of document management endpoints"
+
+  - task: "Document list/fetch endpoint"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need endpoint to fetch documents for admin/client"
+
+  - task: "DocuSign integration service"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to integrate DocuSign API for sending documents for signature"
+
+  - task: "Document download endpoint"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Allow users to download completed documents"
+
+frontend:
+  - task: "DocumentPortal integration in dashboards"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/components/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "DocumentPortal component exists but not integrated into admin/client dashboards"
+
+  - task: "DocumentPortal integration in client dashboard"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/components/ClientDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to add DocumentPortal access for clients"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Document upload endpoint"
+    - "DocuSign integration service"
+    - "DocumentPortal integration in dashboards"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+    - message: "Starting Document Portal completion with DocuSign integration. Will implement backend endpoints first, then integrate frontend components."
