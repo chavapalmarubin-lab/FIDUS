@@ -29,20 +29,21 @@ const LogoAnimation = ({ onComplete }) => {
   }, [onComplete]);
 
   const FinancialElements = () => (
-    <>
+    <AnimatePresence>
       {/* Candlestick Chart */}
       <motion.div
         className="financial-element"
         style={{ top: "20%", left: "15%" }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ 
-          x: window.innerWidth / 2 - window.innerWidth * 0.15,
-          y: window.innerHeight / 2 - window.innerHeight * 0.2,
-          scale: 0,
-          opacity: 0
-        }}
-        transition={{ duration: 1.5, delay: 0.2 }}
+        initial={{ opacity: 0, scale: 0, rotate: 0 }}
+        animate={mergeElements ? {
+          opacity: 1,
+          scale: [1, 1.2, 0],
+          x: typeof window !== 'undefined' ? window.innerWidth / 2 - window.innerWidth * 0.15 - 60 : 0,
+          y: typeof window !== 'undefined' ? window.innerHeight / 2 - window.innerHeight * 0.2 - 40 : 0,
+          rotate: 360
+        } : { opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ duration: mergeElements ? 1.5 : 0.8, delay: 0.2 }}
       >
         <svg className="candlestick-chart" viewBox="0 0 120 80" fill="none">
           <rect x="10" y="30" width="8" height="25" fill="#4caf50" />
