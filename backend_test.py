@@ -1435,6 +1435,20 @@ def main():
     tester.test_password_reset_admin()
     tester.test_password_reset_invalid_scenarios()
     
+    # Test Document Portal endpoints
+    print("\n📋 DOCUMENT PORTAL TESTS")
+    print("-" * 30)
+    tester.test_document_upload()
+    tester.test_document_upload_invalid_file()
+    tester.test_admin_get_all_documents()
+    tester.test_client_get_documents()
+    tester.test_send_document_for_signature()
+    tester.test_document_status_tracking()
+    tester.test_document_download()
+    tester.test_document_download_nonexistent()
+    tester.test_document_deletion()
+    tester.test_document_deletion_nonexistent()
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
