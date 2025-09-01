@@ -676,22 +676,14 @@ const SendForSignatureModal = ({ document, onClose, onSend }) => {
   };
 
   const handleSend = async () => {
-    // Debug: Log current recipients state
-    console.log("Recipients data:", recipients);
-    console.log("Recipients detailed:", JSON.stringify(recipients, null, 2));
-    
     // Validate recipients
     const validRecipients = recipients.filter(r => r.email && r.name);
-    console.log("Valid recipients:", validRecipients);
-    console.log("Valid recipients detailed:", JSON.stringify(validRecipients, null, 2));
     
     if (validRecipients.length === 0) {
-      console.log("Validation failed - no valid recipients found");
-      alert("Please add at least one valid recipient");
+      alert("Please add at least one valid recipient with both name and email");
       return;
     }
 
-    console.log("Validation passed, proceeding with send...");
     setLoading(true);
     try {
       await onSend(document.id, {
