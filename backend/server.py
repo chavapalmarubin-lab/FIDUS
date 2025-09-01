@@ -2763,21 +2763,129 @@ async def view_document_online(document_id: str):
         logging.error(f"Document view error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to load document")
 
-@api_router.post("/gmail/authenticate")
-async def authenticate_gmail():
-    """Authenticate Gmail service (admin only)"""
+@api_router.get("/gmail/auth-url")
+async def get_gmail_auth_url():
+    """Get Gmail OAuth authorization URL for web application flow"""
     try:
-        service = await gmail_service.authenticate()
+        from google_auth_oauthlib.flow import Flow
         
-        # Get profile info to confirm authentication
-        profile = service.users().getProfile(userId="me").execute()
+        # Create flow for web application
+        flow = Flow.from_client_secrets_file(
+            '/app/backend/gmail_credentials.json',
+            scopes=['https://www.googleapis.com/auth/gmail.send'],
+            redirect_uri='https://fidus-finance.preview.emergentagent.com/api/gmail/oauth-callback'
+        )
+        
+        # Generate authorization URL
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+        
+        # Store state for verification (in production, use proper session storage)
+        oauth_states[state] = True
         
         return {
             "success": True,
-            "message": "Gmail authentication successful",
+            "authorization_url": authorization_url,
+            "state": state,
+            "instructions": "Please visit the authorization URL to authenticate with Gmail"
+        }
+        
+    except Exception as e:
+        logging.error(f"Gmail auth URL generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate auth URL: {str(e)}")
+
+@api_router.get("/gmail/oauth-callback")
+async def gmail_oauth_callback(code: str, state: str):
+    """Handle Gmail OAuth callback"""
+    try:
+        from google_auth_oauthlib.flow import Flow
+        
+        # Verify state (in production, use proper session storage)
+        if state not in oauth_states:
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
+        
+        # Create flow
+        flow = Flow.from_client_secrets_file(
+            '/app/backend/gmail_credentials.json',
+            scopes=['https://www.googleapis.com/auth/gmail.send'],
+            redirect_uri='https://fidus-finance.preview.emergentagent.com/api/gmail/oauth-callback'
+        )
+        
+        # Exchange authorization code for tokens
+        flow.fetch_token(code=code)
+        
+        # Save credentials
+        creds = flow.credentials
+        with open('/app/backend/gmail_token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+        
+        # Initialize Gmail service
+        gmail_service.service = build('gmail', 'v1', credentials=creds)
+        
+        # Get profile info
+        profile = gmail_service.service.users().getProfile(userId="me").execute()
+        
+        # Clean up state
+        del oauth_states[state]
+        
+        return {
+            "success": True,
+            "message": "Gmail authentication successful!",
             "email_address": profile.get("emailAddress"),
-            "messages_total": profile.get("messagesTotal", 0),
-            "threads_total": profile.get("threadsTotal", 0)
+            "redirect_message": "You can close this window and return to the admin panel."
+        }
+        
+    except Exception as e:
+        logging.error(f"Gmail OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
+
+@api_router.post("/gmail/authenticate")
+async def authenticate_gmail():
+    """Authenticate Gmail service (admin only) - Updated for web flow"""
+    try:
+        # Check if we already have valid credentials
+        if os.path.exists('/app/backend/gmail_token.pickle'):
+            with open('/app/backend/gmail_token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+                
+            if creds and creds.valid:
+                # Use existing valid credentials
+                gmail_service.service = build('gmail', 'v1', credentials=creds)
+                profile = gmail_service.service.users().getProfile(userId="me").execute()
+                
+                return {
+                    "success": True,
+                    "message": "Gmail authentication successful (using saved credentials)",
+                    "email_address": profile.get("emailAddress"),
+                    "messages_total": profile.get("messagesTotal", 0),
+                    "threads_total": profile.get("threadsTotal", 0)
+                }
+            elif creds and creds.expired and creds.refresh_token:
+                # Try to refresh expired credentials
+                creds.refresh(Request())
+                with open('/app/backend/gmail_token.pickle', 'wb') as token:
+                    pickle.dump(creds, token)
+                    
+                gmail_service.service = build('gmail', 'v1', credentials=creds)
+                profile = gmail_service.service.users().getProfile(userId="me").execute()
+                
+                return {
+                    "success": True,
+                    "message": "Gmail authentication successful (refreshed credentials)",
+                    "email_address": profile.get("emailAddress"),
+                    "messages_total": profile.get("messagesTotal", 0),
+                    "threads_total": profile.get("threadsTotal", 0)
+                }
+        
+        # No valid credentials, need to redirect to OAuth flow
+        return {
+            "success": False,
+            "message": "Gmail authentication required",
+            "action": "redirect_to_oauth",
+            "auth_url_endpoint": "/api/gmail/auth-url",
+            "instructions": "Please use the auth-url endpoint to get the OAuth authorization URL"
         }
         
     except Exception as e:
