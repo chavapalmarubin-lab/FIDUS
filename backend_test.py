@@ -798,6 +798,13 @@ def main():
     tester.test_admin_client_status_update()
     tester.test_admin_client_deletion()
     
+    # Test new OCR and AML/KYC services
+    print("\n📋 SERVICE STATUS & CONFIGURATION TESTS")
+    print("-" * 30)
+    tester.test_service_status()
+    tester.test_ocr_service_direct()
+    tester.test_aml_kyc_service_direct()
+    
     # Test registration endpoints
     print("\n📋 REGISTRATION ENDPOINTS TESTS")
     print("-" * 30)
