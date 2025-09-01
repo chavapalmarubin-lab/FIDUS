@@ -1388,6 +1388,158 @@ async def get_pending_applications():
     
     return {"applications": mock_applications}
 
+# Service Configuration and Status Endpoints
+@api_router.get("/admin/service-status")
+async def get_service_status():
+    """Get status of integrated services"""
+    try:
+        config = get_service_configuration()
+        
+        status = {
+            'ocr_services': {
+                'google_cloud_vision': {
+                    'enabled': config['ocr']['google_vision_enabled'],
+                    'status': 'ready' if config['ocr']['google_vision_enabled'] else 'not_configured',
+                    'description': 'Google Cloud Vision API for high-accuracy OCR'
+                },
+                'tesseract': {
+                    'enabled': config['ocr']['tesseract_enabled'],
+                    'status': 'ready',
+                    'description': 'Local Tesseract OCR engine (fallback)'
+                }
+            },
+            'aml_kyc_services': {
+                'complyadvantage': {
+                    'enabled': config['aml_kyc']['complyadvantage_enabled'],
+                    'status': 'ready' if config['aml_kyc']['complyadvantage_enabled'] else 'not_configured',
+                    'description': 'ComplyAdvantage real-time AML screening'
+                },
+                'local_sanctions_lists': {
+                    'enabled': config['aml_kyc']['fallback_enabled'],
+                    'status': 'ready',
+                    'description': 'Local sanctions lists (OFAC, UN, EU) - fallback option'
+                }
+            },
+            'notification_services': {
+                'email_notifications': {
+                    'enabled': True,
+                    'status': 'demo_mode',
+                    'description': 'Account credential delivery (demo logging mode)'
+                }
+            },
+            'compliance_features': {
+                'document_preprocessing': {
+                    'enabled': True,
+                    'status': 'ready',
+                    'description': 'Image enhancement for OCR accuracy'
+                },
+                'identity_verification': {
+                    'enabled': True,
+                    'status': 'ready',  
+                    'description': 'Cross-reference personal data with document data'
+                },
+                'risk_assessment': {
+                    'enabled': True,
+                    'status': 'ready',
+                    'description': 'Multi-factor risk scoring algorithm'
+                },
+                'audit_logging': {
+                    'enabled': True,
+                    'status': 'ready',
+                    'description': 'Comprehensive compliance audit trails'
+                }
+            }
+        }
+        
+        # Overall system status
+        total_services = 0
+        ready_services = 0
+        
+        for category in status.values():
+            for service in category.values():
+                total_services += 1
+                if service['status'] in ['ready', 'demo_mode']:
+                    ready_services += 1
+        
+        status['overall'] = {
+            'status': 'operational' if ready_services >= total_services * 0.8 else 'partial',
+            'ready_services': ready_services,
+            'total_services': total_services,
+            'readiness_percentage': round((ready_services / total_services) * 100, 1),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        
+        return status
+        
+    except Exception as e:
+        logging.error(f"Service status check error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Service status check failed: {str(e)}")
+
+@api_router.post("/admin/test-ocr")
+async def test_ocr_service(file: UploadFile = File(...)):
+    """Test OCR service with uploaded document"""
+    try:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Only image files are allowed")
+        
+        image_data = await file.read()
+        
+        # Test OCR processing
+        result = await process_document_ocr(image_data, "test_document")
+        
+        return {
+            'success': True,
+            'ocr_method': result.get('ocr_method'),
+            'confidence_score': result.get('confidence_score'),
+            'fields_extracted': len(result.get('structured_data', {})),
+            'raw_text_length': len(result.get('raw_text', '')),
+            'processing_time': result.get('processing_timestamp')
+        }
+        
+    except Exception as e:
+        logging.error(f"OCR test error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.post("/admin/test-aml-kyc")
+async def test_aml_kyc_service(test_person: dict):
+    """Test AML/KYC service with sample person data"""
+    try:
+        # Convert test data to proper format
+        personal_info = RegistrationPersonalInfo(
+            firstName=test_person.get('firstName', 'John'),
+            lastName=test_person.get('lastName', 'Doe'),
+            email=test_person.get('email', 'john.doe@example.com'),
+            phone=test_person.get('phone', '+1-555-123-4567'),
+            dateOfBirth=test_person.get('dateOfBirth', '1990-01-01'),
+            nationality=test_person.get('nationality', 'US'),
+            country=test_person.get('country', 'United States')
+        )
+        
+        # Test AML/KYC processing
+        result = await perform_aml_kyc_check(personal_info, None)
+        
+        return {
+            'success': True,
+            'overall_status': result.get('overall_status'),
+            'risk_level': result.get('risk_level'),
+            'total_score': result.get('total_score'),
+            'checks_completed': result.get('checks_completed', []),
+            'provider_used': result.get('sanctions_screening', {}).get('provider', 'fallback'),
+            'processing_time': result.get('processing_timestamp')
+        }
+        
+    except Exception as e:
+        logging.error(f"AML/KYC test error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+
 # Excel Client Management Functions
 def generate_clients_excel_data():
     """Generate comprehensive client data for Excel export"""
