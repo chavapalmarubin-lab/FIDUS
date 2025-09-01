@@ -207,10 +207,10 @@ const LogoAnimation = ({ onComplete }) => {
         transition={{ duration: 1.5, delay: 0.3 }}
       >
         <motion.img 
-          src="https://customer-assets.emergentagent.com/job_fidus-portal/artifacts/47blltiy_FIDUS%20LOGO.jpg"
+          src="https://customer-assets.emergentagent.com/job_fidus-portal/artifacts/hxt31ed0_FIDUS%20LOGO%20SMALL.jpg"
           alt="FIDUS Logo"
           style={{
-            width: "300px",
+            width: "350px",
             height: "auto",
             filter: "drop-shadow(0 0 20px rgba(255, 167, 38, 0.5))"
           }}
