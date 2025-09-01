@@ -1007,6 +1007,13 @@ def main():
     tester.test_application_finalization()
     tester.test_admin_pending_applications()
     
+    # Test password reset endpoints
+    print("\n📋 PASSWORD RESET TESTS")
+    print("-" * 30)
+    tester.test_password_reset_client()
+    tester.test_password_reset_admin()
+    tester.test_password_reset_invalid_scenarios()
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
