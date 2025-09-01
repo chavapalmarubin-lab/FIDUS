@@ -292,7 +292,7 @@ const CRMDashboard = ({ user }) => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <RechartsePieChart>
+                  <RechartsPieChart>
                     <Pie
                       data={fundAllocationData}
                       cx="50%"
@@ -315,7 +315,7 @@ const CRMDashboard = ({ user }) => {
                       }}
                     />
                     <Legend />
-                  </RechartsePieChart>
+                  </RechartsPieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
