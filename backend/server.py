@@ -2588,7 +2588,7 @@ async def send_document_for_signature(
     document_id: str,
     request: SendForSignatureRequest
 ):
-    """Send document for DocuSign signature"""
+    """Send document for Gmail signature with real Gmail integration"""
     try:
         # Get document
         if document_id not in documents_storage:
@@ -2598,41 +2598,70 @@ async def send_document_for_signature(
         
         # Get sender info
         sender_id = request.sender_id
-        sender_name = "System User"
+        sender_name = "System Admin"
         for user in MOCK_USERS.values():
             if user["id"] == sender_id:
                 sender_name = user["name"]
                 break
         
-        # Send to mock DocuSign
-        docusign_result = await mock_docusign.send_for_signature(
-            document_path=doc_data['file_path'],
-            recipients=request.recipients,
-            subject=request.email_subject,
-            message=request.email_message
-        )
+        # Create document viewing URL (you can customize this)
+        document_url = f"https://fidus-finance.preview.emergentagent.com/documents/{document_id}/view"
         
-        if docusign_result.get('success'):
-            # Update document status
-            doc_data['status'] = docusign_result['status']
+        # Send emails to all recipients using Gmail
+        successful_sends = []
+        failed_sends = []
+        
+        for recipient in request.recipients:
+            recipient_email = recipient.get('email')
+            recipient_name = recipient.get('name', recipient_email)
+            
+            if not recipient_email:
+                continue
+                
+            # Send email with both attachment and viewing link
+            gmail_result = await gmail_service.send_email_with_attachment(
+                recipient_email=recipient_email,
+                recipient_name=recipient_name,
+                subject=request.email_subject,
+                body_text=request.email_message,
+                attachment_path=doc_data['file_path'],
+                document_name=doc_data['name'],
+                document_url=document_url
+            )
+            
+            if gmail_result.get('success'):
+                successful_sends.append({
+                    'email': recipient_email,
+                    'message_id': gmail_result.get('message_id')
+                })
+            else:
+                failed_sends.append({
+                    'email': recipient_email,
+                    'error': gmail_result.get('error')
+                })
+        
+        # Update document status
+        if successful_sends:
+            doc_data['status'] = 'sent'
             doc_data['sender_id'] = sender_id
             doc_data['sender_name'] = sender_name
             doc_data['recipient_emails'] = [r['email'] for r in request.recipients]
-            doc_data['docusign_envelope_id'] = docusign_result['envelope_id']
+            doc_data['gmail_message_ids'] = [s['message_id'] for s in successful_sends]
             doc_data['updated_at'] = datetime.now(timezone.utc)
             
             documents_storage[document_id] = doc_data
-            
-            logging.info(f"Document {document_id} sent for signature via DocuSign (mock)")
-            
-            return {
-                "success": True,
-                "message": "Document sent for signature successfully",
-                "envelope_id": docusign_result['envelope_id'],
-                "status": docusign_result['status']
-            }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to send document for signature")
+        
+        logging.info(f"Document {document_id} sent via Gmail: {len(successful_sends)} successful, {len(failed_sends)} failed")
+        
+        return {
+            "success": len(successful_sends) > 0,
+            "message": f"Document sent successfully to {len(successful_sends)} recipients" + 
+                      (f", failed for {len(failed_sends)} recipients" if failed_sends else ""),
+            "successful_sends": successful_sends,
+            "failed_sends": failed_sends,
+            "total_recipients": len(request.recipients),
+            "document_url": document_url
+        }
         
     except HTTPException:
         raise
