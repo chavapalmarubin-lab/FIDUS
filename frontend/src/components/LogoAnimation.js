@@ -63,15 +63,16 @@ const LogoAnimation = ({ onComplete }) => {
       <motion.div
         className="financial-element"
         style={{ top: "15%", right: "20%" }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ 
-          x: -(window.innerWidth * 0.8 - window.innerWidth / 2),
-          y: window.innerHeight / 2 - window.innerHeight * 0.15,
-          scale: 0,
-          opacity: 0
-        }}
-        transition={{ duration: 1.5, delay: 0.4 }}
+        initial={{ opacity: 0, scale: 0, rotate: 0 }}
+        animate={mergeElements ? {
+          opacity: 1,
+          scale: [1, 1.2, 0],
+          x: typeof window !== 'undefined' ? -(window.innerWidth * 0.8 - window.innerWidth / 2) + 60 : 0,
+          y: typeof window !== 'undefined' ? window.innerHeight / 2 - window.innerHeight * 0.15 - 30 : 0,
+          rotate: -360
+        } : { opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ duration: mergeElements ? 1.5 : 0.8, delay: 0.4 }}
       >
         <svg className="line-chart" viewBox="0 0 100 60" fill="none">
           <polyline 
