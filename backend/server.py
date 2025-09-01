@@ -24,6 +24,9 @@ import re
 import hashlib
 import hmac
 import time
+import numpy as np
+import yfinance as yf
+import pandas as pd
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
