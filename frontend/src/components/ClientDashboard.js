@@ -133,7 +133,7 @@ const ClientDashboard = ({ user, onLogout }) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6"">
+          <TabsContent value="overview" className="mt-6">
         {/* Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
