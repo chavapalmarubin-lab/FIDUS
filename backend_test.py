@@ -1084,7 +1084,7 @@ Document Content:
             
             if success:
                 self.tests_passed += 1
-                print(f"✅ Passed - Invalid file type properly rejected")
+                print(f"✅ Passed - Invalid file type properly rejected (Status: {response.status_code})")
             else:
                 print(f"❌ Failed - Expected 400, got {response.status_code}")
                 try:
