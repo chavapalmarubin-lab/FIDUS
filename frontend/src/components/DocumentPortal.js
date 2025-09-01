@@ -253,12 +253,14 @@ const DocumentPortal = ({ user, userType }) => {
       });
 
       if (response.data.success) {
-        setSuccess("Document sent for signature successfully");
+        setSuccess(`Document sent successfully via Gmail to ${response.data.successful_sends?.length || 0} recipients`);
         setShowSendModal(false);
         fetchDocuments();
+      } else {
+        setError(response.data.message || "Failed to send document");
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to send document");
+      setError(err.response?.data?.detail || "Failed to send document via Gmail");
     } finally {
       setLoading(false);
     }
