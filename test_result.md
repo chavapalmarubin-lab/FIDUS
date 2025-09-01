@@ -183,27 +183,33 @@ backend:
 frontend:
   - task: "DocumentPortal integration in dashboards"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/AdminDashboard.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "DocumentPortal integrated into Admin Dashboard as new 'Document Portal' tab. Ready for testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL ISSUE: Login functionality is broken. Login form submission does not trigger network requests to backend. Manual API test confirms backend works (200 OK), but frontend login button click handler is not functioning. React key duplication errors detected in console. Cannot test Document Portal integration until login is fixed."
 
   - task: "DocumentPortal integration in client dashboard"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/ClientDashboard.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "DocumentPortal integrated into Client Dashboard as 'Documents' tab with tabbed layout. Ready for testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL ISSUE: Cannot test client dashboard Document Portal integration due to login functionality being broken. Same login issue affects both admin and client access."
 
 metadata:
   created_by: "main_agent"
