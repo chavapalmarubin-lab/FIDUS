@@ -6,6 +6,7 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { User, Shield } from "lucide-react";
 import UserRegistration from "./UserRegistration";
+import PasswordReset from "./PasswordReset";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
