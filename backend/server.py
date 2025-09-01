@@ -82,6 +82,42 @@ class ClientData(BaseModel):
     transactions: List[Transaction]
     monthly_statement: MonthlyStatement
 
+# Registration Models
+class RegistrationPersonalInfo(BaseModel):
+    firstName: str
+    lastName: str
+    email: str
+    phone: str
+    dateOfBirth: str
+    nationality: Optional[str] = ""
+    address: Optional[str] = ""
+    city: Optional[str] = ""
+    postalCode: Optional[str] = ""
+    country: Optional[str] = ""
+
+class RegistrationApplication(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    personalInfo: RegistrationPersonalInfo
+    documentType: str
+    status: str = "pending"  # pending, processing, approved, rejected
+    extractedData: Optional[Dict[str, Any]] = None
+    amlKycResults: Optional[Dict[str, Any]] = None
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DocumentProcessingRequest(BaseModel):
+    applicationId: str
+    documentType: str
+
+class AMLKYCRequest(BaseModel):
+    applicationId: str
+    personalInfo: RegistrationPersonalInfo
+    extractedData: Optional[Dict[str, Any]] = None
+
+class ApplicationFinalizationRequest(BaseModel):
+    applicationId: str
+    approved: bool
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
