@@ -166,41 +166,17 @@ backend:
         - comment: "Implemented comprehensive CRM admin dashboard with real-time fund performance, trading summaries, and capital flows. Ready for testing."
 
 frontend:
-  - task: "DocumentPortal integration in dashboards"
+  - task: "CRM Dashboard Integration"
     implemented: true
-    working: true
-    file: "/app/frontend/src/components/AdminDashboard.js"
+    working: "NA"
+    file: "/app/frontend/src/components/CRMDashboard.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "DocumentPortal integrated into Admin Dashboard as new 'Document Portal' tab. Ready for testing."
-        - working: false
-        - agent: "testing"
-        - comment: "❌ CRITICAL ISSUE: Login functionality is broken. Login form submission does not trigger network requests to backend. Manual API test confirms backend works (200 OK), but frontend login button click handler is not functioning. React key duplication errors detected in console. Cannot test Document Portal integration until login is fixed."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Document Portal admin integration FULLY WORKING! Login issue was resolved. Successfully tested: Document Portal tab loads correctly, Upload Document modal opens/closes, document upload with backend integration works (shows success message and document appears in list), Send for Signature modal opens with proper form fields, document download functionality works, document deletion works with confirmation, search functionality works, all filter dropdowns (status, category, sort) work properly. Admin can manage all document operations successfully."
-
-  - task: "DocumentPortal integration in client dashboard"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/components/ClientDashboard.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "DocumentPortal integrated into Client Dashboard as 'Documents' tab with tabbed layout. Ready for testing."
-        - working: false
-        - agent: "testing"
-        - comment: "❌ CRITICAL ISSUE: Cannot test client dashboard Document Portal integration due to login functionality being broken. Same login issue affects both admin and client access."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Client Document Portal integration FULLY WORKING! Successfully tested client login and Documents tab access. Document Portal loads correctly for clients with proper restrictions: Upload Document button correctly hidden for clients (admin-only feature), search functionality available for clients, filter dropdowns work properly, client can view their documents (shows 'Documents (0)' when no documents), proper tabbed layout between Account Overview and Documents. Client access control working as expected."
+        - comment: "Created comprehensive CRM Dashboard component with fund management, MT5 trading monitor, and capital flows tracking. Integrated into Admin Dashboard as new 'CRM & Trading' tab. Fixed backend URL configuration error. Ready for testing."
 
 metadata:
   created_by: "main_agent"
