@@ -107,51 +107,75 @@ user_problem_statement: "Complete the Document Portal with DocuSign integration 
 backend:
   - task: "Document upload endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented document upload endpoint with file validation and storage. Ready for testing."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Document upload working correctly. Successfully uploads PDF files, validates file types (rejects images), stores documents with proper metadata, and returns document ID. File validation works but returns 500 instead of 400 for invalid types (minor issue)."
 
   - task: "Document list/fetch endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented admin and client document fetch endpoints. Ready for testing."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Both admin and client document fetch endpoints working correctly. Admin endpoint returns all documents with proper metadata (id, name, category, status, uploader_id, created_at). Client endpoint properly filters documents by client ID and recipient emails."
 
   - task: "DocuSign integration service"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented mock DocuSign service with envelope creation and status tracking. Ready for testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ FAILED - Send-for-signature endpoint has design issue. Endpoint expects both JSON body (SendForSignatureRequest) and form data (sender_id) simultaneously, which creates content-type conflicts. Returns 422 validation error. Status tracking endpoint works correctly and returns proper envelope status."
 
   - task: "Document download endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented document download endpoint with FileResponse. Ready for testing."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Document download working perfectly. Returns files with proper headers (Content-Type: application/octet-stream, Content-Disposition with filename), correct file content, and proper 404 errors for non-existent documents."
+
+  - task: "Document deletion endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Document deletion working correctly. Successfully deletes documents from both storage and filesystem, returns proper success messages, and gives 404 errors for non-existent documents. Verified deletion by attempting to download deleted documents."
 
 frontend:
   - task: "DocumentPortal integration in dashboards"
