@@ -520,7 +520,7 @@ const CRMDashboard = ({ user }) => {
           )}
 
           {/* All Clients Table */}
-          {!selectedClient && (
+          {(!selectedClient || selectedClient === "all_clients") && (
             <Card className="bg-slate-800 border-slate-700 mt-6">
               <CardHeader>
                 <CardTitle className="text-white">All Trading Accounts</CardTitle>
