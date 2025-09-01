@@ -2119,6 +2119,346 @@ async def get_portfolio_summary():
         "ytd_return": 12.45
     }
 
+# Document Management Models and Services
+class DocumentUpload(BaseModel):
+    name: str
+    category: str
+    uploader_id: str
+
+class DocumentModel(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    category: str
+    status: str = "draft"  # draft, sent, delivered, completed, declined, voided
+    uploader_id: str
+    sender_id: Optional[str] = None
+    sender_name: Optional[str] = None
+    recipient_emails: Optional[List[str]] = []
+    file_path: str
+    file_size: int
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    docusign_envelope_id: Optional[str] = None
+    completion_date: Optional[datetime] = None
+
+class SendForSignatureRequest(BaseModel):
+    recipients: List[Dict[str, str]]
+    email_subject: str
+    email_message: str
+
+# In-memory document storage (in production, use proper database)
+documents_storage = {}
+
+# File storage directory
+import os
+from pathlib import Path
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Mock DocuSign Service
+class MockDocuSignService:
+    def __init__(self):
+        self.envelopes = {}
+    
+    async def send_for_signature(self, document_path: str, recipients: List[Dict], subject: str, message: str) -> Dict[str, Any]:
+        """Mock DocuSign envelope creation"""
+        envelope_id = f"mock_envelope_{str(uuid.uuid4())[:8]}"
+        
+        # Simulate processing time
+        await asyncio.sleep(0.5)
+        
+        # Create mock envelope
+        envelope_data = {
+            'envelope_id': envelope_id,
+            'status': 'sent',
+            'recipients': recipients,
+            'subject': subject,
+            'message': message,
+            'created_at': datetime.now(timezone.utc),
+            'documents': [{'document_path': document_path}]
+        }
+        
+        self.envelopes[envelope_id] = envelope_data
+        
+        # Simulate random status progression for demo
+        import random
+        random_status = random.choice(['sent', 'delivered', 'completed'])
+        envelope_data['status'] = random_status
+        
+        if random_status == 'completed':
+            envelope_data['completed_at'] = datetime.now(timezone.utc)
+        
+        logging.info(f"Mock DocuSign: Envelope {envelope_id} created with status {random_status}")
+        
+        return {
+            'success': True,
+            'envelope_id': envelope_id,
+            'status': random_status,
+            'recipients_count': len(recipients)
+        }
+    
+    async def get_envelope_status(self, envelope_id: str) -> Dict[str, Any]:
+        """Get mock envelope status"""
+        if envelope_id not in self.envelopes:
+            return {'error': 'Envelope not found'}
+        
+        envelope = self.envelopes[envelope_id]
+        return {
+            'envelope_id': envelope_id,
+            'status': envelope['status'],
+            'created_at': envelope['created_at'].isoformat(),
+            'completed_at': envelope.get('completed_at', '').isoformat() if envelope.get('completed_at') else None,
+            'recipients': envelope['recipients']
+        }
+
+# Initialize mock DocuSign service
+mock_docusign = MockDocuSignService()
+
+# Document Management Endpoints
+@api_router.post("/documents/upload")
+async def upload_document(
+    document: UploadFile = File(...),
+    category: str = Form(...),
+    uploader_id: str = Form(...)
+):
+    """Upload a document for archiving or signing"""
+    try:
+        # Validate file type
+        allowed_types = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain',
+            'text/html'
+        ]
+        
+        if document.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Only PDF, Word, Text, and HTML files are supported")
+        
+        # Validate file size (10MB limit)
+        if document.size and document.size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size must be less than 10MB")
+        
+        # Generate unique filename
+        file_extension = Path(document.filename).suffix
+        unique_filename = f"{str(uuid.uuid4())}{file_extension}"
+        file_path = UPLOAD_DIR / unique_filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            content = await document.read()
+            buffer.write(content)
+        
+        # Create document record
+        doc_model = DocumentModel(
+            name=document.filename,
+            category=category,
+            uploader_id=uploader_id,
+            file_path=str(file_path),
+            file_size=len(content)
+        )
+        
+        # Store in memory (in production, use database)
+        documents_storage[doc_model.id] = doc_model.dict()
+        
+        logging.info(f"Document uploaded: {document.filename} by user {uploader_id}")
+        
+        return {
+            "success": True,
+            "document_id": doc_model.id,
+            "message": "Document uploaded successfully"
+        }
+        
+    except Exception as e:
+        logging.error(f"Document upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@api_router.get("/documents/admin/all")
+async def get_all_documents():
+    """Get all documents for admin view"""
+    try:
+        documents = []
+        for doc_data in documents_storage.values():
+            documents.append(doc_data)
+        
+        # Sort by created_at descending
+        documents.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        return {"documents": documents}
+        
+    except Exception as e:
+        logging.error(f"Get all documents error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch documents")
+
+@api_router.get("/documents/client/{client_id}")
+async def get_client_documents(client_id: str):
+    """Get documents for specific client"""
+    try:
+        client_documents = []
+        for doc_data in documents_storage.values():
+            # Include documents uploaded by client or sent to client
+            if (doc_data['uploader_id'] == client_id or 
+                (doc_data.get('recipient_emails') and 
+                 any(email for email in doc_data.get('recipient_emails', []) 
+                     if client_id in email))):
+                client_documents.append(doc_data)
+        
+        # Sort by created_at descending
+        client_documents.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        return {"documents": client_documents}
+        
+    except Exception as e:
+        logging.error(f"Get client documents error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client documents")
+
+@api_router.post("/documents/{document_id}/send-for-signature")
+async def send_document_for_signature(
+    document_id: str,
+    request: SendForSignatureRequest,
+    sender_id: str = Form(...)
+):
+    """Send document for DocuSign signature"""
+    try:
+        # Get document
+        if document_id not in documents_storage:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_data = documents_storage[document_id]
+        
+        # Get sender info
+        sender_name = "System User"
+        for user in MOCK_USERS.values():
+            if user["id"] == sender_id:
+                sender_name = user["name"]
+                break
+        
+        # Send to mock DocuSign
+        docusign_result = await mock_docusign.send_for_signature(
+            document_path=doc_data['file_path'],
+            recipients=request.recipients,
+            subject=request.email_subject,
+            message=request.email_message
+        )
+        
+        if docusign_result.get('success'):
+            # Update document status
+            doc_data['status'] = docusign_result['status']
+            doc_data['sender_id'] = sender_id
+            doc_data['sender_name'] = sender_name
+            doc_data['recipient_emails'] = [r['email'] for r in request.recipients]
+            doc_data['docusign_envelope_id'] = docusign_result['envelope_id']
+            doc_data['updated_at'] = datetime.now(timezone.utc)
+            
+            documents_storage[document_id] = doc_data
+            
+            logging.info(f"Document {document_id} sent for signature via DocuSign (mock)")
+            
+            return {
+                "success": True,
+                "message": "Document sent for signature successfully",
+                "envelope_id": docusign_result['envelope_id'],
+                "status": docusign_result['status']
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send document for signature")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Send for signature error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send document: {str(e)}")
+
+@api_router.get("/documents/{document_id}/download")
+async def download_document(document_id: str):
+    """Download a document file"""
+    try:
+        if document_id not in documents_storage:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_data = documents_storage[document_id]
+        file_path = Path(doc_data['file_path'])
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Document file not found")
+        
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=file_path,
+            filename=doc_data['name'],
+            media_type='application/octet-stream'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Document download error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Download failed")
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str):
+    """Delete a document"""
+    try:
+        if document_id not in documents_storage:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_data = documents_storage[document_id]
+        
+        # Delete file
+        file_path = Path(doc_data['file_path'])
+        if file_path.exists():
+            file_path.unlink()
+        
+        # Remove from storage
+        del documents_storage[document_id]
+        
+        logging.info(f"Document {document_id} deleted")
+        
+        return {"success": True, "message": "Document deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Document deletion error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete document")
+
+@api_router.get("/documents/{document_id}/status")
+async def get_document_status(document_id: str):
+    """Get DocuSign envelope status for a document"""
+    try:
+        if document_id not in documents_storage:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_data = documents_storage[document_id]
+        envelope_id = doc_data.get('docusign_envelope_id')
+        
+        if not envelope_id:
+            return {
+                "status": doc_data['status'],
+                "message": "Document not sent for signature"
+            }
+        
+        # Get status from mock DocuSign
+        envelope_status = await mock_docusign.get_envelope_status(envelope_id)
+        
+        # Update local status if changed
+        if not envelope_status.get('error'):
+            doc_data['status'] = envelope_status['status']
+            doc_data['updated_at'] = datetime.now(timezone.utc)
+            
+            if envelope_status['status'] == 'completed' and envelope_status.get('completed_at'):
+                doc_data['completion_date'] = envelope_status['completed_at']
+            
+            documents_storage[document_id] = doc_data
+        
+        return envelope_status
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get document status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get document status")
+
 # Include the router in the main app
 app.include_router(api_router)
 
