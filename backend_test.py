@@ -957,6 +957,425 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
         
         return True
 
+    def create_test_pdf(self):
+        """Create a test PDF file for document upload"""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+            import io
+            
+            buffer = io.BytesIO()
+            p = canvas.Canvas(buffer, pagesize=letter)
+            p.drawString(100, 750, "Test Document for FIDUS Document Portal")
+            p.drawString(100, 730, "This is a sample document for testing purposes.")
+            p.drawString(100, 710, "Client: Gerardo Briones")
+            p.drawString(100, 690, "Date: 2024-12-19")
+            p.showPage()
+            p.save()
+            
+            buffer.seek(0)
+            return buffer
+        except ImportError:
+            # Fallback to simple text file if reportlab not available
+            content = """Test Document for FIDUS Document Portal
+            
+This is a sample document for testing purposes.
+Client: Gerardo Briones
+Date: 2024-12-19
+
+Document Content:
+- Investment Agreement
+- Risk Disclosure
+- Terms and Conditions
+"""
+            return io.BytesIO(content.encode('utf-8'))
+        except Exception as e:
+            print(f"Error creating test PDF: {e}")
+            # Fallback to simple text file
+            content = "Test Document Content for FIDUS Portal Testing"
+            return io.BytesIO(content.encode('utf-8'))
+
+    def test_document_upload(self):
+        """Test document upload endpoint"""
+        if not self.admin_user:
+            print("❌ Skipping document upload test - no admin user available")
+            return False
+            
+        # Create test document
+        test_doc = self.create_test_pdf()
+        if not test_doc:
+            print("❌ Failed to create test document")
+            return False
+        
+        try:
+            files = {
+                'document': ('investment_agreement.pdf', test_doc, 'application/pdf')
+            }
+            data = {
+                'category': 'investment_agreement',
+                'uploader_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/upload"
+            print(f"\n🔍 Testing Document Upload...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    self.uploaded_document_id = response_data.get("document_id")
+                    print(f"   Document ID: {self.uploaded_document_id}")
+                    print(f"   Success: {response_data.get('success')}")
+                    print(f"   Message: {response_data.get('message')}")
+                except Exception as e:
+                    print(f"   Error parsing response: {e}")
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_document_upload_invalid_file(self):
+        """Test document upload with invalid file type"""
+        if not self.admin_user:
+            print("❌ Skipping invalid file upload test - no admin user available")
+            return False
+            
+        try:
+            # Create invalid file (image instead of document)
+            test_image = self.create_test_image()
+            
+            files = {
+                'document': ('test_image.jpg', test_image, 'image/jpeg')
+            }
+            data = {
+                'category': 'test',
+                'uploader_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/upload"
+            print(f"\n🔍 Testing Document Upload - Invalid File Type...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 400  # Should reject invalid file type
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Invalid file type properly rejected")
+            else:
+                print(f"❌ Failed - Expected 400, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_admin_get_all_documents(self):
+        """Test getting all documents for admin"""
+        success, response = self.run_test(
+            "Get All Documents (Admin)",
+            "GET",
+            "api/documents/admin/all",
+            200
+        )
+        
+        if success:
+            documents = response.get('documents', [])
+            print(f"   Total documents: {len(documents)}")
+            
+            if documents:
+                doc = documents[0]
+                doc_keys = ['id', 'name', 'category', 'status', 'uploader_id', 'created_at']
+                for key in doc_keys:
+                    if key in doc:
+                        print(f"   ✅ Document has {key}: {doc[key]}")
+                    else:
+                        print(f"   ❌ Document missing {key}")
+        
+        return success
+
+    def test_client_get_documents(self):
+        """Test getting documents for specific client"""
+        if not self.client_user:
+            print("❌ Skipping client documents test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get Client Documents",
+            "GET",
+            f"api/documents/client/{client_id}",
+            200
+        )
+        
+        if success:
+            documents = response.get('documents', [])
+            print(f"   Client documents: {len(documents)}")
+            
+            # Check if documents are properly filtered for client
+            for doc in documents:
+                uploader_id = doc.get('uploader_id')
+                recipient_emails = doc.get('recipient_emails', [])
+                client_email = self.client_user.get('email', '')
+                
+                is_client_doc = (uploader_id == client_id or 
+                               any(client_email in email for email in recipient_emails))
+                
+                if is_client_doc:
+                    print(f"   ✅ Document {doc.get('name')} properly belongs to client")
+                else:
+                    print(f"   ⚠️  Document {doc.get('name')} may not belong to client")
+        
+        return success
+
+    def test_send_document_for_signature(self):
+        """Test sending document for DocuSign signature"""
+        if not hasattr(self, 'uploaded_document_id') or not self.uploaded_document_id:
+            print("❌ Skipping send for signature test - no uploaded document available")
+            return False
+            
+        if not self.admin_user:
+            print("❌ Skipping send for signature test - no admin user available")
+            return False
+        
+        try:
+            # Prepare signature request
+            signature_data = {
+                "recipients": [
+                    {
+                        "name": "Gerardo Briones",
+                        "email": "g.b@fidus.com",
+                        "role": "signer"
+                    }
+                ],
+                "email_subject": "Investment Agreement - Signature Required",
+                "email_message": "Please review and sign the attached investment agreement."
+            }
+            
+            # Use form data for this endpoint
+            form_data = {
+                'sender_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/{self.uploaded_document_id}/send-for-signature"
+            print(f"\n🔍 Testing Send Document for Signature...")
+            print(f"   URL: {url}")
+            
+            # Send as JSON in the body and form data for sender_id
+            response = requests.post(
+                url, 
+                json=signature_data,
+                data=form_data,
+                timeout=30
+            )
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    self.envelope_id = response_data.get("envelope_id")
+                    print(f"   Success: {response_data.get('success')}")
+                    print(f"   Envelope ID: {self.envelope_id}")
+                    print(f"   Status: {response_data.get('status')}")
+                    print(f"   Message: {response_data.get('message')}")
+                except Exception as e:
+                    print(f"   Error parsing response: {e}")
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_document_status_tracking(self):
+        """Test DocuSign envelope status tracking"""
+        if not hasattr(self, 'uploaded_document_id') or not self.uploaded_document_id:
+            print("❌ Skipping status tracking test - no uploaded document available")
+            return False
+        
+        success, response = self.run_test(
+            "Get Document Status",
+            "GET",
+            f"api/documents/{self.uploaded_document_id}/status",
+            200
+        )
+        
+        if success:
+            status = response.get('status', 'unknown')
+            message = response.get('message', '')
+            envelope_id = response.get('envelope_id', '')
+            
+            print(f"   Document Status: {status}")
+            if message:
+                print(f"   Message: {message}")
+            if envelope_id:
+                print(f"   Envelope ID: {envelope_id}")
+                
+            # Check if status is valid
+            valid_statuses = ['draft', 'sent', 'delivered', 'completed', 'declined', 'voided']
+            if status in valid_statuses:
+                print(f"   ✅ Valid status: {status}")
+            else:
+                print(f"   ⚠️  Unknown status: {status}")
+        
+        return success
+
+    def test_document_download(self):
+        """Test document download"""
+        if not hasattr(self, 'uploaded_document_id') or not self.uploaded_document_id:
+            print("❌ Skipping document download test - no uploaded document available")
+            return False
+        
+        try:
+            url = f"{self.base_url}/api/documents/{self.uploaded_document_id}/download"
+            print(f"\n🔍 Testing Document Download...")
+            print(f"   URL: {url}")
+            
+            response = requests.get(url, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check response headers
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                content_length = response.headers.get('content-length', '0')
+                
+                print(f"   Content-Type: {content_type}")
+                print(f"   Content-Disposition: {content_disposition}")
+                print(f"   Content-Length: {content_length} bytes")
+                
+                # Check if file content is present
+                if len(response.content) > 0:
+                    print(f"   ✅ File content received: {len(response.content)} bytes")
+                else:
+                    print(f"   ⚠️  No file content received")
+                    
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_document_download_nonexistent(self):
+        """Test downloading non-existent document"""
+        fake_doc_id = "nonexistent-document-id"
+        
+        success, _ = self.run_test(
+            "Download Non-existent Document",
+            "GET",
+            f"api/documents/{fake_doc_id}/download",
+            404
+        )
+        
+        if success:
+            print("   ✅ Non-existent document properly rejected")
+        
+        return success
+
+    def test_document_deletion(self):
+        """Test document deletion"""
+        if not hasattr(self, 'uploaded_document_id') or not self.uploaded_document_id:
+            print("❌ Skipping document deletion test - no uploaded document available")
+            return False
+        
+        success, response = self.run_test(
+            "Delete Document",
+            "DELETE",
+            f"api/documents/{self.uploaded_document_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Success: {response.get('success')}")
+            print(f"   Message: {response.get('message')}")
+            
+            # Verify document is actually deleted by trying to download it
+            verify_success, _ = self.run_test(
+                "Verify Document Deleted",
+                "GET",
+                f"api/documents/{self.uploaded_document_id}/download",
+                404
+            )
+            
+            if verify_success:
+                print("   ✅ Document successfully deleted and no longer accessible")
+            else:
+                print("   ⚠️  Document may not have been properly deleted")
+        
+        return success
+
+    def test_document_deletion_nonexistent(self):
+        """Test deleting non-existent document"""
+        fake_doc_id = "nonexistent-document-id"
+        
+        success, _ = self.run_test(
+            "Delete Non-existent Document",
+            "DELETE",
+            f"api/documents/{fake_doc_id}",
+            404
+        )
+        
+        if success:
+            print("   ✅ Non-existent document deletion properly rejected")
+        
+        return success
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
