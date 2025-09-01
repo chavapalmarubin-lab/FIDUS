@@ -150,7 +150,7 @@ const LoginSelection = ({ onLogin }) => {
               />
             ) : selectedType === "forgot_password" ? (
               <PasswordReset 
-                userType={selectedType === "client_forgot" ? "client" : "admin"}
+                userType="client" // Default to client, will be determined from which login they came from
                 onBack={() => setSelectedType(null)}
                 onComplete={() => setSelectedType(null)}
               />
