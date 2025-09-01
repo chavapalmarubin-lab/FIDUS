@@ -137,9 +137,9 @@ backend:
 
   - task: "DocuSign integration service"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -149,6 +149,9 @@ backend:
         - working: false
         - agent: "testing"
         - comment: "❌ FAILED - Send-for-signature endpoint has design issue. Endpoint expects both JSON body (SendForSignatureRequest) and form data (sender_id) simultaneously, which creates content-type conflicts. Returns 422 validation error. Status tracking endpoint works correctly and returns proper envelope status."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Send-for-signature endpoint FIXED! Now accepts all data as JSON body including sender_id. Successfully tested with JSON-only payload: recipients, email_subject, email_message, and sender_id all in request body. Returns envelope_id and status correctly. Status tracking endpoint continues to work properly. Mock DocuSign integration fully functional."
 
   - task: "Document download endpoint"
     implemented: true
