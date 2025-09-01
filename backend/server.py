@@ -2465,6 +2465,700 @@ async def get_document_status(document_id: str):
         logging.error(f"Get document status error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get document status")
 
+# ===============================================================================
+# CRM SYSTEM IMPLEMENTATION
+# ===============================================================================
+
+# CRM Models
+class FundModel(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # CORE, BALANCE, DYNAMIC, UNLIMITED
+    fund_type: str
+    aum: float  # Assets Under Management
+    nav: float  # Net Asset Value
+    nav_per_share: float
+    inception_date: datetime
+    performance_ytd: float
+    performance_1y: float
+    performance_3y: float
+    minimum_investment: float
+    management_fee: float
+    performance_fee: float
+    total_investors: int
+    status: str = "active"  # active, suspended, closed
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class InvestorAllocation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    fund_id: str
+    fund_name: str
+    shares: float
+    invested_amount: float
+    current_value: float
+    allocation_percentage: float
+    entry_date: datetime
+    entry_nav: float
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CapitalFlow(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    fund_id: str
+    fund_name: str
+    flow_type: str  # subscription, redemption, distribution
+    amount: float
+    shares: float
+    nav_price: float
+    trade_date: datetime
+    settlement_date: datetime
+    status: str = "pending"  # pending, confirmed, settled, cancelled
+    reference_number: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CapitalFlowRequest(BaseModel):
+    client_id: str
+    fund_id: str
+    flow_type: str
+    amount: float
+
+# Mock MT4/MT5 Trading Data Service
+class MockMT5Service:
+    def __init__(self):
+        self.accounts = {}
+        self.positions = {}
+        self.trades_history = {}
+        self.market_data = {}
+        self._initialize_mock_data()
+    
+    def _initialize_mock_data(self):
+        """Initialize mock trading data for clients"""
+        # Create mock accounts for existing clients
+        for username, user in MOCK_USERS.items():
+            if user["type"] == "client":
+                account_id = f"mt5_{user['id']}"
+                self.accounts[account_id] = {
+                    "client_id": user["id"],
+                    "account_number": f"500{random.randint(1000, 9999)}",
+                    "broker": "FIDUS Broker",
+                    "balance": round(random.uniform(50000, 500000), 2),
+                    "equity": round(random.uniform(48000, 520000), 2),
+                    "margin": round(random.uniform(1000, 50000), 2),
+                    "free_margin": 0,
+                    "leverage": random.choice([1, 50, 100, 200, 500]),
+                    "currency": "USD",
+                    "server": "FIDUS-Demo",
+                    "login_time": datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 24))
+                }
+                
+                # Calculate free margin
+                self.accounts[account_id]["free_margin"] = (
+                    self.accounts[account_id]["equity"] - self.accounts[account_id]["margin"]
+                )
+                
+                # Generate mock positions
+                self._generate_mock_positions(account_id)
+                
+                # Generate mock trade history
+                self._generate_mock_trade_history(account_id)
+    
+    def _generate_mock_positions(self, account_id):
+        """Generate mock open positions"""
+        symbols = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "GOLD", "SILVER", "OIL"]
+        num_positions = random.randint(2, 6)
+        
+        self.positions[account_id] = []
+        
+        for _ in range(num_positions):
+            symbol = random.choice(symbols)
+            position_type = random.choice(["buy", "sell"])
+            volume = round(random.uniform(0.1, 2.0), 2)
+            
+            # Mock current prices
+            if symbol == "EURUSD":
+                current_price = round(random.uniform(1.0500, 1.1200), 5)
+            elif symbol == "GBPUSD":
+                current_price = round(random.uniform(1.2000, 1.3000), 5)
+            elif symbol == "USDJPY":
+                current_price = round(random.uniform(140.00, 155.00), 3)
+            elif symbol == "GOLD":
+                current_price = round(random.uniform(1900.00, 2100.00), 2)
+            else:
+                current_price = round(random.uniform(0.8000, 1.5000), 5)
+            
+            open_price = current_price + random.uniform(-0.0050, 0.0050)
+            
+            position = {
+                "ticket": random.randint(100000, 999999),
+                "symbol": symbol,
+                "type": position_type,
+                "volume": volume,
+                "open_price": round(open_price, 5),
+                "current_price": current_price,
+                "profit": round((current_price - open_price) * volume * 100000, 2) if position_type == "buy" else round((open_price - current_price) * volume * 100000, 2),
+                "swap": round(random.uniform(-5.0, 5.0), 2),
+                "commission": round(random.uniform(-2.0, 0.0), 2),
+                "open_time": datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 168)),
+                "comment": "FIDUS Trading"
+            }
+            
+            self.positions[account_id].append(position)
+    
+    def _generate_mock_trade_history(self, account_id):
+        """Generate mock trade history"""
+        symbols = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "GOLD", "SILVER", "OIL"]
+        num_trades = random.randint(10, 30)
+        
+        self.trades_history[account_id] = []
+        
+        for i in range(num_trades):
+            symbol = random.choice(symbols)
+            trade_type = random.choice(["buy", "sell"])
+            volume = round(random.uniform(0.1, 2.0), 2)
+            
+            # Generate historical trade data
+            close_time = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))
+            open_time = close_time - timedelta(hours=random.randint(1, 48))
+            
+            open_price = round(random.uniform(1.0000, 2.0000), 5)
+            close_price = open_price + random.uniform(-0.0100, 0.0100)
+            
+            profit = round((close_price - open_price) * volume * 100000, 2) if trade_type == "buy" else round((open_price - close_price) * volume * 100000, 2)
+            
+            trade = {
+                "ticket": random.randint(100000, 999999),
+                "symbol": symbol,
+                "type": trade_type,
+                "volume": volume,
+                "open_price": round(open_price, 5),
+                "close_price": round(close_price, 5),
+                "profit": profit,
+                "swap": round(random.uniform(-5.0, 5.0), 2),
+                "commission": round(random.uniform(-2.0, 0.0), 2),
+                "open_time": open_time,
+                "close_time": close_time,
+                "comment": "FIDUS Trading"
+            }
+            
+            self.trades_history[account_id].append(trade)
+        
+        # Sort by close time descending
+        self.trades_history[account_id].sort(key=lambda x: x["close_time"], reverse=True)
+    
+    async def get_account_info(self, client_id: str) -> Dict[str, Any]:
+        """Get account information for a client"""
+        account_id = f"mt5_{client_id}"
+        if account_id in self.accounts:
+            return self.accounts[account_id]
+        return None
+    
+    async def get_positions(self, client_id: str) -> List[Dict[str, Any]]:
+        """Get open positions for a client"""
+        account_id = f"mt5_{client_id}"
+        if account_id in self.positions:
+            return self.positions[account_id]
+        return []
+    
+    async def get_trade_history(self, client_id: str, days: int = 30) -> List[Dict[str, Any]]:
+        """Get trade history for a client"""
+        account_id = f"mt5_{client_id}"
+        if account_id in self.trades_history:
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+            return [
+                trade for trade in self.trades_history[account_id] 
+                if trade["close_time"] >= cutoff_date
+            ]
+        return []
+    
+    async def get_all_accounts_summary(self) -> Dict[str, Any]:
+        """Get summary of all client accounts for admin dashboard"""
+        total_balance = 0
+        total_equity = 0
+        total_positions = 0
+        total_clients = len(self.accounts)
+        
+        client_summaries = []
+        
+        for account_id, account in self.accounts.items():
+            total_balance += account["balance"]
+            total_equity += account["equity"]
+            positions_count = len(self.positions.get(account_id, []))
+            total_positions += positions_count
+            
+            # Get client info
+            client_info = None
+            for user in MOCK_USERS.values():
+                if user["id"] == account["client_id"]:
+                    client_info = user
+                    break
+            
+            if client_info:
+                client_summaries.append({
+                    "client_id": account["client_id"],
+                    "client_name": client_info["name"],
+                    "account_number": account["account_number"],
+                    "balance": account["balance"],
+                    "equity": account["equity"],
+                    "margin": account["margin"],
+                    "free_margin": account["free_margin"],
+                    "open_positions": positions_count,
+                    "last_activity": account["login_time"]
+                })
+        
+        return {
+            "summary": {
+                "total_clients": total_clients,
+                "total_balance": round(total_balance, 2),
+                "total_equity": round(total_equity, 2),
+                "total_positions": total_positions,
+                "avg_balance_per_client": round(total_balance / total_clients if total_clients > 0 else 0, 2)
+            },
+            "clients": client_summaries
+        }
+
+# Initialize services
+mock_mt5 = MockMT5Service()
+
+# Fund Management System
+FIDUS_FUNDS = {
+    "CORE": FundModel(
+        id="fund_core",
+        name="CORE",
+        fund_type="Conservative Growth",
+        aum=125000000.00,
+        nav=128500000.00,
+        nav_per_share=102.80,
+        inception_date=datetime(2020, 1, 15, tzinfo=timezone.utc),
+        performance_ytd=8.5,
+        performance_1y=11.2,
+        performance_3y=9.8,
+        minimum_investment=50000.00,
+        management_fee=1.25,
+        performance_fee=15.00,
+        total_investors=245
+    ),
+    "BALANCE": FundModel(
+        id="fund_balance",
+        name="BALANCE",
+        fund_type="Balanced Portfolio",
+        aum=98000000.00,
+        nav=102500000.00,
+        nav_per_share=104.59,
+        inception_date=datetime(2020, 3, 1, tzinfo=timezone.utc),
+        performance_ytd=12.3,
+        performance_1y=15.7,
+        performance_3y=12.1,
+        minimum_investment=25000.00,
+        management_fee=1.50,
+        performance_fee=18.00,
+        total_investors=312
+    ),
+    "DYNAMIC": FundModel(
+        id="fund_dynamic",
+        name="DYNAMIC",
+        fund_type="Growth Aggressive",
+        aum=156000000.00,
+        nav=168200000.00,
+        nav_per_share=107.82,
+        inception_date=datetime(2020, 6, 15, tzinfo=timezone.utc),
+        performance_ytd=18.9,
+        performance_1y=22.4,
+        performance_3y=18.3,
+        minimum_investment=100000.00,
+        management_fee=1.75,
+        performance_fee=20.00,
+        total_investors=189
+    ),
+    "UNLIMITED": FundModel(
+        id="fund_unlimited",
+        name="UNLIMITED",
+        fund_type="Alternative Strategies",
+        aum=245000000.00,
+        nav=267800000.00,
+        nav_per_share=109.31,
+        inception_date=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        performance_ytd=25.6,
+        performance_1y=28.9,
+        performance_3y=24.1,
+        minimum_investment=250000.00,
+        management_fee=2.00,
+        performance_fee=25.00,
+        total_investors=98
+    )
+}
+
+# In-memory storage for CRM data (in production, use proper database)
+investor_allocations = {}
+capital_flows = {}
+
+# Initialize mock allocations for existing clients
+def initialize_mock_allocations():
+    """Initialize mock investor allocations"""
+    for username, user in MOCK_USERS.items():
+        if user["type"] == "client":
+            client_id = user["id"]
+            investor_allocations[client_id] = []
+            
+            # Randomly allocate to 2-3 funds
+            funds_to_allocate = random.sample(list(FIDUS_FUNDS.keys()), random.randint(2, 3))
+            total_investment = random.uniform(100000, 1000000)
+            
+            for i, fund_name in enumerate(funds_to_allocate):
+                fund = FIDUS_FUNDS[fund_name]
+                if i == len(funds_to_allocate) - 1:
+                    # Last fund gets remaining amount
+                    allocation_amount = total_investment
+                else:
+                    allocation_amount = total_investment * random.uniform(0.2, 0.5)
+                    total_investment -= allocation_amount
+                
+                shares = allocation_amount / fund.nav_per_share
+                
+                allocation = InvestorAllocation(
+                    client_id=client_id,
+                    fund_id=fund.id,
+                    fund_name=fund.name,
+                    shares=round(shares, 4),
+                    invested_amount=round(allocation_amount, 2),
+                    current_value=round(allocation_amount * random.uniform(0.95, 1.15), 2),
+                    allocation_percentage=0,  # Will calculate later
+                    entry_date=datetime.now(timezone.utc) - timedelta(days=random.randint(30, 365)),
+                    entry_nav=fund.nav_per_share * random.uniform(0.95, 1.05)
+                )
+                
+                investor_allocations[client_id].append(allocation)
+            
+            # Calculate allocation percentages
+            total_value = sum(alloc.current_value for alloc in investor_allocations[client_id])
+            for allocation in investor_allocations[client_id]:
+                allocation.allocation_percentage = round((allocation.current_value / total_value) * 100, 2)
+
+# Initialize allocations
+initialize_mock_allocations()
+
+# CRM API Endpoints
+@api_router.get("/crm/funds")
+async def get_all_funds():
+    """Get all fund information"""
+    try:
+        funds_data = []
+        for fund in FIDUS_FUNDS.values():
+            funds_data.append(fund.dict())
+        
+        # Calculate totals
+        total_aum = sum(fund.aum for fund in FIDUS_FUNDS.values())
+        total_investors = sum(fund.total_investors for fund in FIDUS_FUNDS.values())
+        
+        return {
+            "funds": funds_data,
+            "summary": {
+                "total_aum": total_aum,
+                "total_investors": total_investors,
+                "total_funds": len(FIDUS_FUNDS),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    except Exception as e:
+        logging.error(f"Get funds error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch funds data")
+
+@api_router.get("/crm/client/{client_id}/allocations")
+async def get_client_allocations(client_id: str):
+    """Get client fund allocations"""
+    try:
+        if client_id not in investor_allocations:
+            return {"allocations": [], "total_value": 0, "total_invested": 0}
+        
+        allocations = investor_allocations[client_id]
+        allocation_data = [alloc.dict() for alloc in allocations]
+        
+        total_value = sum(alloc.current_value for alloc in allocations)
+        total_invested = sum(alloc.invested_amount for alloc in allocations)
+        total_pnl = total_value - total_invested
+        total_pnl_percentage = (total_pnl / total_invested) * 100 if total_invested > 0 else 0
+        
+        return {
+            "allocations": allocation_data,
+            "summary": {
+                "total_value": round(total_value, 2),
+                "total_invested": round(total_invested, 2),
+                "total_pnl": round(total_pnl, 2),
+                "total_pnl_percentage": round(total_pnl_percentage, 2),
+                "number_of_funds": len(allocations)
+            }
+        }
+    except Exception as e:
+        logging.error(f"Get client allocations error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client allocations")
+
+@api_router.post("/crm/capital-flow")
+async def create_capital_flow(request: CapitalFlowRequest):
+    """Create a new capital flow (subscription/redemption/distribution)"""
+    try:
+        if request.fund_id not in [fund.id for fund in FIDUS_FUNDS.values()]:
+            raise HTTPException(status_code=404, detail="Fund not found")
+        
+        fund = next(fund for fund in FIDUS_FUNDS.values() if fund.id == request.fund_id)
+        
+        # Calculate shares based on current NAV
+        shares = request.amount / fund.nav_per_share if request.flow_type == "subscription" else 0
+        
+        # Generate reference number
+        ref_number = f"{request.flow_type.upper()}-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+        
+        capital_flow = CapitalFlow(
+            client_id=request.client_id,
+            fund_id=request.fund_id,
+            fund_name=fund.name,
+            flow_type=request.flow_type,
+            amount=request.amount,
+            shares=round(shares, 4),
+            nav_price=fund.nav_per_share,
+            trade_date=datetime.now(timezone.utc),
+            settlement_date=datetime.now(timezone.utc) + timedelta(days=3),
+            reference_number=ref_number,
+            status="confirmed"
+        )
+        
+        # Store capital flow
+        if request.client_id not in capital_flows:
+            capital_flows[request.client_id] = []
+        capital_flows[request.client_id].append(capital_flow)
+        
+        # Update investor allocations if subscription
+        if request.flow_type == "subscription":
+            if request.client_id not in investor_allocations:
+                investor_allocations[request.client_id] = []
+            
+            # Find existing allocation or create new one
+            existing_allocation = None
+            for alloc in investor_allocations[request.client_id]:
+                if alloc.fund_id == request.fund_id:
+                    existing_allocation = alloc
+                    break
+            
+            if existing_allocation:
+                # Update existing allocation
+                existing_allocation.shares += shares
+                existing_allocation.invested_amount += request.amount
+                existing_allocation.current_value += request.amount  # Simplified
+                existing_allocation.last_updated = datetime.now(timezone.utc)
+            else:
+                # Create new allocation
+                new_allocation = InvestorAllocation(
+                    client_id=request.client_id,
+                    fund_id=request.fund_id,
+                    fund_name=fund.name,
+                    shares=shares,
+                    invested_amount=request.amount,
+                    current_value=request.amount,  # Simplified
+                    allocation_percentage=0,  # Will recalculate
+                    entry_date=datetime.now(timezone.utc),
+                    entry_nav=fund.nav_per_share
+                )
+                investor_allocations[request.client_id].append(new_allocation)
+            
+            # Recalculate allocation percentages
+            total_value = sum(alloc.current_value for alloc in investor_allocations[request.client_id])
+            for allocation in investor_allocations[request.client_id]:
+                allocation.allocation_percentage = round((allocation.current_value / total_value) * 100, 2)
+        
+        logging.info(f"Capital flow created: {ref_number} for client {request.client_id}")
+        
+        return {
+            "success": True,
+            "capital_flow": capital_flow.dict(),
+            "reference_number": ref_number,
+            "message": f"{request.flow_type.title()} request processed successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Capital flow creation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create capital flow: {str(e)}")
+
+@api_router.get("/crm/client/{client_id}/capital-flows")
+async def get_client_capital_flows(client_id: str, days: int = 90):
+    """Get client capital flows history"""
+    try:
+        if client_id not in capital_flows:
+            return {"capital_flows": [], "summary": {"total_subscriptions": 0, "total_redemptions": 0, "total_distributions": 0}}
+        
+        # Filter by date
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+        client_flows = [
+            flow for flow in capital_flows[client_id] 
+            if flow.trade_date >= cutoff_date
+        ]
+        
+        # Sort by trade date descending
+        client_flows.sort(key=lambda x: x.trade_date, reverse=True)
+        
+        # Calculate summary
+        subscriptions = sum(flow.amount for flow in client_flows if flow.flow_type == "subscription")
+        redemptions = sum(flow.amount for flow in client_flows if flow.flow_type == "redemption")
+        distributions = sum(flow.amount for flow in client_flows if flow.flow_type == "distribution")
+        
+        return {
+            "capital_flows": [flow.dict() for flow in client_flows],
+            "summary": {
+                "total_subscriptions": round(subscriptions, 2),
+                "total_redemptions": round(redemptions, 2),
+                "total_distributions": round(distributions, 2),
+                "net_flow": round(subscriptions - redemptions + distributions, 2)
+            }
+        }
+    except Exception as e:
+        logging.error(f"Get client capital flows error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch capital flows")
+
+# MT4/MT5 Integration Endpoints
+@api_router.get("/crm/mt5/client/{client_id}/account")
+async def get_client_mt5_account(client_id: str):
+    """Get MT5 account information for a client"""
+    try:
+        account_info = await mock_mt5.get_account_info(client_id)
+        if not account_info:
+            raise HTTPException(status_code=404, detail="MT5 account not found for client")
+        
+        return {"account": account_info}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get MT5 account error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 account data")
+
+@api_router.get("/crm/mt5/client/{client_id}/positions")
+async def get_client_mt5_positions(client_id: str):
+    """Get MT5 open positions for a client"""
+    try:
+        positions = await mock_mt5.get_positions(client_id)
+        
+        # Calculate summary
+        total_profit = sum(pos["profit"] for pos in positions)
+        total_volume = sum(pos["volume"] for pos in positions)
+        
+        return {
+            "positions": positions,
+            "summary": {
+                "total_positions": len(positions),
+                "total_profit": round(total_profit, 2),
+                "total_volume": round(total_volume, 2)
+            }
+        }
+    except Exception as e:
+        logging.error(f"Get MT5 positions error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 positions")
+
+@api_router.get("/crm/mt5/client/{client_id}/history")
+async def get_client_mt5_history(client_id: str, days: int = 30):
+    """Get MT5 trade history for a client"""
+    try:
+        history = await mock_mt5.get_trade_history(client_id, days)
+        
+        # Calculate summary
+        total_profit = sum(trade["profit"] for trade in history)
+        winning_trades = len([t for t in history if t["profit"] > 0])
+        losing_trades = len([t for t in history if t["profit"] < 0])
+        total_volume = sum(trade["volume"] for trade in history)
+        
+        return {
+            "trades": history,
+            "summary": {
+                "total_trades": len(history),
+                "total_profit": round(total_profit, 2),
+                "winning_trades": winning_trades,
+                "losing_trades": losing_trades,
+                "win_rate": round((winning_trades / len(history)) * 100, 2) if history else 0,
+                "total_volume": round(total_volume, 2)
+            }
+        }
+    except Exception as e:
+        logging.error(f"Get MT5 history error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 trade history")
+
+@api_router.get("/crm/mt5/admin/overview")
+async def get_mt5_admin_overview():
+    """Get MT5 overview for admin dashboard"""
+    try:
+        overview = await mock_mt5.get_all_accounts_summary()
+        return overview
+    except Exception as e:
+        logging.error(f"Get MT5 admin overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 admin overview")
+
+# Enhanced Portfolio Summary with CRM Data
+@api_router.get("/crm/admin/dashboard")
+async def get_crm_admin_dashboard():
+    """Get comprehensive CRM dashboard data for admin"""
+    try:
+        # Get funds data
+        funds_data = []
+        total_fund_aum = 0
+        total_fund_investors = 0
+        
+        for fund in FIDUS_FUNDS.values():
+            fund_dict = fund.dict()
+            funds_data.append(fund_dict)
+            total_fund_aum += fund.aum
+            total_fund_investors += fund.total_investors
+        
+        # Get MT5 overview
+        mt5_overview = await mock_mt5.get_all_accounts_summary()
+        
+        # Calculate total client assets (fund investments + trading accounts)
+        total_client_assets = total_fund_aum + mt5_overview["summary"]["total_balance"]
+        
+        # Recent capital flows across all clients (last 30 days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+        recent_flows = []
+        total_recent_subscriptions = 0
+        total_recent_redemptions = 0
+        
+        for client_flows in capital_flows.values():
+            for flow in client_flows:
+                if flow.trade_date >= cutoff_date:
+                    recent_flows.append(flow.dict())
+                    if flow.flow_type == "subscription":
+                        total_recent_subscriptions += flow.amount
+                    elif flow.flow_type == "redemption":
+                        total_recent_redemptions += flow.amount
+        
+        recent_flows.sort(key=lambda x: x["trade_date"], reverse=True)
+        
+        return {
+            "funds": {
+                "data": funds_data,
+                "summary": {
+                    "total_aum": total_fund_aum,
+                    "total_investors": total_fund_investors,
+                    "total_funds": len(FIDUS_FUNDS)
+                }
+            },
+            "trading": mt5_overview,
+            "capital_flows": {
+                "recent_flows": recent_flows[:20],  # Last 20 flows
+                "summary": {
+                    "recent_subscriptions": round(total_recent_subscriptions, 2),
+                    "recent_redemptions": round(total_recent_redemptions, 2),
+                    "net_flow": round(total_recent_subscriptions - total_recent_redemptions, 2),
+                    "total_recent_flows": len(recent_flows)
+                }
+            },
+            "overview": {
+                "total_client_assets": round(total_client_assets, 2),
+                "fund_assets_percentage": round((total_fund_aum / total_client_assets) * 100, 2) if total_client_assets > 0 else 0,
+                "trading_assets_percentage": round((mt5_overview["summary"]["total_balance"] / total_client_assets) * 100, 2) if total_client_assets > 0 else 0,
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"CRM admin dashboard error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch CRM dashboard data")
+
 # Include the router in the main app
 app.include_router(api_router)
 
