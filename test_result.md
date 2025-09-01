@@ -210,10 +210,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Document upload endpoint"
-    - "DocuSign integration service"
     - "DocumentPortal integration in dashboards"
-  stuck_tasks: []
+  stuck_tasks: 
+    - "DocuSign integration service"
   test_all: false
   test_priority: "high_first"
 
