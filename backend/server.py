@@ -307,42 +307,359 @@ async def get_all_clients():
     
     return {"clients": clients}
 
-# Mock OCR processing function
-def process_document_ocr(image_data: bytes, document_type: str) -> Dict[str, Any]:
-    """Mock OCR processing - in production, this would use actual OCR services"""
-    # Simulate OCR processing delay
-    import time
-    time.sleep(1)
+# Real OCR Processing Service
+class OCRService:
+    def __init__(self):
+        # For this implementation, we'll use a hybrid approach:
+        # 1. Google Cloud Vision API (when credentials are available)
+        # 2. Local OCR processing using Tesseract
+        # 3. Advanced pattern matching for structured data extraction
+        
+        self.vision_client = None
+        self.supported_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']
+        
+        # Initialize Google Vision if credentials are available
+        try:
+            if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') or os.environ.get('GOOGLE_CLOUD_VISION_API_KEY'):
+                from google.cloud import vision
+                self.vision_client = vision.ImageAnnotatorClient()
+                logging.info("Google Cloud Vision API initialized")
+        except Exception as e:
+            logging.warning(f"Google Vision not available, using local OCR: {e}")
     
-    # Mock extracted data based on document type
-    if document_type == "passport":
+    async def preprocess_image(self, image_data: bytes) -> bytes:
+        """Preprocess image to optimize OCR accuracy"""
+        try:
+            # Open image using PIL
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Enhance image quality for better OCR
+            # Increase contrast
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(1.2)
+            
+            # Sharpen image
+            image = image.filter(ImageFilter.SHARPEN)
+            
+            # Increase brightness slightly
+            enhancer = ImageEnhance.Brightness(image)
+            image = enhancer.enhance(1.1)
+            
+            # Convert back to bytes
+            output = io.BytesIO()
+            image.save(output, format='PNG', quality=95, optimize=True)
+            return output.getvalue()
+            
+        except Exception as e:
+            logging.error(f"Image preprocessing error: {str(e)}")
+            return image_data  # Return original if preprocessing fails
+    
+    async def extract_text_google_vision(self, image_data: bytes) -> str:
+        """Extract text using Google Cloud Vision API"""
+        try:
+            if not self.vision_client:
+                raise Exception("Google Vision client not available")
+            
+            from google.cloud import vision
+            
+            # Create Vision API image object
+            image = vision.Image(content=image_data)
+            
+            # Perform text detection
+            response = await asyncio.to_thread(
+                self.vision_client.text_detection, 
+                image=image
+            )
+            
+            if response.error.message:
+                raise Exception(f'Google Vision API error: {response.error.message}')
+            
+            # Extract full text
+            if response.text_annotations:
+                return response.text_annotations[0].description
+            
+            return ""
+            
+        except Exception as e:
+            logging.error(f"Google Vision OCR error: {str(e)}")
+            raise
+    
+    async def extract_text_tesseract(self, image_data: bytes) -> str:
+        """Extract text using Tesseract OCR (local fallback)"""
+        try:
+            import pytesseract
+            
+            # Open image
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Configure Tesseract for better accuracy
+            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,/:-\  '
+            
+            # Extract text
+            text = pytesseract.image_to_string(image, config=custom_config)
+            
+            return text.strip()
+            
+        except Exception as e:
+            logging.error(f"Tesseract OCR error: {str(e)}")
+            raise Exception("Local OCR processing failed")
+
+async def process_document_ocr(image_data: bytes, document_type: str) -> Dict[str, Any]:
+    """Real OCR processing using Google Vision API or Tesseract"""
+    try:
+        ocr_service = OCRService()
+        
+        # Preprocess image for better OCR results
+        processed_image = await ocr_service.preprocess_image(image_data)
+        
+        # Try Google Vision first, fallback to Tesseract
+        raw_text = ""
+        ocr_method = "local"
+        
+        try:
+            if ocr_service.vision_client:
+                raw_text = await ocr_service.extract_text_google_vision(processed_image)
+                ocr_method = "google_vision"
+                logging.info("Used Google Cloud Vision for OCR")
+        except Exception as e:
+            logging.warning(f"Google Vision failed, falling back to local OCR: {e}")
+        
+        if not raw_text:
+            raw_text = await ocr_service.extract_text_tesseract(processed_image)
+            ocr_method = "tesseract"
+            logging.info("Used Tesseract for OCR")
+        
+        if not raw_text:
+            raise Exception("No text could be extracted from document")
+        
+        # Parse structured data based on document type
+        structured_data = await parse_document_data(raw_text, document_type)
+        
+        # Calculate confidence score based on extracted fields
+        confidence_score = calculate_extraction_confidence(structured_data, document_type)
+        
         return {
-            "document_number": f"P{random.randint(100000000, 999999999)}",
-            "full_name": "John Sample Doe",
-            "date_of_birth": "1990-05-15",
-            "nationality": "US",
-            "expiry_date": "2030-05-15",
-            "issuing_country": "USA",
-            "document_type": "Passport"
+            "raw_text": raw_text,
+            "structured_data": structured_data,
+            "confidence_score": confidence_score,
+            "ocr_method": ocr_method,
+            "document_type": document_type,
+            "fields_extracted": list(structured_data.keys()),
+            "processing_timestamp": datetime.now(timezone.utc).isoformat()
         }
-    elif document_type == "drivers_license":
-        return {
-            "license_number": f"DL{random.randint(10000000, 99999999)}",
-            "full_name": "John Sample Doe", 
-            "date_of_birth": "1990-05-15",
-            "address": "123 Main St, Anytown, ST 12345",
-            "expiry_date": "2028-05-15",
-            "state": "CA",
-            "document_type": "Driver's License"
-        }
+        
+    except Exception as e:
+        logging.error(f"OCR processing error: {str(e)}")
+        raise Exception(f"Document processing failed: {str(e)}")
+
+async def parse_document_data(text: str, document_type: str) -> Dict[str, str]:
+    """Parse structured data from OCR text based on document type"""
+    
+    if document_type.lower() in ['passport']:
+        return await parse_passport_data(text)
+    elif document_type.lower() in ['drivers_license', 'driver_license']:
+        return await parse_drivers_license_data(text)
+    elif document_type.lower() in ['national_id', 'state_id']:
+        return await parse_national_id_data(text)
     else:
-        return {
-            "id_number": f"ID{random.randint(100000000, 999999999)}",
-            "full_name": "John Sample Doe",
-            "date_of_birth": "1990-05-15", 
-            "address": "123 Main St, Anytown, ST 12345",
-            "document_type": "National ID"
-        }
+        return {}
+
+async def parse_passport_data(text: str) -> Dict[str, str]:
+    """Parse passport-specific data fields using advanced pattern matching"""
+    passport_data = {}
+    
+    # Common passport field patterns (supports multiple languages and formats)
+    patterns = {
+        'passport_number': [
+            r'P<[A-Z]{3}([A-Z0-9]{9})',  # Machine readable zone
+            r'Passport\s*(?:No\.?|Number)\s*:?\s*([A-Z0-9]{6,12})',
+            r'№\s*([A-Z0-9]{6,12})',  # International format
+            r'No\.?\s*([A-Z0-9]{6,12})',
+        ],
+        'given_names': [
+            r'Given\s*Names?\s*:?\s*([A-Z\s]+)',
+            r'First\s*Name\s*:?\s*([A-Z\s]+)',
+            r'Prenom\s*:?\s*([A-Z\s]+)',
+            r'Nome\s*:?\s*([A-Z\s]+)',
+        ],
+        'surname': [
+            r'Surname\s*:?\s*([A-Z\s]+)',
+            r'Family\s*Name\s*:?\s*([A-Z\s]+)',
+            r'Last\s*Name\s*:?\s*([A-Z\s]+)',
+            r'Nom\s*:?\s*([A-Z\s]+)',
+            r'Apellido\s*:?\s*([A-Z\s]+)',
+        ],
+        'date_of_birth': [
+            r'Date\s*of\s*Birth\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'DOB\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Born\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Fecha\s*de\s*Nacimiento\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+        ],
+        'nationality': [
+            r'Nationality\s*:?\s*([A-Z\s]+)',
+            r'Country\s*:?\s*([A-Z\s]+)',
+            r'Nationalite\s*:?\s*([A-Z\s]+)',
+            r'Pais\s*:?\s*([A-Z\s]+)',
+        ],
+        'expiry_date': [
+            r'Date\s*of\s*Expiry\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Expires?\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Valid\s*until\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Expira\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+        ],
+        'place_of_birth': [
+            r'Place\s*of\s*Birth\s*:?\s*([A-Z\s,]+)',
+            r'Born\s*in\s*:?\s*([A-Z\s,]+)',
+            r'Lieu\s*de\s*Naissance\s*:?\s*([A-Z\s,]+)',
+        ]
+    }
+    
+    # Extract data using patterns
+    for field, field_patterns in patterns.items():
+        for pattern in field_patterns:
+            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                passport_data[field] = match.group(1).strip()
+                break
+    
+    # Clean up extracted data
+    for key, value in passport_data.items():
+        if value:
+            # Remove extra whitespace and normalize
+            passport_data[key] = re.sub(r'\s+', ' ', value.strip())
+            
+            # Convert to title case for names
+            if key in ['given_names', 'surname', 'place_of_birth']:
+                passport_data[key] = value.title()
+    
+    return passport_data
+
+async def parse_drivers_license_data(text: str) -> Dict[str, str]:
+    """Parse driver's license specific data fields"""
+    license_data = {}
+    
+    patterns = {
+        'license_number': [
+            r'DL\s*#?\s*:?\s*([A-Z0-9]{8,12})',
+            r'License\s*#?\s*:?\s*([A-Z0-9]{8,12})',
+            r'ID\s*#?\s*:?\s*([A-Z0-9]{8,12})',
+            r'No\.?\s*([A-Z0-9]{8,12})',
+        ],
+        'full_name': [
+            r'Name\s*:?\s*([A-Z\s,]+)',
+            r'([A-Z]{2,}),\s*([A-Z\s]+)',  # Last, First format
+        ],
+        'address': [
+            r'Address\s*:?\s*([A-Z0-9\s,.-]+?)(?=\n|\r|DOB|Born|EXP)',
+            r'([0-9]+\s+[A-Z\s]+(?:ST|STREET|AVE|AVENUE|RD|ROAD|BLVD|BOULEVARD|DR|DRIVE|LN|LANE|CT|COURT|PL|PLACE|WAY))',
+        ],
+        'date_of_birth': [
+            r'DOB\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Date\s*of\s*Birth\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Born\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+        ],
+        'expiry_date': [
+            r'EXP\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Expires?\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Valid\s*until\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+        ],
+        'state': [
+            r'State\s*:?\s*([A-Z]{2})',
+            r'([A-Z]{2})\s*DRIVER',  # State abbreviation before "DRIVER"
+        ],
+        'class': [
+            r'Class\s*:?\s*([A-Z0-9]+)',
+            r'CDL\s*Class\s*:?\s*([A-Z]+)',
+        ]
+    }
+    
+    # Extract data using patterns
+    for field, field_patterns in patterns.items():
+        for pattern in field_patterns:
+            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                if field == 'full_name' and ',' in match.group(0):
+                    # Handle "Last, First" format
+                    parts = match.group(0).split(',')
+                    license_data['last_name'] = parts[0].strip()
+                    license_data['first_name'] = parts[1].strip()
+                else:
+                    license_data[field] = match.group(1).strip()
+                break
+    
+    return license_data
+
+async def parse_national_id_data(text: str) -> Dict[str, str]:
+    """Parse national ID specific data fields"""
+    id_data = {}
+    
+    patterns = {
+        'id_number': [
+            r'ID\s*#?\s*:?\s*([A-Z0-9]{6,15})',
+            r'National\s*ID\s*:?\s*([A-Z0-9]{6,15})',
+            r'Card\s*#?\s*:?\s*([A-Z0-9]{6,15})',
+            r'Number\s*:?\s*([A-Z0-9]{6,15})',
+        ],
+        'full_name': [
+            r'Name\s*:?\s*([A-Z\s]+)',
+            r'([A-Z]{2,}\s+[A-Z\s]+)',
+        ],
+        'date_of_birth': [
+            r'DOB\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Date\s*of\s*Birth\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+            r'Born\s*:?\s*(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})',
+        ],
+        'address': [
+            r'Address\s*:?\s*([A-Z0-9\s,.-]+?)(?=\n|\r|$)',
+        ]
+    }
+    
+    # Extract data using patterns
+    for field, field_patterns in patterns.items():
+        for pattern in field_patterns:
+            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                id_data[field] = match.group(1).strip()
+                break
+    
+    return id_data
+
+def calculate_extraction_confidence(structured_data: Dict[str, str], document_type: str) -> float:
+    """Calculate confidence score based on extracted fields"""
+    
+    # Define required fields for each document type
+    required_fields = {
+        'passport': ['passport_number', 'given_names', 'surname', 'date_of_birth', 'nationality'],
+        'drivers_license': ['license_number', 'full_name', 'date_of_birth', 'address'],
+        'national_id': ['id_number', 'full_name', 'date_of_birth'],
+    }
+    
+    doc_type = document_type.lower()
+    required = required_fields.get(doc_type, [])
+    
+    if not required:
+        return 0.5  # Unknown document type
+    
+    # Calculate percentage of required fields extracted
+    extracted_count = sum(1 for field in required if structured_data.get(field))
+    base_confidence = extracted_count / len(required)
+    
+    # Bonus points for additional fields
+    additional_fields = len(structured_data) - extracted_count
+    bonus = min(additional_fields * 0.05, 0.2)  # Max 20% bonus
+    
+    # Penalty for empty or very short values
+    penalty = 0
+    for field, value in structured_data.items():
+        if not value or len(str(value).strip()) < 2:
+            penalty += 0.05
+    
+    confidence = base_confidence + bonus - penalty
+    return max(0.0, min(1.0, confidence))  # Clamp between 0 and 1
 
 # Mock AML/KYC verification function
 def perform_aml_kyc_check(personal_info: RegistrationPersonalInfo, extracted_data: Dict[str, Any] = None) -> Dict[str, Any]:
