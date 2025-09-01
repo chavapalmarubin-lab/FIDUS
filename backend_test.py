@@ -421,6 +421,15 @@ def main():
     tester.test_admin_portfolio_summary()
     tester.test_admin_clients()
     
+    # Test registration endpoints
+    print("\n📋 REGISTRATION ENDPOINTS TESTS")
+    print("-" * 30)
+    tester.test_registration_create_application()
+    tester.test_document_processing()
+    tester.test_aml_kyc_verification()
+    tester.test_application_finalization()
+    tester.test_admin_pending_applications()
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
