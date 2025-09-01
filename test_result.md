@@ -224,12 +224,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "DocumentPortal integration in dashboards"
-    - "DocumentPortal integration in client dashboard"
-  stuck_tasks:
-    - "DocumentPortal integration in dashboards"
-    - "DocumentPortal integration in client dashboard"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
