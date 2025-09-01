@@ -124,6 +124,20 @@ const LoginSelection = ({ onLogin }) => {
                   <Shield className="inline mr-3" size={20} />
                   Admin Login
                 </motion.button>
+
+                <motion.div
+                  className="mt-8 pt-6 border-t border-slate-600"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <button
+                    className="w-full py-3 px-4 text-slate-300 text-sm border border-slate-600 rounded-lg hover:border-cyan-400 hover:text-cyan-400 transition-all duration-300"
+                    onClick={() => setSelectedType("register")}
+                  >
+                    First Time Users - Create Account
+                  </button>
+                </motion.div>
               </div>
             ) : (
               <motion.div
