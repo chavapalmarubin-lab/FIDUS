@@ -1139,17 +1139,43 @@ async def process_document(
     documentType: str = Form(...),
     applicationId: str = Form(...)
 ):
-    """Process uploaded document with OCR"""
+    """Process uploaded document with real OCR"""
     try:
         # Validate file
         if not document.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="Only image files are allowed")
         
+        # Validate file size (10MB limit)
+        if document.size and document.size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size must be less than 10MB")
+        
         # Read and process image
         image_data = await document.read()
         
-        # Perform OCR processing (mock)
-        extracted_data = process_document_ocr(image_data, documentType)
+        if len(image_data) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        # Perform real OCR processing
+        try:
+            extracted_data = await process_document_ocr(image_data, documentType)
+        except Exception as ocr_error:
+            logging.error(f"OCR processing failed: {str(ocr_error)}")
+            raise HTTPException(status_code=422, detail=f"Document could not be processed. Please ensure the image is clear and contains readable text. Error: {str(ocr_error)}")
+        
+        # Validate OCR quality
+        if extracted_data.get('confidence_score', 0) < 0.3:
+            raise HTTPException(
+                status_code=422, 
+                detail="Document quality too low. Please upload a clearer image with better lighting and resolution."
+            )
+        
+        # Check if minimum required fields were extracted
+        structured_data = extracted_data.get('structured_data', {})
+        if not structured_data:
+            raise HTTPException(
+                status_code=422,
+                detail="No readable information could be extracted from the document. Please ensure the document is not damaged and text is clearly visible."
+            )
         
         # In production, update application in database
         # await db.registration_applications.update_one(
@@ -1160,10 +1186,16 @@ async def process_document(
         return {
             "success": True,
             "extractedData": extracted_data,
-            "message": "Document processed successfully"
+            "message": "Document processed successfully",
+            "ocrMethod": extracted_data.get('ocr_method', 'unknown'),
+            "confidenceScore": extracted_data.get('confidence_score', 0),
+            "fieldsExtracted": len(structured_data)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logging.error(f"Document processing error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Document processing failed: {str(e)}")
 
 @api_router.post("/registration/aml-kyc-check")
