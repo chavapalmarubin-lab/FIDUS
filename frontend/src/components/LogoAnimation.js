@@ -94,15 +94,16 @@ const LogoAnimation = ({ onComplete }) => {
       <motion.div
         className="financial-element"
         style={{ bottom: "25%", left: "20%" }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ 
-          x: window.innerWidth / 2 - window.innerWidth * 0.2,
-          y: -(window.innerHeight * 0.75 - window.innerHeight / 2),
-          scale: 0,
-          opacity: 0
-        }}
-        transition={{ duration: 1.5, delay: 0.6 }}
+        initial={{ opacity: 0, scale: 0, rotate: 0 }}
+        animate={mergeElements ? {
+          opacity: 1,
+          scale: [1, 1.2, 0],
+          x: typeof window !== 'undefined' ? window.innerWidth / 2 - window.innerWidth * 0.2 - 40 : 0,
+          y: typeof window !== 'undefined' ? -(window.innerHeight * 0.75 - window.innerHeight / 2) + 60 : 0,
+          rotate: 180
+        } : { opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ duration: mergeElements ? 1.5 : 0.8, delay: 0.6 }}
       >
         <svg className="pie-chart" viewBox="0 0 80 80" fill="none">
           <circle cx="40" cy="40" r="30" fill="#ffa726" />
