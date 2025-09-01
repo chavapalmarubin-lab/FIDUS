@@ -2316,8 +2316,7 @@ async def get_client_documents(client_id: str):
 @api_router.post("/documents/{document_id}/send-for-signature")
 async def send_document_for_signature(
     document_id: str,
-    request: SendForSignatureRequest,
-    sender_id: str = Form(...)
+    request: SendForSignatureRequest
 ):
     """Send document for DocuSign signature"""
     try:
@@ -2328,6 +2327,7 @@ async def send_document_for_signature(
         doc_data = documents_storage[document_id]
         
         # Get sender info
+        sender_id = request.sender_id
         sender_name = "System User"
         for user in MOCK_USERS.values():
             if user["id"] == sender_id:
