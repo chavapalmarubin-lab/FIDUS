@@ -2132,6 +2132,261 @@ async def get_portfolio_summary():
         "ytd_return": 12.45
     }
 
+# Gmail Service Integration
+class GmailService:
+    def __init__(self):
+        self.SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+        self.credentials_path = '/app/backend/gmail_credentials.json'
+        self.token_path = '/app/backend/gmail_token.pickle'
+        self.service = None
+        
+    async def authenticate(self):
+        """Authenticate and build Gmail service"""
+        creds = None
+        
+        # Load existing token
+        if os.path.exists(self.token_path):
+            with open(self.token_path, 'rb') as token:
+                creds = pickle.load(token)
+        
+        # Validate and refresh credentials if needed
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                try:
+                    creds.refresh(Request())
+                except RefreshError:
+                    creds = self._perform_oauth_flow()
+            else:
+                creds = self._perform_oauth_flow()
+            
+            # Save credentials for future use
+            with open(self.token_path, 'wb') as token:
+                pickle.dump(creds, token)
+        
+        self.service = build('gmail', 'v1', credentials=creds)
+        return self.service
+    
+    def _perform_oauth_flow(self):
+        """Perform OAuth2 flow for authentication"""
+        flow = InstalledAppFlow.from_client_secrets_file(
+            self.credentials_path, self.SCOPES
+        )
+        # Use run_local_server for web applications
+        return flow.run_local_server(port=0, open_browser=False)
+    
+    async def send_email_with_attachment(
+        self,
+        recipient_email: str,
+        recipient_name: str,
+        subject: str,
+        body_text: str,
+        attachment_path: str = None,
+        document_name: str = None,
+        document_url: str = None
+    ):
+        """Send email with document attachment and/or viewing link"""
+        try:
+            if not self.service:
+                await self.authenticate()
+            
+            # Create message
+            message = MIMEMultipart('alternative')
+            message['To'] = f"{recipient_name} <{recipient_email}>"
+            message['Subject'] = subject
+            message['From'] = "FIDUS Solutions <noreply@fidus.com>"
+            
+            # Create HTML body with professional template
+            html_body = self._create_email_template(
+                recipient_name, body_text, document_name, document_url
+            )
+            
+            # Add text and HTML parts
+            text_part = MIMEText(body_text, 'plain')
+            html_part = MIMEText(html_body, 'html')
+            message.attach(text_part)
+            message.attach(html_part)
+            
+            # Add attachment if provided
+            if attachment_path and os.path.exists(attachment_path):
+                with open(attachment_path, 'rb') as attachment:
+                    part = MIMEApplication(attachment.read())
+                    part.add_header(
+                        'Content-Disposition',
+                        f'attachment; filename="{document_name or os.path.basename(attachment_path)}"'
+                    )
+                    message.attach(part)
+            
+            # Convert to raw format required by Gmail API
+            raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+            
+            # Send email
+            send_message = self.service.users().messages().send(
+                userId="me",
+                body={'raw': raw_message}
+            ).execute()
+            
+            logging.info(f"Email sent successfully: {send_message['id']}")
+            
+            return {
+                'success': True,
+                'message_id': send_message['id'],
+                'recipient': recipient_email,
+                'subject': subject
+            }
+            
+        except HttpError as error:
+            error_detail = json.loads(error.content.decode())
+            logging.error(f"Gmail API error: {error_detail}")
+            return {
+                'success': False,
+                'error': f"Gmail API error: {error_detail.get('error', {}).get('message', 'Unknown error')}"
+            }
+        except Exception as error:
+            logging.error(f"Email sending error: {str(error)}")
+            return {
+                'success': False,
+                'error': f"Failed to send email: {str(error)}"
+            }
+    
+    def _create_email_template(self, recipient_name: str, body_text: str, document_name: str = None, document_url: str = None):
+        """Create professional HTML email template"""
+        html_template = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document from FIDUS Solutions</title>
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f8fafc;
+                }}
+                .email-container {{
+                    background: white;
+                    border-radius: 8px;
+                    padding: 30px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                .header {{
+                    text-align: center;
+                    border-bottom: 3px solid #06b6d4;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                }}
+                .logo {{
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #06b6d4;
+                    margin-bottom: 5px;
+                }}
+                .tagline {{
+                    color: #64748b;
+                    font-size: 14px;
+                }}
+                .content {{
+                    margin-bottom: 30px;
+                }}
+                .greeting {{
+                    font-size: 18px;
+                    margin-bottom: 20px;
+                    color: #1e293b;
+                }}
+                .message {{
+                    margin-bottom: 25px;
+                    color: #475569;
+                }}
+                .document-info {{
+                    background: #f1f5f9;
+                    border-left: 4px solid #06b6d4;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                }}
+                .document-name {{
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin-bottom: 8px;
+                }}
+                .view-button {{
+                    display: inline-block;
+                    background: #06b6d4;
+                    color: white;
+                    padding: 12px 24px;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    margin: 10px 0;
+                }}
+                .view-button:hover {{
+                    background: #0891b2;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding-top: 20px;
+                    border-top: 1px solid #e2e8f0;
+                    color: #64748b;
+                    font-size: 14px;
+                }}
+                .attachment-note {{
+                    background: #ecfdf5;
+                    border: 1px solid #10b981;
+                    border-radius: 4px;
+                    padding: 12px;
+                    margin: 15px 0;
+                    color: #065f46;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="header">
+                    <div class="logo">FIDUS</div>
+                    <div class="tagline">Professional Financial Solutions</div>
+                </div>
+                
+                <div class="content">
+                    <div class="greeting">Hello {recipient_name},</div>
+                    
+                    <div class="message">
+                        {body_text.replace(chr(10), '<br>')}
+                    </div>
+                    
+                    {f'''
+                    <div class="document-info">
+                        <div class="document-name">📄 {document_name}</div>
+                        <p>This document has been shared with you from FIDUS Solutions.</p>
+                        {f'<a href="{document_url}" class="view-button">View Document Online</a>' if document_url else ''}
+                    </div>
+                    ''' if document_name else ''}
+                    
+                    <div class="attachment-note">
+                        📎 <strong>Attachment:</strong> Please find the document attached to this email.
+                    </div>
+                    
+                    <p>If you have any questions about this document, please don't hesitate to contact us.</p>
+                </div>
+                
+                <div class="footer">
+                    <p><strong>FIDUS Solutions LLC</strong><br>
+                    Professional Financial Services<br>
+                    This email was sent from our secure document portal.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html_template
+
+# Initialize Gmail service
+gmail_service = GmailService()
+
 # Document Management Models and Services
 class DocumentUpload(BaseModel):
     name: str
