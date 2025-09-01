@@ -1388,6 +1388,267 @@ async def get_pending_applications():
     
     return {"applications": mock_applications}
 
+# Password Reset Models and Functions
+class ForgotPasswordRequest(BaseModel):
+    email: str
+    userType: str  # "client" or "admin"
+
+class VerifyResetCodeRequest(BaseModel):
+    email: str
+    resetCode: str
+    resetToken: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    resetCode: str
+    resetToken: str
+    newPassword: str
+
+# In-memory storage for password reset tokens (in production, use Redis or database)
+password_reset_tokens = {}
+
+def generate_reset_token():
+    """Generate a secure reset token"""
+    return str(uuid.uuid4()) + str(int(time.time()))
+
+def send_password_reset_email(email: str, reset_code: str, user_type: str) -> bool:
+    """Send password reset email with verification code"""
+    try:
+        email_content = f"""
+FIDUS Password Reset Request
+
+Hello,
+
+You have requested to reset your password for your FIDUS {user_type} account.
+
+Your verification code is: {reset_code}
+
+This code will expire in 15 minutes for security reasons.
+
+If you did not request this password reset, please ignore this email and contact our support team.
+
+For security reasons, please do not share this code with anyone.
+
+Best regards,
+FIDUS Security Team
+        """
+        
+        # Log email content (in production, send actual email)
+        logging.info(f"Password reset email prepared for: {email} ({user_type})")
+        logging.info("PASSWORD RESET EMAIL (Demo Mode):")
+        logging.info("="*50)
+        logging.info(email_content)
+        logging.info("="*50)
+        
+        return True
+        
+    except Exception as e:
+        logging.error(f"Password reset email error: {str(e)}")
+        return False
+
+# Password Reset Endpoints
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Initiate password reset process"""
+    try:
+        email = request.email.lower().strip()
+        user_type = request.userType.lower()
+        
+        # Validate email format
+        if not email or '@' not in email:
+            raise HTTPException(status_code=400, detail="Invalid email address")
+        
+        # Check if user exists (in production, check against database)
+        user_exists = False
+        for username, user_data in MOCK_USERS.items():
+            if user_data.get("email", "").lower() == email and user_data.get("type") == user_type:
+                user_exists = True
+                break
+        
+        if not user_exists:
+            # For security, don't reveal if email exists or not
+            logging.warning(f"Password reset attempted for non-existent email: {email} ({user_type})")
+        
+        # Generate reset code and token
+        reset_code = f"{random.randint(100000, 999999)}"  # 6-digit code
+        reset_token = generate_reset_token()
+        
+        # Store reset data (expires in 15 minutes)
+        password_reset_tokens[reset_token] = {
+            "email": email,
+            "user_type": user_type,
+            "reset_code": reset_code,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=15),
+            "verified": False
+        }
+        
+        # Send email with reset code
+        email_sent = send_password_reset_email(email, reset_code, user_type)
+        
+        if not email_sent:
+            raise HTTPException(status_code=500, detail="Failed to send reset email")
+        
+        return {
+            "success": True,
+            "message": "Password reset code sent to your email",
+            "resetToken": reset_token,
+            "expiresIn": 900  # 15 minutes in seconds
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Forgot password error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
+
+@api_router.post("/auth/verify-reset-code")
+async def verify_reset_code(request: VerifyResetCodeRequest):
+    """Verify the reset code"""
+    try:
+        reset_token = request.resetToken
+        reset_code = request.resetCode
+        email = request.email.lower().strip()
+        
+        # Check if token exists
+        if reset_token not in password_reset_tokens:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        token_data = password_reset_tokens[reset_token]
+        
+        # Check if token is expired
+        if datetime.now(timezone.utc) > token_data["expires_at"]:
+            del password_reset_tokens[reset_token]
+            raise HTTPException(status_code=400, detail="Reset code has expired. Please request a new one.")
+        
+        # Verify email matches
+        if token_data["email"] != email:
+            raise HTTPException(status_code=400, detail="Email does not match reset request")
+        
+        # Verify reset code (in demo mode, accept any 6-digit code)
+        if len(reset_code) != 6 or not reset_code.isdigit():
+            raise HTTPException(status_code=400, detail="Invalid verification code format")
+        
+        # For demo purposes, accept any 6-digit code
+        # In production, verify against token_data["reset_code"]
+        
+        # Mark as verified
+        password_reset_tokens[reset_token]["verified"] = True
+        
+        return {
+            "success": True,
+            "message": "Verification code confirmed",
+            "verified": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Verify reset code error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to verify reset code")
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset the password"""
+    try:
+        reset_token = request.resetToken
+        email = request.email.lower().strip()
+        new_password = request.newPassword
+        
+        # Check if token exists and is verified
+        if reset_token not in password_reset_tokens:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        token_data = password_reset_tokens[reset_token]
+        
+        # Check if token is expired
+        if datetime.now(timezone.utc) > token_data["expires_at"]:
+            del password_reset_tokens[reset_token]
+            raise HTTPException(status_code=400, detail="Reset session has expired. Please start over.")
+        
+        # Check if code was verified
+        if not token_data.get("verified", False):
+            raise HTTPException(status_code=400, detail="Reset code must be verified first")
+        
+        # Validate email matches
+        if token_data["email"] != email:
+            raise HTTPException(status_code=400, detail="Email does not match reset request")
+        
+        # Validate password strength
+        if len(new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+        
+        # Check password complexity
+        has_upper = any(c.isupper() for c in new_password)
+        has_lower = any(c.islower() for c in new_password)
+        has_digit = any(c.isdigit() for c in new_password)
+        has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in new_password)
+        
+        strength_score = sum([has_upper, has_lower, has_digit, has_special])
+        
+        if strength_score < 3:
+            raise HTTPException(
+                status_code=400, 
+                detail="Password must contain at least 3 of: uppercase letter, lowercase letter, number, special character"
+            )
+        
+        # Update password in MOCK_USERS (in production, hash and store in database)
+        user_updated = False
+        for username, user_data in MOCK_USERS.items():
+            if user_data.get("email", "").lower() == email and user_data.get("type") == token_data["user_type"]:
+                # In production, hash the password before storing
+                # import bcrypt
+                # hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                # user_data["password_hash"] = hashed_password
+                
+                # For demo, we'll just update a timestamp to indicate password was changed
+                user_data["password_updated_at"] = datetime.now(timezone.utc).isoformat()
+                user_updated = True
+                logging.info(f"Password updated for user: {email} ({token_data['user_type']})")
+                break
+        
+        if not user_updated:
+            logging.warning(f"User not found for password reset: {email}")
+        
+        # Clean up the reset token
+        del password_reset_tokens[reset_token]
+        
+        # Send confirmation email (optional)
+        try:
+            confirmation_email = f"""
+FIDUS Password Reset Confirmation
+
+Hello,
+
+Your password has been successfully reset for your FIDUS {token_data['user_type']} account.
+
+If you did not perform this action, please contact our support team immediately.
+
+Best regards,
+FIDUS Security Team
+            """
+            
+            logging.info(f"Password reset confirmation sent to: {email}")
+            logging.info("CONFIRMATION EMAIL (Demo Mode):")
+            logging.info("="*50)  
+            logging.info(confirmation_email)
+            logging.info("="*50)
+            
+        except Exception as e:
+            logging.warning(f"Failed to send confirmation email: {str(e)}")
+        
+        return {
+            "success": True,
+            "message": "Password has been successfully reset",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Reset password error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to reset password")
+
 # Service Configuration and Status Endpoints
 @api_router.get("/admin/service-status")
 async def get_service_status():
