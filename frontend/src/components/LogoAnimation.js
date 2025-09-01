@@ -165,7 +165,7 @@ const LogoAnimation = ({ onComplete }) => {
           <rect x="65" y="32" width="15" height="13" fill="#4caf50" />
         </svg>
       </motion.div>
-    </>
+    </AnimatePresence>
   );
 
   return (
