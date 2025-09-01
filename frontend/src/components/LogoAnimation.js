@@ -204,10 +204,20 @@ const LogoAnimation = ({ onComplete }) => {
         className="fidus-logo"
         initial={{ opacity: 0, scale: 0 }}
         animate={showLogo ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
-        transition={{ duration: 1, delay: 0.5 }}
+        transition={{ duration: 1.5, delay: 0.3 }}
       >
-        <span className="fidus-logo-f">F</span>
-        <span>IDUS</span>
+        <motion.img 
+          src="https://customer-assets.emergentagent.com/job_fidus-portal/artifacts/47blltiy_FIDUS%20LOGO.jpg"
+          alt="FIDUS Logo"
+          style={{
+            width: "300px",
+            height: "auto",
+            filter: "drop-shadow(0 0 20px rgba(255, 167, 38, 0.5))"
+          }}
+          initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ duration: 1.5, delay: 0.5 }}
+        />
       </motion.div>
 
       {/* Pulsing Effect */}
