@@ -218,6 +218,184 @@ class FidusAPITester:
                 
         return success
 
+    def create_test_image(self):
+        """Create a test image for document upload"""
+        try:
+            img = Image.new('RGB', (300, 200), color='white')
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format='JPEG')
+            img_buffer.seek(0)
+            return img_buffer
+        except Exception as e:
+            print(f"Error creating test image: {e}")
+            return None
+
+    def test_registration_create_application(self):
+        """Test registration application creation"""
+        test_data = {
+            "personalInfo": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@test.com",
+                "phone": "+1-555-0123",
+                "dateOfBirth": "1990-05-15",
+                "nationality": "US",
+                "address": "123 Test Street",
+                "city": "Test City",
+                "postalCode": "12345",
+                "country": "United States"
+            },
+            "documentType": "passport"
+        }
+        
+        success, response = self.run_test(
+            "Create Registration Application",
+            "POST",
+            "api/registration/create-application",
+            200,
+            data=test_data
+        )
+        
+        if success:
+            self.application_id = response.get("applicationId")
+            print(f"   Application ID: {self.application_id}")
+        
+        return success
+
+    def test_document_processing(self):
+        """Test document upload and processing"""
+        if not self.application_id:
+            print("❌ Skipping document processing - no application ID available")
+            return False
+            
+        # Create test image
+        test_image = self.create_test_image()
+        if not test_image:
+            print("❌ Failed to create test image")
+            return False
+        
+        try:
+            files = {
+                'document': ('test_passport.jpg', test_image, 'image/jpeg')
+            }
+            data = {
+                'documentType': 'passport',
+                'applicationId': self.application_id
+            }
+            
+            url = f"{self.base_url}/api/registration/process-document"
+            print(f"\n🔍 Testing Document Processing...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    self.extracted_data = response_data.get("extractedData")
+                    print(f"   Extracted data keys: {list(self.extracted_data.keys()) if self.extracted_data else 'None'}")
+                except:
+                    pass
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_aml_kyc_verification(self):
+        """Test AML/KYC verification"""
+        if not self.application_id:
+            print("❌ Skipping AML/KYC verification - no application ID available")
+            return False
+            
+        test_data = {
+            "applicationId": self.application_id,
+            "personalInfo": {
+                "firstName": "John",
+                "lastName": "Doe", 
+                "email": "john.doe@test.com",
+                "phone": "+1-555-0123",
+                "dateOfBirth": "1990-05-15",
+                "nationality": "US",
+                "address": "123 Test Street",
+                "city": "Test City",
+                "postalCode": "12345",
+                "country": "United States"
+            },
+            "extractedData": self.extracted_data
+        }
+        
+        success, response = self.run_test(
+            "AML/KYC Verification",
+            "POST",
+            "api/registration/aml-kyc-check",
+            200,
+            data=test_data
+        )
+        
+        if success:
+            risk_score = response.get("riskScore", "N/A")
+            status = response.get("status", "N/A")
+            print(f"   Status: {status}, Risk Score: {risk_score}")
+        
+        return success
+
+    def test_application_finalization(self):
+        """Test application finalization"""
+        if not self.application_id:
+            print("❌ Skipping application finalization - no application ID available")
+            return False
+            
+        test_data = {
+            "applicationId": self.application_id,
+            "approved": True
+        }
+        
+        success, response = self.run_test(
+            "Application Finalization",
+            "POST",
+            "api/registration/finalize",
+            200,
+            data=test_data
+        )
+        
+        if success:
+            credentials = response.get("credentials", {})
+            username = credentials.get("username", "N/A")
+            print(f"   New user created: {username}")
+        
+        return success
+
+    def test_admin_pending_applications(self):
+        """Test admin pending applications endpoint"""
+        success, response = self.run_test(
+            "Admin Pending Applications",
+            "GET",
+            "api/admin/pending-applications",
+            200
+        )
+        
+        if success:
+            applications = response.get("applications", [])
+            print(f"   Pending applications: {len(applications)}")
+        
+        return success
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
