@@ -589,7 +589,7 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
             return True  # Skip this test
             
         # Test deletion
-        success, response = self.run_test(
+        success, delete_response = self.run_test(
             "Delete Client",
             "DELETE",
             f"api/admin/clients/{client_id}",
@@ -597,8 +597,8 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
         )
         
         if success:
-            print(f"   Deletion success: {response.get('success')}")
-            print(f"   Message: {response.get('message')}")
+            print(f"   Deletion success: {delete_response.get('success')}")
+            print(f"   Message: {delete_response.get('message')}")
             
         return success
 
