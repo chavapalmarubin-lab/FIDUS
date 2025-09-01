@@ -604,6 +604,10 @@ const AdminDashboard = ({ user, onLogout }) => {
           <TabsContent value="clients" className="mt-6">
             <ClientManagement />
           </TabsContent>
+
+          <TabsContent value="documents" className="mt-6">
+            <DocumentPortal user={user} userType="admin" />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
