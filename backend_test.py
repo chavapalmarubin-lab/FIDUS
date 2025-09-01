@@ -634,6 +634,136 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
             
         return success
 
+    def test_service_status(self):
+        """Test service status endpoint"""
+        success, response = self.run_test(
+            "Service Status Check",
+            "GET",
+            "api/admin/service-status",
+            200
+        )
+        
+        if success:
+            # Check overall system status
+            overall = response.get("overall", {})
+            print(f"   System Status: {overall.get('status', 'Unknown')}")
+            print(f"   Ready Services: {overall.get('ready_services', 0)}/{overall.get('total_services', 0)}")
+            print(f"   Readiness: {overall.get('readiness_percentage', 0)}%")
+            
+            # Check OCR services
+            ocr_services = response.get("ocr_services", {})
+            for service_name, service_info in ocr_services.items():
+                status = service_info.get("status", "unknown")
+                enabled = service_info.get("enabled", False)
+                print(f"   OCR {service_name}: {'✅' if enabled and status == 'ready' else '❌'} ({status})")
+            
+            # Check AML/KYC services
+            aml_services = response.get("aml_kyc_services", {})
+            for service_name, service_info in aml_services.items():
+                status = service_info.get("status", "unknown")
+                enabled = service_info.get("enabled", False)
+                print(f"   AML/KYC {service_name}: {'✅' if enabled and status == 'ready' else '❌'} ({status})")
+            
+            # Check compliance features
+            compliance_features = response.get("compliance_features", {})
+            for feature_name, feature_info in compliance_features.items():
+                status = feature_info.get("status", "unknown")
+                enabled = feature_info.get("enabled", False)
+                print(f"   Compliance {feature_name}: {'✅' if enabled and status == 'ready' else '❌'} ({status})")
+        
+        return success
+
+    def test_ocr_service_direct(self):
+        """Test OCR service directly"""
+        # Create test image
+        test_image = self.create_test_image()
+        if not test_image:
+            print("❌ Failed to create test image")
+            return False
+        
+        try:
+            files = {
+                'file': ('test_document.jpg', test_image, 'image/jpeg')
+            }
+            
+            url = f"{self.base_url}/api/admin/test-ocr"
+            print(f"\n🔍 Testing OCR Service Direct...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    ocr_success = response_data.get("success", False)
+                    ocr_method = response_data.get("ocr_method", "unknown")
+                    confidence_score = response_data.get("confidence_score", 0)
+                    fields_extracted = response_data.get("fields_extracted", 0)
+                    
+                    print(f"   OCR Success: {ocr_success}")
+                    print(f"   OCR Method: {ocr_method}")
+                    print(f"   Confidence Score: {confidence_score}")
+                    print(f"   Fields Extracted: {fields_extracted}")
+                except Exception as e:
+                    print(f"   Error parsing response: {e}")
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_aml_kyc_service_direct(self):
+        """Test AML/KYC service directly"""
+        test_person = {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@test.com",
+            "phone": "+1-555-0123",
+            "dateOfBirth": "1990-05-15",
+            "nationality": "US",
+            "country": "United States"
+        }
+        
+        success, response = self.run_test(
+            "AML/KYC Service Direct Test",
+            "POST",
+            "api/admin/test-aml-kyc",
+            200,
+            data=test_person
+        )
+        
+        if success:
+            aml_success = response.get("success", False)
+            overall_status = response.get("overall_status", "unknown")
+            risk_level = response.get("risk_level", "unknown")
+            total_score = response.get("total_score", 0)
+            checks_completed = response.get("checks_completed", [])
+            provider_used = response.get("provider_used", "unknown")
+            
+            print(f"   AML/KYC Success: {aml_success}")
+            print(f"   Overall Status: {overall_status}")
+            print(f"   Risk Level: {risk_level}")
+            print(f"   Total Score: {total_score}")
+            print(f"   Checks Completed: {', '.join(checks_completed)}")
+            print(f"   Provider Used: {provider_used}")
+        
+        return success
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
