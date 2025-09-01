@@ -1159,7 +1159,7 @@ Document Content:
         return success
 
     def test_send_document_for_signature(self):
-        """Test sending document for DocuSign signature"""
+        """Test sending document for DocuSign signature - FIXED ENDPOINT"""
         if not hasattr(self, 'uploaded_document_id') or not self.uploaded_document_id:
             print("❌ Skipping send for signature test - no uploaded document available")
             return False
@@ -1169,45 +1169,40 @@ Document Content:
             return False
         
         try:
-            # The endpoint expects both JSON body and form data, so we'll use multipart
+            # FIXED: Now all data is sent as JSON body (no mixed content types)
             signature_data = {
                 "recipients": [
                     {
-                        "name": "Gerardo Briones",
-                        "email": "g.b@fidus.com",
+                        "name": "Test User",
+                        "email": "test@example.com",
                         "role": "signer"
                     }
                 ],
-                "email_subject": "Investment Agreement - Signature Required",
-                "email_message": "Please review and sign the attached investment agreement."
-            }
-            
-            # Use multipart form data with both JSON and form fields
-            data = {
-                'sender_id': self.admin_user['id']
+                "email_subject": "Test Document",
+                "email_message": "Please sign this test document",
+                "sender_id": "admin_001"  # Now included in JSON payload
             }
             
             url = f"{self.base_url}/api/documents/{self.uploaded_document_id}/send-for-signature"
-            print(f"\n🔍 Testing Send Document for Signature...")
+            print(f"\n🔍 Testing Send Document for Signature (FIXED ENDPOINT)...")
             print(f"   URL: {url}")
+            print(f"   Testing with JSON-only payload (no form data)")
             
-            # Send JSON body with form data
+            # Send only JSON body (no form data)
             response = requests.post(
                 url, 
                 json=signature_data,
-                data=data,
+                headers={'Content-Type': 'application/json'},
                 timeout=30
             )
             print(f"   Status Code: {response.status_code}")
             
             self.tests_run += 1
+            success = response.status_code == 200
             
-            # The endpoint might have implementation issues, so let's be flexible
-            success = response.status_code in [200, 422]  # Accept both for now
-            
-            if response.status_code == 200:
+            if success:
                 self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
+                print(f"✅ Passed - Fixed endpoint working correctly!")
                 try:
                     response_data = response.json()
                     self.envelope_id = response_data.get("envelope_id")
@@ -1215,23 +1210,16 @@ Document Content:
                     print(f"   Envelope ID: {self.envelope_id}")
                     print(f"   Status: {response_data.get('status')}")
                     print(f"   Message: {response_data.get('message')}")
+                    print(f"   ✅ ENDPOINT FIX CONFIRMED: JSON-only payload works!")
                 except Exception as e:
                     print(f"   Error parsing response: {e}")
-            elif response.status_code == 422:
-                # This is expected due to endpoint design issue - mixed content types
-                self.tests_passed += 1
-                print(f"⚠️  Endpoint has design issue (mixed JSON + form data) - Status: {response.status_code}")
-                print("   This is a known limitation of the current endpoint implementation")
-                try:
-                    error_data = response.json()
-                    print(f"   Error details: {error_data.get('detail', [{}])[0].get('msg', 'Unknown')}")
-                except:
-                    pass
             else:
-                print(f"❌ Failed - Expected 200 or 422, got {response.status_code}")
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
                 try:
                     error_data = response.json()
                     print(f"   Error: {error_data}")
+                    if response.status_code == 422:
+                        print(f"   ⚠️  Endpoint may still have validation issues")
                 except:
                     print(f"   Error text: {response.text}")
             
