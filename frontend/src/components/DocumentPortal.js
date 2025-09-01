@@ -670,10 +670,8 @@ const SendForSignatureModal = ({ document, onClose, onSend }) => {
   };
 
   const updateRecipient = (index, field, value) => {
-    console.log(`Updating recipient ${index}, field: ${field}, value: ${value}`);
     const updated = [...recipients];
     updated[index] = { ...updated[index], [field]: value };
-    console.log("Updated recipients:", updated);
     setRecipients(updated);
   };
 
