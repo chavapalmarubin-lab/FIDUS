@@ -2146,6 +2146,16 @@ def main():
     tester.test_document_deletion()
     tester.test_document_deletion_nonexistent()
     
+    # Test Gmail Integration endpoints
+    print("\n📋 GMAIL INTEGRATION TESTS")
+    print("-" * 30)
+    tester.test_gmail_authenticate()
+    tester.test_document_view_for_email_links()
+    tester.test_document_view_nonexistent()
+    tester.test_send_document_for_signature_gmail()
+    tester.test_document_status_gmail_tracking()
+    tester.test_gmail_error_handling()
+    
     # Test CRM System endpoints
     print("\n📋 CRM SYSTEM TESTS")
     print("-" * 30)
