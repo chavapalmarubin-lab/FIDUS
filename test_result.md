@@ -220,3 +220,5 @@ test_plan:
 agent_communication:
     - agent: "main"
     - message: "Document Portal implementation completed! Added comprehensive backend endpoints for document management with mock DocuSign integration, and integrated DocumentPortal component into both Admin and Client dashboards. Backend has document upload, download, send-for-signature, and status tracking. Frontend shows Document Portal tabs in both dashboards. Ready for backend testing."
+    - agent: "testing"
+    - message: "Document Portal backend testing completed. CRITICAL ISSUE FOUND: Send-for-signature endpoint has design flaw - expects both JSON body and form data simultaneously causing 422 validation errors. All other endpoints working correctly: upload (✅), admin/client document lists (✅), download (✅), deletion (✅), status tracking (✅). Mock DocuSign service itself works but endpoint design needs fixing."
