@@ -144,14 +144,15 @@ const LogoAnimation = ({ onComplete }) => {
       <motion.div
         className="financial-element"
         style={{ top: "60%", left: "50%", transform: "translateX(-50%)" }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ 
-          y: -(window.innerHeight * 0.6 - window.innerHeight / 2),
-          scale: 0,
-          opacity: 0
-        }}
-        transition={{ duration: 1.5, delay: 1 }}
+        initial={{ opacity: 0, scale: 0, rotate: 0 }}
+        animate={mergeElements ? {
+          opacity: 1,
+          scale: [1, 1.2, 0],
+          y: typeof window !== 'undefined' ? -(window.innerHeight * 0.6 - window.innerHeight / 2) + 20 : 0,
+          rotate: 90
+        } : { opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ duration: mergeElements ? 1.5 : 0.8, delay: 1 }}
       >
         <svg className="data-blocks" viewBox="0 0 90 70" fill="none">
           <rect x="5" y="10" width="15" height="12" fill="#00bcd4" />
