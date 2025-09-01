@@ -77,7 +77,7 @@ const CRMDashboard = ({ user }) => {
 
   const handleClientSelect = (clientId) => {
     setSelectedClient(clientId);
-    if (clientId) {
+    if (clientId && clientId !== "all_clients") {
       fetchClientMT5Data(clientId);
     } else {
       setClientMT5Data(null);
