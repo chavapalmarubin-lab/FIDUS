@@ -518,6 +518,297 @@ async def get_pending_applications():
     
     return {"applications": mock_applications}
 
+# Excel Client Management Functions
+def generate_clients_excel_data():
+    """Generate comprehensive client data for Excel export"""
+    clients_data = []
+    
+    # Add existing clients from MOCK_USERS
+    for user in MOCK_USERS.values():
+        if user["type"] == "client":
+            transactions = generate_mock_transactions(user["id"], 50)
+            balances = calculate_balances(transactions)
+            
+            # Calculate additional metrics
+            total_transactions = len(transactions)
+            avg_transaction_amount = sum(t["amount"] for t in transactions) / total_transactions if total_transactions > 0 else 0
+            last_transaction_date = transactions[0]["date"] if transactions else datetime.now(timezone.utc)
+            
+            client_data = {
+                "Client_ID": user["id"],
+                "Username": user["username"],
+                "Full_Name": user["name"],
+                "Email": user["email"],
+                "Status": user.get("status", "active"),
+                "Registration_Date": user.get("createdAt", datetime.now(timezone.utc).isoformat())[:10],
+                "Total_Balance": round(balances["total_balance"], 2),
+                "FIDUS_Funds": round(balances["fidus_funds"], 2),
+                "Core_Balance": round(balances["core_balance"], 2),
+                "Dynamic_Balance": round(balances["dynamic_balance"], 2),
+                "Total_Transactions": total_transactions,
+                "Avg_Transaction_Amount": round(avg_transaction_amount, 2),
+                "Last_Activity": last_transaction_date.isoformat()[:10] if hasattr(last_transaction_date, 'isoformat') else str(last_transaction_date)[:10],
+                "Risk_Level": random.choice(["Low", "Medium", "Low", "Low"]),  # Mostly low risk
+                "KYC_Status": "Verified",
+                "AML_Status": "Clear",
+                "Account_Type": "Individual",
+                "Phone": "+1-555-" + str(random.randint(1000000, 9999999)),
+                "Address": f"{random.randint(100, 9999)} {random.choice(['Main', 'Oak', 'Pine', 'Cedar', 'Maple'])} {random.choice(['St', 'Ave', 'Blvd', 'Dr'])}",
+                "City": random.choice(["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"]),
+                "State": random.choice(["NY", "CA", "IL", "TX", "AZ", "PA"]),
+                "Zip_Code": str(random.randint(10000, 99999)),
+                "Country": "United States",
+                "Date_of_Birth": f"{random.randint(1970, 2000)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
+                "Nationality": "US",
+                "Occupation": random.choice(["Engineer", "Doctor", "Lawyer", "Teacher", "Manager", "Consultant"]),
+                "Annual_Income": random.randint(75000, 500000),
+                "Net_Worth": random.randint(200000, 2000000),
+                "Investment_Experience": random.choice(["Beginner", "Intermediate", "Advanced"]),
+                "Risk_Tolerance": random.choice(["Conservative", "Moderate", "Aggressive"]),
+                "Investment_Goals": random.choice(["Retirement", "Wealth Building", "Income Generation", "Capital Preservation"])
+            }
+            clients_data.append(client_data)
+    
+    return clients_data
+
+def parse_clients_excel_data(excel_data):
+    """Parse uploaded Excel data and validate client information"""
+    clients = []
+    required_fields = ["Full_Name", "Email", "Username"]
+    
+    for row in excel_data:
+        if not row or all(not str(v).strip() for v in row.values()):
+            continue  # Skip empty rows
+            
+        # Check required fields
+        missing_fields = [field for field in required_fields if not row.get(field)]
+        if missing_fields:
+            continue  # Skip invalid rows
+            
+        # Create standardized client data
+        client = {
+            "id": row.get("Client_ID", f"client_{str(uuid.uuid4())[:8]}"),
+            "username": row.get("Username", "").strip(),
+            "name": row.get("Full_Name", "").strip(),
+            "email": row.get("Email", "").strip().lower(),
+            "type": "client",
+            "status": row.get("Status", "active").lower(),
+            "createdAt": row.get("Registration_Date", datetime.now(timezone.utc).isoformat()[:10]),
+            "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+            "phone": row.get("Phone", ""),
+            "address": row.get("Address", ""),
+            "city": row.get("City", ""),
+            "state": row.get("State", ""),
+            "zip_code": row.get("Zip_Code", ""),
+            "country": row.get("Country", "United States"),
+            "date_of_birth": row.get("Date_of_Birth", ""),
+            "nationality": row.get("Nationality", "US"),
+            "occupation": row.get("Occupation", ""),
+            "annual_income": row.get("Annual_Income", 0),
+            "net_worth": row.get("Net_Worth", 0),
+            "investment_experience": row.get("Investment_Experience", ""),
+            "risk_tolerance": row.get("Risk_Tolerance", ""),
+            "investment_goals": row.get("Investment_Goals", ""),
+            "balances": {
+                "total_balance": float(row.get("Total_Balance", 0)),
+                "fidus_funds": float(row.get("FIDUS_Funds", 0)),
+                "core_balance": float(row.get("Core_Balance", 0)),
+                "dynamic_balance": float(row.get("Dynamic_Balance", 0))
+            }
+        }
+        clients.append(client)
+    
+    return clients
+
+# Excel Client Management Endpoints
+@api_router.get("/admin/clients/export")
+async def export_clients_excel():
+    """Export all clients data to Excel format"""
+    try:
+        import io
+        from datetime import datetime
+        import json
+        
+        clients_data = generate_clients_excel_data()
+        
+        if not clients_data:
+            return {"error": "No client data available for export"}
+        
+        # Convert to CSV format for simple download
+        import csv
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=clients_data[0].keys())
+        writer.writeheader()
+        writer.writerows(clients_data)
+        
+        csv_content = output.getvalue()
+        
+        return {
+            "success": True,
+            "filename": f"fidus_clients_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            "data": csv_content,
+            "total_clients": len(clients_data),
+            "export_date": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+@api_router.post("/admin/clients/import")
+async def import_clients_excel(file: UploadFile = File(...)):
+    """Import clients data from Excel file"""
+    try:
+        if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+            raise HTTPException(status_code=400, detail="Only Excel (.xlsx, .xls) or CSV files are allowed")
+        
+        # Read file content
+        content = await file.read()
+        
+        if file.filename.endswith('.csv'):
+            # Handle CSV files
+            import csv
+            import io
+            csv_content = content.decode('utf-8')
+            csv_reader = csv.DictReader(io.StringIO(csv_content))
+            excel_data = list(csv_reader)
+        else:
+            # Handle Excel files
+            import pandas as pd
+            df = pd.read_excel(io.BytesIO(content))
+            excel_data = df.to_dict('records')
+        
+        # Parse and validate client data
+        clients = parse_clients_excel_data(excel_data)
+        
+        # Update MOCK_USERS with imported clients
+        imported_count = 0
+        updated_count = 0
+        
+        for client in clients:
+            username = client["username"]
+            if username in MOCK_USERS:
+                MOCK_USERS[username].update(client)
+                updated_count += 1
+            else:
+                MOCK_USERS[username] = client
+                imported_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Successfully processed {len(clients)} client records",
+            "imported": imported_count,
+            "updated": updated_count,
+            "total_processed": len(clients),
+            "skipped": len(excel_data) - len(clients)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+@api_router.get("/admin/clients/detailed")
+async def get_detailed_clients():
+    """Get detailed client information for admin management"""
+    try:
+        clients_data = []
+        
+        for user in MOCK_USERS.values():
+            if user["type"] == "client":
+                transactions = generate_mock_transactions(user["id"], 30)
+                balances = calculate_balances(transactions)
+                
+                # Calculate metrics
+                total_transactions = len(transactions)
+                avg_transaction = sum(t["amount"] for t in transactions) / total_transactions if total_transactions > 0 else 0
+                last_activity = transactions[0]["date"] if transactions else datetime.now(timezone.utc)
+                
+                client_detail = {
+                    "id": user["id"],
+                    "username": user["username"],
+                    "name": user["name"],
+                    "email": user["email"],
+                    "status": user.get("status", "active"),
+                    "created_at": user.get("createdAt", datetime.now(timezone.utc).isoformat()),
+                    "profile_picture": user.get("profile_picture", ""),
+                    "balances": {
+                        "total": round(balances["total_balance"], 2),
+                        "fidus": round(balances["fidus_funds"], 2),
+                        "core": round(balances["core_balance"], 2),
+                        "dynamic": round(balances["dynamic_balance"], 2)
+                    },
+                    "activity": {
+                        "total_transactions": total_transactions,
+                        "avg_transaction": round(avg_transaction, 2),
+                        "last_activity": last_activity.isoformat() if hasattr(last_activity, 'isoformat') else str(last_activity)
+                    },
+                    "compliance": {
+                        "kyc_status": "Verified",
+                        "aml_status": "Clear",
+                        "risk_level": random.choice(["Low", "Medium"])
+                    },
+                    "personal": {
+                        "phone": user.get("phone", f"+1-555-{random.randint(1000000, 9999999)}"),
+                        "address": user.get("address", f"{random.randint(100, 9999)} Main St"),
+                        "city": user.get("city", "New York"),
+                        "country": user.get("country", "United States")
+                    }
+                }
+                clients_data.append(client_detail)
+        
+        # Sort by creation date (newest first)
+        clients_data.sort(key=lambda x: x["created_at"], reverse=True)
+        
+        return {
+            "clients": clients_data,
+            "total_clients": len(clients_data),
+            "active_clients": len([c for c in clients_data if c["status"] == "active"]),
+            "total_aum": sum(c["balances"]["total"] for c in clients_data),
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch detailed clients: {str(e)}")
+
+@api_router.delete("/admin/clients/{client_id}")
+async def delete_client(client_id: str):
+    """Delete a client (admin only)"""
+    try:
+        # Find and remove client
+        username_to_remove = None
+        for username, user in MOCK_USERS.items():
+            if user.get("id") == client_id and user.get("type") == "client":
+                username_to_remove = username
+                break
+        
+        if username_to_remove:
+            del MOCK_USERS[username_to_remove]
+            return {"success": True, "message": "Client deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Client not found")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete client: {str(e)}")
+
+@api_router.put("/admin/clients/{client_id}/status")
+async def update_client_status(client_id: str, status_data: dict):
+    """Update client status (active/inactive/suspended)"""
+    try:
+        new_status = status_data.get("status", "active").lower()
+        
+        if new_status not in ["active", "inactive", "suspended"]:
+            raise HTTPException(status_code=400, detail="Invalid status. Must be active, inactive, or suspended")
+        
+        # Find and update client
+        for username, user in MOCK_USERS.items():
+            if user.get("id") == client_id and user.get("type") == "client":
+                user["status"] = new_status
+                user["updatedAt"] = datetime.now(timezone.utc).isoformat()
+                return {"success": True, "message": f"Client status updated to {new_status}"}
+        
+        raise HTTPException(status_code=404, detail="Client not found")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update client status: {str(e)}")
+
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
