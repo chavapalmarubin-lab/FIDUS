@@ -10,6 +10,7 @@ import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp } f
 import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
+import GmailSettings from "./GmailSettings";
 import {
   LineChart,
   Line,
