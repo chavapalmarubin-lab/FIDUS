@@ -2372,15 +2372,23 @@ def main():
     tester.test_document_deletion()
     tester.test_document_deletion_nonexistent()
     
-    # Test Gmail Integration endpoints
-    print("\n📋 GMAIL INTEGRATION TESTS")
+    # Test Gmail OAuth Integration endpoints
+    print("\n📋 GMAIL OAUTH INTEGRATION TESTS")
     print("-" * 30)
-    tester.test_gmail_authenticate()
+    tester.test_gmail_auth_url()
+    tester.test_gmail_oauth_callback_structure()
+    tester.test_gmail_authenticate_oauth_flow()
+    tester.test_gmail_client_id_verification()
+    tester.test_gmail_error_handling()
+    tester.test_gmail_security_measures()
+    
+    # Test Gmail Document Integration endpoints
+    print("\n📋 GMAIL DOCUMENT INTEGRATION TESTS")
+    print("-" * 30)
     tester.test_document_view_for_email_links()
     tester.test_document_view_nonexistent()
     tester.test_send_document_for_signature_gmail()
     tester.test_document_status_gmail_tracking()
-    tester.test_gmail_error_handling()
     
     # Test CRM System endpoints
     print("\n📋 CRM SYSTEM TESTS")
