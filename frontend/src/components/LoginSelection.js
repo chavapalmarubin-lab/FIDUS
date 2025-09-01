@@ -139,6 +139,14 @@ const LoginSelection = ({ onLogin }) => {
                   </button>
                 </motion.div>
               </div>
+            ) : selectedType === "register" ? (
+              <UserRegistration 
+                onBack={() => setSelectedType(null)}
+                onComplete={(userData) => {
+                  // After successful registration, automatically log them in
+                  onLogin(userData);
+                }}
+              />
             ) : (
               <motion.div
                 initial={{ opacity: 0, x: 50 }}
