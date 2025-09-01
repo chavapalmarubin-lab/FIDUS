@@ -558,27 +558,117 @@ const UserRegistration = ({ onBack, onComplete }) => {
       {amlKycResults && (
         <Card className="bg-slate-800 border-slate-600">
           <CardHeader>
-            <CardTitle className="text-white text-lg">AML/KYC Verification Results</CardTitle>
+            <CardTitle className="text-white text-lg flex items-center gap-2">
+              <Shield size={20} />
+              AML/KYC Compliance Verification
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Verification Status:</span>
-              <Badge variant={amlKycResults.status === 'approved' ? 'default' : 'destructive'}>
-                {amlKycResults.status.toUpperCase()}
-              </Badge>
+          <CardContent className="space-y-4">
+            {/* Overall Status */}
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-slate-300 font-medium">Overall Status:</span>
+                <Badge variant={
+                  amlKycResults.overall_status === 'approved' ? 'default' : 
+                  amlKycResults.overall_status === 'enhanced_monitoring' ? 'secondary' :
+                  amlKycResults.overall_status === 'manual_review_required' ? 'outline' : 'destructive'
+                }>
+                  {amlKycResults.overall_status?.toUpperCase().replace('_', ' ')}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-400">Risk Level:</span>
+                  <span className={`ml-2 font-medium ${
+                    amlKycResults.risk_level === 'LOW' ? 'text-green-400' :
+                    amlKycResults.risk_level === 'MEDIUM' ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {amlKycResults.risk_level}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Risk Score:</span>
+                  <span className="text-white ml-2 font-medium">{amlKycResults.total_score || 0}/100</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Risk Score:</span>
-              <span className="text-white font-medium">{amlKycResults.riskScore}/100</span>
+
+            {/* Verification Checks */}
+            <div>
+              <div className="text-sm text-slate-300 mb-3">Compliance Checks Completed</div>
+              <div className="space-y-2">
+                {amlKycResults.checks_completed?.map((check, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <CheckCircle size={16} className="text-green-400" />
+                    <span className="text-slate-300 capitalize">{check.replace('_', ' ')}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Sanctions Check:</span>
-              <span className="text-green-400">✓ Clear</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Identity Verification:</span>
-              <span className="text-green-400">✓ Verified</span>
-            </div>
+
+            {/* Sanctions Screening */}
+            {amlKycResults.sanctions_screening && (
+              <div>
+                <div className="text-sm text-slate-300 mb-2">Sanctions Screening</div>
+                <div className="bg-slate-700/30 rounded p-2 text-xs">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-slate-400">Provider:</span>
+                    <span className="text-cyan-400">{amlKycResults.sanctions_screening.provider}</span>
+                  </div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-slate-400">Total Hits:</span>
+                    <span className="text-white">{amlKycResults.sanctions_screening.total_hits || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Status:</span>
+                    <span className={`${
+                      amlKycResults.sanctions_screening.total_hits === 0 ? 'text-green-400' : 'text-yellow-400'
+                    }`}>
+                      {amlKycResults.sanctions_screening.total_hits === 0 ? '✓ Clear' : '⚠ Matches Found'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Identity Verification */}
+            {amlKycResults.identity_verification && (
+              <div>
+                <div className="text-sm text-slate-300 mb-2">Identity Verification</div>
+                <div className="bg-slate-700/30 rounded p-2 text-xs">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-slate-400">Status:</span>
+                    <span className={`${
+                      amlKycResults.identity_verification.identity_verified ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {amlKycResults.identity_verification.identity_verified ? '✓ Verified' : '✗ Failed'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Verification Score:</span>
+                    <span className="text-white">
+                      {Math.round((amlKycResults.identity_verification.verification_score || 0) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Next Steps */}
+            {amlKycResults.next_steps && amlKycResults.next_steps.length > 0 && (
+              <div>
+                <div className="text-sm text-slate-300 mb-2">Next Steps</div>
+                <div className="space-y-1">
+                  {amlKycResults.next_steps.map((step, index) => (
+                    <div key={index} className="flex items-start gap-2 text-xs text-slate-400">
+                      <div className="w-1 h-1 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
