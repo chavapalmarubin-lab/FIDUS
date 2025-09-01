@@ -627,6 +627,15 @@ def main():
     tester.test_admin_portfolio_summary()
     tester.test_admin_clients()
     
+    # Test Excel client management endpoints
+    print("\n📋 EXCEL CLIENT MANAGEMENT TESTS")
+    print("-" * 30)
+    tester.test_admin_clients_detailed()
+    tester.test_admin_clients_export()
+    tester.test_admin_clients_import()
+    tester.test_admin_client_status_update()
+    tester.test_admin_client_deletion()
+    
     # Test registration endpoints
     print("\n📋 REGISTRATION ENDPOINTS TESTS")
     print("-" * 30)
