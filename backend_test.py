@@ -1868,6 +1868,29 @@ def main():
     tester.test_document_deletion()
     tester.test_document_deletion_nonexistent()
     
+    # Test CRM System endpoints
+    print("\n📋 CRM SYSTEM TESTS")
+    print("-" * 30)
+    tester.test_crm_get_all_funds()
+    tester.test_crm_admin_dashboard()
+    tester.test_crm_client_allocations()
+    tester.test_crm_capital_flow_creation()
+    tester.test_crm_client_capital_flows_history()
+    
+    # Test MT5 Integration endpoints
+    print("\n📋 MT5 INTEGRATION TESTS")
+    print("-" * 30)
+    tester.test_crm_mt5_admin_overview()
+    tester.test_crm_mt5_client_account()
+    tester.test_crm_mt5_client_positions()
+    tester.test_crm_mt5_client_history()
+    
+    # Test CRM error scenarios
+    print("\n📋 CRM ERROR SCENARIO TESTS")
+    print("-" * 30)
+    tester.test_crm_invalid_fund_capital_flow()
+    tester.test_crm_mt5_nonexistent_client()
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
