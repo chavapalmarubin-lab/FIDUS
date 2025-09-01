@@ -443,7 +443,7 @@ const CRMDashboard = ({ user }) => {
           </div>
 
           {/* Client Detail View */}
-          {selectedClient && clientMT5Data && (
+          {selectedClient && selectedClient !== "all_clients" && clientMT5Data && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
               {/* Account Info */}
               <Card className="bg-slate-800 border-slate-700">
