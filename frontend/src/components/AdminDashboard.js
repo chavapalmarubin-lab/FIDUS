@@ -586,14 +586,20 @@ const AdminDashboard = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Notes */}
-        <div className="mt-6 text-xs text-slate-400 bg-slate-800/50 p-4 rounded-lg">
-          <p>
-            <strong>Tip:</strong> Use the <strong>Simulation</strong> toggle to preview this week's hypothetical returns without saving. 
-            Upload your <em>FIDUS Projections.xlsx</em> (sheet <em>FIDUS Investment Committee</em>) to auto-populate the table. 
-            All edits persist to your browser's local storage.
-          </p>
-        </div>
+            {/* Notes */}
+            <div className="mt-6 text-xs text-slate-400 bg-slate-800/50 p-4 rounded-lg">
+              <p>
+                <strong>Tip:</strong> Use the <strong>Simulation</strong> toggle to preview this week's hypothetical returns without saving. 
+                Upload your <em>FIDUS Projections.xlsx</em> (sheet <em>FIDUS Investment Committee</em>) to auto-populate the table. 
+                All edits persist to your browser's local storage.
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="clients" className="mt-6">
+            <ClientManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
