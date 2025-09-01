@@ -105,9 +105,9 @@
 user_problem_statement: "Integrate a fully integrated CRM system for FIDUS extending the existing portal. The CRM must: manage client onboarding with digital KYC/AML, track investor allocations across four funds (CORE, BALANCE, DYNAMIC, UNLIMITED), automate capital flows (subscriptions, redemptions, distributions), and generate real-time dashboards for AUM, NAV, and performance. Include Python MetaQuotes MT4/MT5 integration for client activity monitoring in Admin portal. Focus on core features first."
 
 backend:
-  - task: "Document upload endpoint"
-    implemented: true
-    working: true
+  - task: "Fund Management System"
+    implemented: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
@@ -115,14 +115,11 @@ backend:
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Implemented document upload endpoint with file validation and storage. Ready for testing."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Document upload working correctly. Successfully uploads PDF files, validates file types (rejects images), stores documents with proper metadata, and returns document ID. File validation works but returns 500 instead of 400 for invalid types (minor issue)."
+        - comment: "Starting implementation of 4 funds (CORE, BALANCE, DYNAMIC, UNLIMITED) management system"
 
-  - task: "Document list/fetch endpoint"
-    implemented: true
-    working: true
+  - task: "MT4/MT5 Python Integration"
+    implemented: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
@@ -130,14 +127,11 @@ backend:
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Implemented admin and client document fetch endpoints. Ready for testing."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Both admin and client document fetch endpoints working correctly. Admin endpoint returns all documents with proper metadata (id, name, category, status, uploader_id, created_at). Client endpoint properly filters documents by client ID and recipient emails."
+        - comment: "Need to implement MetaQuotes MT4/MT5 integration for client activity monitoring"
 
-  - task: "DocuSign integration service"
-    implemented: true
-    working: true
+  - task: "Capital Flows Automation"
+    implemented: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
@@ -145,17 +139,11 @@ backend:
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Implemented mock DocuSign service with envelope creation and status tracking. Ready for testing."
-        - working: false
-        - agent: "testing"
-        - comment: "❌ FAILED - Send-for-signature endpoint has design issue. Endpoint expects both JSON body (SendForSignatureRequest) and form data (sender_id) simultaneously, which creates content-type conflicts. Returns 422 validation error. Status tracking endpoint works correctly and returns proper envelope status."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Send-for-signature endpoint FIXED! Now accepts all data as JSON body including sender_id. Successfully tested with JSON-only payload: recipients, email_subject, email_message, and sender_id all in request body. Returns envelope_id and status correctly. Status tracking endpoint continues to work properly. Mock DocuSign integration fully functional."
+        - comment: "Implement subscriptions, redemptions, distributions automation"
 
-  - task: "Document download endpoint"
-    implemented: true
-    working: true
+  - task: "Enhanced Client Management"
+    implemented: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
@@ -163,22 +151,19 @@ backend:
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Implemented document download endpoint with FileResponse. Ready for testing."
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Document download working perfectly. Returns files with proper headers (Content-Type: application/octet-stream, Content-Disposition with filename), correct file content, and proper 404 errors for non-existent documents."
+        - comment: "Extend existing client management with CRM features"
 
-  - task: "Document deletion endpoint"
-    implemented: true
-    working: true
+  - task: "Real-time AUM/NAV Dashboards"
+    implemented: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
-        - working: true
-        - agent: "testing"
-        - comment: "✅ PASSED - Document deletion working correctly. Successfully deletes documents from both storage and filesystem, returns proper success messages, and gives 404 errors for non-existent documents. Verified deletion by attempting to download deleted documents."
+        - working: "NA"
+        - agent: "main"
+        - comment: "Create real-time dashboards for fund performance tracking"
 
 frontend:
   - task: "DocumentPortal integration in dashboards"
