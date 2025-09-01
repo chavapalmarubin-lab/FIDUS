@@ -220,7 +220,10 @@ metadata:
 test_plan:
   current_focus:
     - "DocumentPortal integration in dashboards"
-  stuck_tasks: 
+    - "DocumentPortal integration in client dashboard"
+  stuck_tasks:
+    - "DocumentPortal integration in dashboards"
+    - "DocumentPortal integration in client dashboard"
   test_all: false
   test_priority: "high_first"
 
