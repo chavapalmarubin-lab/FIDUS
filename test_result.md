@@ -201,9 +201,9 @@ frontend:
 
   - task: "DocumentPortal integration in client dashboard"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/ClientDashboard.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -213,6 +213,9 @@ frontend:
         - working: false
         - agent: "testing"
         - comment: "❌ CRITICAL ISSUE: Cannot test client dashboard Document Portal integration due to login functionality being broken. Same login issue affects both admin and client access."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ PASSED - Client Document Portal integration FULLY WORKING! Successfully tested client login and Documents tab access. Document Portal loads correctly for clients with proper restrictions: Upload Document button correctly hidden for clients (admin-only feature), search functionality available for clients, filter dropdowns work properly, client can view their documents (shows 'Documents (0)' when no documents), proper tabbed layout between Account Overview and Documents. Client access control working as expected."
 
 metadata:
   created_by: "main_agent"
