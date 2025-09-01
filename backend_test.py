@@ -961,10 +961,10 @@ Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
 
     def create_test_pdf(self):
         """Create a test PDF file for document upload"""
+        import io
         try:
             from reportlab.pdfgen import canvas
             from reportlab.lib.pagesizes import letter
-            import io
             
             buffer = io.BytesIO()
             p = canvas.Canvas(buffer, pagesize=letter)
