@@ -501,15 +501,56 @@ const UserRegistration = ({ onBack, onComplete }) => {
       {extractedData && (
         <Card className="bg-slate-800 border-slate-600">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Extracted Document Data</CardTitle>
+            <CardTitle className="text-white text-lg flex items-center gap-2">
+              <FileText size={20} />
+              Document Analysis Results
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(extractedData).map(([key, value]) => (
-              <div key={key} className="flex justify-between">
-                <span className="text-slate-400 capitalize">{key.replace(/_/g, ' ')}:</span>
-                <span className="text-white font-medium">{value}</span>
+          <CardContent className="space-y-4">
+            {/* OCR Quality Metrics */}
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <div className="text-sm text-slate-300 mb-2">Processing Quality</div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-slate-400">OCR Method:</span>
+                  <span className="text-cyan-400 ml-2 font-medium">
+                    {extractedData.ocrMethod === 'google_vision' ? 'Google Cloud Vision' : 'Tesseract OCR'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Confidence:</span>
+                  <span className={`ml-2 font-medium ${
+                    extractedData.confidenceScore >= 0.8 ? 'text-green-400' : 
+                    extractedData.confidenceScore >= 0.6 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {Math.round((extractedData.confidenceScore || 0) * 100)}%
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Fields Extracted:</span>
+                  <span className="text-white ml-2 font-medium">{extractedData.fieldsExtracted || 0}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Document Type:</span>
+                  <span className="text-white ml-2 font-medium capitalize">{documentType.replace('_', ' ')}</span>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Extracted Data */}
+            {extractedData.structured_data && Object.keys(extractedData.structured_data).length > 0 && (
+              <div>
+                <div className="text-sm text-slate-300 mb-3">Extracted Information</div>
+                <div className="space-y-2">
+                  {Object.entries(extractedData.structured_data).map(([key, value]) => (
+                    <div key={key} className="flex justify-between items-center py-1">
+                      <span className="text-slate-400 capitalize text-sm">{key.replace(/_/g, ' ')}:</span>
+                      <span className="text-white font-medium text-sm">{value || 'Not detected'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
