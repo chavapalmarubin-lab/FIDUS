@@ -6,7 +6,8 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Switch } from "./ui/switch";
-import { LogOut, Upload, Download, Plus, Trash2 } from "lucide-react";
+import { LogOut, Upload, Download, Plus, Trash2, Users } from "lucide-react";
+import ClientManagement from "./ClientManagement";
 import {
   LineChart,
   Line,
