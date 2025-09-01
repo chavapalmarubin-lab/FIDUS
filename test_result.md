@@ -215,7 +215,6 @@ test_plan:
   current_focus:
     - "DocumentPortal integration in dashboards"
   stuck_tasks: 
-    - "DocuSign integration service"
   test_all: false
   test_priority: "high_first"
 
@@ -224,3 +223,5 @@ agent_communication:
     - message: "Document Portal implementation completed! Added comprehensive backend endpoints for document management with mock DocuSign integration, and integrated DocumentPortal component into both Admin and Client dashboards. Backend has document upload, download, send-for-signature, and status tracking. Frontend shows Document Portal tabs in both dashboards. Ready for backend testing."
     - agent: "testing"
     - message: "Document Portal backend testing completed. CRITICAL ISSUE FOUND: Send-for-signature endpoint has design flaw - expects both JSON body and form data simultaneously causing 422 validation errors. All other endpoints working correctly: upload (✅), admin/client document lists (✅), download (✅), deletion (✅), status tracking (✅). Mock DocuSign service itself works but endpoint design needs fixing."
+    - agent: "testing"
+    - message: "✅ SEND-FOR-SIGNATURE ENDPOINT FIX CONFIRMED! Tested the fixed endpoint that now accepts all data as JSON body including sender_id. Successfully tested complete document workflow: upload document → send for signature with JSON payload (recipients, email_subject, email_message, sender_id) → track status → download document. All Document Portal backend endpoints now working correctly. No stuck tasks remaining."
