@@ -1169,7 +1169,9 @@ Document Content:
             return False
         
         try:
-            # Prepare signature request
+            # Prepare multipart form data with JSON and form fields
+            import json
+            
             signature_data = {
                 "recipients": [
                     {
@@ -1182,22 +1184,17 @@ Document Content:
                 "email_message": "Please review and sign the attached investment agreement."
             }
             
-            # Use form data for this endpoint
-            form_data = {
-                'sender_id': self.admin_user['id']
+            # Create multipart form data
+            files = {
+                'request': (None, json.dumps(signature_data), 'application/json'),
+                'sender_id': (None, self.admin_user['id'])
             }
             
             url = f"{self.base_url}/api/documents/{self.uploaded_document_id}/send-for-signature"
             print(f"\n🔍 Testing Send Document for Signature...")
             print(f"   URL: {url}")
             
-            # Send as JSON in the body and form data for sender_id
-            response = requests.post(
-                url, 
-                json=signature_data,
-                data=form_data,
-                timeout=30
-            )
+            response = requests.post(url, files=files, timeout=30)
             print(f"   Status Code: {response.status_code}")
             
             self.tests_run += 1
