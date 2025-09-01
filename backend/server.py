@@ -2722,36 +2722,79 @@ async def delete_document(document_id: str):
         logging.error(f"Document deletion error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete document")
 
-@api_router.get("/documents/{document_id}/status")
-async def get_document_status(document_id: str):
-    """Get DocuSign envelope status for a document"""
+@api_router.get("/documents/{document_id}/view")
+async def view_document_online(document_id: str):
+    """View document online (public endpoint for email links)"""
     try:
         if document_id not in documents_storage:
             raise HTTPException(status_code=404, detail="Document not found")
         
         doc_data = documents_storage[document_id]
-        envelope_id = doc_data.get('docusign_envelope_id')
+        file_path = Path(doc_data['file_path'])
         
-        if not envelope_id:
-            return {
-                "status": doc_data['status'],
-                "message": "Document not sent for signature"
-            }
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Document file not found")
         
-        # Get status from mock DocuSign
-        envelope_status = await mock_docusign.get_envelope_status(envelope_id)
+        # Return document info for viewer
+        return {
+            "document_id": document_id,
+            "name": doc_data['name'],
+            "category": doc_data['category'],
+            "status": doc_data['status'],
+            "created_at": doc_data['created_at'],
+            "file_size": doc_data['file_size'],
+            "download_url": f"/api/documents/{document_id}/download"
+        }
         
-        # Update local status if changed
-        if not envelope_status.get('error'):
-            doc_data['status'] = envelope_status['status']
-            doc_data['updated_at'] = datetime.now(timezone.utc)
-            
-            if envelope_status['status'] == 'completed' and envelope_status.get('completed_at'):
-                doc_data['completion_date'] = envelope_status['completed_at']
-            
-            documents_storage[document_id] = doc_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Document view error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load document")
+
+@api_router.post("/gmail/authenticate")
+async def authenticate_gmail():
+    """Authenticate Gmail service (admin only)"""
+    try:
+        service = await gmail_service.authenticate()
         
-        return envelope_status
+        # Get profile info to confirm authentication
+        profile = service.users().getProfile(userId="me").execute()
+        
+        return {
+            "success": True,
+            "message": "Gmail authentication successful",
+            "email_address": profile.get("emailAddress"),
+            "messages_total": profile.get("messagesTotal", 0),
+            "threads_total": profile.get("threadsTotal", 0)
+        }
+        
+    except Exception as e:
+        logging.error(f"Gmail authentication error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gmail authentication failed: {str(e)}")
+
+@api_router.get("/documents/{document_id}/status")
+async def get_document_status(document_id: str):
+    """Get Gmail sending status for a document"""
+    try:
+        if document_id not in documents_storage:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_data = documents_storage[document_id]
+        
+        # For Gmail integration, we track message IDs instead of envelope IDs
+        gmail_message_ids = doc_data.get('gmail_message_ids', [])
+        
+        return {
+            "document_id": document_id,
+            "status": doc_data['status'],
+            "sender_name": doc_data.get('sender_name', ''),
+            "recipient_emails": doc_data.get('recipient_emails', []),
+            "gmail_message_ids": gmail_message_ids,
+            "sent_count": len(gmail_message_ids),
+            "updated_at": doc_data.get('updated_at'),
+            "message": f"Document sent via Gmail to {len(gmail_message_ids)} recipients" if gmail_message_ids else "Document not sent yet"
+        }
         
     except HTTPException:
         raise
