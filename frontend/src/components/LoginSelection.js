@@ -67,14 +67,22 @@ const LoginSelection = ({ onLogin }) => {
         <Card className="login-card">
           <CardHeader className="text-center">
             <motion.div
-              className="fidus-logo mb-4"
-              style={{ fontSize: "2.5rem" }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              className="mb-4"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
             >
-              <span className="fidus-logo-f">F</span>
-              <span>IDUS</span>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_fidus-portal/artifacts/47blltiy_FIDUS%20LOGO.jpg"
+                alt="FIDUS Logo"
+                style={{
+                  width: "200px",
+                  height: "auto",
+                  margin: "0 auto",
+                  display: "block",
+                  filter: "drop-shadow(0 0 15px rgba(255, 167, 38, 0.3))"
+                }}
+              />
             </motion.div>
             <CardTitle className="text-2xl text-white">
               {selectedType ? "Login" : "Welcome to FIDUS"}
