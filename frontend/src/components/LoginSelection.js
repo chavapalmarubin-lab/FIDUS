@@ -219,7 +219,10 @@ const LoginSelection = ({ onLogin }) => {
 
                 <div className="text-center mt-4 pt-4 border-t border-slate-600">
                   <button
-                    onClick={() => setSelectedType("forgot_password")}
+                    onClick={() => {
+                      setPasswordResetType(selectedType);
+                      setSelectedType("forgot_password");
+                    }}
                     className="text-cyan-400 text-sm hover:text-cyan-300 underline"
                     disabled={loading}
                   >
