@@ -294,7 +294,9 @@ async def get_all_clients():
                 "name": user["name"],
                 "email": user["email"],
                 "total_balance": balances["total_balance"],
-                "last_activity": transactions[0]["date"] if transactions else datetime.now(timezone.utc)
+                "last_activity": transactions[0]["date"] if transactions else datetime.now(timezone.utc),
+                "status": user.get("status", "active"),
+                "created_at": user.get("createdAt", datetime.now(timezone.utc).isoformat())
             })
     
     return {"clients": clients}
