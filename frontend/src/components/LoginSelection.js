@@ -151,9 +151,15 @@ const LoginSelection = ({ onLogin }) => {
               />
             ) : selectedType === "forgot_password" ? (
               <PasswordReset 
-                userType="client" // Default to client, will be determined from which login they came from
-                onBack={() => setSelectedType(null)}
-                onComplete={() => setSelectedType(null)}
+                userType={passwordResetType || "client"}
+                onBack={() => {
+                  setSelectedType(null);
+                  setPasswordResetType(null);
+                }}
+                onComplete={() => {
+                  setSelectedType(null);
+                  setPasswordResetType(null);
+                }}
               />
             ) : (
               <motion.div
