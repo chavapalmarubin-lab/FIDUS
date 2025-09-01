@@ -396,6 +396,212 @@ class FidusAPITester:
         
         return success
 
+    def test_admin_clients_detailed(self):
+        """Test getting detailed client information for admin"""
+        success, response = self.run_test(
+            "Get Detailed Clients",
+            "GET",
+            "api/admin/clients/detailed",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_keys = ['clients', 'total_clients', 'active_clients', 'total_aum']
+            missing_keys = [key for key in required_keys if key not in response]
+            if missing_keys:
+                print(f"   ⚠️  Missing keys in response: {missing_keys}")
+            else:
+                print(f"   ✅ All required keys present")
+                
+            clients = response.get('clients', [])
+            print(f"   Total clients: {response.get('total_clients', 0)}")
+            print(f"   Active clients: {response.get('active_clients', 0)}")
+            print(f"   Total AUM: ${response.get('total_aum', 0):,.2f}")
+            
+            # Check client structure
+            if clients:
+                client = clients[0]
+                client_keys = ['id', 'name', 'email', 'balances', 'activity', 'compliance']
+                for key in client_keys:
+                    if key in client:
+                        print(f"   ✅ Client has {key}")
+                    else:
+                        print(f"   ❌ Client missing {key}")
+                        
+                # Check balances structure
+                balances = client.get('balances', {})
+                balance_keys = ['total', 'fidus', 'core', 'dynamic']
+                for key in balance_keys:
+                    if key in balances:
+                        print(f"   Balance {key}: ${balances[key]:,.2f}")
+                        
+        return success
+
+    def test_admin_clients_export(self):
+        """Test exporting clients data to Excel/CSV"""
+        success, response = self.run_test(
+            "Export Clients Data",
+            "GET",
+            "api/admin/clients/export",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_keys = ['success', 'filename', 'data', 'total_clients']
+            missing_keys = [key for key in required_keys if key not in response]
+            if missing_keys:
+                print(f"   ⚠️  Missing keys in response: {missing_keys}")
+            else:
+                print(f"   ✅ All required keys present")
+                
+            print(f"   Export success: {response.get('success')}")
+            print(f"   Filename: {response.get('filename')}")
+            print(f"   Total clients exported: {response.get('total_clients')}")
+            
+            # Check if CSV data is present
+            csv_data = response.get('data', '')
+            if csv_data:
+                lines = csv_data.split('\n')
+                print(f"   CSV lines: {len(lines)}")
+                if lines:
+                    headers = lines[0].split(',')
+                    print(f"   CSV headers: {len(headers)} columns")
+                    print(f"   First few headers: {headers[:5]}")
+            
+        return success
+
+    def test_admin_clients_import(self):
+        """Test importing clients data from CSV"""
+        # Create a simple CSV for testing
+        csv_content = """Full_Name,Email,Username,Status,Total_Balance,FIDUS_Funds,Core_Balance,Dynamic_Balance
+Test User,test@example.com,testuser,active,100000,30000,40000,30000
+Another User,another@example.com,anotheruser,active,150000,50000,60000,40000"""
+        
+        try:
+            # Create a file-like object
+            import io
+            csv_file = io.BytesIO(csv_content.encode('utf-8'))
+            
+            files = {
+                'file': ('test_clients.csv', csv_file, 'text/csv')
+            }
+            
+            url = f"{self.base_url}/api/admin/clients/import"
+            print(f"\n🔍 Testing Import Clients Data...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    print(f"   Import success: {response_data.get('success')}")
+                    print(f"   Imported: {response_data.get('imported', 0)} clients")
+                    print(f"   Updated: {response_data.get('updated', 0)} clients")
+                    print(f"   Total processed: {response_data.get('total_processed', 0)}")
+                except:
+                    pass
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_admin_client_status_update(self):
+        """Test updating client status"""
+        # First get a client ID
+        success, response = self.run_test(
+            "Get Clients for Status Update Test",
+            "GET",
+            "api/admin/clients/detailed",
+            200
+        )
+        
+        if not success or not response.get('clients'):
+            print("❌ No clients available for status update test")
+            return False
+            
+        client_id = response['clients'][0]['id']
+        
+        # Test status update
+        success, response = self.run_test(
+            "Update Client Status",
+            "PUT",
+            f"api/admin/clients/{client_id}/status",
+            200,
+            data={"status": "inactive"}
+        )
+        
+        if success:
+            print(f"   Status update success: {response.get('success')}")
+            print(f"   Message: {response.get('message')}")
+            
+            # Test with invalid status
+            invalid_success, _ = self.run_test(
+                "Update Client Status (Invalid)",
+                "PUT",
+                f"api/admin/clients/{client_id}/status",
+                400,
+                data={"status": "invalid_status"}
+            )
+            
+            if invalid_success:
+                print("   ✅ Invalid status properly rejected")
+            
+        return success
+
+    def test_admin_client_deletion(self):
+        """Test client deletion (if implemented)"""
+        # First get a client ID
+        success, response = self.run_test(
+            "Get Clients for Deletion Test",
+            "GET",
+            "api/admin/clients/detailed",
+            200
+        )
+        
+        if not success or not response.get('clients'):
+            print("❌ No clients available for deletion test")
+            return False
+            
+        # Use the last client to avoid disrupting other tests
+        client_id = response['clients'][-1]['id'] if len(response['clients']) > 1 else None
+        
+        if not client_id:
+            print("❌ Not enough clients for safe deletion test")
+            return True  # Skip this test
+            
+        # Test deletion
+        success, response = self.run_test(
+            "Delete Client",
+            "DELETE",
+            f"api/admin/clients/{client_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deletion success: {response.get('success')}")
+            print(f"   Message: {response.get('message')}")
+            
+        return success
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
