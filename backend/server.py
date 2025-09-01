@@ -28,6 +28,16 @@ import numpy as np
 import yfinance as yf
 import pandas as pd
 
+# Gmail API imports
+import pickle
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.exceptions import RefreshError
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from email.message import EmailMessage
+from email.mime.application import MIMEApplication
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
