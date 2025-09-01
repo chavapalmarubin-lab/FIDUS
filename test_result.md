@@ -155,28 +155,28 @@ backend:
 
 frontend:
   - task: "DocumentPortal integration in dashboards"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/components/AdminDashboard.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "DocumentPortal component exists but not integrated into admin/client dashboards"
+        - comment: "DocumentPortal integrated into Admin Dashboard as new 'Document Portal' tab. Ready for testing."
 
   - task: "DocumentPortal integration in client dashboard"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/components/ClientDashboard.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Need to add DocumentPortal access for clients"
+        - comment: "DocumentPortal integrated into Client Dashboard as 'Documents' tab with tabbed layout. Ready for testing."
 
 metadata:
   created_by: "main_agent"
