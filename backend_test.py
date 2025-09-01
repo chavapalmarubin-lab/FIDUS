@@ -14,6 +14,8 @@ class FidusAPITester:
         self.admin_user = None
         self.application_id = None
         self.extracted_data = None
+        self.uploaded_document_id = None
+        self.envelope_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
