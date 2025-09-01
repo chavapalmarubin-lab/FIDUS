@@ -299,6 +299,223 @@ async def get_all_clients():
     
     return {"clients": clients}
 
+# Mock OCR processing function
+def process_document_ocr(image_data: bytes, document_type: str) -> Dict[str, Any]:
+    """Mock OCR processing - in production, this would use actual OCR services"""
+    # Simulate OCR processing delay
+    import time
+    time.sleep(1)
+    
+    # Mock extracted data based on document type
+    if document_type == "passport":
+        return {
+            "document_number": f"P{random.randint(100000000, 999999999)}",
+            "full_name": "John Sample Doe",
+            "date_of_birth": "1990-05-15",
+            "nationality": "US",
+            "expiry_date": "2030-05-15",
+            "issuing_country": "USA",
+            "document_type": "Passport"
+        }
+    elif document_type == "drivers_license":
+        return {
+            "license_number": f"DL{random.randint(10000000, 99999999)}",
+            "full_name": "John Sample Doe", 
+            "date_of_birth": "1990-05-15",
+            "address": "123 Main St, Anytown, ST 12345",
+            "expiry_date": "2028-05-15",
+            "state": "CA",
+            "document_type": "Driver's License"
+        }
+    else:
+        return {
+            "id_number": f"ID{random.randint(100000000, 999999999)}",
+            "full_name": "John Sample Doe",
+            "date_of_birth": "1990-05-15", 
+            "address": "123 Main St, Anytown, ST 12345",
+            "document_type": "National ID"
+        }
+
+# Mock AML/KYC verification function
+def perform_aml_kyc_check(personal_info: RegistrationPersonalInfo, extracted_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Mock AML/KYC verification - in production, this would use actual compliance services"""
+    # Simulate AML/KYC processing delay
+    import time
+    time.sleep(2)
+    
+    # Generate mock results
+    risk_score = random.randint(1, 25)  # Low risk score for demo
+    
+    return {
+        "status": "approved" if risk_score < 30 else "review_required",
+        "riskScore": risk_score,
+        "sanctionsCheck": "clear",
+        "identityVerification": "verified",
+        "pepCheck": "clear",
+        "adverseMediaCheck": "clear",
+        "documentAuthenticity": "verified",
+        "biometricMatch": "confirmed",
+        "processedAt": datetime.now(timezone.utc).isoformat(),
+        "confidence": random.randint(85, 99)
+    }
+
+# Mock email sending function
+def send_credentials_email(email: str, username: str, password: str) -> bool:
+    """Mock email sending - in production, this would use actual email service"""
+    print(f"MOCK EMAIL SENT TO: {email}")
+    print(f"USERNAME: {username}")
+    print(f"PASSWORD: {password}")
+    print("="*50)
+    return True
+
+# Registration endpoints
+@api_router.post("/registration/create-application")
+async def create_registration_application(request: dict):
+    """Create new registration application"""
+    try:
+        personal_info = RegistrationPersonalInfo(**request["personalInfo"])
+        document_type = request["documentType"]
+        
+        application = RegistrationApplication(
+            personalInfo=personal_info,
+            documentType=document_type,
+            status="created"
+        )
+        
+        # Store in database (mock storage for demo)
+        application_dict = application.dict()
+        application_dict["createdAt"] = application_dict["createdAt"].isoformat()
+        application_dict["updatedAt"] = application_dict["updatedAt"].isoformat()
+        
+        # In production, save to database
+        # await db.registration_applications.insert_one(application_dict)
+        
+        return {"applicationId": application.id, "status": "created"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to create application: {str(e)}")
+
+@api_router.post("/registration/process-document")
+async def process_document(
+    document: UploadFile = File(...),
+    documentType: str = Form(...),
+    applicationId: str = Form(...)
+):
+    """Process uploaded document with OCR"""
+    try:
+        # Validate file
+        if not document.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Only image files are allowed")
+        
+        # Read and process image
+        image_data = await document.read()
+        
+        # Perform OCR processing (mock)
+        extracted_data = process_document_ocr(image_data, documentType)
+        
+        # In production, update application in database
+        # await db.registration_applications.update_one(
+        #     {"id": applicationId},
+        #     {"$set": {"extractedData": extracted_data, "status": "document_processed", "updatedAt": datetime.now(timezone.utc)}}
+        # )
+        
+        return {
+            "success": True,
+            "extractedData": extracted_data,
+            "message": "Document processed successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Document processing failed: {str(e)}")
+
+@api_router.post("/registration/aml-kyc-check")
+async def perform_aml_kyc_verification(request: AMLKYCRequest):
+    """Perform AML/KYC verification"""
+    try:
+        # Perform AML/KYC checks (mock)
+        aml_kyc_results = perform_aml_kyc_check(request.personalInfo, request.extractedData)
+        
+        # In production, update application in database
+        # await db.registration_applications.update_one(
+        #     {"id": request.applicationId},
+        #     {"$set": {"amlKycResults": aml_kyc_results, "status": "kyc_complete", "updatedAt": datetime.now(timezone.utc)}}
+        # )
+        
+        return aml_kyc_results
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AML/KYC verification failed: {str(e)}")
+
+@api_router.post("/registration/finalize")
+async def finalize_application(request: ApplicationFinalizationRequest):
+    """Finalize registration application"""
+    try:
+        if not request.approved:
+            raise HTTPException(status_code=400, detail="Application not approved")
+        
+        # Generate credentials
+        username = f"client{random.randint(1000, 9999)}"
+        password = f"temp{random.randint(100000, 999999)}"
+        
+        # Create user account
+        new_user = {
+            "id": f"client_{str(uuid.uuid4())[:8]}",
+            "username": username,
+            "name": "John Sample Doe",  # Would use extracted name in production
+            "email": "demo@fidus.com",  # Would use actual email in production
+            "type": "client",
+            "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+            "status": "active",
+            "createdAt": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # In production, save user to database
+        # await db.users.insert_one(new_user)
+        
+        # Send credentials email (mock)
+        send_credentials_email("demo@fidus.com", username, password)
+        
+        # Update MOCK_USERS for demo purposes
+        MOCK_USERS[username] = new_user
+        
+        return {
+            "success": True,
+            "message": "Registration completed successfully",
+            "user": new_user,
+            "credentials": {
+                "username": username,
+                "password": password
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Application finalization failed: {str(e)}")
+
+# Admin endpoint to get pending applications
+@api_router.get("/admin/pending-applications")
+async def get_pending_applications():
+    """Get all pending registration applications for admin review"""
+    # In production, fetch from database
+    # applications = await db.registration_applications.find({"status": {"$in": ["pending", "review_required"]}}).to_list(100)
+    
+    # Mock data for demo
+    mock_applications = [
+        {
+            "id": str(uuid.uuid4()),
+            "personalInfo": {
+                "firstName": "Jane",
+                "lastName": "Smith", 
+                "email": "jane.smith@email.com",
+                "phone": "+1-555-0123"
+            },
+            "documentType": "passport",
+            "status": "pending",
+            "createdAt": (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+        }
+    ]
+    
+    return {"applications": mock_applications}
+
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
