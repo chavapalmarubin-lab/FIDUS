@@ -1378,6 +1378,425 @@ Document Content:
         
         return success
 
+    # ===============================================================================
+    # CRM SYSTEM TESTS
+    # ===============================================================================
+
+    def test_crm_get_all_funds(self):
+        """Test getting all fund information"""
+        success, response = self.run_test(
+            "Get All Funds",
+            "GET",
+            "api/crm/funds",
+            200
+        )
+        
+        if success:
+            funds = response.get('funds', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Total funds: {len(funds)}")
+            print(f"   Total AUM: ${summary.get('total_aum', 0):,.2f}")
+            print(f"   Total investors: {summary.get('total_investors', 0)}")
+            
+            # Verify fund structure and expected funds
+            expected_funds = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
+            found_funds = [fund.get('name') for fund in funds]
+            
+            for expected_fund in expected_funds:
+                if expected_fund in found_funds:
+                    print(f"   ✅ {expected_fund} fund found")
+                else:
+                    print(f"   ❌ {expected_fund} fund missing")
+            
+            # Check fund data structure
+            if funds:
+                fund = funds[0]
+                required_keys = ['id', 'name', 'fund_type', 'aum', 'nav', 'nav_per_share', 
+                               'performance_ytd', 'performance_1y', 'performance_3y', 
+                               'minimum_investment', 'management_fee', 'total_investors']
+                for key in required_keys:
+                    if key in fund:
+                        print(f"   ✅ Fund has {key}: {fund[key]}")
+                    else:
+                        print(f"   ❌ Fund missing {key}")
+        
+        return success
+
+    def test_crm_admin_dashboard(self):
+        """Test CRM admin dashboard"""
+        success, response = self.run_test(
+            "Get CRM Admin Dashboard",
+            "GET",
+            "api/crm/admin/dashboard",
+            200
+        )
+        
+        if success:
+            # Check main sections
+            required_sections = ['funds', 'trading', 'capital_flows', 'overview']
+            for section in required_sections:
+                if section in response:
+                    print(f"   ✅ Dashboard has {section} section")
+                else:
+                    print(f"   ❌ Dashboard missing {section} section")
+            
+            # Check funds section
+            funds_section = response.get('funds', {})
+            if 'data' in funds_section and 'summary' in funds_section:
+                funds_data = funds_section['data']
+                funds_summary = funds_section['summary']
+                print(f"   Funds data: {len(funds_data)} funds")
+                print(f"   Total fund AUM: ${funds_summary.get('total_aum', 0):,.2f}")
+                print(f"   Total fund investors: {funds_summary.get('total_investors', 0)}")
+            
+            # Check trading section
+            trading_section = response.get('trading', {})
+            if 'summary' in trading_section:
+                trading_summary = trading_section['summary']
+                print(f"   Trading clients: {trading_summary.get('total_clients', 0)}")
+                print(f"   Total trading balance: ${trading_summary.get('total_balance', 0):,.2f}")
+                print(f"   Total positions: {trading_summary.get('total_positions', 0)}")
+            
+            # Check capital flows section
+            capital_flows_section = response.get('capital_flows', {})
+            if 'summary' in capital_flows_section:
+                flows_summary = capital_flows_section['summary']
+                print(f"   Recent subscriptions: ${flows_summary.get('recent_subscriptions', 0):,.2f}")
+                print(f"   Recent redemptions: ${flows_summary.get('recent_redemptions', 0):,.2f}")
+                print(f"   Net flow: ${flows_summary.get('net_flow', 0):,.2f}")
+            
+            # Check overview section
+            overview = response.get('overview', {})
+            if overview:
+                print(f"   Total client assets: ${overview.get('total_client_assets', 0):,.2f}")
+                print(f"   Fund assets %: {overview.get('fund_assets_percentage', 0):.1f}%")
+                print(f"   Trading assets %: {overview.get('trading_assets_percentage', 0):.1f}%")
+        
+        return success
+
+    def test_crm_client_allocations(self):
+        """Test getting client fund allocations"""
+        if not self.client_user:
+            print("❌ Skipping client allocations test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get Client Fund Allocations",
+            "GET",
+            f"api/crm/client/{client_id}/allocations",
+            200
+        )
+        
+        if success:
+            allocations = response.get('allocations', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Client allocations: {len(allocations)}")
+            print(f"   Total value: ${summary.get('total_value', 0):,.2f}")
+            print(f"   Total invested: ${summary.get('total_invested', 0):,.2f}")
+            print(f"   Total P&L: ${summary.get('total_pnl', 0):,.2f}")
+            print(f"   P&L percentage: {summary.get('total_pnl_percentage', 0):.2f}%")
+            
+            # Check allocation structure
+            if allocations:
+                allocation = allocations[0]
+                required_keys = ['id', 'client_id', 'fund_id', 'fund_name', 'shares', 
+                               'invested_amount', 'current_value', 'allocation_percentage']
+                for key in required_keys:
+                    if key in allocation:
+                        print(f"   ✅ Allocation has {key}")
+                    else:
+                        print(f"   ❌ Allocation missing {key}")
+        
+        return success
+
+    def test_crm_capital_flow_creation(self):
+        """Test creating capital flows"""
+        if not self.client_user:
+            print("❌ Skipping capital flow creation test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        
+        # Test subscription
+        subscription_data = {
+            "client_id": client_id,
+            "fund_id": "fund_core",
+            "flow_type": "subscription",
+            "amount": 50000.00
+        }
+        
+        success, response = self.run_test(
+            "Create Capital Flow - Subscription",
+            "POST",
+            "api/crm/capital-flow",
+            200,
+            data=subscription_data
+        )
+        
+        if success:
+            capital_flow = response.get('capital_flow', {})
+            reference_number = response.get('reference_number', '')
+            
+            print(f"   Success: {response.get('success')}")
+            print(f"   Reference number: {reference_number}")
+            print(f"   Flow type: {capital_flow.get('flow_type')}")
+            print(f"   Amount: ${capital_flow.get('amount', 0):,.2f}")
+            print(f"   Shares: {capital_flow.get('shares', 0)}")
+            print(f"   Status: {capital_flow.get('status')}")
+            
+            # Test redemption
+            redemption_data = {
+                "client_id": client_id,
+                "fund_id": "fund_core",
+                "flow_type": "redemption",
+                "amount": 10000.00
+            }
+            
+            redemption_success, redemption_response = self.run_test(
+                "Create Capital Flow - Redemption",
+                "POST",
+                "api/crm/capital-flow",
+                200,
+                data=redemption_data
+            )
+            
+            if redemption_success:
+                print(f"   Redemption reference: {redemption_response.get('reference_number')}")
+        
+        return success
+
+    def test_crm_client_capital_flows_history(self):
+        """Test getting client capital flows history"""
+        if not self.client_user:
+            print("❌ Skipping capital flows history test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get Client Capital Flows History",
+            "GET",
+            f"api/crm/client/{client_id}/capital-flows",
+            200
+        )
+        
+        if success:
+            capital_flows = response.get('capital_flows', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Capital flows: {len(capital_flows)}")
+            print(f"   Total subscriptions: ${summary.get('total_subscriptions', 0):,.2f}")
+            print(f"   Total redemptions: ${summary.get('total_redemptions', 0):,.2f}")
+            print(f"   Total distributions: ${summary.get('total_distributions', 0):,.2f}")
+            print(f"   Net flow: ${summary.get('net_flow', 0):,.2f}")
+            
+            # Check flow structure
+            if capital_flows:
+                flow = capital_flows[0]
+                required_keys = ['id', 'client_id', 'fund_id', 'fund_name', 'flow_type', 
+                               'amount', 'shares', 'nav_price', 'status', 'reference_number']
+                for key in required_keys:
+                    if key in flow:
+                        print(f"   ✅ Flow has {key}")
+                    else:
+                        print(f"   ❌ Flow missing {key}")
+        
+        return success
+
+    def test_crm_mt5_admin_overview(self):
+        """Test MT5 admin overview"""
+        success, response = self.run_test(
+            "Get MT5 Admin Overview",
+            "GET",
+            "api/crm/mt5/admin/overview",
+            200
+        )
+        
+        if success:
+            summary = response.get('summary', {})
+            clients = response.get('clients', [])
+            
+            print(f"   MT5 clients: {summary.get('total_clients', 0)}")
+            print(f"   Total balance: ${summary.get('total_balance', 0):,.2f}")
+            print(f"   Total equity: ${summary.get('total_equity', 0):,.2f}")
+            print(f"   Total positions: {summary.get('total_positions', 0)}")
+            print(f"   Avg balance per client: ${summary.get('avg_balance_per_client', 0):,.2f}")
+            
+            # Check client structure
+            if clients:
+                client = clients[0]
+                required_keys = ['client_id', 'client_name', 'account_number', 'balance', 
+                               'equity', 'margin', 'free_margin', 'open_positions']
+                for key in required_keys:
+                    if key in client:
+                        print(f"   ✅ MT5 client has {key}")
+                    else:
+                        print(f"   ❌ MT5 client missing {key}")
+        
+        return success
+
+    def test_crm_mt5_client_account(self):
+        """Test MT5 client account information"""
+        if not self.client_user:
+            print("❌ Skipping MT5 client account test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get MT5 Client Account",
+            "GET",
+            f"api/crm/mt5/client/{client_id}/account",
+            200
+        )
+        
+        if success:
+            account = response.get('account', {})
+            
+            print(f"   Account number: {account.get('account_number')}")
+            print(f"   Broker: {account.get('broker')}")
+            print(f"   Balance: ${account.get('balance', 0):,.2f}")
+            print(f"   Equity: ${account.get('equity', 0):,.2f}")
+            print(f"   Margin: ${account.get('margin', 0):,.2f}")
+            print(f"   Free margin: ${account.get('free_margin', 0):,.2f}")
+            print(f"   Leverage: 1:{account.get('leverage', 0)}")
+            print(f"   Currency: {account.get('currency')}")
+            
+            # Check account structure
+            required_keys = ['client_id', 'account_number', 'broker', 'balance', 'equity', 
+                           'margin', 'free_margin', 'leverage', 'currency', 'server']
+            for key in required_keys:
+                if key in account:
+                    print(f"   ✅ Account has {key}")
+                else:
+                    print(f"   ❌ Account missing {key}")
+        
+        return success
+
+    def test_crm_mt5_client_positions(self):
+        """Test MT5 client positions"""
+        if not self.client_user:
+            print("❌ Skipping MT5 client positions test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get MT5 Client Positions",
+            "GET",
+            f"api/crm/mt5/client/{client_id}/positions",
+            200
+        )
+        
+        if success:
+            positions = response.get('positions', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Open positions: {summary.get('total_positions', 0)}")
+            print(f"   Total profit: ${summary.get('total_profit', 0):,.2f}")
+            print(f"   Total volume: {summary.get('total_volume', 0)}")
+            
+            # Check position structure
+            if positions:
+                position = positions[0]
+                required_keys = ['ticket', 'symbol', 'type', 'volume', 'open_price', 
+                               'current_price', 'profit', 'swap', 'commission', 'open_time']
+                for key in required_keys:
+                    if key in position:
+                        print(f"   ✅ Position has {key}")
+                    else:
+                        print(f"   ❌ Position missing {key}")
+                
+                print(f"   Sample position: {position.get('symbol')} {position.get('type')} {position.get('volume')} lots")
+                print(f"   P&L: ${position.get('profit', 0):,.2f}")
+        
+        return success
+
+    def test_crm_mt5_client_history(self):
+        """Test MT5 client trade history"""
+        if not self.client_user:
+            print("❌ Skipping MT5 client history test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get MT5 Client Trade History",
+            "GET",
+            f"api/crm/mt5/client/{client_id}/history",
+            200
+        )
+        
+        if success:
+            trades = response.get('trades', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Total trades: {summary.get('total_trades', 0)}")
+            print(f"   Total profit: ${summary.get('total_profit', 0):,.2f}")
+            print(f"   Winning trades: {summary.get('winning_trades', 0)}")
+            print(f"   Losing trades: {summary.get('losing_trades', 0)}")
+            print(f"   Win rate: {summary.get('win_rate', 0):.1f}%")
+            print(f"   Total volume: {summary.get('total_volume', 0)}")
+            
+            # Check trade structure
+            if trades:
+                trade = trades[0]
+                required_keys = ['ticket', 'symbol', 'type', 'volume', 'open_price', 
+                               'close_price', 'profit', 'swap', 'commission', 'open_time', 'close_time']
+                for key in required_keys:
+                    if key in trade:
+                        print(f"   ✅ Trade has {key}")
+                    else:
+                        print(f"   ❌ Trade missing {key}")
+                
+                print(f"   Sample trade: {trade.get('symbol')} {trade.get('type')} {trade.get('volume')} lots")
+                print(f"   P&L: ${trade.get('profit', 0):,.2f}")
+        
+        return success
+
+    def test_crm_invalid_fund_capital_flow(self):
+        """Test creating capital flow with invalid fund"""
+        if not self.client_user:
+            print("❌ Skipping invalid fund test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        
+        invalid_data = {
+            "client_id": client_id,
+            "fund_id": "invalid_fund_id",
+            "flow_type": "subscription",
+            "amount": 10000.00
+        }
+        
+        success, _ = self.run_test(
+            "Create Capital Flow - Invalid Fund",
+            "POST",
+            "api/crm/capital-flow",
+            404,
+            data=invalid_data
+        )
+        
+        if success:
+            print("   ✅ Invalid fund ID properly rejected")
+        
+        return success
+
+    def test_crm_mt5_nonexistent_client(self):
+        """Test MT5 endpoints with non-existent client"""
+        fake_client_id = "nonexistent_client_id"
+        
+        success, _ = self.run_test(
+            "Get MT5 Account - Non-existent Client",
+            "GET",
+            f"api/crm/mt5/client/{fake_client_id}/account",
+            404
+        )
+        
+        if success:
+            print("   ✅ Non-existent client properly rejected for MT5 account")
+        
+        return success
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
