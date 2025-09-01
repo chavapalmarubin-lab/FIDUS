@@ -299,24 +299,39 @@ const AdminDashboard = ({ user, onLogout }) => {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-white">
-                FIDUS Investment Committee — Fund Allocation Dashboard
+                FIDUS Investment Committee — Admin Dashboard
               </h1>
               <p className="text-sm text-slate-400">
-                Upload, edit, simulate, and visualize weekly performance for CORE, BALANCE, and DYNAMIC funds.
+                Manage fund allocations, monitor performance, and oversee client database.
               </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onExport("csv")} className="text-white border-slate-600">
-                <Download size={16} className="mr-2" />
-                Export CSV
-              </Button>
-              <Button variant="outline" onClick={() => onExport("json")} className="text-white border-slate-600">
-                <Download size={16} className="mr-2" />
-                Export JSON
-              </Button>
             </div>
           </div>
         </motion.div>
+
+        <Tabs defaultValue="portfolio" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-600">
+            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
+              Fund Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600">
+              <Users size={16} className="mr-2" />
+              Client Management
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="portfolio" className="mt-6">
+            <div className="flex justify-end mb-4">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => onExport("csv")} className="text-white border-slate-600">
+                  <Download size={16} className="mr-2" />
+                  Export CSV
+                </Button>
+                <Button variant="outline" onClick={() => onExport("json")} className="text-white border-slate-600">
+                  <Download size={16} className="mr-2" />
+                  Export JSON
+                </Button>
+              </div>
+            </div>
 
         {/* Top row: Allocation + Upload */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
