@@ -12,13 +12,11 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const savedUser = localStorage.getItem("fidus_user");
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      setCurrentView(userData.type === "admin" ? "admin" : "client");
-    }
+    // Clear any existing user session to always show logo animation
+    localStorage.removeItem("fidus_user");
+    
+    // Always start with logo animation
+    setCurrentView("logo");
   }, []);
 
   const handleLogin = (userData) => {
