@@ -1,24 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const LogoAnimation = ({ onComplete }) => {
   const [showElements, setShowElements] = useState(true);
   const [showLogo, setShowLogo] = useState(false);
+  const [mergeElements, setMergeElements] = useState(false);
 
   useEffect(() => {
-    // Show financial elements first, then merge into logo
+    // Show financial elements first
     const timer1 = setTimeout(() => {
-      setShowElements(false);
-      setShowLogo(true);
-    }, 2000);
+      setMergeElements(true); // Start merging elements
+    }, 1500);
 
     const timer2 = setTimeout(() => {
+      setShowElements(false);
+      setShowLogo(true);
+    }, 2500);
+
+    const timer3 = setTimeout(() => {
       onComplete();
-    }, 4000);
+    }, 5000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(timer3);
     };
   }, [onComplete]);
 
