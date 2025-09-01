@@ -17,6 +17,7 @@ const LoginSelection = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [passwordResetType, setPasswordResetType] = useState(null);
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
