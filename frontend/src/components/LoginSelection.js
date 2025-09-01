@@ -215,6 +215,16 @@ const LoginSelection = ({ onLogin }) => {
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
+
+                <div className="text-center mt-4 pt-4 border-t border-slate-600">
+                  <button
+                    onClick={() => setSelectedType("forgot_password")}
+                    className="text-cyan-400 text-sm hover:text-cyan-300 underline"
+                    disabled={loading}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               </motion.div>
             )}
           </CardContent>
