@@ -2,6 +2,8 @@ import requests
 import sys
 from datetime import datetime
 import json
+import io
+from PIL import Image
 
 class FidusAPITester:
     def __init__(self, base_url="https://fidus-portal.preview.emergentagent.com"):
@@ -10,6 +12,8 @@ class FidusAPITester:
         self.tests_passed = 0
         self.client_user = None
         self.admin_user = None
+        self.application_id = None
+        self.extracted_data = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
