@@ -2167,12 +2167,20 @@ class GmailService:
         return self.service
     
     def _perform_oauth_flow(self):
-        """Perform OAuth2 flow for authentication"""
+        """Perform OAuth2 flow for web authentication"""
         flow = InstalledAppFlow.from_client_secrets_file(
             self.credentials_path, self.SCOPES
         )
-        # Use run_local_server for web applications
-        return flow.run_local_server(port=0, open_browser=False)
+        
+        # For web server applications, we'll generate the authorization URL
+        # and handle the flow differently
+        try:
+            # Try the local server approach first
+            return flow.run_local_server(port=0, open_browser=False)
+        except Exception as e:
+            logging.error(f"OAuth local server failed: {e}")
+            # Fall back to console-based flow for server environments
+            return flow.run_console()
     
     async def send_email_with_attachment(
         self,
