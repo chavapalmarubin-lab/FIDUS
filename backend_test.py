@@ -353,9 +353,37 @@ class FidusAPITester:
         )
         
         if success:
-            risk_score = response.get("riskScore", "N/A")
-            status = response.get("status", "N/A")
-            print(f"   Status: {status}, Risk Score: {risk_score}")
+            # Check new AML/KYC response structure
+            overall_status = response.get("overall_status", "N/A")
+            risk_level = response.get("risk_level", "N/A")
+            total_score = response.get("total_score", "N/A")
+            checks_completed = response.get("checks_completed", [])
+            
+            print(f"   Overall Status: {overall_status}")
+            print(f"   Risk Level: {risk_level}")
+            print(f"   Total Score: {total_score}")
+            print(f"   Checks Completed: {', '.join(checks_completed)}")
+            
+            # Check for sanctions screening results
+            sanctions_screening = response.get("sanctions_screening", {})
+            if sanctions_screening:
+                provider = sanctions_screening.get("provider", "Unknown")
+                total_hits = sanctions_screening.get("total_hits", 0)
+                print(f"   Sanctions Provider: {provider}")
+                print(f"   Sanctions Hits: {total_hits}")
+            
+            # Check for identity verification results
+            identity_verification = response.get("identity_verification", {})
+            if identity_verification:
+                identity_verified = identity_verification.get("identity_verified", False)
+                verification_score = identity_verification.get("verification_score", 0)
+                print(f"   Identity Verified: {identity_verified}")
+                print(f"   Verification Score: {verification_score}")
+            
+            # Check compliance recommendations
+            recommendations = response.get("compliance_recommendations", [])
+            if recommendations:
+                print(f"   Compliance Recommendations: {len(recommendations)} items")
         
         return success
 
