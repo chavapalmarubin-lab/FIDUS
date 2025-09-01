@@ -2395,6 +2395,9 @@ class GmailService:
 # Initialize Gmail service
 gmail_service = GmailService()
 
+# OAuth state storage for Gmail authentication
+oauth_states = {}
+
 # Document Management Models and Services
 class DocumentUpload(BaseModel):
     name: str
