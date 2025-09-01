@@ -1,52 +1,92 @@
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import LogoAnimation from "./components/LogoAnimation";
+import LoginSelection from "./components/LoginSelection";
+import ClientDashboard from "./components/ClientDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
 
 function App() {
+  const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const savedUser = localStorage.getItem("fidus_user");
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      setCurrentView(userData.type === "admin" ? "admin" : "client");
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem("fidus_user", JSON.stringify(userData));
+    setCurrentView(userData.type === "admin" ? "admin" : "client");
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("fidus_user");
+    setCurrentView("login");
+  };
+
+  const handleAnimationComplete = () => {
+    setCurrentView("login");
+  };
+
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AnimatePresence mode="wait">
+        {currentView === "logo" && (
+          <motion.div
+            key="logo"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <LogoAnimation onComplete={handleAnimationComplete} />
+          </motion.div>
+        )}
+        
+        {currentView === "login" && (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <LoginSelection onLogin={handleLogin} />
+          </motion.div>
+        )}
+        
+        {currentView === "client" && user && (
+          <motion.div
+            key="client"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ClientDashboard user={user} onLogout={handleLogout} />
+          </motion.div>
+        )}
+        
+        {currentView === "admin" && user && (
+          <motion.div
+            key="admin"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <AdminDashboard user={user} onLogout={handleLogout} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
