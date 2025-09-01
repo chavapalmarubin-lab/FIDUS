@@ -148,6 +148,12 @@ const LoginSelection = ({ onLogin }) => {
                   onLogin(userData);
                 }}
               />
+            ) : selectedType === "forgot_password" ? (
+              <PasswordReset 
+                userType={selectedType === "client_forgot" ? "client" : "admin"}
+                onBack={() => setSelectedType(null)}
+                onComplete={() => setSelectedType(null)}
+              />
             ) : (
               <motion.div
                 initial={{ opacity: 0, x: 50 }}
