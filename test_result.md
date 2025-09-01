@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Complete the Document Portal with DocuSign integration for document archiving and e-signature capabilities for both clients and administrators"
+user_problem_statement: "Integrate a fully integrated CRM system for FIDUS extending the existing portal. The CRM must: manage client onboarding with digital KYC/AML, track investor allocations across four funds (CORE, BALANCE, DYNAMIC, UNLIMITED), automate capital flows (subscriptions, redemptions, distributions), and generate real-time dashboards for AUM, NAV, and performance. Include Python MetaQuotes MT4/MT5 integration for client activity monitoring in Admin portal. Focus on core features first."
 
 backend:
   - task: "Document upload endpoint"
