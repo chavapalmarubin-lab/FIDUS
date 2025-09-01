@@ -121,6 +121,19 @@ const ClientDashboard = ({ user, onLogout }) => {
       </div>
 
       <div className="p-6 max-w-7xl mx-auto">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-600 mb-6">
+            <TabsTrigger value="overview" className="text-white data-[state=active]:bg-cyan-600">
+              <DollarSign size={16} className="mr-2" />
+              Account Overview
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
+              <FileText size={16} className="mr-2" />
+              Documents
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-6"">
         {/* Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
