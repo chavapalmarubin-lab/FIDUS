@@ -2503,17 +2503,20 @@ async def upload_document(
 ):
     """Upload a document for archiving or signing"""
     try:
-        # Validate file type
+        # Validate file type - now includes images for camera captures
         allowed_types = [
             'application/pdf',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'text/plain',
-            'text/html'
+            'text/html',
+            'image/jpeg',
+            'image/png',
+            'image/webp'
         ]
         
         if document.content_type not in allowed_types:
-            raise HTTPException(status_code=400, detail="Only PDF, Word, Text, and HTML files are supported")
+            raise HTTPException(status_code=400, detail="Only PDF, Word, Text, HTML, and Image files are supported")
         
         # Validate file size (10MB limit)
         if document.size and document.size > 10 * 1024 * 1024:
