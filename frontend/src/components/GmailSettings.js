@@ -3,61 +3,100 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Mail, Shield, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
+import { Mail, Shield, CheckCircle, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import axios from "axios";
 
 const GmailSettings = () => {
   const [gmailStatus, setGmailStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
+  const [authError, setAuthError] = useState(null);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-  const authenticateGmail = async () => {
+  useEffect(() => {
+    // Check authentication status on component mount
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
     try {
-      setAuthenticating(true);
-      
-      // First try to authenticate with existing credentials
+      setLoading(true);
       const response = await axios.post(`${backendUrl}/api/gmail/authenticate`);
       
       if (response.data.success) {
         setGmailStatus(response.data);
-      } else if (response.data.action === 'redirect_to_oauth') {
-        // Need to perform OAuth flow - use full page redirect instead of popup
-        const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
-        
-        if (authUrlResponse.data.success) {
-          // Store current page state before redirect
-          localStorage.setItem('gmail_auth_return', window.location.href);
-          
-          // Show loading message to user
-          setAuthenticating(true);
-          alert('Redirecting to Google for Gmail authentication. You will be redirected back after granting permissions.');
-          
-          // Redirect to Google OAuth (full page redirect)
-          window.location.href = authUrlResponse.data.authorization_url;
-        }
+        setAuthError(null);
+      } else {
+        setGmailStatus(null);
       }
     } catch (error) {
-      console.error('Gmail authentication error:', error);
-      setAuthenticating(false);
-      if (error.response?.data?.detail) {
-        alert(`Gmail authentication failed: ${error.response.data.detail}`);
-      } else {
-        alert('Gmail authentication failed. Please check server logs.');
-      }
-    }
-    // Don't set setAuthenticating(false) here as we're redirecting
-  };
-
-  const refreshStatus = async () => {
-    try {
-      setLoading(true);
-      // Try to call authenticate to check current status
-      await authenticateGmail();
+      console.error('Error checking Gmail auth status:', error);
+      setGmailStatus(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const authenticateGmail = async () => {
+    try {
+      setAuthenticating(true);
+      setAuthError(null);
+      
+      // First check if already authenticated
+      const statusResponse = await axios.post(`${backendUrl}/api/gmail/authenticate`);
+      
+      if (statusResponse.data.success) {
+        setGmailStatus(statusResponse.data);
+        return;
+      }
+
+      if (statusResponse.data.action === 'redirect_to_oauth') {
+        // Get OAuth URL
+        const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
+        
+        if (authUrlResponse.data.success) {
+          // Show user what's happening
+          setAuthError("Redirecting to Google for authentication...");
+          
+          // Wait a moment for user to see the message
+          setTimeout(() => {
+            // Open OAuth URL in same window
+            window.location.href = authUrlResponse.data.authorization_url;
+          }, 1500);
+          
+        } else {
+          throw new Error("Failed to generate OAuth URL");
+        }
+      } else {
+        throw new Error("Unexpected authentication response");
+      }
+      
+    } catch (error) {
+      console.error('Gmail authentication error:', error);
+      setAuthenticating(false);
+      
+      let errorMessage = "Authentication failed. ";
+      if (error.response?.data?.detail) {
+        errorMessage += error.response.data.detail;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += "Please try again or check your internet connection.";
+      }
+      
+      setAuthError(errorMessage);
+    }
+  };
+
+  const refreshStatus = async () => {
+    await checkAuthStatus();
+  };
+
+  const resetAuth = () => {
+    setGmailStatus(null);
+    setAuthError(null);
+    setAuthenticating(false);
   };
 
   return (
@@ -101,25 +140,48 @@ const GmailSettings = () => {
           )}
         </div>
 
+        {/* Error Display */}
+        {authError && (
+          <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+            <div className="flex items-start text-red-400">
+              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Authentication Issue</span>
+                <p className="text-sm mt-1">{authError}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <Button
-            onClick={authenticateGmail}
-            disabled={authenticating}
-            className="bg-blue-600 hover:bg-blue-700 flex-1"
-          >
-            {authenticating ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Authenticating...
-              </>
-            ) : (
-              <>
-                <Shield className="h-4 w-4 mr-2" />
-                {gmailStatus?.success ? 'Re-authenticate' : 'Authenticate Gmail'}
-              </>
-            )}
-          </Button>
+          {!gmailStatus?.success ? (
+            <Button
+              onClick={authenticateGmail}
+              disabled={authenticating || loading}
+              className="bg-blue-600 hover:bg-blue-700 flex-1"
+            >
+              {authenticating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Authenticate Gmail
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={resetAuth}
+              variant="outline"
+              className="border-red-600 text-red-400 hover:bg-red-600/10 flex-1"
+            >
+              Disconnect Gmail
+            </Button>
+          )}
 
           <Button
             onClick={refreshStatus}
@@ -146,6 +208,21 @@ const GmailSettings = () => {
             <li>• Secure OAuth2 authentication</li>
           </ul>
         </div>
+
+        {/* Setup Instructions */}
+        {!gmailStatus?.success && !authenticating && (
+          <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+            <div className="flex items-start text-blue-400">
+              <ExternalLink className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Setup Required</span>
+                <p className="text-sm mt-1">
+                  Click "Authenticate Gmail" to connect your Gmail account. You'll be redirected to Google to grant permissions, then automatically returned to this page.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {gmailStatus?.success && (
           <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
