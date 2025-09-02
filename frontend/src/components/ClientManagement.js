@@ -649,7 +649,14 @@ const ClientManagement = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      {getReadinessStatus(client)}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          {getReadinessStatus(client)}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          Click row to manage →
+                        </div>
+                      </div>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
