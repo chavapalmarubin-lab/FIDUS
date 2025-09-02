@@ -300,6 +300,9 @@ FIDUS_FUND_CONFIG = {
 # In-memory investment storage (in production, use proper database)
 client_investments = {}
 
+# In-memory client investment readiness tracking (in production, use proper database)
+client_readiness = {}
+
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
