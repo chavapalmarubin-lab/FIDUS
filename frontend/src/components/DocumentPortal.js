@@ -30,10 +30,12 @@ import {
   Folder,
   Archive,
   Plus,
-  MoreHorizontal
+  MoreHorizontal,
+  Camera
 } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
+import CameraCapture from "./CameraCapture";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
