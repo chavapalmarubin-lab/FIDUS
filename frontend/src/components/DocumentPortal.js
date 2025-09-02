@@ -692,6 +692,11 @@ const DocumentPortal = ({ user, userType }) => {
 
       {/* Modals */}
       {renderUploadModal()}
+      <CameraCapture
+        isOpen={showCameraModal}
+        onCapture={handleCameraCapture}
+        onClose={() => setShowCameraModal(false)}
+      />
       {renderSendModal()}
     </div>
   );
