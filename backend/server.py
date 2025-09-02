@@ -5057,7 +5057,8 @@ async def create_client_investment(investment_data: InvestmentCreate):
         investment = create_investment(
             investment_data.client_id,
             investment_data.fund_code,
-            investment_data.amount
+            investment_data.amount,
+            investment_data.deposit_date
         )
         
         # Store investment
