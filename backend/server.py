@@ -218,6 +218,7 @@ class InvestmentCreate(BaseModel):
     client_id: str
     fund_code: str
     amount: float
+    deposit_date: Optional[str] = None  # YYYY-MM-DD format
 
 class RedemptionRequest(BaseModel):
     investment_id: str
