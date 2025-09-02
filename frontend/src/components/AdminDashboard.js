@@ -11,6 +11,7 @@ import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
 import GmailSettings from "./GmailSettings";
+import AdminInvestmentManagement from "./AdminInvestmentManagement";
 import {
   LineChart,
   Line,
