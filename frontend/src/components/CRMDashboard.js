@@ -83,13 +83,36 @@ const CRMDashboard = ({ user }) => {
     }
   };
 
-  const handleClientSelect = (clientId) => {
-    setSelectedClient(clientId);
-    if (clientId && clientId !== "all_clients") {
-      fetchClientMT5Data(clientId);
-    } else {
-      setClientMT5Data(null);
+  const handleViewFundInvestors = (fund) => {
+    setSelectedFund(fund);
+    setCurrentView('fund-investors');
+  };
+
+  const handleViewClientProfile = (clientId, clientName) => {
+    setSelectedClientProfile({ clientId, clientName });
+    setCurrentView('client-profile');
+  };
+
+  const handleViewAllClients = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${backendUrl}/api/crm/clients/all-details`);
+      setAllClientsData(response.data);
+      setCurrentView('all-clients');
+    } catch (error) {
+      console.error('Error fetching all clients:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedFund(null);
+    setSelectedClientProfile(null);
+    setAllClientsData(null);
+    setSelectedClient("");
+    setClientMT5Data(null);
   };
 
   const handleRefresh = () => {
