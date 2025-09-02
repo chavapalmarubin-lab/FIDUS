@@ -31,6 +31,7 @@ import { format } from "date-fns";
 import FundInvestorsDetail from "./FundInvestorsDetail";
 import ClientDetailedProfile from "./ClientDetailedProfile";
 import MetaQuotesData from "./MetaQuotesData";
+import ProspectManagement from "./ProspectManagement";
 
 const CRMDashboard = ({ user }) => {
   const [crmData, setCrmData] = useState(null);
