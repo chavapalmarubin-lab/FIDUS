@@ -414,7 +414,7 @@ def generate_investment_projections(investment: FundInvestment, fund_config: Fun
         can_redeem_now=can_redeem_now
     )
 
-def create_investment(client_id: str, fund_code: str, amount: float) -> FundInvestment:
+def create_investment(client_id: str, fund_code: str, amount: float, deposit_date: Optional[str] = None) -> FundInvestment:
     """Create a new investment with calculated dates"""
     if fund_code not in FIDUS_FUND_CONFIG:
         raise ValueError(f"Invalid fund code: {fund_code}")
@@ -430,20 +430,23 @@ def create_investment(client_id: str, fund_code: str, amount: float) -> FundInve
         # In a real system, check if client has invitation
         pass
     
-    # Get deposit date from client readiness or use current date
-    deposit_date = datetime.now(timezone.utc)
-    if client_id in client_readiness:
-        readiness = client_readiness[client_id]
-        if readiness.get('deposit_date'):
-            deposit_date = datetime.fromisoformat(readiness['deposit_date']) if isinstance(readiness['deposit_date'], str) else readiness['deposit_date']
+    # Use provided deposit_date or get from client readiness or use current date
+    if deposit_date:
+        deposit_datetime = datetime.fromisoformat(deposit_date + "T00:00:00+00:00")
+    else:
+        deposit_datetime = datetime.now(timezone.utc)
+        if client_id in client_readiness:
+            readiness = client_readiness[client_id]
+            if readiness.get('deposit_date'):
+                deposit_datetime = datetime.fromisoformat(readiness['deposit_date']) if isinstance(readiness['deposit_date'], str) else readiness['deposit_date']
     
-    dates = calculate_investment_dates(deposit_date, fund_config)
+    dates = calculate_investment_dates(deposit_datetime, fund_config)
     
     investment = FundInvestment(
         client_id=client_id,
         fund_code=fund_code,
         principal_amount=amount,
-        deposit_date=deposit_date,
+        deposit_date=deposit_datetime,
         current_value=amount,
         **dates
     )
