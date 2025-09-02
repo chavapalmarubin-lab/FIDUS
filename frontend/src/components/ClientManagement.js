@@ -350,7 +350,12 @@ const ClientManagement = () => {
 
   const getReadinessStatus = (client) => {
     if (client.investment_ready) {
-      return <Badge className="bg-green-500 text-white">Ready for Investment</Badge>;
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className="bg-green-500 text-white">Ready for Investment</Badge>
+          <CheckCircle className="w-4 h-4 text-green-400" />
+        </div>
+      );
     }
     
     const readiness = client.readiness_status || {};
@@ -361,11 +366,26 @@ const ClientManagement = () => {
     ].filter(Boolean).length;
     
     if (completed === 0) {
-      return <Badge className="bg-red-500 text-white">Not Started</Badge>;
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className="bg-red-500 text-white">Not Started</Badge>
+          <AlertCircle className="w-4 h-4 text-red-400" />
+        </div>
+      );
     } else if (completed < 3) {
-      return <Badge className="bg-yellow-500 text-white">In Progress ({completed}/3)</Badge>;
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className="bg-yellow-500 text-white">In Progress ({completed}/3)</Badge>
+          <Clock className="w-4 h-4 text-yellow-400" />
+        </div>
+      );
     } else {
-      return <Badge className="bg-green-500 text-white">Ready</Badge>;
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className="bg-green-500 text-white">Ready</Badge>
+          <CheckCircle className="w-4 h-4 text-green-400" />
+        </div>
+      );
     }
   };
 
