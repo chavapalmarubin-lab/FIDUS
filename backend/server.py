@@ -2459,6 +2459,9 @@ class SendForSignatureRequest(BaseModel):
 # In-memory document storage (in production, use proper database)
 documents_storage = {}
 
+# In-memory CRM prospect storage (in production, use proper database)
+prospects_storage = {}
+
 # File storage directory
 import os
 from pathlib import Path
