@@ -835,6 +835,13 @@ const UserRegistration = ({ onBack, onComplete }) => {
           </CardContent>
         </Card>
       </motion.div>
+      
+      {/* Camera Modal */}
+      <CameraCapture
+        isOpen={showCameraModal}
+        onCapture={handleCameraCapture}
+        onClose={() => setShowCameraModal(false)}
+      />
     </div>
   );
 };
