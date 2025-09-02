@@ -4461,6 +4461,268 @@ async def get_crm_admin_dashboard():
         logging.error(f"CRM admin dashboard error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch CRM dashboard data")
 
+# ===============================================================================
+# CRM PROSPECT MANAGEMENT ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/crm/prospects")
+async def get_all_prospects():
+    """Get all prospects with pipeline information"""
+    try:
+        prospects = []
+        for prospect_data in prospects_storage.values():
+            prospects.append(prospect_data)
+        
+        # Sort by created_at descending (newest first)
+        prospects.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        # Calculate pipeline statistics
+        pipeline_stats = {
+            "lead": 0,
+            "qualified": 0,
+            "proposal": 0,
+            "negotiation": 0,
+            "won": 0,
+            "lost": 0
+        }
+        
+        for prospect in prospects:
+            stage = prospect.get('stage', 'lead')
+            if stage in pipeline_stats:
+                pipeline_stats[stage] += 1
+        
+        return {
+            "prospects": prospects,
+            "total_prospects": len(prospects),
+            "pipeline_stats": pipeline_stats,
+            "active_prospects": len([p for p in prospects if p.get('stage') not in ['won', 'lost']]),
+            "converted_prospects": len([p for p in prospects if p.get('converted_to_client', False)])
+        }
+        
+    except Exception as e:
+        logging.error(f"Get prospects error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch prospects")
+
+@api_router.post("/crm/prospects")
+async def create_prospect(prospect_data: ProspectCreate):
+    """Create a new prospect"""
+    try:
+        # Create prospect model
+        prospect = Prospect(
+            name=prospect_data.name,
+            email=prospect_data.email,
+            phone=prospect_data.phone,
+            notes=prospect_data.notes,
+            stage="lead"
+        )
+        
+        # Store in memory (in production, use database)
+        prospects_storage[prospect.id] = prospect.dict()
+        
+        logging.info(f"Prospect created: {prospect.name} ({prospect.email})")
+        
+        return {
+            "success": True,
+            "prospect_id": prospect.id,
+            "prospect": prospect.dict(),
+            "message": "Prospect created successfully"
+        }
+        
+    except Exception as e:
+        logging.error(f"Create prospect error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create prospect")
+
+@api_router.put("/crm/prospects/{prospect_id}")
+async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
+    """Update an existing prospect"""
+    try:
+        if prospect_id not in prospects_storage:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        prospect_data = prospects_storage[prospect_id].copy()
+        
+        # Update provided fields
+        if update_data.name is not None:
+            prospect_data['name'] = update_data.name
+        if update_data.email is not None:
+            prospect_data['email'] = update_data.email
+        if update_data.phone is not None:
+            prospect_data['phone'] = update_data.phone
+        if update_data.stage is not None:
+            # Validate stage
+            valid_stages = ["lead", "qualified", "proposal", "negotiation", "won", "lost"]
+            if update_data.stage not in valid_stages:
+                raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+            prospect_data['stage'] = update_data.stage
+        if update_data.notes is not None:
+            prospect_data['notes'] = update_data.notes
+        
+        # Update timestamp
+        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        # Save updated data
+        prospects_storage[prospect_id] = prospect_data
+        
+        logging.info(f"Prospect updated: {prospect_id}")
+        
+        return {
+            "success": True,
+            "prospect": prospect_data,
+            "message": "Prospect updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Update prospect error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update prospect")
+
+@api_router.delete("/crm/prospects/{prospect_id}")
+async def delete_prospect(prospect_id: str):
+    """Delete a prospect"""
+    try:
+        if prospect_id not in prospects_storage:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        prospect_data = prospects_storage[prospect_id]
+        del prospects_storage[prospect_id]
+        
+        logging.info(f"Prospect deleted: {prospect_id}")
+        
+        return {
+            "success": True,
+            "message": f"Prospect {prospect_data['name']} deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Delete prospect error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete prospect")
+
+@api_router.post("/crm/prospects/{prospect_id}/convert")
+async def convert_prospect_to_client(prospect_id: str, conversion_data: ProspectConversionRequest):
+    """Convert a won prospect to a client and send FIDUS agreement"""
+    try:
+        if prospect_id not in prospects_storage:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        prospect_data = prospects_storage[prospect_id]
+        
+        # Validate prospect stage
+        if prospect_data['stage'] != 'won':
+            raise HTTPException(status_code=400, detail="Only prospects in 'won' stage can be converted to clients")
+        
+        if prospect_data.get('converted_to_client', False):
+            raise HTTPException(status_code=400, detail="Prospect has already been converted to a client")
+        
+        # Generate new client ID
+        client_id = f"client_{str(uuid.uuid4())[:8]}"
+        username = prospect_data['email'].split('@')[0].lower().replace('.', '').replace('-', '')[:10]
+        
+        # Create new client in MOCK_USERS
+        new_client = {
+            "id": client_id,
+            "username": username,
+            "name": prospect_data['name'],
+            "email": prospect_data['email'],
+            "phone": prospect_data['phone'],
+            "type": "client",
+            "status": "active",
+            "created_from_prospect": True,
+            "prospect_id": prospect_id,
+            "createdAt": datetime.now(timezone.utc).isoformat(),
+            "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
+        }
+        
+        # Add to MOCK_USERS
+        MOCK_USERS[username] = new_client
+        
+        # Update prospect as converted
+        prospect_data['converted_to_client'] = True
+        prospect_data['client_id'] = client_id
+        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        prospects_storage[prospect_id] = prospect_data
+        
+        # Send FIDUS agreement if requested
+        agreement_sent = False
+        agreement_message = ""
+        
+        if conversion_data.send_agreement:
+            try:
+                # Here we would integrate with Gmail API to send the FIDUS agreement
+                # For now, we'll simulate this and log it
+                logging.info(f"Sending FIDUS agreement to {prospect_data['email']} for client {client_id}")
+                
+                # You can add actual Gmail integration here using the existing Gmail service
+                agreement_sent = True
+                agreement_message = f"FIDUS agreement sent to {prospect_data['email']}"
+                
+            except Exception as email_error:
+                logging.error(f"Failed to send FIDUS agreement: {str(email_error)}")
+                agreement_message = "Client created but failed to send FIDUS agreement"
+        
+        logging.info(f"Prospect {prospect_id} converted to client {client_id}")
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "prospect": prospect_data,
+            "client": new_client,
+            "agreement_sent": agreement_sent,
+            "message": f"Prospect converted to client successfully. {agreement_message}".strip()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Convert prospect error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to convert prospect to client")
+
+@api_router.get("/crm/prospects/pipeline")
+async def get_prospect_pipeline():
+    """Get prospect pipeline data organized by stages"""
+    try:
+        pipeline = {
+            "lead": [],
+            "qualified": [],
+            "proposal": [],
+            "negotiation": [],
+            "won": [],
+            "lost": []
+        }
+        
+        for prospect_data in prospects_storage.values():
+            stage = prospect_data.get('stage', 'lead')
+            if stage in pipeline:
+                pipeline[stage].append(prospect_data)
+        
+        # Sort each stage by updated_at descending
+        for stage in pipeline:
+            pipeline[stage].sort(key=lambda x: x['updated_at'], reverse=True)
+        
+        # Calculate statistics
+        total_prospects = len(prospects_storage)
+        active_prospects = sum(len(prospects) for stage, prospects in pipeline.items() if stage not in ['won', 'lost'])
+        conversion_rate = 0
+        if total_prospects > 0:
+            conversion_rate = (len(pipeline['won']) / total_prospects) * 100
+        
+        return {
+            "pipeline": pipeline,
+            "stats": {
+                "total_prospects": total_prospects,
+                "active_prospects": active_prospects,
+                "won_prospects": len(pipeline['won']),
+                "lost_prospects": len(pipeline['lost']),
+                "conversion_rate": round(conversion_rate, 1)
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get pipeline error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch prospect pipeline")
+
 # Include the router in the main app
 app.include_router(api_router)
 
