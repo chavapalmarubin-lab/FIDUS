@@ -293,6 +293,22 @@ const AdminInvestmentManagement = () => {
         </div>
       </div>
 
+      {/* Success Display */}
+      {success && (
+        <Alert className="bg-green-900/20 border-green-500/50">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription className="text-green-300">{success}</AlertDescription>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSuccess("")}
+            className="ml-auto text-green-400"
+          >
+            ×
+          </Button>
+        </Alert>
+      )}
+
       {/* Error Display */}
       {error && (
         <Alert className="bg-red-900/20 border-red-500/50">
