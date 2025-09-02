@@ -364,41 +364,74 @@ const UserRegistration = ({ onBack, onComplete }) => {
 
       <div>
         <Label className="text-slate-300 mb-3 block">Upload ID Document *</Label>
-        <div 
-          className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-cyan-400 transition-colors cursor-pointer"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          
-          {documentPreview ? (
-            <div className="space-y-4">
-              <img 
-                src={documentPreview} 
-                alt="Document preview" 
-                className="max-h-64 mx-auto rounded-lg shadow-lg"
-              />
-              <div className="text-slate-300">
-                <CheckCircle className="inline mr-2" size={20} />
-                Document uploaded successfully
-              </div>
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                Choose Different File
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Upload className="mx-auto text-slate-400" size={48} />
-              <div>
-                <div className="text-slate-300 text-lg">Click to upload your ID document</div>
-                <div className="text-slate-500 text-sm mt-2">
-                  Supported formats: JPEG, PNG, WebP (max 10MB)
+        
+        {/* Upload Options */}
+        <div className="space-y-4">
+          {/* File Upload Option */}
+          <div 
+            className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-cyan-400 transition-colors cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            
+            {documentPreview ? (
+              <div className="space-y-4">
+                <img 
+                  src={documentPreview} 
+                  alt="Document preview" 
+                  className="max-h-64 mx-auto rounded-lg shadow-lg"
+                />
+                <div className="text-slate-300">
+                  <CheckCircle className="inline mr-2" size={20} />
+                  Document uploaded successfully
                 </div>
+                <div className="flex gap-2 justify-center">
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    Choose Different File
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCameraModal(true)}
+                  >
+                    <Camera size={16} className="mr-1" />
+                    Take New Photo
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Upload className="mx-auto text-slate-400" size={40} />
+                <div>
+                  <div className="text-slate-300 font-medium">Upload from Device</div>
+                  <div className="text-slate-500 text-sm mt-2">
+                    JPEG, PNG, WebP (max 10MB)
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Camera Option */}
+          {!documentPreview && (
+            <div className="text-center">
+              <div className="text-slate-400 text-sm mb-2">OR</div>
+              <Button
+                onClick={() => setShowCameraModal(true)}
+                className="w-full bg-cyan-600 hover:bg-cyan-700"
+                type="button"
+              >
+                <Camera size={16} className="mr-2" />
+                Take Photo with Camera
+              </Button>
+              <div className="text-slate-500 text-xs mt-2">
+                Capture your ID document directly with your camera
               </div>
             </div>
           )}
