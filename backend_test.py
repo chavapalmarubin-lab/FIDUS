@@ -2554,7 +2554,58 @@ Document Content:
         if success:
             print("   ✅ Non-existent client properly rejected for MT5 account")
         
-        return success
+    def run_gmail_oauth_tests(self):
+        """Run focused Gmail OAuth integration tests"""
+        print("="*80)
+        print("🔍 GMAIL OAUTH INTEGRATION TESTING - FOCUSED ON OAUTH CALLBACK FIX")
+        print("="*80)
+        
+        # Test the specific OAuth callback fix mentioned in review request
+        print("\n📋 Testing OAuth Callback Fix (RedirectResponse vs JSON)...")
+        oauth_callback_success = self.test_gmail_oauth_callback_redirect_fix()
+        
+        print("\n📋 Testing OAuth Flow Verification...")
+        oauth_flow_success = self.test_gmail_oauth_flow_verification()
+        
+        print("\n📋 Testing State Management Security...")
+        state_mgmt_success = self.test_gmail_state_management()
+        
+        print("\n📋 Testing Gmail Authentication Status...")
+        auth_status_success = self.test_gmail_authenticate_oauth_flow()
+        
+        # Summary of critical OAuth tests
+        critical_tests = [
+            ("OAuth Callback Redirect Fix", oauth_callback_success),
+            ("OAuth Flow Verification", oauth_flow_success), 
+            ("State Management", state_mgmt_success),
+            ("Authentication Status", auth_status_success)
+        ]
+        
+        print("\n" + "="*80)
+        print("📊 GMAIL OAUTH TEST RESULTS SUMMARY")
+        print("="*80)
+        
+        passed_critical = 0
+        for test_name, result in critical_tests:
+            status = "✅ PASSED" if result else "❌ FAILED"
+            print(f"   {test_name}: {status}")
+            if result:
+                passed_critical += 1
+        
+        print(f"\n🎯 Critical OAuth Tests: {passed_critical}/{len(critical_tests)} passed")
+        print(f"📈 Overall Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        if passed_critical == len(critical_tests):
+            print("\n🎉 ALL CRITICAL GMAIL OAUTH TESTS PASSED!")
+            print("✅ OAuth callback fix is working correctly")
+            print("✅ RedirectResponse implementation verified")
+            print("✅ Frontend URL parameters working")
+            print("✅ State management security confirmed")
+            return True
+        else:
+            print(f"\n⚠️  {len(critical_tests) - passed_critical} critical OAuth tests failed")
+            print("❌ OAuth callback fix may have issues")
+            return False
 
 def main():
     print("🚀 Starting FIDUS API Testing...")
@@ -2562,122 +2613,19 @@ def main():
     
     tester = FidusAPITester()
     
-    # Test authentication endpoints
-    print("\n📋 AUTHENTICATION TESTS")
-    print("-" * 30)
-    tester.test_client_login()
-    tester.test_admin_login()
-    tester.test_invalid_login()
-    
-    # Test client endpoints
-    print("\n📋 CLIENT ENDPOINTS TESTS")
-    print("-" * 30)
-    tester.test_client_data()
-    tester.test_client_transactions_filtered()
-    
-    # Test admin endpoints
-    print("\n📋 ADMIN ENDPOINTS TESTS")
-    print("-" * 30)
-    tester.test_admin_portfolio_summary()
-    tester.test_admin_clients()
-    
-    # Test Excel client management endpoints
-    print("\n📋 EXCEL CLIENT MANAGEMENT TESTS")
-    print("-" * 30)
-    tester.test_admin_clients_detailed()
-    tester.test_admin_clients_export()
-    tester.test_admin_clients_import()
-    tester.test_admin_client_status_update()
-    tester.test_admin_client_deletion()
-    
-    # Test new OCR and AML/KYC services
-    print("\n📋 SERVICE STATUS & CONFIGURATION TESTS")
-    print("-" * 30)
-    tester.test_service_status()
-    tester.test_ocr_service_direct()
-    tester.test_aml_kyc_service_direct()
-    
-    # Test registration endpoints
-    print("\n📋 REGISTRATION ENDPOINTS TESTS")
-    print("-" * 30)
-    tester.test_registration_create_application()
-    tester.test_document_processing()
-    tester.test_aml_kyc_verification()
-    tester.test_application_finalization()
-    tester.test_admin_pending_applications()
-    
-    # Test password reset endpoints
-    print("\n📋 PASSWORD RESET TESTS")
-    print("-" * 30)
-    tester.test_password_reset_client()
-    tester.test_password_reset_admin()
-    tester.test_password_reset_invalid_scenarios()
-    
-    # Test Document Portal endpoints
-    print("\n📋 DOCUMENT PORTAL TESTS")
-    print("-" * 30)
-    tester.test_document_upload()
-    tester.test_document_upload_invalid_file()
-    tester.test_admin_get_all_documents()
-    tester.test_client_get_documents()
-    tester.test_send_document_for_signature()
-    tester.test_document_status_tracking()
-    tester.test_document_download()
-    tester.test_document_download_nonexistent()
-    tester.test_document_deletion()
-    tester.test_document_deletion_nonexistent()
-    
-    # Test Gmail OAuth Integration endpoints
-    print("\n📋 GMAIL OAUTH INTEGRATION TESTS")
-    print("-" * 30)
-    tester.test_gmail_auth_url()
-    tester.test_gmail_oauth_callback_structure()
-    tester.test_gmail_authenticate_oauth_flow()
-    tester.test_gmail_client_id_verification()
-    tester.test_gmail_error_handling()
-    tester.test_gmail_security_measures()
-    
-    # Test Gmail Document Integration endpoints
-    print("\n📋 GMAIL DOCUMENT INTEGRATION TESTS")
-    print("-" * 30)
-    tester.test_document_view_for_email_links()
-    tester.test_document_view_nonexistent()
-    tester.test_send_document_for_signature_gmail()
-    tester.test_document_status_gmail_tracking()
-    
-    # Test CRM System endpoints
-    print("\n📋 CRM SYSTEM TESTS")
-    print("-" * 30)
-    tester.test_crm_get_all_funds()
-    tester.test_crm_admin_dashboard()
-    tester.test_crm_client_allocations()
-    tester.test_crm_capital_flow_creation()
-    tester.test_crm_client_capital_flows_history()
-    
-    # Test MT5 Integration endpoints
-    print("\n📋 MT5 INTEGRATION TESTS")
-    print("-" * 30)
-    tester.test_crm_mt5_admin_overview()
-    tester.test_crm_mt5_client_account()
-    tester.test_crm_mt5_client_positions()
-    tester.test_crm_mt5_client_history()
-    
-    # Test CRM error scenarios
-    print("\n📋 CRM ERROR SCENARIO TESTS")
-    print("-" * 30)
-    tester.test_crm_invalid_fund_capital_flow()
-    tester.test_crm_mt5_nonexistent_client()
+    # Run focused Gmail OAuth tests as requested in review
+    gmail_oauth_success = tester.run_gmail_oauth_tests()
     
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed! Backend APIs are working correctly.")
+    if gmail_oauth_success:
+        print("🎉 Gmail OAuth integration tests passed! OAuth callback fix verified.")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
-        print(f"⚠️  {failed_tests} test(s) failed. Please check the issues above.")
+        print(f"⚠️  {failed_tests} test(s) failed. Please check the OAuth callback implementation.")
         return 1
 
 if __name__ == "__main__":
