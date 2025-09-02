@@ -13,6 +13,7 @@ import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, Trend
 import { format } from "date-fns";
 import axios from "axios";
 import DocumentPortal from "./DocumentPortal";
+import InvestmentDashboard from "./InvestmentDashboard";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
