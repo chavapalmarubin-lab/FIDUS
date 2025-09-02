@@ -89,6 +89,7 @@ const GmailSettings = () => {
       
       if (statusResponse.data.success) {
         setGmailStatus(statusResponse.data);
+        setAuthenticating(false);
         return;
       }
 
@@ -97,14 +98,9 @@ const GmailSettings = () => {
         const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
         
         if (authUrlResponse.data.success) {
-          // Show user what's happening
-          setAuthError("Redirecting to Google for authentication...");
-          
-          // Wait a moment for user to see the message
-          setTimeout(() => {
-            // Open OAuth URL in same window
-            window.location.href = authUrlResponse.data.authorization_url;
-          }, 1500);
+          // Redirect to Google OAuth - the backend will redirect back to our app
+          window.location.href = authUrlResponse.data.authorization_url;
+          // Don't set authenticating to false here - let the OAuth callback handle it
           
         } else {
           throw new Error("Failed to generate OAuth URL");
