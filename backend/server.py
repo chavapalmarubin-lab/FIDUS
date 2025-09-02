@@ -167,6 +167,63 @@ class ProspectConversionRequest(BaseModel):
     prospect_id: str
     send_agreement: bool = True
 
+# Investment Tracking Models
+class FundInvestment(BaseModel):
+    investment_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    fund_code: str  # CORE, BALANCE, DYNAMIC, UNLIMITED
+    principal_amount: float
+    deposit_date: datetime
+    incubation_end_date: datetime
+    interest_start_date: datetime
+    minimum_hold_end_date: datetime  # 14 months from deposit
+    current_value: float
+    total_interest_earned: float = 0.0
+    status: str = "active"  # active, redeemed, pending_redemption
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class InterestPayment(BaseModel):
+    payment_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    investment_id: str
+    client_id: str
+    fund_code: str
+    payment_date: datetime
+    interest_amount: float
+    principal_balance: float
+    payment_period: str  # "2024-04", "2024-Q1", etc.
+    status: str = "scheduled"  # scheduled, paid, failed
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class InvestmentProjection(BaseModel):
+    investment_id: str
+    projected_payments: List[dict]
+    total_projected_interest: float
+    final_value: float
+    next_redemption_date: Optional[datetime]
+    can_redeem_now: bool
+
+class FundConfiguration(BaseModel):
+    fund_code: str
+    name: str
+    interest_rate: float  # Monthly rate as percentage
+    minimum_investment: float
+    interest_frequency: str  # "monthly"
+    redemption_frequency: str  # "monthly", "quarterly", "semi-annually"
+    invitation_only: bool = False
+    incubation_months: int = 2
+    minimum_hold_months: int = 14
+
+class InvestmentCreate(BaseModel):
+    client_id: str
+    fund_code: str
+    amount: float
+
+class RedemptionRequest(BaseModel):
+    investment_id: str
+    amount: Optional[float] = None  # If None, redeem full amount
+    redemption_date: Optional[datetime] = None
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
