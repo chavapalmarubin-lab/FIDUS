@@ -65,6 +65,7 @@ const DocumentPortal = ({ user, userType }) => {
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
