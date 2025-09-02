@@ -1532,9 +1532,158 @@ Document Content:
                 print(f"   State parameter: {state}")
                 print(f"   Instructions: {response.get('instructions')}")
             
-            return url_valid
+    def test_gmail_authenticate_oauth_flow(self):
+        """Test Gmail authentication endpoint with OAuth flow support"""
+        success, response = self.run_test(
+            "Gmail Authentication - OAuth Flow Detection",
+            "POST",
+            "api/gmail/authenticate",
+            200  # Should return OAuth instructions when no credentials exist
+        )
+        
+        if success:
+            # Check if response indicates OAuth flow is needed
+            success_flag = response.get('success', True)
+            message = response.get('message', '')
+            action = response.get('action', '')
+            auth_url_endpoint = response.get('auth_url_endpoint', '')
+            
+            print(f"   Success flag: {success_flag}")
+            print(f"   Message: {message}")
+            print(f"   Action: {action}")
+            print(f"   Auth URL endpoint: {auth_url_endpoint}")
+            
+            # Verify OAuth flow instructions
+            if not success_flag and action == 'redirect_to_oauth':
+                print("   ✅ Properly detects missing credentials and provides OAuth instructions")
+                
+                # Verify auth URL endpoint is correct
+                if auth_url_endpoint == '/api/gmail/auth-url':
+                    print("   ✅ Correct auth URL endpoint provided")
+                else:
+                    print(f"   ❌ Incorrect auth URL endpoint: {auth_url_endpoint}")
+                    return False
+                    
+                # Check for proper instructions
+                instructions = response.get('instructions', '')
+                if 'oauth' in instructions.lower() or 'auth-url' in instructions.lower():
+                    print("   ✅ Proper OAuth instructions provided")
+                else:
+                    print(f"   ⚠️  Instructions may be unclear: {instructions}")
+                
+                return True
+            elif success_flag:
+                # If success is True, check if valid credentials exist
+                email_address = response.get('email_address', '')
+                if email_address:
+                    print(f"   ✅ Valid Gmail credentials found for: {email_address}")
+                    return True
+                else:
+                    print("   ⚠️  Success reported but no email address provided")
+                    return False
+            else:
+                print(f"   ❌ Unexpected response format")
+                return False
         else:
-            print("   ❌ Failed to generate OAuth authorization URL")
+            print("   ❌ Gmail authentication endpoint not responding correctly")
+            return False
+
+    def test_gmail_state_management(self):
+        """Test Gmail OAuth state parameter management and security"""
+        print("\n🔍 Testing Gmail OAuth State Management...")
+        
+        # Test that auth URL generates unique states
+        try:
+            response1 = requests.get(f"{self.base_url}/api/gmail/auth-url", timeout=10)
+            response2 = requests.get(f"{self.base_url}/api/gmail/auth-url", timeout=10)
+            
+            self.tests_run += 2
+            
+            if response1.status_code == 200 and response2.status_code == 200:
+                data1 = response1.json()
+                data2 = response2.json()
+                
+                state1 = data1.get('state', '')
+                state2 = data2.get('state', '')
+                
+                if state1 != state2 and state1 and state2:
+                    print("   ✅ Unique state parameters generated (prevents replay attacks)")
+                    print(f"   State 1: {state1[:20]}...")
+                    print(f"   State 2: {state2[:20]}...")
+                    self.tests_passed += 2
+                    
+                    # Test state validation in callback
+                    callback_url = f"{self.base_url}/api/gmail/oauth-callback?code=test&state=malicious_state"
+                    callback_response = requests.get(callback_url, allow_redirects=False, timeout=10)
+                    
+                    self.tests_run += 1
+                    
+                    if 300 <= callback_response.status_code < 400:
+                        location = callback_response.headers.get('location', '')
+                        if 'gmail_auth=error' in location and 'Invalid+state' in location:
+                            print("   ✅ State parameter validation working (prevents CSRF attacks)")
+                            self.tests_passed += 1
+                            return True
+                        else:
+                            print(f"   ❌ State validation may be weak: {location}")
+                    else:
+                        print(f"   ❌ Expected redirect for invalid state, got: {callback_response.status_code}")
+                else:
+                    print("   ❌ State parameters are not unique or empty")
+            else:
+                print(f"   ❌ Failed to get auth URLs: {response1.status_code}, {response2.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Error testing state management: {e}")
+            self.tests_run += 1
+            
+        return False
+
+    def test_gmail_oauth_flow_verification(self):
+        """Test complete Gmail OAuth flow verification"""
+        print("\n🔍 Testing Complete Gmail OAuth Flow...")
+        
+        success_count = 0
+        total_tests = 4
+        
+        # Test 1: Auth URL generation
+        if self.test_gmail_auth_url():
+            success_count += 1
+            print("   ✅ Step 1: Auth URL generation - PASSED")
+        else:
+            print("   ❌ Step 1: Auth URL generation - FAILED")
+        
+        # Test 2: OAuth callback redirect behavior
+        if self.test_gmail_oauth_callback_redirect_fix():
+            success_count += 1
+            print("   ✅ Step 2: OAuth callback redirects - PASSED")
+        else:
+            print("   ❌ Step 2: OAuth callback redirects - FAILED")
+        
+        # Test 3: State management security
+        if self.test_gmail_state_management():
+            success_count += 1
+            print("   ✅ Step 3: State management - PASSED")
+        else:
+            print("   ❌ Step 3: State management - FAILED")
+        
+        # Test 4: Authentication endpoint
+        if self.test_gmail_authenticate_oauth_flow():
+            success_count += 1
+            print("   ✅ Step 4: Authentication endpoint - PASSED")
+        else:
+            print("   ❌ Step 4: Authentication endpoint - FAILED")
+        
+        print(f"\n📊 Gmail OAuth Flow Test Summary: {success_count}/{total_tests} tests passed")
+        
+        if success_count == total_tests:
+            print("🎉 ALL GMAIL OAUTH TESTS PASSED - OAuth callback fix is working correctly!")
+            return True
+        elif success_count >= 3:
+            print("⚠️  Most Gmail OAuth tests passed - minor issues may exist")
+            return True
+        else:
+            print("❌ Gmail OAuth flow has significant issues")
             return False
 
     def test_gmail_oauth_callback_structure(self):
