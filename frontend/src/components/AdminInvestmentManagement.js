@@ -56,8 +56,18 @@ const AdminInvestmentManagement = () => {
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showCreateInvestmentModal, setShowCreateInvestmentModal] = useState(false);
+  const [fundConfigs, setFundConfigs] = useState([]);
+
+  // Investment creation form state
+  const [investmentForm, setInvestmentForm] = useState({
+    client_id: "",
+    fund_code: "",
+    amount: ""
+  });
 
   useEffect(() => {
     fetchOverviewData();
