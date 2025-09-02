@@ -56,6 +56,7 @@ const UserRegistration = ({ onBack, onComplete }) => {
   const [documentFile, setDocumentFile] = useState(null);
   const [documentType, setDocumentType] = useState("");
   const [documentPreview, setDocumentPreview] = useState(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
   const [amlKycResults, setAmlKycResults] = useState(null);
   const [loading, setLoading] = useState(false);
