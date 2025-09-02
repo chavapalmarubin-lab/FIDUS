@@ -131,6 +131,173 @@ const CRMDashboard = ({ user }) => {
     }
   };
 
+  if (currentView === 'fund-investors' && selectedFund) {
+    return (
+      <FundInvestorsDetail
+        fundId={selectedFund.id}
+        fundName={selectedFund.name}
+        onBack={handleBackToDashboard}
+      />
+    );
+  }
+
+  if (currentView === 'client-profile' && selectedClientProfile) {
+    return (
+      <ClientDetailedProfile
+        clientId={selectedClientProfile.clientId}
+        clientName={selectedClientProfile.clientName}
+        onBack={handleBackToDashboard}
+      />
+    );
+  }
+
+  if (currentView === 'all-clients' && allClientsData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={handleBackToDashboard}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to CRM Dashboard
+            </Button>
+            <div>
+              <h2 className="text-2xl font-bold text-white">All Clients Details</h2>
+              <p className="text-gray-400">Comprehensive client information and portfolios</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Total Clients</p>
+                  <p className="text-2xl font-bold text-white">{allClientsData.summary.total_clients}</p>
+                </div>
+                <div className="h-12 w-12 bg-cyan-600/20 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-cyan-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Total Assets</p>
+                  <p className="text-2xl font-bold text-white">{formatCurrency(allClientsData.summary.total_assets)}</p>
+                </div>
+                <div className="h-12 w-12 bg-green-600/20 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Fund Assets</p>
+                  <p className="text-2xl font-bold text-white">{formatCurrency(allClientsData.summary.total_fund_assets)}</p>
+                </div>
+                <div className="h-12 w-12 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Trading Assets</p>
+                  <p className="text-2xl font-bold text-white">{formatCurrency(allClientsData.summary.total_trading_assets)}</p>
+                </div>
+                <div className="h-12 w-12 bg-yellow-600/20 rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Clients Table */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Client Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-600">
+                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Client</th>
+                    <th className="text-right py-3 px-4 text-gray-400 font-medium">Total Assets</th>
+                    <th className="text-right py-3 px-4 text-gray-400 font-medium">Fund Portfolio</th>
+                    <th className="text-right py-3 px-4 text-gray-400 font-medium">Trading Balance</th>
+                    <th className="text-right py-3 px-4 text-gray-400 font-medium">Open Positions</th>
+                    <th className="text-right py-3 px-4 text-gray-400 font-medium">Recent Activity</th>
+                    <th className="text-center py-3 px-4 text-gray-400 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allClientsData.clients.map((client) => (
+                    <tr key={client.client_id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <div className="font-medium text-white">{client.name}</div>
+                          <div className="text-xs text-gray-400">{client.email}</div>
+                        </div>
+                      </td>
+                      <td className="text-right py-3 px-4 text-white font-medium">
+                        {formatCurrency(client.total_assets)}
+                      </td>
+                      <td className="text-right py-3 px-4 text-white">
+                        {formatCurrency(client.fund_portfolio.total_value)}
+                        <div className="text-xs text-gray-400">{client.fund_portfolio.number_of_funds} funds</div>
+                      </td>
+                      <td className="text-right py-3 px-4 text-white">
+                        {formatCurrency(client.trading_account.balance)}
+                      </td>
+                      <td className="text-right py-3 px-4 text-white">
+                        {client.trading_account.open_positions}
+                      </td>
+                      <td className="text-right py-3 px-4 text-gray-400">
+                        {client.recent_activity.last_capital_flow 
+                          ? format(new Date(client.recent_activity.last_capital_flow), 'MMM dd')
+                          : 'No recent activity'
+                        }
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewClientProfile(client.client_id, client.name)}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
