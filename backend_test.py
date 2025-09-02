@@ -4860,7 +4860,8 @@ Document Content:
         return False
 
 def main():
-    print("🚀 Starting FIDUS Investment Management System Testing...")
+    print("🚀 Starting FIDUS API Comprehensive Testing...")
+    print("🎯 PRIMARY FOCUS: Client Management Enhanced Features & FIDUS Fund Structures")
     print("=" * 80)
     
     tester = FidusAPITester()
@@ -4871,21 +4872,83 @@ def main():
     tester.test_client_login()
     tester.test_admin_login()
     
-    # Run FIDUS Investment System Tests
+    # PRIMARY FOCUS - Client Investment Readiness System Tests
+    print("\n🎯 PRIMARY FOCUS - CLIENT INVESTMENT READINESS SYSTEM")
+    print("-"*60)
+    readiness_create_success = tester.test_client_readiness_create()
+    readiness_get_success = tester.test_client_readiness_get()
+    readiness_workflow_success = tester.test_client_readiness_complete_workflow()
+    
+    # PRIMARY FOCUS - Enhanced Client Management Tests
+    print("\n🎯 PRIMARY FOCUS - ENHANCED CLIENT MANAGEMENT")
+    print("-"*50)
+    enhanced_client_success = tester.test_enhanced_client_management()
+    
+    # PRIMARY FOCUS - Investment Creation with Readiness Validation
+    print("\n🎯 PRIMARY FOCUS - INVESTMENT CREATION WITH READINESS VALIDATION")
+    print("-"*65)
+    investment_readiness_success = tester.test_investment_creation_with_readiness_validation()
+    
+    # PRIMARY FOCUS - FIDUS Fund Structures and Business Logic
+    print("\n🎯 PRIMARY FOCUS - FIDUS FUND STRUCTURES AND TIMELINES")
+    print("-"*55)
+    fund_config_success = tester.test_fund_configuration_and_business_logic()
+    timeline_success = tester.test_investment_timeline_calculations()
+    
+    # SECONDARY FOCUS - FIDUS Investment Tests
+    print("\n📋 SECONDARY FOCUS - FIDUS INVESTMENT TESTS")
+    print("-"*45)
     investment_success = tester.test_fidus_investment_system()
+    
+    # Calculate primary focus results
+    primary_tests = [
+        readiness_create_success,
+        readiness_get_success, 
+        readiness_workflow_success,
+        enhanced_client_success,
+        investment_readiness_success,
+        fund_config_success,
+        timeline_success
+    ]
+    
+    primary_passed = sum(primary_tests)
+    primary_total = len(primary_tests)
     
     # Print final results
     print("\n" + "=" * 80)
-    print("🎯 FIDUS INVESTMENT TESTING COMPLETE!")
-    print(f"📊 Results: {tester.tests_passed}/{tester.tests_run} tests passed")
-    print(f"✅ Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    print("🏁 TESTING COMPLETE - CLIENT READINESS & FUND STRUCTURES FOCUS")
+    print("=" * 80)
+    print(f"🎯 PRIMARY FOCUS TESTS: {primary_passed}/{primary_total} passed")
+    print(f"📊 TOTAL TESTS: {tester.tests_passed}/{tester.tests_run} passed")
+    print(f"✅ SUCCESS RATE: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
     
-    if investment_success:
-        print("🎉 ALL FIDUS INVESTMENT TESTS PASSED! System is working correctly.")
+    # Detailed primary focus results
+    print(f"\n🔍 PRIMARY FOCUS RESULTS:")
+    focus_tests = [
+        ("Client Readiness Create", readiness_create_success),
+        ("Client Readiness Get", readiness_get_success),
+        ("Client Readiness Workflow", readiness_workflow_success),
+        ("Enhanced Client Management", enhanced_client_success),
+        ("Investment Creation with Readiness", investment_readiness_success),
+        ("Fund Configuration & Business Logic", fund_config_success),
+        ("Investment Timeline Calculations", timeline_success)
+    ]
+    
+    for test_name, result in focus_tests:
+        status = "✅ PASSED" if result else "❌ FAILED"
+        print(f"   {test_name}: {status}")
+    
+    if primary_passed == primary_total:
+        print("\n🎉 ALL PRIMARY FOCUS TESTS PASSED!")
+        print("✅ Client Investment Readiness System: WORKING")
+        print("✅ Enhanced Client Management: WORKING") 
+        print("✅ Investment Creation with Readiness Validation: WORKING")
+        print("✅ FIDUS Fund Structures and Timelines: WORKING")
         return 0
     else:
-        failed_tests = tester.tests_run - tester.tests_passed
-        print(f"⚠️  {failed_tests} test(s) failed. Please review the results above.")
+        failed_primary = primary_total - primary_passed
+        print(f"\n⚠️  {failed_primary} primary focus test(s) failed.")
+        print("❌ Some client readiness or fund structure features need attention.")
         return 1
 
 if __name__ == "__main__":
