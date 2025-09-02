@@ -37,6 +37,10 @@ const CRMDashboard = ({ user }) => {
   const [clientMT5Data, setClientMT5Data] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentView, setCurrentView] = useState('dashboard'); // dashboard, fund-investors, client-profile, all-clients
+  const [selectedFund, setSelectedFund] = useState(null);
+  const [selectedClientProfile, setSelectedClientProfile] = useState(null);
+  const [allClientsData, setAllClientsData] = useState(null);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
