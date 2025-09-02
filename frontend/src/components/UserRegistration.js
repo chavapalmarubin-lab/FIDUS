@@ -83,7 +83,15 @@ const UserRegistration = ({ onBack, onComplete }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    processDocumentFile(file);
+  };
 
+  const handleCameraCapture = (file) => {
+    if (!file) return;
+    processDocumentFile(file);
+  };
+
+  const processDocumentFile = (file) => {
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
@@ -99,6 +107,7 @@ const UserRegistration = ({ onBack, onComplete }) => {
 
     setDocumentFile(file);
     setError("");
+    setShowCameraModal(false);
 
     // Create preview
     const reader = new FileReader();
