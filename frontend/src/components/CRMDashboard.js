@@ -576,10 +576,27 @@ const CRMDashboard = ({ user }) => {
                           </span>
                         </td>
                         <td className="text-right py-3 px-4 text-white">
-                          {fund.total_investors}
+                          <Button
+                            variant="link"
+                            onClick={() => handleViewFundInvestors(fund)}
+                            className="text-cyan-400 hover:text-cyan-300 p-0 h-auto font-medium"
+                          >
+                            {fund.total_investors}
+                          </Button>
                         </td>
                         <td className="text-right py-3 px-4 text-gray-400">
                           {formatCurrency(fund.minimum_investment)}
+                        </td>
+                        <td className="text-center py-3 px-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewFundInvestors(fund)}
+                            className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
                         </td>
                       </tr>
                     ))}
