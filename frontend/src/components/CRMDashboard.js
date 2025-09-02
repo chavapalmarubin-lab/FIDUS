@@ -473,6 +473,10 @@ const CRMDashboard = ({ user }) => {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="prospects" className="mt-6">
+          <ProspectManagement />
+        </TabsContent>
+
         <TabsContent value="funds" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Fund Performance Chart */}
