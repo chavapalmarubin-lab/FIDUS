@@ -276,6 +276,13 @@ const AdminInvestmentManagement = () => {
             Refresh
           </Button>
           <Button
+            onClick={() => setShowCreateInvestmentModal(true)}
+            className="bg-cyan-600 hover:bg-cyan-700"
+          >
+            <Plus size={16} className="mr-2" />
+            Create Investment
+          </Button>
+          <Button
             variant="outline"
             className="border-slate-600 text-slate-300"
           >
