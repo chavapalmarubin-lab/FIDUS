@@ -275,6 +275,146 @@ FIDUS_FUND_CONFIG = {
 # In-memory investment storage (in production, use proper database)
 client_investments = {}
 
+# Investment Calculation and Management Functions
+def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
+    """Calculate key dates for an investment"""
+    # Incubation period (2 months from deposit)
+    incubation_end = deposit_date + timedelta(days=60)  # Approximately 2 months
+    
+    # Interest starts from beginning of month after incubation
+    interest_start = incubation_end.replace(day=1)
+    if interest_start <= incubation_end:
+        # Move to next month if incubation ends after month start
+        if interest_start.month == 12:
+            interest_start = interest_start.replace(year=interest_start.year + 1, month=1)
+        else:
+            interest_start = interest_start.replace(month=interest_start.month + 1)
+    
+    # Minimum hold period (14 months from deposit)
+    minimum_hold_end = deposit_date + timedelta(days=420)  # Approximately 14 months
+    
+    return {
+        "incubation_end_date": incubation_end,
+        "interest_start_date": interest_start,
+        "minimum_hold_end_date": minimum_hold_end
+    }
+
+def calculate_simple_interest(principal: float, rate: float, months: int) -> float:
+    """Calculate simple interest for given principal, rate, and months"""
+    return principal * (rate / 100) * months
+
+def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfiguration) -> Optional[datetime]:
+    """Calculate next available redemption date based on fund redemption frequency"""
+    if fund_config.redemption_frequency == "monthly":
+        # Can redeem anytime after minimum hold period
+        return investment.minimum_hold_end_date if datetime.now(timezone.utc) < investment.minimum_hold_end_date else datetime.now(timezone.utc)
+    
+    elif fund_config.redemption_frequency == "quarterly":
+        # Can redeem every 3 months starting from interest start date
+        start_date = investment.interest_start_date
+        current_date = datetime.now(timezone.utc)
+        
+        # Find next quarterly date (March, June, September, December)
+        quarterly_months = [3, 6, 9, 12]
+        current_year = current_date.year
+        
+        for month in quarterly_months:
+            redemption_date = datetime(current_year, month, 1, tzinfo=timezone.utc)
+            if redemption_date > current_date and redemption_date >= investment.minimum_hold_end_date:
+                return redemption_date
+        
+        # If no date found in current year, start with March of next year
+        return datetime(current_year + 1, 3, 1, tzinfo=timezone.utc)
+    
+    elif fund_config.redemption_frequency == "semi-annually":
+        # Can redeem every 6 months (June and December)
+        current_date = datetime.now(timezone.utc)
+        current_year = current_date.year
+        
+        for month in [6, 12]:
+            redemption_date = datetime(current_year, month, 1, tzinfo=timezone.utc)
+            if redemption_date > current_date and redemption_date >= investment.minimum_hold_end_date:
+                return redemption_date
+        
+        # Next June if no date found in current year
+        return datetime(current_year + 1, 6, 1, tzinfo=timezone.utc)
+    
+    else:  # flexible or none
+        return investment.minimum_hold_end_date if datetime.now(timezone.utc) < investment.minimum_hold_end_date else datetime.now(timezone.utc)
+
+def generate_investment_projections(investment: FundInvestment, fund_config: FundConfiguration) -> InvestmentProjection:
+    """Generate projected interest payments and values for an investment"""
+    projections = []
+    current_date = investment.interest_start_date
+    end_date = datetime.now(timezone.utc) + timedelta(days=730)  # Project 2 years ahead
+    total_projected_interest = 0.0
+    
+    if fund_config.interest_frequency == "monthly" and fund_config.interest_rate > 0:
+        while current_date <= end_date:
+            # Calculate monthly interest
+            monthly_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, 1)
+            
+            projection = {
+                "date": current_date.isoformat(),
+                "type": "interest_payment",
+                "amount": round(monthly_interest, 2),
+                "principal_balance": investment.principal_amount,
+                "period": current_date.strftime("%Y-%m"),
+                "status": "projected"
+            }
+            
+            projections.append(projection)
+            total_projected_interest += monthly_interest
+            
+            # Move to next month
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(month=current_date.month + 1)
+    
+    # Get next redemption date
+    next_redemption = get_next_redemption_date(investment, fund_config)
+    can_redeem_now = datetime.now(timezone.utc) >= investment.minimum_hold_end_date
+    
+    return InvestmentProjection(
+        investment_id=investment.investment_id,
+        projected_payments=projections[:24],  # Limit to 24 months for display
+        total_projected_interest=round(total_projected_interest, 2),
+        final_value=round(investment.principal_amount + total_projected_interest, 2),
+        next_redemption_date=next_redemption,
+        can_redeem_now=can_redeem_now
+    )
+
+def create_investment(client_id: str, fund_code: str, amount: float) -> FundInvestment:
+    """Create a new investment with calculated dates"""
+    if fund_code not in FIDUS_FUND_CONFIG:
+        raise ValueError(f"Invalid fund code: {fund_code}")
+    
+    fund_config = FIDUS_FUND_CONFIG[fund_code]
+    
+    # Validate minimum investment
+    if amount < fund_config.minimum_investment:
+        raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
+    
+    # Check invitation-only restriction
+    if fund_config.invitation_only:
+        # In a real system, check if client has invitation
+        pass
+    
+    deposit_date = datetime.now(timezone.utc)
+    dates = calculate_investment_dates(deposit_date, fund_config)
+    
+    investment = FundInvestment(
+        client_id=client_id,
+        fund_code=fund_code,
+        principal_amount=amount,
+        deposit_date=deposit_date,
+        current_value=amount,
+        **dates
+    )
+    
+    return investment
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
