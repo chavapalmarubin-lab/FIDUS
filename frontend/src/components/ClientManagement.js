@@ -638,14 +638,14 @@ const ClientManagement = () => {
                     </td>
                     <td className="p-3">
                       <div className="text-white">{client.email}</div>
-                      <div className="text-slate-400 text-sm">{client.personal?.phone || "N/A"}</div>
+                      <div className="text-slate-400 text-sm">{client.phone || "N/A"}</div>
                     </td>
                     <td className="p-3">
-                      <div className="text-cyan-400 font-semibold">{formatCurrency(client.balances.total)}</div>
                       <div className="text-slate-400 text-sm">
-                        F: {formatCurrency(client.balances.fidus)} | 
-                        C: {formatCurrency(client.balances.core)} | 
-                        D: {formatCurrency(client.balances.dynamic)}
+                        Investments: {client.total_investments || 0}
+                      </div>
+                      <div className="text-slate-400 text-xs">
+                        {client.last_login !== "Never" ? `Last: ${client.last_login}` : "Never logged in"}
                       </div>
                     </td>
                     <td className="p-3">
