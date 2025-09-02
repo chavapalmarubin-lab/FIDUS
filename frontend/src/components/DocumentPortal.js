@@ -190,20 +190,34 @@ const DocumentPortal = ({ user, userType }) => {
 
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return;
-
-    const file = files[0];
     
-    // Validate file type
+    const file = files[0];
+    await uploadFile(file);
+  };
+
+  const handleCameraCapture = async (file) => {
+    if (!file) return;
+    await uploadFile(file);
+  };
+
+  const uploadFile = async (file) => {
+    setError("");
+    setSuccess("");
+
+    // Validate file type - now includes images from camera
     const allowedTypes = [
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain',
-      'text/html'
+      'text/html',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
     ];
     
     if (!allowedTypes.includes(file.type)) {
-      setError("Only PDF, Word, Text, and HTML files are supported");
+      setError("Only PDF, Word, Text, HTML, and Image files are supported");
       return;
     }
 
@@ -233,8 +247,10 @@ const DocumentPortal = ({ user, userType }) => {
       });
 
       if (response.data.success) {
-        setSuccess("Document uploaded successfully");
+        const uploadMethod = file.name.includes('document-') && file.type.startsWith('image/') ? 'camera' : 'file';
+        setSuccess(`Document uploaded successfully via ${uploadMethod}`);
         setShowUploadModal(false);
+        setShowCameraModal(false);
         fetchDocuments();
       }
     } catch (err) {
