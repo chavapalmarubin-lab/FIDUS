@@ -3194,25 +3194,120 @@ Document Content:
             print("❌ OAuth callback fix may have issues")
             return False
 
+    # ===============================================================================
+    # CAMERA CAPTURE SUPPORT TESTS - FOR REVIEW REQUEST
+    # ===============================================================================
+
+    def run_camera_capture_tests(self):
+        """Run focused camera capture support tests as requested in review"""
+        print("="*80)
+        print("📷 CAMERA CAPTURE SUPPORT TESTING - DOCUMENT UPLOAD ENDPOINT VERIFICATION")
+        print("="*80)
+        
+        # Ensure we have admin user for testing
+        if not self.admin_user:
+            print("Setting up admin user for camera capture tests...")
+            self.test_admin_login()
+        
+        # Test 1: Image File Support Verification
+        print("\n📋 Test 1: Image File Support Verification...")
+        image_support_success = self.test_document_upload_image_files()
+        
+        # Test 2: File Type Validation
+        print("\n📋 Test 2: File Type Validation...")
+        file_type_validation_success = self.test_document_upload_invalid_file()
+        
+        # Test 3: Existing Functionality
+        print("\n📋 Test 3: Existing Document Types Still Supported...")
+        existing_functionality_success = self.test_document_upload_existing_document_types()
+        
+        # Test 4: File Size Validation
+        print("\n📋 Test 4: File Size Validation (10MB limit)...")
+        file_size_validation_success = self.test_document_upload_file_size_validation()
+        
+        # Summary of camera capture tests
+        camera_tests = [
+            ("Image File Support (JPEG, PNG, WebP)", image_support_success),
+            ("Invalid File Type Rejection", file_type_validation_success),
+            ("Existing Document Types Support", existing_functionality_success),
+            ("File Size Validation (10MB)", file_size_validation_success)
+        ]
+        
+        print("\n" + "="*80)
+        print("📊 CAMERA CAPTURE SUPPORT TEST RESULTS SUMMARY")
+        print("="*80)
+        
+        passed_camera_tests = 0
+        for test_name, result in camera_tests:
+            status = "✅ PASSED" if result else "❌ FAILED"
+            print(f"   {test_name}: {status}")
+            if result:
+                passed_camera_tests += 1
+        
+        print(f"\n🎯 Camera Capture Tests: {passed_camera_tests}/{len(camera_tests)} passed")
+        print(f"📈 Overall Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        # Specific analysis for review request
+        print(f"\n🔍 REVIEW REQUEST ANALYSIS:")
+        print(f"📷 CAMERA CAPTURE FUNCTIONALITY:")
+        
+        if image_support_success:
+            print("✅ IMAGE FILE SUPPORT: JPEG, PNG, WebP files accepted for camera captures")
+        else:
+            print("❌ IMAGE FILE SUPPORT: Issues found with image file acceptance")
+            
+        if file_type_validation_success:
+            print("✅ FILE TYPE VALIDATION: Invalid file types properly rejected")
+        else:
+            print("❌ FILE TYPE VALIDATION: Issues with file type validation")
+            
+        if existing_functionality_success:
+            print("✅ BACKWARD COMPATIBILITY: Existing document types (PDF, Word, etc.) still work")
+        else:
+            print("❌ BACKWARD COMPATIBILITY: Issues with existing document types")
+            
+        if file_size_validation_success:
+            print("✅ FILE SIZE VALIDATION: 10MB limit properly enforced for image files")
+        else:
+            print("❌ FILE SIZE VALIDATION: Issues with file size limit enforcement")
+        
+        print(f"\n📋 ENDPOINT VERIFICATION:")
+        print(f"   Endpoint: POST /api/documents/upload")
+        print(f"   Expected Behavior: Accept image files for camera captures")
+        print(f"   File Types: PDF, Word, Text, HTML, JPEG, PNG, WebP")
+        print(f"   File Size Limit: 10MB")
+        
+        if passed_camera_tests == len(camera_tests):
+            print("\n🎉 ALL CAMERA CAPTURE TESTS PASSED!")
+            print("✅ Document upload endpoint now supports image files")
+            print("✅ Camera capture functionality is fully operational")
+            print("✅ File validation working correctly")
+            print("✅ Backward compatibility maintained")
+            return True
+        else:
+            print(f"\n⚠️  {len(camera_tests) - passed_camera_tests} camera capture tests failed")
+            print("❌ Camera capture functionality may have issues")
+            return False
+
 def main():
     print("🚀 Starting FIDUS API Testing...")
     print("=" * 50)
     
     tester = FidusAPITester()
     
-    # Run focused Gmail OAuth tests as requested in review
-    gmail_oauth_success = tester.run_gmail_oauth_tests()
+    # Run focused camera capture tests as requested in review
+    camera_capture_success = tester.run_camera_capture_tests()
     
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    if gmail_oauth_success:
-        print("🎉 Gmail OAuth integration tests passed! OAuth callback fix verified.")
+    if camera_capture_success:
+        print("🎉 Camera capture support tests passed! Document upload endpoint verified.")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
-        print(f"⚠️  {failed_tests} test(s) failed. Please check the OAuth callback implementation.")
+        print(f"⚠️  {failed_tests} test(s) failed. Please check the document upload implementation.")
         return 1
 
 if __name__ == "__main__":
