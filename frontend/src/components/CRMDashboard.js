@@ -880,6 +880,10 @@ const CRMDashboard = ({ user }) => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="metaquotes" className="mt-6">
+          <MetaQuotesData />
+        </TabsContent>
       </Tabs>
     </div>
   );
