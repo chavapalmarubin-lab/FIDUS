@@ -671,6 +671,15 @@ const ClientManagement = () => {
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          onClick={() => openReadinessModal(client)}
+                          className="text-slate-400 hover:text-cyan-400"
+                          title="Manage Investment Readiness"
+                        >
+                          <Settings size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
                           className="text-slate-400 hover:text-white"
                         >
                           <Eye size={16} />
