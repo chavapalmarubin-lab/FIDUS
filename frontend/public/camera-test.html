@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Permission Test - FIDUS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e293b;
+            color: white;
+        }
+        .container {
+            background-color: #334155;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #0891b2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background-color: #0e7490;
+        }
+        button:disabled {
+            background-color: #64748b;
+            cursor: not-allowed;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .error {
+            background-color: #dc2626;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .success {
+            background-color: #059669;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .info {
+            background-color: #0284c7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .steps {
+            background-color: #475569;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎥 Camera Permission Test</h1>
+    
+    <div class="container">
+        <h2>Test Camera Access for FIDUS Document Capture</h2>
+        <p>This page will help you test and troubleshoot camera permissions for document capture.</p>
+        
+        <div id="status"></div>
+        
+        <button id="startCamera">Start Camera</button>
+        <button id="stopCamera" style="display:none;">Stop Camera</button>
+        
+        <video id="video" style="display:none;" autoplay playsinline></video>
+        
+        <div class="steps">
+            <h3>📋 How to Enable Camera Permissions:</h3>
+            
+            <h4>🖥️ Desktop Browsers:</h4>
+            <ol>
+                <li><strong>Chrome/Edge:</strong> Look for the camera icon in the address bar and click "Allow"</li>
+                <li><strong>Firefox:</strong> Click the camera icon in the address bar and select "Allow"</li>
+                <li><strong>Safari:</strong> Safari menu → Preferences → Websites → Camera → Allow</li>
+            </ol>
+            
+            <h4>📱 Mobile Browsers:</h4>
+            <ol>
+                <li><strong>iPhone Safari:</strong> Settings → Safari → Camera → Allow</li>
+                <li><strong>Android Chrome:</strong> Settings → Site Settings → Camera → Allow</li>
+                <li><strong>iPhone Chrome:</strong> May need to use Safari instead for camera access</li>
+            </ol>
+            
+            <h4>🔒 Security Requirements:</h4>
+            <ul>
+                <li>Camera access requires <strong>HTTPS</strong> (secure connection)</li>
+                <li>Some browsers block camera on HTTP sites</li>
+                <li>Make sure you're using: <code>https://docuflow-10.preview.emergentagent.com</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const startBtn = document.getElementById('startCamera');
+        const stopBtn = document.getElementById('stopCamera');
+        const status = document.getElementById('status');
+        let stream = null;
+
+        function showStatus(message, type = 'info') {
+            status.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function checkHTTPS() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                showStatus('⚠️ WARNING: Camera requires HTTPS. You are on HTTP which may block camera access.', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        async function checkPermissions() {
+            if (navigator.permissions && navigator.permissions.query) {
+                try {
+                    const result = await navigator.permissions.query({ name: 'camera' });
+                    showStatus(`📊 Current permission state: <strong>${result.state}</strong>`, 'info');
+                    return result.state;
+                } catch (err) {
+                    showStatus('📊 Permission API not supported in this browser', 'info');
+                }
+            }
+            return 'unknown';
+        }
+
+        async function startCamera() {
+            showStatus('🔄 Requesting camera access...', 'info');
+            startBtn.disabled = true;
+
+            if (!checkHTTPS()) {
+                startBtn.disabled = false;
+                return;
+            }
+
+            try {
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera not supported in this browser');
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'environment'
+                    },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+                video.style.display = 'block';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                
+                showStatus('✅ Camera access successful! You should see video above.', 'success');
+
+            } catch (err) {
+                console.error('Camera error:', err);
+                
+                let errorMessage = '❌ Camera access failed: ';
+                
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Permission denied. Please allow camera access and try again.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No camera found on this device.';
+                } else if (err.name === 'NotSupportedError') {
+                    errorMessage += 'Camera not supported in this browser.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage += 'Camera is being used by another application.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage += 'Camera specifications not supported.';
+                } else {
+                    errorMessage += err.message || 'Unknown error occurred.';
+                }
+                
+                showStatus(errorMessage, 'error');
+                startBtn.disabled = false;
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            video.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            startBtn.disabled = false;
+            showStatus('📷 Camera stopped', 'info');
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        stopBtn.addEventListener('click', stopCamera);
+
+        // Initialize
+        checkHTTPS();
+        checkPermissions();
+        showStatus('🎥 Ready to test camera access. Click "Start Camera" to begin.', 'info');
+    </script>
+</body>
+</html>
