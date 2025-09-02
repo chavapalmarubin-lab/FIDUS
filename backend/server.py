@@ -429,7 +429,13 @@ def create_investment(client_id: str, fund_code: str, amount: float) -> FundInve
         # In a real system, check if client has invitation
         pass
     
+    # Get deposit date from client readiness or use current date
     deposit_date = datetime.now(timezone.utc)
+    if client_id in client_readiness:
+        readiness = client_readiness[client_id]
+        if readiness.get('deposit_date'):
+            deposit_date = datetime.fromisoformat(readiness['deposit_date']) if isinstance(readiness['deposit_date'], str) else readiness['deposit_date']
+    
     dates = calculate_investment_dates(deposit_date, fund_config)
     
     investment = FundInvestment(
