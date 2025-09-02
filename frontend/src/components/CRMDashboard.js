@@ -115,6 +115,15 @@ const CRMDashboard = ({ user }) => {
     setClientMT5Data(null);
   };
 
+  const handleClientSelect = (clientId) => {
+    setSelectedClient(clientId);
+    if (clientId && clientId !== "all_clients") {
+      fetchClientMT5Data(clientId);
+    } else {
+      setClientMT5Data(null);
+    }
+  };
+
   const handleRefresh = () => {
     fetchCRMData();
     if (selectedClient) {
