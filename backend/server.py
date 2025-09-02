@@ -224,6 +224,57 @@ class RedemptionRequest(BaseModel):
     amount: Optional[float] = None  # If None, redeem full amount
     redemption_date: Optional[datetime] = None
 
+# FIDUS Investment Fund Configuration
+FIDUS_FUND_CONFIG = {
+    "CORE": FundConfiguration(
+        fund_code="CORE",
+        name="FIDUS Core Fund",
+        interest_rate=1.5,  # 1.5% monthly
+        minimum_investment=10000.0,
+        interest_frequency="monthly",
+        redemption_frequency="monthly",
+        invitation_only=False,
+        incubation_months=2,
+        minimum_hold_months=14
+    ),
+    "BALANCE": FundConfiguration(
+        fund_code="BALANCE",
+        name="FIDUS Balance Fund", 
+        interest_rate=2.5,  # 2.5% monthly
+        minimum_investment=50000.0,
+        interest_frequency="monthly",
+        redemption_frequency="quarterly",  # Every 3 months
+        invitation_only=False,
+        incubation_months=2,
+        minimum_hold_months=14
+    ),
+    "DYNAMIC": FundConfiguration(
+        fund_code="DYNAMIC",
+        name="FIDUS Dynamic Fund",
+        interest_rate=3.5,  # 3.5% monthly
+        minimum_investment=250000.0,
+        interest_frequency="monthly", 
+        redemption_frequency="semi-annually",  # Every 6 months
+        invitation_only=False,
+        incubation_months=2,
+        minimum_hold_months=14
+    ),
+    "UNLIMITED": FundConfiguration(
+        fund_code="UNLIMITED",
+        name="FIDUS Unlimited Fund",
+        interest_rate=0.0,  # No specific monthly return
+        minimum_investment=1000000.0,
+        interest_frequency="none",
+        redemption_frequency="flexible",
+        invitation_only=True,
+        incubation_months=2,
+        minimum_hold_months=14
+    )
+}
+
+# In-memory investment storage (in production, use proper database)
+client_investments = {}
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
