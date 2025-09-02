@@ -76,6 +76,7 @@ const AdminInvestmentManagement = () => {
   useEffect(() => {
     fetchOverviewData();
     fetchFundConfigs();
+    fetchReadyClients();
   }, []);
 
   const fetchFundConfigs = async () => {
@@ -84,6 +85,15 @@ const AdminInvestmentManagement = () => {
       setFundConfigs(response.data.funds);
     } catch (err) {
       console.error("Error fetching fund configs:", err);
+    }
+  };
+
+  const fetchReadyClients = async () => {
+    try {
+      const response = await axios.get(`${API}/clients/ready-for-investment`);
+      setReadyClients(response.data.ready_clients);
+    } catch (err) {
+      console.error("Error fetching ready clients:", err);
     }
   };
 
