@@ -433,25 +433,48 @@ const DocumentPortal = ({ user, userType }) => {
           >
             <h3 className="text-xl font-semibold text-white mb-4">Upload Document</h3>
             
-            <div
-              className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-cyan-400 transition-colors cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx,.txt,.html"
-                onChange={(e) => handleFileUpload(e.target.files)}
-                className="hidden"
-              />
-              
-              <Upload className="mx-auto text-slate-400 mb-4" size={48} />
-              <div className="text-slate-300 text-lg">Click to upload document</div>
-              <div className="text-slate-500 text-sm mt-2">
-                Supported: PDF, Word, Text, HTML (max 10MB)
+            {/* Upload Options */}
+            <div className="space-y-4">
+              {/* File Upload Option */}
+              <div
+                className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-cyan-400 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.html,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                />
+                
+                <Upload className="mx-auto text-slate-400 mb-3" size={40} />
+                <div className="text-slate-300 font-medium">Upload from Device</div>
+                <div className="text-slate-500 text-sm mt-2">
+                  PDF, Word, Text, HTML, Images (max 10MB)
+                </div>
+              </div>
+
+              {/* Camera Capture Option */}
+              <div className="text-center">
+                <div className="text-slate-400 text-sm mb-2">OR</div>
+                <Button
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setShowCameraModal(true);
+                  }}
+                  className="w-full bg-cyan-600 hover:bg-cyan-700"
+                >
+                  <Camera size={16} className="mr-2" />
+                  Take Photo with Camera
+                </Button>
+                <div className="text-slate-500 text-xs mt-2">
+                  Capture documents directly with your camera
+                </div>
               </div>
             </div>
 
+            {/* Upload Progress */}
             {uploadProgress > 0 && (
               <div className="mt-4">
                 <Progress value={uploadProgress} className="w-full" />
@@ -461,6 +484,7 @@ const DocumentPortal = ({ user, userType }) => {
               </div>
             )}
 
+            {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <Button
                 variant="outline"
