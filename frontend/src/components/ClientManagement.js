@@ -441,6 +441,14 @@ const ClientManagement = () => {
             <span>Client Database Management</span>
             <div className="flex gap-2">
               <Button 
+                onClick={() => setShowAddClientModal(true)}
+                size="sm"
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Client
+              </Button>
+              <Button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadLoading}
                 variant="outline"
