@@ -1,12 +1,15 @@
 import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { 
   Camera, 
   CameraOff, 
   RotateCcw, 
   Check, 
   X,
+  XCircle,
+  CheckCircle,
   AlertCircle,
   Loader2
 } from "lucide-react";
