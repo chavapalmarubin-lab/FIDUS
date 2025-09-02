@@ -198,15 +198,18 @@ backend:
 frontend:
   - task: "CRM Dashboard Integration"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/CRMDashboard.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Created comprehensive CRM Dashboard component with fund management, MT5 trading monitor, and capital flows tracking. Integrated into Admin Dashboard as new 'CRM & Trading' tab. Fixed backend URL configuration error. Ready for testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL LOGIN ISSUE BLOCKING CRM DASHBOARD TESTING: Admin login functionality is completely broken. Login form accepts credentials (admin/password123) but fails to navigate to admin dashboard. Page remains stuck on login screen with 'Signing in...' state indefinitely. Multiple React key duplication errors in console may be causing rendering issues. CANNOT TEST CRM FUNCTIONALITY: Unable to access admin dashboard means all enhanced CRM features cannot be tested including: Fund Management tab with clickable investors, Trading Monitor with client profiles, MetaQuotes Data tab with credential management, and all navigation flows. CODE REVIEW FINDINGS: ✅ CRM Dashboard component is well-implemented with comprehensive functionality ✅ FundInvestorsDetail component properly structured ✅ ClientDetailedProfile component with all required tabs ✅ MetaQuotes Data component with credential management ✅ All backend integrations properly configured. URGENT FIX REQUIRED: Login system must be repaired before any CRM testing can proceed."
 
   - task: "Gmail Integration in Document Portal"
     implemented: true
