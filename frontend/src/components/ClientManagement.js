@@ -52,6 +52,10 @@ const ClientManagement = () => {
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showReadinessModal, setShowReadinessModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  
+  const fileInputRef = useRef(null);
   
   // Client creation form
   const [newClientForm, setNewClientForm] = useState({
