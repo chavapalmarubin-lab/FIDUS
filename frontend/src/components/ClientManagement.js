@@ -616,8 +616,11 @@ const ClientManagement = () => {
       {/* Clients Table */}
       <Card className="dashboard-card">
         <CardHeader>
-          <CardTitle className="text-white">
-            Client Database ({filteredClients.length} of {clients.length})
+          <CardTitle className="text-white flex items-center justify-between">
+            <span>Client Database ({filteredClients.length} of {clients.length})</span>
+            <div className="text-sm text-slate-400 font-normal">
+              💡 Click on any client row to manage their investment readiness
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
