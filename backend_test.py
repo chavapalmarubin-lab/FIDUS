@@ -1182,7 +1182,150 @@ Document Content:
             self.tests_run += 1
             return False
 
-    def test_admin_get_all_documents(self):
+    def test_document_upload_file_size_validation(self):
+        """Test document upload file size validation (10MB limit) with image files"""
+        if not self.admin_user:
+            print("❌ Skipping file size validation test - no admin user available")
+            return False
+            
+        try:
+            # Create a large image file (simulate > 10MB)
+            # For testing, we'll create a smaller file but set a fake size in the request
+            test_image = self.create_test_image()
+            
+            # Create a larger image buffer to simulate oversized file
+            large_image_data = b"x" * (11 * 1024 * 1024)  # 11MB of data
+            large_image_file = io.BytesIO(large_image_data)
+            
+            files = {
+                'document': ('large_camera_capture.jpg', large_image_file, 'image/jpeg')
+            }
+            data = {
+                'category': 'camera_capture',
+                'uploader_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/upload"
+            print(f"\n🔍 Testing Document Upload - File Size Validation (>10MB Image)...")
+            print(f"   URL: {url}")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 400  # Should reject oversized file
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Oversized image file properly rejected (Status: {response.status_code})")
+                try:
+                    error_data = response.json()
+                    error_message = error_data.get('detail', '')
+                    if '10MB' in error_message:
+                        print(f"   ✅ Correct error message: {error_message}")
+                    else:
+                        print(f"   ⚠️  Error message: {error_message}")
+                except:
+                    pass
+            else:
+                print(f"❌ Failed - Expected 400, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_document_upload_existing_document_types(self):
+        """Test that existing document types (PDF, Word, etc.) still work correctly"""
+        if not self.admin_user:
+            print("❌ Skipping existing document types test - no admin user available")
+            return False
+            
+        print(f"\n🔍 Testing Document Upload - Existing Document Types Still Supported...")
+        
+        # Test PDF upload
+        success_pdf = self.test_existing_document_upload('application/pdf', 'test_document.pdf')
+        
+        # Test Word document upload
+        success_word = self.test_existing_document_upload('application/msword', 'test_document.doc')
+        
+        # Test text file upload
+        success_text = self.test_existing_document_upload('text/plain', 'test_document.txt')
+        
+        # Test HTML file upload
+        success_html = self.test_existing_document_upload('text/html', 'test_document.html')
+        
+        # All existing formats should still be supported
+        if success_pdf and success_word and success_text and success_html:
+            print("✅ ALL EXISTING DOCUMENT TYPES STILL SUPPORTED - Backward compatibility maintained!")
+            return True
+        else:
+            print("❌ Some existing document types not working")
+            return False
+
+    def test_existing_document_upload(self, content_type, filename):
+        """Helper method to test specific existing document format upload"""
+        try:
+            # Create appropriate test content based on type
+            if content_type == 'application/pdf':
+                test_content = self.create_test_pdf()
+            elif content_type == 'application/msword':
+                test_content = io.BytesIO(b"Mock Word Document Content")
+            elif content_type == 'text/plain':
+                test_content = io.BytesIO(b"This is a test text document for FIDUS portal.")
+            elif content_type == 'text/html':
+                test_content = io.BytesIO(b"<html><body><h1>Test HTML Document</h1></body></html>")
+            else:
+                test_content = io.BytesIO(b"Generic document content")
+            
+            files = {
+                'document': (filename, test_content, content_type)
+            }
+            data = {
+                'category': 'existing_document_type',
+                'uploader_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/upload"
+            print(f"   Testing {content_type} upload...")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"   ✅ {content_type} upload successful")
+                try:
+                    response_data = response.json()
+                    document_id = response_data.get("document_id")
+                    print(f"   Document ID: {document_id}")
+                    return True
+                except:
+                    pass
+            else:
+                print(f"   ❌ {content_type} upload failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"   ❌ Error testing {content_type}: {str(e)}")
+            self.tests_run += 1
+            return False
         """Test getting all documents for admin"""
         success, response = self.run_test(
             "Get All Documents (Admin)",
