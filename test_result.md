@@ -243,7 +243,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All CRM functionalities tested successfully"
+    - "Gmail Integration in Document Portal - OAuth flow fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
