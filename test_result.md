@@ -129,6 +129,21 @@ backend:
         - agent: "testing"
         - comment: "🎯 DETAILED OAUTH URL ANALYSIS COMPLETED - DIAGNOSING 'ACCOUNTS.GOOGLE.REFUSE TO CONNECT' ISSUE! Comprehensive analysis of Gmail OAuth URL generation reveals PERFECT backend implementation: (1) OAUTH URL STRUCTURE: Generated URL follows exact Google OAuth format - https://accounts.google.com/o/oauth2/auth with all required parameters correctly formatted and URL-encoded. (2) CLIENT ID VERIFICATION: Using NEW client_id (909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com) which should resolve previous 403 errors. Client ID format is valid Google OAuth client format. (3) PARAMETER VALIDATION: All 6 required OAuth parameters present and correct - client_id (valid), redirect_uri (matches expected), scope (gmail.send), response_type (code), access_type (offline), state (30 chars, CSRF protection). (4) GOOGLE OAUTH COMPLIANCE: URL structure matches Google's OAuth 2.0 specification exactly. Base URL, parameter encoding, and format all correct. (5) DIAGNOSIS CONCLUSION: Backend OAuth implementation is PERFECT! If 'accounts.google.refuse to connect' error persists, the issue is in Google Cloud Console configuration (OAuth consent screen, domain verification, redirect URI whitelist, external user approval, or testing mode restrictions) - NOT in backend code. All 7/7 critical OAuth tests passed with 16/16 total tests successful. Backend requires no fixes for OAuth functionality."
 
+  - task: "Document Upload Camera Capture Support"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Added camera functionality to both Document Portal and User Registration KYC flow. Updated the backend document upload endpoint to accept image files (JPEG, PNG, WebP) in addition to existing document types (PDF, Word, Text, HTML). Ready for testing."
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 CAMERA CAPTURE SUPPORT TESTING COMPLETED SUCCESSFULLY! Comprehensive testing of document upload endpoint POST /api/documents/upload confirms camera capture functionality is fully operational: ✅ IMAGE FILE SUPPORT VERIFIED: All three image formats (JPEG, PNG, WebP) are successfully accepted for camera captures with proper document IDs generated. ✅ FILE TYPE VALIDATION WORKING: Invalid file types (non-image/non-document) are properly rejected with 400 status and clear error message 'Only PDF, Word, Text, HTML, and Image files are supported'. ✅ BACKWARD COMPATIBILITY MAINTAINED: All existing document types (PDF, Word, Text, HTML) continue to work correctly, ensuring no regression in functionality. ✅ FILE SIZE VALIDATION ENFORCED: 10MB limit is properly enforced for image files with correct error message 'File size must be less than 10MB' when exceeded. ENDPOINT VERIFICATION: POST /api/documents/upload now supports complete file type matrix: Documents (PDF, Word, Text, HTML) + Images (JPEG, PNG, WebP) with consistent 10MB size limit across all types. All 4/4 camera capture tests passed (10/10 total tests) confirming the endpoint enhancement is working perfectly for camera-captured images while maintaining full backward compatibility."
+
   - task: "Fund Management System"
     implemented: true
     working: true
