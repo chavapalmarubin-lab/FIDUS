@@ -21,9 +21,11 @@ import {
   CreditCard,
   Shield,
   Mail,
-  Phone
+  Phone,
+  Camera
 } from "lucide-react";
 import axios from "axios";
+import CameraCapture from "./CameraCapture";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
