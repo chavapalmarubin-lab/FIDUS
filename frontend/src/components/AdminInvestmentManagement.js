@@ -153,7 +153,8 @@ const AdminInvestmentManagement = () => {
     setInvestmentForm({
       client_id: "",
       fund_code: "",
-      amount: ""
+      amount: "",
+      deposit_date: ""
     });
   };
 
