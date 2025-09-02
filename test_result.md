@@ -393,9 +393,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Client Management Enhanced Features"
-    - "FIDUS Fund Structures and Timelines"
-    - "Investment Creation and Readiness Workflow"
+    - "Client Management Enhanced Features Frontend"
+    - "FIDUS Investment Management System Frontend"
+    - "Admin Investment Creation with Readiness Validation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
