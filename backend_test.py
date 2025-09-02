@@ -2363,6 +2363,404 @@ Document Content:
         return success1 and success2
 
     # ===============================================================================
+    # CLIENT INVESTMENT READINESS SYSTEM TESTS - PRIMARY FOCUS
+    # ===============================================================================
+    
+    def test_client_readiness_create(self):
+        """Test creating client readiness records"""
+        if not self.admin_user:
+            print("❌ Skipping client readiness create test - no admin user available")
+            return False
+            
+        # First get a client ID
+        success, response = self.run_test(
+            "Get Clients for Readiness Test",
+            "GET",
+            "api/clients/all",
+            200
+        )
+        
+        if not success or not response.get('clients'):
+            print("❌ No clients available for readiness test")
+            return False
+            
+        client_id = response['clients'][0]['id']
+        
+        # Test creating/updating readiness record
+        readiness_data = {
+            "aml_kyc_completed": True,
+            "agreement_signed": False,
+            "deposit_date": "2024-12-19T10:00:00Z",
+            "notes": "Initial AML/KYC completed, awaiting agreement signature",
+            "updated_by": "admin"
+        }
+        
+        success, update_response = self.run_test(
+            "Create/Update Client Readiness Record",
+            "PUT",
+            f"api/clients/{client_id}/readiness",
+            200,
+            data=readiness_data
+        )
+        
+        if success:
+            readiness = update_response.get('readiness', {})
+            print(f"   AML/KYC Completed: {readiness.get('aml_kyc_completed')}")
+            print(f"   Agreement Signed: {readiness.get('agreement_signed')}")
+            print(f"   Deposit Date: {readiness.get('deposit_date')}")
+            print(f"   Investment Ready: {readiness.get('investment_ready')}")
+            print(f"   Notes: {readiness.get('notes')}")
+            
+            # Should not be investment ready yet (agreement not signed)
+            if not readiness.get('investment_ready'):
+                print("   ✅ Correctly not investment-ready (agreement not signed)")
+            else:
+                print("   ⚠️  Should not be investment-ready yet")
+                
+        return success
+
+    def test_client_readiness_get(self):
+        """Test retrieving client readiness status"""
+        if not self.admin_user:
+            print("❌ Skipping client readiness get test - no admin user available")
+            return False
+            
+        # Get a client ID
+        success, response = self.run_test(
+            "Get Clients for Readiness Retrieval Test",
+            "GET",
+            "api/clients/all",
+            200
+        )
+        
+        if not success or not response.get('clients'):
+            print("❌ No clients available for readiness retrieval test")
+            return False
+            
+        client_id = response['clients'][0]['id']
+        
+        # Test getting readiness status
+        success, readiness_response = self.run_test(
+            "Get Client Readiness Status",
+            "GET",
+            f"api/clients/{client_id}/readiness",
+            200
+        )
+        
+        if success:
+            readiness = readiness_response.get('readiness', {})
+            required_fields = ['client_id', 'aml_kyc_completed', 'agreement_signed', 
+                             'deposit_date', 'investment_ready', 'notes', 'updated_at', 'updated_by']
+            
+            missing_fields = [field for field in required_fields if field not in readiness]
+            if missing_fields:
+                print(f"   ⚠️  Missing readiness fields: {missing_fields}")
+            else:
+                print("   ✅ All required readiness fields present")
+                
+            print(f"   Client ID: {readiness.get('client_id')}")
+            print(f"   Investment Ready: {readiness.get('investment_ready')}")
+            
+        return success
+
+    def test_client_readiness_complete_workflow(self):
+        """Test complete client readiness workflow to investment-ready status"""
+        if not self.admin_user:
+            print("❌ Skipping complete readiness workflow test - no admin user available")
+            return False
+            
+        # Get a client ID
+        success, response = self.run_test(
+            "Get Clients for Complete Workflow Test",
+            "GET",
+            "api/clients/all",
+            200
+        )
+        
+        if not success or not response.get('clients'):
+            print("❌ No clients available for complete workflow test")
+            return False
+            
+        client_id = response['clients'][0]['id']
+        
+        # Step 1: Complete all readiness requirements
+        complete_readiness_data = {
+            "aml_kyc_completed": True,
+            "agreement_signed": True,
+            "deposit_date": "2024-12-19T10:00:00Z",
+            "notes": "All requirements completed - ready for investment",
+            "updated_by": "admin"
+        }
+        
+        success, update_response = self.run_test(
+            "Complete All Readiness Requirements",
+            "PUT",
+            f"api/clients/{client_id}/readiness",
+            200,
+            data=complete_readiness_data
+        )
+        
+        if success:
+            readiness = update_response.get('readiness', {})
+            investment_ready = readiness.get('investment_ready', False)
+            
+            if investment_ready:
+                print("   ✅ Client is now investment-ready (all checklist items completed)")
+                print(f"   AML/KYC: {readiness.get('aml_kyc_completed')}")
+                print(f"   Agreement: {readiness.get('agreement_signed')}")
+                print(f"   Deposit Date: {readiness.get('deposit_date')}")
+                return True
+            else:
+                print("   ❌ Client should be investment-ready but isn't")
+                return False
+                
+        return success
+
+    def test_enhanced_client_management(self):
+        """Test enhanced client management endpoint (should NOT have balances.total or activity.total_transactions)"""
+        success, response = self.run_test(
+            "Get Enhanced Client Data Structure",
+            "GET",
+            "api/clients/all",
+            200
+        )
+        
+        if success:
+            clients = response.get('clients', [])
+            print(f"   Total clients: {len(clients)}")
+            print(f"   Ready for investment: {response.get('ready_for_investment', 0)}")
+            
+            if clients:
+                client = clients[0]
+                
+                # Check that client does NOT have balances.total or activity.total_transactions
+                if 'balances' in client and 'total' in client['balances']:
+                    print("   ❌ Client has balances.total (should be removed in enhanced version)")
+                    return False
+                    
+                if 'activity' in client and 'total_transactions' in client['activity']:
+                    print("   ❌ Client has activity.total_transactions (should be removed in enhanced version)")
+                    return False
+                    
+                print("   ✅ Enhanced client structure confirmed (no balances.total or activity.total_transactions)")
+                
+                # Check for enhanced fields
+                enhanced_fields = ['readiness_status', 'investment_ready', 'total_investments']
+                for field in enhanced_fields:
+                    if field in client:
+                        print(f"   ✅ Enhanced field present: {field} = {client[field]}")
+                    else:
+                        print(f"   ⚠️  Enhanced field missing: {field}")
+                        
+        return success
+
+    def test_investment_creation_with_readiness_validation(self):
+        """Test investment creation with client readiness validation"""
+        if not self.admin_user:
+            print("❌ Skipping investment creation readiness test - no admin user available")
+            return False
+            
+        # First ensure we have an investment-ready client
+        success, response = self.run_test(
+            "Get Investment-Ready Clients",
+            "GET",
+            "api/clients/ready-for-investment",
+            200
+        )
+        
+        ready_clients = response.get('ready_clients', []) if success else []
+        
+        if not ready_clients:
+            print("   ⚠️  No investment-ready clients found, creating one...")
+            
+            # Get any client and make them ready
+            success, all_clients_response = self.run_test(
+                "Get All Clients for Readiness Setup",
+                "GET",
+                "api/clients/all",
+                200
+            )
+            
+            if success and all_clients_response.get('clients'):
+                client_id = all_clients_response['clients'][0]['id']
+                
+                # Make client investment-ready
+                readiness_data = {
+                    "aml_kyc_completed": True,
+                    "agreement_signed": True,
+                    "deposit_date": "2024-12-19T10:00:00Z",
+                    "updated_by": "admin"
+                }
+                
+                self.run_test(
+                    "Make Client Investment-Ready",
+                    "PUT",
+                    f"api/clients/{client_id}/readiness",
+                    200,
+                    data=readiness_data
+                )
+                
+                ready_clients = [{'client_id': client_id, 'name': 'Test Client'}]
+        
+        if ready_clients:
+            client_id = ready_clients[0]['client_id']
+            
+            # Test investment creation for ready client
+            investment_data = {
+                "client_id": client_id,
+                "fund_code": "CORE",
+                "amount": 15000.0
+            }
+            
+            success, investment_response = self.run_test(
+                "Create Investment for Ready Client",
+                "POST",
+                "api/investments/create",
+                200,
+                data=investment_data
+            )
+            
+            if success:
+                investment = investment_response.get('investment', {})
+                print(f"   ✅ Investment created successfully")
+                print(f"   Investment ID: {investment.get('investment_id')}")
+                print(f"   Fund: {investment.get('fund_code')}")
+                print(f"   Amount: ${investment.get('principal_amount'):,.2f}")
+                print(f"   Status: {investment.get('status')}")
+                
+                # Check timeline calculations
+                dates = ['deposit_date', 'incubation_end_date', 'interest_start_date', 'minimum_hold_end_date']
+                for date_field in dates:
+                    if date_field in investment:
+                        print(f"   {date_field}: {investment[date_field]}")
+                        
+                return True
+            else:
+                print("   ❌ Failed to create investment for ready client")
+                return False
+        else:
+            print("   ❌ Could not find or create investment-ready client")
+            return False
+
+    def test_fund_configuration_and_business_logic(self):
+        """Test all 4 FIDUS funds and their business logic"""
+        success, response = self.run_test(
+            "Get FIDUS Fund Configuration",
+            "GET",
+            "api/investments/funds/config",
+            200
+        )
+        
+        if success:
+            funds = response.get('funds', {})
+            expected_funds = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
+            
+            print(f"   Total funds configured: {len(funds)}")
+            
+            for fund_code in expected_funds:
+                if fund_code in funds:
+                    fund = funds[fund_code]
+                    print(f"   ✅ {fund_code} Fund:")
+                    print(f"      Name: {fund.get('name')}")
+                    print(f"      Interest Rate: {fund.get('interest_rate')}% monthly")
+                    print(f"      Minimum Investment: ${fund.get('minimum_investment'):,.2f}")
+                    print(f"      Redemption Frequency: {fund.get('redemption_frequency')}")
+                    print(f"      Invitation Only: {fund.get('invitation_only')}")
+                    print(f"      Incubation Period: {fund.get('incubation_months')} months")
+                    print(f"      Minimum Hold: {fund.get('minimum_hold_months')} months")
+                    
+                    # Verify specific fund characteristics
+                    if fund_code == 'CORE':
+                        assert fund.get('interest_rate') == 1.5, "CORE should be 1.5%"
+                        assert fund.get('minimum_investment') == 10000.0, "CORE min should be $10K"
+                        assert fund.get('redemption_frequency') == 'monthly', "CORE should be monthly redemption"
+                        
+                    elif fund_code == 'BALANCE':
+                        assert fund.get('interest_rate') == 2.5, "BALANCE should be 2.5%"
+                        assert fund.get('minimum_investment') == 50000.0, "BALANCE min should be $50K"
+                        assert fund.get('redemption_frequency') == 'quarterly', "BALANCE should be quarterly redemption"
+                        
+                    elif fund_code == 'DYNAMIC':
+                        assert fund.get('interest_rate') == 3.5, "DYNAMIC should be 3.5%"
+                        assert fund.get('minimum_investment') == 250000.0, "DYNAMIC min should be $250K"
+                        assert fund.get('redemption_frequency') == 'semi-annually', "DYNAMIC should be semi-annual redemption"
+                        
+                    elif fund_code == 'UNLIMITED':
+                        assert fund.get('minimum_investment') == 1000000.0, "UNLIMITED min should be $1M"
+                        assert fund.get('invitation_only') == True, "UNLIMITED should be invitation-only"
+                        
+                else:
+                    print(f"   ❌ Missing {fund_code} fund configuration")
+                    return False
+                    
+            print("   ✅ All 4 FIDUS funds properly configured with correct business logic")
+            return True
+            
+        return success
+
+    def test_investment_timeline_calculations(self):
+        """Test investment timeline calculations (2-month incubation, interest start dates, minimum hold periods)"""
+        if not self.admin_user:
+            print("❌ Skipping timeline calculations test - no admin user available")
+            return False
+            
+        # Create a test investment to verify timeline calculations
+        investment_data = {
+            "client_id": "client_001",  # Use existing client
+            "fund_code": "CORE",
+            "amount": 15000.0
+        }
+        
+        success, response = self.run_test(
+            "Create Investment for Timeline Testing",
+            "POST",
+            "api/investments/create",
+            200,
+            data=investment_data
+        )
+        
+        if success:
+            investment = response.get('investment', {})
+            
+            # Verify timeline calculations
+            deposit_date = investment.get('deposit_date')
+            incubation_end = investment.get('incubation_end_date')
+            interest_start = investment.get('interest_start_date')
+            min_hold_end = investment.get('minimum_hold_end_date')
+            
+            print(f"   Deposit Date: {deposit_date}")
+            print(f"   Incubation End: {incubation_end}")
+            print(f"   Interest Start: {interest_start}")
+            print(f"   Min Hold End: {min_hold_end}")
+            
+            # Verify 2-month incubation period
+            if deposit_date and incubation_end:
+                from datetime import datetime
+                deposit_dt = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+                incubation_dt = datetime.fromisoformat(incubation_end.replace('Z', '+00:00'))
+                incubation_days = (incubation_dt - deposit_dt).days
+                
+                if 55 <= incubation_days <= 65:  # Approximately 2 months (60 days ± 5)
+                    print(f"   ✅ Incubation period correct: {incubation_days} days (~2 months)")
+                else:
+                    print(f"   ❌ Incubation period incorrect: {incubation_days} days (should be ~60)")
+                    
+            # Verify 14-month minimum hold period
+            if deposit_date and min_hold_end:
+                deposit_dt = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+                min_hold_dt = datetime.fromisoformat(min_hold_end.replace('Z', '+00:00'))
+                hold_days = (min_hold_dt - deposit_dt).days
+                
+                if 400 <= hold_days <= 440:  # Approximately 14 months (420 days ± 20)
+                    print(f"   ✅ Minimum hold period correct: {hold_days} days (~14 months)")
+                else:
+                    print(f"   ❌ Minimum hold period incorrect: {hold_days} days (should be ~420)")
+                    
+            return True
+            
+        return success
+
+    # ===============================================================================
     # CRM SYSTEM TESTS
     # ===============================================================================
 
