@@ -790,6 +790,16 @@ const CRMDashboard = ({ user }) => {
                           <td className="text-right py-3 px-4 text-gray-400">
                             {format(new Date(client.last_activity), 'MMM dd, HH:mm')}
                           </td>
+                          <td className="text-center py-3 px-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewClientProfile(client.client_id, client.client_name)}
+                              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
