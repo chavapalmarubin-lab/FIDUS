@@ -619,7 +619,9 @@ const ClientManagement = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.02 }}
-                    className="border-b border-slate-700 hover:bg-slate-800/50"
+                    className="border-b border-slate-700 hover:bg-slate-800/50 cursor-pointer transition-colors"
+                    onClick={() => openReadinessModal(client)}
+                    title="Click to manage investment readiness"
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
