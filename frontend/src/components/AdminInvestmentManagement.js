@@ -534,16 +534,30 @@ const AdminInvestmentManagement = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label className="text-slate-300">Client ID</Label>
-                  <Input
-                    value={investmentForm.client_id}
-                    onChange={(e) => setInvestmentForm({...investmentForm, client_id: e.target.value})}
-                    placeholder="Enter client ID (e.g., client1)"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  <p className="text-slate-400 text-xs mt-1">
-                    Use client IDs like: client1, client2, admin_001, etc.
-                  </p>
+                  <Label className="text-slate-300">Select Client</Label>
+                  <Select value={investmentForm.client_id} onValueChange={(value) => setInvestmentForm({...investmentForm, client_id: value})}>
+                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Choose a client ready for investment" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {readyClients.map(client => (
+                        <SelectItem key={client.client_id} value={client.client_id} className="text-white">
+                          <div>
+                            <div className="font-medium">{client.name}</div>
+                            <div className="text-sm text-slate-400">
+                              {client.email} • Investments: {client.total_investments}
+                              {client.deposit_date && ` • Deposit: ${format(new Date(client.deposit_date), 'MMM dd, yyyy')}`}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {readyClients.length === 0 && (
+                    <p className="text-yellow-400 text-sm mt-1">
+                      ⚠️ No clients ready for investment. Complete AML/KYC, Agreement, and Deposit Date in Client Management.
+                    </p>
+                  )}
                 </div>
                 
                 <div>
