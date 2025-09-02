@@ -649,13 +649,13 @@ const ClientManagement = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <Badge variant={getStatusBadgeVariant(client.status)}>
-                        {client.status?.toUpperCase()}
-                      </Badge>
+                      {getReadinessStatus(client)}
                     </td>
                     <td className="p-3">
-                      <div className="text-white text-sm">{client.activity.total_transactions} transactions</div>
-                      <div className="text-slate-400 text-xs">{formatDate(client.activity.last_activity)}</div>
+                      <div className="text-white text-sm">ID: {client.id || client.username}</div>
+                      <div className="text-slate-400 text-xs">
+                        Created: {formatDate(client.created_at || client.createdAt)}
+                      </div>
                     </td>
                     <td className="p-3">
                       <div className="space-y-1">
