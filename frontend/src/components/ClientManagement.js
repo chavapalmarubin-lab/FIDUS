@@ -384,7 +384,7 @@ const ClientManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm">Total Clients</p>
-                <p className="text-2xl font-bold text-white">{summary.total || 0}</p>
+                <p className="text-2xl font-bold text-white">{summary.total_clients || 0}</p>
               </div>
               <Users className="h-8 w-8 text-cyan-400" />
             </div>
@@ -395,10 +395,10 @@ const ClientManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Active Clients</p>
-                <p className="text-2xl font-bold text-green-400">{summary.active || 0}</p>
+                <p className="text-slate-400 text-sm">Ready for Investment</p>
+                <p className="text-2xl font-bold text-green-400">{summary.ready_for_investment || 0}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-400" />
+              <Target className="h-8 w-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
@@ -407,10 +407,12 @@ const ClientManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Total AUM</p>
-                <p className="text-2xl font-bold text-cyan-400">{formatCurrency(summary.totalAUM || 0)}</p>
+                <p className="text-slate-400 text-sm">In Progress</p>
+                <p className="text-2xl font-bold text-yellow-400">
+                  {(summary.total_clients || 0) - (summary.ready_for_investment || 0)}
+                </p>
               </div>
-              <DollarSign className="h-8 w-8 text-cyan-400" />
+              <Clock className="h-8 w-8 text-yellow-400" />
             </div>
           </CardContent>
         </Card>
@@ -419,10 +421,14 @@ const ClientManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Growth Rate</p>
-                <p className="text-2xl font-bold text-green-400">+12.5%</p>
+                <p className="text-slate-400 text-sm">Completion Rate</p>
+                <p className="text-2xl font-bold text-cyan-400">
+                  {summary.total_clients > 0 
+                    ? Math.round((summary.ready_for_investment / summary.total_clients) * 100) 
+                    : 0}%
+                </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-400" />
+              <TrendingUp className="h-8 w-8 text-cyan-400" />
             </div>
           </CardContent>
         </Card>
