@@ -177,13 +177,25 @@ const GmailSettings = () => {
           )}
         </div>
 
-        {/* Error Display */}
+        {/* Error/Success Display */}
         {authError && (
-          <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
-            <div className="flex items-start text-red-400">
-              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+          <div className={`border rounded-lg p-4 ${
+            authError.includes('successful') 
+              ? 'bg-green-600/10 border-green-600/20' 
+              : 'bg-red-600/10 border-red-600/20'
+          }`}>
+            <div className={`flex items-start ${
+              authError.includes('successful') ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {authError.includes('successful') ? (
+                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              )}
               <div>
-                <span className="font-medium">Authentication Issue</span>
+                <span className="font-medium">
+                  {authError.includes('successful') ? 'Success' : 'Authentication Issue'}
+                </span>
                 <p className="text-sm mt-1">{authError}</p>
               </div>
             </div>
