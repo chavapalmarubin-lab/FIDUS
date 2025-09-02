@@ -223,7 +223,7 @@ frontend:
     file: "/app/frontend/src/components/GmailSettings.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
         - agent: "main"
@@ -231,6 +231,9 @@ frontend:
         - working: false
         - agent: "testing"
         - comment: "❌ CRITICAL LOGIN ISSUE BLOCKING GMAIL TESTING: Unable to complete login process to access Document Portal. Login form appears but input field selectors are not working properly. Multiple selector attempts failed (placeholder, type, nth-child). This prevents comprehensive testing of Gmail integration features. CODE REVIEW FINDINGS: ✅ Gmail Settings component properly implemented with OAuth flow, status badges, feature list, and responsive layout. ✅ Component correctly integrated into AdminDashboard Document Portal tab. ✅ Backend integration endpoints configured. ✅ Professional UI with proper error handling. Gmail integration appears well-implemented but requires login fix for full testing."
+        - working: false
+        - agent: "main"
+        - comment: "FIXED GMAIL OAUTH FLOW: Identified and fixed the root cause of 'Not Connected' issue. Problem was OAuth callback handling - backend was returning JSON instead of redirecting back to frontend. Fixed by: (1) Updated backend OAuth callback to redirect to frontend with success/error parameters instead of returning JSON. (2) Updated frontend to detect and handle OAuth callback parameters from URL. (3) Implemented proper state management and status updates after OAuth completion. (4) Added success message display and automatic status refresh. The OAuth flow now works correctly: Frontend -> Google OAuth -> Backend callback -> Frontend redirect with status. Ready for comprehensive testing."
 
 metadata:
   created_by: "main_agent"
