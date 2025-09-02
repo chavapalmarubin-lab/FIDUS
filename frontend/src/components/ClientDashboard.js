@@ -399,6 +399,10 @@ const ClientDashboard = ({ user, onLogout }) => {
         </motion.div>
           </TabsContent>
 
+          <TabsContent value="investments" className="mt-6">
+            <InvestmentDashboard user={user} userType="client" />
+          </TabsContent>
+
           <TabsContent value="documents" className="mt-6">
             <DocumentPortal user={user} userType="client" />
           </TabsContent>
