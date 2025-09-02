@@ -269,6 +269,104 @@ const ClientManagement = () => {
     }
   };
 
+  // Investment Readiness Functions
+  const handleAddClient = async () => {
+    try {
+      if (!newClientForm.username || !newClientForm.name || !newClientForm.email) {
+        setError("Please fill in all required fields");
+        return;
+      }
+
+      const response = await axios.post(`${API}/clients/create`, newClientForm);
+      
+      if (response.data.success) {
+        setSuccess(response.data.message);
+        setShowAddClientModal(false);
+        resetNewClientForm();
+        fetchClients();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to create client");
+    }
+  };
+
+  const handleUpdateReadiness = async () => {
+    try {
+      if (!selectedClient) return;
+
+      const updateData = {
+        ...readinessForm,
+        deposit_date: readinessForm.deposit_date ? new Date(readinessForm.deposit_date).toISOString() : null
+      };
+
+      const response = await axios.put(`${API}/clients/${selectedClient.id}/readiness`, updateData);
+      
+      if (response.data.success) {
+        setSuccess(response.data.message);
+        setShowReadinessModal(false);
+        setSelectedClient(null);
+        resetReadinessForm();
+        fetchClients();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to update client readiness");
+    }
+  };
+
+  const resetNewClientForm = () => {
+    setNewClientForm({
+      username: "",
+      name: "",
+      email: "",
+      phone: "",
+      notes: ""
+    });
+  };
+
+  const resetReadinessForm = () => {
+    setReadinessForm({
+      aml_kyc_completed: false,
+      agreement_signed: false,
+      deposit_date: "",
+      notes: "",
+      updated_by: "admin"
+    });
+  };
+
+  const openReadinessModal = (client) => {
+    setSelectedClient(client);
+    const readiness = client.readiness_status || {};
+    setReadinessForm({
+      aml_kyc_completed: readiness.aml_kyc_completed || false,
+      agreement_signed: readiness.agreement_signed || false,
+      deposit_date: readiness.deposit_date ? readiness.deposit_date.split('T')[0] : "",
+      notes: readiness.notes || "",
+      updated_by: "admin"
+    });
+    setShowReadinessModal(true);
+  };
+
+  const getReadinessStatus = (client) => {
+    if (client.investment_ready) {
+      return <Badge className="bg-green-500 text-white">Ready for Investment</Badge>;
+    }
+    
+    const readiness = client.readiness_status || {};
+    const completed = [
+      readiness.aml_kyc_completed,
+      readiness.agreement_signed,
+      readiness.deposit_date
+    ].filter(Boolean).length;
+    
+    if (completed === 0) {
+      return <Badge className="bg-red-500 text-white">Not Started</Badge>;
+    } else if (completed < 3) {
+      return <Badge className="bg-yellow-500 text-white">In Progress ({completed}/3)</Badge>;
+    } else {
+      return <Badge className="bg-green-500 text-white">Ready</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
