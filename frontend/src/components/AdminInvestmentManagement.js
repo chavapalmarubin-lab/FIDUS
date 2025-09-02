@@ -102,6 +102,44 @@ const AdminInvestmentManagement = () => {
     setRefreshing(false);
   };
 
+  const handleCreateInvestment = async () => {
+    try {
+      if (!investmentForm.client_id || !investmentForm.fund_code || !investmentForm.amount) {
+        setError("Please fill in all fields");
+        return;
+      }
+
+      const amount = parseFloat(investmentForm.amount);
+      if (isNaN(amount) || amount <= 0) {
+        setError("Please enter a valid amount");
+        return;
+      }
+
+      const response = await axios.post(`${API}/investments/create`, {
+        client_id: investmentForm.client_id,
+        fund_code: investmentForm.fund_code,
+        amount: amount
+      });
+
+      if (response.data.success) {
+        setSuccess(`Investment created successfully: ${response.data.message}`);
+        setShowCreateInvestmentModal(false);
+        resetInvestmentForm();
+        fetchOverviewData();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to create investment");
+    }
+  };
+
+  const resetInvestmentForm = () => {
+    setInvestmentForm({
+      client_id: "",
+      fund_code: "",
+      amount: ""
+    });
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
