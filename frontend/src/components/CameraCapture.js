@@ -26,6 +26,11 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
       setIsLoading(true);
       setError("");
       
+      // Check if navigator.mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported in this browser");
+      }
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           width: { ideal: 1280 },
@@ -43,7 +48,26 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      setError("Unable to access camera. Please check permissions.");
+      
+      let errorMessage = "Unable to access camera. ";
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage = "Camera access denied. Please allow camera permissions in your browser settings and try again.";
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = "No camera found on this device.";
+      } else if (err.name === 'NotSupportedError') {
+        errorMessage = "Camera not supported in this browser.";
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = "Camera is being used by another application.";
+      } else if (err.name === 'OverconstrainedError') {
+        errorMessage = "Camera doesn't meet the required specifications.";
+      } else if (err.message === "Camera not supported in this browser") {
+        errorMessage = err.message;
+      } else {
+        errorMessage += "Please check your browser permissions and ensure you're using HTTPS.";
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
