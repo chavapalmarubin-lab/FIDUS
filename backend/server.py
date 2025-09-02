@@ -471,6 +471,14 @@ MOCK_USERS = {
         "type": "client",
         "profile_picture": "https://images.unsplash.com/photo-1494790108755-2616b812358f?w=150&h=150&fit=crop&crop=face"
     },
+    "client3": {
+        "id": "client_0fd630c3",
+        "username": "client3", 
+        "name": "SALVADOR PALMA",
+        "email": "chava@alyarglobal.com",
+        "type": "client",
+        "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+    },
     "admin": {
         "id": "admin_001",
         "username": "admin",
