@@ -140,6 +140,7 @@ const AdminInvestmentManagement = () => {
         setShowCreateInvestmentModal(false);
         resetInvestmentForm();
         fetchOverviewData();
+        fetchReadyClients(); // Refresh client list
       }
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to create investment");
