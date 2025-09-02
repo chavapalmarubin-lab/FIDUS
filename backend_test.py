@@ -1054,18 +1054,95 @@ Document Content:
             self.tests_run += 1
             return False
 
+    def test_document_upload_image_files(self):
+        """Test document upload with image files (camera capture support)"""
+        if not self.admin_user:
+            print("❌ Skipping image file upload test - no admin user available")
+            return False
+            
+        print(f"\n🔍 Testing Document Upload - Image Files (Camera Capture Support)...")
+        
+        # Test JPEG image upload
+        success_jpeg = self.test_image_upload('image/jpeg', 'test_camera_capture.jpg')
+        
+        # Test PNG image upload  
+        success_png = self.test_image_upload('image/png', 'test_camera_capture.png')
+        
+        # Test WebP image upload
+        success_webp = self.test_image_upload('image/webp', 'test_camera_capture.webp')
+        
+        # All image formats should be supported
+        if success_jpeg and success_png and success_webp:
+            print("✅ ALL IMAGE FORMATS SUPPORTED - Camera capture functionality working!")
+            return True
+        else:
+            print("❌ Some image formats not supported")
+            return False
+
+    def test_image_upload(self, content_type, filename):
+        """Helper method to test specific image format upload"""
+        try:
+            # Create test image
+            test_image = self.create_test_image()
+            if not test_image:
+                print(f"❌ Failed to create test image for {content_type}")
+                return False
+            
+            files = {
+                'document': (filename, test_image, content_type)
+            }
+            data = {
+                'category': 'camera_capture',
+                'uploader_id': self.admin_user['id']
+            }
+            
+            url = f"{self.base_url}/api/documents/upload"
+            print(f"   Testing {content_type} upload...")
+            
+            response = requests.post(url, files=files, data=data, timeout=30)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"   ✅ {content_type} upload successful")
+                try:
+                    response_data = response.json()
+                    document_id = response_data.get("document_id")
+                    print(f"   Document ID: {document_id}")
+                    return True
+                except:
+                    pass
+            else:
+                print(f"   ❌ {content_type} upload failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"   ❌ Error testing {content_type}: {str(e)}")
+            self.tests_run += 1
+            return False
+
     def test_document_upload_invalid_file(self):
-        """Test document upload with invalid file type"""
+        """Test document upload with truly invalid file type (not supported)"""
         if not self.admin_user:
             print("❌ Skipping invalid file upload test - no admin user available")
             return False
             
         try:
-            # Create invalid file (image instead of document)
-            test_image = self.create_test_image()
+            # Create invalid file type (e.g., executable)
+            invalid_content = b"This is not a valid document or image file"
+            invalid_file = io.BytesIO(invalid_content)
             
             files = {
-                'document': ('test_image.jpg', test_image, 'image/jpeg')
+                'document': ('malicious_file.exe', invalid_file, 'application/x-executable')
             }
             data = {
                 'category': 'test',
@@ -1073,18 +1150,23 @@ Document Content:
             }
             
             url = f"{self.base_url}/api/documents/upload"
-            print(f"\n🔍 Testing Document Upload - Invalid File Type...")
+            print(f"\n🔍 Testing Document Upload - Invalid File Type (Non-Image/Non-Document)...")
             print(f"   URL: {url}")
             
             response = requests.post(url, files=files, data=data, timeout=30)
             print(f"   Status Code: {response.status_code}")
             
             self.tests_run += 1
-            success = response.status_code in [400, 500]  # Should reject invalid file type (server returns 500 but message is correct)
+            success = response.status_code == 400  # Should reject invalid file type
             
             if success:
                 self.tests_passed += 1
                 print(f"✅ Passed - Invalid file type properly rejected (Status: {response.status_code})")
+                try:
+                    error_data = response.json()
+                    print(f"   Error message: {error_data.get('detail', 'No detail')}")
+                except:
+                    pass
             else:
                 print(f"❌ Failed - Expected 400, got {response.status_code}")
                 try:
