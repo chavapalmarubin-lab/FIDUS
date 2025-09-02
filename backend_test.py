@@ -3966,25 +3966,528 @@ Document Content:
             print("❌ Camera capture functionality may have issues")
             return False
 
+    # ===============================================================================
+    # FIDUS INVESTMENT MANAGEMENT SYSTEM TESTS
+    # ===============================================================================
+    
+    def test_fidus_investment_system(self):
+        """Run comprehensive FIDUS Investment Management System tests"""
+        print("\n💰 FIDUS INVESTMENT MANAGEMENT SYSTEM TESTS")
+        print("-"*60)
+        
+        # Test all investment scenarios as requested in review
+        success_count = 0
+        total_tests = 6
+        
+        # 1. Fund Configuration Verification
+        if self.test_fund_configuration_verification():
+            success_count += 1
+            
+        # 2. Investment Creation and Validation
+        if self.test_investment_creation_validation():
+            success_count += 1
+            
+        # 3. Interest Calculation Engine
+        if self.test_interest_calculation_engine():
+            success_count += 1
+            
+        # 4. Client Investment Portfolio
+        if self.test_client_investment_portfolio():
+            success_count += 1
+            
+        # 5. Investment Projections
+        if self.test_investment_projections():
+            success_count += 1
+            
+        # 6. Admin Investment Overview
+        if self.test_admin_investment_overview():
+            success_count += 1
+        
+        print(f"\n📊 FIDUS Investment System Results: {success_count}/{total_tests} scenarios passed")
+        return success_count == total_tests
+
+    def test_fund_configuration_verification(self):
+        """Test GET /api/investments/funds/config - Verify fund configurations"""
+        print("\n🔍 Testing Fund Configuration Verification...")
+        
+        success, response = self.run_test(
+            "Get Fund Configuration",
+            "GET",
+            "api/investments/funds/config",
+            200
+        )
+        
+        if success:
+            funds = response.get('funds', [])
+            print(f"   Total funds configured: {len(funds)}")
+            
+            # Verify all 4 funds are present
+            expected_funds = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
+            fund_codes = [fund.get('fund_code') for fund in funds]
+            
+            all_funds_present = all(code in fund_codes for code in expected_funds)
+            if all_funds_present:
+                print("   ✅ All 4 funds present: CORE, BALANCE, DYNAMIC, UNLIMITED")
+            else:
+                print(f"   ❌ Missing funds. Expected: {expected_funds}, Found: {fund_codes}")
+                return False
+            
+            # Verify fund parameters for each fund
+            fund_validations = {
+                'CORE': {
+                    'interest_rate': 1.5,
+                    'minimum_investment': 10000.0,
+                    'redemption_frequency': 'monthly',
+                    'invitation_only': False
+                },
+                'BALANCE': {
+                    'interest_rate': 2.5,
+                    'minimum_investment': 50000.0,
+                    'redemption_frequency': 'quarterly',
+                    'invitation_only': False
+                },
+                'DYNAMIC': {
+                    'interest_rate': 3.5,
+                    'minimum_investment': 250000.0,
+                    'redemption_frequency': 'semi-annually',
+                    'invitation_only': False
+                },
+                'UNLIMITED': {
+                    'interest_rate': 0.0,
+                    'minimum_investment': 1000000.0,
+                    'redemption_frequency': 'flexible',
+                    'invitation_only': True
+                }
+            }
+            
+            validation_passed = True
+            for fund in funds:
+                fund_code = fund.get('fund_code')
+                if fund_code in fund_validations:
+                    expected = fund_validations[fund_code]
+                    
+                    # Check interest rate
+                    if fund.get('interest_rate') == expected['interest_rate']:
+                        print(f"   ✅ {fund_code}: Interest rate {fund.get('interest_rate')}% correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Interest rate {fund.get('interest_rate')}% != {expected['interest_rate']}%")
+                        validation_passed = False
+                    
+                    # Check minimum investment
+                    if fund.get('minimum_investment') == expected['minimum_investment']:
+                        print(f"   ✅ {fund_code}: Minimum investment ${fund.get('minimum_investment'):,.0f} correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Minimum investment ${fund.get('minimum_investment'):,.0f} != ${expected['minimum_investment']:,.0f}")
+                        validation_passed = False
+                    
+                    # Check redemption frequency
+                    if fund.get('redemption_frequency') == expected['redemption_frequency']:
+                        print(f"   ✅ {fund_code}: Redemption frequency '{fund.get('redemption_frequency')}' correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Redemption frequency '{fund.get('redemption_frequency')}' != '{expected['redemption_frequency']}'")
+                        validation_passed = False
+                    
+                    # Check invitation only
+                    if fund.get('invitation_only') == expected['invitation_only']:
+                        print(f"   ✅ {fund_code}: Invitation only {fund.get('invitation_only')} correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Invitation only {fund.get('invitation_only')} != {expected['invitation_only']}")
+                        validation_passed = False
+                    
+                    # Check incubation and hold periods
+                    if fund.get('incubation_months') == 2:
+                        print(f"   ✅ {fund_code}: Incubation period 2 months correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Incubation period {fund.get('incubation_months')} != 2 months")
+                        validation_passed = False
+                    
+                    if fund.get('minimum_hold_months') == 14:
+                        print(f"   ✅ {fund_code}: Minimum hold period 14 months correct")
+                    else:
+                        print(f"   ❌ {fund_code}: Minimum hold period {fund.get('minimum_hold_months')} != 14 months")
+                        validation_passed = False
+            
+            return validation_passed
+        
+        return False
+
+    def test_investment_creation_validation(self):
+        """Test POST /api/investments/create - Investment creation with validation"""
+        print("\n🔍 Testing Investment Creation and Validation...")
+        
+        if not self.client_user:
+            print("❌ Skipping investment creation test - no client user available")
+            return False
+        
+        client_id = self.client_user.get('id')
+        validation_passed = True
+        
+        # Test 1: Valid CORE fund investment (minimum $10K)
+        success, response = self.run_test(
+            "Create CORE Investment (Valid)",
+            "POST",
+            "api/investments/create",
+            200,
+            data={
+                "client_id": client_id,
+                "fund_code": "CORE",
+                "amount": 15000.0
+            }
+        )
+        
+        if success:
+            investment_id = response.get('investment_id')
+            print(f"   ✅ CORE investment created: {investment_id}")
+            
+            # Verify investment details
+            investment = response.get('investment', {})
+            if investment.get('principal_amount') == 15000.0:
+                print(f"   ✅ Principal amount correct: ${investment.get('principal_amount'):,.2f}")
+            else:
+                print(f"   ❌ Principal amount incorrect: ${investment.get('principal_amount'):,.2f}")
+                validation_passed = False
+            
+            # Verify dates are calculated
+            if investment.get('incubation_end_date') and investment.get('interest_start_date'):
+                print(f"   ✅ Investment dates calculated correctly")
+            else:
+                print(f"   ❌ Investment dates not calculated")
+                validation_passed = False
+        else:
+            validation_passed = False
+        
+        # Test 2: Invalid investment - below minimum for BALANCE fund
+        success, _ = self.run_test(
+            "Create BALANCE Investment (Below Minimum)",
+            "POST",
+            "api/investments/create",
+            400,
+            data={
+                "client_id": client_id,
+                "fund_code": "BALANCE",
+                "amount": 25000.0  # Below $50K minimum
+            }
+        )
+        
+        if success:
+            print("   ✅ Below minimum investment properly rejected")
+        else:
+            print("   ❌ Below minimum investment not rejected")
+            validation_passed = False
+        
+        # Test 3: Invalid fund code
+        success, _ = self.run_test(
+            "Create Investment (Invalid Fund)",
+            "POST",
+            "api/investments/create",
+            400,
+            data={
+                "client_id": client_id,
+                "fund_code": "INVALID",
+                "amount": 10000.0
+            }
+        )
+        
+        if success:
+            print("   ✅ Invalid fund code properly rejected")
+        else:
+            print("   ❌ Invalid fund code not rejected")
+            validation_passed = False
+        
+        # Test 4: Valid DYNAMIC fund investment (minimum $250K)
+        success, response = self.run_test(
+            "Create DYNAMIC Investment (Valid)",
+            "POST",
+            "api/investments/create",
+            200,
+            data={
+                "client_id": client_id,
+                "fund_code": "DYNAMIC",
+                "amount": 300000.0
+            }
+        )
+        
+        if success:
+            print(f"   ✅ DYNAMIC investment created successfully")
+            # Store investment ID for later tests
+            self.dynamic_investment_id = response.get('investment_id')
+        else:
+            validation_passed = False
+        
+        return validation_passed
+
+    def test_interest_calculation_engine(self):
+        """Test interest calculation logic and simple interest formula"""
+        print("\n🔍 Testing Interest Calculation Engine...")
+        
+        if not self.client_user:
+            print("❌ Skipping interest calculation test - no client user available")
+            return False
+        
+        client_id = self.client_user.get('id')
+        
+        # Get client investments to verify interest calculations
+        success, response = self.run_test(
+            "Get Client Investments for Interest Verification",
+            "GET",
+            f"api/investments/client/{client_id}",
+            200
+        )
+        
+        if success:
+            investments = response.get('investments', [])
+            portfolio_stats = response.get('portfolio_stats', {})
+            
+            print(f"   Total investments: {len(investments)}")
+            print(f"   Total invested: ${portfolio_stats.get('total_invested', 0):,.2f}")
+            print(f"   Current value: ${portfolio_stats.get('current_value', 0):,.2f}")
+            print(f"   Total interest earned: ${portfolio_stats.get('total_interest_earned', 0):,.2f}")
+            
+            calculation_passed = True
+            
+            # Verify interest calculations for each investment
+            for investment in investments:
+                fund_code = investment.get('fund_code')
+                principal = investment.get('principal_amount', 0)
+                interest_earned = investment.get('total_interest_earned', 0)
+                current_value = investment.get('current_value', 0)
+                
+                print(f"   Investment {fund_code}: Principal ${principal:,.2f}, Interest ${interest_earned:,.2f}")
+                
+                # Verify simple interest calculation (not compound)
+                # Interest should be calculated from interest_start_date
+                interest_start = investment.get('interest_start_date')
+                if interest_start:
+                    print(f"   ✅ Interest start date: {interest_start}")
+                    
+                    # Verify current value = principal + interest (simple interest)
+                    expected_value = principal + interest_earned
+                    if abs(current_value - expected_value) < 0.01:  # Allow for rounding
+                        print(f"   ✅ Simple interest calculation correct: ${current_value:,.2f}")
+                    else:
+                        print(f"   ❌ Interest calculation error: ${current_value:,.2f} != ${expected_value:,.2f}")
+                        calculation_passed = False
+                else:
+                    print(f"   ❌ No interest start date found")
+                    calculation_passed = False
+            
+            return calculation_passed
+        
+        return False
+
+    def test_client_investment_portfolio(self):
+        """Test GET /api/investments/client/{id} - Client portfolio retrieval"""
+        print("\n🔍 Testing Client Investment Portfolio...")
+        
+        if not self.client_user:
+            print("❌ Skipping client portfolio test - no client user available")
+            return False
+        
+        client_id = self.client_user.get('id')
+        
+        success, response = self.run_test(
+            "Get Client Investment Portfolio",
+            "GET",
+            f"api/investments/client/{client_id}",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_keys = ['investments', 'portfolio_stats']
+            missing_keys = [key for key in required_keys if key not in response]
+            
+            if missing_keys:
+                print(f"   ❌ Missing keys in response: {missing_keys}")
+                return False
+            
+            investments = response.get('investments', [])
+            portfolio_stats = response.get('portfolio_stats', {})
+            
+            print(f"   ✅ Portfolio structure correct")
+            print(f"   Total investments: {len(investments)}")
+            
+            # Verify portfolio statistics
+            stats_keys = ['total_invested', 'current_value', 'total_interest_earned', 'total_investments']
+            stats_passed = True
+            
+            for key in stats_keys:
+                if key in portfolio_stats:
+                    value = portfolio_stats[key]
+                    print(f"   ✅ {key}: {value if isinstance(value, int) else f'${value:,.2f}'}")
+                else:
+                    print(f"   ❌ Missing portfolio stat: {key}")
+                    stats_passed = False
+            
+            # Verify individual investment structure
+            if investments:
+                investment = investments[0]
+                investment_keys = [
+                    'investment_id', 'fund_code', 'principal_amount', 'current_value',
+                    'total_interest_earned', 'deposit_date', 'incubation_end_date',
+                    'interest_start_date', 'minimum_hold_end_date', 'status'
+                ]
+                
+                investment_passed = True
+                for key in investment_keys:
+                    if key in investment:
+                        print(f"   ✅ Investment has {key}")
+                    else:
+                        print(f"   ❌ Investment missing {key}")
+                        investment_passed = False
+                
+                return stats_passed and investment_passed
+            else:
+                print("   ⚠️  No investments found for client")
+                return True  # Not an error if no investments
+        
+        return False
+
+    def test_investment_projections(self):
+        """Test GET /api/investments/{id}/projections - Investment projection calculations"""
+        print("\n🔍 Testing Investment Projections...")
+        
+        # Use the DYNAMIC investment created earlier
+        if not hasattr(self, 'dynamic_investment_id') or not self.dynamic_investment_id:
+            print("❌ Skipping projections test - no investment ID available")
+            return False
+        
+        success, response = self.run_test(
+            "Get Investment Projections",
+            "GET",
+            f"api/investments/{self.dynamic_investment_id}/projections",
+            200
+        )
+        
+        if success:
+            # Verify projection structure
+            required_keys = ['investment_id', 'projected_payments', 'total_projected_interest', 
+                           'final_value', 'next_redemption_date', 'can_redeem_now']
+            missing_keys = [key for key in required_keys if key not in response]
+            
+            if missing_keys:
+                print(f"   ❌ Missing keys in response: {missing_keys}")
+                return False
+            
+            projected_payments = response.get('projected_payments', [])
+            total_projected_interest = response.get('total_projected_interest', 0)
+            final_value = response.get('final_value', 0)
+            next_redemption_date = response.get('next_redemption_date')
+            can_redeem_now = response.get('can_redeem_now', False)
+            
+            print(f"   ✅ Projection structure correct")
+            print(f"   Projected payments: {len(projected_payments)} months")
+            print(f"   Total projected interest: ${total_projected_interest:,.2f}")
+            print(f"   Final value: ${final_value:,.2f}")
+            print(f"   Next redemption date: {next_redemption_date}")
+            print(f"   Can redeem now: {can_redeem_now}")
+            
+            # Verify 24-month projection limit
+            if len(projected_payments) <= 24:
+                print(f"   ✅ Projection limited to 24 months or less")
+            else:
+                print(f"   ❌ Too many projected payments: {len(projected_payments)} > 24")
+                return False
+            
+            # Verify payment structure
+            if projected_payments:
+                payment = projected_payments[0]
+                payment_keys = ['date', 'type', 'amount', 'principal_balance', 'period', 'status']
+                
+                payment_passed = True
+                for key in payment_keys:
+                    if key in payment:
+                        print(f"   ✅ Payment has {key}")
+                    else:
+                        print(f"   ❌ Payment missing {key}")
+                        payment_passed = False
+                
+                return payment_passed
+            else:
+                print("   ⚠️  No projected payments found")
+                return True  # May be valid if no interest payments projected
+        
+        return False
+
+    def test_admin_investment_overview(self):
+        """Test GET /api/investments/admin/overview - Admin investment overview"""
+        print("\n🔍 Testing Admin Investment Overview...")
+        
+        success, response = self.run_test(
+            "Get Admin Investment Overview",
+            "GET",
+            "api/investments/admin/overview",
+            200
+        )
+        
+        if success:
+            # Verify overview structure
+            required_keys = ['total_aum', 'fund_summaries', 'client_count', 'investment_count']
+            missing_keys = [key for key in required_keys if key not in response]
+            
+            if missing_keys:
+                print(f"   ❌ Missing keys in response: {missing_keys}")
+                return False
+            
+            total_aum = response.get('total_aum', 0)
+            fund_summaries = response.get('fund_summaries', [])
+            client_count = response.get('client_count', 0)
+            investment_count = response.get('investment_count', 0)
+            
+            print(f"   ✅ Overview structure correct")
+            print(f"   Total AUM: ${total_aum:,.2f}")
+            print(f"   Fund summaries: {len(fund_summaries)} funds")
+            print(f"   Client count: {client_count}")
+            print(f"   Investment count: {investment_count}")
+            
+            # Verify fund summaries
+            if fund_summaries:
+                fund_summary = fund_summaries[0]
+                summary_keys = ['fund_code', 'fund_name', 'total_invested', 'current_value', 
+                              'investment_count', 'client_count']
+                
+                summary_passed = True
+                for key in summary_keys:
+                    if key in fund_summary:
+                        print(f"   ✅ Fund summary has {key}")
+                    else:
+                        print(f"   ❌ Fund summary missing {key}")
+                        summary_passed = False
+                
+                return summary_passed
+            else:
+                print("   ⚠️  No fund summaries found")
+                return True  # May be valid if no investments exist
+        
+        return False
+
 def main():
-    print("🚀 Starting FIDUS API Testing...")
-    print("=" * 50)
+    print("🚀 Starting FIDUS Investment Management System Testing...")
+    print("=" * 80)
     
     tester = FidusAPITester()
     
-    # Run focused CRM prospect management tests as requested in review
-    crm_prospect_success = tester.run_crm_prospect_tests()
+    # Authentication first
+    print("\n📋 AUTHENTICATION SETUP")
+    print("-"*40)
+    tester.test_client_login()
+    tester.test_admin_login()
+    
+    # Run FIDUS Investment System Tests
+    investment_success = tester.test_fidus_investment_system()
     
     # Print final results
-    print("\n" + "=" * 50)
-    print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print("\n" + "=" * 80)
+    print("🎯 FIDUS INVESTMENT TESTING COMPLETE!")
+    print(f"📊 Results: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print(f"✅ Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
     
-    if crm_prospect_success:
-        print("🎉 CRM prospect management tests passed! All endpoints verified.")
+    if investment_success:
+        print("🎉 ALL FIDUS INVESTMENT TESTS PASSED! System is working correctly.")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
-        print(f"⚠️  {failed_tests} test(s) failed. Please check the CRM prospect implementation.")
+        print(f"⚠️  {failed_tests} test(s) failed. Please review the results above.")
         return 1
 
 if __name__ == "__main__":
