@@ -701,6 +701,202 @@ const ClientManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Client Modal */}
+      <AnimatePresence>
+        {showAddClientModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowAddClientModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-white mb-4">Add New Client</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Username *</Label>
+                  <Input
+                    value={newClientForm.username}
+                    onChange={(e) => setNewClientForm({...newClientForm, username: e.target.value})}
+                    placeholder="Enter username"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Full Name *</Label>
+                  <Input
+                    value={newClientForm.name}
+                    onChange={(e) => setNewClientForm({...newClientForm, name: e.target.value})}
+                    placeholder="Enter full name"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Email *</Label>
+                  <Input
+                    type="email"
+                    value={newClientForm.email}
+                    onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Phone</Label>
+                  <Input
+                    value={newClientForm.phone}
+                    onChange={(e) => setNewClientForm({...newClientForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-slate-300">Notes</Label>
+                  <textarea
+                    value={newClientForm.notes}
+                    onChange={(e) => setNewClientForm({...newClientForm, notes: e.target.value})}
+                    placeholder="Additional notes..."
+                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddClientModal(false);
+                    resetNewClientForm();
+                  }}
+                  className="flex-1 border-slate-600 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddClient}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                >
+                  Add Client
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Investment Readiness Modal */}
+      <AnimatePresence>
+        {showReadinessModal && selectedClient && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowReadinessModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Investment Readiness - {selectedClient.name}
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="aml_kyc"
+                    checked={readinessForm.aml_kyc_completed}
+                    onChange={(e) => setReadinessForm({...readinessForm, aml_kyc_completed: e.target.checked})}
+                    className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
+                  />
+                  <Label htmlFor="aml_kyc" className="text-slate-300 flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                    AML KYC Completed
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="agreement_signed"
+                    checked={readinessForm.agreement_signed}
+                    onChange={(e) => setReadinessForm({...readinessForm, agreement_signed: e.target.checked})}
+                    className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
+                  />
+                  <Label htmlFor="agreement_signed" className="text-slate-300 flex items-center">
+                    <FileSpreadsheet className="w-4 h-4 mr-2 text-blue-400" />
+                    Agreement Signed
+                  </Label>
+                </div>
+
+                <div>
+                  <Label className="text-slate-300 flex items-center mb-2">
+                    <Calendar className="w-4 h-4 mr-2 text-yellow-400" />
+                    Date of Deposit (Critical for Timeline) *
+                  </Label>
+                  <Input
+                    type="date"
+                    value={readinessForm.deposit_date}
+                    onChange={(e) => setReadinessForm({...readinessForm, deposit_date: e.target.value})}
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    This date determines the incubation period and all investment timelines
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-slate-300">Notes</Label>
+                  <textarea
+                    value={readinessForm.notes}
+                    onChange={(e) => setReadinessForm({...readinessForm, notes: e.target.value})}
+                    placeholder="Additional notes about readiness..."
+                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowReadinessModal(false);
+                    setSelectedClient(null);
+                    resetReadinessForm();
+                  }}
+                  className="flex-1 border-slate-600 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateReadiness}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                >
+                  Update Readiness
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
