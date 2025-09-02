@@ -499,6 +499,102 @@ const AdminInvestmentManagement = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Create Investment Modal */}
+      <AnimatePresence>
+        {showCreateInvestmentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowCreateInvestmentModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-white mb-4">Create Client Investment</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Client ID</Label>
+                  <Input
+                    value={investmentForm.client_id}
+                    onChange={(e) => setInvestmentForm({...investmentForm, client_id: e.target.value})}
+                    placeholder="Enter client ID (e.g., client1)"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-slate-400 text-xs mt-1">
+                    Use client IDs like: client1, client2, admin_001, etc.
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Select Fund</Label>
+                  <Select value={investmentForm.fund_code} onValueChange={(value) => setInvestmentForm({...investmentForm, fund_code: value})}>
+                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Choose a fund" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {fundConfigs.map(fund => (
+                        <SelectItem key={fund.fund_code} value={fund.fund_code} className="text-white">
+                          <div>
+                            <div className="font-medium">{fund.name}</div>
+                            <div className="text-sm text-slate-400">
+                              {fund.interest_rate > 0 ? `${fund.interest_rate}% monthly` : 'No fixed return'} • 
+                              Min: {formatCurrency(fund.minimum_investment)}
+                              {fund.invitation_only && ' • Invitation Only'}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Investment Amount</Label>
+                  <Input
+                    type="number"
+                    value={investmentForm.amount}
+                    onChange={(e) => setInvestmentForm({...investmentForm, amount: e.target.value})}
+                    placeholder="Enter amount in USD"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                  {investmentForm.fund_code && (
+                    <p className="text-slate-400 text-sm mt-1">
+                      Minimum: {formatCurrency(fundConfigs.find(f => f.fund_code === investmentForm.fund_code)?.minimum_investment || 0)}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreateInvestmentModal(false);
+                    resetInvestmentForm();
+                  }}
+                  className="flex-1 border-slate-600 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateInvestment}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                >
+                  Create Investment
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
