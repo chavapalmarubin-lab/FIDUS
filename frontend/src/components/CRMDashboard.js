@@ -766,6 +766,7 @@ const CRMDashboard = ({ user }) => {
                         <th className="text-right py-3 px-4 text-gray-400 font-medium">Equity</th>
                         <th className="text-right py-3 px-4 text-gray-400 font-medium">Positions</th>
                         <th className="text-right py-3 px-4 text-gray-400 font-medium">Last Activity</th>
+                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
