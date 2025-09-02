@@ -64,6 +64,7 @@ const AdminInvestmentManagement = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showCreateInvestmentModal, setShowCreateInvestmentModal] = useState(false);
   const [fundConfigs, setFundConfigs] = useState([]);
+  const [readyClients, setReadyClients] = useState([]);
 
   // Investment creation form state
   const [investmentForm, setInvestmentForm] = useState({
