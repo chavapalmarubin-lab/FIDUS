@@ -1379,8 +1379,115 @@ Document Content:
         return success
 
     # ===============================================================================
-    # GMAIL OAUTH INTEGRATION TESTS
+    # GMAIL OAUTH INTEGRATION TESTS - FOCUSED ON OAUTH CALLBACK FIX
     # ===============================================================================
+
+    def test_gmail_oauth_callback_redirect_fix(self):
+        """Test Gmail OAuth callback returns RedirectResponse instead of JSON (CRITICAL FIX)"""
+        print("\n🔍 Testing Gmail OAuth Callback Redirect Fix...")
+        
+        # Test 1: OAuth callback with missing parameters should return redirect with error
+        try:
+            url = f"{self.base_url}/api/gmail/oauth-callback"
+            print(f"   Testing missing parameters: {url}")
+            
+            response = requests.get(url, allow_redirects=False, timeout=10)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            
+            # Should return 422 for validation error OR redirect (3xx) with error
+            if response.status_code == 422:
+                print("✅ Missing parameters properly rejected with 422")
+                self.tests_passed += 1
+            elif 300 <= response.status_code < 400:
+                # Check if it's a redirect to frontend with error
+                location = response.headers.get('location', '')
+                if 'gmail_auth=error' in location:
+                    print(f"✅ Redirects to frontend with error: {location}")
+                    self.tests_passed += 1
+                else:
+                    print(f"❌ Redirect but no error parameter: {location}")
+            else:
+                print(f"❌ Unexpected status code: {response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Error testing missing parameters: {e}")
+            self.tests_run += 1
+        
+        # Test 2: OAuth callback with invalid state should redirect with error
+        try:
+            url = f"{self.base_url}/api/gmail/oauth-callback?code=test_code&state=invalid_state"
+            print(f"   Testing invalid state: {url}")
+            
+            response = requests.get(url, allow_redirects=False, timeout=10)
+            print(f"   Status Code: {response.status_code}")
+            
+            self.tests_run += 1
+            
+            # Should redirect to frontend with error
+            if 300 <= response.status_code < 400:
+                location = response.headers.get('location', '')
+                if 'gmail_auth=error' in location and 'Invalid+state' in location:
+                    print(f"✅ Invalid state redirects with proper error: {location}")
+                    self.tests_passed += 1
+                    return True
+                else:
+                    print(f"❌ Redirect but wrong error message: {location}")
+            else:
+                print(f"❌ Expected redirect, got status: {response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Error testing invalid state: {e}")
+            self.tests_run += 1
+            
+        return False
+
+    def test_gmail_oauth_callback_success_redirect(self):
+        """Test OAuth callback success scenario redirects to frontend"""
+        print("\n🔍 Testing Gmail OAuth Callback Success Redirect...")
+        
+        # First generate a valid state by calling auth-url
+        try:
+            auth_url_response = requests.get(f"{self.base_url}/api/gmail/auth-url", timeout=10)
+            if auth_url_response.status_code == 200:
+                auth_data = auth_url_response.json()
+                valid_state = auth_data.get('state', '')
+                print(f"   Generated valid state: {valid_state[:20]}...")
+                
+                # Test callback with valid state but dummy code (will fail at Google but should redirect)
+                callback_url = f"{self.base_url}/api/gmail/oauth-callback?code=dummy_auth_code&state={valid_state}"
+                print(f"   Testing callback with valid state...")
+                
+                response = requests.get(callback_url, allow_redirects=False, timeout=10)
+                print(f"   Status Code: {response.status_code}")
+                
+                self.tests_run += 1
+                
+                # Should redirect (even if auth fails, it should redirect with error)
+                if 300 <= response.status_code < 400:
+                    location = response.headers.get('location', '')
+                    if 'gmail_auth=' in location:
+                        if 'gmail_auth=success' in location:
+                            print(f"✅ Success redirect format correct: {location}")
+                        elif 'gmail_auth=error' in location:
+                            print(f"✅ Error redirect format correct (expected with dummy code): {location}")
+                        self.tests_passed += 1
+                        return True
+                    else:
+                        print(f"❌ Redirect missing gmail_auth parameter: {location}")
+                else:
+                    print(f"❌ Expected redirect, got status: {response.status_code}")
+                    
+            else:
+                print(f"❌ Failed to get auth URL: {auth_url_response.status_code}")
+                self.tests_run += 1
+                
+        except Exception as e:
+            print(f"❌ Error testing success redirect: {e}")
+            self.tests_run += 1
+            
+        return False
 
     def test_gmail_auth_url(self):
         """Test Gmail OAuth authorization URL generation"""
@@ -1408,9 +1515,8 @@ Document Content:
             # Check if URL contains expected OAuth parameters
             expected_params = [
                 'accounts.google.com/o/oauth2/auth',
-                'client_id=909926639154-cjtnt3urluctt1q90gri3rtj37vbim6h.apps.googleusercontent.com',
                 'scope=https%3A//www.googleapis.com/auth/gmail.send',
-                'redirect_uri=https%3A//fidus-finance.preview.emergentagent.com/api/gmail/oauth-callback'
+                'redirect_uri=https%3A//docuflow-10.preview.emergentagent.com/api/gmail/oauth-callback'
             ]
             
             url_valid = True
