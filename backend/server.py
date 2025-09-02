@@ -2979,7 +2979,480 @@ class CapitalFlowRequest(BaseModel):
     flow_type: str
     amount: float
 
-# Mock MT4/MT5 Trading Data Service
+# MetaQuotes Real Integration Service (Enhanced)
+class EnhancedMetaQuotesService:
+    def __init__(self):
+        self.credentials = {}
+        self.connected = False
+        self.mt5_available = False
+        
+        # Try to import MetaTrader5 if available (Windows only)
+        try:
+            import MetaTrader5 as mt5
+            self.mt5 = mt5
+            self.mt5_available = True
+            logging.info("MetaTrader5 library available")
+        except ImportError:
+            self.mt5 = None
+            self.mt5_available = False
+            logging.info("MetaTrader5 library not available - using advanced simulation")
+        
+        # Advanced simulation data for Linux environments
+        self.simulation_accounts = {}
+        self.simulation_market_data = {}
+        self._initialize_advanced_simulation()
+    
+    def _initialize_advanced_simulation(self):
+        """Initialize advanced simulation with realistic trading data"""
+        import random
+        from datetime import datetime, timedelta
+        
+        # Simulate multiple trading accounts
+        symbols = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "NZDUSD", "USDCHF", "EURJPY", "GBPJPY", "XAUUSD", "XAGUSD", "US30", "NAS100", "SPX500"]
+        
+        for i in range(5):
+            account_number = f"500{1000 + i}"
+            self.simulation_accounts[account_number] = {
+                'login': account_number,
+                'balance': round(random.uniform(50000, 500000), 2),
+                'equity': 0,
+                'margin': round(random.uniform(1000, 50000), 2),
+                'free_margin': 0,
+                'margin_level': 0,
+                'profit': round(random.uniform(-5000, 15000), 2),
+                'leverage': random.choice([100, 200, 500]),
+                'trade_allowed': True,
+                'expert_allowed': True,
+                'currency': 'USD',
+                'server': 'MetaQuotes-Demo',
+                'company': 'MetaQuotes Software Corp.',
+                'name': f'Demo Account {i+1}',
+                'positions': [],
+                'orders': [],
+                'deals': []
+            }
+            
+            # Calculate equity and margins
+            account = self.simulation_accounts[account_number]
+            account['equity'] = account['balance'] + account['profit']
+            account['free_margin'] = account['equity'] - account['margin']
+            account['margin_level'] = (account['equity'] / account['margin']) * 100 if account['margin'] > 0 else 0
+            
+            # Generate positions
+            num_positions = random.randint(0, 8)
+            for j in range(num_positions):
+                symbol = random.choice(symbols)
+                position_type = random.choice([0, 1])  # 0=buy, 1=sell
+                volume = round(random.uniform(0.01, 2.00), 2)
+                
+                # Generate realistic prices based on symbol
+                if "JPY" in symbol:
+                    price_open = round(random.uniform(140.000, 155.000), 3)
+                    price_current = price_open + random.uniform(-0.500, 0.500)
+                elif "XAU" in symbol:  # Gold
+                    price_open = round(random.uniform(1900.00, 2100.00), 2)
+                    price_current = price_open + random.uniform(-20.00, 20.00)
+                elif "US30" in symbol or "NAS100" in symbol:
+                    price_open = round(random.uniform(33000, 35000), 2)
+                    price_current = price_open + random.uniform(-200, 200)
+                else:
+                    price_open = round(random.uniform(1.0000, 1.3000), 5)
+                    price_current = price_open + random.uniform(-0.0100, 0.0100)
+                
+                profit = (price_current - price_open) * volume * 100000 if position_type == 0 else (price_open - price_current) * volume * 100000
+                
+                position = {
+                    'ticket': random.randint(100000000, 999999999),
+                    'time': int((datetime.now() - timedelta(hours=random.randint(1, 72))).timestamp()),
+                    'type': position_type,
+                    'magic': random.randint(0, 999999),
+                    'identifier': random.randint(100000000, 999999999),
+                    'reason': 0,
+                    'volume': volume,
+                    'price_open': round(price_open, 5),
+                    'sl': 0.0,
+                    'tp': 0.0,
+                    'price_current': round(price_current, 5),
+                    'swap': round(random.uniform(-5.0, 5.0), 2),
+                    'profit': round(profit, 2),
+                    'symbol': symbol,
+                    'comment': 'FIDUS Trading',
+                    'external_id': ''
+                }
+                
+                account['positions'].append(position)
+            
+            # Generate deal history
+            num_deals = random.randint(50, 200)
+            for j in range(num_deals):
+                symbol = random.choice(symbols)
+                deal_type = random.choice([0, 1])  # buy/sell
+                volume = round(random.uniform(0.01, 2.00), 2)
+                
+                deal_time = datetime.now() - timedelta(days=random.randint(1, 90))
+                
+                if "JPY" in symbol:
+                    price = round(random.uniform(140.000, 155.000), 3)
+                elif "XAU" in symbol:
+                    price = round(random.uniform(1900.00, 2100.00), 2)
+                else:
+                    price = round(random.uniform(1.0000, 1.3000), 5)
+                
+                deal = {
+                    'ticket': random.randint(100000000, 999999999),
+                    'order': random.randint(100000000, 999999999),
+                    'time': int(deal_time.timestamp()),
+                    'type': deal_type,
+                    'entry': random.choice([0, 1]),  # in/out
+                    'magic': random.randint(0, 999999),
+                    'position_id': random.randint(100000000, 999999999),
+                    'reason': random.choice([0, 1, 2, 3]),
+                    'volume': volume,
+                    'price': price,
+                    'commission': round(random.uniform(-10.0, 0.0), 2),
+                    'swap': round(random.uniform(-5.0, 5.0), 2),
+                    'profit': round(random.uniform(-500.0, 800.0), 2),
+                    'fee': 0.0,
+                    'symbol': symbol,
+                    'comment': 'FIDUS Trading',
+                    'external_id': ''
+                }
+                
+                account['deals'].append(deal)
+            
+            # Sort deals by time descending
+            account['deals'].sort(key=lambda x: x['time'], reverse=True)
+        
+        # Generate market data
+        for symbol in symbols:
+            if "JPY" in symbol:
+                bid = round(random.uniform(140.000, 155.000), 3)
+                ask = bid + 0.003
+            elif "XAU" in symbol:
+                bid = round(random.uniform(1900.00, 2100.00), 2)
+                ask = bid + 0.50
+            elif "US30" in symbol or "NAS100" in symbol:
+                bid = round(random.uniform(33000, 35000), 2)
+                ask = bid + 5.0
+            else:
+                bid = round(random.uniform(1.0000, 1.3000), 5)
+                ask = bid + 0.00020
+            
+            self.simulation_market_data[symbol] = {
+                'time': int(datetime.now().timestamp()),
+                'bid': bid,
+                'ask': ask,
+                'last': round((bid + ask) / 2, 5),
+                'volume': random.randint(1000, 50000),
+                'volume_real': random.randint(100, 5000),
+                'spread': int((ask - bid) * 100000),
+                'digits': 5 if "JPY" not in symbol else 3,
+                'trade_tick_value': 1.0,
+                'trade_tick_value_profit': 1.0,
+                'trade_tick_value_loss': 1.0,
+                'trade_tick_size': 0.00001 if "JPY" not in symbol else 0.001,
+                'trade_contract_size': 100000.0,
+                'currency_base': symbol[:3],
+                'currency_profit': symbol[3:],
+                'path': f'Forex\\Major\\{symbol}',
+                'description': f'{symbol[:3]}/{symbol[3:]} Currency Pair'
+            }
+    
+    async def connect_mt5(self, login: str, password: str, server: str):
+        """Connect to MetaTrader 5 terminal"""
+        try:
+            if self.mt5_available:
+                # Real MT5 connection
+                if not self.mt5.initialize():
+                    return {"success": False, "error": "MetaTrader 5 initialization failed"}
+                
+                if not self.mt5.login(int(login), password, server):
+                    error_code = self.mt5.last_error()
+                    return {"success": False, "error": f"Login failed: {error_code}"}
+                
+                account_info = self.mt5.account_info()
+                if account_info is None:
+                    return {"success": False, "error": "Failed to get account info"}
+                
+                self.connected = True
+                self.credentials = {"login": login, "server": server}
+                
+                return {
+                    "success": True,
+                    "message": "Connected to MetaTrader 5",
+                    "account_info": {
+                        "login": account_info.login,
+                        "balance": account_info.balance,
+                        "equity": account_info.equity,
+                        "margin": account_info.margin,
+                        "free_margin": account_info.margin_free,
+                        "margin_level": account_info.margin_level,
+                        "currency": account_info.currency,
+                        "server": account_info.server,
+                        "company": account_info.company,
+                        "name": account_info.name
+                    }
+                }
+            else:
+                # Simulation mode
+                if login in [acc['login'] for acc in self.simulation_accounts.values()]:
+                    self.connected = True
+                    self.credentials = {"login": login, "server": server}
+                    
+                    account = next(acc for acc in self.simulation_accounts.values() if acc['login'] == login)
+                    
+                    return {
+                        "success": True,
+                        "message": "Connected to MetaTrader 5 (Simulation)",
+                        "account_info": {
+                            "login": account['login'],
+                            "balance": account['balance'],
+                            "equity": account['equity'],
+                            "margin": account['margin'],
+                            "free_margin": account['free_margin'],
+                            "margin_level": account['margin_level'],
+                            "currency": account['currency'],
+                            "server": account['server'],
+                            "company": account['company'],
+                            "name": account['name']
+                        }
+                    }
+                else:
+                    return {"success": False, "error": "Invalid login credentials (use 5001000-5001004 for simulation)"}
+                    
+        except Exception as e:
+            logging.error(f"MT5 connection error: {str(e)}")
+            return {"success": False, "error": f"Connection failed: {str(e)}"}
+    
+    async def get_account_info(self):
+        """Get current account information"""
+        if not self.connected:
+            return {"success": False, "error": "Not connected to MetaTrader 5"}
+        
+        try:
+            if self.mt5_available:
+                account_info = self.mt5.account_info()
+                if account_info is None:
+                    return {"success": False, "error": "Failed to get account info"}
+                
+                return {
+                    "success": True,
+                    "account_info": {
+                        "login": account_info.login,
+                        "balance": account_info.balance,
+                        "equity": account_info.equity,
+                        "margin": account_info.margin,
+                        "free_margin": account_info.margin_free,
+                        "margin_level": account_info.margin_level,
+                        "profit": account_info.profit,
+                        "currency": account_info.currency,
+                        "server": account_info.server,
+                        "company": account_info.company,
+                        "name": account_info.name,
+                        "leverage": account_info.leverage,
+                        "trade_allowed": account_info.trade_allowed,
+                        "expert_allowed": account_info.expert_allowed
+                    }
+                }
+            else:
+                # Simulation mode
+                login = self.credentials.get('login')
+                account = next(acc for acc in self.simulation_accounts.values() if acc['login'] == login)
+                
+                return {
+                    "success": True,
+                    "account_info": account
+                }
+                
+        except Exception as e:
+            logging.error(f"Get account info error: {str(e)}")
+            return {"success": False, "error": f"Failed to get account info: {str(e)}"}
+    
+    async def get_positions(self):
+        """Get open positions"""
+        if not self.connected:
+            return {"success": False, "error": "Not connected to MetaTrader 5"}
+        
+        try:
+            if self.mt5_available:
+                positions = self.mt5.positions_get()
+                if positions is None:
+                    return {"success": True, "positions": []}
+                
+                positions_list = []
+                for pos in positions:
+                    positions_list.append({
+                        "ticket": pos.ticket,
+                        "time": pos.time,
+                        "type": pos.type,
+                        "magic": pos.magic,
+                        "identifier": pos.identifier,
+                        "reason": pos.reason,
+                        "volume": pos.volume,
+                        "price_open": pos.price_open,
+                        "sl": pos.sl,
+                        "tp": pos.tp,
+                        "price_current": pos.price_current,
+                        "swap": pos.swap,
+                        "profit": pos.profit,
+                        "symbol": pos.symbol,
+                        "comment": pos.comment,
+                        "external_id": pos.external_id
+                    })
+                
+                return {"success": True, "positions": positions_list}
+            else:
+                # Simulation mode
+                login = self.credentials.get('login')
+                account = next(acc for acc in self.simulation_accounts.values() if acc['login'] == login)
+                
+                return {"success": True, "positions": account['positions']}
+                
+        except Exception as e:
+            logging.error(f"Get positions error: {str(e)}")
+            return {"success": False, "error": f"Failed to get positions: {str(e)}"}
+    
+    async def get_deals_history(self, days_back: int = 30):
+        """Get deal history"""
+        if not self.connected:
+            return {"success": False, "error": "Not connected to MetaTrader 5"}
+        
+        try:
+            if self.mt5_available:
+                from datetime import datetime, timedelta
+                date_from = datetime.now() - timedelta(days=days_back)
+                deals = self.mt5.history_deals_get(date_from, datetime.now())
+                
+                if deals is None:
+                    return {"success": True, "deals": []}
+                
+                deals_list = []
+                for deal in deals:
+                    deals_list.append({
+                        "ticket": deal.ticket,
+                        "order": deal.order,
+                        "time": deal.time,
+                        "type": deal.type,
+                        "entry": deal.entry,
+                        "magic": deal.magic,
+                        "position_id": deal.position_id,
+                        "reason": deal.reason,
+                        "volume": deal.volume,
+                        "price": deal.price,
+                        "commission": deal.commission,
+                        "swap": deal.swap,
+                        "profit": deal.profit,
+                        "fee": deal.fee,
+                        "symbol": deal.symbol,
+                        "comment": deal.comment,
+                        "external_id": deal.external_id
+                    })
+                
+                return {"success": True, "deals": deals_list}
+            else:
+                # Simulation mode
+                login = self.credentials.get('login')
+                account = next(acc for acc in self.simulation_accounts.values() if acc['login'] == login)
+                
+                # Filter deals by date
+                from datetime import datetime, timedelta
+                cutoff_time = (datetime.now() - timedelta(days=days_back)).timestamp()
+                recent_deals = [deal for deal in account['deals'] if deal['time'] >= cutoff_time]
+                
+                return {"success": True, "deals": recent_deals}
+                
+        except Exception as e:
+            logging.error(f"Get deals history error: {str(e)}")
+            return {"success": False, "error": f"Failed to get deals history: {str(e)}"}
+    
+    async def get_symbol_info(self, symbol: str):
+        """Get symbol information"""
+        if not self.connected:
+            return {"success": False, "error": "Not connected to MetaTrader 5"}
+        
+        try:
+            if self.mt5_available:
+                symbol_info = self.mt5.symbol_info(symbol)
+                if symbol_info is None:
+                    return {"success": False, "error": f"Symbol {symbol} not found"}
+                
+                return {
+                    "success": True,
+                    "symbol_info": {
+                        "name": symbol_info.name,
+                        "currency_base": symbol_info.currency_base,
+                        "currency_profit": symbol_info.currency_profit,
+                        "digits": symbol_info.digits,
+                        "spread": symbol_info.spread,
+                        "trade_tick_value": symbol_info.trade_tick_value,
+                        "trade_tick_size": symbol_info.trade_tick_size,
+                        "trade_contract_size": symbol_info.trade_contract_size,
+                        "volume_min": symbol_info.volume_min,
+                        "volume_max": symbol_info.volume_max,
+                        "volume_step": symbol_info.volume_step,
+                        "description": symbol_info.description,
+                        "path": symbol_info.path
+                    }
+                }
+            else:
+                # Simulation mode
+                if symbol in self.simulation_market_data:
+                    return {"success": True, "symbol_info": self.simulation_market_data[symbol]}
+                else:
+                    return {"success": False, "error": f"Symbol {symbol} not found in simulation"}
+                    
+        except Exception as e:
+            logging.error(f"Get symbol info error: {str(e)}")
+            return {"success": False, "error": f"Failed to get symbol info: {str(e)}"}
+    
+    async def get_market_data(self, symbols: list = None):
+        """Get current market data for symbols"""
+        if not self.connected:
+            return {"success": False, "error": "Not connected to MetaTrader 5"}
+        
+        try:
+            if symbols is None:
+                symbols = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "XAUUSD"]
+            
+            market_data = {}
+            
+            if self.mt5_available:
+                for symbol in symbols:
+                    tick = self.mt5.symbol_info_tick(symbol)
+                    if tick is not None:
+                        market_data[symbol] = {
+                            "time": tick.time,
+                            "bid": tick.bid,
+                            "ask": tick.ask,
+                            "last": tick.last,
+                            "volume": tick.volume,
+                            "spread": int((tick.ask - tick.bid) * 100000)
+                        }
+            else:
+                # Simulation mode
+                for symbol in symbols:
+                    if symbol in self.simulation_market_data:
+                        market_data[symbol] = self.simulation_market_data[symbol]
+            
+            return {"success": True, "market_data": market_data}
+            
+        except Exception as e:
+            logging.error(f"Get market data error: {str(e)}")
+            return {"success": False, "error": f"Failed to get market data: {str(e)}"}
+    
+    def disconnect(self):
+        """Disconnect from MetaTrader 5"""
+        if self.mt5_available:
+            self.mt5.shutdown()
+        
+        self.connected = False
+        self.credentials = {}
+        return {"success": True, "message": "Disconnected from MetaTrader 5"}
+
+# Initialize enhanced MetaQuotes service
+enhanced_mt5_service = EnhancedMetaQuotesService()
+
+# Mock MT4/MT5 Trading Data Service (keeping existing for compatibility)
 class MockMT5Service:
     def __init__(self):
         self.accounts = {}
