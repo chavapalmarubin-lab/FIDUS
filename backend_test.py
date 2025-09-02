@@ -3972,19 +3972,19 @@ def main():
     
     tester = FidusAPITester()
     
-    # Run focused camera capture tests as requested in review
-    camera_capture_success = tester.run_camera_capture_tests()
+    # Run focused CRM prospect management tests as requested in review
+    crm_prospect_success = tester.run_crm_prospect_tests()
     
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    if camera_capture_success:
-        print("🎉 Camera capture support tests passed! Document upload endpoint verified.")
+    if crm_prospect_success:
+        print("🎉 CRM prospect management tests passed! All endpoints verified.")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
-        print(f"⚠️  {failed_tests} test(s) failed. Please check the document upload implementation.")
+        print(f"⚠️  {failed_tests} test(s) failed. Please check the CRM prospect implementation.")
         return 1
 
 if __name__ == "__main__":
