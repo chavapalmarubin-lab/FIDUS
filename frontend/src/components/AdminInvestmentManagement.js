@@ -71,7 +71,17 @@ const AdminInvestmentManagement = () => {
 
   useEffect(() => {
     fetchOverviewData();
+    fetchFundConfigs();
   }, []);
+
+  const fetchFundConfigs = async () => {
+    try {
+      const response = await axios.get(`${API}/investments/funds/config`);
+      setFundConfigs(response.data.funds);
+    } catch (err) {
+      console.error("Error fetching fund configs:", err);
+    }
+  };
 
   const fetchOverviewData = async () => {
     try {
