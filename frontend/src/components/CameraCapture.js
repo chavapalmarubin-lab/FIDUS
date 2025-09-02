@@ -17,9 +17,34 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [cameraActive, setCameraActive] = useState(false);
+  const [permissionState, setPermissionState] = useState("unknown");
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
+  // Check camera permission status
+  const checkPermissions = useCallback(async () => {
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: 'camera' });
+        setPermissionState(result.state);
+        
+        result.addEventListener('change', () => {
+          setPermissionState(result.state);
+        });
+      }
+    } catch (err) {
+      console.log("Permission API not supported");
+      setPermissionState("unknown");
+    }
+  }, []);
+
+  // Initialize permission checking when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      checkPermissions();
+    }
+  }, [isOpen, checkPermissions]);
 
   const startCamera = useCallback(async () => {
     try {
