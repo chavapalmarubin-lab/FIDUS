@@ -224,6 +224,31 @@ class RedemptionRequest(BaseModel):
     amount: Optional[float] = None  # If None, redeem full amount
     redemption_date: Optional[datetime] = None
 
+# Client Investment Readiness Models
+class ClientInvestmentReadiness(BaseModel):
+    client_id: str
+    aml_kyc_completed: bool = False
+    agreement_signed: bool = False
+    deposit_date: Optional[datetime] = None
+    investment_ready: bool = False
+    notes: str = ""
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_by: str = ""
+
+class ClientInvestmentReadinessUpdate(BaseModel):
+    aml_kyc_completed: Optional[bool] = None
+    agreement_signed: Optional[bool] = None
+    deposit_date: Optional[datetime] = None
+    notes: Optional[str] = None
+    updated_by: Optional[str] = None
+
+class ClientCreate(BaseModel):
+    username: str
+    name: str
+    email: str
+    phone: Optional[str] = None
+    notes: Optional[str] = ""
+
 # FIDUS Investment Fund Configuration
 FIDUS_FUND_CONFIG = {
     "CORE": FundConfiguration(
