@@ -2801,10 +2801,12 @@ async def gmail_oauth_callback(code: str, state: str):
     """Handle Gmail OAuth callback"""
     try:
         from google_auth_oauthlib.flow import Flow
+        from fastapi.responses import RedirectResponse
         
         # Verify state (in production, use proper session storage)
         if state not in oauth_states:
-            raise HTTPException(status_code=400, detail="Invalid state parameter")
+            # Redirect to frontend with error
+            return RedirectResponse(url="/?gmail_auth=error&message=Invalid+state+parameter")
         
         # Create flow
         flow = Flow.from_client_secrets_file(
@@ -2826,20 +2828,19 @@ async def gmail_oauth_callback(code: str, state: str):
         
         # Get profile info
         profile = gmail_service.service.users().getProfile(userId="me").execute()
+        email_address = profile.get("emailAddress", "")
         
         # Clean up state
         del oauth_states[state]
         
-        return {
-            "success": True,
-            "message": "Gmail authentication successful!",
-            "email_address": profile.get("emailAddress"),
-            "redirect_message": "You can close this window and return to the admin panel."
-        }
+        # Redirect to frontend with success
+        return RedirectResponse(url=f"/?gmail_auth=success&email={email_address}")
         
     except Exception as e:
         logging.error(f"Gmail OAuth callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
+        # Redirect to frontend with error
+        error_msg = str(e).replace(" ", "+")
+        return RedirectResponse(url=f"/?gmail_auth=error&message={error_msg}")
 
 @api_router.post("/gmail/authenticate")
 async def authenticate_gmail():
