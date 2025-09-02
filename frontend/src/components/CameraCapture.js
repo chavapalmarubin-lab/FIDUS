@@ -202,14 +202,35 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
             <h3 className="text-xl font-semibold text-white">
               {cameraActive ? "Take Photo" : capturedImage ? "Review Photo" : "Camera Access"}
             </h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleClose}
-              className="text-slate-400 hover:text-white"
-            >
-              <X size={20} />
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Permission Status Indicator */}
+              {permissionState === "granted" && (
+                <Badge className="bg-green-600/20 text-green-400 text-xs">
+                  <CheckCircle size={12} className="mr-1" />
+                  Permission Granted
+                </Badge>
+              )}
+              {permissionState === "denied" && (
+                <Badge className="bg-red-600/20 text-red-400 text-xs">
+                  <XCircle size={12} className="mr-1" />
+                  Permission Denied
+                </Badge>
+              )}
+              {permissionState === "prompt" && (
+                <Badge className="bg-yellow-600/20 text-yellow-400 text-xs">
+                  <AlertCircle size={12} className="mr-1" />
+                  Permission Required
+                </Badge>
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleClose}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={20} />
+              </Button>
+            </div>
           </div>
 
           {/* Error Display */}
