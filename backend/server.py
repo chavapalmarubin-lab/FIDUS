@@ -2934,7 +2934,7 @@ async def send_document_for_signature(
                 break
         
         # Create document viewing URL (you can customize this)
-        document_url = f"https://docuflow-10.preview.emergentagent.com/documents/{document_id}/view"
+        document_url = f"https://invest-manager-5.preview.emergentagent.com/documents/{document_id}/view"
         
         # Send emails to all recipients using Gmail
         successful_sends = []
@@ -3091,7 +3091,7 @@ async def get_gmail_auth_url():
         flow = Flow.from_client_secrets_file(
             '/app/backend/gmail_credentials.json',
             scopes=['https://www.googleapis.com/auth/gmail.send'],
-            redirect_uri='https://docuflow-10.preview.emergentagent.com/api/gmail/oauth-callback'
+            redirect_uri='https://invest-manager-5.preview.emergentagent.com/api/gmail/oauth-callback'
         )
         
         # Generate authorization URL
@@ -3130,7 +3130,7 @@ async def gmail_oauth_callback(code: str, state: str):
         flow = Flow.from_client_secrets_file(
             '/app/backend/gmail_credentials.json',
             scopes=['https://www.googleapis.com/auth/gmail.send'],
-            redirect_uri='https://docuflow-10.preview.emergentagent.com/api/gmail/oauth-callback'
+            redirect_uri='https://invest-manager-5.preview.emergentagent.com/api/gmail/oauth-callback'
         )
         
         # Exchange authorization code for tokens
