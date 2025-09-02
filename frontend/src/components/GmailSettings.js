@@ -17,7 +17,48 @@ const GmailSettings = () => {
   useEffect(() => {
     // Check authentication status on component mount
     checkAuthStatus();
+    
+    // Handle OAuth callback parameters
+    handleOAuthCallback();
   }, []);
+
+  const handleOAuthCallback = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gmailAuth = urlParams.get('gmail_auth');
+    const email = urlParams.get('email');
+    const message = urlParams.get('message');
+
+    if (gmailAuth === 'success') {
+      // OAuth was successful
+      setAuthError(null);
+      setAuthenticating(false);
+      
+      // Show success message temporarily
+      setAuthError(`Gmail authentication successful! Connected as ${email}`);
+      setTimeout(() => {
+        setAuthError(null);
+      }, 3000);
+      
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // Refresh status to get updated authentication info
+      setTimeout(() => {
+        checkAuthStatus();
+      }, 1000);
+      
+    } else if (gmailAuth === 'error') {
+      // OAuth failed
+      setAuthenticating(false);
+      const errorMsg = message ? decodeURIComponent(message.replace(/\+/g, ' ')) : 'Authentication failed';
+      setAuthError(`Gmail authentication failed: ${errorMsg}`);
+      
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  };
 
   const checkAuthStatus = async () => {
     try {
