@@ -23,27 +23,31 @@ const GmailSettings = () => {
       if (response.data.success) {
         setGmailStatus(response.data);
       } else if (response.data.action === 'redirect_to_oauth') {
-        // Need to perform OAuth flow
+        // Need to perform OAuth flow - use full page redirect instead of popup
         const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
         
         if (authUrlResponse.data.success) {
-          // Open OAuth URL in new window
-          window.open(authUrlResponse.data.authorization_url, 'gmail_oauth', 'width=600,height=700');
+          // Store current page state before redirect
+          localStorage.setItem('gmail_auth_return', window.location.href);
           
-          // Show instructions to user
-          alert(`Gmail authentication required. Please:\n\n1. Complete authentication in the popup window\n2. Grant Gmail permissions\n3. Return to this page and click "Refresh Status"\n\nNote: Keep this window open during authentication.`);
+          // Show loading message to user
+          setAuthenticating(true);
+          alert('Redirecting to Google for Gmail authentication. You will be redirected back after granting permissions.');
+          
+          // Redirect to Google OAuth (full page redirect)
+          window.location.href = authUrlResponse.data.authorization_url;
         }
       }
     } catch (error) {
       console.error('Gmail authentication error:', error);
+      setAuthenticating(false);
       if (error.response?.data?.detail) {
         alert(`Gmail authentication failed: ${error.response.data.detail}`);
       } else {
         alert('Gmail authentication failed. Please check server logs.');
       }
-    } finally {
-      setAuthenticating(false);
     }
+    // Don't set setAuthenticating(false) here as we're redirecting
   };
 
   const refreshStatus = async () => {
