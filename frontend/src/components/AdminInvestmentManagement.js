@@ -600,6 +600,22 @@ const AdminInvestmentManagement = () => {
                     </p>
                   )}
                 </div>
+                
+                <div>
+                  <Label className="text-slate-300 flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Date of Deposit (Sets Investment Timeline) *
+                  </Label>
+                  <Input
+                    type="date"
+                    value={investmentForm.deposit_date}
+                    onChange={(e) => setInvestmentForm({...investmentForm, deposit_date: e.target.value})}
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    This date determines the 2-month incubation period and all investment timelines
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
