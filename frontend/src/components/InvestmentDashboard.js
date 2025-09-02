@@ -360,7 +360,7 @@ const InvestmentDashboard = ({ user, userType }) => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">Investment Dashboard</h2>
-          <p className="text-slate-400">Manage your FIDUS fund investments</p>
+          <p className="text-slate-400">View your FIDUS fund investments</p>
         </div>
         
         <div className="flex gap-3">
@@ -373,13 +373,16 @@ const InvestmentDashboard = ({ user, userType }) => {
             <RefreshCw size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button
-            onClick={() => setShowInvestModal(true)}
-            className="bg-cyan-600 hover:bg-cyan-700"
-          >
-            <Plus size={16} className="mr-2" />
-            New Investment
-          </Button>
+          {/* Investment creation only available for admins */}
+          {userType === "admin" && (
+            <Button
+              onClick={() => setShowInvestModal(true)}
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              <Plus size={16} className="mr-2" />
+              New Investment
+            </Button>
+          )}
         </div>
       </div>
 
