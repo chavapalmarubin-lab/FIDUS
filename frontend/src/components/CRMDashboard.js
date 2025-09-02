@@ -449,7 +449,7 @@ const CRMDashboard = ({ user }) => {
       </div>
 
       <Tabs defaultValue="funds" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-800 border-slate-600">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-600">
           <TabsTrigger value="funds" className="data-[state=active]:bg-cyan-600">
             <PieChart className="h-4 w-4 mr-2" />
             Fund Management
@@ -461,6 +461,10 @@ const CRMDashboard = ({ user }) => {
           <TabsTrigger value="flows" className="data-[state=active]:bg-cyan-600">
             <BarChart3 className="h-4 w-4 mr-2" />
             Capital Flows
+          </TabsTrigger>
+          <TabsTrigger value="metaquotes" className="data-[state=active]:bg-cyan-600">
+            <Database className="h-4 w-4 mr-2" />
+            MetaQuotes Data
           </TabsTrigger>
         </TabsList>
 
