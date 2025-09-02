@@ -657,16 +657,7 @@ const ClientManagement = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="space-y-1">
-                        <div className="text-green-400 text-xs">✓ {client.compliance.kyc_status}</div>
-                        <div className="text-green-400 text-xs">✓ {client.compliance.aml_status}</div>
-                        <div className={`text-xs ${getRiskLevelColor(client.compliance.risk_level)}`}>
-                          {client.compliance.risk_level} Risk
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         <Button 
                           variant="ghost" 
                           size="sm"
