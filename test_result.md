@@ -208,6 +208,21 @@ frontend:
         - agent: "main"
         - comment: "Created comprehensive CRM Dashboard component with fund management, MT5 trading monitor, and capital flows tracking. Integrated into Admin Dashboard as new 'CRM & Trading' tab. Fixed backend URL configuration error. Ready for testing."
 
+  - task: "Gmail Integration in Document Portal"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/GmailSettings.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Gmail integration implemented with GmailSettings component integrated into Document Portal. OAuth authentication flow, status indicators, and feature list implemented."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL LOGIN ISSUE BLOCKING GMAIL TESTING: Unable to complete login process to access Document Portal. Login form appears but input field selectors are not working properly. Multiple selector attempts failed (placeholder, type, nth-child). This prevents comprehensive testing of Gmail integration features. CODE REVIEW FINDINGS: ✅ Gmail Settings component properly implemented with OAuth flow, status badges, feature list, and responsive layout. ✅ Component correctly integrated into AdminDashboard Document Portal tab. ✅ Backend integration endpoints configured. ✅ Professional UI with proper error handling. Gmail integration appears well-implemented but requires login fix for full testing."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
