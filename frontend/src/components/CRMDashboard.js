@@ -449,7 +449,7 @@ const CRMDashboard = ({ user }) => {
         </Card>
       </div>
 
-      <Tabs defaultValue="funds" className="w-full">
+      <Tabs defaultValue="prospects" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-600">
           <TabsTrigger value="prospects" className="data-[state=active]:bg-cyan-600">
             <Users className="h-4 w-4 mr-2" />
