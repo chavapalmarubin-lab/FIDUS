@@ -609,7 +609,6 @@ const ClientManagement = () => {
                   <th className="text-left p-3 text-slate-300">Contact</th>
                   <th className="text-left p-3 text-slate-300">Investments</th>
                   <th className="text-left p-3 text-slate-300">Investment Readiness</th>
-                  <th className="text-left p-3 text-slate-300">Details</th>
                   <th className="text-left p-3 text-slate-300">Actions</th>
                 </tr>
               </thead>
