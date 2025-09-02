@@ -189,9 +189,34 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg flex items-center gap-2">
-              <AlertCircle className="text-red-400" size={16} />
-              <span className="text-red-300 text-sm">{error}</span>
+            <div className="mb-4 p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-red-400 flex-shrink-0 mt-0.5" size={20} />
+                <div>
+                  <span className="text-red-300 font-medium">Camera Access Issue</span>
+                  <p className="text-red-300 text-sm mt-1">{error}</p>
+                  
+                  {/* Permission help for common errors */}
+                  {error.includes("denied") && (
+                    <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300">
+                      <strong>How to enable camera:</strong>
+                      <ul className="mt-1 space-y-1 list-disc list-inside">
+                        <li><strong>Desktop:</strong> Click the camera icon in your browser's address bar</li>
+                        <li><strong>Mobile:</strong> Check browser settings → Site permissions → Camera</li>
+                        <li><strong>Safari:</strong> Settings → Safari → Camera → Allow</li>
+                        <li><strong>Chrome:</strong> Settings → Privacy → Site Settings → Camera</li>
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {error.includes("HTTPS") && (
+                    <div className="mt-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded text-xs text-yellow-300">
+                      <strong>Security Note:</strong> Camera access requires a secure connection (HTTPS). 
+                      Make sure you're accessing the site with HTTPS://
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
