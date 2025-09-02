@@ -20,7 +20,8 @@ import {
   Wallet,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
 import { 
   LineChart, 
