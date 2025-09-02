@@ -119,8 +119,8 @@ const AdminInvestmentManagement = () => {
 
   const handleCreateInvestment = async () => {
     try {
-      if (!investmentForm.client_id || !investmentForm.fund_code || !investmentForm.amount) {
-        setError("Please fill in all fields");
+      if (!investmentForm.client_id || !investmentForm.fund_code || !investmentForm.amount || !investmentForm.deposit_date) {
+        setError("Please fill in all fields including the deposit date");
         return;
       }
 
@@ -133,7 +133,8 @@ const AdminInvestmentManagement = () => {
       const response = await axios.post(`${API}/investments/create`, {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
-        amount: amount
+        amount: amount,
+        deposit_date: investmentForm.deposit_date
       });
 
       if (response.data.success) {
