@@ -4018,6 +4018,342 @@ async def get_mt5_admin_overview():
         logging.error(f"Get MT5 admin overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 admin overview")
 
+# MetaQuotes API Endpoints
+@api_router.post("/metaquotes/connect")
+async def connect_metaquotes(
+    login: str = Form(...),
+    password: str = Form(...), 
+    server: str = Form(...)
+):
+    """Connect to MetaTrader 5 with credentials"""
+    try:
+        result = await enhanced_mt5_service.connect_mt5(login, password, server)
+        return result
+    except Exception as e:
+        logging.error(f"MetaQuotes connection error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
+
+@api_router.get("/metaquotes/account-info")
+async def get_metaquotes_account_info():
+    """Get MetaTrader 5 account information"""
+    try:
+        result = await enhanced_mt5_service.get_account_info()
+        return result
+    except Exception as e:
+        logging.error(f"Get account info error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get account info: {str(e)}")
+
+@api_router.get("/metaquotes/positions")
+async def get_metaquotes_positions():
+    """Get MetaTrader 5 open positions"""
+    try:
+        result = await enhanced_mt5_service.get_positions()
+        return result
+    except Exception as e:
+        logging.error(f"Get positions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get positions: {str(e)}")
+
+@api_router.get("/metaquotes/deals-history")
+async def get_metaquotes_deals_history(days: int = 30):
+    """Get MetaTrader 5 deals history"""
+    try:
+        result = await enhanced_mt5_service.get_deals_history(days)
+        return result
+    except Exception as e:
+        logging.error(f"Get deals history error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get deals history: {str(e)}")
+
+@api_router.get("/metaquotes/symbol-info/{symbol}")
+async def get_metaquotes_symbol_info(symbol: str):
+    """Get MetaTrader 5 symbol information"""
+    try:
+        result = await enhanced_mt5_service.get_symbol_info(symbol)
+        return result
+    except Exception as e:
+        logging.error(f"Get symbol info error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get symbol info: {str(e)}")
+
+@api_router.get("/metaquotes/market-data")
+async def get_metaquotes_market_data(symbols: str = "EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD,XAUUSD"):
+    """Get MetaTrader 5 market data for symbols"""
+    try:
+        symbols_list = symbols.split(',') if symbols else None
+        result = await enhanced_mt5_service.get_market_data(symbols_list)
+        return result
+    except Exception as e:
+        logging.error(f"Get market data error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get market data: {str(e)}")
+
+@api_router.post("/metaquotes/disconnect")
+async def disconnect_metaquotes():
+    """Disconnect from MetaTrader 5"""
+    try:
+        result = enhanced_mt5_service.disconnect()
+        return result
+    except Exception as e:
+        logging.error(f"Disconnect error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to disconnect: {str(e)}")
+
+# Enhanced CRM endpoints for detailed views
+@api_router.get("/crm/fund/{fund_id}/investors")
+async def get_fund_investors(fund_id: str):
+    """Get detailed investor list for a specific fund"""
+    try:
+        if fund_id not in [fund.id for fund in FIDUS_FUNDS.values()]:
+            raise HTTPException(status_code=404, detail="Fund not found")
+        
+        fund = next(fund for fund in FIDUS_FUNDS.values() if fund.id == fund_id)
+        
+        # Get all investors for this fund
+        fund_investors = []
+        
+        for client_id, allocations in investor_allocations.items():
+            for allocation in allocations:
+                if allocation.fund_id == fund_id:
+                    # Get client info
+                    client_info = None
+                    for user in MOCK_USERS.values():
+                        if user["id"] == client_id:
+                            client_info = user
+                            break
+                    
+                    if client_info:
+                        # Get MT5 account info
+                        mt5_account = await mock_mt5.get_account_info(client_id)
+                        
+                        # Calculate additional metrics
+                        total_pnl = allocation.current_value - allocation.invested_amount
+                        pnl_percentage = (total_pnl / allocation.invested_amount) * 100 if allocation.invested_amount > 0 else 0
+                        days_invested = (datetime.now(timezone.utc) - allocation.entry_date).days
+                        
+                        investor_detail = {
+                            "client_id": client_id,
+                            "client_name": client_info["name"],
+                            "client_email": client_info.get("email", ""),
+                            "fund_allocation": {
+                                "allocation_id": allocation.id,
+                                "shares": allocation.shares,
+                                "invested_amount": allocation.invested_amount,
+                                "current_value": allocation.current_value,
+                                "allocation_percentage": allocation.allocation_percentage,
+                                "entry_date": allocation.entry_date.isoformat(),
+                                "entry_nav": allocation.entry_nav,
+                                "current_nav": fund.nav_per_share,
+                                "total_pnl": round(total_pnl, 2),
+                                "pnl_percentage": round(pnl_percentage, 2),
+                                "days_invested": days_invested
+                            },
+                            "trading_account": {
+                                "account_number": mt5_account.get("account_number") if mt5_account else None,
+                                "balance": mt5_account.get("balance", 0) if mt5_account else 0,
+                                "equity": mt5_account.get("equity", 0) if mt5_account else 0,
+                                "open_positions": len(await mock_mt5.get_positions(client_id))
+                            },
+                            "status": "Active"
+                        }
+                        
+                        fund_investors.append(investor_detail)
+        
+        # Sort by invested amount descending
+        fund_investors.sort(key=lambda x: x["fund_allocation"]["invested_amount"], reverse=True)
+        
+        # Calculate fund summary
+        total_investors = len(fund_investors)
+        total_invested = sum(inv["fund_allocation"]["invested_amount"] for inv in fund_investors)
+        total_current_value = sum(inv["fund_allocation"]["current_value"] for inv in fund_investors)
+        total_pnl = total_current_value - total_invested
+        avg_allocation = total_invested / total_investors if total_investors > 0 else 0
+        
+        return {
+            "fund": fund.dict(),
+            "investors": fund_investors,
+            "summary": {
+                "total_investors": total_investors,
+                "total_invested": round(total_invested, 2),
+                "total_current_value": round(total_current_value, 2),
+                "total_pnl": round(total_pnl, 2),
+                "total_pnl_percentage": round((total_pnl / total_invested) * 100 if total_invested > 0 else 0, 2),
+                "average_allocation": round(avg_allocation, 2)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get fund investors error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch fund investors")
+
+@api_router.get("/crm/client/{client_id}/profile")
+async def get_client_detailed_profile(client_id: str):
+    """Get comprehensive client profile with trading and fund details"""
+    try:
+        # Get client info
+        client_info = None
+        for user in MOCK_USERS.values():
+            if user["id"] == client_id:
+                client_info = user
+                break
+        
+        if not client_info:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Get fund allocations
+        client_allocations = investor_allocations.get(client_id, [])
+        allocations_data = []
+        total_fund_value = 0
+        
+        for allocation in client_allocations:
+            fund = next(fund for fund in FIDUS_FUNDS.values() if fund.id == allocation.fund_id)
+            total_pnl = allocation.current_value - allocation.invested_amount
+            pnl_percentage = (total_pnl / allocation.invested_amount) * 100 if allocation.invested_amount > 0 else 0
+            
+            allocation_detail = {
+                "fund_name": fund.name,
+                "fund_type": fund.fund_type,
+                "shares": allocation.shares,
+                "invested_amount": allocation.invested_amount,
+                "current_value": allocation.current_value,
+                "total_pnl": round(total_pnl, 2),
+                "pnl_percentage": round(pnl_percentage, 2),
+                "entry_date": allocation.entry_date.isoformat(),
+                "allocation_percentage": allocation.allocation_percentage
+            }
+            
+            allocations_data.append(allocation_detail)
+            total_fund_value += allocation.current_value
+        
+        # Get MT5 trading data
+        mt5_account = await mock_mt5.get_account_info(client_id)
+        mt5_positions = await mock_mt5.get_positions(client_id)
+        mt5_history = await mock_mt5.get_trade_history(client_id, 30)
+        
+        # Get capital flows
+        client_flows = capital_flows.get(client_id, [])
+        recent_flows = sorted(client_flows, key=lambda x: x.trade_date, reverse=True)[:10]
+        
+        return {
+            "client_info": {
+                "client_id": client_id,
+                "name": client_info["name"],
+                "email": client_info.get("email", ""),
+                "type": client_info["type"],
+                "status": "Active",
+                "join_date": "2024-01-15",  # Could be stored in user data
+                "risk_tolerance": client_info.get("risk_tolerance", "Moderate")
+            },
+            "fund_portfolio": {
+                "allocations": allocations_data,
+                "total_value": round(total_fund_value, 2),
+                "number_of_funds": len(allocations_data)
+            },
+            "trading_account": {
+                "account_info": mt5_account,
+                "positions": {
+                    "data": mt5_positions,
+                    "summary": {
+                        "total_positions": len(mt5_positions),
+                        "total_profit": sum(pos["profit"] for pos in mt5_positions),
+                        "total_volume": sum(pos["volume"] for pos in mt5_positions)
+                    }
+                },
+                "recent_history": {
+                    "data": mt5_history[:20],  # Last 20 trades
+                    "summary": {
+                        "total_trades": len(mt5_history),
+                        "total_profit": sum(trade["profit"] for trade in mt5_history),
+                        "winning_trades": len([t for t in mt5_history if t["profit"] > 0]),
+                        "losing_trades": len([t for t in mt5_history if t["profit"] < 0])
+                    }
+                }
+            },
+            "capital_flows": {
+                "recent_flows": [flow.dict() for flow in recent_flows],
+                "summary": {
+                    "total_subscriptions": sum(f.amount for f in client_flows if f.flow_type == "subscription"),
+                    "total_redemptions": sum(f.amount for f in client_flows if f.flow_type == "redemption"),
+                    "total_distributions": sum(f.amount for f in client_flows if f.flow_type == "distribution")
+                }
+            },
+            "total_assets": round(total_fund_value + (mt5_account.get("balance", 0) if mt5_account else 0), 2)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get client profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client profile")
+
+@api_router.get("/crm/clients/all-details")
+async def get_all_clients_details():
+    """Get comprehensive details for all clients"""
+    try:
+        clients_details = []
+        
+        for username, user in MOCK_USERS.items():
+            if user["type"] == "client":
+                client_id = user["id"]
+                
+                # Get fund allocations
+                client_allocations = investor_allocations.get(client_id, [])
+                total_fund_value = sum(alloc.current_value for alloc in client_allocations)
+                
+                # Get MT5 account
+                mt5_account = await mock_mt5.get_account_info(client_id)
+                mt5_positions = await mock_mt5.get_positions(client_id)
+                
+                # Get recent capital flows
+                client_flows = capital_flows.get(client_id, [])
+                recent_subscriptions = sum(f.amount for f in client_flows[-5:] if f.flow_type == "subscription")
+                
+                client_detail = {
+                    "client_id": client_id,
+                    "name": user["name"],
+                    "email": user.get("email", f"{username}@example.com"),
+                    "status": "Active",
+                    "fund_portfolio": {
+                        "total_value": round(total_fund_value, 2),
+                        "number_of_funds": len(client_allocations)
+                    },
+                    "trading_account": {
+                        "account_number": mt5_account.get("account_number") if mt5_account else None,
+                        "balance": mt5_account.get("balance", 0) if mt5_account else 0,
+                        "equity": mt5_account.get("equity", 0) if mt5_account else 0,
+                        "open_positions": len(mt5_positions),
+                        "last_activity": mt5_account.get("login_time") if mt5_account else None
+                    },
+                    "recent_activity": {
+                        "recent_subscriptions": round(recent_subscriptions, 2),
+                        "last_capital_flow": client_flows[-1].trade_date.isoformat() if client_flows else None
+                    },
+                    "total_assets": round(total_fund_value + (mt5_account.get("balance", 0) if mt5_account else 0), 2)
+                }
+                
+                clients_details.append(client_detail)
+        
+        # Sort by total assets descending
+        clients_details.sort(key=lambda x: x["total_assets"], reverse=True)
+        
+        # Calculate summary
+        total_clients = len(clients_details)
+        total_assets_all = sum(client["total_assets"] for client in clients_details)
+        total_fund_assets = sum(client["fund_portfolio"]["total_value"] for client in clients_details)
+        total_trading_assets = sum(client["trading_account"]["balance"] for client in clients_details)
+        
+        return {
+            "clients": clients_details,
+            "summary": {
+                "total_clients": total_clients,
+                "total_assets": round(total_assets_all, 2),
+                "total_fund_assets": round(total_fund_assets, 2),
+                "total_trading_assets": round(total_trading_assets, 2),
+                "average_assets_per_client": round(total_assets_all / total_clients if total_clients > 0 else 0, 2)
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all clients details error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch all clients details")
+
 # Enhanced Portfolio Summary with CRM Data
 @api_router.get("/crm/admin/dashboard")
 async def get_crm_admin_dashboard():
