@@ -650,12 +650,6 @@ const ClientManagement = () => {
                       {getReadinessStatus(client)}
                     </td>
                     <td className="p-3">
-                      <div className="text-white text-sm">ID: {client.id || client.username}</div>
-                      <div className="text-slate-400 text-xs">
-                        Created: {formatDate(client.created_at || client.createdAt)}
-                      </div>
-                    </td>
-                    <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Button 
                           variant="ghost" 
