@@ -86,12 +86,11 @@ const ClientManagement = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/admin/clients/detailed`);
+      const response = await axios.get(`${API}/clients/all`);
       setClients(response.data.clients);
       setSummary({
-        total: response.data.total_clients,
-        active: response.data.active_clients,
-        totalAUM: response.data.total_aum
+        total_clients: response.data.total_clients,
+        ready_for_investment: response.data.ready_for_investment
       });
     } catch (err) {
       setError("Failed to fetch clients data");
