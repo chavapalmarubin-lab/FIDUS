@@ -2554,6 +2554,342 @@ Document Content:
         if success:
             print("   ✅ Non-existent client properly rejected for MT5 account")
         
+        return success
+
+    # ===============================================================================
+    # GMAIL OAUTH URL DETAILED ANALYSIS TESTS - FOR REVIEW REQUEST
+    # ===============================================================================
+
+    def test_gmail_oauth_url_detailed_analysis(self):
+        """DETAILED ANALYSIS: Test Gmail OAuth URL generation and analyze parameters to diagnose 'accounts.google.refuse to connect' issue"""
+        print("\n🔍 DETAILED GMAIL OAUTH URL ANALYSIS - DIAGNOSING 'REFUSE TO CONNECT' ISSUE")
+        print("="*80)
+        
+        success, response = self.run_test(
+            "Gmail OAuth URL Generation - Detailed Analysis",
+            "GET",
+            "api/gmail/auth-url",
+            200
+        )
+        
+        if not success:
+            print("❌ CRITICAL: Cannot generate OAuth URL - this is the root cause!")
+            return False
+            
+        # Extract the OAuth URL
+        auth_url = response.get('authorization_url', '')
+        state = response.get('state', '')
+        
+        if not auth_url:
+            print("❌ CRITICAL: No authorization_url in response!")
+            return False
+            
+        print(f"\n📋 OAUTH URL ANALYSIS:")
+        print(f"Full OAuth URL: {auth_url}")
+        print(f"State Parameter: {state}")
+        
+        # Parse URL components
+        from urllib.parse import urlparse, parse_qs
+        try:
+            parsed_url = urlparse(auth_url)
+            query_params = parse_qs(parsed_url.query)
+            
+            print(f"\n🔍 URL COMPONENT ANALYSIS:")
+            print(f"Base URL: {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}")
+            print(f"Query Parameters Count: {len(query_params)}")
+            
+            # Expected OAuth URL format validation
+            expected_base = "https://accounts.google.com/o/oauth2/auth"
+            actual_base = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+            
+            print(f"\n✅ BASE URL VALIDATION:")
+            if actual_base == expected_base:
+                print(f"✅ Base URL correct: {actual_base}")
+            else:
+                print(f"❌ ISSUE FOUND - Base URL incorrect!")
+                print(f"   Expected: {expected_base}")
+                print(f"   Actual: {actual_base}")
+                return False
+            
+            # Required OAuth parameters check
+            required_params = {
+                'client_id': 'OAuth Client ID',
+                'redirect_uri': 'Callback URL',
+                'scope': 'Gmail permissions',
+                'response_type': 'OAuth flow type',
+                'access_type': 'Token access type',
+                'state': 'CSRF protection'
+            }
+            
+            print(f"\n🔍 REQUIRED PARAMETERS ANALYSIS:")
+            all_params_present = True
+            
+            for param, description in required_params.items():
+                if param in query_params:
+                    value = query_params[param][0] if query_params[param] else ''
+                    print(f"✅ {param}: {value}")
+                    
+                    # Detailed parameter validation
+                    if param == 'client_id':
+                        if value.endswith('.apps.googleusercontent.com'):
+                            print(f"   ✅ Client ID format valid: Google OAuth client")
+                        else:
+                            print(f"   ❌ ISSUE: Client ID format invalid - {value}")
+                            all_params_present = False
+                            
+                    elif param == 'redirect_uri':
+                        expected_redirect = 'https://docuflow-10.preview.emergentagent.com/api/gmail/oauth-callback'
+                        if value == expected_redirect:
+                            print(f"   ✅ Redirect URI matches expected: {value}")
+                        else:
+                            print(f"   ❌ ISSUE: Redirect URI mismatch!")
+                            print(f"      Expected: {expected_redirect}")
+                            print(f"      Actual: {value}")
+                            all_params_present = False
+                            
+                    elif param == 'scope':
+                        expected_scope = 'https://www.googleapis.com/auth/gmail.send'
+                        if expected_scope in value:
+                            print(f"   ✅ Gmail scope present: {value}")
+                        else:
+                            print(f"   ❌ ISSUE: Gmail scope missing or incorrect - {value}")
+                            all_params_present = False
+                            
+                    elif param == 'response_type':
+                        if value == 'code':
+                            print(f"   ✅ Response type correct: {value}")
+                        else:
+                            print(f"   ❌ ISSUE: Response type should be 'code', got: {value}")
+                            all_params_present = False
+                            
+                    elif param == 'access_type':
+                        if value == 'offline':
+                            print(f"   ✅ Access type correct: {value}")
+                        else:
+                            print(f"   ⚠️  Access type: {value} (should be 'offline' for refresh tokens)")
+                            
+                    elif param == 'state':
+                        if len(value) >= 10:
+                            print(f"   ✅ State parameter sufficient length: {len(value)} chars")
+                        else:
+                            print(f"   ⚠️  State parameter too short: {len(value)} chars")
+                else:
+                    print(f"❌ MISSING: {param} ({description})")
+                    all_params_present = False
+            
+            # Additional OAuth parameters check
+            optional_params = ['prompt', 'include_granted_scopes', 'enable_granular_consent']
+            print(f"\n🔍 OPTIONAL PARAMETERS:")
+            for param in optional_params:
+                if param in query_params:
+                    value = query_params[param][0]
+                    print(f"ℹ️  {param}: {value}")
+            
+            # URL encoding validation
+            print(f"\n🔍 URL ENCODING VALIDATION:")
+            if '%3A' in auth_url or '%2F' in auth_url:
+                print("✅ URL properly encoded")
+            else:
+                print("⚠️  URL may not be properly encoded")
+            
+            # Diagnose potential "refuse to connect" causes
+            print(f"\n🚨 DIAGNOSIS FOR 'ACCOUNTS.GOOGLE.REFUSE TO CONNECT' ERROR:")
+            
+            if all_params_present:
+                print("✅ All required OAuth parameters are present and correctly formatted")
+                print("\n🔍 POTENTIAL CAUSES OF 'REFUSE TO CONNECT' ERROR:")
+                print("1. ❓ OAuth consent screen not configured in Google Cloud Console")
+                print("2. ❓ Domain not verified in Google Cloud Console")
+                print("3. ❓ Redirect URI not whitelisted in OAuth client configuration")
+                print("4. ❓ OAuth client not approved for external users")
+                print("5. ❓ Missing required scopes in consent screen configuration")
+                print("6. ❓ OAuth client in testing mode with limited test users")
+                
+                print(f"\n✅ BACKEND OAUTH IMPLEMENTATION: PERFECT")
+                print(f"   The OAuth URL generation is working correctly.")
+                print(f"   The issue is likely in Google Cloud Console configuration.")
+                
+                return True
+            else:
+                print("❌ CRITICAL OAUTH PARAMETER ISSUES FOUND!")
+                print("   These parameter issues are likely causing the 'refuse to connect' error.")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error parsing OAuth URL: {e}")
+            return False
+
+    def test_gmail_client_id_verification_detailed(self):
+        """Verify Gmail OAuth client ID matches credentials file and check for updates"""
+        print("\n🔍 GMAIL CLIENT ID VERIFICATION - DETAILED ANALYSIS")
+        print("-" * 60)
+        
+        # Get OAuth URL to extract client_id
+        success, response = self.run_test(
+            "Get OAuth URL for Client ID Extraction",
+            "GET", 
+            "api/gmail/auth-url",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        auth_url = response.get('authorization_url', '')
+        if not auth_url:
+            print("❌ No authorization URL found")
+            return False
+            
+        # Extract client_id from URL
+        from urllib.parse import urlparse, parse_qs
+        try:
+            parsed_url = urlparse(auth_url)
+            query_params = parse_qs(parsed_url.query)
+            client_id = query_params.get('client_id', [''])[0]
+            
+            print(f"📋 CLIENT ID ANALYSIS:")
+            print(f"Client ID from OAuth URL: {client_id}")
+            
+            # Validate client ID format
+            if client_id.endswith('.apps.googleusercontent.com'):
+                print("✅ Client ID format is valid (Google OAuth client)")
+                
+                # Extract project number
+                project_part = client_id.split('-')[0]
+                print(f"Google Cloud Project ID: {project_part}")
+                
+                # Check if it's the expected new client ID
+                expected_new_client = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
+                old_client = "909926639154-cjtnt3urluctt1q90gri3rtj37vbim6h.apps.googleusercontent.com"
+                
+                if client_id == expected_new_client:
+                    print("✅ Using NEW client ID (should resolve 403 errors)")
+                    print("   This is the updated client ID that should fix 'refuse to connect' issues")
+                elif client_id == old_client:
+                    print("❌ Still using OLD client ID (may cause 403 errors)")
+                    print("   This could be the cause of 'refuse to connect' errors")
+                    print("   RECOMMENDATION: Update to new client ID")
+                    return False
+                else:
+                    print(f"ℹ️  Using different client ID: {client_id}")
+                    print("   Verify this client ID is properly configured in Google Cloud Console")
+                
+                return True
+            else:
+                print(f"❌ Invalid client ID format: {client_id}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error extracting client ID: {e}")
+            return False
+
+    def test_gmail_oauth_parameters_comprehensive(self):
+        """Comprehensive test of all Gmail OAuth parameters for 'refuse to connect' diagnosis"""
+        print("\n🔍 COMPREHENSIVE GMAIL OAUTH PARAMETERS TEST")
+        print("-" * 60)
+        
+        success, response = self.run_test(
+            "Gmail OAuth Parameters Comprehensive Check",
+            "GET",
+            "api/gmail/auth-url", 
+            200
+        )
+        
+        if not success:
+            return False
+            
+        auth_url = response.get('authorization_url', '')
+        
+        # Parse and validate every parameter
+        from urllib.parse import urlparse, parse_qs, unquote
+        try:
+            parsed_url = urlparse(auth_url)
+            query_params = parse_qs(parsed_url.query)
+            
+            print(f"📋 COMPREHENSIVE PARAMETER VALIDATION:")
+            
+            # Test each parameter in detail
+            test_results = {}
+            
+            # 1. Client ID validation
+            client_id = query_params.get('client_id', [''])[0]
+            if client_id and client_id.endswith('.apps.googleusercontent.com'):
+                test_results['client_id'] = True
+                print(f"✅ client_id: {client_id}")
+            else:
+                test_results['client_id'] = False
+                print(f"❌ client_id invalid: {client_id}")
+            
+            # 2. Redirect URI validation  
+            redirect_uri = unquote(query_params.get('redirect_uri', [''])[0])
+            expected_redirect = 'https://docuflow-10.preview.emergentagent.com/api/gmail/oauth-callback'
+            if redirect_uri == expected_redirect:
+                test_results['redirect_uri'] = True
+                print(f"✅ redirect_uri: {redirect_uri}")
+            else:
+                test_results['redirect_uri'] = False
+                print(f"❌ redirect_uri mismatch:")
+                print(f"   Expected: {expected_redirect}")
+                print(f"   Actual: {redirect_uri}")
+            
+            # 3. Scope validation
+            scope = unquote(query_params.get('scope', [''])[0])
+            expected_scope = 'https://www.googleapis.com/auth/gmail.send'
+            if expected_scope in scope:
+                test_results['scope'] = True
+                print(f"✅ scope: {scope}")
+            else:
+                test_results['scope'] = False
+                print(f"❌ scope missing gmail.send: {scope}")
+            
+            # 4. Response type validation
+            response_type = query_params.get('response_type', [''])[0]
+            if response_type == 'code':
+                test_results['response_type'] = True
+                print(f"✅ response_type: {response_type}")
+            else:
+                test_results['response_type'] = False
+                print(f"❌ response_type should be 'code': {response_type}")
+            
+            # 5. Access type validation
+            access_type = query_params.get('access_type', [''])[0]
+            if access_type == 'offline':
+                test_results['access_type'] = True
+                print(f"✅ access_type: {access_type}")
+            else:
+                test_results['access_type'] = False
+                print(f"❌ access_type should be 'offline': {access_type}")
+            
+            # 6. State parameter validation
+            state = query_params.get('state', [''])[0]
+            if state and len(state) >= 10:
+                test_results['state'] = True
+                print(f"✅ state: {state[:20]}... (length: {len(state)})")
+            else:
+                test_results['state'] = False
+                print(f"❌ state parameter invalid: {state}")
+            
+            # Summary
+            passed_tests = sum(test_results.values())
+            total_tests = len(test_results)
+            
+            print(f"\n📊 PARAMETER VALIDATION SUMMARY:")
+            print(f"Passed: {passed_tests}/{total_tests}")
+            
+            if passed_tests == total_tests:
+                print("✅ ALL OAUTH PARAMETERS VALID - Backend implementation is correct!")
+                print("   If 'refuse to connect' error persists, check Google Cloud Console configuration.")
+                return True
+            else:
+                print("❌ OAUTH PARAMETER ISSUES FOUND - These may cause 'refuse to connect' errors")
+                failed_params = [param for param, result in test_results.items() if not result]
+                print(f"   Failed parameters: {', '.join(failed_params)}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error validating parameters: {e}")
+            return False
+        
     def run_gmail_oauth_tests(self):
         """Run focused Gmail OAuth integration tests"""
         print("="*80)
