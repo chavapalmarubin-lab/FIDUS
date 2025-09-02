@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -23,9 +23,16 @@ import {
   RefreshCw,
   CheckCircle,
   AlertCircle,
-  UserPlus
+  UserPlus,
+  Calendar,
+  Phone,
+  Mail,
+  Clock,
+  Settings,
+  Target
 } from "lucide-react";
 import axios from "axios";
+import { format } from "date-fns";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -40,12 +47,29 @@ const ClientManagement = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedClients, setSelectedClients] = useState([]);
   const [summary, setSummary] = useState({});
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [showReadinessModal, setShowReadinessModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
   
-  const fileInputRef = useRef(null);
+  // Client creation form
+  const [newClientForm, setNewClientForm] = useState({
+    username: "",
+    name: "",
+    email: "",
+    phone: "",
+    notes: ""
+  });
+
+  // Investment readiness form
+  const [readinessForm, setReadinessForm] = useState({
+    aml_kyc_completed: false,
+    agreement_signed: false,
+    deposit_date: "",
+    notes: "",
+    updated_by: "admin"
+  });
 
   useEffect(() => {
     fetchClients();
