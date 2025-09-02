@@ -450,7 +450,11 @@ const CRMDashboard = ({ user }) => {
       </div>
 
       <Tabs defaultValue="funds" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-600">
+        <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-600">
+          <TabsTrigger value="prospects" className="data-[state=active]:bg-cyan-600">
+            <Users className="h-4 w-4 mr-2" />
+            Prospects
+          </TabsTrigger>
           <TabsTrigger value="funds" className="data-[state=active]:bg-cyan-600">
             <PieChart className="h-4 w-4 mr-2" />
             Fund Management
