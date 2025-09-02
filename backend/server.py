@@ -137,6 +137,36 @@ class ApplicationFinalizationRequest(BaseModel):
     applicationId: str
     approved: bool
 
+# CRM Prospect Models
+class ProspectCreate(BaseModel):
+    name: str
+    email: str
+    phone: str
+    notes: Optional[str] = ""
+
+class ProspectUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    stage: Optional[str] = None
+    notes: Optional[str] = None
+
+class Prospect(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: str
+    phone: str
+    stage: str = "lead"  # lead, qualified, proposal, negotiation, won, lost
+    notes: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    converted_to_client: bool = False
+    client_id: Optional[str] = None
+
+class ProspectConversionRequest(BaseModel):
+    prospect_id: str
+    send_agreement: bool = True
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
