@@ -663,21 +663,20 @@ const ClientManagement = () => {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => openReadinessModal(client)}
-                          className="text-slate-400 hover:text-cyan-400"
-                          title="Manage Investment Readiness"
-                        >
-                          <Settings size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Additional view functionality can be added here
+                          }}
                           className="text-slate-400 hover:text-white"
+                          title="View Client Details"
                         >
                           <Eye size={16} />
                         </Button>
                         <Select onValueChange={(value) => handleStatusUpdate(client.id, value)}>
-                          <SelectTrigger className="w-24 h-8 bg-slate-800 border-slate-600">
+                          <SelectTrigger 
+                            className="w-24 h-8 bg-slate-800 border-slate-600"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal size={16} />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600">
