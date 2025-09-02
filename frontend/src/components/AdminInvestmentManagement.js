@@ -70,7 +70,8 @@ const AdminInvestmentManagement = () => {
   const [investmentForm, setInvestmentForm] = useState({
     client_id: "",
     fund_code: "",
-    amount: ""
+    amount: "",
+    deposit_date: ""
   });
 
   useEffect(() => {
