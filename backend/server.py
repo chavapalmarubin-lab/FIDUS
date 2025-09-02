@@ -4971,6 +4971,298 @@ async def get_prospect_pipeline():
         logging.error(f"Get pipeline error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch prospect pipeline")
 
+# ===============================================================================
+# INVESTMENT MANAGEMENT ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/investments/funds/config")
+async def get_fund_configurations():
+    """Get all available fund configurations"""
+    try:
+        fund_configs = []
+        for fund_code, config in FIDUS_FUND_CONFIG.items():
+            fund_configs.append(config.dict())
+        
+        return {
+            "success": True,
+            "funds": fund_configs,
+            "total_funds": len(fund_configs)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get fund configs error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch fund configurations")
+
+@api_router.post("/investments/create")
+async def create_client_investment(investment_data: InvestmentCreate):
+    """Create a new investment for a client"""
+    try:
+        # Validate fund exists
+        if investment_data.fund_code not in FIDUS_FUND_CONFIG:
+            raise HTTPException(status_code=400, detail=f"Invalid fund code: {investment_data.fund_code}")
+        
+        fund_config = FIDUS_FUND_CONFIG[investment_data.fund_code]
+        
+        # Validate minimum investment
+        if investment_data.amount < fund_config.minimum_investment:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Minimum investment for {investment_data.fund_code} is ${fund_config.minimum_investment:,.2f}"
+            )
+        
+        # Check invitation-only restriction
+        if fund_config.invitation_only:
+            # In a real system, verify client has invitation
+            logging.info(f"Creating invitation-only fund investment for client {investment_data.client_id}")
+        
+        # Create investment
+        investment = create_investment(
+            investment_data.client_id,
+            investment_data.fund_code,
+            investment_data.amount
+        )
+        
+        # Store investment
+        if investment_data.client_id not in client_investments:
+            client_investments[investment_data.client_id] = []
+        client_investments[investment_data.client_id].append(investment.dict())
+        
+        logging.info(f"Investment created: {investment.investment_id} for client {investment_data.client_id}")
+        
+        return {
+            "success": True,
+            "investment_id": investment.investment_id,
+            "investment": investment.dict(),
+            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Create investment error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
+
+@api_router.get("/investments/client/{client_id}")
+async def get_client_investments(client_id: str):
+    """Get all investments for a specific client"""
+    try:
+        client_investments_list = client_investments.get(client_id, [])
+        
+        # Calculate current values and projections
+        enriched_investments = []
+        total_invested = 0.0
+        total_current_value = 0.0
+        total_projected_interest = 0.0
+        
+        for investment_data in client_investments_list:
+            investment = FundInvestment(**investment_data)
+            fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+            
+            # Generate projections
+            projections = generate_investment_projections(investment, fund_config)
+            
+            # Calculate months since interest started
+            now = datetime.now(timezone.utc)
+            if now >= investment.interest_start_date:
+                months_elapsed = max(0, (now.year - investment.interest_start_date.year) * 12 + 
+                                   (now.month - investment.interest_start_date.month))
+            else:
+                months_elapsed = 0
+            
+            # Calculate earned interest
+            earned_interest = 0.0
+            if fund_config.interest_rate > 0 and months_elapsed > 0:
+                earned_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, months_elapsed)
+            
+            # Update current value
+            current_value = investment.principal_amount + earned_interest
+            
+            enriched_investment = {
+                **investment.dict(),
+                "fund_name": fund_config.name,
+                "interest_rate": fund_config.interest_rate,
+                "redemption_frequency": fund_config.redemption_frequency,
+                "months_since_interest_started": months_elapsed,
+                "earned_interest": round(earned_interest, 2),
+                "current_value": round(current_value, 2),
+                "projections": projections.dict(),
+                "incubation_status": "active" if now >= investment.incubation_end_date else "incubating",
+                "days_until_incubation_ends": max(0, (investment.incubation_end_date - now).days),
+                "can_redeem": now >= investment.minimum_hold_end_date,
+                "days_until_min_hold_ends": max(0, (investment.minimum_hold_end_date - now).days)
+            }
+            
+            enriched_investments.append(enriched_investment)
+            total_invested += investment.principal_amount
+            total_current_value += current_value
+            total_projected_interest += projections.total_projected_interest
+        
+        # Calculate portfolio statistics
+        portfolio_stats = {
+            "total_investments": len(enriched_investments),
+            "total_invested": round(total_invested, 2),
+            "total_current_value": round(total_current_value, 2),
+            "total_earned_interest": round(total_current_value - total_invested, 2),
+            "total_projected_interest": round(total_projected_interest, 2),
+            "projected_portfolio_value": round(total_invested + total_projected_interest, 2),
+            "overall_return_percentage": round(((total_current_value - total_invested) / total_invested * 100), 2) if total_invested > 0 else 0.0
+        }
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "investments": enriched_investments,
+            "portfolio_stats": portfolio_stats
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client investments error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client investments")
+
+@api_router.get("/investments/{investment_id}/projections")
+async def get_investment_projections(investment_id: str):
+    """Get detailed projections for a specific investment"""
+    try:
+        # Find investment
+        investment_found = None
+        for client_id, investments in client_investments.items():
+            for inv_data in investments:
+                if inv_data['investment_id'] == investment_id:
+                    investment_found = FundInvestment(**inv_data)
+                    break
+            if investment_found:
+                break
+        
+        if not investment_found:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        fund_config = FIDUS_FUND_CONFIG[investment_found.fund_code]
+        projections = generate_investment_projections(investment_found, fund_config)
+        
+        # Add additional timeline information
+        now = datetime.now(timezone.utc)
+        timeline = []
+        
+        # Add milestone events
+        timeline.append({
+            "date": investment_found.deposit_date.isoformat(),
+            "event": "Investment Created",
+            "description": f"Deposited ${investment_found.principal_amount:,.2f}",
+            "status": "completed"
+        })
+        
+        timeline.append({
+            "date": investment_found.incubation_end_date.isoformat(),
+            "event": "Incubation Period Ends",
+            "description": "Investment becomes active",
+            "status": "completed" if now >= investment_found.incubation_end_date else "pending"
+        })
+        
+        timeline.append({
+            "date": investment_found.interest_start_date.isoformat(),
+            "event": "Interest Payments Begin",
+            "description": f"{fund_config.interest_rate}% monthly interest starts",
+            "status": "completed" if now >= investment_found.interest_start_date else "pending"
+        })
+        
+        timeline.append({
+            "date": investment_found.minimum_hold_end_date.isoformat(),
+            "event": "Minimum Hold Period Ends",
+            "description": "Redemption becomes available",
+            "status": "completed" if now >= investment_found.minimum_hold_end_date else "pending"
+        })
+        
+        return {
+            "success": True,
+            "investment": investment_found.dict(),
+            "fund_config": fund_config.dict(),
+            "projections": projections.dict(),
+            "timeline": timeline
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get investment projections error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch investment projections")
+
+@api_router.get("/investments/admin/overview")
+async def get_admin_investments_overview():
+    """Get comprehensive investment overview for admin"""
+    try:
+        all_investments = []
+        fund_summaries = {}
+        total_aum = 0.0
+        
+        # Initialize fund summaries
+        for fund_code, config in FIDUS_FUND_CONFIG.items():
+            fund_summaries[fund_code] = {
+                "fund_code": fund_code,
+                "fund_name": config.name,
+                "total_invested": 0.0,
+                "total_current_value": 0.0,
+                "total_investors": 0,
+                "total_interest_paid": 0.0,
+                "average_investment": 0.0
+            }
+        
+        # Process all client investments
+        for client_id, investments in client_investments.items():
+            for investment_data in investments:
+                investment = FundInvestment(**investment_data)
+                fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+                
+                # Calculate current value
+                now = datetime.now(timezone.utc)
+                months_elapsed = max(0, (now.year - investment.interest_start_date.year) * 12 + 
+                                   (now.month - investment.interest_start_date.month)) if now >= investment.interest_start_date else 0
+                
+                earned_interest = 0.0
+                if fund_config.interest_rate > 0 and months_elapsed > 0:
+                    earned_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, months_elapsed)
+                
+                current_value = investment.principal_amount + earned_interest
+                
+                # Add to all investments
+                all_investments.append({
+                    **investment.dict(),
+                    "client_name": f"Client {client_id}",  # In real system, get actual name
+                    "fund_name": fund_config.name,
+                    "current_value": round(current_value, 2),
+                    "earned_interest": round(earned_interest, 2),
+                    "incubation_status": "active" if now >= investment.incubation_end_date else "incubating"
+                })
+                
+                # Update fund summaries
+                fund_summaries[investment.fund_code]["total_invested"] += investment.principal_amount
+                fund_summaries[investment.fund_code]["total_current_value"] += current_value
+                fund_summaries[investment.fund_code]["total_investors"] += 1
+                fund_summaries[investment.fund_code]["total_interest_paid"] += earned_interest
+                
+                total_aum += current_value
+        
+        # Calculate averages
+        for fund_summary in fund_summaries.values():
+            if fund_summary["total_investors"] > 0:
+                fund_summary["average_investment"] = fund_summary["total_invested"] / fund_summary["total_investors"]
+            fund_summary["total_invested"] = round(fund_summary["total_invested"], 2)
+            fund_summary["total_current_value"] = round(fund_summary["total_current_value"], 2)
+            fund_summary["total_interest_paid"] = round(fund_summary["total_interest_paid"], 2)
+            fund_summary["average_investment"] = round(fund_summary["average_investment"], 2)
+        
+        return {
+            "success": True,
+            "total_aum": round(total_aum, 2),
+            "total_investments": len(all_investments),
+            "total_clients": len(client_investments),
+            "fund_summaries": list(fund_summaries.values()),
+            "all_investments": all_investments
+        }
+        
+    except Exception as e:
+        logging.error(f"Get admin investments overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
+
 # Include the router in the main app
 app.include_router(api_router)
 
