@@ -106,15 +106,21 @@ const ClientManagement = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(client => 
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.username.toLowerCase().includes(searchTerm.toLowerCase())
+        (client.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.username || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(client => client.status === statusFilter);
+      if (statusFilter === "ready") {
+        filtered = filtered.filter(client => client.investment_ready);
+      } else if (statusFilter === "not_ready") {
+        filtered = filtered.filter(client => !client.investment_ready);
+      } else {
+        filtered = filtered.filter(client => client.status === statusFilter);
+      }
     }
 
     // Apply sorting
@@ -123,24 +129,20 @@ const ClientManagement = () => {
       
       switch (sortBy) {
         case "name":
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case "balance":
-          aValue = a.balances.total;
-          bValue = b.balances.total;
+          aValue = (a.name || "").toLowerCase();
+          bValue = (b.name || "").toLowerCase();
           break;
         case "created_at":
-          aValue = new Date(a.created_at);
-          bValue = new Date(b.created_at);
+          aValue = new Date(a.created_at || 0);
+          bValue = new Date(b.created_at || 0);
           break;
-        case "last_activity":
-          aValue = new Date(a.activity.last_activity);
-          bValue = new Date(b.activity.last_activity);
+        case "email":
+          aValue = (a.email || "").toLowerCase();
+          bValue = (b.email || "").toLowerCase();
           break;
         default:
-          aValue = a[sortBy];
-          bValue = b[sortBy];
+          aValue = a[sortBy] || "";
+          bValue = b[sortBy] || "";
       }
 
       if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
