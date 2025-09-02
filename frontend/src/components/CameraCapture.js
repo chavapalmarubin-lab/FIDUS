@@ -346,10 +346,32 @@ const CameraCapture = ({ onCapture, onClose, isOpen }) => {
           </div>
 
           {/* Instructions */}
-          <div className="mt-4 text-sm text-slate-400 text-center">
-            {cameraActive && "Position the document within the guidelines and click capture"}
-            {capturedImage && "Review your photo and confirm to use it or retake if needed"}
-            {!cameraActive && !capturedImage && !isLoading && "Grant camera permission to take a photo of your document"}
+          <div className="mt-4 text-sm text-slate-400">
+            {cameraActive && (
+              <div className="text-center">
+                📸 Position the document within the guidelines and click capture
+              </div>
+            )}
+            {capturedImage && (
+              <div className="text-center">
+                👀 Review your photo and confirm to use it or retake if needed
+              </div>
+            )}
+            {!cameraActive && !capturedImage && !isLoading && (
+              <div className="space-y-2">
+                <div className="text-center">
+                  🎥 Your browser will ask for camera permission when you click "Start Camera"
+                </div>
+                <div className="text-xs text-slate-500 text-center">
+                  Make sure to click "Allow" when prompted. Camera access is required to take photos of your documents.
+                </div>
+              </div>
+            )}
+            {isLoading && (
+              <div className="text-center">
+                ⏳ Requesting camera access... Please allow when prompted by your browser
+              </div>
+            )}
           </div>
         </motion.div>
       </motion.div>
