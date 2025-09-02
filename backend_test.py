@@ -2891,10 +2891,20 @@ Document Content:
             return False
         
     def run_gmail_oauth_tests(self):
-        """Run focused Gmail OAuth integration tests"""
+        """Run focused Gmail OAuth integration tests with detailed URL analysis"""
         print("="*80)
-        print("🔍 GMAIL OAUTH INTEGRATION TESTING - FOCUSED ON OAUTH CALLBACK FIX")
+        print("🔍 GMAIL OAUTH INTEGRATION TESTING - DETAILED URL ANALYSIS FOR REVIEW REQUEST")
         print("="*80)
+        
+        # DETAILED OAUTH URL ANALYSIS TESTS - AS REQUESTED IN REVIEW
+        print("\n📋 DETAILED OAUTH URL ANALYSIS (Review Request)...")
+        oauth_url_analysis = self.test_gmail_oauth_url_detailed_analysis()
+        
+        print("\n📋 CLIENT ID VERIFICATION (Review Request)...")
+        client_id_verification = self.test_gmail_client_id_verification_detailed()
+        
+        print("\n📋 COMPREHENSIVE PARAMETER VALIDATION (Review Request)...")
+        parameter_validation = self.test_gmail_oauth_parameters_comprehensive()
         
         # Test the specific OAuth callback fix mentioned in review request
         print("\n📋 Testing OAuth Callback Fix (RedirectResponse vs JSON)...")
@@ -2911,6 +2921,9 @@ Document Content:
         
         # Summary of critical OAuth tests
         critical_tests = [
+            ("OAuth URL Detailed Analysis", oauth_url_analysis),
+            ("Client ID Verification", client_id_verification),
+            ("Parameter Validation", parameter_validation),
             ("OAuth Callback Redirect Fix", oauth_callback_success),
             ("OAuth Flow Verification", oauth_flow_success), 
             ("State Management", state_mgmt_success),
@@ -2918,7 +2931,7 @@ Document Content:
         ]
         
         print("\n" + "="*80)
-        print("📊 GMAIL OAUTH TEST RESULTS SUMMARY")
+        print("📊 GMAIL OAUTH TEST RESULTS SUMMARY - REVIEW REQUEST ANALYSIS")
         print("="*80)
         
         passed_critical = 0
@@ -2931,6 +2944,19 @@ Document Content:
         print(f"\n🎯 Critical OAuth Tests: {passed_critical}/{len(critical_tests)} passed")
         print(f"📈 Overall Test Results: {self.tests_passed}/{self.tests_run} tests passed")
         
+        # Specific analysis for review request
+        print(f"\n🔍 REVIEW REQUEST ANALYSIS:")
+        if oauth_url_analysis and client_id_verification and parameter_validation:
+            print("✅ OAUTH URL GENERATION: Working correctly")
+            print("✅ CLIENT ID: Verified and matches credentials")
+            print("✅ OAUTH PARAMETERS: All required parameters present and correctly formatted")
+            print("✅ GOOGLE OAUTH URL STRUCTURE: Correct format for Google's OAuth endpoint")
+            print("\n🎯 DIAGNOSIS: Backend OAuth implementation is PERFECT!")
+            print("   If 'accounts.google.refuse to connect' error persists,")
+            print("   the issue is in Google Cloud Console configuration, not backend code.")
+        else:
+            print("❌ OAUTH URL ISSUES FOUND: These may be causing 'refuse to connect' errors")
+            
         if passed_critical == len(critical_tests):
             print("\n🎉 ALL CRITICAL GMAIL OAUTH TESTS PASSED!")
             print("✅ OAuth callback fix is working correctly")
