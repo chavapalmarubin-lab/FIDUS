@@ -5297,6 +5297,225 @@ async def get_admin_investments_overview():
         logging.error(f"Get admin investments overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
 
+# ===============================================================================
+# CLIENT MANAGEMENT WITH INVESTMENT READINESS ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/clients/all")
+async def get_all_clients():
+    """Get all clients with their investment readiness status"""
+    try:
+        clients = []
+        
+        # Get all clients from MOCK_USERS
+        for username, user_data in MOCK_USERS.items():
+            if user_data.get('type') == 'client':
+                client_id = user_data.get('id', username)
+                
+                # Get investment readiness status
+                readiness = client_readiness.get(client_id, {
+                    'client_id': client_id,
+                    'aml_kyc_completed': False,
+                    'agreement_signed': False,
+                    'deposit_date': None,
+                    'investment_ready': False,
+                    'notes': '',
+                    'updated_at': datetime.now(timezone.utc).isoformat(),
+                    'updated_by': ''
+                })
+                
+                client_info = {
+                    **user_data,
+                    'readiness_status': readiness,
+                    'investment_ready': readiness.get('investment_ready', False),
+                    'total_investments': len(client_investments.get(client_id, [])),
+                    'last_login': user_data.get('last_login', 'Never')
+                }
+                
+                clients.append(client_info)
+        
+        # Sort by name
+        clients.sort(key=lambda x: x.get('name', ''))
+        
+        return {
+            "success": True,
+            "clients": clients,
+            "total_clients": len(clients),
+            "ready_for_investment": len([c for c in clients if c.get('investment_ready', False)])
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all clients error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch clients")
+
+@api_router.post("/clients/create")
+async def create_new_client(client_data: ClientCreate):
+    """Create a new client"""
+    try:
+        # Check if username already exists
+        if client_data.username in MOCK_USERS:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        
+        # Generate client ID
+        client_id = f"client_{str(uuid.uuid4())[:8]}"
+        
+        # Create new client
+        new_client = {
+            "id": client_id,
+            "username": client_data.username,
+            "name": client_data.name,
+            "email": client_data.email,
+            "phone": client_data.phone or "",
+            "type": "client",
+            "status": "active",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
+        }
+        
+        # Add to MOCK_USERS
+        MOCK_USERS[client_data.username] = new_client
+        
+        # Initialize investment readiness
+        client_readiness[client_id] = {
+            'client_id': client_id,
+            'aml_kyc_completed': False,
+            'agreement_signed': False,
+            'deposit_date': None,
+            'investment_ready': False,
+            'notes': client_data.notes,
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'updated_by': 'admin'
+        }
+        
+        logging.info(f"New client created: {client_data.name} ({client_data.username})")
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "client": new_client,
+            "message": f"Client {client_data.name} created successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Create client error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create client")
+
+@api_router.put("/clients/{client_id}/readiness")
+async def update_client_readiness(client_id: str, readiness_data: ClientInvestmentReadinessUpdate):
+    """Update client investment readiness status"""
+    try:
+        # Get existing readiness or create new
+        current_readiness = client_readiness.get(client_id, {
+            'client_id': client_id,
+            'aml_kyc_completed': False,
+            'agreement_signed': False,
+            'deposit_date': None,
+            'investment_ready': False,
+            'notes': '',
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'updated_by': ''
+        })
+        
+        # Update provided fields
+        if readiness_data.aml_kyc_completed is not None:
+            current_readiness['aml_kyc_completed'] = readiness_data.aml_kyc_completed
+        if readiness_data.agreement_signed is not None:
+            current_readiness['agreement_signed'] = readiness_data.agreement_signed
+        if readiness_data.deposit_date is not None:
+            current_readiness['deposit_date'] = readiness_data.deposit_date.isoformat()
+        if readiness_data.notes is not None:
+            current_readiness['notes'] = readiness_data.notes
+        if readiness_data.updated_by is not None:
+            current_readiness['updated_by'] = readiness_data.updated_by
+        
+        # Update timestamp
+        current_readiness['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        # Calculate investment readiness
+        investment_ready = (
+            current_readiness['aml_kyc_completed'] and 
+            current_readiness['agreement_signed'] and 
+            current_readiness['deposit_date'] is not None
+        )
+        current_readiness['investment_ready'] = investment_ready
+        
+        # Save updated readiness
+        client_readiness[client_id] = current_readiness
+        
+        logging.info(f"Client readiness updated: {client_id} - Ready: {investment_ready}")
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "readiness": current_readiness,
+            "message": f"Client readiness updated - {'Ready for investment' if investment_ready else 'Not ready for investment'}"
+        }
+        
+    except Exception as e:
+        logging.error(f"Update client readiness error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update client readiness")
+
+@api_router.get("/clients/{client_id}/readiness")
+async def get_client_readiness(client_id: str):
+    """Get client investment readiness status"""
+    try:
+        readiness = client_readiness.get(client_id, {
+            'client_id': client_id,
+            'aml_kyc_completed': False,
+            'agreement_signed': False,
+            'deposit_date': None,
+            'investment_ready': False,
+            'notes': '',
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'updated_by': ''
+        })
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "readiness": readiness
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client readiness error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client readiness")
+
+@api_router.get("/clients/ready-for-investment")
+async def get_investment_ready_clients():
+    """Get clients who are ready for investment (for dropdown in investment creation)"""
+    try:
+        ready_clients = []
+        
+        for username, user_data in MOCK_USERS.items():
+            if user_data.get('type') == 'client':
+                client_id = user_data.get('id', username)
+                readiness = client_readiness.get(client_id, {})
+                
+                if readiness.get('investment_ready', False):
+                    ready_clients.append({
+                        'client_id': client_id,
+                        'name': user_data.get('name', ''),
+                        'email': user_data.get('email', ''),
+                        'username': user_data.get('username', ''),
+                        'deposit_date': readiness.get('deposit_date'),
+                        'total_investments': len(client_investments.get(client_id, []))
+                    })
+        
+        # Sort by name
+        ready_clients.sort(key=lambda x: x['name'])
+        
+        return {
+            "success": True,
+            "ready_clients": ready_clients,
+            "total_ready": len(ready_clients)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get investment ready clients error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
+
 # Include the router in the main app
 app.include_router(api_router)
 
