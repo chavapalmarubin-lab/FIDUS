@@ -497,14 +497,21 @@ const InvestmentDashboard = ({ user, userType }) => {
               <CardContent className="p-12 text-center">
                 <Wallet size={48} className="mx-auto mb-4 text-slate-400" />
                 <h3 className="text-lg font-medium text-white mb-2">No Investments Yet</h3>
-                <p className="text-slate-400 mb-4">Start building your investment portfolio with FIDUS funds</p>
-                <Button
-                  onClick={() => setShowInvestModal(true)}
-                  className="bg-cyan-600 hover:bg-cyan-700"
-                >
-                  <Plus size={16} className="mr-2" />
-                  Create First Investment
-                </Button>
+                <p className="text-slate-400 mb-4">
+                  {userType === "admin" 
+                    ? "Start creating client investments with FIDUS funds"
+                    : "Contact your investment advisor to create investments in FIDUS funds"
+                  }
+                </p>
+                {userType === "admin" && (
+                  <Button
+                    onClick={() => setShowInvestModal(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700"
+                  >
+                    <Plus size={16} className="mr-2" />
+                    Create Client Investment
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
