@@ -237,9 +237,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "CRM Dashboard Integration"
-  stuck_tasks:
-    - "CRM Dashboard Integration"
+    - "All CRM functionalities tested successfully"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
