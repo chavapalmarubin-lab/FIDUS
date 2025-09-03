@@ -2611,7 +2611,10 @@ async def get_portfolio_summary():
 # Gmail Service Integration
 class GmailService:
     def __init__(self):
-        self.SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+        self.SCOPES = [
+            'https://www.googleapis.com/auth/gmail.send',
+            'https://www.googleapis.com/auth/gmail.readonly'
+        ]
         self.credentials_path = '/app/backend/gmail_credentials.json'
         self.token_path = '/app/backend/gmail_token.pickle'
         self.service = None
