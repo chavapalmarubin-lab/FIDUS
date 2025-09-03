@@ -4351,8 +4351,8 @@ FIDUS_FUNDS = {
         id="fund_core",
         name="CORE",
         fund_type="Conservative Growth",
-        aum=125000000.00,
-        nav=128500000.00,
+        aum=0.00,  # Reset to zero as requested
+        nav=0.00,  # Reset to zero as requested
         nav_per_share=102.80,
         inception_date=datetime(2020, 1, 15, tzinfo=timezone.utc),
         performance_ytd=8.5,
@@ -4361,14 +4361,14 @@ FIDUS_FUNDS = {
         minimum_investment=50000.00,
         management_fee=1.25,
         performance_fee=15.00,
-        total_investors=245
+        total_investors=0  # Reset to zero as requested
     ),
     "BALANCE": FundModel(
         id="fund_balance",
         name="BALANCE",
         fund_type="Balanced Portfolio",
-        aum=98000000.00,
-        nav=102500000.00,
+        aum=0.00,  # Reset to zero as requested
+        nav=0.00,  # Reset to zero as requested
         nav_per_share=104.59,
         inception_date=datetime(2020, 3, 1, tzinfo=timezone.utc),
         performance_ytd=12.3,
@@ -4377,14 +4377,14 @@ FIDUS_FUNDS = {
         minimum_investment=25000.00,
         management_fee=1.50,
         performance_fee=18.00,
-        total_investors=312
+        total_investors=0  # Reset to zero as requested
     ),
     "DYNAMIC": FundModel(
         id="fund_dynamic",
         name="DYNAMIC",
         fund_type="Growth Aggressive",
-        aum=156000000.00,
-        nav=168200000.00,
+        aum=0.00,  # Reset to zero as requested
+        nav=0.00,  # Reset to zero as requested
         nav_per_share=107.82,
         inception_date=datetime(2020, 6, 15, tzinfo=timezone.utc),
         performance_ytd=18.9,
