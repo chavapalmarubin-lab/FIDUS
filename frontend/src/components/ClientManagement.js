@@ -71,10 +71,17 @@ const ClientManagement = () => {
   const [readinessForm, setReadinessForm] = useState({
     aml_kyc_completed: false,
     agreement_signed: false,
-    deposit_date: "",
+    account_creation_date: "",
     notes: "",
     updated_by: "admin"
   });
+
+  // Document upload states
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocumentClient, setSelectedDocumentClient] = useState(null);
+  const [documentFile, setDocumentFile] = useState(null);
+  const [documentCategory, setDocumentCategory] = useState("");
+  const [documentUploadLoading, setDocumentUploadLoading] = useState(false);
 
   // New user creation form
   const [newUserForm, setNewUserForm] = useState({
