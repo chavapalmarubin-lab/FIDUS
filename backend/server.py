@@ -3314,18 +3314,28 @@ async def gmail_oauth_callback(code: str, state: str):
         with open('/app/backend/gmail_token.pickle', 'wb') as token:
             pickle.dump(creds, token)
         
-        # Initialize Gmail service
+        # Initialize Gmail service with new credentials
         gmail_service.service = build('gmail', 'v1', credentials=creds)
         
-        # Get profile info
-        profile = gmail_service.service.users().getProfile(userId="me").execute()
-        email_address = profile.get("emailAddress", "")
+        # Test the service by getting profile info (this will verify both scopes work)
+        try:
+            profile = gmail_service.service.users().getProfile(userId="me").execute()
+            email_address = profile.get("emailAddress", "")
+            
+            logging.info(f"Gmail OAuth success: {email_address} with scopes: {creds.scopes}")
+            
+            # Clean up state
+            del oauth_states[state]
+            
+            # Redirect to frontend with success
+            return RedirectResponse(url=f"/?gmail_auth=success&email={email_address}")
+            
+        except HttpError as profile_error:
+            logging.error(f"Gmail profile error after OAuth: {profile_error}")
+            # Clean up state
+            del oauth_states[state]
+            return RedirectResponse(url=f"/?gmail_auth=error&message=Profile+access+failed:+{str(profile_error)}")
         
-        # Clean up state
-        del oauth_states[state]
-        
-        # Redirect to frontend with success
-        return RedirectResponse(url=f"/?gmail_auth=success&email={email_address}")
         
     except Exception as e:
         logging.error(f"Gmail OAuth callback error: {str(e)}")
