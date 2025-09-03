@@ -2803,7 +2803,7 @@ async def update_client_status(client_id: str, status_data: dict):
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
-    total_aum = 2500000  # Mock AUM
+    total_aum = 0  # Reset to zero as requested
     allocation = {
         "CORE": 33.33,
         "BALANCE": 33.33, 
