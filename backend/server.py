@@ -5973,13 +5973,13 @@ async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest,
         
         # Log the activity
         create_activity_log(
-            client_id=investment.client_id,
+            client_id=investment_client_id,  # Use the found client_id
             activity_type="deposit_confirmed",
             amount=confirmation_data.amount,
             description=f"Deposit confirmed via {confirmation_data.payment_method.upper()} for investment {confirmation_data.investment_id}",
             performed_by=admin_id,
             investment_id=confirmation_data.investment_id,
-            fund_code=investment.fund_code,
+            fund_code=investment["fund_code"],  # Access as dictionary key
             reference_id=confirmation.id,
             metadata={
                 "payment_method": confirmation_data.payment_method,
