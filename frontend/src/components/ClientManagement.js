@@ -347,7 +347,7 @@ const ClientManagement = () => {
     setReadinessForm({
       aml_kyc_completed: false,
       agreement_signed: false,
-      deposit_date: "",
+      account_creation_date: "",
       notes: "",
       updated_by: "admin"
     });
