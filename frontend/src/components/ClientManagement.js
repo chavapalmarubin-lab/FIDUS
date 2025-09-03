@@ -384,6 +384,58 @@ const ClientManagement = () => {
     }
   };
 
+  // Document upload functions
+  const openDocumentModal = (client) => {
+    setSelectedDocumentClient(client);
+    setShowDocumentModal(true);
+    setDocumentFile(null);
+    setDocumentCategory("");
+    setError("");
+  };
+
+  const handleDocumentUpload = async () => {
+    try {
+      if (!documentFile || !documentCategory || !selectedDocumentClient) {
+        setError("Please select a file and category");
+        return;
+      }
+
+      setDocumentUploadLoading(true);
+      
+      const formData = new FormData();
+      formData.append('file', documentFile);
+      formData.append('client_id', selectedDocumentClient.id);
+      formData.append('category', documentCategory);
+      formData.append('uploaded_by', 'admin');
+      formData.append('description', `Client document for ${selectedDocumentClient.name}`);
+
+      const response = await axios.post(`${API}/documents/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+
+      if (response.data.success) {
+        setSuccess(`Document uploaded successfully for ${selectedDocumentClient.name}`);
+        setShowDocumentModal(false);
+        setSelectedDocumentClient(null);
+        setDocumentFile(null);
+        setDocumentCategory("");
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to upload document");
+    } finally {
+      setDocumentUploadLoading(false);
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setDocumentFile(file);
+    }
+  };
+
   const openReadinessModal = (client) => {
     setSelectedClient(client);
     const readiness = client.readiness_status || {};
