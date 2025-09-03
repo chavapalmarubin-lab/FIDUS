@@ -722,10 +722,10 @@ def calculate_balances(transactions: List[dict]) -> dict:
         elif fund_type == "dynamic":
             balances["dynamic_balance"] += amount
     
-    # Add base amounts to make realistic
-    balances["fidus_funds"] += 124567
-    balances["core_balance"] += 275376.44
-    balances["dynamic_balance"] += 150000.00
+    # Reset all balances to zero as requested by user
+    balances["fidus_funds"] = 0
+    balances["core_balance"] = 0
+    balances["dynamic_balance"] = 0
     
     balances["total_balance"] = sum(balances.values())
     
