@@ -6,12 +6,13 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Switch } from "./ui/switch";
-import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp } from "lucide-react";
+import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp, ArrowDownCircle } from "lucide-react";
 import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
 import GmailSettings from "./GmailSettings";
 import AdminInvestmentManagement from "./AdminInvestmentManagement";
+import AdminRedemptionManagement from "./AdminRedemptionManagement";
 import {
   LineChart,
   Line,
