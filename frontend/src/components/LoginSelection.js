@@ -49,12 +49,28 @@ const LoginSelection = ({ onLogin }) => {
         user_type: selectedType
       });
 
+      // Check if password change is required
+      if (response.data.must_change_password) {
+        setUserRequiringPasswordChange(response.data);
+        setShowPasswordChange(true);
+        setLoading(false);
+        return;
+      }
+
       onLogin(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || "Login failed");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasswordChanged = () => {
+    setShowPasswordChange(false);
+    setUserRequiringPasswordChange(null);
+    setCredentials({ username: "", password: "" });
+    setError("");
+    // User will need to login again with new password
   };
 
   const handleBack = () => {
