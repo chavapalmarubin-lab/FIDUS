@@ -644,7 +644,7 @@ const UserRegistration = ({ onBack, onComplete }) => {
               <div className="text-sm text-slate-300 mb-3">Compliance Checks Completed</div>
               <div className="space-y-2">
                 {amlKycResults.checks_completed?.map((check, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
+                  <div key={`check-${index}-${check}`} className="flex items-center gap-2 text-sm">
                     <CheckCircle size={16} className="text-green-400" />
                     <span className="text-slate-300 capitalize">{check.replace('_', ' ')}</span>
                   </div>
