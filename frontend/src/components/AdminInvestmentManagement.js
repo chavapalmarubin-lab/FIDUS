@@ -138,15 +138,57 @@ const AdminInvestmentManagement = () => {
         return;
       }
 
-      const response = await axios.post(`${API}/investments/create`, {
+      // Validate payment confirmation fields based on method
+      if (investmentForm.payment_method === "fiat") {
+        if (!investmentForm.wire_confirmation_number) {
+          setError("Please enter wire confirmation number for FIAT payment");
+          return;
+        }
+      } else if (investmentForm.payment_method === "crypto") {
+        if (!investmentForm.transaction_hash) {
+          setError("Please enter transaction hash for crypto payment");
+          return;
+        }
+      }
+
+      // First create the investment
+      const investmentResponse = await axios.post(`${API}/investments/create`, {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
         amount: amount,
         deposit_date: investmentForm.deposit_date
       });
 
-      if (response.data.success) {
-        setSuccess(`Investment created successfully: ${response.data.message}`);
+      if (investmentResponse.data.success) {
+        const investmentId = investmentResponse.data.investment_id;
+        
+        // Then confirm the deposit payment
+        const confirmationData = {
+          investment_id: investmentId,
+          payment_method: investmentForm.payment_method,
+          amount: amount,
+          currency: "USD",
+          notes: investmentForm.payment_notes
+        };
+
+        // Add method-specific fields
+        if (investmentForm.payment_method === "fiat") {
+          confirmationData.wire_confirmation_number = investmentForm.wire_confirmation_number;
+          confirmationData.bank_reference = investmentForm.bank_reference;
+        } else {
+          confirmationData.transaction_hash = investmentForm.transaction_hash;
+          confirmationData.blockchain_network = investmentForm.blockchain_network;
+          confirmationData.wallet_address = investmentForm.wallet_address;
+        }
+
+        const confirmationResponse = await axios.post(`${API}/payments/deposit/confirm`, confirmationData);
+
+        if (confirmationResponse.data.success) {
+          setSuccess(`Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`);
+        } else {
+          setSuccess(`Investment created but payment confirmation failed: ${investmentResponse.data.message}`);
+        }
+
         setShowCreateInvestmentModal(false);
         resetInvestmentForm();
         fetchOverviewData();
