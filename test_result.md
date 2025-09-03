@@ -427,7 +427,6 @@ metadata:
 test_plan:
   current_focus:
     - "Client Management Investment Readiness Changes"
-    - "Document Upload Functionality"
     - "Client Balances Reset"
     - "Investment Tab Date of Deposit Separation"
   stuck_tasks: []
@@ -435,6 +434,7 @@ test_plan:
   test_priority: "completed"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
+  document_upload_testing: "completed"
 
 agent_communication:
     - agent: "main"
