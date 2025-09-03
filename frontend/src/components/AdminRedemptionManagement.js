@@ -35,7 +35,15 @@ const AdminRedemptionManagement = () => {
   const [selectedRedemption, setSelectedRedemption] = useState(null);
   const [approvalForm, setApprovalForm] = useState({
     action: "",
-    admin_notes: ""
+    admin_notes: "",
+    // Payment confirmation fields for approvals
+    payment_method: "fiat",
+    wire_confirmation_number: "",
+    bank_reference: "",
+    transaction_hash: "",
+    blockchain_network: "",
+    wallet_address: "",
+    payment_notes: ""
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
