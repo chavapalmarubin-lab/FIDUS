@@ -596,14 +596,14 @@ const AdminInvestmentManagement = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label className="text-slate-300">Select Client</Label>
+                  <Label className="text-slate-300">Select Client *</Label>
                   <Select value={investmentForm.client_id} onValueChange={(value) => setInvestmentForm({...investmentForm, client_id: value})}>
-                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white w-full min-h-[40px]">
                       <SelectValue placeholder="Choose a client ready for investment" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectContent className="bg-slate-700 border-slate-600 z-50">
                       {readyClients.map(client => (
-                        <SelectItem key={client.client_id} value={client.client_id} className="text-white">
+                        <SelectItem key={client.client_id} value={client.client_id} className="text-white hover:bg-slate-600">
                           <div>
                             <div className="font-medium">{client.name}</div>
                             <div className="text-sm text-slate-400">
@@ -617,7 +617,7 @@ const AdminInvestmentManagement = () => {
                   </Select>
                   {readyClients.length === 0 && (
                     <p className="text-yellow-400 text-sm mt-1">
-                      ⚠️ No clients ready for investment. Complete AML/KYC, Agreement, and Deposit Date in Client Management.
+                      ⚠️ No clients ready for investment. Complete AML/KYC and Agreement in Client Management.
                     </p>
                   )}
                 </div>
