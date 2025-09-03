@@ -515,6 +515,108 @@ def create_investment(client_id: str, fund_code: str, amount: float, deposit_dat
     
     return investment
 
+# Redemption System Functions
+def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfiguration) -> datetime:
+    """Calculate the next available redemption date based on fund rules"""
+    # Start from interest start date (after incubation)
+    base_date = investment.interest_start_date
+    
+    # Calculate redemption frequency in months
+    if fund_config.redemption_frequency == "monthly":
+        frequency_months = 1
+    elif fund_config.redemption_frequency == "quarterly":
+        frequency_months = 3
+    elif fund_config.redemption_frequency == "semi_annually":
+        frequency_months = 6
+    elif fund_config.redemption_frequency == "flexible":
+        # For UNLIMITED fund - can redeem at any time after minimum hold
+        return investment.minimum_hold_end_date
+    else:
+        frequency_months = 12  # Default to annual
+    
+    # Find next redemption date
+    current_date = datetime.now(timezone.utc)
+    
+    # Start from the first possible redemption date (after incubation)
+    next_redemption = base_date
+    
+    # Move forward by redemption frequency until we find a future date
+    while next_redemption <= current_date:
+        # Add frequency months
+        if next_redemption.month + frequency_months > 12:
+            next_redemption = next_redemption.replace(
+                year=next_redemption.year + ((next_redemption.month + frequency_months - 1) // 12),
+                month=((next_redemption.month + frequency_months - 1) % 12) + 1
+            )
+        else:
+            next_redemption = next_redemption.replace(month=next_redemption.month + frequency_months)
+    
+    return next_redemption
+
+def calculate_redemption_value(investment: FundInvestment, fund_config: FundConfiguration) -> float:
+    """Calculate current redemption value including accrued interest"""
+    now = datetime.now(timezone.utc)
+    
+    # If still in incubation period, can only redeem principal
+    if now < investment.interest_start_date:
+        return investment.principal_amount
+    
+    # Calculate months since interest started
+    months_elapsed = (now.year - investment.interest_start_date.year) * 12 + \
+                    (now.month - investment.interest_start_date.month)
+    
+    # Simple interest calculation
+    monthly_rate = fund_config.interest_rate / 100.0
+    total_interest = investment.principal_amount * monthly_rate * months_elapsed
+    
+    return investment.principal_amount + total_interest
+
+def can_request_redemption(investment: FundInvestment, fund_config: FundConfiguration) -> tuple[bool, str]:
+    """Check if a redemption can be requested for this investment"""
+    now = datetime.now(timezone.utc)
+    
+    # Check if still in incubation period
+    if now < investment.interest_start_date:
+        days_remaining = (investment.interest_start_date - now).days
+        return False, f"Investment is in incubation period. Available for redemption in {days_remaining} days."
+    
+    # Check if minimum hold period has passed
+    if now < investment.minimum_hold_end_date:
+        days_remaining = (investment.minimum_hold_end_date - now).days
+        return False, f"Minimum hold period not met. Available for redemption in {days_remaining} days."
+    
+    # Check if redemption date is available based on fund rules
+    next_redemption = get_next_redemption_date(investment, fund_config)
+    
+    if fund_config.redemption_frequency == "flexible":
+        return True, "Redemption available anytime"
+    
+    if now >= next_redemption:
+        return True, f"Redemption available now"
+    else:
+        days_until = (next_redemption - now).days
+        return False, f"Next redemption date: {next_redemption.strftime('%B %d, %Y')} ({days_until} days remaining)"
+
+def create_activity_log(client_id: str, activity_type: str, amount: float, description: str, 
+                       performed_by: str, investment_id: str = None, fund_code: str = None, 
+                       reference_id: str = None, metadata: dict = None):
+    """Create an activity log entry"""
+    activity = ActivityLog(
+        client_id=client_id,
+        activity_type=activity_type,
+        investment_id=investment_id,
+        fund_code=fund_code,
+        amount=amount,
+        description=description,
+        performed_by=performed_by,
+        reference_id=reference_id,
+        metadata=metadata or {}
+    )
+    
+    activity_logs.append(activity)
+    logging.info(f"Activity logged: {activity_type} for client {client_id}, amount ${amount}")
+    return activity
+
 # Mock data for demo
 MOCK_USERS = {
     "client1": {
