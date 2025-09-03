@@ -51,6 +51,7 @@ const ClientManagement = () => {
   const [success, setSuccess] = useState("");
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showReadinessModal, setShowReadinessModal] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
