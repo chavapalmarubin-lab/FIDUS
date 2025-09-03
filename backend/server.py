@@ -402,7 +402,7 @@ FIDUS_FUND_CONFIG = {
         redemption_frequency="semi_annually",  # Every 6 months
         invitation_only=False,
         incubation_months=2,
-        minimum_hold_months=14
+        minimum_hold_months=8  # Fixed: 8 months total (2 incubation + 6 months) - allows redemption on semi-annual schedule
     ),
     "UNLIMITED": FundConfiguration(
         fund_code="UNLIMITED",
