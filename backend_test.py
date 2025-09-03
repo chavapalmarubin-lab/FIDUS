@@ -4951,5 +4951,686 @@ def main():
         print("❌ Some client readiness or fund structure features need attention.")
         return 1
 
+    # ===============================================================================
+    # FIDUS PRODUCTION READINESS TESTS - COMPREHENSIVE BACKEND TESTING
+    # ===============================================================================
+    
+    def test_fidus_fund_configuration_production(self):
+        """Test FIDUS fund configuration (CORE, BALANCE, DYNAMIC, UNLIMITED)"""
+        success, response = self.run_test(
+            "FIDUS Fund Configuration",
+            "GET",
+            "api/investments/funds/config",
+            200
+        )
+        
+        if success:
+            funds = response.get('funds', {})
+            expected_funds = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
+            
+            print(f"   Funds configured: {len(funds)}")
+            for fund_code in expected_funds:
+                if fund_code in funds:
+                    fund = funds[fund_code]
+                    print(f"   ✅ {fund_code}: {fund.get('interest_rate')}% monthly, Min: ${fund.get('minimum_investment'):,.0f}")
+                    print(f"      Redemption: {fund.get('redemption_frequency')}")
+                else:
+                    print(f"   ❌ Missing fund: {fund_code}")
+        
+        return success
+
+    def test_investment_creation_with_readiness_validation_production(self):
+        """Test investment creation with client readiness validation"""
+        # First create a ready client
+        ready_client_data = {
+            "username": "ready_investor",
+            "name": "Ready Investor",
+            "email": "ready@fidus.com",
+            "phone": "+1-555-9999"
+        }
+        
+        success, response = self.run_test(
+            "Create Ready Client",
+            "POST",
+            "api/admin/users/create",
+            200,
+            data=ready_client_data
+        )
+        
+        if not success:
+            return False
+            
+        client_id = response.get('user_id')
+        
+        # Set client as investment ready
+        readiness_data = {
+            "aml_kyc_completed": True,
+            "agreement_signed": True,
+            "deposit_date": "2024-12-01T00:00:00Z",
+            "updated_by": "admin_001"
+        }
+        
+        success, _ = self.run_test(
+            "Set Client Investment Ready",
+            "PUT",
+            f"api/clients/{client_id}/readiness",
+            200,
+            data=readiness_data
+        )
+        
+        if not success:
+            return False
+        
+        # Test investment creation
+        investment_data = {
+            "client_id": client_id,
+            "fund_code": "CORE",
+            "amount": 25000.0,
+            "deposit_date": "2024-12-01"
+        }
+        
+        success, response = self.run_test(
+            "Create Investment with Readiness Validation",
+            "POST",
+            "api/investments/create",
+            200,
+            data=investment_data
+        )
+        
+        if success:
+            investment_id = response.get('investment_id')
+            print(f"   Investment created: {investment_id}")
+            print(f"   Principal: ${response.get('principal_amount'):,.2f}")
+            print(f"   Incubation ends: {response.get('incubation_end_date')}")
+            print(f"   Interest starts: {response.get('interest_start_date')}")
+        
+        return success
+
+    def test_investment_portfolio_calculations_production(self):
+        """Test investment portfolio retrieval and calculations"""
+        if not self.client_user:
+            print("❌ Skipping portfolio test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        success, response = self.run_test(
+            "Get Investment Portfolio",
+            "GET",
+            f"api/investments/client/{client_id}",
+            200
+        )
+        
+        if success:
+            investments = response.get('investments', [])
+            portfolio_stats = response.get('portfolio_statistics', {})
+            
+            print(f"   Total investments: {len(investments)}")
+            print(f"   Total invested: ${portfolio_stats.get('total_invested', 0):,.2f}")
+            print(f"   Current value: ${portfolio_stats.get('current_value', 0):,.2f}")
+            print(f"   Total interest: ${portfolio_stats.get('total_interest_earned', 0):,.2f}")
+            
+            # Verify 2-month incubation and 14-month hold calculations
+            for inv in investments:
+                fund_code = inv.get('fund_code')
+                status = inv.get('status')
+                print(f"   {fund_code} investment: {status}")
+        
+        return success
+
+    def test_interest_calculations_timeline_production(self):
+        """Test interest calculations and timeline management"""
+        if not self.client_user:
+            print("❌ Skipping interest calculations test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        
+        # Get client investments first
+        success, response = self.run_test(
+            "Get Investments for Interest Test",
+            "GET",
+            f"api/investments/client/{client_id}",
+            200
+        )
+        
+        if not success or not response.get('investments'):
+            print("   No investments found for interest calculation test")
+            return True
+            
+        investment_id = response['investments'][0]['investment_id']
+        
+        # Test investment projections
+        success, response = self.run_test(
+            "Get Investment Projections",
+            "GET",
+            f"api/investments/{investment_id}/projections",
+            200
+        )
+        
+        if success:
+            projections = response.get('projections', [])
+            timeline = response.get('timeline', [])
+            
+            print(f"   Projection periods: {len(projections)}")
+            print(f"   Timeline milestones: {len(timeline)}")
+            
+            # Verify 2-month incubation period
+            for milestone in timeline:
+                if milestone.get('type') == 'incubation_end':
+                    print(f"   Incubation ends: {milestone.get('date')}")
+                elif milestone.get('type') == 'interest_start':
+                    print(f"   Interest starts: {milestone.get('date')}")
+                elif milestone.get('type') == 'minimum_hold_end':
+                    print(f"   Min hold ends: {milestone.get('date')}")
+        
+        return success
+
+    def test_client_readiness_system_production(self):
+        """Test client investment readiness tracking system"""
+        if not self.client_user:
+            print("❌ Skipping readiness test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        
+        # Test readiness update
+        readiness_data = {
+            "aml_kyc_completed": True,
+            "agreement_signed": False,
+            "notes": "AML/KYC completed, awaiting agreement signature",
+            "updated_by": "admin_001"
+        }
+        
+        success, response = self.run_test(
+            "Update Client Readiness",
+            "PUT",
+            f"api/clients/{client_id}/readiness",
+            200,
+            data=readiness_data
+        )
+        
+        if not success:
+            return False
+        
+        # Test readiness retrieval
+        success, response = self.run_test(
+            "Get Client Readiness Status",
+            "GET",
+            f"api/clients/{client_id}/readiness",
+            200
+        )
+        
+        if success:
+            aml_kyc = response.get('aml_kyc_completed', False)
+            agreement = response.get('agreement_signed', False)
+            deposit_date = response.get('deposit_date')
+            investment_ready = response.get('investment_ready', False)
+            
+            print(f"   AML/KYC completed: {aml_kyc}")
+            print(f"   Agreement signed: {agreement}")
+            print(f"   Deposit date: {deposit_date}")
+            print(f"   Investment ready: {investment_ready}")
+        
+        return success
+
+    def test_redemption_system_comprehensive_production(self):
+        """Test comprehensive redemption system with fund-specific rules"""
+        # Test client redemption data
+        success, response = self.run_test(
+            "Get Client Redemption Data",
+            "GET",
+            "api/redemptions/client/client_004",
+            200
+        )
+        
+        if success:
+            investments = response.get('investments', [])
+            print(f"   Client investments for redemption: {len(investments)}")
+            
+            for inv in investments:
+                fund_code = inv.get('fund_code')
+                current_value = inv.get('current_value', 0)
+                can_redeem = inv.get('can_redeem_now', False)
+                next_date = inv.get('next_redemption_date')
+                
+                print(f"   {fund_code}: ${current_value:,.2f}, Can redeem: {can_redeem}")
+                if next_date:
+                    print(f"      Next redemption: {next_date}")
+        
+        # Test redemption request creation
+        if success and response.get('investments'):
+            investment = response['investments'][0]
+            investment_id = investment.get('investment_id')
+            
+            redemption_data = {
+                "investment_id": investment_id,
+                "requested_amount": 10000.0,
+                "reason": "Partial redemption for testing"
+            }
+            
+            success, response = self.run_test(
+                "Create Redemption Request",
+                "POST",
+                "api/redemptions/request",
+                200,
+                data=redemption_data
+            )
+            
+            if success:
+                redemption_id = response.get('redemption_id')
+                status = response.get('status')
+                print(f"   Redemption request created: {redemption_id}")
+                print(f"   Status: {status}")
+        
+        return success
+
+    def test_admin_redemption_approval_workflow_production(self):
+        """Test admin redemption approval workflow"""
+        # Get pending redemptions
+        success, response = self.run_test(
+            "Get Pending Redemptions",
+            "GET",
+            "api/redemptions/admin/pending",
+            200
+        )
+        
+        if success:
+            pending = response.get('pending_redemptions', [])
+            print(f"   Pending redemptions: {len(pending)}")
+            
+            # Test approval workflow if there are pending redemptions
+            if pending:
+                redemption_id = pending[0].get('id')
+                
+                approval_data = {
+                    "redemption_id": redemption_id,
+                    "action": "approve",
+                    "admin_notes": "Approved for testing",
+                    "admin_id": "admin_001"
+                }
+                
+                success, response = self.run_test(
+                    "Approve Redemption Request",
+                    "POST",
+                    "api/redemptions/admin/approve",
+                    200,
+                    data=approval_data
+                )
+                
+                if success:
+                    print(f"   Redemption approved: {response.get('success')}")
+                    print(f"   Status: {response.get('status')}")
+        
+        return success
+
+    def test_activity_logging_system_production(self):
+        """Test activity logging system for financial transactions"""
+        if not self.client_user:
+            print("❌ Skipping activity logging test - no client user available")
+            return False
+            
+        client_id = self.client_user.get('id')
+        
+        # Test client activity logs
+        success, response = self.run_test(
+            "Get Client Activity Logs",
+            "GET",
+            f"api/activity-logs/client/{client_id}",
+            200
+        )
+        
+        if success:
+            activities = response.get('activities', [])
+            print(f"   Client activities logged: {len(activities)}")
+            
+            for activity in activities[:3]:  # Show first 3
+                activity_type = activity.get('activity_type')
+                amount = activity.get('amount', 0)
+                description = activity.get('description')
+                timestamp = activity.get('timestamp')
+                
+                print(f"   {activity_type}: ${amount:,.2f} - {description}")
+                print(f"      {timestamp}")
+        
+        # Test admin activity logs
+        success, response = self.run_test(
+            "Get Admin Activity Logs",
+            "GET",
+            "api/activity-logs/admin/all",
+            200
+        )
+        
+        if success:
+            activities = response.get('activities', [])
+            print(f"   Total system activities: {len(activities)}")
+        
+        return success
+
+    def test_crm_prospect_management_production(self):
+        """Test CRM prospect management system"""
+        # Test getting prospects
+        success, response = self.run_test(
+            "Get CRM Prospects",
+            "GET",
+            "api/crm/prospects",
+            200
+        )
+        
+        if success:
+            prospects = response.get('prospects', [])
+            statistics = response.get('statistics', {})
+            
+            print(f"   Total prospects: {statistics.get('total_prospects', 0)}")
+            print(f"   Active prospects: {statistics.get('active_prospects', 0)}")
+            print(f"   Conversion rate: {statistics.get('conversion_rate', 0)}%")
+        
+        # Test creating new prospect
+        prospect_data = {
+            "name": "Production Test Prospect",
+            "email": "prospect@production.test",
+            "phone": "+1-555-TEST",
+            "notes": "Created during production readiness testing"
+        }
+        
+        success, response = self.run_test(
+            "Create CRM Prospect",
+            "POST",
+            "api/crm/prospects",
+            200,
+            data=prospect_data
+        )
+        
+        if success:
+            prospect_id = response.get('id')
+            print(f"   Prospect created: {prospect_id}")
+            
+            # Test prospect to client conversion
+            conversion_data = {
+                "prospect_id": prospect_id,
+                "send_agreement": True
+            }
+            
+            # First move to won stage
+            update_data = {"stage": "won"}
+            success, _ = self.run_test(
+                "Update Prospect to Won",
+                "PUT",
+                f"api/crm/prospects/{prospect_id}",
+                200,
+                data=update_data
+            )
+            
+            if success:
+                success, response = self.run_test(
+                    "Convert Prospect to Client",
+                    "POST",
+                    f"api/crm/prospects/{prospect_id}/convert",
+                    200,
+                    data=conversion_data
+                )
+                
+                if success:
+                    client_id = response.get('client_id')
+                    print(f"   Converted to client: {client_id}")
+        
+        return success
+
+    def test_mt5_trading_integration_production(self):
+        """Test MT5 trading data simulation and integration"""
+        # Test admin MT5 overview
+        success, response = self.run_test(
+            "Get MT5 Admin Overview",
+            "GET",
+            "api/mt5/admin/overview",
+            200
+        )
+        
+        if success:
+            total_clients = response.get('total_clients', 0)
+            total_balance = response.get('total_balance', 0)
+            total_equity = response.get('total_equity', 0)
+            total_positions = response.get('total_positions', 0)
+            
+            print(f"   MT5 clients: {total_clients}")
+            print(f"   Total balance: ${total_balance:,.2f}")
+            print(f"   Total equity: ${total_equity:,.2f}")
+            print(f"   Open positions: {total_positions}")
+        
+        # Test client MT5 account data
+        success, response = self.run_test(
+            "Get MT5 Client Account",
+            "GET",
+            "api/mt5/client/client_001/account",
+            200
+        )
+        
+        if success:
+            account = response.get('account', {})
+            balance = account.get('balance', 0)
+            equity = account.get('equity', 0)
+            margin = account.get('margin', 0)
+            leverage = account.get('leverage', '1:1')
+            
+            print(f"   Client balance: ${balance:,.2f}")
+            print(f"   Client equity: ${equity:,.2f}")
+            print(f"   Margin used: ${margin:,.2f}")
+            print(f"   Leverage: {leverage}")
+        
+        return success
+
+    def test_capital_flows_automation_production(self):
+        """Test capital flows automation system"""
+        # Test creating capital flow
+        flow_data = {
+            "client_id": "client_001",
+            "fund_id": "CORE",
+            "flow_type": "subscription",
+            "amount": 50000.0,
+            "description": "Production test subscription"
+        }
+        
+        success, response = self.run_test(
+            "Create Capital Flow",
+            "POST",
+            "api/crm/capital-flow",
+            200,
+            data=flow_data
+        )
+        
+        if success:
+            reference_number = response.get('reference_number')
+            shares_allocated = response.get('shares_allocated', 0)
+            settlement_date = response.get('settlement_date')
+            
+            print(f"   Reference: {reference_number}")
+            print(f"   Shares allocated: {shares_allocated:,.2f}")
+            print(f"   Settlement date: {settlement_date}")
+        
+        # Test capital flows history
+        success, response = self.run_test(
+            "Get Capital Flows History",
+            "GET",
+            "api/crm/client/client_001/capital-flows",
+            200
+        )
+        
+        if success:
+            flows = response.get('capital_flows', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Total flows: {len(flows)}")
+            print(f"   Total subscriptions: ${summary.get('total_subscriptions', 0):,.2f}")
+            print(f"   Total redemptions: ${summary.get('total_redemptions', 0):,.2f}")
+            print(f"   Net flow: ${summary.get('net_flow', 0):,.2f}")
+        
+        return success
+
+    def test_fund_management_system_production(self):
+        """Test fund management system with AUM and NAV tracking"""
+        success, response = self.run_test(
+            "Get Fund Management Data",
+            "GET",
+            "api/crm/funds",
+            200
+        )
+        
+        if success:
+            funds = response.get('funds', [])
+            summary = response.get('summary', {})
+            
+            print(f"   Total funds: {len(funds)}")
+            print(f"   Total AUM: ${summary.get('total_aum', 0):,.0f}")
+            print(f"   Total investors: {summary.get('total_investors', 0)}")
+            
+            for fund in funds:
+                fund_name = fund.get('name')
+                aum = fund.get('aum', 0)
+                nav = fund.get('nav', 0)
+                investors = fund.get('total_investors', 0)
+                
+                print(f"   {fund_name}: AUM ${aum:,.0f}, NAV ${nav:.2f}, Investors: {investors}")
+        
+        return success
+
+    def test_user_management_temporary_passwords_production(self):
+        """Test user creation with temporary passwords"""
+        user_data = {
+            "username": "production_test_user",
+            "name": "Production Test User",
+            "email": "production.test@fidus.com",
+            "phone": "+1-555-PROD",
+            "temporary_password": "TempPass123!",
+            "notes": "Created during production readiness testing"
+        }
+        
+        success, response = self.run_test(
+            "Create User with Temporary Password",
+            "POST",
+            "api/admin/users/create",
+            200,
+            data=user_data
+        )
+        
+        if success:
+            user_id = response.get('user_id')
+            username = response.get('username')
+            temp_password = response.get('temporary_password')
+            
+            print(f"   User created: {username} (ID: {user_id})")
+            print(f"   Temporary password: {temp_password}")
+            
+            # Test login with temporary password
+            login_data = {
+                "username": username,
+                "password": temp_password,
+                "user_type": "client"
+            }
+            
+            success, response = self.run_test(
+                "Login with Temporary Password",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            
+            if success:
+                must_change = response.get('must_change_password', False)
+                print(f"   Must change password: {must_change}")
+        
+        return success
+
+    def test_password_change_flow_production(self):
+        """Test password change functionality"""
+        change_data = {
+            "username": "production_test_user",
+            "current_password": "TempPass123!",
+            "new_password": "NewSecurePass456!"
+        }
+        
+        success, response = self.run_test(
+            "Change Password from Temporary",
+            "POST",
+            "api/auth/change-password",
+            200,
+            data=change_data
+        )
+        
+        if success:
+            print(f"   Password change success: {response.get('success')}")
+            print(f"   Message: {response.get('message')}")
+        
+        return success
+
+    def run_production_readiness_tests(self):
+        """Run comprehensive production readiness tests for FIDUS financial portal"""
+        print("🚀 Starting FIDUS Financial Portal Production Readiness Testing...")
+        print("=" * 80)
+        
+        # Core Authentication & User Management
+        print("\n📋 CORE AUTHENTICATION & USER MANAGEMENT")
+        print("-" * 50)
+        self.test_client_login()
+        self.test_admin_login()
+        self.test_invalid_login()
+        self.test_user_management_temporary_passwords_production()
+        self.test_password_change_flow_production()
+        
+        # Investment Management System
+        print("\n📋 INVESTMENT MANAGEMENT SYSTEM")
+        print("-" * 50)
+        self.test_fidus_fund_configuration_production()
+        self.test_investment_creation_with_readiness_validation_production()
+        self.test_investment_portfolio_calculations_production()
+        self.test_interest_calculations_timeline_production()
+        
+        # Client Management & Readiness System
+        print("\n📋 CLIENT MANAGEMENT & READINESS SYSTEM")
+        print("-" * 50)
+        self.test_client_readiness_system_production()
+        self.test_client_data()
+        
+        # Redemption System (Priority Focus)
+        print("\n📋 REDEMPTION SYSTEM (PRIORITY FOCUS)")
+        print("-" * 50)
+        self.test_redemption_system_comprehensive_production()
+        self.test_admin_redemption_approval_workflow_production()
+        self.test_activity_logging_system_production()
+        
+        # CRM & Trading Integration
+        print("\n📋 CRM & TRADING INTEGRATION")
+        print("-" * 50)
+        self.test_fund_management_system_production()
+        self.test_mt5_trading_integration_production()
+        self.test_capital_flows_automation_production()
+        self.test_crm_prospect_management_production()
+        
+        # Document & Email Integration
+        print("\n📋 DOCUMENT & EMAIL INTEGRATION")
+        print("-" * 50)
+        self.test_document_upload()
+        self.test_document_upload_image_files()
+        self.test_gmail_oauth_comprehensive_flow()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print("🎯 PRODUCTION READINESS TEST RESULTS")
+        print("=" * 80)
+        print(f"Total Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed / self.tests_run * 100):.1f}%" if self.tests_run > 0 else "No tests run")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL PRODUCTION READINESS TESTS PASSED!")
+            print("✅ FIDUS Financial Portal Backend is ready for end-to-end testing.")
+        else:
+            print("⚠️  Some production readiness tests failed.")
+            print("❌ Please review and fix issues before proceeding to end-to-end testing.")
+        
+        print("=" * 80)
+
 if __name__ == "__main__":
-    sys.exit(main())
+    tester = FidusAPITester()
+    # Run production readiness tests as requested
+    tester.run_production_readiness_tests()
