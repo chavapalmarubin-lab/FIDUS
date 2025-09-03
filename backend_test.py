@@ -5291,7 +5291,7 @@ Document Content:
             success_crypto, response_crypto = self.run_test(
                 f"Crypto Payment Confirmation - {client_name}",
                 "POST",
-                "api/payments/deposit/confirm",
+                "api/payments/deposit/confirm?admin_id=admin_001",
                 200,
                 data={
                     "investment_id": investment_id,
