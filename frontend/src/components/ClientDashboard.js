@@ -9,11 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";  
-import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, Target } from "lucide-react";
+import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, Target, ArrowDownCircle } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 import DocumentPortal from "./DocumentPortal";
 import InvestmentDashboard from "./InvestmentDashboard";
+import RedemptionManagement from "./RedemptionManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
