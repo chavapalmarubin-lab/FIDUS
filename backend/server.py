@@ -207,6 +207,71 @@ class RedemptionApproval(BaseModel):
     admin_notes: Optional[str] = ""
     admin_id: str
 
+# Payment Confirmation Models
+class PaymentConfirmation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    transaction_type: str  # deposit, redemption
+    payment_method: str  # fiat, crypto
+    amount: float
+    currency: str = "USD"  # USD, BTC, ETH, etc.
+    
+    # For deposits
+    investment_id: Optional[str] = None
+    client_id: Optional[str] = None
+    
+    # For redemptions  
+    redemption_id: Optional[str] = None
+    
+    # FIAT Wire Details
+    wire_confirmation_number: Optional[str] = None
+    bank_reference: Optional[str] = None
+    wire_receipt_file: Optional[str] = None  # File path/ID for uploaded receipt
+    
+    # Crypto Details
+    transaction_hash: Optional[str] = None
+    blockchain_network: Optional[str] = None  # Bitcoin, Ethereum, etc.
+    wallet_address: Optional[str] = None
+    
+    # Common fields
+    confirmation_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    confirmed_by: str  # admin_id
+    notes: Optional[str] = ""
+    status: str = "pending"  # pending, confirmed, failed
+    
+class DepositConfirmationRequest(BaseModel):
+    investment_id: str
+    payment_method: str  # fiat, crypto
+    amount: float
+    currency: str = "USD"
+    
+    # For FIAT
+    wire_confirmation_number: Optional[str] = None
+    bank_reference: Optional[str] = None
+    
+    # For Crypto
+    transaction_hash: Optional[str] = None
+    blockchain_network: Optional[str] = None
+    wallet_address: Optional[str] = None
+    
+    notes: Optional[str] = ""
+
+class RedemptionPaymentConfirmation(BaseModel):
+    redemption_id: str
+    payment_method: str  # fiat, crypto
+    amount: float
+    currency: str = "USD"
+    
+    # For FIAT
+    wire_confirmation_number: Optional[str] = None
+    bank_reference: Optional[str] = None
+    
+    # For Crypto
+    transaction_hash: Optional[str] = None
+    blockchain_network: Optional[str] = None
+    wallet_address: Optional[str] = None
+    
+    notes: Optional[str] = ""
+
 # Activity Logging Models
 class ActivityLog(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
