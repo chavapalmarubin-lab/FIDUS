@@ -76,6 +76,16 @@ const ClientManagement = () => {
     updated_by: "admin"
   });
 
+  // New user creation form
+  const [newUserForm, setNewUserForm] = useState({
+    username: "",
+    name: "",
+    email: "",
+    phone: "",
+    temporary_password: "",
+    notes: ""
+  });
+
   useEffect(() => {
     fetchClients();
   }, []);
