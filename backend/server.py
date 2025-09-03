@@ -284,7 +284,7 @@ class ClientInvestmentReadiness(BaseModel):
     client_id: str
     aml_kyc_completed: bool = False
     agreement_signed: bool = False
-    deposit_date: Optional[datetime] = None
+    account_creation_date: Optional[datetime] = None
     investment_ready: bool = False
     notes: str = ""
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -293,7 +293,7 @@ class ClientInvestmentReadiness(BaseModel):
 class ClientInvestmentReadinessUpdate(BaseModel):
     aml_kyc_completed: Optional[bool] = None
     agreement_signed: Optional[bool] = None
-    deposit_date: Optional[datetime] = None
+    account_creation_date: Optional[datetime] = None
     notes: Optional[str] = None
     updated_by: Optional[str] = None
 
