@@ -376,23 +376,23 @@ FIDUS_FUND_CONFIG = {
         fund_code="CORE",
         name="FIDUS Core Fund",
         interest_rate=1.5,  # 1.5% monthly
-        minimum_investment=10000.0,  # Fixed: $10,000 USD as requested
+        minimum_investment=10000.0,
         interest_frequency="monthly",
-        redemption_frequency="monthly",  # Monthly redemptions
+        redemption_frequency="monthly",  # Interest can be redeemed monthly
         invitation_only=False,
-        incubation_months=2,
-        minimum_hold_months=3  # Fixed: 3 months total (2 incubation + 1 interest) - allows redemption after interest starts
+        incubation_months=2,  # 2 months incubation (no interest)
+        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
     ),
     "BALANCE": FundConfiguration(
         fund_code="BALANCE", 
         name="FIDUS Balance Fund",
         interest_rate=2.5,  # 2.5% monthly
-        minimum_investment=50000.0,  # Fixed: $50,000 USD as requested
-        interest_frequency="monthly", 
-        redemption_frequency="quarterly",  # Every 3 months
+        minimum_investment=50000.0,
+        interest_frequency="monthly",
+        redemption_frequency="quarterly",  # Interest can be redeemed quarterly (every 3 months)
         invitation_only=False,
-        incubation_months=2,
-        minimum_hold_months=14
+        incubation_months=2,  # 2 months incubation (no interest)
+        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
     ),
     "DYNAMIC": FundConfiguration(
         fund_code="DYNAMIC",
@@ -400,10 +400,10 @@ FIDUS_FUND_CONFIG = {
         interest_rate=3.5,  # 3.5% monthly
         minimum_investment=250000.0,
         interest_frequency="monthly",
-        redemption_frequency="semi_annually",  # Every 6 months
+        redemption_frequency="semi_annually",  # Interest can be redeemed semi-annually (every 6 months)
         invitation_only=False,
-        incubation_months=2,
-        minimum_hold_months=8  # Fixed: 8 months total (2 incubation + 6 months) - allows redemption on semi-annual schedule
+        incubation_months=2,  # 2 months incubation (no interest)
+        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
     ),
     "UNLIMITED": FundConfiguration(
         fund_code="UNLIMITED",
