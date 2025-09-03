@@ -3299,7 +3299,10 @@ async def gmail_oauth_callback(code: str, state: str):
         # Create flow
         flow = Flow.from_client_secrets_file(
             '/app/backend/gmail_credentials.json',
-            scopes=['https://www.googleapis.com/auth/gmail.send'],
+            scopes=[
+                'https://www.googleapis.com/auth/gmail.send',
+                'https://www.googleapis.com/auth/gmail.readonly'
+            ],
             redirect_uri='https://invest-manager-5.preview.emergentagent.com/api/gmail/oauth-callback'
         )
         
