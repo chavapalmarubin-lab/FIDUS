@@ -124,7 +124,7 @@ const ClientDashboard = ({ user, onLogout }) => {
 
       <div className="p-6 max-w-7xl mx-auto">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-800 border-slate-600 mb-6">
+          <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-600 mb-6">
             <TabsTrigger value="overview" className="text-white data-[state=active]:bg-cyan-600">
               <DollarSign size={16} className="mr-2" />
               Account Overview
@@ -132,6 +132,10 @@ const ClientDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
               <Target size={16} className="mr-2" />
               Investments
+            </TabsTrigger>
+            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
+              <ArrowDownCircle size={16} className="mr-2" />
+              Redemptions
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
               <FileText size={16} className="mr-2" />
