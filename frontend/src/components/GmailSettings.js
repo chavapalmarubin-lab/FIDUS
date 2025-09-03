@@ -23,21 +23,35 @@ const GmailSettings = () => {
   }, []);
 
   const handleOAuthCallback = () => {
+    console.log("Checking for OAuth callback parameters...");
+    
     const urlParams = new URLSearchParams(window.location.search);
     const gmailAuth = urlParams.get('gmail_auth');
     const email = urlParams.get('email');
     const message = urlParams.get('message');
+    
+    // Check if we were in the middle of OAuth flow
+    const authInProgress = localStorage.getItem('gmail_auth_in_progress');
+    const authTimestamp = localStorage.getItem('gmail_auth_timestamp');
+    
+    console.log(`OAuth callback check: gmail_auth=${gmailAuth}, email=${email}, authInProgress=${authInProgress}`);
 
-    if (gmailAuth === 'success') {
+    if (gmailAuth === 'success' && email) {
       // OAuth was successful
+      console.log("OAuth success detected!");
+      
       setAuthError(null);
       setAuthenticating(false);
       
-      // Show success message temporarily
-      setAuthError(`Gmail authentication successful! Connected as ${email}`);
+      // Clear localStorage flags
+      localStorage.removeItem('gmail_auth_in_progress');
+      localStorage.removeItem('gmail_auth_timestamp');
+      
+      // Show success message temporarily with green styling
+      setAuthError(`✅ Gmail authentication successful! Connected as ${email}`);
       setTimeout(() => {
         setAuthError(null);
-      }, 3000);
+      }, 5000);
       
       // Clean up URL parameters
       const newUrl = window.location.pathname;
@@ -45,18 +59,43 @@ const GmailSettings = () => {
       
       // Refresh status to get updated authentication info
       setTimeout(() => {
+        console.log("Refreshing Gmail status after successful auth...");
         checkAuthStatus();
       }, 1000);
       
     } else if (gmailAuth === 'error') {
       // OAuth failed
+      console.log("OAuth error detected!");
+      
       setAuthenticating(false);
-      const errorMsg = message ? decodeURIComponent(message.replace(/\+/g, ' ')) : 'Authentication failed';
-      setAuthError(`Gmail authentication failed: ${errorMsg}`);
+      
+      // Clear localStorage flags
+      localStorage.removeItem('gmail_auth_in_progress');
+      localStorage.removeItem('gmail_auth_timestamp');
+      
+      // Show error message
+      const errorMsg = message ? decodeURIComponent(message.replace(/\+/g, ' ')) : 'Unknown authentication error';
+      setAuthError(`❌ Gmail authentication failed: ${errorMsg}`);
       
       // Clean up URL parameters
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
+      
+    } else if (authInProgress) {
+      // We were in OAuth flow but no callback params - might still be in progress
+      const timestamp = parseInt(authTimestamp || '0');
+      const timeElapsed = Date.now() - timestamp;
+      
+      if (timeElapsed > 300000) { // 5 minutes timeout
+        console.log("OAuth timeout detected, clearing state");
+        localStorage.removeItem('gmail_auth_in_progress');
+        localStorage.removeItem('gmail_auth_timestamp');
+        setAuthenticating(false);
+        setAuthError("❌ Authentication timed out. Please try again.");
+      } else {
+        console.log("OAuth still in progress...");
+        setAuthenticating(true);
+      }
     }
   };
 
