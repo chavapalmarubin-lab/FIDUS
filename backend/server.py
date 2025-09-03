@@ -176,6 +176,51 @@ class ProspectConversionRequest(BaseModel):
     prospect_id: str
     send_agreement: bool = True
 
+# Redemption System Models
+class RedemptionRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    investment_id: str
+    fund_code: str
+    fund_name: str
+    requested_amount: float
+    current_value: float
+    principal_amount: float
+    request_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    requested_redemption_date: datetime
+    next_available_date: datetime
+    status: str = "pending"  # pending, approved, rejected, completed, cancelled
+    reason: Optional[str] = ""
+    admin_notes: Optional[str] = ""
+    approved_by: Optional[str] = None
+    approved_date: Optional[datetime] = None
+    completed_date: Optional[datetime] = None
+
+class RedemptionRequestCreate(BaseModel):
+    investment_id: str
+    requested_amount: float
+    reason: Optional[str] = ""
+
+class RedemptionApproval(BaseModel):
+    redemption_id: str
+    action: str  # approve, reject
+    admin_notes: Optional[str] = ""
+    admin_id: str
+
+# Activity Logging Models
+class ActivityLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    activity_type: str  # deposit, redemption_request, redemption_approved, redemption_rejected, redemption_completed
+    investment_id: Optional[str] = None
+    fund_code: Optional[str] = None
+    amount: float
+    description: str
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    performed_by: str  # admin_id or client_id
+    reference_id: Optional[str] = None  # redemption_id, investment_id, etc.
+    metadata: Optional[Dict[str, Any]] = None
+
 # Investment Tracking Models
 class FundInvestment(BaseModel):
     investment_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
