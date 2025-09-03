@@ -630,11 +630,11 @@ class FidusProductionTester:
         if success:
             projections = response.get('projections', [])
             
-            if projections:
+            if projections and len(projections) > 0:
                 # Check that interest starts after incubation period
                 first_payment = projections[0]
                 payment_date = first_payment.get('date', '')
-                amount = first_payment.get('amount', 0)
+                amount = first_payment.get('amount', 0) or 0
                 
                 print(f"   ✅ Interest calculation verification:")
                 print(f"   First payment date: {payment_date}")
@@ -646,6 +646,8 @@ class FidusProductionTester:
                     print(f"   ✅ Interest calculation accurate: ${amount:.2f} ≈ ${expected_monthly:.2f}")
                 else:
                     print(f"   ⚠️  Interest calculation may be incorrect: ${amount:.2f} vs expected ${expected_monthly:.2f}")
+            else:
+                print(f"   ⚠️  No projections available for verification")
                     
         return success
 
