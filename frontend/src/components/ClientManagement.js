@@ -464,8 +464,7 @@ const ClientManagement = () => {
     const readiness = client.readiness_status || {};
     const completed = [
       readiness.aml_kyc_completed,
-      readiness.agreement_signed,
-      readiness.deposit_date
+      readiness.agreement_signed
     ].filter(Boolean).length;
     
     if (completed === 0) {
@@ -475,10 +474,10 @@ const ClientManagement = () => {
           <AlertCircle className="w-4 h-4 text-red-400" />
         </div>
       );
-    } else if (completed < 3) {
+    } else if (completed < 2) {
       return (
         <div className="flex items-center gap-2">
-          <Badge className="bg-yellow-500 text-white">In Progress ({completed}/3)</Badge>
+          <Badge className="bg-yellow-500 text-white">In Progress ({completed}/2)</Badge>
           <Clock className="w-4 h-4 text-yellow-400" />
         </div>
       );
