@@ -479,6 +479,22 @@ MOCK_USERS = {
         "type": "client",
         "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
     },
+    "client4": {
+        "id": "client_004",
+        "username": "client4",
+        "name": "Javier Gonzalez",
+        "email": "javier.gonzalez@fidus.com",
+        "type": "client",
+        "profile_picture": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+    },
+    "client5": {
+        "id": "client_005",
+        "username": "client5",
+        "name": "Jorge Gonzalez", 
+        "email": "jorge.gonzalez@fidus.com",
+        "type": "client",
+        "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+    },
     "admin": {
         "id": "admin_001",
         "username": "admin",
