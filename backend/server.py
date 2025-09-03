@@ -4409,7 +4409,7 @@ FIDUS_FUNDS = {
         minimum_investment=250000.00,
         management_fee=2.00,
         performance_fee=25.00,
-        total_investors=98
+        total_investors=0  # Reset to zero as requested
     )
 }
 
