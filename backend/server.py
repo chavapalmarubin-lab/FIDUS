@@ -65,6 +65,7 @@ class UserResponse(BaseModel):
     email: str
     type: str
     profile_picture: str
+    must_change_password: Optional[bool] = False
 
 class UserCreate(BaseModel):
     username: str
