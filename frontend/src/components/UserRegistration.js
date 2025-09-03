@@ -706,7 +706,7 @@ const UserRegistration = ({ onBack, onComplete }) => {
                 <div className="text-sm text-slate-300 mb-2">Next Steps</div>
                 <div className="space-y-1">
                   {amlKycResults.next_steps.map((step, index) => (
-                    <div key={index} className="flex items-start gap-2 text-xs text-slate-400">
+                    <div key={`step-${index}-${step.substring(0, 10)}`} className="flex items-start gap-2 text-xs text-slate-400">
                       <div className="w-1 h-1 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
                       <span>{step}</span>
                     </div>
