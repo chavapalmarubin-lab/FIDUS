@@ -688,6 +688,7 @@ const AdminInvestmentManagement = () => {
                     This date determines the 2-month incubation period and all investment timelines
                   </p>
                 </div>
+                </div>
 
                 {/* Payment Confirmation Section */}
                 <div className="border-t border-slate-600 pt-4">
