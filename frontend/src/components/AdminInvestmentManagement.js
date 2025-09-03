@@ -676,6 +676,112 @@ const AdminInvestmentManagement = () => {
                     This date determines the 2-month incubation period and all investment timelines
                   </p>
                 </div>
+
+                {/* Payment Confirmation Section */}
+                <div className="border-t border-slate-600 pt-4">
+                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
+                    <Wallet className="w-5 h-5 mr-2 text-green-400" />
+                    Deposit Payment Confirmation
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-slate-300">Payment Method *</Label>
+                      <Select value={investmentForm.payment_method} onValueChange={(value) => setInvestmentForm({...investmentForm, payment_method: value})}>
+                        <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                          <SelectItem value="fiat" className="text-white">💳 FIAT (Bank Wire)</SelectItem>
+                          <SelectItem value="crypto" className="text-white">₿ Crypto Currency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {investmentForm.payment_method === "fiat" && (
+                      <>
+                        <div>
+                          <Label className="text-slate-300">Wire Confirmation Number *</Label>
+                          <Input
+                            type="text"
+                            value={investmentForm.wire_confirmation_number}
+                            onChange={(e) => setInvestmentForm({...investmentForm, wire_confirmation_number: e.target.value})}
+                            placeholder="Enter wire confirmation number"
+                            className="mt-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-slate-300">Bank Reference (Optional)</Label>
+                          <Input
+                            type="text"
+                            value={investmentForm.bank_reference}
+                            onChange={(e) => setInvestmentForm({...investmentForm, bank_reference: e.target.value})}
+                            placeholder="Bank reference number"
+                            className="mt-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {investmentForm.payment_method === "crypto" && (
+                      <>
+                        <div>
+                          <Label className="text-slate-300">Transaction Hash *</Label>
+                          <Input
+                            type="text"
+                            value={investmentForm.transaction_hash}
+                            onChange={(e) => setInvestmentForm({...investmentForm, transaction_hash: e.target.value})}
+                            placeholder="Enter blockchain transaction hash"
+                            className="mt-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-slate-300">Blockchain Network (Optional)</Label>
+                          <Input
+                            type="text"
+                            value={investmentForm.blockchain_network}
+                            onChange={(e) => setInvestmentForm({...investmentForm, blockchain_network: e.target.value})}
+                            placeholder="e.g., Bitcoin, Ethereum, BSC"
+                            className="mt-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-slate-300">Wallet Address (Optional)</Label>
+                          <Input
+                            type="text"
+                            value={investmentForm.wallet_address}
+                            onChange={(e) => setInvestmentForm({...investmentForm, wallet_address: e.target.value})}
+                            placeholder="Client's wallet address"
+                            className="mt-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div>
+                      <Label className="text-slate-300">Payment Notes (Optional)</Label>
+                      <textarea
+                        value={investmentForm.payment_notes}
+                        onChange={(e) => setInvestmentForm({...investmentForm, payment_notes: e.target.value})}
+                        placeholder="Additional notes about the payment..."
+                        className="mt-1 w-full min-h-16 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+                      />
+                    </div>
+
+                    <div className="bg-green-900/20 border border-green-600 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5" />
+                        <div className="text-sm text-green-300">
+                          <p className="font-medium mb-1">Payment Confirmation Required</p>
+                          <p>Confirming payment receipt will complete the investment creation process and start the timeline calculations.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
