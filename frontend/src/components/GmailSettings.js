@@ -84,61 +84,40 @@ const GmailSettings = () => {
       setAuthenticating(true);
       setAuthError(null);
       
-      // First check if already authenticated
-      const statusResponse = await axios.post(`${backendUrl}/api/gmail/authenticate`);
+      // Always force fresh OAuth flow - no cached credentials
+      console.log("Starting Gmail OAuth flow...");
       
-      if (statusResponse.data.success) {
-        setGmailStatus(statusResponse.data);
-        setAuthenticating(false);
-        return;
-      }
-
-      if (statusResponse.data.action === 'redirect_to_oauth') {
-        // Get OAuth URL
-        const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
+      // Get OAuth URL from backend
+      const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
+      
+      if (authUrlResponse.data.success) {
+        console.log("Got OAuth URL, redirecting...");
         
-        if (authUrlResponse.data.success) {
-          // Open OAuth in a new popup window to avoid "refused to connect" errors
-          const popup = window.open(
-            authUrlResponse.data.authorization_url,
-            'gmail_oauth',
-            'width=500,height=600,scrollbars=yes,resizable=yes'
-          );
-          
-          if (popup) {
-            // Monitor the popup for completion
-            const checkClosed = setInterval(() => {
-              if (popup.closed) {
-                clearInterval(checkClosed);
-                setAuthenticating(false);
-                // Check auth status after popup closes
-                setTimeout(() => checkAuthStatus(), 1000);
-              }
-            }, 1000);
-          } else {
-            // Popup blocked - fall back to same window redirect
-            console.warn('Popup blocked, falling back to same-window redirect');
-            window.location.href = authUrlResponse.data.authorization_url;
-          }
-          
-        } else {
-          throw new Error("Failed to generate OAuth URL");
-        }
+        // Store authentication state in localStorage
+        localStorage.setItem('gmail_auth_in_progress', 'true');
+        localStorage.setItem('gmail_auth_timestamp', Date.now().toString());
+        
+        // Direct redirect to Google OAuth - this is the ONLY reliable method
+        // Popup/iframe approaches are blocked by Google's security policies
+        window.location.href = authUrlResponse.data.authorization_url;
+        
       } else {
-        throw new Error("Unexpected authentication response");
+        throw new Error("Failed to generate OAuth URL: " + (authUrlResponse.data.error || "Unknown error"));
       }
       
     } catch (error) {
       console.error('Gmail authentication error:', error);
       setAuthenticating(false);
       
-      let errorMessage = "Authentication failed. ";
+      let errorMessage = "Gmail authentication failed. ";
       if (error.response?.data?.detail) {
         errorMessage += error.response.data.detail;
+      } else if (error.response?.data?.error) {
+        errorMessage += error.response.data.error;
       } else if (error.message) {
         errorMessage += error.message;
       } else {
-        errorMessage += "Please try again or check your internet connection.";
+        errorMessage += "Please check your internet connection and try again.";
       }
       
       setAuthError(errorMessage);
