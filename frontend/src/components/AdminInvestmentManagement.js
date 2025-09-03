@@ -589,16 +589,12 @@ const AdminInvestmentManagement = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col"
+              className="bg-slate-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Fixed Header */}
-              <div className="p-6 border-b border-slate-600">
-                <h3 className="text-xl font-semibold text-white">Create Client Investment</h3>
-              </div>
-              
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-white mb-4">Create Client Investment</h3>
+                
                 <div className="space-y-4">
                   {/* Debug information */}
                   <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
