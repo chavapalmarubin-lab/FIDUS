@@ -621,6 +621,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             <AdminInvestmentManagement />
           </TabsContent>
 
+          <TabsContent value="redemptions" className="mt-6">
+            <AdminRedemptionManagement />
+          </TabsContent>
+
           <TabsContent value="crm" className="mt-6">
             <CRMDashboard user={user} />
           </TabsContent>
