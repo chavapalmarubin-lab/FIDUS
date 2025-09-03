@@ -626,15 +626,15 @@ def calculate_redemption_value(investment: FundInvestment, fund_config: FundConf
     """Calculate current redemption value including accrued interest"""
     now = datetime.now(timezone.utc)
     
-    # If still in incubation period, can only redeem principal
+    # If still in incubation period, NO INTEREST EARNED - only principal can be redeemed
     if now < investment.interest_start_date:
         return investment.principal_amount
     
-    # Calculate months since interest started
+    # Calculate months since interest started (after incubation)
     months_elapsed = (now.year - investment.interest_start_date.year) * 12 + \
                     (now.month - investment.interest_start_date.month)
     
-    # Simple interest calculation
+    # Interest calculation - only for months AFTER incubation period
     monthly_rate = fund_config.interest_rate / 100.0
     total_interest = investment.principal_amount * monthly_rate * months_elapsed
     
