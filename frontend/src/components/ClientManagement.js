@@ -1092,17 +1092,17 @@ const ClientManagement = () => {
 
                 <div>
                   <Label className="text-slate-300 flex items-center mb-2">
-                    <Calendar className="w-4 h-4 mr-2 text-yellow-400" />
-                    Date of Deposit (Critical for Timeline) *
+                    <Calendar className="w-4 h-4 mr-2 text-cyan-400" />
+                    Account Creation Date *
                   </Label>
                   <Input
                     type="date"
-                    value={readinessForm.deposit_date}
-                    onChange={(e) => setReadinessForm({...readinessForm, deposit_date: e.target.value})}
+                    value={readinessForm.account_creation_date}
+                    onChange={(e) => setReadinessForm({...readinessForm, account_creation_date: e.target.value})}
                     className="mt-1 bg-slate-700 border-slate-600 text-white"
                   />
                   <p className="text-xs text-slate-400 mt-1">
-                    This date determines the incubation period and all investment timelines
+                    Date when the client account was officially created
                   </p>
                 </div>
 
