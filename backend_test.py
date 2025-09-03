@@ -5348,7 +5348,7 @@ Document Content:
         success_payment, response_payment = self.run_test(
             "Workflow Test - Confirm Payment",
             "POST",
-            "api/payments/deposit/confirm",
+            "api/payments/deposit/confirm?admin_id=admin_001",
             200,
             data={
                 "investment_id": investment_id,
