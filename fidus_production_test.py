@@ -420,8 +420,10 @@ class FidusProductionTester:
                 portfolio_stats = response.get('portfolio_stats', {})
                 
                 print(f"   ✅ {name} investments: {len(investments)}")
-                print(f"   Total Invested: ${portfolio_stats.get('total_invested', 0):,.2f}")
-                print(f"   Current Value: ${portfolio_stats.get('current_value', 0):,.2f}")
+                total_invested = portfolio_stats.get('total_invested', 0) or 0
+                current_value = portfolio_stats.get('current_value', 0) or 0
+                print(f"   Total Invested: ${total_invested:,.2f}")
+                print(f"   Current Value: ${current_value:,.2f}")
                 
                 if expected_count and len(investments) != expected_count:
                     print(f"   ⚠️  Expected {expected_count} investments, found {len(investments)}")
