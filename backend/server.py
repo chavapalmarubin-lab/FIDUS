@@ -5932,11 +5932,23 @@ async def approve_redemption_request(approval_data: RedemptionApproval):
 async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest, admin_id: str = "admin_001"):
     """Confirm that a deposit payment has been received"""
     try:
-        # Check if investment exists
-        if confirmation_data.investment_id not in client_investments:
+        # Find the investment by searching through all client investments
+        investment_found = None
+        investment_client_id = None
+        
+        for client_id, investments in client_investments.items():
+            for inv in investments:
+                if inv["investment_id"] == confirmation_data.investment_id:
+                    investment_found = inv
+                    investment_client_id = client_id
+                    break
+            if investment_found:
+                break
+        
+        if not investment_found:
             raise HTTPException(status_code=404, detail="Investment not found")
         
-        investment = client_investments[confirmation_data.investment_id]
+        investment = investment_found
         
         # Create payment confirmation record
         confirmation = PaymentConfirmation(
