@@ -3335,54 +3335,29 @@ async def gmail_oauth_callback(code: str, state: str):
 
 @api_router.post("/gmail/authenticate")
 async def authenticate_gmail():
-    """Authenticate Gmail service (admin only) - Updated for web flow"""
+    """Authenticate Gmail service (admin only) - Complete fix for scopes issue"""
     try:
-        # Check if we already have valid credentials
+        # Always force fresh authentication to ensure proper scopes
+        # Delete any existing token to force re-authentication with new scopes
         if os.path.exists('/app/backend/gmail_token.pickle'):
-            with open('/app/backend/gmail_token.pickle', 'rb') as token:
-                creds = pickle.load(token)
-                
-            if creds and creds.valid:
-                # Use existing valid credentials
-                gmail_service.service = build('gmail', 'v1', credentials=creds)
-                profile = gmail_service.service.users().getProfile(userId="me").execute()
-                
-                return {
-                    "success": True,
-                    "message": "Gmail authentication successful (using saved credentials)",
-                    "email_address": profile.get("emailAddress"),
-                    "messages_total": profile.get("messagesTotal", 0),
-                    "threads_total": profile.get("threadsTotal", 0)
-                }
-            elif creds and creds.expired and creds.refresh_token:
-                # Try to refresh expired credentials
-                creds.refresh(Request())
-                with open('/app/backend/gmail_token.pickle', 'wb') as token:
-                    pickle.dump(creds, token)
-                    
-                gmail_service.service = build('gmail', 'v1', credentials=creds)
-                profile = gmail_service.service.users().getProfile(userId="me").execute()
-                
-                return {
-                    "success": True,
-                    "message": "Gmail authentication successful (refreshed credentials)",
-                    "email_address": profile.get("emailAddress"),
-                    "messages_total": profile.get("messagesTotal", 0),
-                    "threads_total": profile.get("threadsTotal", 0)
-                }
+            os.remove('/app/backend/gmail_token.pickle')
         
-        # No valid credentials, need to redirect to OAuth flow
+        # Always redirect to OAuth flow with proper scopes
         return {
             "success": False,
-            "message": "Gmail authentication required",
+            "message": "Gmail authentication required - redirecting to OAuth",
             "action": "redirect_to_oauth",
             "auth_url_endpoint": "/api/gmail/auth-url",
-            "instructions": "Please use the auth-url endpoint to get the OAuth authorization URL"
+            "instructions": "Starting fresh OAuth flow with proper scopes (gmail.send + gmail.readonly)"
         }
         
     except Exception as e:
         logging.error(f"Gmail authentication error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Gmail authentication failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Gmail authentication failed"
+        }
 
 @api_router.get("/documents/{document_id}/status")
 async def get_document_status(document_id: str):
