@@ -6027,7 +6027,7 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
             'client_id': client_id,
             'aml_kyc_completed': False,
             'agreement_signed': False,
-            'deposit_date': None,
+            'account_creation_date': None,
             'investment_ready': False,
             'notes': '',
             'updated_at': datetime.now(timezone.utc).isoformat(),
@@ -6039,8 +6039,8 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
             current_readiness['aml_kyc_completed'] = readiness_data.aml_kyc_completed
         if readiness_data.agreement_signed is not None:
             current_readiness['agreement_signed'] = readiness_data.agreement_signed
-        if readiness_data.deposit_date is not None:
-            current_readiness['deposit_date'] = readiness_data.deposit_date.isoformat()
+        if readiness_data.account_creation_date is not None:
+            current_readiness['account_creation_date'] = readiness_data.account_creation_date.isoformat()
         if readiness_data.notes is not None:
             current_readiness['notes'] = readiness_data.notes
         if readiness_data.updated_by is not None:
@@ -6049,11 +6049,11 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
         # Update timestamp
         current_readiness['updated_at'] = datetime.now(timezone.utc).isoformat()
         
-        # Calculate investment readiness
+        # Calculate investment readiness - only need AML KYC and Agreement for investment readiness
+        # (account creation date is for record keeping, not a requirement for investment)
         investment_ready = (
             current_readiness['aml_kyc_completed'] and 
-            current_readiness['agreement_signed'] and 
-            current_readiness['deposit_date'] is not None
+            current_readiness['agreement_signed']
         )
         current_readiness['investment_ready'] = investment_ready
         
