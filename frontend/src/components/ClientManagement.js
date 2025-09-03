@@ -1155,6 +1155,108 @@ const ClientManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Document Upload Modal */}
+      <AnimatePresence>
+        {showDocumentModal && selectedDocumentClient && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowDocumentModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <Upload className="mr-2 h-6 w-6 text-blue-400" />
+                Upload Document - {selectedDocumentClient.name}
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Document Category *</Label>
+                  <Select value={documentCategory} onValueChange={setDocumentCategory}>
+                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select document category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="kyc" className="text-white">KYC Documents</SelectItem>
+                      <SelectItem value="aml" className="text-white">AML Compliance</SelectItem>
+                      <SelectItem value="agreement" className="text-white">Client Agreement</SelectItem>
+                      <SelectItem value="identity" className="text-white">Identity Verification</SelectItem>
+                      <SelectItem value="financial" className="text-white">Financial Documents</SelectItem>
+                      <SelectItem value="other" className="text-white">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-slate-300">Select File *</Label>
+                  <Input
+                    type="file"
+                    onChange={handleFileChange}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1"
+                  />
+                  {documentFile && (
+                    <p className="text-sm text-green-400 mt-1">
+                      Selected: {documentFile.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-400 mt-1">
+                    Supported formats: PDF, Word, Images (JPG, PNG), Text files (Max 10MB)
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
+                    <p className="text-red-400 text-sm">{error}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDocumentModal(false);
+                    setSelectedDocumentClient(null);
+                    setDocumentFile(null);
+                    setDocumentCategory("");
+                  }}
+                  className="flex-1 border-slate-600 text-slate-300"
+                  disabled={documentUploadLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDocumentUpload}
+                  disabled={documentUploadLoading || !documentFile || !documentCategory}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {documentUploadLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Document
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
