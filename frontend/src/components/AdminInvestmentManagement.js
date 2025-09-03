@@ -598,46 +598,34 @@ const AdminInvestmentManagement = () => {
                 {/* Debug information */}
                 <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
                   Debug: Ready clients: {readyClients.length} | Selected: {investmentForm.client_id || 'None'}
+                  <br />API Status: {readyClients.length > 0 ? 'Loaded successfully' : 'Loading or no data'}
                 </div>
                 
                 <div>
-                  <Label htmlFor="client-select" className="text-slate-300 text-sm font-medium">Select Client *</Label>
-                  <Select 
-                    value={investmentForm.client_id} 
-                    onValueChange={(value) => {
-                      console.log('Client selected:', value);
-                      setInvestmentForm({...investmentForm, client_id: value});
+                  <Label htmlFor="client-select" className="text-slate-300 text-sm font-medium mb-2 block">Select Client *</Label>
+                  
+                  {/* Fallback HTML select to ensure functionality */}
+                  <select 
+                    id="client-select"
+                    value={investmentForm.client_id}
+                    onChange={(e) => {
+                      console.log('Client selected:', e.target.value);
+                      setInvestmentForm({...investmentForm, client_id: e.target.value});
                     }}
+                    className="w-full min-h-[42px] px-3 py-2 bg-slate-700 border-2 border-slate-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <SelectTrigger 
-                      id="client-select"
-                      className="mt-1 bg-slate-700 border-slate-600 text-white w-full min-h-[42px] border-2"
-                    >
-                      <SelectValue placeholder="Choose a client ready for investment" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 z-[100]">
-                      {readyClients.length > 0 ? (
-                        readyClients.map(client => (
-                          <SelectItem 
-                            key={client.client_id} 
-                            value={client.client_id} 
-                            className="text-white hover:bg-slate-600 cursor-pointer"
-                          >
-                            <div>
-                              <div className="font-medium">{client.name}</div>
-                              <div className="text-sm text-slate-400">
-                                {client.email} • Investments: {client.total_investments}
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-clients" disabled className="text-slate-400">
-                          Loading clients...
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                    <option value="" disabled>Choose a client ready for investment</option>
+                    {readyClients.map(client => (
+                      <option 
+                        key={client.client_id} 
+                        value={client.client_id}
+                        className="bg-slate-700 text-white"
+                      >
+                        {client.name} - {client.email} (Investments: {client.total_investments})
+                      </option>
+                    ))}
+                  </select>
+                  
                   {readyClients.length === 0 && (
                     <p className="text-yellow-400 text-sm mt-1">
                       ⚠️ No clients ready for investment. Complete AML/KYC and Agreement in Client Management.
