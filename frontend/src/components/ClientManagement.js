@@ -316,7 +316,7 @@ const ClientManagement = () => {
 
       const updateData = {
         ...readinessForm,
-        deposit_date: readinessForm.deposit_date ? new Date(readinessForm.deposit_date).toISOString() : null
+        account_creation_date: readinessForm.account_creation_date ? new Date(readinessForm.account_creation_date).toISOString() : null
       };
 
       const response = await axios.put(`${API}/clients/${selectedClient.id}/readiness`, updateData);
