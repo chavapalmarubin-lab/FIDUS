@@ -16,6 +16,7 @@ class FidusAPITester:
         self.extracted_data = None
         self.uploaded_document_id = None
         self.envelope_id = None
+        self.created_investments = []  # Track created investments for payment confirmation tests
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
