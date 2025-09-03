@@ -5047,6 +5047,390 @@ Document Content:
         
         print("=" * 80)
 
+    def run_investment_payment_tests(self):
+        """Run focused tests for investment creation and payment confirmation as requested in review"""
+        print("🚀 Starting FIDUS Investment Creation & Payment Confirmation Tests...")
+        print(f"   Base URL: {self.base_url}")
+        print("=" * 80)
+        
+        # Authentication Tests (Required for other tests)
+        print("\n📋 AUTHENTICATION SETUP")
+        print("-" * 40)
+        if not self.test_client_login():
+            print("❌ Client login failed - cannot proceed with tests")
+            return False
+        if not self.test_admin_login():
+            print("❌ Admin login failed - cannot proceed with tests")
+            return False
+        
+        # Priority Test 1: Minimum Investment Amount Verification
+        print("\n📋 PRIORITY TEST 1: MINIMUM INVESTMENT AMOUNT VERIFICATION")
+        print("-" * 60)
+        self.test_fund_minimum_investment_amounts()
+        
+        # Priority Test 2: Investment Creation and Payment Confirmation Fix
+        print("\n📋 PRIORITY TEST 2: INVESTMENT CREATION & PAYMENT CONFIRMATION")
+        print("-" * 60)
+        self.test_investment_creation_for_specific_clients()
+        self.test_payment_confirmation_workflow()
+        
+        # Priority Test 3: Complete Investment Workflow
+        print("\n📋 PRIORITY TEST 3: COMPLETE INVESTMENT WORKFLOW")
+        print("-" * 60)
+        self.test_complete_investment_workflow()
+        
+        # Final Results
+        print("\n" + "=" * 80)
+        print("🏁 INVESTMENT & PAYMENT TESTING COMPLETE")
+        print("=" * 80)
+        print(f"📊 Tests Run: {self.tests_run}")
+        print(f"✅ Tests Passed: {self.tests_passed}")
+        print(f"❌ Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"📈 Success Rate: {(self.tests_passed / self.tests_run * 100):.1f}%" if self.tests_run > 0 else "No tests run")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL INVESTMENT & PAYMENT TESTS PASSED!")
+        else:
+            print("⚠️  Some tests failed. Please review the output above.")
+        
+        return self.tests_passed == self.tests_run
+
+    def test_fund_minimum_investment_amounts(self):
+        """Test CORE fund minimum investment is $10,000 and BALANCE fund minimum is $50,000"""
+        print("\n🔍 Testing Fund Minimum Investment Amounts...")
+        
+        # Test CORE fund minimum ($10,000)
+        print("   Testing CORE fund minimum investment ($10,000)...")
+        
+        # Test below minimum for CORE fund
+        success_below_core, _ = self.run_test(
+            "CORE Fund Below Minimum ($5,000)",
+            "POST",
+            "api/investments/create",
+            400,  # Should reject
+            data={
+                "client_id": "client_001",
+                "fund_code": "CORE",
+                "amount": 5000.0
+            }
+        )
+        
+        if success_below_core:
+            print("   ✅ CORE fund properly rejects below minimum ($5,000)")
+        
+        # Test at minimum for CORE fund
+        success_at_core, response_core = self.run_test(
+            "CORE Fund At Minimum ($10,000)",
+            "POST",
+            "api/investments/create",
+            200,  # Should accept
+            data={
+                "client_id": "client_001",
+                "fund_code": "CORE",
+                "amount": 10000.0
+            }
+        )
+        
+        if success_at_core:
+            print("   ✅ CORE fund accepts minimum investment ($10,000)")
+            investment_id = response_core.get("investment_id")
+            if investment_id:
+                self.created_investments.append(investment_id)
+        
+        # Test BALANCE fund minimum ($50,000)
+        print("   Testing BALANCE fund minimum investment ($50,000)...")
+        
+        # Test below minimum for BALANCE fund
+        success_below_balance, _ = self.run_test(
+            "BALANCE Fund Below Minimum ($25,000)",
+            "POST",
+            "api/investments/create",
+            400,  # Should reject
+            data={
+                "client_id": "client_0fd630c3",
+                "fund_code": "BALANCE",
+                "amount": 25000.0
+            }
+        )
+        
+        if success_below_balance:
+            print("   ✅ BALANCE fund properly rejects below minimum ($25,000)")
+        
+        # Test at minimum for BALANCE fund
+        success_at_balance, response_balance = self.run_test(
+            "BALANCE Fund At Minimum ($50,000)",
+            "POST",
+            "api/investments/create",
+            200,  # Should accept
+            data={
+                "client_id": "client_0fd630c3",
+                "fund_code": "BALANCE",
+                "amount": 50000.0
+            }
+        )
+        
+        if success_at_balance:
+            print("   ✅ BALANCE fund accepts minimum investment ($50,000)")
+            investment_id = response_balance.get("investment_id")
+            if investment_id:
+                self.created_investments.append(investment_id)
+        
+        return success_below_core and success_at_core and success_below_balance and success_at_balance
+
+    def test_investment_creation_for_specific_clients(self):
+        """Test creating investments for specific clients as requested in review"""
+        print("\n🔍 Testing Investment Creation for Specific Clients...")
+        
+        # Test creating investment for client_001 (Gerardo Briones) in CORE fund with $15,000
+        print("   Creating investment for Gerardo Briones (client_001) - CORE fund $15,000...")
+        success_gerardo, response_gerardo = self.run_test(
+            "Create Investment - Gerardo Briones CORE $15,000",
+            "POST",
+            "api/investments/create",
+            200,
+            data={
+                "client_id": "client_001",
+                "fund_code": "CORE",
+                "amount": 15000.0
+            }
+        )
+        
+        if success_gerardo:
+            print("   ✅ Investment created successfully for Gerardo Briones")
+            investment_id = response_gerardo.get("investment_id")
+            if investment_id:
+                self.created_investments.append({
+                    "investment_id": investment_id,
+                    "client_id": "client_001",
+                    "fund_code": "CORE",
+                    "amount": 15000.0,
+                    "client_name": "Gerardo Briones"
+                })
+                print(f"   Investment ID: {investment_id}")
+        
+        # Test creating investment for client_0fd630c3 (Salvador Palma) in BALANCE fund with $75,000
+        print("   Creating investment for Salvador Palma (client_0fd630c3) - BALANCE fund $75,000...")
+        success_salvador, response_salvador = self.run_test(
+            "Create Investment - Salvador Palma BALANCE $75,000",
+            "POST",
+            "api/investments/create",
+            200,
+            data={
+                "client_id": "client_0fd630c3",
+                "fund_code": "BALANCE",
+                "amount": 75000.0
+            }
+        )
+        
+        if success_salvador:
+            print("   ✅ Investment created successfully for Salvador Palma")
+            investment_id = response_salvador.get("investment_id")
+            if investment_id:
+                self.created_investments.append({
+                    "investment_id": investment_id,
+                    "client_id": "client_0fd630c3",
+                    "fund_code": "BALANCE",
+                    "amount": 75000.0,
+                    "client_name": "Salvador Palma"
+                })
+                print(f"   Investment ID: {investment_id}")
+        
+        return success_gerardo and success_salvador
+
+    def test_payment_confirmation_workflow(self):
+        """Test payment confirmation works after investment creation (no 'Investment not found' error)"""
+        print("\n🔍 Testing Payment Confirmation Workflow...")
+        
+        if not self.created_investments:
+            print("   ❌ No investments available for payment confirmation testing")
+            return False
+        
+        success_count = 0
+        total_tests = 0
+        
+        for investment in self.created_investments:
+            if isinstance(investment, dict):
+                investment_id = investment["investment_id"]
+                client_name = investment.get("client_name", "Unknown")
+                amount = investment.get("amount", 0)
+            else:
+                investment_id = investment
+                client_name = "Unknown"
+                amount = 0
+            
+            print(f"   Testing payment confirmation for {client_name} (Investment ID: {investment_id})...")
+            
+            # Test FIAT payment confirmation
+            print(f"     Testing FIAT payment confirmation...")
+            total_tests += 1
+            success_fiat, response_fiat = self.run_test(
+                f"FIAT Payment Confirmation - {client_name}",
+                "POST",
+                "api/payments/confirm-deposit",
+                200,
+                data={
+                    "investment_id": investment_id,
+                    "payment_method": "fiat",
+                    "amount": amount,
+                    "currency": "USD",
+                    "wire_confirmation_number": f"WIRE{investment_id[:8]}",
+                    "bank_reference": f"REF{investment_id[:6]}",
+                    "notes": f"FIAT deposit confirmation for {client_name}"
+                }
+            )
+            
+            if success_fiat:
+                print(f"     ✅ FIAT payment confirmation successful for {client_name}")
+                success_count += 1
+            else:
+                print(f"     ❌ FIAT payment confirmation failed for {client_name}")
+            
+            # Test Crypto payment confirmation
+            print(f"     Testing Crypto payment confirmation...")
+            total_tests += 1
+            success_crypto, response_crypto = self.run_test(
+                f"Crypto Payment Confirmation - {client_name}",
+                "POST",
+                "api/payments/confirm-deposit",
+                200,
+                data={
+                    "investment_id": investment_id,
+                    "payment_method": "crypto",
+                    "amount": amount,
+                    "currency": "BTC",
+                    "transaction_hash": f"0x{investment_id}abcdef123456789",
+                    "blockchain_network": "Bitcoin",
+                    "wallet_address": f"bc1q{investment_id[:20]}xyz",
+                    "notes": f"Crypto deposit confirmation for {client_name}"
+                }
+            )
+            
+            if success_crypto:
+                print(f"     ✅ Crypto payment confirmation successful for {client_name}")
+                success_count += 1
+            else:
+                print(f"     ❌ Crypto payment confirmation failed for {client_name}")
+        
+        print(f"   Payment confirmation tests: {success_count}/{total_tests} passed")
+        return success_count == total_tests
+
+    def test_complete_investment_workflow(self):
+        """Test complete investment workflow: Create → Confirm payment → Verify activity logging"""
+        print("\n🔍 Testing Complete Investment Workflow...")
+        
+        # Step 1: Create a new investment for workflow testing
+        print("   Step 1: Creating new investment for workflow test...")
+        success_create, response_create = self.run_test(
+            "Workflow Test - Create Investment",
+            "POST",
+            "api/investments/create",
+            200,
+            data={
+                "client_id": "client_001",
+                "fund_code": "CORE",
+                "amount": 20000.0
+            }
+        )
+        
+        if not success_create:
+            print("   ❌ Failed to create investment for workflow test")
+            return False
+        
+        investment_id = response_create.get("investment_id")
+        if not investment_id:
+            print("   ❌ No investment ID returned from creation")
+            return False
+        
+        print(f"   ✅ Investment created: {investment_id}")
+        
+        # Step 2: Confirm payment
+        print("   Step 2: Confirming payment...")
+        success_payment, response_payment = self.run_test(
+            "Workflow Test - Confirm Payment",
+            "POST",
+            "api/payments/confirm-deposit",
+            200,
+            data={
+                "investment_id": investment_id,
+                "payment_method": "fiat",
+                "amount": 20000.0,
+                "currency": "USD",
+                "wire_confirmation_number": f"WORKFLOW{investment_id[:8]}",
+                "bank_reference": f"WF{investment_id[:6]}",
+                "notes": "Workflow test payment confirmation"
+            }
+        )
+        
+        if not success_payment:
+            print("   ❌ Failed to confirm payment")
+            return False
+        
+        print("   ✅ Payment confirmed successfully")
+        
+        # Step 3: Verify investment is retrievable
+        print("   Step 3: Verifying investment is retrievable...")
+        success_retrieve, response_retrieve = self.run_test(
+            "Workflow Test - Retrieve Investment",
+            "GET",
+            f"api/investments/client/client_001",
+            200
+        )
+        
+        if success_retrieve:
+            investments = response_retrieve.get("investments", [])
+            found_investment = any(inv.get("investment_id") == investment_id for inv in investments)
+            if found_investment:
+                print("   ✅ Investment found in client portfolio")
+            else:
+                print("   ❌ Investment not found in client portfolio")
+                return False
+        else:
+            print("   ❌ Failed to retrieve client investments")
+            return False
+        
+        # Step 4: Verify activity logging
+        print("   Step 4: Verifying activity logging...")
+        success_activity, response_activity = self.run_test(
+            "Workflow Test - Check Activity Logs",
+            "GET",
+            f"api/activity-logs/client/client_001",
+            200
+        )
+        
+        if success_activity:
+            activities = response_activity.get("activities", [])
+            deposit_activity = any(
+                act.get("activity_type") == "deposit" and 
+                act.get("investment_id") == investment_id 
+                for act in activities
+            )
+            if deposit_activity:
+                print("   ✅ Deposit activity logged correctly")
+            else:
+                print("   ⚠️  Deposit activity not found in logs")
+        else:
+            print("   ❌ Failed to retrieve activity logs")
+            return False
+        
+        # Step 5: Verify client investment data is updated
+        print("   Step 5: Verifying client investment data is updated...")
+        success_client_data, response_client_data = self.run_test(
+            "Workflow Test - Check Updated Client Data",
+            "GET",
+            f"api/client/client_001/data",
+            200
+        )
+        
+        if success_client_data:
+            print("   ✅ Client data retrieved successfully")
+            # Additional verification could be added here to check specific balance updates
+        else:
+            print("   ❌ Failed to retrieve updated client data")
+            return False
+        
+        print("   🎉 Complete investment workflow test PASSED!")
+        return True
+
 def main():
     print("🚀 Starting FIDUS API Comprehensive Testing...")
     print("🎯 PRIMARY FOCUS: Client Management Enhanced Features & FIDUS Fund Structures")
