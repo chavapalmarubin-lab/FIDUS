@@ -429,6 +429,7 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "completed"
+  redemption_system_testing: "completed"
 
 agent_communication:
     - agent: "main"
