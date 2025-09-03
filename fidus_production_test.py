@@ -465,9 +465,10 @@ class FidusProductionTester:
                     print(f"   {milestone.get('milestone')}: {milestone.get('date')} ({milestone.get('status')})")
                     
             # Check interest calculations
-            if projections:
+            if projections and len(projections) > 0:
                 first_payment = projections[0]
-                print(f"   First payment: ${first_payment.get('amount', 0):.2f} on {first_payment.get('date')}")
+                amount = first_payment.get('amount', 0) or 0
+                print(f"   First payment: ${amount:.2f} on {first_payment.get('date', 'N/A')}")
                 
         return success
 
