@@ -431,6 +431,9 @@ user_accounts = {}  # Additional user data beyond MOCK_USERS
 redemption_requests = {}  # {redemption_id: RedemptionRequest}
 activity_logs = []  # List of ActivityLog entries
 
+# In-memory payment confirmation storage  
+payment_confirmations = {}  # {confirmation_id: PaymentConfirmation}
+
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
