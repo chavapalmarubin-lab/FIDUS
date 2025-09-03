@@ -314,13 +314,17 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
               Fund Portfolio
             </TabsTrigger>
             <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
               <TrendingUp size={16} className="mr-2" />
               Investments
+            </TabsTrigger>
+            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
+              <ArrowDownCircle size={16} className="mr-2" />
+              Redemptions
             </TabsTrigger>
             <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600">
               <TrendingUp size={16} className="mr-2" />
