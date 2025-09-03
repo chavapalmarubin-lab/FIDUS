@@ -870,6 +870,115 @@ const ClientManagement = () => {
         )}
       </AnimatePresence>
 
+      {/* Create New User Modal */}
+      <AnimatePresence>
+        {showCreateUserModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowCreateUserModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-white mb-4">Create New User Account</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Username *</Label>
+                  <Input
+                    value={newUserForm.username}
+                    onChange={(e) => setNewUserForm({...newUserForm, username: e.target.value})}
+                    placeholder="Enter unique username"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Full Name *</Label>
+                  <Input
+                    value={newUserForm.name}
+                    onChange={(e) => setNewUserForm({...newUserForm, name: e.target.value})}
+                    placeholder="Enter full name"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Email *</Label>
+                  <Input
+                    type="email"
+                    value={newUserForm.email}
+                    onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-slate-300">Phone</Label>
+                  <Input
+                    value={newUserForm.phone}
+                    onChange={(e) => setNewUserForm({...newUserForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-slate-300">Temporary Password *</Label>
+                  <Input
+                    type="password"
+                    value={newUserForm.temporary_password}
+                    onChange={(e) => setNewUserForm({...newUserForm, temporary_password: e.target.value})}
+                    placeholder="Enter temporary password"
+                    className="mt-1 bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-yellow-400 mt-1">
+                    User will be required to change this password on first login
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-slate-300">Notes</Label>
+                  <textarea
+                    value={newUserForm.notes}
+                    onChange={(e) => setNewUserForm({...newUserForm, notes: e.target.value})}
+                    placeholder="Additional notes about this user..."
+                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreateUserModal(false);
+                    resetNewUserForm();
+                  }}
+                  className="flex-1 border-slate-600 text-slate-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateUser}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  Create User
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Investment Readiness Modal */}
       <AnimatePresence>
         {showReadinessModal && selectedClient && (
