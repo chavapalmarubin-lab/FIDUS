@@ -362,6 +362,10 @@ client_readiness = {}
 user_temp_passwords = {}  # {user_id: {"temp_password": "...", "must_change": True}}
 user_accounts = {}  # Additional user data beyond MOCK_USERS
 
+# In-memory redemption system storage
+redemption_requests = {}  # {redemption_id: RedemptionRequest}
+activity_logs = []  # List of ActivityLog entries
+
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
