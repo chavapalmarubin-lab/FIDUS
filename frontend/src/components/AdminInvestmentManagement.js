@@ -799,24 +799,27 @@ const AdminInvestmentManagement = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreateInvestmentModal(false);
-                    resetInvestmentForm();
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateInvestment}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                >
-                  Create Investment
-                </Button>
+              
+              {/* Fixed Footer with buttons */}
+              <div className="p-6 border-t border-slate-600 bg-slate-800 rounded-b-lg">
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateInvestmentModal(false);
+                      resetInvestmentForm();
+                    }}
+                    className="flex-1 border-slate-600 text-slate-300"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateInvestment}
+                    className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                  >
+                    Create Investment
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
