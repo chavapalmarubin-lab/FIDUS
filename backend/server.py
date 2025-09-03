@@ -649,22 +649,17 @@ def can_request_redemption(investment: FundInvestment, fund_config: FundConfigur
         days_remaining = (investment.interest_start_date - now).days
         return False, f"Investment is in incubation period. Available for redemption in {days_remaining} days."
     
-    # Check if minimum hold period has passed
-    if now < investment.minimum_hold_end_date:
-        days_remaining = (investment.minimum_hold_end_date - now).days
-        return False, f"Minimum hold period not met. Available for redemption in {days_remaining} days."
+    # For investments past incubation, redemptions are available based on the redemption frequency
+    # No additional minimum hold period beyond incubation + 1 interest period
+    interest_periods_passed = (now.year - investment.interest_start_date.year) * 12 + \
+                             (now.month - investment.interest_start_date.month)
     
-    # Check if redemption date is available based on fund rules
-    next_redemption = get_next_redemption_date(investment, fund_config)
-    
-    if fund_config.redemption_frequency == "flexible":
-        return True, "Redemption available anytime"
-    
-    if now >= next_redemption:
-        return True, f"Redemption available now"
+    if interest_periods_passed >= 1:  # At least 1 interest payment made
+        return True, f"Redemption available - {interest_periods_passed} interest payments completed"
     else:
-        days_until = (next_redemption - now).days
-        return False, f"Next redemption date: {next_redemption.strftime('%B %d, %Y')} ({days_until} days remaining)"
+        next_interest_date = investment.interest_start_date + relativedelta(months=1)
+        days_until = (next_interest_date - now).days
+        return False, f"Available after first interest payment in {days_until} days"
 
 def create_activity_log(client_id: str, activity_type: str, amount: float, description: str, 
                        performed_by: str, investment_id: str = None, fund_code: str = None, 
