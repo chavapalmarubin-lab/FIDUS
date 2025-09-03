@@ -6081,7 +6081,7 @@ async def get_client_readiness(client_id: str):
             'client_id': client_id,
             'aml_kyc_completed': False,
             'agreement_signed': False,
-            'deposit_date': None,
+            'account_creation_date': None,
             'investment_ready': False,
             'notes': '',
             'updated_at': datetime.now(timezone.utc).isoformat(),
