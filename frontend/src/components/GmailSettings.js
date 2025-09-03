@@ -98,9 +98,28 @@ const GmailSettings = () => {
         const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
         
         if (authUrlResponse.data.success) {
-          // Redirect to Google OAuth - the backend will redirect back to our app
-          window.location.href = authUrlResponse.data.authorization_url;
-          // Don't set authenticating to false here - let the OAuth callback handle it
+          // Open OAuth in a new popup window to avoid "refused to connect" errors
+          const popup = window.open(
+            authUrlResponse.data.authorization_url,
+            'gmail_oauth',
+            'width=500,height=600,scrollbars=yes,resizable=yes'
+          );
+          
+          if (popup) {
+            // Monitor the popup for completion
+            const checkClosed = setInterval(() => {
+              if (popup.closed) {
+                clearInterval(checkClosed);
+                setAuthenticating(false);
+                // Check auth status after popup closes
+                setTimeout(() => checkAuthStatus(), 1000);
+              }
+            }, 1000);
+          } else {
+            // Popup blocked - fall back to same window redirect
+            console.warn('Popup blocked, falling back to same-window redirect');
+            window.location.href = authUrlResponse.data.authorization_url;
+          }
           
         } else {
           throw new Error("Failed to generate OAuth URL");
