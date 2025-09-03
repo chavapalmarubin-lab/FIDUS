@@ -582,16 +582,35 @@ def calculate_balances(transactions: List[dict]) -> dict:
 # Authentication endpoints
 @api_router.post("/auth/login", response_model=UserResponse)
 async def login(login_data: LoginRequest):
-    """Simple authentication - in production, use proper password hashing"""
+    """Authentication with temporary password support"""
     username = login_data.username
     password = login_data.password
     user_type = login_data.user_type
     
-    # Simple demo authentication
-    if username in MOCK_USERS and password == "password123":
-        user_data = MOCK_USERS[username]
-        if user_data["type"] == user_type:
-            return UserResponse(**user_data)
+    if username not in MOCK_USERS:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    user_data = MOCK_USERS[username]
+    
+    # Check if user type matches
+    if user_data["type"] != user_type:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check for temporary password first
+    user_id = user_data["id"]
+    if user_id in user_temp_passwords:
+        temp_info = user_temp_passwords[user_id]
+        if password == temp_info["temp_password"]:
+            # Temporary password login successful
+            user_response = UserResponse(**user_data)
+            # Add flag to indicate password change required
+            user_response_dict = user_response.dict()
+            user_response_dict["must_change_password"] = temp_info["must_change"]
+            return user_response_dict
+    
+    # Check regular password
+    if password == "password123":
+        return UserResponse(**user_data)
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
