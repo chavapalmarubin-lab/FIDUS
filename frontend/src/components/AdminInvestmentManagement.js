@@ -595,24 +595,47 @@ const AdminInvestmentManagement = () => {
               <h3 className="text-xl font-semibold text-white mb-4">Create Client Investment</h3>
               
               <div className="space-y-4">
+                {/* Debug information */}
+                <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
+                  Debug: Ready clients: {readyClients.length} | Selected: {investmentForm.client_id || 'None'}
+                </div>
+                
                 <div>
-                  <Label className="text-slate-300">Select Client *</Label>
-                  <Select value={investmentForm.client_id} onValueChange={(value) => setInvestmentForm({...investmentForm, client_id: value})}>
-                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white w-full min-h-[40px]">
+                  <Label htmlFor="client-select" className="text-slate-300 text-sm font-medium">Select Client *</Label>
+                  <Select 
+                    value={investmentForm.client_id} 
+                    onValueChange={(value) => {
+                      console.log('Client selected:', value);
+                      setInvestmentForm({...investmentForm, client_id: value});
+                    }}
+                  >
+                    <SelectTrigger 
+                      id="client-select"
+                      className="mt-1 bg-slate-700 border-slate-600 text-white w-full min-h-[42px] border-2"
+                    >
                       <SelectValue placeholder="Choose a client ready for investment" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 z-50">
-                      {readyClients.map(client => (
-                        <SelectItem key={client.client_id} value={client.client_id} className="text-white hover:bg-slate-600">
-                          <div>
-                            <div className="font-medium">{client.name}</div>
-                            <div className="text-sm text-slate-400">
-                              {client.email} • Investments: {client.total_investments}
-                              {client.deposit_date && ` • Deposit: ${format(new Date(client.deposit_date), 'MMM dd, yyyy')}`}
+                    <SelectContent className="bg-slate-700 border-slate-600 z-[100]">
+                      {readyClients.length > 0 ? (
+                        readyClients.map(client => (
+                          <SelectItem 
+                            key={client.client_id} 
+                            value={client.client_id} 
+                            className="text-white hover:bg-slate-600 cursor-pointer"
+                          >
+                            <div>
+                              <div className="font-medium">{client.name}</div>
+                              <div className="text-sm text-slate-400">
+                                {client.email} • Investments: {client.total_investments}
+                              </div>
                             </div>
-                          </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-clients" disabled className="text-slate-400">
+                          Loading clients...
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   {readyClients.length === 0 && (
