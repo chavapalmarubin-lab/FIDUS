@@ -5608,6 +5608,296 @@ async def get_admin_investments_overview():
         raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
 
 # ===============================================================================
+# REDEMPTION SYSTEM ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/redemptions/client/{client_id}")
+async def get_client_redemptions(client_id: str):
+    """Get all redemptions and available redemption options for a client"""
+    try:
+        # Get client investments
+        if client_id not in client_investments:
+            return {
+                "success": True,
+                "redemptions": [],
+                "available_redemptions": [],
+                "message": "No investments found for client"
+            }
+        
+        investments = client_investments[client_id]
+        available_redemptions = []
+        client_redemption_requests = []
+        
+        # Check each investment for redemption eligibility
+        for investment_data in investments:
+            investment = FundInvestment(**investment_data)
+            fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+            
+            can_redeem, message = can_request_redemption(investment, fund_config)
+            current_value = calculate_redemption_value(investment, fund_config)
+            next_redemption = get_next_redemption_date(investment, fund_config)
+            
+            redemption_info = {
+                "investment_id": investment.investment_id,
+                "fund_code": investment.fund_code,
+                "fund_name": fund_config.name,
+                "principal_amount": investment.principal_amount,
+                "current_value": round(current_value, 2),
+                "can_redeem": can_redeem,
+                "message": message,
+                "next_redemption_date": next_redemption.isoformat(),
+                "deposit_date": investment.deposit_date.isoformat(),
+                "redemption_frequency": fund_config.redemption_frequency
+            }
+            
+            available_redemptions.append(redemption_info)
+        
+        # Get client's redemption requests
+        for redemption_id, redemption in redemption_requests.items():
+            if redemption.client_id == client_id:
+                client_redemption_requests.append(redemption.dict())
+        
+        return {
+            "success": True,
+            "available_redemptions": available_redemptions,
+            "redemption_requests": client_redemption_requests
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client redemptions error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client redemptions")
+
+@api_router.post("/redemptions/request")
+async def create_redemption_request(redemption_data: RedemptionRequestCreate):
+    """Create a new redemption request"""
+    try:
+        # Find the investment
+        investment_found = None
+        client_id = None
+        
+        for cid, investments in client_investments.items():
+            for investment_data in investments:
+                if investment_data["investment_id"] == redemption_data.investment_id:
+                    investment_found = FundInvestment(**investment_data)
+                    client_id = cid
+                    break
+            if investment_found:
+                break
+        
+        if not investment_found:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        fund_config = FIDUS_FUND_CONFIG[investment_found.fund_code]
+        
+        # Check if redemption is allowed
+        can_redeem, message = can_request_redemption(investment_found, fund_config)
+        if not can_redeem:
+            raise HTTPException(status_code=400, detail=f"Redemption not allowed: {message}")
+        
+        # Validate requested amount
+        current_value = calculate_redemption_value(investment_found, fund_config)
+        if redemption_data.requested_amount > current_value:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Requested amount ${redemption_data.requested_amount:,.2f} exceeds current value ${current_value:,.2f}"
+            )
+        
+        # Calculate next available redemption date
+        next_available = get_next_redemption_date(investment_found, fund_config)
+        
+        # Create redemption request
+        redemption_request = RedemptionRequest(
+            client_id=client_id,
+            investment_id=redemption_data.investment_id,
+            fund_code=investment_found.fund_code,
+            fund_name=fund_config.name,
+            requested_amount=redemption_data.requested_amount,
+            current_value=current_value,
+            principal_amount=investment_found.principal_amount,
+            requested_redemption_date=next_available,
+            next_available_date=next_available,
+            reason=redemption_data.reason or ""
+        )
+        
+        # Store redemption request
+        redemption_requests[redemption_request.id] = redemption_request
+        
+        # Log the activity
+        create_activity_log(
+            client_id=client_id,
+            activity_type="redemption_request",
+            amount=redemption_data.requested_amount,
+            description=f"Redemption request submitted for {fund_config.name}",
+            performed_by=client_id,
+            investment_id=redemption_data.investment_id,
+            fund_code=investment_found.fund_code,
+            reference_id=redemption_request.id,
+            metadata={
+                "reason": redemption_data.reason,
+                "requested_redemption_date": next_available.isoformat()
+            }
+        )
+        
+        logging.info(f"Redemption request created: {redemption_request.id} for client {client_id}")
+        
+        return {
+            "success": True,
+            "redemption_request": redemption_request.dict(),
+            "message": f"Redemption request submitted for ${redemption_data.requested_amount:,.2f}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Create redemption request error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create redemption request")
+
+@api_router.get("/redemptions/admin/pending")
+async def get_pending_redemptions():
+    """Get all pending redemption requests for admin review"""
+    try:
+        pending_redemptions = []
+        
+        for redemption_id, redemption in redemption_requests.items():
+            if redemption.status == "pending":
+                # Get client info
+                client_info = None
+                for user_data in MOCK_USERS.values():
+                    if user_data["id"] == redemption.client_id:
+                        client_info = {
+                            "name": user_data["name"],
+                            "email": user_data["email"]
+                        }
+                        break
+                
+                redemption_data = redemption.dict()
+                redemption_data["client_info"] = client_info or {"name": "Unknown", "email": "Unknown"}
+                pending_redemptions.append(redemption_data)
+        
+        return {
+            "success": True,
+            "pending_redemptions": pending_redemptions,
+            "total_pending": len(pending_redemptions)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get pending redemptions error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch pending redemptions")
+
+@api_router.post("/redemptions/admin/approve")
+async def approve_redemption_request(approval_data: RedemptionApproval):
+    """Approve or reject a redemption request"""
+    try:
+        if approval_data.redemption_id not in redemption_requests:
+            raise HTTPException(status_code=404, detail="Redemption request not found")
+        
+        redemption = redemption_requests[approval_data.redemption_id]
+        
+        if redemption.status != "pending":
+            raise HTTPException(status_code=400, detail=f"Redemption request is already {redemption.status}")
+        
+        # Update redemption status
+        if approval_data.action == "approve":
+            redemption.status = "approved"
+            activity_type = "redemption_approved"
+            message = f"Redemption approved for ${redemption.requested_amount:,.2f}"
+        elif approval_data.action == "reject":
+            redemption.status = "rejected"
+            activity_type = "redemption_rejected"
+            message = f"Redemption rejected for ${redemption.requested_amount:,.2f}"
+        else:
+            raise HTTPException(status_code=400, detail="Action must be 'approve' or 'reject'")
+        
+        # Update redemption details
+        redemption.admin_notes = approval_data.admin_notes or ""
+        redemption.approved_by = approval_data.admin_id
+        redemption.approved_date = datetime.now(timezone.utc)
+        
+        # Log the activity
+        create_activity_log(
+            client_id=redemption.client_id,
+            activity_type=activity_type,
+            amount=redemption.requested_amount,
+            description=f"Redemption {approval_data.action} by admin for {redemption.fund_name}",
+            performed_by=approval_data.admin_id,
+            investment_id=redemption.investment_id,
+            fund_code=redemption.fund_code,
+            reference_id=redemption.id,
+            metadata={
+                "admin_notes": approval_data.admin_notes,
+                "action": approval_data.action
+            }
+        )
+        
+        logging.info(f"Redemption {approval_data.action}: {redemption.id} by admin {approval_data.admin_id}")
+        
+        return {
+            "success": True,
+            "redemption_request": redemption.dict(),
+            "message": message
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Approve redemption error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process redemption approval")
+
+@api_router.get("/activity-logs/client/{client_id}")
+async def get_client_activity_logs(client_id: str):
+    """Get all activity logs for a specific client"""
+    try:
+        client_logs = [log.dict() for log in activity_logs if log.client_id == client_id]
+        
+        # Sort by timestamp (most recent first)
+        client_logs.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        return {
+            "success": True,
+            "activity_logs": client_logs,
+            "total_activities": len(client_logs)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client activity logs error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client activity logs")
+
+@api_router.get("/activity-logs/admin/all")
+async def get_all_activity_logs():
+    """Get all activity logs for admin review"""
+    try:
+        all_logs = []
+        
+        for log in activity_logs:
+            log_data = log.dict()
+            
+            # Add client info
+            client_info = None
+            for user_data in MOCK_USERS.values():
+                if user_data["id"] == log.client_id:
+                    client_info = {
+                        "name": user_data["name"],
+                        "email": user_data["email"]
+                    }
+                    break
+            
+            log_data["client_info"] = client_info or {"name": "Unknown", "email": "Unknown"}
+            all_logs.append(log_data)
+        
+        # Sort by timestamp (most recent first)
+        all_logs.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        return {
+            "success": True,
+            "activity_logs": all_logs,
+            "total_activities": len(all_logs)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all activity logs error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch activity logs")
+
+# ===============================================================================
 # CLIENT MANAGEMENT WITH INVESTMENT READINESS ENDPOINTS
 # ===============================================================================
 
