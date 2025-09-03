@@ -382,12 +382,13 @@ class FidusProductionTester:
         if success:
             self.created_investment_id = response.get('investment_id')
             print(f"   ✅ Investment created: {self.created_investment_id}")
-            print(f"   Fund: {response.get('fund_code')}")
-            print(f"   Amount: ${response.get('principal_amount'):,.2f}")
-            print(f"   Deposit Date: {response.get('deposit_date')}")
-            print(f"   Incubation End: {response.get('incubation_end_date')}")
-            print(f"   Interest Start: {response.get('interest_start_date')}")
-            print(f"   Min Hold End: {response.get('minimum_hold_end_date')}")
+            print(f"   Fund: {response.get('fund_code', 'N/A')}")
+            amount = response.get('principal_amount', 0)
+            print(f"   Amount: ${amount:,.2f}" if amount else "   Amount: N/A")
+            print(f"   Deposit Date: {response.get('deposit_date', 'N/A')}")
+            print(f"   Incubation End: {response.get('incubation_end_date', 'N/A')}")
+            print(f"   Interest Start: {response.get('interest_start_date', 'N/A')}")
+            print(f"   Min Hold End: {response.get('minimum_hold_end_date', 'N/A')}")
             
         return success
 
