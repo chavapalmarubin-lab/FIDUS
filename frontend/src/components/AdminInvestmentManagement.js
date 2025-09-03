@@ -582,24 +582,29 @@ const AdminInvestmentManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={() => setShowCreateInvestmentModal(false)}
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              className="bg-slate-800 rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-semibold text-white mb-4">Create Client Investment</h3>
+              {/* Fixed Header */}
+              <div className="p-6 border-b border-slate-600">
+                <h3 className="text-xl font-semibold text-white">Create Client Investment</h3>
+              </div>
               
-              <div className="space-y-4">
-                {/* Debug information */}
-                <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
-                  Debug: Ready clients: {readyClients.length} | Selected: {investmentForm.client_id || 'None'}
-                  <br />API Status: {readyClients.length > 0 ? 'Loaded successfully' : 'Loading or no data'}
-                </div>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-4">
+                  {/* Debug information */}
+                  <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
+                    Debug: Ready clients: {readyClients.length} | Selected: {investmentForm.client_id || 'None'}
+                    <br />API Status: {readyClients.length > 0 ? 'Loaded successfully' : 'Loading or no data'}
+                  </div>
                 
                 <div>
                   <Label htmlFor="client-select" className="text-slate-300 text-sm font-medium mb-2 block">Select Client *</Label>
