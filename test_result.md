@@ -441,15 +441,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Client Management Investment Readiness Changes"
-    - "Client Balances Reset"
-    - "Investment Tab Date of Deposit Separation"
+    - "Client Dropdown Fix in Investment Creation"
   stuck_tasks: []
   test_all: false
-  test_priority: "completed"
+  test_priority: "high_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
+  client_dropdown_testing: "completed"
 
 agent_communication:
     - agent: "main"
