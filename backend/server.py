@@ -4393,14 +4393,14 @@ FIDUS_FUNDS = {
         minimum_investment=100000.00,
         management_fee=1.75,
         performance_fee=20.00,
-        total_investors=189
+        total_investors=0  # Reset to zero as requested
     ),
     "UNLIMITED": FundModel(
         id="fund_unlimited",
         name="UNLIMITED",
         fund_type="Alternative Strategies",
-        aum=245000000.00,
-        nav=267800000.00,
+        aum=0.00,  # Reset to zero as requested
+        nav=0.00,  # Reset to zero as requested
         nav_per_share=109.31,
         inception_date=datetime(2021, 1, 1, tzinfo=timezone.utc),
         performance_ytd=25.6,
