@@ -162,7 +162,15 @@ const AdminInvestmentManagement = () => {
       client_id: "",
       fund_code: "",
       amount: "",
-      deposit_date: ""
+      deposit_date: "",
+      // Payment confirmation fields
+      payment_method: "fiat",
+      wire_confirmation_number: "",
+      bank_reference: "",
+      transaction_hash: "",
+      blockchain_network: "",
+      wallet_address: "",
+      payment_notes: ""
     });
   };
 
