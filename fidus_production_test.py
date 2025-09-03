@@ -629,11 +629,12 @@ class FidusProductionTester:
         )
         
         if success:
-            projections = response.get('projections', [])
+            projections_data = response.get('projections', {})
+            projected_payments = projections_data.get('projected_payments', [])
             
-            if projections and len(projections) > 0:
+            if projected_payments and len(projected_payments) > 0:
                 # Check that interest starts after incubation period
-                first_payment = projections[0]
+                first_payment = projected_payments[0]
                 payment_date = first_payment.get('date', '')
                 amount = first_payment.get('amount', 0) or 0
                 
