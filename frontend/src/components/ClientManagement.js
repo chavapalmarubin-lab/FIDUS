@@ -1115,6 +1115,21 @@ const ClientManagement = () => {
                     className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
                   />
                 </div>
+
+                {/* Document Upload Section */}
+                <div className="pt-4 border-t border-slate-600">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowReadinessModal(false);
+                      openDocumentModal(selectedClient);
+                    }}
+                    className="w-full border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Client Document
+                  </Button>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
