@@ -5927,6 +5927,178 @@ async def approve_redemption_request(approval_data: RedemptionApproval):
         logging.error(f"Approve redemption error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process redemption approval")
 
+# Payment Confirmation Endpoints
+@api_router.post("/payments/deposit/confirm")
+async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest, admin_id: str = "admin_001"):
+    """Confirm that a deposit payment has been received"""
+    try:
+        # Check if investment exists
+        if confirmation_data.investment_id not in client_investments:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        investment = client_investments[confirmation_data.investment_id]
+        
+        # Create payment confirmation record
+        confirmation = PaymentConfirmation(
+            transaction_type="deposit",
+            payment_method=confirmation_data.payment_method,
+            amount=confirmation_data.amount,
+            currency=confirmation_data.currency,
+            investment_id=confirmation_data.investment_id,
+            client_id=investment.client_id,
+            wire_confirmation_number=confirmation_data.wire_confirmation_number,
+            bank_reference=confirmation_data.bank_reference,
+            transaction_hash=confirmation_data.transaction_hash,
+            blockchain_network=confirmation_data.blockchain_network,
+            wallet_address=confirmation_data.wallet_address,
+            confirmed_by=admin_id,
+            notes=confirmation_data.notes,
+            status="confirmed"
+        )
+        
+        # Store confirmation
+        payment_confirmations[confirmation.id] = confirmation
+        
+        # Log the activity
+        create_activity_log(
+            client_id=investment.client_id,
+            activity_type="deposit_confirmed",
+            amount=confirmation_data.amount,
+            description=f"Deposit confirmed via {confirmation_data.payment_method.upper()} for investment {confirmation_data.investment_id}",
+            performed_by=admin_id,
+            investment_id=confirmation_data.investment_id,
+            fund_code=investment.fund_code,
+            reference_id=confirmation.id,
+            metadata={
+                "payment_method": confirmation_data.payment_method,
+                "confirmation_details": confirmation_data.dict()
+            }
+        )
+        
+        logging.info(f"Deposit payment confirmed: {confirmation.id} for investment {confirmation_data.investment_id}")
+        
+        return {
+            "success": True,
+            "confirmation_id": confirmation.id,
+            "confirmation": confirmation.dict(),
+            "message": f"Deposit payment confirmed via {confirmation_data.payment_method.upper()}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Confirm deposit payment error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to confirm deposit payment")
+
+@api_router.post("/payments/redemption/confirm")
+async def confirm_redemption_payment(confirmation_data: RedemptionPaymentConfirmation, admin_id: str = "admin_001"):
+    """Confirm that a redemption payment has been sent"""
+    try:
+        # Check if redemption exists
+        if confirmation_data.redemption_id not in redemption_requests:
+            raise HTTPException(status_code=404, detail="Redemption request not found")
+        
+        redemption = redemption_requests[confirmation_data.redemption_id]
+        
+        # Create payment confirmation record
+        confirmation = PaymentConfirmation(
+            transaction_type="redemption",
+            payment_method=confirmation_data.payment_method,
+            amount=confirmation_data.amount,
+            currency=confirmation_data.currency,
+            redemption_id=confirmation_data.redemption_id,
+            client_id=redemption.client_id,
+            wire_confirmation_number=confirmation_data.wire_confirmation_number,
+            bank_reference=confirmation_data.bank_reference,
+            transaction_hash=confirmation_data.transaction_hash,
+            blockchain_network=confirmation_data.blockchain_network,
+            wallet_address=confirmation_data.wallet_address,
+            confirmed_by=admin_id,
+            notes=confirmation_data.notes,
+            status="confirmed"
+        )
+        
+        # Store confirmation
+        payment_confirmations[confirmation.id] = confirmation
+        
+        # Update redemption status to completed
+        redemption.status = "completed"
+        redemption.completed_date = datetime.now(timezone.utc)
+        
+        # Log the activity
+        create_activity_log(
+            client_id=redemption.client_id,
+            activity_type="redemption_payment_sent",
+            amount=confirmation_data.amount,
+            description=f"Redemption payment sent via {confirmation_data.payment_method.upper()} for redemption {confirmation_data.redemption_id}",
+            performed_by=admin_id,
+            investment_id=redemption.investment_id,
+            fund_code=redemption.fund_code,
+            reference_id=confirmation.id,
+            metadata={
+                "payment_method": confirmation_data.payment_method,
+                "confirmation_details": confirmation_data.dict()
+            }
+        )
+        
+        logging.info(f"Redemption payment confirmed: {confirmation.id} for redemption {confirmation_data.redemption_id}")
+        
+        return {
+            "success": True,
+            "confirmation_id": confirmation.id,
+            "confirmation": confirmation.dict(),
+            "redemption": redemption.dict(),
+            "message": f"Redemption payment confirmed via {confirmation_data.payment_method.upper()}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Confirm redemption payment error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to confirm redemption payment")
+
+@api_router.get("/payments/confirmations/{transaction_type}")
+async def get_payment_confirmations(transaction_type: str):
+    """Get all payment confirmations by transaction type (deposit/redemption)"""
+    try:
+        confirmations = [
+            conf.dict() for conf in payment_confirmations.values() 
+            if conf.transaction_type == transaction_type
+        ]
+        
+        # Sort by confirmation date (most recent first)
+        confirmations.sort(key=lambda x: x["confirmation_date"], reverse=True)
+        
+        return {
+            "success": True,
+            "confirmations": confirmations,
+            "total_confirmations": len(confirmations),
+            "transaction_type": transaction_type
+        }
+        
+    except Exception as e:
+        logging.error(f"Get payment confirmations error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch payment confirmations")
+
+@api_router.get("/payments/confirmations")
+async def get_all_payment_confirmations():
+    """Get all payment confirmations"""
+    try:
+        confirmations = [conf.dict() for conf in payment_confirmations.values()]
+        
+        # Sort by confirmation date (most recent first)
+        confirmations.sort(key=lambda x: x["confirmation_date"], reverse=True)
+        
+        return {
+            "success": True,
+            "confirmations": confirmations,
+            "total_confirmations": len(confirmations)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all payment confirmations error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch payment confirmations")
+
 @api_router.get("/activity-logs/client/{client_id}")
 async def get_client_activity_logs(client_id: str):
     """Get all activity logs for a specific client"""
