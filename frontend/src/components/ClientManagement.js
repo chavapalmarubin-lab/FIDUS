@@ -403,11 +403,10 @@ const ClientManagement = () => {
       setDocumentUploadLoading(true);
       
       const formData = new FormData();
-      formData.append('file', documentFile);
-      formData.append('client_id', selectedDocumentClient.id);
+      formData.append('document', documentFile);  // Changed from 'file' to 'document'
       formData.append('category', documentCategory);
-      formData.append('uploaded_by', 'admin');
-      formData.append('description', `Client document for ${selectedDocumentClient.name}`);
+      formData.append('uploader_id', 'admin_001');  // Changed from 'uploaded_by' to 'uploader_id'
+      // Removed client_id and description as they're not expected by the backend
 
       const response = await axios.post(`${API}/documents/upload`, formData, {
         headers: {
@@ -421,6 +420,8 @@ const ClientManagement = () => {
         setSelectedDocumentClient(null);
         setDocumentFile(null);
         setDocumentCategory("");
+      } else {
+        setError("Document upload failed");
       }
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to upload document");
