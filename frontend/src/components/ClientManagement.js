@@ -482,6 +482,14 @@ const ClientManagement = () => {
                 Add Client
               </Button>
               <Button 
+                onClick={() => setShowCreateUserModal(true)}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create New User
+              </Button>
+              <Button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadLoading}
                 variant="outline"
