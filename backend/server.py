@@ -5957,7 +5957,7 @@ async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest,
             amount=confirmation_data.amount,
             currency=confirmation_data.currency,
             investment_id=confirmation_data.investment_id,
-            client_id=investment.client_id,
+            client_id=investment_client_id,  # Use the found client_id
             wire_confirmation_number=confirmation_data.wire_confirmation_number,
             bank_reference=confirmation_data.bank_reference,
             transaction_hash=confirmation_data.transaction_hash,
