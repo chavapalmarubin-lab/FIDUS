@@ -453,20 +453,21 @@ class FidusProductionTester:
         )
         
         if success:
-            projections = response.get('projections', [])
+            projections_data = response.get('projections', {})
             timeline = response.get('timeline', [])
+            projected_payments = projections_data.get('projected_payments', [])
             
-            print(f"   ✅ Projections generated: {len(projections)} months")
+            print(f"   ✅ Projections generated: {len(projected_payments)} months")
             print(f"   Timeline milestones: {len(timeline)}")
             
             # Verify 2-month incubation period
             if timeline:
                 for milestone in timeline:
-                    print(f"   {milestone.get('milestone')}: {milestone.get('date')} ({milestone.get('status')})")
+                    print(f"   {milestone.get('event')}: {milestone.get('date')} ({milestone.get('status')})")
                     
             # Check interest calculations
-            if projections and len(projections) > 0:
-                first_payment = projections[0]
+            if projected_payments and len(projected_payments) > 0:
+                first_payment = projected_payments[0]
                 amount = first_payment.get('amount', 0) or 0
                 print(f"   First payment: ${amount:.2f} on {first_payment.get('date', 'N/A')}")
                 
