@@ -346,6 +346,37 @@ const ClientManagement = () => {
     });
   };
 
+  const resetNewUserForm = () => {
+    setNewUserForm({
+      username: "",
+      name: "",
+      email: "",
+      phone: "",
+      temporary_password: "",
+      notes: ""
+    });
+  };
+
+  const handleCreateUser = async () => {
+    try {
+      if (!newUserForm.username || !newUserForm.name || !newUserForm.email || !newUserForm.temporary_password) {
+        setError("Please fill in all required fields");
+        return;
+      }
+
+      const response = await axios.post(`${API}/admin/users/create`, newUserForm);
+      
+      if (response.data.success) {
+        setSuccess(`User created successfully: ${response.data.message}`);
+        setShowCreateUserModal(false);
+        resetNewUserForm();
+        fetchClients();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to create user");
+    }
+  };
+
   const openReadinessModal = (client) => {
     setSelectedClient(client);
     const readiness = client.readiness_status || {};
