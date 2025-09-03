@@ -471,13 +471,18 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Client Dropdown Fix in Investment Creation"
+    - "Modal UX Fix for Investment Creation Window"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
+  modal_ux_testing: "completed"
+
+agent_communication:
+    - agent: "testing"
+    - message: "✅ MODAL UX FIX TESTING COMPLETED SUCCESSFULLY! The investment creation modal UX improvements have been thoroughly tested and verified. All critical issues have been resolved: (1) Modal is now properly sized with max-w-2xl width (672px) providing better usability, (2) Modal respects 90vh height limit and includes scrolling capability, (3) Client dropdown is positioned at the top and fully accessible, (4) All form fields are reachable and functional, (5) JSX compilation error has been fixed. The modal now provides an excellent user experience for investment creation workflow. Ready for production use."
   client_dropdown_testing: "completed"
 
 agent_communication:
