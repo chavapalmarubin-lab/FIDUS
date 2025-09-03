@@ -603,15 +603,15 @@ async def login(login_data: LoginRequest):
         temp_info = user_temp_passwords[user_id]
         if password == temp_info["temp_password"]:
             # Temporary password login successful
-            user_response = UserResponse(**user_data)
-            # Add flag to indicate password change required
-            user_response_dict = user_response.dict()
+            user_response_dict = user_data.copy()
             user_response_dict["must_change_password"] = temp_info["must_change"]
-            return user_response_dict
+            return UserResponse(**user_response_dict)
     
     # Check regular password
     if password == "password123":
-        return UserResponse(**user_data)
+        user_response_dict = user_data.copy()
+        user_response_dict["must_change_password"] = False
+        return UserResponse(**user_response_dict)
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
