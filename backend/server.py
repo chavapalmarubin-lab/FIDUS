@@ -5371,6 +5371,22 @@ async def create_client_investment(investment_data: InvestmentCreate):
             client_investments[investment_data.client_id] = []
         client_investments[investment_data.client_id].append(investment.dict())
         
+        # Log the deposit activity
+        create_activity_log(
+            client_id=investment_data.client_id,
+            activity_type="deposit",
+            amount=investment_data.amount,
+            description=f"Investment deposit in {fund_config.name}",
+            performed_by="admin",  # Created by admin
+            investment_id=investment.investment_id,
+            fund_code=investment_data.fund_code,
+            reference_id=investment.investment_id,
+            metadata={
+                "deposit_date": investment_data.deposit_date or datetime.now(timezone.utc).isoformat(),
+                "fund_name": fund_config.name
+            }
+        )
+        
         logging.info(f"Investment created: {investment.investment_id} for client {investment_data.client_id}")
         
         return {
