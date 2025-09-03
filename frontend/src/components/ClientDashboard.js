@@ -408,6 +408,10 @@ const ClientDashboard = ({ user, onLogout }) => {
             <InvestmentDashboard user={user} userType="client" />
           </TabsContent>
 
+          <TabsContent value="redemptions" className="mt-6">
+            <RedemptionManagement user={user} />
+          </TabsContent>
+
           <TabsContent value="documents" className="mt-6">
             <DocumentPortal user={user} userType="client" />
           </TabsContent>
