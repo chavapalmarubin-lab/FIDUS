@@ -2353,6 +2353,69 @@ async def import_clients_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
+@api_router.post("/admin/users/create")
+async def create_new_user(user_data: UserCreate):
+    """Create a new user account with temporary password"""
+    try:
+        # Check if username already exists
+        for existing_user in MOCK_USERS.values():
+            if existing_user["username"] == user_data.username:
+                raise HTTPException(status_code=400, detail="Username already exists")
+        
+        # Generate unique user ID
+        user_id = f"client_{str(uuid.uuid4())[:8]}"  
+        
+        # Create user entry
+        new_user = {
+            "id": user_id,
+            "username": user_data.username,
+            "name": user_data.name,
+            "email": user_data.email,
+            "type": "client",
+            "status": "active",
+            "phone": user_data.phone,
+            "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "notes": user_data.notes
+        }
+        
+        # Add to MOCK_USERS with username as key
+        MOCK_USERS[user_data.username] = new_user
+        
+        # Store temporary password info
+        user_temp_passwords[user_id] = {
+            "temp_password": user_data.temporary_password,
+            "must_change": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Initialize client readiness (not ready initially)
+        client_readiness[user_id] = {
+            "client_id": user_id,
+            "aml_kyc_completed": False,
+            "agreement_signed": False,
+            "deposit_date": None,
+            "investment_ready": False,
+            "notes": f"Created by admin - {user_data.notes}",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": "admin"
+        }
+        
+        logging.info(f"New user created: {user_data.username} (ID: {user_id})")
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "username": user_data.username,
+            "message": f"User '{user_data.name}' created successfully. Temporary password set."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"User creation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+
 @api_router.get("/admin/clients/detailed")
 async def get_detailed_clients():
     """Get detailed client information for admin management"""
