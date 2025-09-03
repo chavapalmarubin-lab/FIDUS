@@ -259,6 +259,15 @@ const LoginSelection = ({ onLogin }) => {
           </CardContent>
         </Card>
       </motion.div>
+      
+      {/* Password Change Modal */}
+      {showPasswordChange && userRequiringPasswordChange && (
+        <PasswordChangeModal
+          user={userRequiringPasswordChange}
+          onPasswordChanged={handlePasswordChanged}
+          onClose={() => setShowPasswordChange(false)}
+        />
+      )}
     </div>
   );
 };
