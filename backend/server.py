@@ -312,6 +312,10 @@ client_investments = {}
 # In-memory client investment readiness tracking (in production, use proper database)
 client_readiness = {}
 
+# In-memory user management for temporary passwords and first-time logins
+user_temp_passwords = {}  # {user_id: {"temp_password": "...", "must_change": True}}
+user_accounts = {}  # Additional user data beyond MOCK_USERS
+
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
