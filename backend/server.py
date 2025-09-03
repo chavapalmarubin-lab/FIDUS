@@ -66,6 +66,14 @@ class UserResponse(BaseModel):
     type: str
     profile_picture: str
 
+class UserCreate(BaseModel):
+    username: str
+    name: str
+    email: str
+    phone: Optional[str] = None
+    temporary_password: str
+    notes: Optional[str] = None
+
 class TransactionCreate(BaseModel):
     description: str
     amount: float
