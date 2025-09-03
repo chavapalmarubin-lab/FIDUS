@@ -5266,7 +5266,7 @@ Document Content:
             success_fiat, response_fiat = self.run_test(
                 f"FIAT Payment Confirmation - {client_name}",
                 "POST",
-                "api/payments/deposit/confirm",
+                "api/payments/deposit/confirm?admin_id=admin_001",
                 200,
                 data={
                     "investment_id": investment_id,
