@@ -387,10 +387,12 @@ const ClientManagement = () => {
   const openReadinessModal = (client) => {
     setSelectedClient(client);
     const readiness = client.readiness_status || {};
+    // Default account creation date to today if not set
+    const defaultCreationDate = new Date().toISOString().split('T')[0];
     setReadinessForm({
       aml_kyc_completed: readiness.aml_kyc_completed || false,
       agreement_signed: readiness.agreement_signed || false,
-      deposit_date: readiness.deposit_date ? readiness.deposit_date.split('T')[0] : "",
+      account_creation_date: readiness.account_creation_date ? readiness.account_creation_date.split('T')[0] : defaultCreationDate,
       notes: readiness.notes || "",
       updated_by: "admin"
     });
