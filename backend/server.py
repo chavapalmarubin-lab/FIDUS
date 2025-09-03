@@ -380,7 +380,7 @@ FIDUS_FUND_CONFIG = {
         redemption_frequency="monthly",  # Monthly redemptions
         invitation_only=False,
         incubation_months=2,
-        minimum_hold_months=14
+        minimum_hold_months=3  # Fixed: 3 months total (2 incubation + 1 interest) - allows redemption after interest starts
     ),
     "BALANCE": FundConfiguration(
         fund_code="BALANCE", 
