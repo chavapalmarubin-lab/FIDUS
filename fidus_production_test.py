@@ -430,7 +430,9 @@ class FidusProductionTester:
                     
                 # Check investment structure
                 for i, investment in enumerate(investments):
-                    print(f"   Investment {i+1}: {investment.get('fund_code')} - ${investment.get('principal_amount'):,.2f}")
+                    fund_code = investment.get('fund_code', 'N/A')
+                    principal = investment.get('principal_amount', 0) or 0
+                    print(f"   Investment {i+1}: {fund_code} - ${principal:,.2f}")
                     
             else:
                 all_success = False
