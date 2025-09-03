@@ -614,6 +614,47 @@ async def login(login_data: LoginRequest):
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+@api_router.post("/auth/change-password")
+async def change_password(change_request: dict):
+    """Change user password from temporary to permanent"""
+    try:
+        username = change_request.get("username")
+        current_password = change_request.get("current_password") 
+        new_password = change_request.get("new_password")
+        
+        if not username or not current_password or not new_password:
+            raise HTTPException(status_code=400, detail="All fields are required")
+        
+        if username not in MOCK_USERS:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_data = MOCK_USERS[username]
+        user_id = user_data["id"]
+        
+        # Verify current password (temporary)
+        if user_id in user_temp_passwords:
+            temp_info = user_temp_passwords[user_id]
+            if current_password == temp_info["temp_password"]:
+                # Remove temporary password and allow regular login
+                del user_temp_passwords[user_id]
+                
+                # In a real system, you would hash and store the new password
+                # For this demo, we'll just remove the temp password requirement
+                logging.info(f"Password changed for user: {username}")
+                
+                return {
+                    "success": True,
+                    "message": "Password changed successfully"
+                }
+        
+        raise HTTPException(status_code=401, detail="Invalid current password")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Password change error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to change password")
+
 # Client endpoints
 @api_router.get("/client/{client_id}/data", response_model=ClientData)
 async def get_client_data(client_id: str):
