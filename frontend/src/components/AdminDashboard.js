@@ -316,25 +316,31 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-8 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
               Fund Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600">
+              <DollarSign size={16} className="mr-2" />
+              Cash Flow
             </TabsTrigger>
             <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
+            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600">
+              <Users size={16} className="mr-2" />
+              Clients
+            </TabsTrigger>
+            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600">
+              CRM Dashboard
+            </TabsTrigger>
             <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600">
-              <TrendingUp size={16} className="mr-2" />
-              CRM & Trading
-            </TabsTrigger>
-            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600">
-              <Users size={16} className="mr-2" />
-              Client Management
+            <TabsTrigger value="gmail" className="text-white data-[state=active]:bg-cyan-600">
+              Gmail Settings
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
               <FileText size={16} className="mr-2" />
