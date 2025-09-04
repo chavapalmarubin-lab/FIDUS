@@ -213,7 +213,7 @@ const RedemptionManagement = ({ user }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {availableRedemptions.map((investment, index) => (
+              {(availableRedemptions || []).map((investment, index) => (
                 <motion.div
                   key={investment.investment_id}
                   initial={{ opacity: 0, y: 20 }}
