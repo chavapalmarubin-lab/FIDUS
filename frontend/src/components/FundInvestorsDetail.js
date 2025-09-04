@@ -264,7 +264,7 @@ const FundInvestorsDetail = ({ fundId, fundName, onBack }) => {
                 </tr>
               </thead>
               <tbody>
-                {investorsData.investors.map((investor, index) => (
+                {(investorsData?.investors || []).map((investor, index) => (
                   <tr key={investor.client_id} className="border-b border-slate-700 hover:bg-slate-700/50">
                     <td className="py-3 px-4">
                       <div>
