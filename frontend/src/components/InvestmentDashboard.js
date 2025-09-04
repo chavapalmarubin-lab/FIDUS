@@ -687,7 +687,7 @@ const InvestmentDashboard = ({ user, userType }) => {
                       <SelectValue placeholder="Choose a fund" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      {fundConfigs.map(fund => (
+                      {(fundConfigs || []).map(fund => (
                         <SelectItem key={fund.fund_code} value={fund.fund_code} className="text-white">
                           <div>
                             <div className="font-medium">{fund.name}</div>
