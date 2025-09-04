@@ -311,7 +311,7 @@ const FundPortfolioManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Active Funds</p>
                 <p className="text-2xl font-bold text-white">
-                  {Object.keys(fundData).length}
+                  {Object.keys(fundData || {}).length}
                 </p>
               </div>
             </div>
