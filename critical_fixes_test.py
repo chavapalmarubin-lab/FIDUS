@@ -270,19 +270,10 @@ class FidusCriticalFixesTester:
         # Create a new client registration
         unique_id = str(uuid.uuid4())[:8]
         registration_data = {
-            "personalInfo": {
-                "firstName": f"TestClient{unique_id}",
-                "lastName": "AutoRegistration",
-                "email": f"test.client.{unique_id}@fidus-test.com",
-                "phone": f"+1-555-{unique_id[:4]}",
-                "dateOfBirth": "1985-03-15",
-                "nationality": "US",
-                "address": "123 Test Registration Street",
-                "city": "Test City",
-                "postalCode": "12345",
-                "country": "United States"
-            },
-            "documentType": "passport"
+            "name": f"TestClient{unique_id} AutoRegistration",
+            "email": f"test.client.{unique_id}@fidus-test.com",
+            "phone": f"+1-555-{unique_id[:4]}",
+            "password": "TestPassword123!"
         }
         
         success, registration_response = self.run_test(
