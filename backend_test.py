@@ -7236,10 +7236,15 @@ def main():
 if __name__ == "__main__":
     tester = FidusAPITester()
     
-    if len(sys.argv) > 1 and sys.argv[1] == "investment":
+    if len(sys.argv) > 1 and sys.argv[1] == "stress":
+        # Run comprehensive stress test for user-reported issues
+        print("🚀 Running COMPREHENSIVE STRESS TEST for user-reported issues...")
+        tester.run_comprehensive_stress_test()
+    elif len(sys.argv) > 1 and sys.argv[1] == "investment":
         # Run only Investment & Payment Confirmation tests as requested in review
         print("🚀 Running Investment Creation & Payment Confirmation Tests Only...")
         tester.run_investment_payment_tests()
     else:
-        # Run production readiness tests as requested
-        tester.run_production_readiness_tests()
+        # Run comprehensive stress test by default (for user-reported issues)
+        print("🚀 Running COMPREHENSIVE STRESS TEST - FULL APPLICATION AUDIT...")
+        tester.run_comprehensive_stress_test()
