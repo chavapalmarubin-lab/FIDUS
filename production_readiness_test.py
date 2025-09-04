@@ -393,7 +393,7 @@ class ProductionReadinessTester:
         endpoints_to_check = [
             ("GET", "api/clients/all", 200),
             ("GET", "api/crm/funds", 200),
-            ("GET", "api/mt5/admin/overview", 200),
+            ("GET", "api/crm/mt5/admin/overview", 200),
             ("GET", "api/crm/prospects", 200),
             ("GET", "api/admin/clients", 200)
         ]
