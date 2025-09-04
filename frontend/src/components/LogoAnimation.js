@@ -94,6 +94,7 @@ const LogoAnimation = ({ onComplete }) => {
 
       {/* Pie Chart */}
       <motion.div
+        key="pie-chart"
         className="financial-element"
         style={{ bottom: "25%", left: "20%" }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
