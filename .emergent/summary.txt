@@ -1,98 +1,92 @@
 <analysis>
-The AI engineer has significantly evolved the FIDUS financial portal, initially focused on a document portal and basic CRM. Key developments include robust investment management with fund-specific logic (incubation, interest, redemptions), and a comprehensive user lifecycle system (creation, temporary passwords, forced changes). Persistent Gmail OAuth authentication issues (403, refused to connect) were repeatedly encountered, requiring extensive debugging of scopes, redirect URIs, and OAuth flow mechanisms, eventually resolved by direct redirects and precise Google Cloud Console instructions for the user. Major UX improvements were made to client management, making client rows clickable for investment readiness. Data persistence remains an implicit challenge, as investments are currently in-memory, requiring manual re-creation post-backend restarts. The trajectory concludes with the backend of a new, comprehensive redemption system largely implemented and tested, but frontend integration and full end-to-end validation, along with a critical frontend login bug, are pending.
+The AI engineer successfully progressed the FIDUS application from its initial state by systematically addressing user requirements and emergent bugs. Key achievements include resolving persistent frontend login issues stemming from React key duplication and modal rendering problems, implementing a comprehensive client investment readiness process with document upload, and building a robust redemption system with fund-specific rules. The engineer then meticulously refined fund calculations, redemption logic (distinguishing interest vs. principal), and integrated a client-facing investment calendar. Finally, a complete fund portfolio and cash flow management system for admins, including rebate tracking and FIDUS profitability logic, was integrated. Throughout, the engineer demonstrated strong debugging skills, particularly in rectifying backend data inconsistencies and frontend UI glitches, ensuring adherence to complex financial business rules. The trajectory concludes with a request for a comprehensive production readiness test.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal aims to be a full-stack platform with an animated logo, dual Client/Admin login, and respective dashboards. Key features include user registration with AML/KYC, client management, password reset, and a comprehensive CRM. The CRM features client onboarding with digital KYC/AML, investor allocation across CORE, BALANCE, DYNAMIC, UNLIMITED funds, automated capital flows, real-time AUM/NAV/performance dashboards, and role-based portals. Secure document storage with Gmail API integration for sending emails is crucial. Compliance reminders, MT4/MT5 API monitoring, multi-currency support, communication tools, exportable reports, encryption, audit trails, and accounting/n8n integrations are also required. Recent explicit implementations include:
-*   Robust Gmail API integration (after fixing multiple auth/redirect issues).
-*   Camera capture for AML/KYC in Document Portal and User Registration.
-*   Admin CRM enhancement: prospect management with pipeline and conversion to client.
-*   FIDUS funds investment logic: 2-month incubation, varying monthly interest rates, specific redemption schedules.
-*   Admin-only investment creation (clients view-only).
-*   Client investment readiness tracking (AML KYC, Agreement Signed, Date of Deposit) in Client Management.
-*   User creation system for Admin to generate new users with temporary passwords and forced password changes on first login.
-*   A comprehensive redemption system for both client and admin with fund-specific rules (CORE monthly, BALANCE 3-monthly, DYNAMIC 6-monthly), an approval process, and deposit/redemption activity tracking.
+The FIDUS financial portal is a full-stack platform featuring an animated logo, dual Client/Admin login, and respective dashboards. It includes user registration with AML/KYC, client management, password reset, and a comprehensive CRM for onboarding and investor allocation across CORE, BALANCE, DYNAMIC, UNLIMITED funds. The system requires automated capital flows, real-time AUM/NAV/performance dashboards, and role-based portals. Secure document storage with Gmail API integration, compliance reminders, MT4/MT5 API monitoring, multi-currency support, communication tools, exportable reports, encryption, audit trails, and accounting/n8n integrations are planned.
+
+Recent implementations include:
+*   Refined Gmail API integration.
+*   Camera capture for AML/KYC.
+*   Admin CRM: prospect management.
+*   FIDUS funds investment logic: 2-month incubation (no interest), 12-month principal hold (total 14 months), fund-specific monthly interest (CORE 1.5%, BALANCE 2.5%, DYNAMIC 3.5%), and fund-specific redemption schedules (CORE monthly, BALANCE quarterly, DYNAMIC semi-annually).
+*   Admin-only investment creation, client view-only.
+*   Client investment readiness tracking (AML KYC, Agreement Signed, Account Creation Date).
+*   User creation with temporary passwords and forced changes.
+*   Comprehensive redemption system for client/admin with fund-specific rules, approval process, and deposit/redemption activity tracking, distinguishing interest and principal redemptions.
+*   Payment confirmation system for deposits/redemptions (FIAT wires/crypto hashes).
+*   Client-side Investment Calendar displaying investment lifecycle events.
+*   Admin-side Fund Portfolio and Cash Flow management: real-time fund AUM (sum of client investments), fund performance, FIDUS profitability (fund performance - client interest + rebates), cash flow forecasting, and rebate entry.
 </product_requirements>
 
 <key_technical_concepts>
-- React.js: Frontend framework.
-- FastAPI: Python backend framework.
-- MongoDB: Database for persistence (though much data is in-memory).
-- Google Gmail API: OAuth 2.0 for email sending/reading.
-- Shadcn UI, Tailwind CSS, Framer Motion, Recharts: UI components, styling, animation, charting.
-- Camera/MediaStream API: For document capture.
-- In-memory data structures: For CRM, client readiness, investments, temporary passwords, activity logs.
-- Investment fund management logic: Incubation periods, interest calculations, redemption schedules.
-- Role-Based Access Control: For different user types (Admin/Client).
+- React.js: Frontend framework for UI components and state management.
+- FastAPI: Python backend framework for API routes and business logic.
+- MongoDB: Database for data persistence (though mock data heavily used).
+- Google Gmail API: OAuth 2.0 for email functionality.
+- Shadcn UI, Tailwind CSS, Framer Motion: UI components, styling, and animations.
+- In-memory data structures: Used for CRM, client readiness, investments, and activity logs.
+- Complex Financial Logic: Incubation periods, interest calculations, multi-tiered redemption schedules, principal vs. interest redemptions.
+- Role-Based Access Control: Admin vs. Client functionalities.
 </key_technical_concepts>
 
 <code_architecture>
 
 -   ****:
-    -   **Importance**: Central FastAPI backend for all API routes, database (in-memory data for new features), auth, and business logic.
+    -   **Importance**: Centralizes all backend logic: API routes, data models, authentication, and financial calculations.
     -   **Changes**:
-        *   Gmail OAuth callback/scopes updated (, ) and rewritten for a robust direct redirect flow to resolve 403 errors and refuse to connect.
-        *    model and  function updated to include  for timeline calculations;  enhanced with .
-        *    model, ,  in-memory storage,  endpoint, and  endpoint added.  modified to return  flag.
-        *   ,  models and their in-memory storage, along with , ,  functions, and API endpoints (, , ) for the redemption system.
-        *    updated with additional test clients.
+        *   Redemption logic heavily modified: ,  models updated for principal/interest separation, , ,  functions refined.
+        *   Duplicate  class definition removed (Line 343).
+        *    updated with correct minimum investment amounts (CORE 0k, BALANCE 0k) and precise hold/incubation periods (12+2 months for principal, fund-specific for interest).
+        *    updated to sum client investments instead of transaction history for accurate totals.
+        *   Payment confirmation models (, ) and related endpoints (, ) added.
+        *   Fund portfolio endpoints (, , ) added to provide fund-level AUM, investor counts, and rebate tracking.
 -   ****:
-    -   **Importance**: Stores Gmail API OAuth 2.0 client credentials.
-    -   **Changes**: Verified correct  configuration (matching Google Cloud Console).
+    -   **Importance**: Main application shell, handles routing and initial view.
+    -   **Changes**: Temporarily modified to skip logo animation for debugging, then reverted.
 -   ****:
-    -   **Importance**: Admin component for managing clients.
-    -   **Changes**: Enhanced UX by making entire client rows clickable for investment readiness management, added visual cues, improved status badges, and integrated a Create New User button and modal.
+    -   **Importance**: Admin UI for managing client readiness and profiles.
+    -   **Changes**: Date of Deposit replaced with Account Creation Date in readiness; document upload modal and associated functions () added,  adjusted. Corrected FormData fields (, ) for document upload.
 -   ****:
-    -   **Importance**: Admin component for managing client investments.
-    -   **Changes**: Investment creation form updated to include a Date of Deposit field.
+    -   **Importance**: Admin UI for creating and managing investments.
+    -   **Changes**: Payment confirmation fields integrated into investment creation form. Client dropdown visibility issues resolved by reverting to standard HTML select and adjusting modal styling (, , ).
 -   ****:
-    -   **Importance**: Handles user login.
-    -   **Changes**: Modified to detect  flag and conditionally render .
+    -   **Importance**: Client UI for requesting redemptions.
+    -   **Changes**: UI updated to clearly distinguish Interest Redemption vs. Principal Redemption with separate buttons and clearer status messages.  adjusted to handle redemption types.
 -   ****:
-    -   **Importance**: New component for enforcing password changes.
-    -   **Changes**: Newly created.
+    -   **Importance**: New component providing a visual calendar of investment events (start, interest, redemptions).
+    -   **Changes**: Newly created component, integrates with ClientDashboard for display.
 -   ****:
-    -   **Importance**: Manages Gmail API authentication.
-    -   **Changes**: Modified OAuth flow to use a direct  redirect to resolve refused to connect errors.
+    -   **Importance**: Main client portal dashboard.
+    -   **Changes**: Integrated  as a new Calendar tab.
 -   ****:
-    -   **Importance**: Client financial information.
-    -   **Changes**: Integrated  as a new Redemptions tab.
+    -   **Importance**: New admin component for overall fund performance and AUM.
+    -   **Changes**: Newly created. Displays real-time fund data based on client investments, FIDUS profitability, NAV, and performance.
 -   ****:
-    -   **Importance**: Admin functionalities.
-    -   **Changes**: Integrated  as a new Redemptions tab.
+    -   **Importance**: New admin component for tracking money inflows/outflows and forecasting redemptions.
+    -   **Changes**: Newly created. Provides a detailed cash flow overview by fund.
 -   ****:
-    -   **Importance**: Client-side component for requesting redemptions.
-    -   **Changes**: Newly created.
--   ****:
-    -   **Importance**: Admin-side component for managing redemption requests.
-    -   **Changes**: Newly created.
+    -   **Importance**: Main admin portal dashboard.
+    -   **Changes**: Integrated  and  as new tabs, replacing old portfolio logic.
+
 </code_architecture>
 
 <pending_tasks>
-- Complete the frontend integration and testing of the comprehensive redemption system.
-- Resolve the blank screen login issue encountered during the production readiness frontend testing.
-- Ensure robust end-to-end testing of the complete client onboarding, investment creation, user creation, and redemption workflow for all user types.
-- Address the persistence of investment data, currently stored in-memory, to ensure it survives backend restarts.
+- Conduct a comprehensive production readiness test of the entire application, including all flows and functionality.
+- Transition the application from current mock data to live data for production.
+- Implement the auto-add new client registrations to CRM Leads feature (pending client self-registration endpoint).
+- Implement the MT4/MT5 real-time data integration for fund performance and NAV updates.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively engaged in implementing a **comprehensive redemption system** for the FIDUS Investment Portal. This complex feature aimed to provide fund-specific redemption capabilities (CORE monthly, BALANCE 3-monthly, DYNAMIC 6-monthly), an approval process for admin, and detailed tracking of deposits and redemptions for both clients and admins.
+Immediately before this summary request, the AI engineer had successfully implemented and thoroughly tested a comprehensive **Fund Portfolio Management and Cash Flow Management system** for the admin side of the FIDUS application. This involved:
+- **Backend:** Creation of new API endpoints (, , ) to calculate fund AUM based on aggregated client investments, track rebates, and provide cash flow data. Fund initial AUM values in  were reset to zero to reflect dynamic calculation.
+- **Frontend:** Development of two new components:  and . These were integrated into the  as new Fund Portfolio and Cash Flow tabs, respectively. The Fund Portfolio tab now displays real fund data (AUM, investors), FIDUS profitability (Fund Performance - Client Interest + Rebates), and is set up for real-time data entry for NAV/performance and rebate management. The Cash Flow tab provides an overview of money inflows, outflows, net cash flow, and a detailed redemption schedule.
+The system now accurately reflects FIDUS's business model for profitability and liquidity management.
 
-The work encompassed both backend and frontend modifications:
-1.  **Backend ():**
-    *   **Models:**  and  were introduced to manage redemption requests and track all financial activities.
-    *   **In-memory Storage:** New dictionaries were added to  to store redemption requests and activity logs temporarily.
-    *   **Business Logic:** Functions like , , and  were implemented to enforce fund-specific redemption rules, calculate eligibility based on investment start dates and fund types, and record all deposit and redemption events.
-    *   **API Endpoints:** New API routes were created:  (for clients),  (for admins), and  (to view a client's redemptions).
-    *   **Integration:** The  function was updated to log deposit activities, and  was enhanced with  to support the new logic. The backend service was restarted to apply these changes.
-
-2.  **Frontend ():**
-    *   **New Components:**  (for client-side requests) and  (for admin approvals) were created.
-    *   **Dashboard Integration:**  was modified to include a new Redemptions tab, integrating the  component. Similarly,  was updated to include an Redemptions tab, integrating . This involved adjusting  and  elements in both dashboards. The frontend service was restarted.
-
-The trajectory concludes with the **backend portion of the redemption system being tested** (showing 90% success with 18/20 tests passed by ). However, the **frontend integration, UI validation, and complete end-to-end testing of the redemption workflow remain pending**. Additionally, a critical blank screen login issue, discovered during earlier production readiness frontend testing, also needs to be addressed.
+The user's last instruction was to conduct a comprehensive production readiness test.
 </current_work>
 
 <optional_next_step>
-Resolve the blank screen login issue in the frontend to enable full access and then proceed with end-to-end testing of the newly implemented redemption system.
+Conduct a comprehensive production readiness test of the entire application, systematically testing all flows and functionality, and transitioning from mock data.
 </optional_next_step>
