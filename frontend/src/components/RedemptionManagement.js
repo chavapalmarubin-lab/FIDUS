@@ -464,7 +464,7 @@ const RedemptionManagement = ({ user }) => {
             >
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                 <ArrowDownCircle className="mr-2 h-6 w-6 text-red-400" />
-                Request Redemption
+                Request {redemptionType === 'interest' ? 'Interest' : 'Principal'} Redemption
               </h3>
               
               <div className="space-y-4">
@@ -475,15 +475,21 @@ const RedemptionManagement = ({ user }) => {
                       <span className="font-medium">{selectedInvestment.fund_name}</span>
                     </div>
                     <div className="flex justify-between mb-1">
-                      <span>Current Value:</span>
+                      <span>Principal Amount:</span>
+                      <span className="font-medium text-white">
+                        {formatCurrency(selectedInvestment.principal_amount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between mb-1">
+                      <span>Interest Earned:</span>
                       <span className="font-medium text-green-400">
-                        {formatCurrency(selectedInvestment.current_value)}
+                        {formatCurrency(selectedInvestment.interest_earned || (selectedInvestment.current_value - selectedInvestment.principal_amount))}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Available:</span>
-                      <span className="font-medium text-yellow-400">
-                        {formatDate(selectedInvestment.next_redemption_date)}
+                      <span>Redeeming:</span>
+                      <span className={`font-medium ${redemptionType === 'interest' ? 'text-green-400' : 'text-red-400'}`}>
+                        {redemptionType === 'interest' ? 'Interest Only' : 'Principal Only'}
                       </span>
                     </div>
                   </div>
