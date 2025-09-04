@@ -297,7 +297,7 @@ const FundPortfolioManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Total Clients</p>
                 <p className="text-2xl font-bold text-white">
-                  {Object.values(fundData).reduce((sum, fund) => sum + (fund.total_investors || 0), 0)}
+                  {Object.values(fundData || {}).reduce((sum, fund) => sum + (fund.total_investors || 0), 0)}
                 </p>
               </div>
             </div>
