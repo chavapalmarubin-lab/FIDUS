@@ -3019,6 +3019,7 @@ async def get_portfolio_summary():
         # Return fallback data instead of zeros
         return {
             "total_aum": 0,
+            "aum": 0,  # Add for frontend compatibility
             "client_count": 0,
             "allocation": {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0},
             "fund_breakdown": {}
