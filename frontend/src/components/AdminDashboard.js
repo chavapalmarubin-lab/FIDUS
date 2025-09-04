@@ -128,7 +128,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         ...response.data.allocation
       });
       // Update weekly data with fetched performance
-      setRows(response.data.weekly_performance);
+      setRows(response.data.weekly_performance || defaultWeeks);
     } catch (error) {
       console.error("Error fetching portfolio data:", error);
     }
