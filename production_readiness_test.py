@@ -235,6 +235,7 @@ class ProductionReadinessTester:
                 "name": f"Stress Test Client {i}",
                 "email": f"stresstest{i}@fidus.com",
                 "phone": f"+1-555-{1000+i:04d}",
+                "temporary_password": f"TempPass{i}123!",  # Added required field
                 "notes": f"Stress test client #{i}"
             }
             
