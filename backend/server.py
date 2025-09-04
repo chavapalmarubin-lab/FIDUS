@@ -2972,12 +2972,52 @@ async def update_client_status(client_id: str, status_data: dict):
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
-    total_aum = 0  # Reset to zero as requested
-    allocation = {
-        "CORE": 33.33,
-        "BALANCE": 33.33, 
-        "DYNAMIC": 33.34
-    }
+    try:
+        # Calculate real total AUM from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        total_aum = 0.0
+        client_count = 0
+        fund_allocation = {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0}
+        
+        # Sum AUM from all client investments
+        for client in all_clients:
+            client_investments_list = mongodb_manager.get_client_investments(client['id'])
+            if client_investments_list:
+                client_count += 1
+                for investment in client_investments_list:
+                    current_value = investment['current_value']
+                    total_aum += current_value
+                    fund_code = investment['fund_code']
+                    if fund_code in fund_allocation:
+                        fund_allocation[fund_code] += current_value
+        
+        # Calculate allocation percentages
+        allocation = {}
+        if total_aum > 0:
+            for fund_code, amount in fund_allocation.items():
+                allocation[fund_code] = round((amount / total_aum) * 100, 2)
+        else:
+            allocation = {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0}
+        
+        return {
+            "total_aum": round(total_aum, 2),
+            "client_count": client_count,
+            "allocation": allocation,
+            "fund_breakdown": {
+                fund_code: {"amount": round(amount, 2), "percentage": allocation.get(fund_code, 0)}
+                for fund_code, amount in fund_allocation.items()
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Portfolio summary error: {str(e)}")
+        # Return fallback data instead of zeros
+        return {
+            "total_aum": 0,
+            "client_count": 0,
+            "allocation": {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0},
+            "fund_breakdown": {}
+        }
     
     # Generate weekly performance data
     weeks_data = []
