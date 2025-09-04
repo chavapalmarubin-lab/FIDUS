@@ -492,7 +492,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Modal UX Fix for Investment Creation Window"
+    - "Fund Portfolio Management and Cash Flow Management System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -500,6 +500,7 @@ test_plan:
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
   modal_ux_testing: "completed"
+  fund_portfolio_cashflow_testing: "completed"
 
 agent_communication:
     - agent: "testing"
