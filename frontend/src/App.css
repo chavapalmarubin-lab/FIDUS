@@ -94,6 +94,42 @@ body {
   filter: drop-shadow(0 0 15px rgba(255, 167, 38, 0.7));
 }
 
+/* Logo Integration Classes */
+.logo-integrated {
+  position: relative;
+  z-index: 10;
+}
+
+.logo-integrated::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: radial-gradient(circle at center, rgba(255, 167, 38, 0.03) 0%, transparent 60%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  0% {
+    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.02) 0%, transparent 60%);
+  }
+  100% {
+    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.05) 0%, rgba(59, 130, 246, 0.02) 40%, transparent 70%);
+  }
+}
+
+/* Responsive Logo Adjustments */
+@media (max-width: 768px) {
+  .fidus-logo img {
+    max-width: 200px;
+    padding: 8px;
+  }
+}
+
 /* Login Selection Styles */
 .login-selection {
   min-height: 100vh;
