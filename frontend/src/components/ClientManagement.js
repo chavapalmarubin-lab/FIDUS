@@ -747,7 +747,7 @@ const ClientManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredClients.map((client, index) => (
+                {(filteredClients || []).map((client, index) => (
                   <motion.tr
                     key={client.id}
                     initial={{ opacity: 0, y: 20 }}
