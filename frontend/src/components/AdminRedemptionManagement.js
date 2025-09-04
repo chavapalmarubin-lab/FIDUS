@@ -379,7 +379,7 @@ const AdminRedemptionManagement = () => {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {filteredActivityLogs.slice(0, 50).map((log, index) => (
+                  {(filteredActivityLogs || []).slice(0, 50).map((log, index) => (
                     <motion.div
                       key={log.id}
                       initial={{ opacity: 0, x: -20 }}
