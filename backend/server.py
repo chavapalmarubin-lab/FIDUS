@@ -3005,6 +3005,7 @@ async def get_portfolio_summary():
         
         return {
             "total_aum": round(total_aum, 2),
+            "aum": round(total_aum, 2),  # Add for frontend compatibility
             "client_count": client_count,
             "allocation": allocation,
             "fund_breakdown": {
