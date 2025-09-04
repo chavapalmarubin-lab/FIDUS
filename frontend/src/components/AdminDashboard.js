@@ -135,8 +135,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const effectiveRows = useMemo(() => {
-    if (!sim.enabled) return rows;
-    if (rows.length === 0) return rows;
+    if (!sim.enabled) return rows || [];
+    if (!rows || rows.length === 0) return rows || [];
     const cloned = rows.map((r) => ({ ...r }));
     const lastIdx = cloned.length - 1;
     cloned[lastIdx] = {
