@@ -252,7 +252,7 @@ const CRMDashboard = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {allClientsData.clients.map((client) => (
+                  {(allClientsData?.clients || []).map((client) => (
                     <tr key={client.client_id} className="border-b border-slate-700 hover:bg-slate-700/50">
                       <td className="py-3 px-4">
                         <div>
