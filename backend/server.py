@@ -6636,24 +6636,22 @@ async def get_client_readiness(client_id: str):
 
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients():
-    """Get clients who are ready for investment (for dropdown in investment creation)"""
+    """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     try:
-        ready_clients = []
+        # Get all clients from MongoDB and filter for ready ones
+        all_clients = mongodb_manager.get_all_clients()
         
-        for username, user_data in MOCK_USERS.items():
-            if user_data.get('type') == 'client':
-                client_id = user_data.get('id', username)
-                readiness = client_readiness.get(client_id, {})
-                
-                if readiness.get('investment_ready', False):
-                    ready_clients.append({
-                        'client_id': client_id,
-                        'name': user_data.get('name', ''),
-                        'email': user_data.get('email', ''),
-                        'username': user_data.get('username', ''),
-                        'deposit_date': readiness.get('deposit_date'),
-                        'total_investments': len(client_investments.get(client_id, []))
-                    })
+        ready_clients = []
+        for client in all_clients:
+            if client.get('investment_ready', False):
+                ready_clients.append({
+                    'client_id': client['id'],
+                    'name': client['name'],
+                    'email': client['email'],
+                    'username': client['username'],
+                    'account_creation_date': client['readiness_status'].get('account_creation_date'),
+                    'total_investments': client.get('total_investments', 0)
+                })
         
         # Sort by name
         ready_clients.sort(key=lambda x: x['name'])
