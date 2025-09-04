@@ -496,11 +496,22 @@ const PasswordReset = ({ userType, onBack, onComplete }) => {
                 src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
                 alt="FIDUS Logo"
                 style={{
-                  width: "150px",
+                  width: "180px",
                   height: "auto",
                   margin: "0 auto",
                   display: "block",
-                  filter: "drop-shadow(0 0 15px rgba(255, 167, 38, 0.3))"
+                  filter: `
+                    drop-shadow(0 0 20px rgba(255, 167, 38, 0.5))
+                    drop-shadow(0 0 40px rgba(59, 130, 246, 0.25))
+                    brightness(1.06)
+                    contrast(1.02)
+                  `,
+                  background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.05) 0%, rgba(59, 130, 246, 0.02) 50%, transparent 70%)",
+                  borderRadius: "12px",
+                  padding: "8px",
+                  backdropFilter: "blur(0.5px)",
+                  border: "1px solid rgba(255, 167, 38, 0.06)",
+                  transition: "all 0.3s ease"
                 }}
               />
             </motion.div>
