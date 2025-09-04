@@ -206,6 +206,7 @@ const LogoAnimation = ({ onComplete }) => {
 
       {/* FIDUS Logo */}
       <motion.div
+        key="fidus-logo"
         className="fidus-logo"
         initial={{ opacity: 0, scale: 0 }}
         animate={showLogo ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
