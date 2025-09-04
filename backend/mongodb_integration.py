@@ -267,7 +267,7 @@ class MongoDBManager:
                     'incubation_end_date': inv['incubation_end_date'].isoformat(),
                     'interest_start_date': inv['interest_start_date'].isoformat(),
                     'minimum_hold_end_date': inv['minimum_hold_end_date'].isoformat(),
-                    'status': inv['status'],
+                    'status': 'active' if current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']) else 'incubating',
                     'monthly_interest_rate': monthly_rate,
                     'can_redeem_interest': current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']),
                     'can_redeem_principal': current_date > (inv['minimum_hold_end_date'].replace(tzinfo=timezone.utc) if inv['minimum_hold_end_date'].tzinfo is None else inv['minimum_hold_end_date']),
