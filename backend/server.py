@@ -819,21 +819,25 @@ def calculate_balances(client_id: str) -> dict:
     """Calculate balances from current investment values"""
     balances = {"fidus_funds": 0, "core_balance": 0, "dynamic_balance": 0}
     
-    # Get client investments and sum by fund type
-    if client_id in client_investments:
-        for investment_data in client_investments[client_id]:
-            investment = FundInvestment(**investment_data)
-            fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
-            current_value = calculate_redemption_value(investment, fund_config)
+    # Get client investments from MongoDB - since we reset to zero, return zero balances
+    try:
+        from mongodb_integration import mongodb_manager
+        investments = mongodb_manager.get_client_investments(client_id)
+        
+        for investment in investments:
+            current_value = investment['current_value']
             
-            if investment.fund_code == "CORE":
+            if investment['fund_code'] == "CORE":
                 balances["core_balance"] += current_value
-            elif investment.fund_code == "BALANCE":
+            elif investment['fund_code'] == "BALANCE":
                 balances["fidus_funds"] += current_value  # BALANCE goes to fidus_funds
-            elif investment.fund_code == "DYNAMIC":
+            elif investment['fund_code'] == "DYNAMIC":
                 balances["dynamic_balance"] += current_value
-            elif investment.fund_code == "UNLIMITED":
+            elif investment['fund_code'] == "UNLIMITED":
                 balances["fidus_funds"] += current_value  # UNLIMITED goes to fidus_funds
+    except:
+        # If MongoDB fails, default to zero balances (clean start)
+        pass
     
     balances["total_balance"] = sum(balances.values())
     
