@@ -1,37 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 
 function App() {
-  const [currentView, setCurrentView] = useState("loading");
+  const [currentView, setCurrentView] = useState("login");
   const [user, setUser] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
-    // Initialize the app
-    const urlParams = new URLSearchParams(window.location.search);
-    const skipAnimation = urlParams.get('skip_animation') === 'true';
-    
-    if (skipAnimation) {
-      // Check for existing session
-      const savedUser = localStorage.getItem("fidus_user");
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser);
-          setUser(userData);
-          setCurrentView(userData.type === "admin" ? "admin" : "client");
-          return;
-        } catch (e) {
-          localStorage.removeItem("fidus_user");
-        }
+    // Check for existing session
+    const savedUser = localStorage.getItem("fidus_user");
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setCurrentView(userData.type === "admin" ? "admin" : "client");
+        setShowWelcome(false);
+        return;
+      } catch (e) {
+        localStorage.removeItem("fidus_user");
       }
-      setCurrentView("login");
-    } else {
-      // Start with logo animation
-      setCurrentView("logo");
     }
+
+    // Show welcome message briefly, then login
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLogin = (userData) => {
@@ -46,13 +44,7 @@ function App() {
     setCurrentView("login");
   };
 
-  const handleAnimationComplete = () => {
-    console.log("Animation completed, transitioning to login");
-    setCurrentView("login");
-  };
-
-  // Show loading screen initially
-  if (currentView === "loading") {
+  if (showWelcome) {
     return (
       <div className="App" style={{
         minHeight: '100vh',
@@ -62,7 +54,28 @@ function App() {
         justifyContent: 'center',
         color: 'white'
       }}>
-        <div>Loading FIDUS...</div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1 }}
+          style={{ textAlign: 'center' }}
+        >
+          <div style={{
+            fontSize: '64px',
+            fontWeight: 'bold',
+            marginBottom: '20px',
+            textShadow: '0 0 30px rgba(255,255,255,0.5)'
+          }}>
+            FIDUS
+          </div>
+          <div style={{
+            fontSize: '20px',
+            color: '#a1a1aa',
+            letterSpacing: '2px'
+          }}>
+            Investment Management System
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -70,17 +83,6 @@ function App() {
   return (
     <div className="App">
       <AnimatePresence mode="wait">
-        {currentView === "logo" && (
-          <motion.div
-            key="logo-animation"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <LogoAnimation onComplete={handleAnimationComplete} />
-          </motion.div>
-        )}
-        
         {currentView === "login" && (
           <motion.div
             key="login-selection"
