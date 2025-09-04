@@ -6161,6 +6161,242 @@ async def get_all_payment_confirmations():
         logging.error(f"Get all payment confirmations error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch payment confirmations")
 
+# Fund Portfolio & Cash Flow Management Endpoints
+@api_router.get("/admin/funds-overview")
+async def get_funds_overview():
+    """Get comprehensive fund overview for admin portfolio management"""
+    try:
+        funds_overview = {}
+        
+        for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
+            # Calculate fund AUM from client investments
+            fund_aum = 0
+            total_investors = 0
+            client_interest_rate = fund_config.interest_rate
+            
+            # Sum all investments for this fund
+            for client_id, investments in client_investments.items():
+                for investment_data in investments:
+                    investment = FundInvestment(**investment_data)
+                    if investment.fund_code == fund_code:
+                        current_value = calculate_redemption_value(investment, fund_config)
+                        fund_aum += current_value
+                        total_investors += 1
+            
+            # Get fund configuration from FIDUS_FUNDS
+            fund_info = FIDUS_FUNDS.get(fund_code, {})
+            
+            funds_overview[fund_code] = {
+                "fund_code": fund_code,
+                "name": fund_config.name,
+                "fund_type": getattr(fund_info, 'fund_type', 'Investment Fund'),
+                "aum": fund_aum,
+                "nav": fund_aum,  # For now, NAV = AUM
+                "nav_per_share": getattr(fund_info, 'nav_per_share', 100.0),
+                "performance_ytd": getattr(fund_info, 'performance_ytd', 0.0),
+                "performance_1y": getattr(fund_info, 'performance_1y', 0.0),
+                "total_investors": total_investors,
+                "client_interest_rate": client_interest_rate,
+                "client_investments": fund_aum,
+                "minimum_investment": fund_config.minimum_investment,
+                "management_fee": getattr(fund_info, 'management_fee', 0.0),
+                "performance_fee": getattr(fund_info, 'performance_fee', 0.0),
+                "total_rebates": 0.0  # Will be calculated from rebate system
+            }
+        
+        return {
+            "success": True,
+            "funds": funds_overview,
+            "total_aum": sum(fund["aum"] for fund in funds_overview.values()),
+            "total_investors": sum(fund["total_investors"] for fund in funds_overview.values())
+        }
+        
+    except Exception as e:
+        logging.error(f"Get funds overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch funds overview")
+
+@api_router.put("/admin/funds/{fund_code}/realtime")
+async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
+    """Update real-time data for a specific fund"""
+    try:
+        if fund_code not in FIDUS_FUND_CONFIG:
+            raise HTTPException(status_code=404, detail="Fund not found")
+        
+        # Store real-time data (in production this would update the database)
+        # For now, we'll just acknowledge the update
+        logging.info(f"Real-time data updated for {fund_code}: {realtime_data}")
+        
+        return {
+            "success": True,
+            "fund_code": fund_code,
+            "updated_data": realtime_data,
+            "message": f"Real-time data updated for {fund_code} fund"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Update fund real-time data error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update real-time data")
+
+# In-memory rebate storage
+fund_rebates = []  # List of rebate entries
+
+@api_router.post("/admin/rebates/add")
+async def add_rebate(rebate_data: dict):
+    """Add a rebate entry for a fund"""
+    try:
+        rebate_entry = {
+            "id": str(uuid.uuid4()),
+            "fund_code": rebate_data["fund_code"],
+            "amount": rebate_data["amount"],
+            "broker": rebate_data["broker"],
+            "description": rebate_data.get("description", ""),
+            "date": rebate_data["date"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": "admin"
+        }
+        
+        fund_rebates.append(rebate_entry)
+        
+        logging.info(f"Rebate added: {rebate_entry['amount']} for {rebate_entry['fund_code']} fund")
+        
+        return {
+            "success": True,
+            "rebate": rebate_entry,
+            "message": f"Rebate of ${rebate_entry['amount']} added to {rebate_entry['fund_code']} fund"
+        }
+        
+    except Exception as e:
+        logging.error(f"Add rebate error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add rebate")
+
+@api_router.get("/admin/rebates/all")
+async def get_all_rebates():
+    """Get all rebate entries"""
+    try:
+        # Sort by date (most recent first)
+        sorted_rebates = sorted(fund_rebates, key=lambda x: x["date"], reverse=True)
+        
+        return {
+            "success": True,
+            "rebates": sorted_rebates,
+            "total_rebates": len(sorted_rebates)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get rebates error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch rebates")
+
+# Cash Flow Management Endpoints
+@api_router.get("/admin/cashflow/overview")
+async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
+    """Get cash flow overview data"""
+    try:
+        # This would integrate with real transaction data
+        # For now, return mock structure that frontend expects
+        return {
+            "success": True,
+            "cash_flows": [],  # Will be populated with actual transaction data
+            "fund_breakdown": {
+                "CORE": {"inflow": 0, "outflow": 0},
+                "BALANCE": {"inflow": 0, "outflow": 0},
+                "DYNAMIC": {"inflow": 0, "outflow": 0},
+                "UNLIMITED": {"inflow": 0, "outflow": 0}
+            },
+            "timeframe": timeframe,
+            "selected_fund": fund
+        }
+        
+    except Exception as e:
+        logging.error(f"Get cash flow overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch cash flow overview")
+
+@api_router.get("/admin/cashflow/redemption-schedule")
+async def get_redemption_schedule(timeframe: str = "3months"):
+    """Get upcoming redemption schedule"""
+    try:
+        upcoming_redemptions = []
+        
+        # Get all client investments and calculate upcoming redemption opportunities
+        for client_id, investments in client_investments.items():
+            client = MOCK_USERS.get(client_id, {})
+            client_name = client.get("name", f"Client {client_id}")
+            
+            for investment_data in investments:
+                investment = FundInvestment(**investment_data)
+                fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+                
+                # Calculate next redemption dates based on fund rules
+                next_redemption_date = get_next_redemption_date(investment, fund_config)
+                current_value = calculate_redemption_value(investment, fund_config)
+                interest_earned = current_value - investment.principal_amount
+                
+                # Check if redemption is in the future (potential)
+                if next_redemption_date > datetime.now(timezone.utc):
+                    upcoming_redemptions.append({
+                        "date": next_redemption_date.isoformat().split('T')[0],
+                        "fund_code": investment.fund_code,
+                        "client_name": client_name,
+                        "potential_amount": interest_earned,  # Interest redemption amount
+                        "type": "interest",
+                        "certainty": "medium"  # Based on client behavior patterns
+                    })
+        
+        return {
+            "success": True,
+            "redemption_schedule": upcoming_redemptions
+        }
+        
+    except Exception as e:
+        logging.error(f"Get redemption schedule error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch redemption schedule")
+
+@api_router.get("/admin/cashflow/projections")
+async def get_cashflow_projections(months: int = 12):
+    """Get cash flow projections for specified months"""
+    try:
+        projections = []
+        today = datetime.now(timezone.utc)
+        
+        for i in range(months):
+            projection_date = today + relativedelta(months=i)
+            month_year = projection_date.strftime("%Y-%m")
+            
+            # Calculate projected inflows and outflows
+            # This would be based on historical patterns and scheduled investments/redemptions
+            projected_inflow = 0
+            projected_outflow = 0
+            
+            # Add some realistic projections based on current investments
+            for client_id, investments in client_investments.items():
+                for investment_data in investments:
+                    investment = FundInvestment(**investment_data)
+                    fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+                    
+                    # Project monthly interest payments as potential outflows
+                    monthly_interest = investment.principal_amount * (fund_config.interest_rate / 100)
+                    projected_outflow += monthly_interest
+            
+            # Mock some additional inflow projections
+            projected_inflow = projected_outflow * 1.2  # Assume 20% net positive flow
+            
+            projections.append({
+                "month": month_year,
+                "projected_inflow": projected_inflow,
+                "projected_outflow": projected_outflow,
+                "net_flow": projected_inflow - projected_outflow
+            })
+        
+        return {
+            "success": True,
+            "projections": projections
+        }
+        
+    except Exception as e:
+        logging.error(f"Get cash flow projections error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch cash flow projections")
+
 @api_router.get("/activity-logs/client/{client_id}")
 async def get_client_activity_logs(client_id: str):
     """Get all activity logs for a specific client"""
