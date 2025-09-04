@@ -432,7 +432,7 @@ const AdminInvestmentManagement = () => {
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
                       {prepareFundAllocationData().map((entry, index) => (
-                        <Cell key={`admin-investment-cell-${entry.name}-${index}`} fill={entry.color} />
+                        <Cell key={`admin-investment-cell-${index}-${entry.name}-${entry.value}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => formatCurrency(value)} />
