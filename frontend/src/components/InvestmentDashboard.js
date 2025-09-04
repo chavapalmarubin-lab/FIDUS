@@ -245,7 +245,7 @@ const InvestmentDashboard = ({ user, userType }) => {
       });
       
       chartData.push({
-        month: format(date, 'MMM yyyy'),
+        month: safeFormatDate(date, 'MMM yyyy'),
         value: Math.round(totalValue)
       });
     }
