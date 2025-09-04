@@ -5985,6 +5985,8 @@ async def get_client_redemptions(client_id: str):
             deposit_date = investment_data['deposit_date']
             if isinstance(deposit_date, str):
                 deposit_date = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+            elif deposit_date.tzinfo is None:
+                deposit_date = deposit_date.replace(tzinfo=timezone.utc)
             
             calculated_dates = calculate_investment_dates(deposit_date, fund_config)
             
