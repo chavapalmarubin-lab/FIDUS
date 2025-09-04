@@ -261,8 +261,7 @@ const InvestmentDashboard = ({ user, userType }) => {
   };
 
   const renderInvestmentCard = (investment) => {
-    const daysUntilIncubationEnds = Math.max(0, differenceInDays(new Date(investment.incubation_end_date), new Date()));
-    const daysUntilCanRedeem = Math.max(0, differenceInDays(new Date(investment.minimum_hold_end_date), new Date()));
+    const { daysUntilIncubationEnds, daysUntilCanRedeem } = calculateTimelineInfo(investment);
     
     return (
       <motion.div
