@@ -241,7 +241,7 @@ const AdminInvestmentManagement = () => {
   const prepareFundAllocationData = () => {
     if (!overviewData?.fund_summaries) return [];
     
-    return overviewData.fund_summaries.map((fund, index) => ({
+    return (overviewData?.fund_summaries || []).map((fund, index) => ({
       name: fund.fund_name,
       value: fund.total_current_value,
       color: FUND_COLORS[fund.fund_code] || COLORS[index % COLORS.length]
