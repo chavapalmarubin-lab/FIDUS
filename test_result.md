@@ -646,3 +646,18 @@ agent_communication:
         - working: false
         - agent: "testing"
         - comment: "🚨 CRITICAL BACKEND TESTING COMPLETED - 2 MAJOR ISSUES REQUIRE IMMEDIATE ATTENTION! Conducted focused testing on user-priority flows as requested. FINDINGS: (1) ✅ Authentication & User Management: Working correctly - both client and admin login functional. (2) ✅ Client Registration → Admin Leads Flow: Working correctly - new registrations appear in admin CRM leads immediately. (3) ❌ INVESTMENT CREATION DATA CONSISTENCY: CRITICAL BUG - Admin dashboard shows correct total AUM but empty clients array, causing admin to see 0 clients despite having investments. Client view works perfectly. This is the exact user-reported issue. (4) ❌ FINANCIAL CALCULATIONS FLOW: CRITICAL BUG - All fund interest rates returning None instead of configured values (CORE should be 1.5%, BALANCE 2.5%, etc.). This breaks all financial calculations. (5) ✅ Database Integration: Working correctly with real data. URGENT FIXES NEEDED: Fix admin investment overview endpoint client aggregation logic and fund configuration interest rate retrieval. These are blocking admin dashboard functionality."
+
+  - task: "Client Investment Tab Error Investigation"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/InvestmentDashboard.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "User reported 'Client investment tab gets an error' but backend testing shows the API endpoint GET /api/investments/client/client_001 working correctly with real investment data. Need to verify the frontend properly handles and displays this data without errors."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL ISSUE CONFIRMED: Client investment tab has JavaScript errors preventing proper display. FINDINGS: (1) ✅ LOGIN SUCCESS: Successfully logged in as client1/password123 (Gerardo Briones), confirmed user identity and dashboard access. (2) ✅ BACKEND DATA CORRECT: Account Overview shows expected $86,825.00 balance, CORE BALANCE section displays correctly, backend API GET /api/investments/client/client_001 returns 200 status with 4 investments totaling $86,825.00 as expected. (3) ❌ FRONTEND ERROR: Clicking Investment tab triggers JavaScript 'Invalid time value' RangeError in InvestmentDashboard component, preventing Investment Dashboard from loading. React error boundary triggered with message 'An error occurred in the <InvestmentDashboard> component'. (4) ✅ NETWORK REQUESTS: All API calls successful (200 status), no network connectivity issues, backend endpoints working correctly. ROOT CAUSE: Date parsing error in InvestmentDashboard component - likely invalid/null date values from backend causing new Date() constructor to fail. IMPACT: Investment tab completely non-functional for clients despite backend working correctly. URGENT FIX NEEDED: Add date validation/error handling in InvestmentDashboard component before parsing dates."
