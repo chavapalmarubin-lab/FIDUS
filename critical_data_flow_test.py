@@ -180,7 +180,7 @@ class FidusDataFlowTester:
             return False
             
         # Analyze AUM data
-        aum = response.get('aum', 0)
+        aum = response.get('total_aum', 0)  # Fixed: correct field name
         allocation = response.get('allocation', {})
         ytd_return = response.get('ytd_return', 0)
         weekly_performance = response.get('weekly_performance', [])
