@@ -499,7 +499,7 @@ const CashFlowManagement = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(fundBreakdown).map(([fundCode, data]) => (
+              {Object.entries(fundBreakdown || {}).map(([fundCode, data]) => (
                 <div key={fundCode} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
                   <div className="flex items-center">
                     <div 
