@@ -78,12 +78,7 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div style={{padding: '20px', color: 'white', textAlign: 'center'}}>
-              <h1>Client Dashboard</h1>
-              <p>Welcome {user.name}!</p>
-              <p>Dashboard temporarily disabled for React key debugging</p>
-              <button onClick={handleLogout} style={{padding: '10px 20px', marginTop: '20px'}}>Logout</button>
-            </div>
+            <ClientDashboard user={user} onLogout={handleLogout} />
           </motion.div>
         )}
         
@@ -95,12 +90,7 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div style={{padding: '20px', color: 'white', textAlign: 'center'}}>
-              <h1>Admin Dashboard</h1>
-              <p>Welcome {user.name}!</p>
-              <p>Dashboard temporarily disabled for React key debugging</p>
-              <button onClick={handleLogout} style={{padding: '10px 20px', marginTop: '20px'}}>Logout</button>
-            </div>
+            <AdminDashboard user={user} onLogout={handleLogout} />
           </motion.div>
         )}
       </AnimatePresence>
