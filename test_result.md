@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     - agent: "main"
+##       message: "Initiating comprehensive production readiness testing. Focus areas: (1) Fix critical issues found during testing, (2) Integration framework preparation for MT4/MT5, (3) Full client lifecycle stress testing (registration → investment → redemption), (4) Live data transition away from mock data, (5) Demo environment setup, (6) Proper database structure with backup capabilities. Starting with systematic backend testing."
 
 # Protocol Guidelines for Main agent
 #
