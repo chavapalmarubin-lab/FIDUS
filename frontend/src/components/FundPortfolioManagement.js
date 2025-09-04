@@ -110,9 +110,9 @@ const FundPortfolioManagement = () => {
 
     const performanceHistory = dates.map((date, index) => {
       const dataPoint = { date };
-      Object.keys(funds).forEach(fundCode => {
+      Object.keys(funds || {}).forEach(fundCode => {
         // Simulate performance trends
-        const basePerformance = funds[fundCode].performance_ytd || 0;
+        const basePerformance = (funds && funds[fundCode] && funds[fundCode].performance_ytd) || 0;
         const dailyVariation = (Math.random() - 0.5) * 2; // -1% to +1% daily variation
         dataPoint[fundCode] = basePerformance + dailyVariation;
       });
