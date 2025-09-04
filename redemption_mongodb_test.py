@@ -201,7 +201,7 @@ class RedemptionMongoDBTester:
         # Find an eligible investment for redemption
         eligible_investment = None
         for investment in self.gerardo_investments:
-            if investment.get('can_redeem_now', False):
+            if investment.get('can_redeem_interest', False) or investment.get('can_redeem_principal', False):
                 eligible_investment = investment
                 break
         
