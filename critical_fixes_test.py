@@ -312,7 +312,7 @@ class FidusCriticalFixesTester:
             print(f"   ✅ Prospects count INCREASED by {updated_count - initial_count}")
             
             # Find the new prospect
-            test_email = registration_data['personalInfo']['email']
+            test_email = registration_data['email']
             new_prospect = None
             
             for prospect in updated_prospects:
