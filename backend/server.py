@@ -5763,17 +5763,28 @@ async def get_client_redemptions(client_id: str):
             current_value = calculate_redemption_value(investment, fund_config)
             next_redemption = get_next_redemption_date(investment, fund_config)
             
+            # Calculate interest earned (current_value - principal)
+            interest_earned = current_value - investment.principal_amount
+            
+            # Check if principal hold period has passed
+            now = datetime.now(timezone.utc)
+            principal_available = now >= investment.minimum_hold_end_date
+            
             redemption_info = {
                 "investment_id": investment.investment_id,
                 "fund_code": investment.fund_code,
                 "fund_name": fund_config.name,
                 "principal_amount": investment.principal_amount,
+                "interest_earned": round(interest_earned, 2),
                 "current_value": round(current_value, 2),
-                "can_redeem": can_redeem,
-                "message": message,
+                "can_redeem_interest": can_redeem,
+                "can_redeem_principal": principal_available,
+                "interest_message": message,
+                "principal_message": f"Principal available in {(investment.minimum_hold_end_date - now).days} days" if not principal_available else "Principal redemption available",
                 "next_redemption_date": next_redemption.isoformat(),
                 "deposit_date": investment.deposit_date.isoformat(),
-                "redemption_frequency": fund_config.redemption_frequency
+                "redemption_frequency": fund_config.redemption_frequency,
+                "principal_hold_end_date": investment.minimum_hold_end_date.isoformat()
             }
             
             available_redemptions.append(redemption_info)
