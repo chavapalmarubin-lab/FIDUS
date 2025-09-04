@@ -13,6 +13,8 @@ import CRMDashboard from "./CRMDashboard";
 import GmailSettings from "./GmailSettings";
 import AdminInvestmentManagement from "./AdminInvestmentManagement";
 import AdminRedemptionManagement from "./AdminRedemptionManagement";
+import FundPortfolioManagement from "./FundPortfolioManagement";
+import CashFlowManagement from "./CashFlowManagement";
 import {
   LineChart,
   Line,
