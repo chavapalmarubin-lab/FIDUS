@@ -152,7 +152,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     const start = 100;
     const cum = {};
     fields.forEach((f) => (cum[f] = start));
-    return effectiveRows.map((r) => {
+    return (effectiveRows || []).map((r) => {
       const out = { week: r.week };
       fields.forEach((f) => {
         const weeklyPct = parseNumber(r[f]) / 100;
@@ -164,7 +164,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   }, [effectiveRows]);
 
   const weightedWeekly = useMemo(() => {
-    return effectiveRows.map((r) => {
+    return (effectiveRows || []).map((r) => {
       const core = parseNumber(r.CORE) / 100;
       const bal = parseNumber(r.BALANCE) / 100;
       const dyn = parseNumber(r.DYNAMIC) / 100;
