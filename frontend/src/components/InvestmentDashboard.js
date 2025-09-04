@@ -613,43 +613,43 @@ const InvestmentDashboard = ({ user, userType }) => {
                       <CheckCircle className="h-5 w-5 text-green-400" />
                       <div>
                         <p className="text-white font-medium">Investment Created</p>
-                        <p className="text-slate-400 text-sm">{format(new Date(investment.deposit_date), 'MMM dd, yyyy')}</p>
+                        <p className="text-slate-400 text-sm">{safeFormatDate(investment.deposit_date, 'MMM dd, yyyy')}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      {new Date() >= new Date(investment.incubation_end_date) ? (
+                      {new Date() >= safeParseDate(investment.incubation_end_date) ? (
                         <CheckCircle className="h-5 w-5 text-green-400" />
                       ) : (
                         <Timer className="h-5 w-5 text-yellow-400" />
                       )}
                       <div>
                         <p className="text-white font-medium">Incubation Period Ends</p>
-                        <p className="text-slate-400 text-sm">{format(new Date(investment.incubation_end_date), 'MMM dd, yyyy')}</p>
+                        <p className="text-slate-400 text-sm">{safeFormatDate(investment.incubation_end_date, 'MMM dd, yyyy')}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      {new Date() >= new Date(investment.interest_start_date) ? (
+                      {new Date() >= safeParseDate(investment.interest_start_date) ? (
                         <CheckCircle className="h-5 w-5 text-green-400" />
                       ) : (
                         <Clock className="h-5 w-5 text-blue-400" />
                       )}
                       <div>
                         <p className="text-white font-medium">Interest Payments Begin</p>
-                        <p className="text-slate-400 text-sm">{format(new Date(investment.interest_start_date), 'MMM dd, yyyy')}</p>
+                        <p className="text-slate-400 text-sm">{safeFormatDate(investment.interest_start_date, 'MMM dd, yyyy')}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      {new Date() >= new Date(investment.minimum_hold_end_date) ? (
+                      {new Date() >= safeParseDate(investment.minimum_hold_end_date) ? (
                         <CheckCircle className="h-5 w-5 text-green-400" />
                       ) : (
                         <Clock className="h-5 w-5 text-slate-400" />
                       )}
                       <div>
                         <p className="text-white font-medium">Minimum Hold Period Ends</p>
-                        <p className="text-slate-400 text-sm">{format(new Date(investment.minimum_hold_end_date), 'MMM dd, yyyy')}</p>
+                        <p className="text-slate-400 text-sm">{safeFormatDate(investment.minimum_hold_end_date, 'MMM dd, yyyy')}</p>
                       </div>
                     </div>
                   </div>
