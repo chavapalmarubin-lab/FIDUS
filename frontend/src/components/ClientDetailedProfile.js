@@ -292,7 +292,7 @@ const ClientDetailedProfile = ({ clientId, clientName, onBack }) => {
                       dataKey="value"
                     >
                       {fundAllocationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`client-profile-cell-${entry.name}-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip 
