@@ -453,7 +453,7 @@ const CashFlowManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {upcomingRedemptions.map((redemption, index) => (
+            {(upcomingRedemptions || []).map((redemption, index) => (
               <div key={`cash-flow-redemption-${index}-${redemption.fund_code}-${redemption.client_name}-${redemption.date}`} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border-l-4 border-yellow-400">
                 <div className="flex items-center">
                   <div className="mr-4">
