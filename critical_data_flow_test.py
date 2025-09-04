@@ -282,10 +282,10 @@ class FidusDataFlowTester:
             return False
             
         # Analyze cashflow data
-        total_inflows = response.get('total_inflows', 0)
-        total_outflows = response.get('total_outflows', 0)
-        net_flow = response.get('net_flow', 0)
-        monthly_flows = response.get('monthly_flows', [])
+        total_inflows = response.get('total_inflow', 0)  # Fixed: correct field name
+        total_outflows = response.get('total_outflow', 0)  # Fixed: correct field name
+        net_flow = response.get('net_cash_flow', 0)  # Fixed: correct field name
+        monthly_flows = response.get('cash_flows', [])  # Fixed: correct field name
         
         print(f"   📊 ANALYSIS:")
         print(f"   Total Inflows: ${total_inflows:,.2f}")
