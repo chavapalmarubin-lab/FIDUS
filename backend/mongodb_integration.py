@@ -100,6 +100,27 @@ class MongoDBManager:
                 for inv in investments:
                     total_invested += inv.get('principal_amount', 0)
                 
+                # Format readiness status properly (remove ObjectId)
+                readiness_data = {}
+                if readiness:
+                    readiness_data = {
+                        'client_id': readiness.get('client_id'),
+                        'aml_kyc_completed': readiness.get('aml_kyc_completed', False),
+                        'agreement_signed': readiness.get('agreement_signed', False),
+                        'account_creation_date': readiness.get('account_creation_date').isoformat() if readiness.get('account_creation_date') else None,
+                        'investment_ready': readiness.get('investment_ready', False),
+                        'notes': readiness.get('notes', '')
+                    }
+                else:
+                    readiness_data = {
+                        'client_id': client_id,
+                        'aml_kyc_completed': False,
+                        'agreement_signed': False,
+                        'account_creation_date': None,
+                        'investment_ready': False,
+                        'notes': ''
+                    }
+                
                 client_data = {
                     'id': client_id,
                     'username': user['username'],
@@ -111,12 +132,8 @@ class MongoDBManager:
                     'fidus_account_number': profile.get('fidus_account_number', '') if profile else '',
                     'total_investments': investment_count,
                     'total_invested': total_invested,
-                    'readiness_status': readiness if readiness else {
-                        'aml_kyc_completed': False,
-                        'agreement_signed': False,
-                        'investment_ready': False
-                    },
-                    'investment_ready': readiness.get('investment_ready', False) if readiness else False,
+                    'readiness_status': readiness_data,
+                    'investment_ready': readiness_data.get('investment_ready', False),
                     'created_at': user.get('created_at', datetime.now(timezone.utc)).isoformat()
                 }
                 
