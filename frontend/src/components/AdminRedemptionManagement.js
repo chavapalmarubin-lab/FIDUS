@@ -254,7 +254,7 @@ const AdminRedemptionManagement = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pendingRedemptions.map((redemption, index) => (
+                  {(pendingRedemptions || []).map((redemption, index) => (
                     <motion.div
                       key={redemption.id}
                       initial={{ opacity: 0, y: 20 }}
