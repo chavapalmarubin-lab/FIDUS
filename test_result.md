@@ -303,6 +303,18 @@ backend:
         - agent: "testing"
         - comment: "🎉 COMPREHENSIVE REDEMPTION SYSTEM TESTING COMPLETED SUCCESSFULLY! All critical redemption endpoints tested and working perfectly for production readiness: (1) CLIENT REDEMPTION DATA: GET /api/redemptions/client/{client_id} returns complete investment data with current values including accrued interest, redemption eligibility, and next available dates. Verified client_004 (Javier Gonzalez) $150K CORE + $200K BALANCE, client_005 (Jorge Gonzalez) $300K DYNAMIC + $100K CORE as specified. (2) FUND REDEMPTION RULES: All redemption frequencies working correctly - CORE monthly, BALANCE quarterly, DYNAMIC semi-annually after 2-month incubation periods. Business logic properly enforces minimum hold periods. (3) REDEMPTION CALCULATIONS: Interest calculations accurate with proper accrued interest - CORE 1.5%, BALANCE 2.5%, DYNAMIC 3.5% monthly rates. (4) REDEMPTION REQUEST CREATION: POST /api/redemptions/request validates business logic, rejects invalid amounts and timing violations with clear error messages. (5) ADMIN MANAGEMENT: GET /api/redemptions/admin/pending and POST /api/redemptions/admin/approve operational for approval workflow. (6) ACTIVITY LOGGING: All deposit activities properly logged when investments created, GET /api/activity-logs/client/{client_id} and admin endpoints working. (7) TIMELINE CALCULATIONS: Individual investment deposit dates correctly used for redemption eligibility calculations. System is mathematically accurate, follows all fund-specific business rules, and ready for production use. 90% test success rate (18/20 tests passed)."
 
+  - task: "User-Reported Issues Comprehensive Stress Test"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL ISSUES FOUND IN COMPREHENSIVE STRESS TEST! User-reported issues confirmed and diagnosed: (1) ✅ CLIENT INVESTMENT TAB: Gerardo Briones (client1) investment data WORKING correctly - GET /api/investments/client/client_001 returns 1 CORE investment with $25,000 principal and $26,875 current value (exactly as user reported). (2) ❌ ADMIN-CLIENT DATA CONSISTENCY: CRITICAL ISSUE FOUND - GET /api/investments/admin/overview returns total_aum: $101,875 but shows 0 clients in the clients array, causing admin dashboard to not display Gerardo's investment data. This explains why admin cannot see client investments. (3) ❌ FUND CONFIGURATION ISSUE: GET /api/investments/funds/config returns all fund interest_rate values as None instead of expected rates (CORE: 1.5%, BALANCE: 2.5%, DYNAMIC: 3.5%, UNLIMITED: 0%). (4) ✅ AUTHENTICATION SYSTEM: Client and admin login working correctly (client1/password123 and admin/password123). (5) ✅ DATABASE INTEGRATION: Client endpoints using real database data, not mock data. (6) ❌ ADMIN DASHBOARD ENDPOINTS: Admin investment overview endpoint has data inconsistency - calculates total AUM correctly but fails to populate client details array. ROOT CAUSE: Admin investment overview endpoint logic issue - total AUM calculation works but client aggregation fails, causing empty clients array in admin view while client view works perfectly. This creates the admin-client data inconsistency reported by user."
+
 frontend:
   - task: "Investment Calendar Tab Integration"
     implemented: true
