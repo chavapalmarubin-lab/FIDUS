@@ -540,10 +540,10 @@ const InvestmentDashboard = ({ user, userType }) => {
 
         <TabsContent value="investments" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {investments.map(renderInvestmentCard)}
+            {(investments || []).map(renderInvestmentCard)}
           </div>
           
-          {investments.length === 0 && (
+          {(investments || []).length === 0 && (
             <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-12 text-center">
                 <Wallet size={48} className="mx-auto mb-4 text-slate-400" />
