@@ -229,9 +229,9 @@ const RedemptionManagement = ({ user }) => {
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400">Current Value:</span>
+                          <span className="text-slate-400">Interest Earned:</span>
                           <span className="text-green-400 ml-2 font-medium">
-                            {formatCurrency(investment.current_value)}
+                            {formatCurrency(investment.interest_earned || (investment.current_value - investment.principal_amount))}
                           </span>
                         </div>
                         <div>
@@ -241,9 +241,9 @@ const RedemptionManagement = ({ user }) => {
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400">Next Available:</span>
-                          <span className="text-yellow-400 ml-2">
-                            {formatDate(investment.next_redemption_date)}
+                          <span className="text-slate-400">Total Value:</span>
+                          <span className="text-cyan-400 ml-2 font-medium">
+                            {formatCurrency(investment.current_value)}
                           </span>
                         </div>
                       </div>
