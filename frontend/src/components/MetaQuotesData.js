@@ -478,7 +478,7 @@ const MetaQuotesData = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {positions.map((position) => (
+                        {(positions || []).map((position) => (
                           <tr key={position.ticket} className="border-b border-slate-700 hover:bg-slate-700/50">
                             <td className="py-3 px-4 text-white font-mono">{position.ticket}</td>
                             <td className="py-3 px-4 text-white font-medium">{position.symbol}</td>
