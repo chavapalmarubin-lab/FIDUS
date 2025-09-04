@@ -38,7 +38,37 @@ function App() {
       // Always start with logo animation
       setCurrentView("logo");
     }
-  }, []);
+
+    // Listen for storage changes (for programmatic login)
+    const handleStorageChange = () => {
+      const savedUser = localStorage.getItem("fidus_user");
+      if (savedUser && currentView === "login") {
+        try {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          setCurrentView(userData.type === "admin" ? "admin" : "client");
+        } catch (e) {
+          localStorage.removeItem("fidus_user");
+        }
+      }
+    };
+
+    // Listen for custom login event
+    const handleCustomLogin = (event) => {
+      if (event.detail) {
+        setUser(event.detail);
+        setCurrentView(event.detail.type === "admin" ? "admin" : "client");
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('fidus-login', handleCustomLogin);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('fidus-login', handleCustomLogin);
+    };
+  }, [currentView]);
 
   const handleLogin = (userData) => {
     setUser(userData);
