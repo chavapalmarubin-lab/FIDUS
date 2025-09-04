@@ -5695,29 +5695,32 @@ async def get_admin_investments_overview():
                 "average_investment": 0.0
             }
         
-        # Process all client investments
-        for client_id, investments in client_investments.items():
-            for investment_data in investments:
-                investment = FundInvestment(**investment_data)
-                fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
-                
-                # Calculate current value
-                now = datetime.now(timezone.utc)
-                months_elapsed = max(0, (now.year - investment.interest_start_date.year) * 12 + 
-                                   (now.month - investment.interest_start_date.month)) if now >= investment.interest_start_date else 0
-                
-                earned_interest = 0.0
-                if fund_config.interest_rate > 0 and months_elapsed > 0:
-                    earned_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, months_elapsed)
-                
-                current_value = investment.principal_amount + earned_interest
-                
-                # Add to all investments
-                all_investments.append({
-                    **investment.dict(),
-                    "client_name": f"Client {client_id}",  # In real system, get actual name
-                    "fund_name": fund_config.name,
-                    "current_value": round(current_value, 2),
+        # Get all clients and their investments from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        
+        for client in all_clients:
+            client_id = client['id']
+            client_name = client['name']
+            
+            # Get investments for this client from MongoDB
+            client_investments_list = mongodb_manager.get_client_investments(client_id)
+            
+            for investment in client_investments_list:
+                # Add to all investments with proper client name
+                investment_record = {
+                    "investment_id": investment["investment_id"],
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "fund_code": investment["fund_code"],
+                    "fund_name": investment["fund_name"],
+                    "principal_amount": investment["principal_amount"],
+                    "current_value": investment["current_value"],
+                    "interest_earned": investment["interest_earned"],
+                    "deposit_date": investment["deposit_date"],
+                    "status": investment["status"],
+                    "monthly_interest_rate": investment["monthly_interest_rate"],
+                    "can_redeem_interest": investment["can_redeem_interest"],
+                    "can_redeem_principal": investment["can_redeem_principal"]
                     "earned_interest": round(earned_interest, 2),
                     "incubation_status": "active" if now >= investment.incubation_end_date else "incubating"
                 })
