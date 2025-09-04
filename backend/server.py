@@ -5721,17 +5721,18 @@ async def get_admin_investments_overview():
                     "monthly_interest_rate": investment["monthly_interest_rate"],
                     "can_redeem_interest": investment["can_redeem_interest"],
                     "can_redeem_principal": investment["can_redeem_principal"]
-                    "earned_interest": round(earned_interest, 2),
-                    "incubation_status": "active" if now >= investment.incubation_end_date else "incubating"
-                })
+                }
                 
-                # Update fund summaries
-                fund_summaries[investment.fund_code]["total_invested"] += investment.principal_amount
-                fund_summaries[investment.fund_code]["total_current_value"] += current_value
-                fund_summaries[investment.fund_code]["total_investors"] += 1
-                fund_summaries[investment.fund_code]["total_interest_paid"] += earned_interest
+                all_investments.append(investment_record)
                 
-                total_aum += current_value
+                # Update fund summaries with MongoDB data
+                fund_code = investment["fund_code"]
+                fund_summaries[fund_code]["total_invested"] += investment["principal_amount"]
+                fund_summaries[fund_code]["total_current_value"] += investment["current_value"]
+                fund_summaries[fund_code]["total_investors"] += 1
+                fund_summaries[fund_code]["total_interest_paid"] += investment["interest_earned"]
+                
+                total_aum += investment["current_value"]
         
         # Calculate averages
         for fund_summary in fund_summaries.values():
