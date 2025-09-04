@@ -947,13 +947,15 @@ async def get_client_data(client_id: str):
         **balances
     )
     
-    # Generate monthly statement
+    # Generate monthly statement with zero balances
+    from datetime import datetime
+    current_month = datetime.now().strftime("%B %Y")
     monthly_statement = MonthlyStatement(
-        month="April 2024",
-        initial_balance=320041.96,
-        profit=51.19,
-        profit_percentage=51.19,
-        final_balance=332681.44
+        month=current_month,
+        initial_balance=0.00,
+        profit=0.00,
+        profit_percentage=0.00,
+        final_balance=0.00
     )
     
     return ClientData(
