@@ -229,9 +229,15 @@ class FidusDataFlowTester:
         zero_investor_funds = []
         
         for fund in funds:
-            fund_code = fund.get('fund_code', 'Unknown')
-            fund_aum = fund.get('aum', 0)
-            fund_investors = fund.get('total_investors', 0)
+            # Handle both dict and string fund objects
+            if isinstance(fund, dict):
+                fund_code = fund.get('fund_code', 'Unknown')
+                fund_aum = fund.get('aum', 0)
+                fund_investors = fund.get('total_investors', 0)
+            else:
+                # If fund is a string or other type, skip detailed analysis
+                print(f"   Fund data type: {type(fund)} - {fund}")
+                continue
             
             print(f"   Fund {fund_code}: AUM ${fund_aum:,.2f}, Investors: {fund_investors}")
             
