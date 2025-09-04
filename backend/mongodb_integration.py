@@ -245,6 +245,10 @@ class MongoDBManager:
                 current_date = datetime.now(timezone.utc)
                 interest_earned = 0
                 
+                # Ensure interest_start_date is timezone-aware
+                if interest_start_date.tzinfo is None:
+                    interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
+                
                 if current_date > interest_start_date:
                     months_earning = max(0, (current_date.year - interest_start_date.year) * 12 + 
                                           (current_date.month - interest_start_date.month))
