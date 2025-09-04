@@ -329,7 +329,7 @@ const CRMDashboard = ({ user }) => {
   };
 
   // Prepare chart data
-  const fundPerformanceData = crmData.funds.data.map((fund, index) => ({
+  const fundPerformanceData = (crmData?.funds?.data || []).map((fund, index) => ({
     name: fund.name,
     ytd: fund.performance_ytd,
     '1y': fund.performance_1y,
