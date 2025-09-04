@@ -479,7 +479,7 @@ const CashFlowManagement = () => {
                 </div>
               </div>
             ))}
-            {upcomingRedemptions.length === 0 && (
+            {(upcomingRedemptions || []).length === 0 && (
               <div className="text-center py-8 text-slate-400">
                 No redemptions scheduled for the next 7 days
               </div>
