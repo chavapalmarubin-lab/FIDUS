@@ -340,11 +340,6 @@ class InvestmentCreate(BaseModel):
     amount: float
     deposit_date: Optional[str] = None  # YYYY-MM-DD format
 
-class RedemptionRequest(BaseModel):
-    investment_id: str
-    amount: Optional[float] = None  # If None, redeem full amount
-    redemption_date: Optional[datetime] = None
-
 # Client Investment Readiness Models
 class ClientInvestmentReadiness(BaseModel):
     client_id: str
