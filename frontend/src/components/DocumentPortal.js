@@ -791,7 +791,7 @@ const SendForSignatureModal = ({ document, onClose, onSend }) => {
             </div>
             
             <div className="space-y-3">
-              {recipients.map((recipient, index) => (
+              {(recipients || []).map((recipient, index) => (
                 <div key={`recipient-${index}-${recipient.email || index}`} className="flex gap-3 items-end">
                   <div className="flex-1">
                     <Input
