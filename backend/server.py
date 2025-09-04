@@ -29,6 +29,9 @@ import numpy as np
 import yfinance as yf
 import pandas as pd
 
+# MongoDB Integration
+from mongodb_integration import mongodb_manager
+
 # Gmail API imports
 import pickle
 from google.auth.transport.requests import Request
