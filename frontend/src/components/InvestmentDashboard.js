@@ -300,11 +300,11 @@ const InvestmentDashboard = ({ user, userType }) => {
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-slate-400">Deposit Date:</span>
-            <span className="text-white">{format(new Date(investment.deposit_date), 'MMM dd, yyyy')}</span>
+            <span className="text-white">{safeFormatDate(investment.deposit_date, 'MMM dd, yyyy')}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-slate-400">Interest Starts:</span>
-            <span className="text-white">{format(new Date(investment.interest_start_date), 'MMM dd, yyyy')}</span>
+            <span className="text-white">{safeFormatDate(investment.interest_start_date, 'MMM dd, yyyy')}</span>
           </div>
           {daysUntilIncubationEnds > 0 && (
             <div className="flex items-center justify-between">
