@@ -601,7 +601,7 @@ const InvestmentDashboard = ({ user, userType }) => {
 
         <TabsContent value="timeline" className="space-y-4">
           <div className="space-y-4">
-            {investments.map(investment => (
+            {(investments || []).map(investment => (
               <Card key={investment.investment_id} className="bg-slate-800 border-slate-700">
                 <CardHeader>
                   <CardTitle className="text-white">{investment.fund_name}</CardTitle>
