@@ -817,25 +817,25 @@ def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     
     return sorted(transactions, key=lambda x: x["date"], reverse=True)
 
-def calculate_balances(transactions: List[dict]) -> dict:
-    """Calculate balances from transactions"""
+def calculate_balances(client_id: str) -> dict:
+    """Calculate balances from current investment values"""
     balances = {"fidus_funds": 0, "core_balance": 0, "dynamic_balance": 0}
     
-    for trans in transactions:
-        fund_type = trans["fund_type"]
-        amount = trans["amount"]
-        
-        if fund_type == "fidus":
-            balances["fidus_funds"] += amount
-        elif fund_type == "core":
-            balances["core_balance"] += amount
-        elif fund_type == "dynamic":
-            balances["dynamic_balance"] += amount
-    
-    # Reset all balances to zero as requested by user
-    balances["fidus_funds"] = 0
-    balances["core_balance"] = 0
-    balances["dynamic_balance"] = 0
+    # Get client investments and sum by fund type
+    if client_id in client_investments:
+        for investment_data in client_investments[client_id]:
+            investment = FundInvestment(**investment_data)
+            fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
+            current_value = calculate_redemption_value(investment, fund_config)
+            
+            if investment.fund_code == "CORE":
+                balances["core_balance"] += current_value
+            elif investment.fund_code == "BALANCE":
+                balances["fidus_funds"] += current_value  # BALANCE goes to fidus_funds
+            elif investment.fund_code == "DYNAMIC":
+                balances["dynamic_balance"] += current_value
+            elif investment.fund_code == "UNLIMITED":
+                balances["fidus_funds"] += current_value  # UNLIMITED goes to fidus_funds
     
     balances["total_balance"] = sum(balances.values())
     
