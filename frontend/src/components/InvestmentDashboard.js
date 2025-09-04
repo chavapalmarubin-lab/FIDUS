@@ -449,7 +449,7 @@ const InvestmentDashboard = ({ user, userType }) => {
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
                       {preparePortfolioChartData().map((entry, index) => (
-                        <Cell key={`investment-cell-${entry.name}-${index}`} fill={entry.color} />
+                        <Cell key={`investment-portfolio-cell-${index}-${entry.name}-${entry.value}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => formatCurrency(value)} />
