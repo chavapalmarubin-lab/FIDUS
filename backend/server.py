@@ -951,15 +951,29 @@ async def get_client_data(client_id: str):
         **balances
     )
     
-    # Generate monthly statement with zero balances
+    # Generate monthly statement with actual investment data
     from datetime import datetime
     current_month = datetime.now().strftime("%B %Y")
+    
+    # Get investment data to calculate monthly statement
+    try:
+        investments = mongodb_manager.get_client_investments(client_id)
+        total_invested = sum(inv['principal_amount'] for inv in investments)
+        total_current = sum(inv['current_value'] for inv in investments)
+        total_profit = total_current - total_invested
+        profit_percentage = (total_profit / total_invested * 100) if total_invested > 0 else 0
+    except:
+        total_invested = 0
+        total_current = 0
+        total_profit = 0
+        profit_percentage = 0
+    
     monthly_statement = MonthlyStatement(
         month=current_month,
-        initial_balance=0.00,
-        profit=0.00,
-        profit_percentage=0.00,
-        final_balance=0.00
+        initial_balance=total_invested,
+        profit=total_profit,
+        profit_percentage=profit_percentage,
+        final_balance=total_current
     )
     
     return ClientData(
