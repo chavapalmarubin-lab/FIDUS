@@ -326,7 +326,7 @@ const ProspectManagement = () => {
             <IconComponent className={`h-5 w-5 ${stageConfig.textColor}`} />
             <h3 className="font-medium text-slate-900">{stageConfig.label}</h3>
             <Badge variant="outline" className="text-xs">
-              {prospects.length}
+              {(prospects || []).length}
             </Badge>
           </div>
         </div>
