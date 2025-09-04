@@ -164,7 +164,7 @@ const InvestmentCalendar = ({ user }) => {
         frequency: frequency
       });
       
-      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + monthsInterval));
+      currentDate.setMonth(currentDate.getMonth() + monthsInterval);
       redemptionCount++;
     }
   };
