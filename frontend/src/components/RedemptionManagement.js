@@ -248,32 +248,65 @@ const RedemptionManagement = ({ user }) => {
                         </div>
                       </div>
                       
-                      <div className="mt-2">
+                      <div className="mt-2 space-y-1">
+                        {/* Interest Redemption Status */}
                         <div className="flex items-center">
-                          {investment.can_redeem ? (
+                          {(investment.can_redeem_interest || investment.can_redeem) ? (
                             <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
                           ) : (
                             <Clock className="h-4 w-4 text-yellow-400 mr-2" />
                           )}
-                          <span className={`text-sm ${investment.can_redeem ? 'text-green-400' : 'text-yellow-400'}`}>
-                            {investment.message}
+                          <span className={`text-sm ${(investment.can_redeem_interest || investment.can_redeem) ? 'text-green-400' : 'text-yellow-400'}`}>
+                            Interest: {investment.interest_message || investment.message}
+                          </span>
+                        </div>
+                        {/* Principal Redemption Status */}
+                        <div className="flex items-center">
+                          {investment.can_redeem_principal ? (
+                            <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+                          ) : (
+                            <Clock className="h-4 w-4 text-yellow-400 mr-2" />
+                          )}
+                          <span className={`text-sm ${investment.can_redeem_principal ? 'text-green-400' : 'text-yellow-400'}`}>
+                            Principal: {investment.principal_message || 'Principal hold period not met'}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="ml-4">
+                    <div className="ml-4 space-y-2">
+                      {/* Interest Redemption Button */}
                       <Button
-                        onClick={() => openRedemptionModal(investment)}
-                        disabled={!investment.can_redeem}
-                        className={`${
-                          investment.can_redeem 
+                        onClick={() => openRedemptionModal(investment, 'interest')}
+                        disabled={!(investment.can_redeem_interest || investment.can_redeem)}
+                        className={`w-full ${
+                          (investment.can_redeem_interest || investment.can_redeem) 
+                            ? 'bg-green-600 hover:bg-green-700' 
+                            : 'bg-slate-600 cursor-not-allowed'
+                        } text-white`}
+                      >
+                        <ArrowDownCircle className="mr-2 h-4 w-4" />
+                        Redeem Interest
+                        <span className="ml-2 text-xs">
+                          ({formatCurrency(investment.interest_earned || (investment.current_value - investment.principal_amount))})
+                        </span>
+                      </Button>
+                      
+                      {/* Principal Redemption Button */}
+                      <Button
+                        onClick={() => openRedemptionModal(investment, 'principal')}
+                        disabled={!investment.can_redeem_principal}
+                        className={`w-full ${
+                          investment.can_redeem_principal 
                             ? 'bg-red-600 hover:bg-red-700' 
                             : 'bg-slate-600 cursor-not-allowed'
                         } text-white`}
                       >
                         <ArrowDownCircle className="mr-2 h-4 w-4" />
-                        Request Redemption
+                        Redeem Principal
+                        <span className="ml-2 text-xs">
+                          ({formatCurrency(investment.principal_amount)})
+                        </span>
                       </Button>
                     </div>
                   </div>
