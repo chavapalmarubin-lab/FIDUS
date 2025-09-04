@@ -95,7 +95,7 @@ const LoginSelection = ({ onLogin }) => {
               transition={{ delay: 0.3, duration: 0.8 }}
             >
               <img 
-                src="https://customer-assets.emergentagent.com/job_fidus-portal/artifacts/hxt31ed0_FIDUS%20LOGO%20SMALL.jpg"
+                src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
                 alt="FIDUS Logo"
                 style={{
                   width: "250px",
