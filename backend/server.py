@@ -926,7 +926,7 @@ async def get_client_data(client_id: str):
     
     # Generate or retrieve transactions
     transactions = generate_mock_transactions(client_id)
-    balances = calculate_balances(transactions)
+    balances = calculate_balances(client_id)
     
     # Create balance object
     client_balance = ClientBalance(
