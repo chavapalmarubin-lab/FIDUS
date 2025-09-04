@@ -515,7 +515,7 @@ const ProspectManagement = () => {
             {(prospects || []).map(renderProspectCard)}
           </div>
           
-          {prospects.length === 0 && (
+          {(prospects || []).length === 0 && (
             <Card>
               <CardContent className="p-12 text-center">
                 <Users size={48} className="mx-auto mb-4 text-slate-400" />
