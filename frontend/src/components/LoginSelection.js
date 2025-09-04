@@ -98,11 +98,23 @@ const LoginSelection = ({ onLogin }) => {
                 src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
                 alt="FIDUS Logo"
                 style={{
-                  width: "250px",
+                  width: "280px",
                   height: "auto",
                   margin: "0 auto",
                   display: "block",
-                  filter: "drop-shadow(0 0 15px rgba(255, 167, 38, 0.3))"
+                  filter: `
+                    drop-shadow(0 0 25px rgba(255, 167, 38, 0.6))
+                    drop-shadow(0 0 50px rgba(59, 130, 246, 0.3))
+                    brightness(1.08)
+                    contrast(1.03)
+                  `,
+                  background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.06) 0%, rgba(59, 130, 246, 0.03) 50%, transparent 70%)",
+                  borderRadius: "15px",
+                  padding: "12px",
+                  backdropFilter: "blur(1px)",
+                  border: "1px solid rgba(255, 167, 38, 0.08)",
+                  transition: "all 0.3s ease"
+                }}
                 }}
               />
             </motion.div>
