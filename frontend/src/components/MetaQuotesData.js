@@ -525,7 +525,7 @@ const MetaQuotesData = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {dealsHistory.slice(0, 50).map((deal) => (
+                        {(dealsHistory || []).slice(0, 50).map((deal) => (
                           <tr key={deal.ticket} className="border-b border-slate-700 hover:bg-slate-700/50">
                             <td className="py-3 px-4 text-white font-mono">{deal.ticket}</td>
                             <td className="py-3 px-4 text-gray-400">{formatTimestamp(deal.time)}</td>
