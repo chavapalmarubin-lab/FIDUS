@@ -6615,13 +6615,23 @@ async def get_redemption_schedule(timeframe: str = "3months"):
     try:
         upcoming_redemptions = []
         
-        # Get all client investments and calculate upcoming redemption opportunities
-        for client_id, investments in client_investments.items():
-            client = MOCK_USERS.get(client_id, {})
-            client_name = client.get("name", f"Client {client_id}")
+        # Get all client investments from MongoDB and calculate upcoming redemption opportunities
+        all_clients = mongodb_manager.get_all_clients()
+        for client in all_clients:
+            client_name = client.get("name", f"Client {client['id']}")
+            client_investments_list = mongodb_manager.get_client_investments(client['id'])
             
-            for investment_data in investments:
-                investment = FundInvestment(**investment_data)
+            for investment_data in client_investments_list:
+                # Create FundInvestment object
+                investment = FundInvestment(
+                    investment_id=investment_data['investment_id'],
+                    client_id=client['id'],
+                    fund_code=investment_data['fund_code'],
+                    principal_amount=investment_data['principal_amount'],
+                    deposit_date=investment_data['deposit_date'],
+                    interest_rate=investment_data.get('monthly_interest_rate', 0.0)
+                )
+                
                 fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
                 
                 # Calculate next redemption dates based on fund rules
