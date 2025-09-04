@@ -562,7 +562,7 @@ const CRMDashboard = ({ user }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {crmData.funds.data.map((fund, index) => (
+                    {(crmData?.funds?.data || []).map((fund, index) => (
                       <tr key={fund.id} className="border-b border-slate-700 hover:bg-slate-700/50">
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-3">
