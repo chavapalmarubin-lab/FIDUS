@@ -216,9 +216,19 @@ const LogoAnimation = ({ onComplete }) => {
           src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
           alt="FIDUS Logo"
           style={{
-            width: "350px",
+            width: "380px",
             height: "auto",
-            filter: "drop-shadow(0 0 20px rgba(255, 167, 38, 0.5))"
+            filter: `
+              drop-shadow(0 0 30px rgba(255, 167, 38, 0.7))
+              drop-shadow(0 0 60px rgba(59, 130, 246, 0.4))
+              brightness(1.1)
+              contrast(1.05)
+            `,
+            background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.08) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%)",
+            borderRadius: "20px",
+            padding: "15px",
+            backdropFilter: "blur(2px)",
+            border: "1px solid rgba(255, 167, 38, 0.1)"
           }}
           initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
