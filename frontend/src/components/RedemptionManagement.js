@@ -344,7 +344,7 @@ const RedemptionManagement = ({ user }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {redemptionRequests.map((request, index) => (
+              {(redemptionRequests || []).map((request, index) => (
                 <motion.div
                   key={request.id}
                   initial={{ opacity: 0, x: -20 }}
