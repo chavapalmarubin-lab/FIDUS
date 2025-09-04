@@ -2771,6 +2771,104 @@ async def create_new_user(user_data: UserCreate):
         logging.error(f"User creation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
+# Client Registration Endpoint - automatically adds to CRM leads
+@api_router.post("/auth/register")
+async def register_new_client(registration_data: dict):
+    """Register a new client and automatically add to CRM leads"""
+    try:
+        # Extract registration data
+        name = registration_data.get("name")
+        email = registration_data.get("email")
+        phone = registration_data.get("phone")
+        password = registration_data.get("password")
+        
+        if not all([name, email, password]):
+            raise HTTPException(status_code=400, detail="Name, email, and password are required")
+        
+        # Check if email already exists
+        for existing_user in MOCK_USERS.values():
+            if existing_user["email"] == email:
+                raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Generate unique user ID and username
+        user_id = f"client_{str(uuid.uuid4())[:8]}"
+        username = email.split('@')[0]  # Use email prefix as username
+        
+        # Create user entry
+        new_user = {
+            "id": user_id,
+            "username": username,
+            "name": name,
+            "email": email,
+            "type": "client",
+            "status": "active",
+            "phone": phone,
+            "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "notes": "Self-registered client"
+        }
+        
+        # Add to MOCK_USERS
+        MOCK_USERS[username] = new_user
+        
+        # Store password (in production, hash this properly)
+        user_temp_passwords[user_id] = {
+            "temp_password": password,
+            "must_change": False,  # Self-registered clients don't need to change password immediately
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Initialize client readiness (not ready initially)
+        client_readiness[user_id] = {
+            "client_id": user_id,
+            "aml_kyc_completed": False,
+            "agreement_signed": False,
+            "deposit_date": None,
+            "investment_ready": False,
+            "notes": "Self-registered - needs AML/KYC completion",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": "system"
+        }
+        
+        # AUTOMATICALLY ADD TO CRM LEADS
+        prospect_id = str(uuid.uuid4())
+        new_prospect = {
+            "id": prospect_id,
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "stage": "lead",  # Start as lead
+            "notes": f"Self-registered client - automatically added to CRM",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "converted_to_client": False,
+            "client_id": None,
+            "agreement_sent": False
+        }
+        
+        # Add to mock prospects
+        if "mock_prospects" not in globals():
+            global mock_prospects
+            mock_prospects = {}
+        
+        mock_prospects[prospect_id] = new_prospect
+        
+        logging.info(f"New client registered and added to CRM leads: {name} ({email})")
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "username": username,
+            "message": f"Registration successful! Welcome {name}. You have been added to our CRM system for investment readiness processing.",
+            "added_to_crm": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Client registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
 @api_router.get("/admin/clients/detailed")
 async def get_detailed_clients():
     """Get detailed client information for admin management"""
