@@ -48,6 +48,50 @@ import {
 import axios from "axios";
 import { format, addMonths, differenceInDays } from "date-fns";
 
+// Safe date parsing utility to prevent "Invalid time value" errors
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return new Date(); // Return current date if no value
+  
+  try {
+    // Handle both string and Date object inputs
+    const dateStr = typeof dateValue === 'string' ? dateValue : dateValue.toString();
+    
+    // Check if Date.parse can handle it
+    const parsedTime = Date.parse(dateStr);
+    if (isNaN(parsedTime)) {
+      console.warn(`Invalid date value: ${dateStr}, using current date`);
+      return new Date();
+    }
+    
+    const date = new Date(parsedTime);
+    
+    // Additional validation - check if the date is reasonable (not too far in past/future)
+    const currentYear = new Date().getFullYear();
+    const dateYear = date.getFullYear();
+    
+    if (dateYear < 2020 || dateYear > 2030) {
+      console.warn(`Date year ${dateYear} seems unreasonable, using current date`);
+      return new Date();
+    }
+    
+    return date;
+  } catch (error) {
+    console.error(`Error parsing date: ${dateValue}`, error);
+    return new Date(); // Fallback to current date
+  }
+};
+
+// Safe date formatting utility
+const safeFormatDate = (dateValue, formatStr = 'MMM dd, yyyy') => {
+  try {
+    const date = safeParseDate(dateValue);
+    return format(date, formatStr);
+  } catch (error) {
+    console.error(`Error formatting date: ${dateValue}`, error);
+    return 'Invalid Date';
+  }
+};
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
