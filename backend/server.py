@@ -3395,7 +3395,7 @@ async def send_document_for_signature(
                 break
         
         # Create document viewing URL (you can customize this)
-        document_url = f"https://invest-portal-22.preview.emergentagent.com/documents/{document_id}/view"
+        document_url = f"https://fidus-finance-1.preview.emergentagent.com/documents/{document_id}/view"
         
         # Send emails to all recipients using Gmail
         successful_sends = []
@@ -3555,7 +3555,7 @@ async def get_gmail_auth_url():
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
             ],
-            redirect_uri='https://invest-portal-22.preview.emergentagent.com/api/gmail/oauth-callback'
+            redirect_uri='https://fidus-finance-1.preview.emergentagent.com/api/gmail/oauth-callback'
         )
         
         # Generate authorization URL
@@ -3597,7 +3597,7 @@ async def gmail_oauth_callback(code: str, state: str):
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
             ],
-            redirect_uri='https://invest-portal-22.preview.emergentagent.com/api/gmail/oauth-callback'
+            redirect_uri='https://fidus-finance-1.preview.emergentagent.com/api/gmail/oauth-callback'
         )
         
         # Exchange authorization code for tokens
