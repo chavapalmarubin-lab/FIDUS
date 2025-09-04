@@ -5747,7 +5747,7 @@ async def get_admin_investments_overview():
             "success": True,
             "total_aum": round(total_aum, 2),
             "total_investments": len(all_investments),
-            "total_clients": len(client_investments),
+            "total_clients": len(all_clients),
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
         }
