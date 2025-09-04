@@ -62,6 +62,7 @@ const LogoAnimation = ({ onComplete }) => {
 
       {/* Line Chart */}
       <motion.div
+        key="line-chart"
         className="financial-element"
         style={{ top: "15%", right: "20%" }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
