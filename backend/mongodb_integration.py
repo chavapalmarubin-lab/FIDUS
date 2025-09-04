@@ -62,9 +62,11 @@ class MongoDBManager:
                 return {
                     'id': user['user_id'],
                     'username': user['username'],
-                    'email': user['email'],
+                    'name': profile_data.get('name', user['username']),
+                    'email': profile_data.get('email', user['email']),
                     'type': user['user_type'],
                     'status': user['status'],
+                    'profile_picture': '/app/static/default_profile.jpg',  # Default profile picture
                     **profile_data
                 }
             
