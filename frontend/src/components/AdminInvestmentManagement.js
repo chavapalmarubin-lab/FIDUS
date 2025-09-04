@@ -251,7 +251,7 @@ const AdminInvestmentManagement = () => {
   const prepareInvestmentVolumeData = () => {
     if (!overviewData?.fund_summaries) return [];
     
-    return overviewData.fund_summaries.map(fund => ({
+    return (overviewData?.fund_summaries || []).map(fund => ({
       fund: fund.fund_code,
       investors: fund.total_investors,
       aum: fund.total_current_value / 1000, // In thousands
