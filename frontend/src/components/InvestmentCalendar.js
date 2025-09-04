@@ -117,7 +117,7 @@ const InvestmentCalendar = ({ user }) => {
     
     while (currentDate <= maxDate) {
       // Add one month
-      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+      currentDate.setMonth(currentDate.getMonth() + 1);
       
       events.push({
         id: `interest-${investment.investment_id}-${monthCount}`,
