@@ -842,37 +842,52 @@ def calculate_balances(client_id: str) -> dict:
 # Authentication endpoints
 @api_router.post("/auth/login", response_model=UserResponse)
 async def login(login_data: LoginRequest):
-    """Authentication with temporary password support"""
+    """Authentication with MongoDB integration and temporary password support"""
     username = login_data.username
     password = login_data.password
     user_type = login_data.user_type
     
-    if username not in MOCK_USERS:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    user_data = MOCK_USERS[username]
-    
-    # Check if user type matches
-    if user_data["type"] != user_type:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Check for temporary password first
-    user_id = user_data["id"]
-    if user_id in user_temp_passwords:
-        temp_info = user_temp_passwords[user_id]
-        if password == temp_info["temp_password"]:
-            # Temporary password login successful
+    try:
+        # First try MongoDB authentication
+        user_data = mongodb_manager.authenticate_user(username, password, user_type)
+        
+        if user_data:
+            # MongoDB authentication successful
             user_response_dict = user_data.copy()
-            user_response_dict["must_change_password"] = temp_info["must_change"]
+            user_response_dict["must_change_password"] = False
             return UserResponse(**user_response_dict)
-    
-    # Check regular password
-    if password == "password123":
-        user_response_dict = user_data.copy()
-        user_response_dict["must_change_password"] = False
-        return UserResponse(**user_response_dict)
-    
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Fallback to mock data for backward compatibility during transition
+        if username not in MOCK_USERS:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        mock_user_data = MOCK_USERS[username]
+        
+        # Check if user type matches
+        if mock_user_data["type"] != user_type:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Check for temporary password first
+        user_id = mock_user_data["id"]
+        if user_id in user_temp_passwords:
+            temp_info = user_temp_passwords[user_id]
+            if password == temp_info["temp_password"]:
+                # Temporary password login successful
+                user_response_dict = mock_user_data.copy()
+                user_response_dict["must_change_password"] = temp_info["must_change"]
+                return UserResponse(**user_response_dict)
+        
+        # Check regular password for mock users
+        if password == "password123":
+            user_response_dict = mock_user_data.copy()
+            user_response_dict["must_change_password"] = False
+            return UserResponse(**user_response_dict)
+        
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+    except Exception as e:
+        logging.error(f"Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Authentication failed")
 
 @api_router.post("/auth/change-password")
 async def change_password(change_request: dict):
