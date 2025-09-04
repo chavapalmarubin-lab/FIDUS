@@ -6634,14 +6634,27 @@ async def get_redemption_schedule(timeframe: str = "3months"):
             client_investments_list = mongodb_manager.get_client_investments(client['id'])
             
             for investment_data in client_investments_list:
-                # Create FundInvestment object
+                fund_code = investment_data['fund_code']
+                fund_config = FIDUS_FUND_CONFIG[fund_code]
+                
+                # Calculate missing date fields
+                deposit_date = investment_data['deposit_date']
+                if isinstance(deposit_date, str):
+                    deposit_date = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+                
+                calculated_dates = calculate_investment_dates(deposit_date, fund_config)
+                
+                # Create FundInvestment object with all required fields
                 investment = FundInvestment(
                     investment_id=investment_data['investment_id'],
                     client_id=client['id'],
-                    fund_code=investment_data['fund_code'],
+                    fund_code=fund_code,
                     principal_amount=investment_data['principal_amount'],
-                    deposit_date=investment_data['deposit_date'],
-                    interest_rate=investment_data.get('monthly_interest_rate', 0.0)
+                    deposit_date=deposit_date,
+                    current_value=investment_data.get('current_value', investment_data['principal_amount']),
+                    incubation_end_date=calculated_dates['incubation_end_date'],
+                    interest_start_date=calculated_dates['interest_start_date'],
+                    minimum_hold_end_date=calculated_dates['minimum_hold_end_date']
                 )
                 
                 fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
