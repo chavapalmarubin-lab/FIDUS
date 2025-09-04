@@ -32,6 +32,7 @@ const LogoAnimation = ({ onComplete }) => {
     <AnimatePresence>
       {/* Candlestick Chart */}
       <motion.div
+        key="candlestick-chart"
         className="financial-element"
         style={{ top: "20%", left: "15%" }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
