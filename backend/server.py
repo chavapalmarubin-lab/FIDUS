@@ -5843,7 +5843,9 @@ async def create_redemption_request(redemption_data: RedemptionRequestCreate):
         next_available = get_next_redemption_date(investment_found, fund_config)
         
         # Create redemption request
+        redemption_id = str(uuid.uuid4())
         redemption_request = RedemptionRequest(
+            id=redemption_id,  # Explicitly set the ID
             client_id=client_id,
             investment_id=redemption_data.investment_id,
             fund_code=investment_found.fund_code,
