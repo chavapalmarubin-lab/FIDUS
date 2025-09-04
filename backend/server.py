@@ -2497,7 +2497,7 @@ def generate_clients_excel_data():
     for user in MOCK_USERS.values():
         if user["type"] == "client":
             transactions = generate_mock_transactions(user["id"], 50)
-            balances = calculate_balances(transactions)
+            balances = calculate_balances(user["id"])
             
             # Calculate additional metrics
             total_transactions = len(transactions)
