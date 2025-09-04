@@ -616,7 +616,7 @@ const AdminInvestmentManagement = () => {
                     className="w-full min-h-[42px] px-3 py-2 bg-slate-700 border-2 border-slate-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled>Choose a client ready for investment</option>
-                    {readyClients.map(client => (
+                    {(readyClients || []).map(client => (
                       <option 
                         key={client.client_id} 
                         value={client.client_id}
