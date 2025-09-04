@@ -5964,8 +5964,10 @@ async def get_admin_investments_overview():
 async def get_client_redemptions(client_id: str):
     """Get all redemptions and available redemption options for a client"""
     try:
-        # Get client investments
-        if client_id not in client_investments:
+        # Get client investments from MongoDB
+        client_investments_list = mongodb_manager.get_client_investments(client_id)
+        
+        if not client_investments_list:
             return {
                 "success": True,
                 "redemptions": [],
@@ -5973,7 +5975,20 @@ async def get_client_redemptions(client_id: str):
                 "message": "No investments found for client"
             }
         
-        investments = client_investments[client_id]
+        # Convert MongoDB investment data to FundInvestment objects
+        investments = []
+        for investment_data in client_investments_list:
+            # Create FundInvestment object with proper structure
+            fund_investment = FundInvestment(
+                investment_id=investment_data['investment_id'],
+                client_id=client_id,
+                fund_code=investment_data['fund_code'],
+                principal_amount=investment_data['principal_amount'],
+                deposit_date=investment_data['deposit_date'],
+                interest_rate=investment_data.get('monthly_interest_rate', 0.0)
+            )
+            investments.append(fund_investment)
+        
         available_redemptions = []
         client_redemption_requests = []
         
