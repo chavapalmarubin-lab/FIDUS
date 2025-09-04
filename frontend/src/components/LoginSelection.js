@@ -115,7 +115,6 @@ const LoginSelection = ({ onLogin }) => {
                   border: "1px solid rgba(255, 167, 38, 0.08)",
                   transition: "all 0.3s ease"
                 }}
-                }}
               />
             </motion.div>
             <CardTitle className="text-2xl text-white">
