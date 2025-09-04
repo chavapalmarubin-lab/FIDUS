@@ -361,7 +361,7 @@ const ClientDashboard = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredTransactions.map((transaction, index) => (
+                {(filteredTransactions || []).map((transaction, index) => (
                   <motion.div
                     key={transaction.id}
                     initial={{ opacity: 0, x: -20 }}
