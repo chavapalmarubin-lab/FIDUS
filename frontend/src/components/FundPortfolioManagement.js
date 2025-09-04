@@ -451,7 +451,7 @@ const FundPortfolioManagement = () => {
                   }}
                 />
                 <Legend />
-                {Object.keys(fundData).map(fundCode => (
+                {Object.keys(fundData || {}).map(fundCode => (
                   <Line
                     key={fundCode}
                     type="monotone"
