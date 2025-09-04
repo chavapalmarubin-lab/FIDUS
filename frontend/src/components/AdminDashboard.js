@@ -179,7 +179,7 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const cumTotal = useMemo(() => {
     let nav = 100;
-    return weightedWeekly.map((r) => {
+    return (weightedWeekly || []).map((r) => {
       const pct = parseNumber(r.TOTAL) / 100;
       nav = nav * (1 + pct);
       return { week: r.week, TOTAL: Number(nav.toFixed(4)) };
