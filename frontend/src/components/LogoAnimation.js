@@ -117,6 +117,7 @@ const LogoAnimation = ({ onComplete }) => {
 
       {/* Network Diagram */}
       <motion.div
+        key="network-diagram"
         className="financial-element"
         style={{ bottom: "20%", right: "15%" }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
