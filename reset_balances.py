@@ -80,7 +80,7 @@ def reset_all_balances():
         return False
 
 if __name__ == "__main__":
-    success = reset_balances()
+    success = reset_all_balances()
     if success:
         print("\n✅ System is now ready with clean zero balances")
     else:
