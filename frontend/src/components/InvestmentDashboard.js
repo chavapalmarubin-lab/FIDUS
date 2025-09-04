@@ -216,7 +216,7 @@ const InvestmentDashboard = ({ user, userType }) => {
   };
 
   const preparePortfolioChartData = () => {
-    return investments.map(inv => ({
+    return (investments || []).map(inv => ({
       name: inv.fund_code,
       value: inv.current_value,
       color: FUND_COLORS[inv.fund_code] || '#6b7280'
