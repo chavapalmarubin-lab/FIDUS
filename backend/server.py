@@ -6475,45 +6475,20 @@ async def get_all_activity_logs():
 
 @api_router.get("/clients/all")
 async def get_all_clients():
-    """Get all clients with their investment readiness status"""
+    """Get all clients with their investment readiness status from MongoDB"""
     try:
-        clients = []
+        # Get all clients from MongoDB
+        clients = mongodb_manager.get_all_clients()
         
-        # Get all clients from MOCK_USERS
-        for username, user_data in MOCK_USERS.items():
-            if user_data.get('type') == 'client':
-                client_id = user_data.get('id', username)
-                
-                # Get investment readiness status
-                readiness = client_readiness.get(client_id, {
-                    'client_id': client_id,
-                    'aml_kyc_completed': False,
-                    'agreement_signed': False,
-                    'deposit_date': None,
-                    'investment_ready': False,
-                    'notes': '',
-                    'updated_at': datetime.now(timezone.utc).isoformat(),
-                    'updated_by': ''
-                })
-                
-                client_info = {
-                    **user_data,
-                    'readiness_status': readiness,
-                    'investment_ready': readiness.get('investment_ready', False),
-                    'total_investments': len(client_investments.get(client_id, [])),
-                    'last_login': user_data.get('last_login', 'Never')
-                }
-                
-                clients.append(client_info)
-        
-        # Sort by name
-        clients.sort(key=lambda x: x.get('name', ''))
+        # Calculate statistics
+        total_clients = len(clients)
+        ready_for_investment = len([c for c in clients if c.get('investment_ready', False)])
         
         return {
             "success": True,
             "clients": clients,
-            "total_clients": len(clients),
-            "ready_for_investment": len([c for c in clients if c.get('investment_ready', False)])
+            "total_clients": total_clients,
+            "ready_for_investment": ready_for_investment
         }
         
     except Exception as e:
