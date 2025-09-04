@@ -146,7 +146,7 @@ class ProductionReadinessTester:
             ("GET", "api/crm/funds", 200),
             ("GET", "api/investments/funds/config", 200),
             ("GET", "api/clients/all", 200),
-            ("GET", "api/mt5/admin/overview", 200),
+            ("GET", "api/crm/mt5/admin/overview", 200),  # Corrected MT5 endpoint
             ("GET", "api/crm/prospects", 200),
             ("GET", "api/admin/clients", 200)
         ]
