@@ -5494,26 +5494,31 @@ async def create_client_investment(investment_data: InvestmentCreate):
             investment_data.deposit_date
         )
         
-        # Store investment
-        if investment_data.client_id not in client_investments:
-            client_investments[investment_data.client_id] = []
-        client_investments[investment_data.client_id].append(investment.dict())
+        # Store investment in MongoDB
+        investment_id = mongodb_manager.create_investment({
+            'client_id': investment_data.client_id,
+            'fund_code': investment_data.fund_code,
+            'amount': investment_data.amount,
+            'deposit_date': investment_data.deposit_date or datetime.now(timezone.utc),
+            'incubation_end_date': investment.incubation_end_date,
+            'interest_start_date': investment.interest_start_date,
+            'minimum_hold_end_date': investment.minimum_hold_end_date
+        })
         
-        # Log the deposit activity
-        create_activity_log(
-            client_id=investment_data.client_id,
-            activity_type="deposit",
-            amount=investment_data.amount,
-            description=f"Investment deposit in {fund_config.name}",
-            performed_by="admin",  # Created by admin
-            investment_id=investment.investment_id,
-            fund_code=investment_data.fund_code,
-            reference_id=investment.investment_id,
-            metadata={
-                "deposit_date": investment_data.deposit_date or datetime.now(timezone.utc).isoformat(),
-                "fund_name": fund_config.name
-            }
-        )
+        if not investment_id:
+            raise HTTPException(status_code=500, detail="Failed to create investment in database")
+        
+        # Update the investment object with the actual ID from MongoDB
+        investment.investment_id = investment_id
+        
+        # Log the deposit activity in MongoDB
+        mongodb_manager.log_activity({
+            'client_id': investment_data.client_id,
+            'activity_type': 'deposit',
+            'amount': investment_data.amount,
+            'fund_code': investment_data.fund_code,
+            'description': f"Investment deposit in {fund_config.name}"
+        })
         
         logging.info(f"Investment created: {investment.investment_id} for client {investment_data.client_id}")
         
