@@ -229,6 +229,7 @@ const LogoAnimation = ({ onComplete }) => {
       {/* Pulsing Effect */}
       {showLogo && (
         <motion.div
+          key="pulsing-effect"
           style={{
             position: "absolute",
             width: "300px",
