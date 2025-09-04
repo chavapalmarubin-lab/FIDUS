@@ -146,6 +146,7 @@ const LogoAnimation = ({ onComplete }) => {
 
       {/* Data Blocks */}
       <motion.div
+        key="data-blocks"
         className="financial-element"
         style={{ top: "60%", left: "50%", transform: "translateX(-50%)" }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
