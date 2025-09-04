@@ -17,6 +17,18 @@ function App() {
     const skipAnimation = urlParams.get('skip_animation') === 'true';
     
     if (skipAnimation) {
+      // Check if user is already logged in
+      const savedUser = localStorage.getItem("fidus_user");
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          setCurrentView(userData.type === "admin" ? "admin" : "client");
+          return;
+        } catch (e) {
+          localStorage.removeItem("fidus_user");
+        }
+      }
       // Skip animation for testing/production
       setCurrentView("login");
     } else {
