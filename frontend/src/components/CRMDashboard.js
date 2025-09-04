@@ -524,7 +524,7 @@ const CRMDashboard = ({ user }) => {
                       dataKey="value"
                     >
                       {fundAllocationData.map((entry, index) => (
-                        <Cell key={`crm-cell-${entry.name}-${index}`} fill={entry.color} />
+                        <Cell key={`crm-cell-${index}-${entry.name}-${entry.value}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip 
