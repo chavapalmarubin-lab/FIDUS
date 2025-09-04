@@ -354,6 +354,21 @@ frontend:
         - agent: "testing"
         - comment: "✅ PRODUCTION READINESS TESTING CONFIRMED: Calendar tab functionality verified during comprehensive frontend testing. Calendar component loads correctly with September 2025 display, month navigation working (left/right arrows), event legend with 5 color-coded event types (Investment Start, Interest Begins, Interest Payment, Interest Redemption, Principal Redemption), calendar grid structure proper 7-day layout, responsive design confirmed on multiple viewports. Calendar provides clear liquidity overview for client investments and integrates properly with FIDUS fund business rules. Ready for production deployment."
 
+  - task: "Investment Dashboard Date Parsing Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/InvestmentDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "CRITICAL DATE PARSING ERROR IDENTIFIED: Line 248 in InvestmentDashboard.js had direct call to format(date, 'MMM yyyy') that bypassed safeFormatDate() utility, causing 'Invalid time value' RangeError crashes when accessing Investment tab. Fixed by replacing with safeFormatDate(date, 'MMM yyyy') to ensure all date formatting goes through safe parsing utility."
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 INVESTMENT DASHBOARD DATE PARSING FIX VERIFICATION COMPLETED SUCCESSFULLY! Comprehensive testing confirms the critical date parsing issue has been completely resolved: ✅ LOGIN AS GERARDO BRIONES: Successfully authenticated as client1/password123 (Gerardo Briones) and accessed Client Dashboard without any login issues. ✅ INVESTMENT TAB ACCESS: Investment tab loads successfully without any crashes or JavaScript errors - the tab was previously completely broken with RangeError. ✅ NO 'INVALID TIME VALUE' RANGEERROR: Comprehensive console monitoring throughout entire test session detected ZERO 'Invalid time value' errors or RangeError exceptions - the critical fix is working perfectly. ✅ INVESTMENT DASHBOARD LOADING: Investment Dashboard loads successfully with header 'Investment Dashboard' and subtitle 'View your FIDUS fund investments' displaying correctly. ✅ GERARDO'S INVESTMENT DATA DISPLAY: All 4 CORE investments display properly with correct financial data - Total Invested: $80,000.00, Current Value: $86,825.00, Interest Earned: +$6,825.00, Return: +8.53%. ✅ DATE FORMATTING VERIFICATION: All date displays use proper MMM yyyy format (Nov 2025, Mar 2026, Jul 2026, Sep 2027) in charts and projections without any parsing errors. ✅ CHARTS AND PROJECTIONS WORKING: Portfolio Allocation pie chart displays CORE fund percentages correctly, Portfolio Growth Projection area chart shows 24-month timeline with proper month labels, all chart elements render without JavaScript errors. ✅ TAB NAVIGATION TESTING: Successfully navigated through Overview, My Investments, Projections, and Timeline tabs - all tabs load without triggering any date parsing errors. ✅ TIMELINE TAB VERIFICATION: Timeline tab displays investment milestones with properly formatted dates (Dec 19, 2024, Sep 04, 2025, Mar 01, 2025, Feb 12, 2026) using safeFormatDate utility. RESULT: The date parsing fix is 100% successful! Investment Dashboard no longer crashes with 'Invalid time value' RangeError, all date formatting displays correctly, and Gerardo's investment data is fully accessible. The safeFormatDate(date, 'MMM yyyy') replacement on line 248 has completely resolved the critical issue that was blocking Investment tab functionality."
+
   - task: "Document Upload Functionality in Client Readiness Management"
     implemented: true
     working: true
