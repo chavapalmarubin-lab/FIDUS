@@ -5572,14 +5572,14 @@ async def get_client_investments(client_id: str):
             total_current_value += investment["current_value"]
             total_earned_interest += investment["interest_earned"]
         
-        # Calculate portfolio statistics
+        # Calculate portfolio statistics from MongoDB data
         portfolio_stats = {
             "total_investments": len(enriched_investments),
             "total_invested": round(total_invested, 2),
             "total_current_value": round(total_current_value, 2),
-            "total_earned_interest": round(total_current_value - total_invested, 2),
-            "total_projected_interest": round(total_projected_interest, 2),
-            "projected_portfolio_value": round(total_invested + total_projected_interest, 2),
+            "total_earned_interest": round(total_earned_interest, 2),
+            "total_projected_interest": round(total_earned_interest, 2),  # Using earned as projected for now
+            "projected_portfolio_value": round(total_current_value, 2),
             "overall_return_percentage": round(((total_current_value - total_invested) / total_invested * 100), 2) if total_invested > 0 else 0.0
         }
         
