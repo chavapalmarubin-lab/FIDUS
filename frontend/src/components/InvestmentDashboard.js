@@ -253,6 +253,13 @@ const InvestmentDashboard = ({ user, userType }) => {
     return chartData;
   };
 
+  const calculateTimelineInfo = (investment) => {
+    const daysUntilIncubationEnds = Math.max(0, differenceInDays(safeParseDate(investment.incubation_end_date), new Date()));
+    const daysUntilCanRedeem = Math.max(0, differenceInDays(safeParseDate(investment.minimum_hold_end_date), new Date()));
+    
+    return { daysUntilIncubationEnds, daysUntilCanRedeem };
+  };
+
   const renderInvestmentCard = (investment) => {
     const daysUntilIncubationEnds = Math.max(0, differenceInDays(new Date(investment.incubation_end_date), new Date()));
     const daysUntilCanRedeem = Math.max(0, differenceInDays(new Date(investment.minimum_hold_end_date), new Date()));
