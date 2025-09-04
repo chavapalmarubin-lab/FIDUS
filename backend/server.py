@@ -6396,36 +6396,39 @@ async def get_funds_overview():
     try:
         funds_overview = {}
         
+        # Get all clients and their investments from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        
         for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
-            # Calculate fund AUM from client investments
+            # Calculate fund AUM from MongoDB investments
             fund_aum = 0
             total_investors = 0
             client_interest_rate = fund_config.interest_rate
             
-            # Sum all investments for this fund
-            for client_id, investments in client_investments.items():
-                for investment_data in investments:
-                    investment = FundInvestment(**investment_data)
-                    if investment.fund_code == fund_code:
-                        current_value = calculate_redemption_value(investment, fund_config)
+            # Sum all investments for this fund from MongoDB
+            for client in all_clients:
+                client_investments_list = mongodb_manager.get_client_investments(client['id'])
+                for investment in client_investments_list:
+                    if investment['fund_code'] == fund_code:
+                        current_value = investment['current_value']
                         fund_aum += current_value
                         total_investors += 1
             
-            # Get fund configuration from FIDUS_FUNDS
+            # Get fund configuration from FIDUS_FUNDS (fallback data)
             fund_info = FIDUS_FUNDS.get(fund_code, {})
             
             funds_overview[fund_code] = {
                 "fund_code": fund_code,
                 "name": fund_config.name,
                 "fund_type": getattr(fund_info, 'fund_type', 'Investment Fund'),
-                "aum": fund_aum,
-                "nav": fund_aum,  # For now, NAV = AUM
+                "aum": round(fund_aum, 2),
+                "nav": round(fund_aum, 2),  # For now, NAV = AUM
                 "nav_per_share": getattr(fund_info, 'nav_per_share', 100.0),
                 "performance_ytd": getattr(fund_info, 'performance_ytd', 0.0),
                 "performance_1y": getattr(fund_info, 'performance_1y', 0.0),
                 "total_investors": total_investors,
                 "client_interest_rate": client_interest_rate,
-                "client_investments": fund_aum,
+                "client_investments": round(fund_aum, 2),
                 "minimum_investment": fund_config.minimum_investment,
                 "management_fee": getattr(fund_info, 'management_fee', 0.0),
                 "performance_fee": getattr(fund_info, 'performance_fee', 0.0),
@@ -6435,7 +6438,7 @@ async def get_funds_overview():
         return {
             "success": True,
             "funds": funds_overview,
-            "total_aum": sum(fund["aum"] for fund in funds_overview.values()),
+            "total_aum": round(sum(fund["aum"] for fund in funds_overview.values()), 2),
             "total_investors": sum(fund["total_investors"] for fund in funds_overview.values())
         }
         
