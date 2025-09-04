@@ -633,7 +633,7 @@ const CRMDashboard = ({ user }) => {
                       </SelectTrigger>
                       <SelectContent className="bg-slate-700 border-slate-600">
                         <SelectItem value="all_clients">All Clients Overview</SelectItem>
-                        {crmData.trading.clients.map((client) => (
+                        {(crmData?.trading?.clients || []).map((client) => (
                           <SelectItem key={client.client_id} value={client.client_id}>
                             {client.client_name} - {client.account_number}
                           </SelectItem>
