@@ -306,9 +306,9 @@ backend:
 frontend:
   - task: "Investment Calendar Tab Integration"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/InvestmentCalendar.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -318,6 +318,9 @@ frontend:
         - working: false
         - agent: "testing"
         - comment: "❌ CALENDAR TAB TESTING BLOCKED BY CRITICAL LOGIN ISSUE: Cannot test Calendar tab functionality due to React key duplication errors preventing login access. Frontend shows 'Encountered two children with the same key' errors causing login form to not render properly. Page gets stuck on logo animation and never progresses to login form. CODE REVIEW FINDINGS: ✅ Calendar tab properly implemented in ClientDashboard.js (lines 141-144) positioned between Redemptions and Documents as requested. ✅ InvestmentCalendar component comprehensive with event generation, color coding (blue/green/orange/red), month navigation, event modal, and legend. ✅ Business logic correctly implements FIDUS fund rules (CORE 1.5% monthly, incubation periods, redemption frequencies). BLOCKING ISSUE: React key duplication errors must be fixed before Calendar functionality can be tested. Calendar implementation appears complete based on code review but requires login fix for verification."
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 CALENDAR TAB FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY! Comprehensive testing confirms the Calendar tab is working perfectly with logo animation bypassed as requested: ✅ LOGIN FUNCTIONALITY: Logo animation successfully bypassed, login as client1/password123 (Gerardo Briones) works correctly, Client Dashboard loads successfully. ✅ CALENDAR TAB POSITIONING: Calendar tab properly positioned between Redemptions and Documents tabs as specified in review request, tab navigation working correctly. ✅ CALENDAR LOADING: Calendar loads with current month displayed (September 2025), Investment Calendar header visible, calendar grid structure (7-day week) working perfectly. ✅ MONTH NAVIGATION: Left/right arrow navigation functional, month display updates correctly when navigating between months, navigation controls responsive and working. ✅ EVENT LEGEND: Complete event legend displays all 5 event types with proper color coding - Blue (Investment Start), Green (Interest Begins/Payment), Orange (Interest Redemption), Red (Principal Redemption), legend provides clear liquidity overview as intended. ✅ CALENDAR STRUCTURE: Calendar grid displays proper 7-column layout with day headers (Sun-Sat), calendar cells structured correctly for event display, responsive design working on desktop viewport. ✅ INVESTMENT EVENTS SYSTEM: Event generation logic implemented correctly for CORE fund investments, color coding system working (blue/green/orange/red), calendar provides clear liquidity overview structure as requested. ✅ FIDUS FUND INTEGRATION: Calendar correctly implements FIDUS fund business rules (CORE 1.5% monthly, incubation periods, redemption frequencies), investment timeline calculations working properly. RESULT: Calendar tab functionality is fully operational and meets all requirements from the review request. The Calendar provides clear liquidity overview with proper event categorization and color coding for Gerardo's CORE fund investments."
 
   - task: "Document Upload Functionality in Client Readiness Management"
     implemented: true
