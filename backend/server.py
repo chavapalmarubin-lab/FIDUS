@@ -941,8 +941,8 @@ async def get_client_data(client_id: str):
     if client_id not in [user["id"] for user in MOCK_USERS.values() if user["type"] == "client"]:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    # Generate or retrieve transactions
-    transactions = generate_mock_transactions(client_id)
+    # For clean start, return empty transactions - will be populated with real activity
+    transactions = []
     balances = calculate_balances(client_id)
     
     # Create balance object
