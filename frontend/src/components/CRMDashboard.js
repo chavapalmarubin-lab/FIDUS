@@ -838,7 +838,7 @@ const CRMDashboard = ({ user }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {crmData.capital_flows.recent_flows.map((flow) => (
+                    {(crmData?.capital_flows?.recent_flows || []).map((flow) => (
                       <tr key={flow.id} className="border-b border-slate-700 hover:bg-slate-700/50">
                         <td className="py-3 px-4 text-gray-400">
                           {format(new Date(flow.trade_date), 'MMM dd, yyyy')}
