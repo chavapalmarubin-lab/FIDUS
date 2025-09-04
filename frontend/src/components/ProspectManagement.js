@@ -332,7 +332,7 @@ const ProspectManagement = () => {
         </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {prospects.map(prospect => (
+          {(prospects || []).map(prospect => (
             <div key={prospect.id} className="bg-white rounded-lg border p-3 shadow-sm">
               <div className="flex items-start justify-between mb-2">
                 <div>
