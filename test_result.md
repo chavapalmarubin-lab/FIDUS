@@ -335,6 +335,21 @@ backend:
         - agent: "testing"
         - comment: "🎯 ADMIN PORTFOLIO SUMMARY AUM FIELD MISMATCH ISSUE RESOLVED! Conducted detailed investigation of user-reported frontend $0 AUM display issue as requested in review: ✅ ROOT CAUSE IDENTIFIED: Field name mismatch between backend and frontend - Backend was returning 'total_aum' field but frontend AdminDashboard.js line 127 was reading 'aum' field, causing undefined value to display as $0. ✅ ISSUE CONFIRMED: GET /api/admin/portfolio-summary was correctly calculating AUM as $161,825 (CORE $86,825 + BALANCE $75,000) but frontend couldn't access it due to wrong field name. ✅ SOLUTION IMPLEMENTED: Updated backend endpoint to return both 'aum' and 'total_aum' fields with identical values for backward compatibility. ✅ FIX VERIFIED: Comprehensive testing confirms both field names now present with correct $161,825 value, fund breakdown accurate (CORE: 53.65%, BALANCE: 46.35%), allocation percentages calculated correctly, and client count shows 2 clients with investments. ✅ CALCULATION ACCURACY: Verified AUM calculation logic is mathematically correct - sum of all client investment current_values from MongoDB matches expected total. RESULT: Frontend AUM display issue completely resolved! Admin dashboard should now show correct $161,825 total AUM instead of $0. All 4/4 AUM-related tests passed (100% success rate). The specific user-reported issue has been fixed with minimal code change ensuring compatibility."
 
+  - task: "Admin Portfolio Summary AUM Field Mismatch Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL FIELD MISMATCH IDENTIFIED: User-reported frontend showing $0 AUM traced to backend returning 'total_aum' field while frontend AdminDashboard.js expects 'aum' field. Backend calculation correct ($161,825) but inaccessible to frontend due to wrong field name."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ AUM FIELD MISMATCH COMPLETELY RESOLVED! Fixed backend GET /api/admin/portfolio-summary endpoint to return both 'aum' and 'total_aum' fields with identical values for compatibility. Verified: (1) Both field names present with correct $161,825 value, (2) AUM calculation accurate: CORE $86,825 + BALANCE $75,000 = $161,825, (3) Fund allocation percentages correct: CORE 53.65%, BALANCE 46.35%, (4) Client count accurate: 2 clients with investments, (5) Fund breakdown matches total AUM. Frontend should now display correct AUM value instead of $0. All 4/4 AUM tests passed (100% success rate). Issue completely resolved with minimal backend change ensuring backward compatibility."
+
 frontend:
   - task: "Admin Dashboard Map() Error Fix"
     implemented: true
