@@ -534,7 +534,7 @@ const FundPortfolioManagement = () => {
                     className="w-full mt-1 p-2 bg-slate-700 border border-slate-600 text-white rounded-md"
                   >
                     <option value="">Select Fund</option>
-                    {Object.keys(fundData).map(fundCode => (
+                    {Object.keys(fundData || {}).map(fundCode => (
                       <option key={fundCode} value={fundCode}>{fundCode}</option>
                     ))}
                   </select>
