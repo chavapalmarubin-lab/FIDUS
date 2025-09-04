@@ -533,13 +533,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User-Reported Issues Comprehensive Stress Test"
-    - "Admin Investment Overview Data Consistency Fix"
-    - "Fund Configuration Interest Rate Fix"
+    - "Client Investment Tab Error Investigation"
   stuck_tasks:
-    - "User-Reported Issues Comprehensive Stress Test"
+    - "Client Investment Tab Error Investigation"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
