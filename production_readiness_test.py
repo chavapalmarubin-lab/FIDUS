@@ -443,6 +443,7 @@ class ProductionReadinessTester:
             "name": "Database Persistence Test Client",
             "email": f"persistence_test_{int(time.time())}@fidus.com",
             "phone": "+1-555-9999",
+            "temporary_password": "TempPersist123!",  # Added required field
             "notes": "Testing database persistence"
         }
         
