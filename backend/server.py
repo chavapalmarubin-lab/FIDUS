@@ -5463,10 +5463,42 @@ async def get_prospect_pipeline():
 
 @api_router.get("/investments/funds/config")
 async def get_fund_configurations():
-    """Get all available fund configurations from MongoDB"""
+    """Get all available fund configurations"""
     try:
-        # Get fund configurations from MongoDB
-        funds = mongodb_manager.get_fund_configurations()
+        # Use hardcoded FIDUS_FUND_CONFIG to ensure correct interest rates
+        funds = []
+        
+        for fund_code, config in FIDUS_FUND_CONFIG.items():
+            # Get real AUM and investor count from MongoDB
+            all_clients = mongodb_manager.get_all_clients()
+            total_aum = 0.0
+            investor_count = 0
+            
+            for client in all_clients:
+                client_investments = mongodb_manager.get_client_investments(client['id'])
+                for investment in client_investments:
+                    if investment['fund_code'] == fund_code:
+                        total_aum += investment['current_value']
+                        investor_count += 1
+            
+            fund_data = {
+                'fund_code': fund_code,
+                'name': config.name,
+                'interest_rate': config.interest_rate,  # Use correct interest rate from config
+                'monthly_interest_rate': config.interest_rate,
+                'annual_interest_rate': config.interest_rate * 12,
+                'minimum_investment': config.minimum_investment,
+                'redemption_frequency': config.redemption_frequency,
+                'aum': round(total_aum, 2),
+                'nav_per_share': 100.0,
+                'performance_ytd': 0.0,
+                'total_investors': investor_count,
+                'incubation_period_months': config.incubation_months,
+                'minimum_hold_period_months': config.minimum_hold_months,
+                'invitation_only': config.invitation_only
+            }
+            
+            funds.append(fund_data)
         
         return {
             "success": True,
