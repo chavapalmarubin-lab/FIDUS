@@ -436,6 +436,10 @@ payment_confirmations = {}  # {confirmation_id: PaymentConfirmation}
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
+    # Ensure deposit_date is timezone-aware
+    if deposit_date.tzinfo is None:
+        deposit_date = deposit_date.replace(tzinfo=timezone.utc)
+    
     # Incubation period (2 months from deposit)
     incubation_end = deposit_date + timedelta(days=60)  # Approximately 2 months
     
