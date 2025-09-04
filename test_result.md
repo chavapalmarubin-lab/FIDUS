@@ -507,8 +507,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Fund Portfolio Management and Cash Flow Management System"
-  stuck_tasks: []
+    - "User-Reported Issues Comprehensive Stress Test"
+    - "Admin Investment Overview Data Consistency Fix"
+    - "Fund Configuration Interest Rate Fix"
+  stuck_tasks:
+    - "User-Reported Issues Comprehensive Stress Test"
   test_all: false
   test_priority: "high_first"
   redemption_system_testing: "completed"
@@ -516,6 +519,7 @@ test_plan:
   document_upload_testing: "completed"
   modal_ux_testing: "completed"
   fund_portfolio_cashflow_testing: "completed"
+  user_reported_issues_testing: "critical_issues_found"
 
 agent_communication:
     - agent: "testing"
