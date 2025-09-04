@@ -321,7 +321,7 @@ const FundPortfolioManagement = () => {
 
       {/* Individual Fund Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Object.entries(fundData).map(([fundCode, fund]) => (
+        {Object.entries(fundData || {}).map(([fundCode, fund]) => (
           <Card key={fundCode} className={`dashboard-card border-2 ${getFundColorClass(fundCode)}`}>
             <CardHeader>
               <div className="flex items-center justify-between">
