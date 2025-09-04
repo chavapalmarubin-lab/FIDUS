@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
 import AdminDashboard from "./components/AdminDashboard";
-import "./App.css";
 
 function App() {
-  const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
+  const [currentView, setCurrentView] = useState("loading");
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check for skip animation parameter (for production testing)
+    // Initialize the app
     const urlParams = new URLSearchParams(window.location.search);
     const skipAnimation = urlParams.get('skip_animation') === 'true';
     
     if (skipAnimation) {
-      // Check if user is already logged in
+      // Check for existing session
       const savedUser = localStorage.getItem("fidus_user");
       if (savedUser) {
         try {
@@ -29,46 +27,12 @@ function App() {
           localStorage.removeItem("fidus_user");
         }
       }
-      // Skip animation for testing/production
       setCurrentView("login");
     } else {
-      // Clear any existing user session to always show logo animation
-      localStorage.removeItem("fidus_user");
-      
-      // Always start with logo animation
+      // Start with logo animation
       setCurrentView("logo");
     }
-
-    // Listen for storage changes (for programmatic login)
-    const handleStorageChange = () => {
-      const savedUser = localStorage.getItem("fidus_user");
-      if (savedUser && currentView === "login") {
-        try {
-          const userData = JSON.parse(savedUser);
-          setUser(userData);
-          setCurrentView(userData.type === "admin" ? "admin" : "client");
-        } catch (e) {
-          localStorage.removeItem("fidus_user");
-        }
-      }
-    };
-
-    // Listen for custom login event
-    const handleCustomLogin = (event) => {
-      if (event.detail) {
-        setUser(event.detail);
-        setCurrentView(event.detail.type === "admin" ? "admin" : "client");
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('fidus-login', handleCustomLogin);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('fidus-login', handleCustomLogin);
-    };
-  }, [currentView]);
+  }, []);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -83,15 +47,32 @@ function App() {
   };
 
   const handleAnimationComplete = () => {
+    console.log("Animation completed, transitioning to login");
     setCurrentView("login");
   };
+
+  // Show loading screen initially
+  if (currentView === "loading") {
+    return (
+      <div className="App" style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white'
+      }}>
+        <div>Loading FIDUS...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
       <AnimatePresence mode="wait">
         {currentView === "logo" && (
           <motion.div
-            key="logo"
+            key="logo-animation"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
@@ -102,7 +83,7 @@ function App() {
         
         {currentView === "login" && (
           <motion.div
-            key="login"
+            key="login-selection"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -114,7 +95,7 @@ function App() {
         
         {currentView === "client" && user && (
           <motion.div
-            key="client"
+            key="client-dashboard"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -126,7 +107,7 @@ function App() {
         
         {currentView === "admin" && user && (
           <motion.div
-            key="admin"
+            key="admin-dashboard"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
