@@ -532,7 +532,7 @@ const CashFlowManagement = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {cashFlowData.slice(0, 10).map((transaction) => (
+              {(cashFlowData || []).slice(0, 10).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
                   <div className="flex items-center">
                     {transaction.type === 'inflow' ? (
