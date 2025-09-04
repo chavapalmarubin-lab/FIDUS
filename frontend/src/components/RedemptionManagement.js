@@ -31,6 +31,7 @@ const RedemptionManagement = ({ user }) => {
   const [success, setSuccess] = useState("");
   const [showRedemptionModal, setShowRedemptionModal] = useState(false);
   const [selectedInvestment, setSelectedInvestment] = useState(null);
+  const [redemptionType, setRedemptionType] = useState('interest'); // 'interest' or 'principal'
   const [redemptionForm, setRedemptionForm] = useState({
     amount: "",
     reason: ""
