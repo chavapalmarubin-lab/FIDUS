@@ -3,8 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
-import ClientDashboard from "./components/ClientDashboard";
-import AdminDashboard from "./components/AdminDashboard";
+// Temporarily commenting out dashboards to isolate React key issues
+// import ClientDashboard from "./components/ClientDashboard";
+// import AdminDashboard from "./components/AdminDashboard";
 import "./App.css";
 
 function App() {
