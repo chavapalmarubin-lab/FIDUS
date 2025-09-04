@@ -2846,12 +2846,8 @@ async def register_new_client(registration_data: dict):
             "agreement_sent": False
         }
         
-        # Add to mock prospects
-        if "mock_prospects" not in globals():
-            global mock_prospects
-            mock_prospects = {}
-        
-        mock_prospects[prospect_id] = new_prospect
+        # Add to prospects_storage (CRM system)
+        prospects_storage[prospect_id] = new_prospect
         
         logging.info(f"New client registered and added to CRM leads: {name} ({email})")
         
