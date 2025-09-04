@@ -5978,14 +5978,27 @@ async def get_client_redemptions(client_id: str):
         # Convert MongoDB investment data to FundInvestment objects
         investments = []
         for investment_data in client_investments_list:
-            # Create FundInvestment object with proper structure
+            fund_code = investment_data['fund_code']
+            fund_config = FIDUS_FUND_CONFIG[fund_code]
+            
+            # Calculate missing date fields using existing function
+            deposit_date = investment_data['deposit_date']
+            if isinstance(deposit_date, str):
+                deposit_date = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+            
+            calculated_dates = calculate_investment_dates(deposit_date, fund_config)
+            
+            # Create FundInvestment object with all required fields
             fund_investment = FundInvestment(
                 investment_id=investment_data['investment_id'],
                 client_id=client_id,
-                fund_code=investment_data['fund_code'],
+                fund_code=fund_code,
                 principal_amount=investment_data['principal_amount'],
-                deposit_date=investment_data['deposit_date'],
-                interest_rate=investment_data.get('monthly_interest_rate', 0.0)
+                deposit_date=deposit_date,
+                current_value=investment_data.get('current_value', investment_data['principal_amount']),
+                incubation_end_date=calculated_dates['incubation_end_date'],
+                interest_start_date=calculated_dates['interest_start_date'],
+                minimum_hold_end_date=calculated_dates['minimum_hold_end_date']
             )
             investments.append(fund_investment)
         
@@ -5993,8 +6006,7 @@ async def get_client_redemptions(client_id: str):
         client_redemption_requests = []
         
         # Check each investment for redemption eligibility
-        for investment_data in investments:
-            investment = FundInvestment(**investment_data)
+        for investment in investments:
             fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
             
             can_redeem, message = can_request_redemption(investment, fund_config)
