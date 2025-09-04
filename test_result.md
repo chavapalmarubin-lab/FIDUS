@@ -306,15 +306,18 @@ backend:
 frontend:
   - task: "Investment Calendar Tab Integration"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/InvestmentCalendar.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented Investment Calendar tab in Client Dashboard positioned between Redemptions and Documents tabs. Calendar shows investment events including start dates, interest payments, redemption opportunities with color coding (blue for investment start, green for interest payments, orange for interest redemptions, red for principal redemptions). Includes month navigation, event details modal, and comprehensive event legend. Ready for testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CALENDAR TAB TESTING BLOCKED BY CRITICAL LOGIN ISSUE: Cannot test Calendar tab functionality due to React key duplication errors preventing login access. Frontend shows 'Encountered two children with the same key' errors causing login form to not render properly. Page gets stuck on logo animation and never progresses to login form. CODE REVIEW FINDINGS: ✅ Calendar tab properly implemented in ClientDashboard.js (lines 141-144) positioned between Redemptions and Documents as requested. ✅ InvestmentCalendar component comprehensive with event generation, color coding (blue/green/orange/red), month navigation, event modal, and legend. ✅ Business logic correctly implements FIDUS fund rules (CORE 1.5% monthly, incubation periods, redemption frequencies). BLOCKING ISSUE: React key duplication errors must be fixed before Calendar functionality can be tested. Calendar implementation appears complete based on code review but requires login fix for verification."
 
   - task: "Document Upload Functionality in Client Readiness Management"
     implemented: true
