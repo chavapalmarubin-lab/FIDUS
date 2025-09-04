@@ -160,16 +160,45 @@ class MongoDBManager:
             # Generate investment ID
             investment_id = str(uuid.uuid4())
             
+            # Convert dates to datetime objects if they're strings
+            deposit_date = investment_data.get('deposit_date', datetime.now(timezone.utc))
+            if isinstance(deposit_date, str):
+                try:
+                    deposit_date = datetime.fromisoformat(deposit_date.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    deposit_date = datetime.strptime(deposit_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            
+            incubation_end_date = investment_data['incubation_end_date']
+            if isinstance(incubation_end_date, str):
+                try:
+                    incubation_end_date = datetime.fromisoformat(incubation_end_date.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    incubation_end_date = datetime.strptime(incubation_end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            
+            interest_start_date = investment_data['interest_start_date']
+            if isinstance(interest_start_date, str):
+                try:
+                    interest_start_date = datetime.fromisoformat(interest_start_date.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    interest_start_date = datetime.strptime(interest_start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            
+            minimum_hold_end_date = investment_data['minimum_hold_end_date']
+            if isinstance(minimum_hold_end_date, str):
+                try:
+                    minimum_hold_end_date = datetime.fromisoformat(minimum_hold_end_date.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    minimum_hold_end_date = datetime.strptime(minimum_hold_end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            
             # Prepare investment document
             investment_doc = {
                 'investment_id': investment_id,
                 'client_id': investment_data['client_id'],
                 'fund_code': investment_data['fund_code'],
                 'principal_amount': investment_data['amount'],
-                'deposit_date': investment_data.get('deposit_date', datetime.now(timezone.utc)),
-                'incubation_end_date': investment_data['incubation_end_date'],
-                'interest_start_date': investment_data['interest_start_date'],
-                'minimum_hold_end_date': investment_data['minimum_hold_end_date'],
+                'deposit_date': deposit_date,
+                'incubation_end_date': incubation_end_date,
+                'interest_start_date': interest_start_date,
+                'minimum_hold_end_date': minimum_hold_end_date,
                 'status': 'incubating',
                 'created_at': datetime.now(timezone.utc)
             }
