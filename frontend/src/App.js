@@ -12,11 +12,20 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Clear any existing user session to always show logo animation
-    localStorage.removeItem("fidus_user");
+    // Check for skip animation parameter (for production testing)
+    const urlParams = new URLSearchParams(window.location.search);
+    const skipAnimation = urlParams.get('skip_animation') === 'true';
     
-    // Always start with logo animation
-    setCurrentView("logo");
+    if (skipAnimation) {
+      // Skip animation for testing/production
+      setCurrentView("login");
+    } else {
+      // Clear any existing user session to always show logo animation
+      localStorage.removeItem("fidus_user");
+      
+      // Always start with logo animation
+      setCurrentView("logo");
+    }
   }, []);
 
   const handleLogin = (userData) => {
