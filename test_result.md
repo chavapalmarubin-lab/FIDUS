@@ -59,6 +59,8 @@
 ## agent_communication:
 ##     - agent: "main"
 ##       message: "Initiating comprehensive production readiness testing. Focus areas: (1) Fix critical issues found during testing, (2) Integration framework preparation for MT4/MT5, (3) Full client lifecycle stress testing (registration → investment → redemption), (4) Live data transition away from mock data, (5) Demo environment setup, (6) Proper database structure with backup capabilities. Starting with systematic backend testing."
+##     - agent: "main"
+##       message: "Starting comprehensive application functionality testing based on user priority: (1) Client account creation → admin leads flow, (2) Admin leads/clients to investment readiness process, (3) Investment creation flow across client and admin sides, (4) All financial calculations flowing: admin fund → cash flow → client portal → redemptions. Testing backend first to identify and resolve critical data flow issues."
 
 # Protocol Guidelines for Main agent
 #
