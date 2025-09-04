@@ -105,9 +105,19 @@ const RedemptionManagement = ({ user }) => {
     }
   };
 
-  const openRedemptionModal = (investment) => {
+  const openRedemptionModal = (investment, type = 'interest') => {
     setSelectedInvestment(investment);
-    setRedemptionForm({ amount: investment.current_value.toString(), reason: "" });
+    setRedemptionType(type);
+    
+    // Set the correct amount based on redemption type
+    const maxAmount = type === 'interest' 
+      ? (investment.interest_earned || (investment.current_value - investment.principal_amount))
+      : investment.principal_amount;
+    
+    setRedemptionForm({ 
+      amount: maxAmount.toString(), 
+      reason: `${type === 'interest' ? 'Interest' : 'Principal'} redemption request` 
+    });
     setShowRedemptionModal(true);
     setError("");
   };
