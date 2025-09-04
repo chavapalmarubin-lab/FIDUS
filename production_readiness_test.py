@@ -603,7 +603,7 @@ class ProductionReadinessTester:
         # Test MT5 admin overview
         success, response = self.run_test(
             "MT5 Admin Overview",
-            "GET", "api/mt5/admin/overview", 200
+            "GET", "api/crm/mt5/admin/overview", 200
         )
         
         if success:
