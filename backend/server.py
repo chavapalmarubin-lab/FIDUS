@@ -5713,6 +5713,7 @@ async def get_admin_investments_overview():
     try:
         all_investments = []
         fund_summaries = {}
+        clients_summary = []  # Add clients array for admin dashboard
         total_aum = 0.0
         
         # Initialize fund summaries
@@ -5737,6 +5738,17 @@ async def get_admin_investments_overview():
             # Get investments for this client from MongoDB
             client_investments_list = mongodb_manager.get_client_investments(client_id)
             
+            # Initialize client summary
+            client_summary = {
+                "client_id": client_id,
+                "client_name": client_name,
+                "total_invested": 0.0,
+                "current_value": 0.0,
+                "total_interest": 0.0,
+                "investment_count": len(client_investments_list),
+                "funds": []
+            }
+            
             for investment in client_investments_list:
                 # Add to all investments with proper client name
                 investment_record = {
@@ -5757,6 +5769,19 @@ async def get_admin_investments_overview():
                 
                 all_investments.append(investment_record)
                 
+                # Update client summary
+                client_summary["total_invested"] += investment["principal_amount"]
+                client_summary["current_value"] += investment["current_value"]
+                client_summary["total_interest"] += investment["interest_earned"]
+                
+                # Add fund to client summary if not already there
+                fund_info = {
+                    "fund_code": investment["fund_code"],
+                    "fund_name": investment["fund_name"],
+                    "amount": investment["current_value"]
+                }
+                client_summary["funds"].append(fund_info)
+                
                 # Update fund summaries with MongoDB data
                 fund_code = investment["fund_code"]
                 fund_summaries[fund_code]["total_invested"] += investment["principal_amount"]
@@ -5765,6 +5790,14 @@ async def get_admin_investments_overview():
                 fund_summaries[fund_code]["total_interest_paid"] += investment["interest_earned"]
                 
                 total_aum += investment["current_value"]
+            
+            # Only add clients with investments to the summary
+            if client_investments_list:
+                # Round client summary values
+                client_summary["total_invested"] = round(client_summary["total_invested"], 2)
+                client_summary["current_value"] = round(client_summary["current_value"], 2)
+                client_summary["total_interest"] = round(client_summary["total_interest"], 2)
+                clients_summary.append(client_summary)
         
         # Calculate averages
         for fund_summary in fund_summaries.values():
@@ -5780,6 +5813,7 @@ async def get_admin_investments_overview():
             "total_aum": round(total_aum, 2),
             "total_investments": len(all_investments),
             "total_clients": len(all_clients),
+            "clients": clients_summary,  # Add clients array for admin dashboard
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
         }
