@@ -232,7 +232,8 @@ const InvestmentDashboard = ({ user, userType }) => {
       let totalValue = 0;
       
       investments.forEach(inv => {
-        const monthsFromStart = Math.max(0, i - Math.max(0, differenceInDays(new Date(inv.interest_start_date), baseDate) / 30));
+        const interestStartDate = safeParseDate(inv.interest_start_date);
+        const monthsFromStart = Math.max(0, i - Math.max(0, differenceInDays(interestStartDate, baseDate) / 30));
         let projectedValue = inv.principal_amount;
         
         if (monthsFromStart > 0 && inv.interest_rate > 0) {
