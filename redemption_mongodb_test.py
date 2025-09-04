@@ -155,12 +155,13 @@ class RedemptionMongoDBTester:
                 fund_code = investment.get('fund_code', 'Unknown')
                 principal = investment.get('principal_amount', 0)
                 current_value = investment.get('current_value', 0)
-                can_redeem = investment.get('can_redeem_now', False)
+                can_redeem_interest = investment.get('can_redeem_interest', False)
+                can_redeem_principal = investment.get('can_redeem_principal', False)
                 next_redemption = investment.get('next_redemption_date', 'Unknown')
                 investment_id = investment.get('investment_id', 'Unknown')
                 
                 total_value += current_value
-                if can_redeem:
+                if can_redeem_interest or can_redeem_principal:
                     eligible_for_redemption += 1
                 
                 print(f"   Investment {i}:")
@@ -168,7 +169,8 @@ class RedemptionMongoDBTester:
                 print(f"     - Fund: {fund_code}")
                 print(f"     - Principal: ${principal:,.2f}")
                 print(f"     - Current Value: ${current_value:,.2f}")
-                print(f"     - Can Redeem Now: {'✅ YES' if can_redeem else '❌ NO'}")
+                print(f"     - Can Redeem Interest: {'✅ YES' if can_redeem_interest else '❌ NO'}")
+                print(f"     - Can Redeem Principal: {'✅ YES' if can_redeem_principal else '❌ NO'}")
                 print(f"     - Next Redemption Date: {next_redemption}")
             
             print(f"\n   📈 PORTFOLIO SUMMARY:")
