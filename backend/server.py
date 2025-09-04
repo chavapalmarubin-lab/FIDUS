@@ -5539,57 +5539,38 @@ async def create_client_investment(investment_data: InvestmentCreate):
 async def get_client_investments(client_id: str):
     """Get all investments for a specific client - MongoDB version"""
     try:
-        # Get investments from MongoDB
+        # Get investments from MongoDB (already enriched with calculations)
         client_investments_list = mongodb_manager.get_client_investments(client_id)
         
-        # Calculate current values and projections
+        # Calculate portfolio statistics from MongoDB data
         enriched_investments = []
         total_invested = 0.0
         total_current_value = 0.0
-        total_projected_interest = 0.0
+        total_earned_interest = 0.0
         
-        for investment_data in client_investments_list:
-            investment = FundInvestment(**investment_data)
-            fund_config = FIDUS_FUND_CONFIG[investment.fund_code]
-            
-            # Generate projections
-            projections = generate_investment_projections(investment, fund_config)
-            
-            # Calculate months since interest started
-            now = datetime.now(timezone.utc)
-            if now >= investment.interest_start_date:
-                months_elapsed = max(0, (now.year - investment.interest_start_date.year) * 12 + 
-                                   (now.month - investment.interest_start_date.month))
-            else:
-                months_elapsed = 0
-            
-            # Calculate earned interest
-            earned_interest = 0.0
-            if fund_config.interest_rate > 0 and months_elapsed > 0:
-                earned_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, months_elapsed)
-            
-            # Update current value
-            current_value = investment.principal_amount + earned_interest
-            
+        for investment in client_investments_list:
+            # MongoDB data already includes calculations and current values
             enriched_investment = {
-                **investment.dict(),
-                "fund_name": fund_config.name,
-                "interest_rate": fund_config.interest_rate,
-                "redemption_frequency": fund_config.redemption_frequency,
-                "months_since_interest_started": months_elapsed,
-                "earned_interest": round(earned_interest, 2),
-                "current_value": round(current_value, 2),
-                "projections": projections.dict(),
-                "incubation_status": "active" if now >= investment.incubation_end_date else "incubating",
-                "days_until_incubation_ends": max(0, (investment.incubation_end_date - now).days),
-                "can_redeem": now >= investment.minimum_hold_end_date,
-                "days_until_min_hold_ends": max(0, (investment.minimum_hold_end_date - now).days)
+                "investment_id": investment["investment_id"],
+                "fund_code": investment["fund_code"],
+                "fund_name": investment["fund_name"],
+                "principal_amount": investment["principal_amount"],
+                "current_value": investment["current_value"],
+                "interest_earned": investment["interest_earned"],
+                "deposit_date": investment["deposit_date"],
+                "interest_start_date": investment["interest_start_date"],
+                "minimum_hold_end_date": investment["minimum_hold_end_date"],
+                "status": investment["status"],
+                "monthly_interest_rate": investment["monthly_interest_rate"],
+                "can_redeem_interest": investment["can_redeem_interest"],
+                "can_redeem_principal": investment["can_redeem_principal"],
+                "created_at": investment["created_at"]
             }
             
             enriched_investments.append(enriched_investment)
-            total_invested += investment.principal_amount
-            total_current_value += current_value
-            total_projected_interest += projections.total_projected_interest
+            total_invested += investment["principal_amount"]
+            total_current_value += investment["current_value"]
+            total_earned_interest += investment["interest_earned"]
         
         # Calculate portfolio statistics
         portfolio_stats = {
