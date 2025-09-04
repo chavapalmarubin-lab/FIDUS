@@ -2747,7 +2747,7 @@ async def get_detailed_clients():
         for user in MOCK_USERS.values():
             if user["type"] == "client":
                 transactions = generate_mock_transactions(user["id"], 30)
-                balances = calculate_balances(transactions)
+                balances = calculate_balances(user["id"])
                 
                 # Calculate metrics
                 total_transactions = len(transactions)
