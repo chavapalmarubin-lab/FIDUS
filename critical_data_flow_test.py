@@ -361,7 +361,7 @@ class FidusDataFlowTester:
             client_total = sum(inv.get('current_value', 0) for inv in client_investments)
             print(f"   Client total investment value: ${client_total:,.2f}")
             
-        portfolio_aum = endpoints_data.get('portfolio_summary', {}).get('aum', 0)
+        portfolio_aum = endpoints_data.get('portfolio_summary', {}).get('total_aum', 0)  # Fixed: correct field name
         print(f"   Portfolio summary AUM: ${portfolio_aum:,.2f}")
         
         funds_aum = endpoints_data.get('funds_overview', {}).get('total_aum', 0)
