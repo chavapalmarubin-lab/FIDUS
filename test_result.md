@@ -304,6 +304,18 @@ backend:
         - comment: "🎉 COMPREHENSIVE REDEMPTION SYSTEM TESTING COMPLETED SUCCESSFULLY! All critical redemption endpoints tested and working perfectly for production readiness: (1) CLIENT REDEMPTION DATA: GET /api/redemptions/client/{client_id} returns complete investment data with current values including accrued interest, redemption eligibility, and next available dates. Verified client_004 (Javier Gonzalez) $150K CORE + $200K BALANCE, client_005 (Jorge Gonzalez) $300K DYNAMIC + $100K CORE as specified. (2) FUND REDEMPTION RULES: All redemption frequencies working correctly - CORE monthly, BALANCE quarterly, DYNAMIC semi-annually after 2-month incubation periods. Business logic properly enforces minimum hold periods. (3) REDEMPTION CALCULATIONS: Interest calculations accurate with proper accrued interest - CORE 1.5%, BALANCE 2.5%, DYNAMIC 3.5% monthly rates. (4) REDEMPTION REQUEST CREATION: POST /api/redemptions/request validates business logic, rejects invalid amounts and timing violations with clear error messages. (5) ADMIN MANAGEMENT: GET /api/redemptions/admin/pending and POST /api/redemptions/admin/approve operational for approval workflow. (6) ACTIVITY LOGGING: All deposit activities properly logged when investments created, GET /api/activity-logs/client/{client_id} and admin endpoints working. (7) TIMELINE CALCULATIONS: Individual investment deposit dates correctly used for redemption eligibility calculations. System is mathematically accurate, follows all fund-specific business rules, and ready for production use. 90% test success rate (18/20 tests passed)."
 
 frontend:
+  - task: "Investment Calendar Tab Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/InvestmentCalendar.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented Investment Calendar tab in Client Dashboard positioned between Redemptions and Documents tabs. Calendar shows investment events including start dates, interest payments, redemption opportunities with color coding (blue for investment start, green for interest payments, orange for interest redemptions, red for principal redemptions). Includes month navigation, event details modal, and comprehensive event legend. Ready for testing."
+
   - task: "Document Upload Functionality in Client Readiness Management"
     implemented: true
     working: true
