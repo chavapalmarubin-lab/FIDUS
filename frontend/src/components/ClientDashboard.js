@@ -138,6 +138,10 @@ const ClientDashboard = ({ user, onLogout }) => {
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
+            <TabsTrigger value="calendar" className="text-white data-[state=active]:bg-cyan-600">
+              <CalendarIcon size={16} className="mr-2" />
+              Calendar
+            </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
               <FileText size={16} className="mr-2" />
               Documents
