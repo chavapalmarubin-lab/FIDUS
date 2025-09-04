@@ -195,8 +195,8 @@ const InvestmentDashboard = ({ user, userType }) => {
 
   const getStatusBadge = (investment) => {
     const now = new Date();
-    const incubationEnd = new Date(investment.incubation_end_date);
-    const minHoldEnd = new Date(investment.minimum_hold_end_date);
+    const incubationEnd = safeParseDate(investment.incubation_end_date);
+    const minHoldEnd = safeParseDate(investment.minimum_hold_end_date);
 
     if (now < incubationEnd) {
       return <Badge className="bg-yellow-500 text-white">Incubating</Badge>;
