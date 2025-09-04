@@ -269,8 +269,8 @@ class MongoDBManager:
                     'minimum_hold_end_date': inv['minimum_hold_end_date'].isoformat(),
                     'status': inv['status'],
                     'monthly_interest_rate': monthly_rate,
-                    'can_redeem_interest': current_date > inv['interest_start_date'],
-                    'can_redeem_principal': current_date > inv['minimum_hold_end_date'],
+                    'can_redeem_interest': current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']),
+                    'can_redeem_principal': current_date > (inv['minimum_hold_end_date'].replace(tzinfo=timezone.utc) if inv['minimum_hold_end_date'].tzinfo is None else inv['minimum_hold_end_date']),
                     'created_at': inv.get('created_at', datetime.now(timezone.utc)).isoformat()
                 }
                 
