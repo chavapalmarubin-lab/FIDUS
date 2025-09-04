@@ -15,8 +15,8 @@ function App() {
     // Clear any existing user session to always show logo animation
     localStorage.removeItem("fidus_user");
     
-    // Skip logo animation for testing - go directly to login
-    setCurrentView("login");  // Temporarily bypass logo
+    // Always start with logo animation
+    setCurrentView("logo");
   }, []);
 
   const handleLogin = (userData) => {
