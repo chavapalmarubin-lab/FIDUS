@@ -477,7 +477,7 @@ const FundPortfolioManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {rebateData.slice(0, 5).map((rebate, index) => (
+            {(rebateData || []).slice(0, 5).map((rebate, index) => (
               <div key={`fund-portfolio-rebate-${index}-${rebate.fund_code}-${rebate.broker}-${rebate.date}`} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
                 <div className="flex items-center">
                   <Badge className="mr-3" style={{ backgroundColor: FUND_COLORS[rebate.fund_code] }}>
