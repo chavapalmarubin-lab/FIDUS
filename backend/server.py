@@ -5537,9 +5537,10 @@ async def create_client_investment(investment_data: InvestmentCreate):
 
 @api_router.get("/investments/client/{client_id}")
 async def get_client_investments(client_id: str):
-    """Get all investments for a specific client"""
+    """Get all investments for a specific client - MongoDB version"""
     try:
-        client_investments_list = client_investments.get(client_id, [])
+        # Get investments from MongoDB
+        client_investments_list = mongodb_manager.get_client_investments(client_id)
         
         # Calculate current values and projections
         enriched_investments = []
