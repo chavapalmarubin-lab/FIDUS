@@ -618,7 +618,7 @@ class ProductionReadinessTester:
         # Test client account data
         success, response = self.run_test(
             "MT5 Client Account Data",
-            "GET", "api/mt5/client/5001000/account", 200
+            "GET", "api/crm/mt5/client/5001000/account", 200
         )
         
         if success:
