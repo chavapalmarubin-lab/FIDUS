@@ -726,7 +726,7 @@ const CRMDashboard = ({ user }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {clientMT5Data.positions.positions.map((position) => (
+                    {(clientMT5Data?.positions?.positions || []).map((position) => (
                       <div key={position.ticket} className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
                         <div>
                           <div className="font-medium text-white">{position.symbol}</div>
