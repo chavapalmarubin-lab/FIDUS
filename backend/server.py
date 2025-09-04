@@ -5443,16 +5443,15 @@ async def get_prospect_pipeline():
 
 @api_router.get("/investments/funds/config")
 async def get_fund_configurations():
-    """Get all available fund configurations"""
+    """Get all available fund configurations from MongoDB"""
     try:
-        fund_configs = []
-        for fund_code, config in FIDUS_FUND_CONFIG.items():
-            fund_configs.append(config.dict())
+        # Get fund configurations from MongoDB
+        funds = mongodb_manager.get_fund_configurations()
         
         return {
             "success": True,
-            "funds": fund_configs,
-            "total_funds": len(fund_configs)
+            "funds": funds,
+            "total_funds": len(funds)
         }
         
     except Exception as e:
