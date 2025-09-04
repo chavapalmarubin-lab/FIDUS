@@ -6046,15 +6046,26 @@ async def get_client_redemptions(client_id: str):
 async def create_redemption_request(redemption_data: RedemptionRequestCreate):
     """Create a new redemption request"""
     try:
-        # Find the investment
+        # Find the investment in MongoDB
         investment_found = None
         client_id = None
         
-        for cid, investments in client_investments.items():
-            for investment_data in investments:
+        # Search through all clients for the investment
+        all_clients = mongodb_manager.get_all_clients()
+        for client in all_clients:
+            client_investments_list = mongodb_manager.get_client_investments(client['id'])
+            for investment_data in client_investments_list:
                 if investment_data["investment_id"] == redemption_data.investment_id:
-                    investment_found = FundInvestment(**investment_data)
-                    client_id = cid
+                    # Create FundInvestment object
+                    investment_found = FundInvestment(
+                        investment_id=investment_data['investment_id'],
+                        client_id=client['id'],
+                        fund_code=investment_data['fund_code'],
+                        principal_amount=investment_data['principal_amount'],
+                        deposit_date=investment_data['deposit_date'],
+                        interest_rate=investment_data.get('monthly_interest_rate', 0.0)
+                    )
+                    client_id = client['id']
                     break
             if investment_found:
                 break
