@@ -6524,17 +6524,57 @@ async def get_all_rebates():
 async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
     """Get cash flow overview data"""
     try:
-        # This would integrate with real transaction data
-        # For now, return mock structure that frontend expects
+        # Get all clients and their investments from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        
+        # Calculate real cash flow data
+        fund_breakdown = {
+            "CORE": {"inflow": 0, "outflow": 0},
+            "BALANCE": {"inflow": 0, "outflow": 0},
+            "DYNAMIC": {"inflow": 0, "outflow": 0},
+            "UNLIMITED": {"inflow": 0, "outflow": 0}
+        }
+        
+        cash_flows = []
+        total_inflow = 0
+        total_outflow = 0
+        
+        # Calculate cash flows from actual investment data
+        for client in all_clients:
+            client_investments_list = mongodb_manager.get_client_investments(client['id'])
+            for investment in client_investments_list:
+                fund_code = investment['fund_code']
+                principal_amount = investment['principal_amount']
+                current_value = investment['current_value']
+                interest_earned = investment['interest_earned']
+                
+                # Count principal as inflow (money coming into fund)
+                if fund_code in fund_breakdown:
+                    fund_breakdown[fund_code]["inflow"] += principal_amount
+                    total_inflow += principal_amount
+                    
+                    # Add cash flow record
+                    cash_flows.append({
+                        "date": investment['deposit_date'],
+                        "type": "deposit",
+                        "amount": principal_amount,
+                        "fund_code": fund_code,
+                        "client_name": client['name'],
+                        "description": f"Investment deposit - {fund_code} Fund"
+                    })
+        
+        # Round all values
+        for fund_code in fund_breakdown:
+            fund_breakdown[fund_code]["inflow"] = round(fund_breakdown[fund_code]["inflow"], 2)
+            fund_breakdown[fund_code]["outflow"] = round(fund_breakdown[fund_code]["outflow"], 2)
+        
         return {
             "success": True,
-            "cash_flows": [],  # Will be populated with actual transaction data
-            "fund_breakdown": {
-                "CORE": {"inflow": 0, "outflow": 0},
-                "BALANCE": {"inflow": 0, "outflow": 0},
-                "DYNAMIC": {"inflow": 0, "outflow": 0},
-                "UNLIMITED": {"inflow": 0, "outflow": 0}
-            },
+            "cash_flows": cash_flows,
+            "fund_breakdown": fund_breakdown,
+            "total_inflow": round(total_inflow, 2),
+            "total_outflow": round(total_outflow, 2),
+            "net_cash_flow": round(total_inflow - total_outflow, 2),
             "timeframe": timeframe,
             "selected_fund": fund
         }
