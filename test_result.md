@@ -348,6 +348,21 @@ backend:
         - agent: "testing"
         - comment: "🎯 ADMIN PORTFOLIO SUMMARY AUM FIELD MISMATCH ISSUE RESOLVED! Conducted detailed investigation of user-reported frontend $0 AUM display issue as requested in review: ✅ ROOT CAUSE IDENTIFIED: Field name mismatch between backend and frontend - Backend was returning 'total_aum' field but frontend AdminDashboard.js line 127 was reading 'aum' field, causing undefined value to display as $0. ✅ ISSUE CONFIRMED: GET /api/admin/portfolio-summary was correctly calculating AUM as $161,825 (CORE $86,825 + BALANCE $75,000) but frontend couldn't access it due to wrong field name. ✅ SOLUTION IMPLEMENTED: Updated backend endpoint to return both 'aum' and 'total_aum' fields with identical values for backward compatibility. ✅ FIX VERIFIED: Comprehensive testing confirms both field names now present with correct $161,825 value, fund breakdown accurate (CORE: 53.65%, BALANCE: 46.35%), allocation percentages calculated correctly, and client count shows 2 clients with investments. ✅ CALCULATION ACCURACY: Verified AUM calculation logic is mathematically correct - sum of all client investment current_values from MongoDB matches expected total. RESULT: Frontend AUM display issue completely resolved! Admin dashboard should now show correct $161,825 total AUM instead of $0. All 4/4 AUM-related tests passed (100% success rate). The specific user-reported issue has been fixed with minimal code change ensuring compatibility."
 
+  - task: "Multi-Broker MT5 Integration System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented multi-broker MT5 integration system with support for Multibank and DooTechnology brokers. Added broker management APIs, multi-broker account management, and enhanced existing MT5 APIs. System includes broker configuration, server management, and manual account creation capabilities."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ CRITICAL MULTI-BROKER MT5 INTEGRATION ISSUES FOUND: Comprehensive testing reveals significant problems requiring immediate fixes. PRIORITY 1 (✅ WORKING): Broker management APIs functional - GET /api/mt5/brokers returns 2 brokers (Multibank, DooTechnology), GET /api/mt5/brokers/dootechnology/servers includes DooTechnology-Live server, GET /api/mt5/brokers/multibank/servers working correctly. PRIORITY 2 (❌ CRITICAL FAILURES): Manual account creation completely broken - POST /api/mt5/admin/add-manual-account returns 500 error due to missing mongodb_manager.get_client() method, GET /api/mt5/admin/accounts/by-broker shows all 4 existing accounts grouped under 'unknown' broker instead of proper broker codes (multibank/dootechnology). PRIORITY 3 (⚠️ MIXED RESULTS): GET /api/mt5/admin/accounts working (4 accounts, $5,675,000 allocated), GET /api/mt5/admin/performance/overview has incorrect response structure with data nested under 'overview' key instead of expected flat structure. ROOT CAUSES: (1) MongoDBManager class missing get_client() method referenced in manual account creation endpoint, (2) Existing MT5 accounts in database missing broker_code and broker_name fields causing improper grouping, (3) Performance overview endpoint returns nested response structure incompatible with expected format, (4) Database health check fails due to incorrect MongoDB command syntax. URGENT ACTION REQUIRED: System cannot create DooTechnology accounts as requested, existing accounts not properly categorized by broker, performance data structure incompatible with frontend expectations."
+
   - task: "Admin Portfolio Summary AUM Field Mismatch Fix"
     implemented: true
     working: true
