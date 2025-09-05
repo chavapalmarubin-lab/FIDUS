@@ -3900,6 +3900,28 @@ class SendForSignatureRequest(BaseModel):
 # In-memory document storage (in production, use proper database)
 documents_storage = {}
 
+# Document categories
+SHARED_DOCUMENT_CATEGORIES = [
+    'loan_agreements',
+    'account_opening', 
+    'investment_documents',
+    'insurance_forms',
+    'amendments',
+    'client_statements',
+    'tax_documents',
+    'other'
+]
+
+ADMIN_ONLY_DOCUMENT_CATEGORIES = [
+    'aml_kyc_reports',
+    'compliance_notes', 
+    'internal_memos',
+    'risk_assessments',
+    'due_diligence',
+    'regulatory_filings',
+    'audit_documents'
+]
+
 # In-memory CRM prospect storage (in production, use proper database)
 prospects_storage = {}
 
