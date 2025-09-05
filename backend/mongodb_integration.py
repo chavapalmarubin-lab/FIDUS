@@ -669,6 +669,169 @@ class MongoDBManager:
     # DATABASE UTILITIES
     # ===============================================================================
     
+    # ===============================================================================
+    # DOCUMENT MANAGEMENT
+    # ===============================================================================
+    
+    def create_document(self, document_data: Dict[str, Any]) -> Optional[str]:
+        """Create a new document record"""
+        try:
+            document_doc = {
+                'document_id': document_data['document_id'],
+                'name': document_data['name'],
+                'category': document_data['category'],
+                'document_type': document_data.get('document_type', 'shared'),  # 'shared' or 'admin_only'
+                'uploader_id': document_data['uploader_id'],
+                'uploader_type': document_data.get('uploader_type', 'admin'),  # 'admin' or 'client'
+                'client_id': document_data.get('client_id'),  # For client-specific documents
+                'file_path': document_data['file_path'],
+                'file_size': document_data['file_size'],
+                'content_type': document_data.get('content_type'),
+                'status': document_data.get('status', 'uploaded'),
+                'recipient_emails': document_data.get('recipient_emails', []),
+                'signature_required': document_data.get('signature_required', False),
+                'created_at': datetime.now(timezone.utc),
+                'updated_at': datetime.now(timezone.utc)
+            }
+            
+            result = self.db.documents.insert_one(document_doc)
+            
+            if result.inserted_id:
+                return document_data['document_id']
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error creating document: {str(e)}")
+            return None
+    
+    def get_client_documents(self, client_id: str, include_admin_shared: bool = True) -> List[Dict[str, Any]]:
+        """Get documents for a specific client"""
+        try:
+            documents = []
+            query = {'$or': []}
+            
+            # Include documents uploaded by the client
+            query['$or'].append({'uploader_id': client_id})
+            
+            # Include documents assigned to this client
+            query['$or'].append({'client_id': client_id})
+            
+            if include_admin_shared:
+                # Include shared documents (not admin_only)
+                query['$or'].append({
+                    'document_type': 'shared',
+                    'client_id': {'$in': [None, client_id]}
+                })
+            
+            document_docs = self.db.documents.find(query)
+            
+            for doc in document_docs:
+                document_data = {
+                    'id': doc['document_id'],
+                    'name': doc['name'],
+                    'category': doc['category'],
+                    'document_type': doc.get('document_type', 'shared'),
+                    'uploader_id': doc['uploader_id'],
+                    'uploader_type': doc.get('uploader_type', 'admin'),
+                    'client_id': doc.get('client_id'),
+                    'file_path': doc['file_path'],
+                    'file_size': doc['file_size'],
+                    'content_type': doc.get('content_type'),
+                    'status': doc.get('status', 'uploaded'),
+                    'recipient_emails': doc.get('recipient_emails', []),
+                    'signature_required': doc.get('signature_required', False),
+                    'created_at': doc['created_at'].isoformat(),
+                    'updated_at': doc['updated_at'].isoformat()
+                }
+                documents.append(document_data)
+            
+            # Sort by creation date (newest first)
+            documents.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return documents
+            
+        except Exception as e:
+            print(f"❌ Error getting client documents: {str(e)}")
+            return []
+    
+    def get_all_documents(self, include_admin_only: bool = False) -> List[Dict[str, Any]]:
+        """Get all documents for admin view"""
+        try:
+            documents = []
+            query = {}
+            
+            if not include_admin_only:
+                # Exclude admin-only documents
+                query['document_type'] = {'$ne': 'admin_only'}
+            
+            document_docs = self.db.documents.find(query)
+            
+            for doc in document_docs:
+                document_data = {
+                    'id': doc['document_id'],
+                    'name': doc['name'],
+                    'category': doc['category'],
+                    'document_type': doc.get('document_type', 'shared'),
+                    'uploader_id': doc['uploader_id'],
+                    'uploader_type': doc.get('uploader_type', 'admin'),
+                    'client_id': doc.get('client_id'),
+                    'file_path': doc['file_path'],
+                    'file_size': doc['file_size'],
+                    'content_type': doc.get('content_type'),
+                    'status': doc.get('status', 'uploaded'),
+                    'recipient_emails': doc.get('recipient_emails', []),
+                    'signature_required': doc.get('signature_required', False),
+                    'created_at': doc['created_at'].isoformat(),
+                    'updated_at': doc['updated_at'].isoformat()
+                }
+                documents.append(document_data)
+            
+            # Sort by creation date (newest first)
+            documents.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return documents
+            
+        except Exception as e:
+            print(f"❌ Error getting all documents: {str(e)}")
+            return []
+    
+    def get_admin_only_documents(self) -> List[Dict[str, Any]]:
+        """Get admin-only documents (compliance, internal, etc.)"""
+        try:
+            documents = []
+            
+            document_docs = self.db.documents.find({'document_type': 'admin_only'})
+            
+            for doc in document_docs:
+                document_data = {
+                    'id': doc['document_id'],
+                    'name': doc['name'],
+                    'category': doc['category'],
+                    'document_type': doc.get('document_type', 'admin_only'),
+                    'uploader_id': doc['uploader_id'],
+                    'uploader_type': doc.get('uploader_type', 'admin'),
+                    'client_id': doc.get('client_id'),
+                    'file_path': doc['file_path'],
+                    'file_size': doc['file_size'],
+                    'content_type': doc.get('content_type'),
+                    'status': doc.get('status', 'uploaded'),
+                    'recipient_emails': doc.get('recipient_emails', []),
+                    'signature_required': doc.get('signature_required', False),
+                    'created_at': doc['created_at'].isoformat(),
+                    'updated_at': doc['updated_at'].isoformat()
+                }
+                documents.append(document_data)
+            
+            # Sort by creation date (newest first)
+            documents.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return documents
+            
+        except Exception as e:
+            print(f"❌ Error getting admin-only documents: {str(e)}")
+            return []
+
     def get_database_stats(self) -> Dict[str, Any]:
         """Get database statistics for monitoring"""
         try:
@@ -681,7 +844,7 @@ class MongoDBManager:
             collections = ['users', 'client_profiles', 'investments', 'client_readiness', 
                           'fund_configurations', 'activity_logs', 'redemption_requests',
                           'payment_confirmations', 'crm_prospects', 'fund_rebates',
-                          'mt5_accounts', 'mt5_credentials']
+                          'mt5_accounts', 'mt5_credentials', 'documents']
             
             for collection_name in collections:
                 count = self.db[collection_name].count_documents({})
