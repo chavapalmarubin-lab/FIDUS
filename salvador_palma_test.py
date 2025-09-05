@@ -238,7 +238,8 @@ class SalvadorPalmaInvestmentTester:
             "POST",
             "api/investments/create",
             200,
-            data=investment_data
+            data=investment_data,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if success:
