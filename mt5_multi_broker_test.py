@@ -395,11 +395,22 @@ class MT5MultiBrokerTester:
 
     def test_get_all_mt5_accounts(self):
         """Test GET /api/mt5/admin/accounts - Verify all accounts endpoint still works"""
+        
+        if not self.admin_token:
+            print("❌ No admin token available for authentication")
+            return False
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.admin_token}'
+        }
+        
         success, response = self.run_test(
             "Get All MT5 Accounts",
             "GET",
             "api/mt5/admin/accounts",
-            200
+            200,
+            headers=headers
         )
         
         if success:
