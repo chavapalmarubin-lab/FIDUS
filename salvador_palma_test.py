@@ -380,7 +380,8 @@ class SalvadorPalmaInvestmentTester:
             "Get Admin Investment Overview",
             "GET",
             "api/investments/admin/overview",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if success:
