@@ -139,26 +139,24 @@ class MT5MultiBrokerTester:
         
         if success:
             servers = response.get('servers', [])
+            broker_name = response.get('broker', 'Unknown')
+            print(f"   Broker: {broker_name}")
             print(f"   DooTechnology servers: {len(servers)}")
             
-            # Check for DooTechnology-Live server
-            server_names = [server.get('name') for server in servers]
+            # Check for DooTechnology-Live server (servers are strings, not objects)
             expected_server = 'DooTechnology-Live'
             
-            if expected_server in server_names:
+            if expected_server in servers:
                 print(f"   ✅ {expected_server} server found")
             else:
                 print(f"   ❌ {expected_server} server missing")
-                print(f"   Available servers: {', '.join(server_names)}")
+                print(f"   Available servers: {', '.join(servers)}")
                 
-            # Display server details
+            # Display server details (servers are strings)
             for server in servers:
-                name = server.get('name', 'Unknown')
-                host = server.get('host', 'Unknown')
-                status = server.get('status', 'unknown')
-                print(f"   Server: {name} - Host: {host} - Status: {status}")
+                print(f"   Server: {server}")
                 
-            return expected_server in server_names
+            return expected_server in servers
                 
         return success
 
