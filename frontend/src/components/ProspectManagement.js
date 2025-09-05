@@ -356,7 +356,7 @@ const ProspectManagement = () => {
   
   const handleVerifyDocument = async (prospectId, documentId, status) => {
     try {
-      const response = await axios.patch(`${API}/crm/prospects/${prospectId}/documents/${documentId}`, {
+      const response = await apiAxios.patch(`/crm/prospects/${prospectId}/documents/${documentId}`, {
         verification_status: status,
         verified_at: new Date().toISOString(),
         verified_by: "admin"
