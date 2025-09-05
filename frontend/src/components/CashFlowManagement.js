@@ -47,17 +47,17 @@ const CashFlowManagement = () => {
       setLoading(true);
       
       // Fetch cash flow data
-      const cashFlowResponse = await axios.get(`${API}/admin/cashflow/overview`, {
+      const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
       
       // Fetch redemption schedule
-      const redemptionResponse = await axios.get(`${API}/admin/cashflow/redemption-schedule`, {
+      const redemptionResponse = await apiAxios.get(`/admin/cashflow/redemption-schedule`, {
         params: { timeframe: selectedTimeframe }
       });
       
       // Fetch projections
-      const projectionsResponse = await axios.get(`${API}/admin/cashflow/projections`, {
+      const projectionsResponse = await apiAxios.get(`/admin/cashflow/projections`, {
         params: { months: getMonthsFromTimeframe(selectedTimeframe) }
       });
 
