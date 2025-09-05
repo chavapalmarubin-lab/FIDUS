@@ -121,9 +121,7 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const fetchPortfolioData = async () => {
     try {
-      const response = await axios.get(`${API}/admin/portfolio-summary`, {
-        headers: getAuthHeaders()
-      });
+      const response = await apiAxios.get(`/admin/portfolio-summary`);
       setPortfolioData(response.data);
       // Update allocation with fetched data
       setAlloc({
