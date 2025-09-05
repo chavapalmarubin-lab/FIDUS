@@ -97,6 +97,7 @@ class UserResponse(BaseModel):
     type: str
     profile_picture: str
     must_change_password: Optional[bool] = False
+    token: Optional[str] = None
 
 class UserCreate(BaseModel):
     username: str
