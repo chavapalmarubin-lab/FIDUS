@@ -1214,12 +1214,35 @@ class ClientMT5Mapping:
         account_id = self.investment_to_mt5[investment_id]
         return self.mt5_accounts.get(account_id)
 
+# MT5 Integration Service
+from mt5_integration import mt5_service
+
 # Global MT5 mapping manager
 mt5_mapping_manager = ClientMT5Mapping()
 
 # Storage for MT5 account credentials and mappings
 mt5_account_credentials = {}  # account_id -> {login, password, server}
 client_mt5_accounts = {}  # client_id -> {fund_code -> account_id}
+
+# MT5 Account Management Models
+class MT5AccountCreate(BaseModel):
+    client_id: str
+    fund_code: str
+    mt5_login: int
+    mt5_password: str
+    mt5_server: Optional[str] = None
+
+class MT5AccountUpdate(BaseModel):
+    mt5_login: Optional[int] = None
+    mt5_password: Optional[str] = None
+    mt5_server: Optional[str] = None
+
+class MT5CredentialsRequest(BaseModel):
+    client_id: str
+    fund_code: str
+    mt5_login: int
+    mt5_password: str
+    mt5_server: str
 class OCRService:
     def __init__(self):
         # For this implementation, we'll use a hybrid approach:
