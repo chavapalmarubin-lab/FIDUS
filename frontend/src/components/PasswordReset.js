@@ -501,16 +501,11 @@ const PasswordReset = ({ userType, onBack, onComplete }) => {
                   margin: "0 auto",
                   display: "block",
                   filter: `
-                    drop-shadow(0 0 20px rgba(255, 167, 38, 0.5))
-                    drop-shadow(0 0 40px rgba(59, 130, 246, 0.25))
-                    brightness(1.06)
-                    contrast(1.02)
+                    drop-shadow(0 0 15px rgba(255, 167, 38, 0.4))
+                    drop-shadow(0 0 30px rgba(59, 130, 246, 0.2))
+                    brightness(1.03)
+                    contrast(1.01)
                   `,
-                  background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.05) 0%, rgba(59, 130, 246, 0.02) 50%, transparent 70%)",
-                  borderRadius: "12px",
-                  padding: "8px",
-                  backdropFilter: "blur(0.5px)",
-                  border: "1px solid rgba(255, 167, 38, 0.06)",
                   transition: "all 0.3s ease"
                 }}
               />
