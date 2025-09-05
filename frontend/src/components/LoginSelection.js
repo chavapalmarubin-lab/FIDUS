@@ -112,13 +112,19 @@ const LoginSelection = ({ onLogin }) => {
                 }}
               />
             </motion.div>
-            <CardTitle className="text-2xl text-white">
-              {selectedType ? "Login" : "Welcome to FIDUS"}
-            </CardTitle>
-            <p className="text-slate-400 mt-2">
+            <h1 className="text-2xl text-white font-bold">
+              {selectedType ? `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Login` : "Welcome to FIDUS"}
+            </h1>
+            <h2 className="text-slate-400 mt-2 text-lg">
               {selectedType 
-                ? `Sign in to your ${selectedType} account` 
-                : "Please select your account type"
+                ? `Professional Investment Management Platform` 
+                : "Professional Investment Management Platform"
+              }
+            </h2>
+            <p className="text-slate-500 mt-1 text-sm">
+              {selectedType 
+                ? `Sign in to access your ${selectedType} dashboard` 
+                : "Please select your account type to continue"
               }
             </p>
           </CardHeader>
