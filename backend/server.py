@@ -961,6 +961,11 @@ async def login(login_data: LoginRequest):
                 # Temporary password login successful
                 user_response_dict = mock_user_data.copy()
                 user_response_dict["must_change_password"] = temp_info["must_change"]
+                
+                # Generate JWT token
+                jwt_token = create_jwt_token(mock_user_data)
+                user_response_dict["token"] = jwt_token
+                
                 return UserResponse(**user_response_dict)
         
         # Check regular password for mock users
