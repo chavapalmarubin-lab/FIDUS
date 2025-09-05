@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart, Bar, Pie } from "recharts";
 import axios from "axios";
+import apiAxios from "../utils/apiAxios";
 import { format } from "date-fns";
 import FundInvestorsDetail from "./FundInvestorsDetail";
 import ClientDetailedProfile from "./ClientDetailedProfile";
