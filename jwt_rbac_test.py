@@ -256,13 +256,11 @@ class JWTRBACTester:
         )
         
         # Look for clear error message indicating admin access required
-        error_message = ""
-        if isinstance(response, dict):
-            error_message = str(response.get('detail', ''))
+        error_message = response.get('message', response.get('detail', response.get('error', '')))
         
         # Check if error message is informative
         has_admin_mention = 'admin' in error_message.lower()
-        has_forbidden_mention = 'forbidden' in error_message.lower() or '403' in error_message
+        has_forbidden_mention = 'forbidden' in error_message.lower() or '403' in str(response.get('status_code', ''))
         has_user_type = 'client' in error_message.lower() or 'user' in error_message.lower()
         
         if has_admin_mention and has_forbidden_mention:
