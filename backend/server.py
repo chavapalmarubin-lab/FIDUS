@@ -7929,6 +7929,97 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ===============================================================================
+# SECURITY MIDDLEWARE - CRITICAL SECURITY HEADERS
+# ===============================================================================
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add critical security headers to all responses"""
+    response = await call_next(request)
+    
+    # Prevent clickjacking attacks
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # Enable XSS protection
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # Enforce HTTPS (in production)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    
+    # Content Security Policy - Basic policy for financial apps
+    csp_policy = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us-assets.i.posthog.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self' https:; "
+        "frame-ancestors 'none';"
+    )
+    response.headers["Content-Security-Policy"] = csp_policy
+    
+    # Referrer policy for privacy
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # Feature policy to restrict dangerous features
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    
+    return response
+
+# ===============================================================================
+# API AUTHENTICATION MIDDLEWARE - PROTECT SENSITIVE ENDPOINTS
+# ===============================================================================
+
+PROTECTED_ENDPOINTS = [
+    "/api/admin/",
+    "/api/clients/all",
+    "/api/investments/create",
+    "/api/investments/admin/",
+    "/api/documents/admin/",
+    "/api/mt5/admin/",
+    "/api/crm/",
+    "/api/fund-configurations/",
+    "/api/payment-confirmations/"
+]
+
+@app.middleware("http") 
+async def api_authentication_middleware(request: Request, call_next):
+    """Protect sensitive API endpoints with authentication check"""
+    path = request.url.path
+    
+    # Check if this is a protected endpoint
+    is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
+    
+    if is_protected and request.method != "OPTIONS":
+        # For now, we'll implement basic protection
+        # In production, implement proper JWT token validation
+        auth_header = request.headers.get("Authorization")
+        
+        # Basic auth check - should be replaced with proper JWT validation
+        if not auth_header or not auth_header.startswith("Bearer "):
+            # For development, allow requests with session cookies or basic auth
+            # This should be replaced with proper JWT validation in production
+            session_cookie = request.cookies.get("session_id")
+            basic_auth = request.headers.get("Authorization")
+            
+            if not session_cookie and not basic_auth:
+                logging.warning(f"Unauthorized access attempt to {path}")
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "error": "Unauthorized", 
+                        "message": "Authentication required for this endpoint",
+                        "endpoint": path
+                    }
+                )
+    
+    response = await call_next(request)
+    return response
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
