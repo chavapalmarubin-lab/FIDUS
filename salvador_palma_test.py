@@ -391,7 +391,7 @@ class SalvadorPalmaInvestmentTester:
             
             print(f"\n📈 ADMIN INVESTMENT OVERVIEW:")
             print(f"   Total AUM: ${total_aum:,.2f}")
-            print(f"   Fund Summaries: {list(fund_summaries.keys())}")
+            print(f"   Fund Summaries: {list(fund_summaries.keys()) if isinstance(fund_summaries, dict) else 'Not dict format'}")
             print(f"   Client Count: {len(clients)}")
             
             # Check BALANCE fund specifically
