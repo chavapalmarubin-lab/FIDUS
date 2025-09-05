@@ -71,8 +71,9 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <AnimatePresence mode="wait">
+    <ToastProvider>
+      <div className="App">
+        <AnimatePresence mode="wait">
         {currentView === "logo" && (
           <motion.div
             key="logo"
