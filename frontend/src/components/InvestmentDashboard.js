@@ -163,7 +163,7 @@ const InvestmentDashboard = ({ user, userType }) => {
         return;
       }
 
-      const response = await axios.post(`${API}/investments/create`, {
+      const response = await apiAxios.post(`/investments/create`, {
         client_id: user.id,
         fund_code: investmentForm.fund_code,
         amount: amount
