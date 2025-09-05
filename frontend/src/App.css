@@ -52,7 +52,7 @@ body {
   height: 70px;
 }
 
-/* FIDUS Logo Styles - Enhanced Integration */
+/* FIDUS Logo Styles - Clean Netflix-Style Integration */
 .fidus-logo {
   display: flex;
   align-items: center;
@@ -67,23 +67,19 @@ body {
 
 .fidus-logo img {
   filter: 
-    drop-shadow(0 0 25px rgba(255, 167, 38, 0.6))
-    drop-shadow(0 0 50px rgba(59, 130, 246, 0.3))
-    brightness(1.1)
-    contrast(1.05);
-  background: radial-gradient(ellipse at center, rgba(255, 167, 38, 0.1) 0%, transparent 70%);
-  border-radius: 15px;
-  padding: 10px;
-  backdrop-filter: blur(1px);
+    drop-shadow(0 0 20px rgba(255, 167, 38, 0.4))
+    drop-shadow(0 0 40px rgba(59, 130, 246, 0.2))
+    brightness(1.05)
+    contrast(1.02);
   transition: all 0.3s ease;
 }
 
 .fidus-logo img:hover {
   filter: 
-    drop-shadow(0 0 35px rgba(255, 167, 38, 0.8))
-    drop-shadow(0 0 70px rgba(59, 130, 246, 0.4))
-    brightness(1.15)
-    contrast(1.1);
+    drop-shadow(0 0 25px rgba(255, 167, 38, 0.6))
+    drop-shadow(0 0 50px rgba(59, 130, 246, 0.3))
+    brightness(1.08)
+    contrast(1.05);
   transform: scale(1.02);
 }
 
@@ -94,7 +90,7 @@ body {
   filter: drop-shadow(0 0 15px rgba(255, 167, 38, 0.7));
 }
 
-/* Logo Integration Classes */
+/* Logo Integration Classes - Clean No-Frame Style */
 .logo-integrated {
   position: relative;
   z-index: 10;
@@ -103,22 +99,22 @@ body {
 .logo-integrated::before {
   content: '';
   position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background: radial-gradient(circle at center, rgba(255, 167, 38, 0.03) 0%, transparent 60%);
+  top: -30px;
+  left: -30px;
+  right: -30px;
+  bottom: -30px;
+  background: radial-gradient(circle at center, rgba(255, 167, 38, 0.02) 0%, transparent 70%);
   border-radius: 50%;
   z-index: -1;
-  animation: logoGlow 3s ease-in-out infinite alternate;
+  animation: logoGlow 4s ease-in-out infinite alternate;
 }
 
 @keyframes logoGlow {
   0% {
-    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.02) 0%, transparent 60%);
+    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.01) 0%, transparent 70%);
   }
   100% {
-    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.05) 0%, rgba(59, 130, 246, 0.02) 40%, transparent 70%);
+    background: radial-gradient(circle at center, rgba(255, 167, 38, 0.03) 0%, rgba(59, 130, 246, 0.01) 50%, transparent 80%);
   }
 }
 
@@ -126,7 +122,6 @@ body {
 @media (max-width: 768px) {
   .fidus-logo img {
     max-width: 200px;
-    padding: 8px;
   }
 }
 
