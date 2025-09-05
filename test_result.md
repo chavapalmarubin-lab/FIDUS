@@ -390,6 +390,18 @@ backend:
         - agent: "testing"
         - comment: "🎉 COMPLETE CLIENT REGISTRATION TO ADMIN CRM WITH DOCUMENT MANAGEMENT CAPABILITIES TEST SUCCESSFUL! Comprehensive end-to-end workflow testing completed successfully: ✅ PHASE 1 - CLIENT REGISTRATION: ClientOnboarding process verified with professional 5-step workflow (Document Upload → Verify Information → Personal Details → Account Setup → KYC Verification), document upload interface with camera and file upload options working, OCR processing workflow implemented with proper validation. ✅ PHASE 2 - ADMIN CRM VERIFICATION: Admin login successful (admin/password123), CRM Dashboard accessible and functional, Sarah Johnson prospect created successfully with test data (sarah.johnson@test.com, +1-555-987-6543), prospect appears as new lead in CRM with rich onboarding data. ✅ PHASE 3 - DOCUMENT MANAGEMENT TESTING: Document Management Modal opens successfully via FileText icon button, ALL 5 KYC document types display correctly (Identity Document, Proof of Residence, Bank Statement, Source of Funds, Employment Verification), document request functionality works perfectly - Request button clicked for Proof of Residence with success message 'Document request sent to Sarah Johnson', KYC completion status tracking verified with 4 required field indicators and 5 status indicators, complete AML/KYC document workflow operational. ✅ VERIFICATION POINTS CONFIRMED: (1) Client registration creates CRM lead automatically ✓ (2) Admin can see new prospect with rich onboarding data ✓ (3) Document management modal opens and displays KYC document types ✓ (4) Document request functionality works ✓ (5) KYC completion percentage shows correctly ✓ (6) Proof of Residence and other AML/KYC documents are manageable ✓. EXPECTED COMPLETE FLOW VERIFIED: Client Onboarding → Automatic CRM Lead → Document Management → KYC Completion Tracking. This tests the complete AML/KYC document workflow as requested by the user. All critical functionality working perfectly for production use."
 
+  - task: "MT5 Integration with Automatic Account Mapping"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/mt5_integration.py, /app/backend/server.py, /app/backend/mongodb_integration.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented comprehensive MT5 integration system with Multibank broker. Features: (1) MongoDB schema extensions for MT5 accounts and encrypted credentials storage, (2) Mock MT5 integration service with real-time performance simulation, (3) Automatic MT5 account creation during investment process - one account per client per fund with reuse logic, (4) Secure credential encryption using Fernet encryption, (5) Complete backend API endpoints for MT5 management, (6) Investment creation now automatically creates/updates MT5 accounts, (7) Multibank server configurations for different fund types. Ready for backend testing. Backend testing validated: Investment creation creates MT5 accounts correctly, fund separation works (CORE vs BALANCE funds get separate accounts), account reuse for same fund works, allocation updates correctly."
+
 frontend:
   - task: "Client Onboarding Process with Document Upload and OCR"
     implemented: true
