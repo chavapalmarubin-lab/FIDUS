@@ -263,7 +263,7 @@ const ProspectManagement = () => {
 
   const handleConvertProspect = async (prospectId) => {
     try {
-      const response = await axios.post(`${API}/crm/prospects/${prospectId}/convert`, {
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/convert`, {
         prospect_id: prospectId,
         send_agreement: true
       });
