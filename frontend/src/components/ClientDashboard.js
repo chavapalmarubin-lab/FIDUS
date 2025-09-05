@@ -11,7 +11,7 @@ import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";  
 import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, Target, ArrowDownCircle } from "lucide-react";
 import { format } from "date-fns";
-import axios from "axios";
+import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
 import InvestmentDashboard from "./InvestmentDashboard";
 import RedemptionManagement from "./RedemptionManagement";
