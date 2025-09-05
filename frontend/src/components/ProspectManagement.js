@@ -284,6 +284,124 @@ const ProspectManagement = () => {
       phone: "",
       notes: ""
     });
+    setError("");
+    setSuccess("");
+  };
+  
+  // Document Management Functions
+  const fetchProspectDocuments = async (prospectId) => {
+    try {
+      const response = await axios.get(`${API}/crm/prospects/${prospectId}/documents`);
+      setProspectDocuments(prev => ({
+        ...prev,
+        [prospectId]: response.data.documents || []
+      }));
+    } catch (err) {
+      console.error("Error fetching prospect documents:", err);
+    }
+  };
+  
+  const handleDocumentUpload = async () => {
+    try {
+      if (!documentToUpload.type || !documentToUpload.file) {
+        setError("Please select document type and file");
+        return;
+      }
+      
+      setUploadingDocument(true);
+      
+      const formData = new FormData();
+      formData.append('file', documentToUpload.file);
+      formData.append('document_type', documentToUpload.type);
+      formData.append('notes', documentToUpload.notes);
+      
+      const response = await axios.post(
+        `${API}/crm/prospects/${selectedProspectForDocs.id}/documents`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      if (response.data.success) {
+        setSuccess("Document uploaded successfully");
+        setDocumentToUpload({ type: "", file: null, notes: "" });
+        fetchProspectDocuments(selectedProspectForDocs.id);
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to upload document");
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+  
+  const handleRequestDocument = async (prospectId, documentType) => {
+    try {
+      const response = await axios.post(`${API}/crm/prospects/${prospectId}/documents/request`, {
+        document_type: documentType,
+        message: `Please upload your ${KYC_DOCUMENT_TYPES[documentType].label} to complete your KYC verification.`
+      });
+      
+      if (response.data.success) {
+        setSuccess(`Document request sent to ${prospects.find(p => p.id === prospectId)?.name}`);
+        fetchProspectDocuments(prospectId);
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to request document");
+    }
+  };
+  
+  const handleVerifyDocument = async (prospectId, documentId, status) => {
+    try {
+      const response = await axios.patch(`${API}/crm/prospects/${prospectId}/documents/${documentId}`, {
+        verification_status: status,
+        verified_at: new Date().toISOString(),
+        verified_by: "admin"
+      });
+      
+      if (response.data.success) {
+        setSuccess(`Document ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+        fetchProspectDocuments(prospectId);
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to verify document");
+    }
+  };
+  
+  const openDocumentModal = (prospect) => {
+    setSelectedProspectForDocs(prospect);
+    setShowDocumentModal(true);
+    fetchProspectDocuments(prospect.id);
+  };
+  
+  const getDocumentStatus = (prospectId, documentType) => {
+    const documents = prospectDocuments[prospectId] || [];
+    const doc = documents.find(d => d.document_type === documentType);
+    
+    if (!doc) return 'missing';
+    if (doc.verification_status === 'approved') return 'approved';
+    if (doc.verification_status === 'rejected') return 'rejected';
+    if (doc.verification_status === 'pending') return 'pending';
+    return 'uploaded';
+  };
+  
+  const getKYCCompletionStatus = (prospectId) => {
+    const requiredDocs = Object.keys(KYC_DOCUMENT_TYPES).filter(
+      key => KYC_DOCUMENT_TYPES[key].required
+    );
+    
+    const approvedDocs = requiredDocs.filter(
+      docType => getDocumentStatus(prospectId, docType) === 'approved'
+    );
+    
+    return {
+      completed: approvedDocs.length,
+      total: requiredDocs.length,
+      percentage: Math.round((approvedDocs.length / requiredDocs.length) * 100),
+      isComplete: approvedDocs.length === requiredDocs.length
+    };
   };
 
   const openEditModal = (prospect) => {
