@@ -7933,6 +7933,118 @@ async def disconnect_mt5_account(account_id: str):
         logging.error(f"Disconnect MT5 account error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to disconnect MT5 account")
 
+# ===============================================================================
+# MULTI-FACTOR AUTHENTICATION ENDPOINTS
+# ===============================================================================
+
+@api_router.post("/auth/mfa/setup")
+async def setup_mfa(request: MFASetupRequest):
+    """Setup MFA for user"""
+    try:
+        setup = mfa_service.setup_mfa(request.user_id, request.user_email)
+        
+        return {
+            "success": True,
+            "secret": setup.secret,
+            "qr_code": setup.qr_code,
+            "backup_codes": setup.backup_codes,
+            "setup_token": setup.setup_token
+        }
+        
+    except Exception as e:
+        logging.error(f"MFA setup error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to setup MFA")
+
+@api_router.post("/auth/mfa/verify")
+async def verify_mfa(request: MFAVerifyRequest):
+    """Verify MFA token"""
+    try:
+        if request.method == "totp":
+            result = mfa_service.verify_totp(request.user_id, request.token)
+        elif request.method == "backup_code":
+            result = mfa_service.verify_backup_code(request.user_id, request.token)
+        elif request.method == "sms":
+            result = mfa_service.verify_sms_code(request.user_id, request.token)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid MFA method")
+        
+        response_data = {
+            "success": result.is_valid,
+            "method": result.method,
+            "remaining_attempts": result.remaining_attempts
+        }
+        
+        if result.locked_until:
+            response_data["locked_until"] = result.locked_until.isoformat()
+        
+        return response_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"MFA verification error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to verify MFA")
+
+@api_router.post("/auth/mfa/sms/send")
+async def send_sms_code(request: SMSRequest):
+    """Send SMS verification code"""
+    try:
+        success = mfa_service.send_sms_code(request.user_id, request.phone_number)
+        
+        return {
+            "success": success,
+            "message": "SMS code sent successfully" if success else "Failed to send SMS code"
+        }
+        
+    except Exception as e:
+        logging.error(f"Send SMS code error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send SMS code")
+
+@api_router.get("/auth/mfa/status/{user_id}")
+async def get_mfa_status(user_id: str):
+    """Get MFA status for user"""
+    try:
+        status = mfa_service.get_user_mfa_status(user_id)
+        return {
+            "success": True,
+            "status": status
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MFA status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get MFA status")
+
+@api_router.post("/auth/mfa/disable/{user_id}")
+async def disable_mfa(user_id: str):
+    """Disable MFA for user (admin only)"""
+    try:
+        success = mfa_service.disable_mfa(user_id)
+        
+        return {
+            "success": success,
+            "message": "MFA disabled successfully" if success else "No MFA found for user"
+        }
+        
+    except Exception as e:
+        logging.error(f"Disable MFA error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to disable MFA")
+
+@api_router.post("/auth/mfa/recovery-codes/{user_id}")
+async def generate_recovery_codes(user_id: str):
+    """Generate new recovery codes for user"""
+    try:
+        codes = mfa_service.generate_recovery_codes(user_id)
+        
+        return {
+            "success": True,
+            "backup_codes": codes,
+            "message": "New recovery codes generated. Previous codes are now invalid."
+        }
+        
+    except Exception as e:
+        logging.error(f"Generate recovery codes error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate recovery codes")
+
 # Include the router in the main app
 app.include_router(api_router)
 
