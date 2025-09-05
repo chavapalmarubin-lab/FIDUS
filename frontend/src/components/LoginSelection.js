@@ -25,12 +25,8 @@ const LoginSelection = ({ onLogin }) => {
   const handleTypeSelect = (type) => {
     setSelectedType(type);
     setError("");
-    // Set default credentials for demo
-    if (type === "client") {
-      setCredentials({ username: "client1", password: "password123" });
-    } else {
-      setCredentials({ username: "admin", password: "password123" });
-    }
+    // Clear credentials for security
+    setCredentials({ username: "", password: "" });
   };
 
   const handleLogin = async () => {
