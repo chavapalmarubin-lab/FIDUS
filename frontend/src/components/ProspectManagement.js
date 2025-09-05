@@ -137,6 +137,17 @@ const ProspectManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Document management states
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedProspectForDocs, setSelectedProspectForDocs] = useState(null);
+  const [prospectDocuments, setProspectDocuments] = useState({});
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [documentToUpload, setDocumentToUpload] = useState({
+    type: "",
+    file: null,
+    notes: ""
+  });
 
   // Form states
   const [formData, setFormData] = useState({
