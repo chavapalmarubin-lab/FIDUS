@@ -625,9 +625,34 @@ def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfig
     return next_redemption
 
 def calculate_redemption_value(investment: FundInvestment, fund_config: FundConfiguration) -> float:
-    """Calculate current redemption value including accrued interest"""
+    """Calculate current redemption value including accrued interest or performance sharing"""
     now = datetime.now(timezone.utc)
     
+    # Special handling for UNLIMITED fund (50-50 performance sharing)
+    if fund_config.fund_code == "UNLIMITED":
+        # If still in incubation period, only principal can be redeemed
+        if now < investment.interest_start_date:
+            return investment.principal_amount
+        
+        # Mock fund performance for UNLIMITED (in production, get from real performance data)
+        # Simulate monthly fund performance between -2% to +8% (highly volatile)
+        months_elapsed = (now.year - investment.interest_start_date.year) * 12 + \
+                        (now.month - investment.interest_start_date.month)
+        
+        # Mock performance calculation (replace with real fund performance)
+        cumulative_performance = 0.0
+        for month in range(months_elapsed):
+            # Simulate varying monthly performance (in production, use actual data)
+            monthly_performance = 0.045  # Average 4.5% monthly fund performance
+            cumulative_performance += monthly_performance
+        
+        # Client gets 50% of fund performance
+        client_performance_share = cumulative_performance * 0.5
+        performance_value = investment.principal_amount * client_performance_share
+        
+        return investment.principal_amount + performance_value
+    
+    # For fixed interest funds (CORE, BALANCE, DYNAMIC)
     # If still in incubation period, NO INTEREST EARNED - only principal can be redeemed
     if now < investment.interest_start_date:
         return investment.principal_amount
@@ -636,7 +661,7 @@ def calculate_redemption_value(investment: FundInvestment, fund_config: FundConf
     months_elapsed = (now.year - investment.interest_start_date.year) * 12 + \
                     (now.month - investment.interest_start_date.month)
     
-    # Interest calculation - only for months AFTER incubation period
+    # Simple interest calculation - only for months AFTER incubation period
     monthly_rate = fund_config.interest_rate / 100.0
     total_interest = investment.principal_amount * monthly_rate * months_elapsed
     
