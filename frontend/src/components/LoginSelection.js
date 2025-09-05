@@ -167,7 +167,7 @@ const LoginSelection = ({ onLogin }) => {
                 </motion.div>
               </div>
             ) : selectedType === "register" ? (
-              <UserRegistration 
+              <ClientOnboarding 
                 onBack={() => setSelectedType(null)}
                 onComplete={(userData) => {
                   // After successful registration, automatically log them in
