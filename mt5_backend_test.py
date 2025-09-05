@@ -455,21 +455,20 @@ class MT5BackendTester:
         )
         
         if success:
-            performance = response.get('performance', {})
-            accounts_performance = response.get('accounts_performance', [])
+            summary = response.get('summary', {})
             
-            # Check performance structure
+            # Check performance structure (updated to match actual API response)
             required_fields = ['total_allocated', 'total_equity', 'total_profit_loss', 
                              'overall_performance_percentage']
-            missing_fields = [field for field in required_fields if field not in performance]
+            missing_fields = [field for field in required_fields if field not in summary]
             
             if missing_fields:
                 print(f"   ❌ Missing performance fields: {missing_fields}")
                 return False
             else:
                 print("   ✅ Performance summary structure correct")
-                print(f"   📈 Overall Performance: {performance.get('overall_performance_percentage', 0):.2f}%")
-                print(f"   📈 Total P&L: ${performance.get('total_profit_loss', 0):,.2f}")
+                print(f"   📈 Overall Performance: {summary.get('overall_performance_percentage', 0):.2f}%")
+                print(f"   📈 Total P&L: ${summary.get('total_profit_loss', 0):,.2f}")
         else:
             print("   ❌ Failed to get client performance summary")
             return False
