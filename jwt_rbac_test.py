@@ -66,16 +66,18 @@ class JWTRBACTester:
                     print(f"   Response: {error_data}")
                 except:
                     print(f"   Response text: {response.text[:200]}")
-                return False, {}
+                return False, {"status_code": response.status_code}
             
             try:
-                return True, response.json()
+                response_data = response.json()
+                response_data["status_code"] = response.status_code
+                return True, response_data
             except:
                 return True, {"status_code": response.status_code, "text": response.text}
                 
         except Exception as e:
             print(f"   Request failed: {str(e)}")
-            return False, {}
+            return False, {"status_code": 0}
 
     def test_admin_login_jwt(self):
         """Test admin login and JWT token generation"""
