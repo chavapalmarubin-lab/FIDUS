@@ -316,8 +316,8 @@ const ProspectManagement = () => {
       formData.append('document_type', documentToUpload.type);
       formData.append('notes', documentToUpload.notes);
       
-      const response = await axios.post(
-        `${API}/crm/prospects/${selectedProspectForDocs.id}/documents`,
+      const response = await apiAxios.post(
+        `/crm/prospects/${selectedProspectForDocs.id}/documents`,
         formData,
         {
           headers: {
