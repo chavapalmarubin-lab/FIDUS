@@ -71,6 +71,60 @@ class SalvadorPalmaInvestmentTester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def authenticate_admin(self):
+        """Authenticate as admin to get JWT token"""
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "admin",
+                "password": "password123", 
+                "user_type": "admin"
+            }
+        )
+        
+        if success:
+            self.admin_token = response.get('token')
+            print(f"   ✅ Admin authenticated successfully")
+            return True
+        else:
+            print(f"   ❌ Admin authentication failed")
+            return False
+
+    def authenticate_client(self, username="client3"):
+        """Authenticate as client to get JWT token (client3 is Salvador Palma)"""
+        success, response = self.run_test(
+            "Client Login",
+            "POST", 
+            "api/auth/login",
+            200,
+            data={
+                "username": username,
+                "password": "password123",
+                "user_type": "client"
+            }
+        )
+        
+        if success:
+            self.client_token = response.get('token')
+            print(f"   ✅ Client authenticated successfully")
+            return True
+        else:
+            print(f"   ❌ Client authentication failed")
+            return False
+
+    def get_auth_headers(self, use_admin=True):
+        """Get authorization headers with JWT token"""
+        token = self.admin_token if use_admin else self.client_token
+        if token:
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
+            }
+        return {'Content-Type': 'application/json'}
+
     def step_1_check_available_clients(self):
         """Step 1: Check Available Clients - Look for Salvador Palma"""
         print("\n" + "="*80)
