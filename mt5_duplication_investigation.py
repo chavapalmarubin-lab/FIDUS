@@ -392,6 +392,11 @@ class MT5DuplicationInvestigator:
         print("=" * 80)
         
         try:
+            # Authenticate first
+            if not self.authenticate_admin():
+                print("❌ Admin authentication failed")
+                return False
+            
             # Priority 1: Investigate current accounts
             if not self.priority_1_investigate_current_accounts():
                 print("❌ Priority 1 investigation failed")
