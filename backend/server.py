@@ -682,68 +682,77 @@ def can_request_redemption(investment: FundInvestment, fund_config: FundConfigur
     """Check if a redemption can be requested for this investment"""
     now = datetime.now(timezone.utc)
     
-    # Check if still in incubation period (no interest earned, no redemptions)
+    # Check if still in incubation period (first 2 months - NO interest, NO redemptions allowed)
     if now < investment.interest_start_date:
         days_remaining = (investment.interest_start_date - now).days
-        return False, f"Investment is in incubation period. Available for redemption in {days_remaining} days."
+        return False, f"Investment is in 2-month incubation period. Interest starts in {days_remaining} days."
     
-    # Calculate months since interest started
-    interest_periods_passed = (now.year - investment.interest_start_date.year) * 12 + \
-                             (now.month - investment.interest_start_date.month)
+    # Calculate months since interest started (exactly 2 months after deposit)
+    months_elapsed = (now.year - investment.interest_start_date.year) * 12 + \
+                    (now.month - investment.interest_start_date.month)
+    
+    # Add fractional month calculation
+    if now.day >= investment.interest_start_date.day:
+        fractional_month = (now.day - investment.interest_start_date.day) / 30.0
+    else:
+        months_elapsed -= 1
+        fractional_month = (30 - investment.interest_start_date.day + now.day) / 30.0
+    
+    total_months = months_elapsed + fractional_month
     
     # Check if any interest has been earned (needed for interest redemptions)
-    if interest_periods_passed < 1:
+    if total_months < 1:
         next_interest_date = investment.interest_start_date + relativedelta(months=1)
         days_until = (next_interest_date - now).days
         return False, f"Available after first interest payment in {days_until} days"
     
-    # Check if principal hold period has passed (for principal redemptions)
+    # Check if principal hold period has passed (14 months total from deposit)
     principal_hold_passed = now >= investment.minimum_hold_end_date
     
     # Determine what can be redeemed based on fund redemption frequency
     if fund_config.redemption_frequency == "monthly":
-        # CORE: Can redeem interest monthly, principal after hold period
+        # CORE: Can redeem interest monthly after incubation, principal after 14 months total
         if principal_hold_passed:
-            return True, f"Full redemption available - {interest_periods_passed} interest payments completed"
+            return True, f"Full redemption available - {int(total_months)} interest payments completed"
         else:
             days_until_principal = (investment.minimum_hold_end_date - now).days
             return True, f"Interest redemption available monthly. Principal available in {days_until_principal} days"
     
     elif fund_config.redemption_frequency == "quarterly":
-        # BALANCE: Can redeem interest quarterly, principal after hold period
-        if interest_periods_passed >= 3:  # At least 3 months for quarterly
+        # BALANCE: Can redeem interest every 3 months after incubation, principal after 14 months total
+        if total_months >= 3:  # At least 3 months for quarterly redemption
             if principal_hold_passed:
-                return True, f"Full redemption available - {interest_periods_passed} interest payments completed"
+                return True, f"Full redemption available - {int(total_months)} interest payments completed"
             else:
                 days_until_principal = (investment.minimum_hold_end_date - now).days
                 return True, f"Interest redemption available quarterly. Principal available in {days_until_principal} days"
         else:
-            months_until_quarterly = 3 - (interest_periods_passed % 3)
-            next_quarterly_date = investment.interest_start_date + relativedelta(months=interest_periods_passed + months_until_quarterly)
+            months_until_quarterly = 3 - (int(total_months) % 3)
+            next_quarterly_date = investment.interest_start_date + relativedelta(months=int(total_months) + months_until_quarterly)
             days_until = (next_quarterly_date - now).days
             return False, f"Next quarterly redemption in {days_until} days"
     
     elif fund_config.redemption_frequency == "semi_annually":
-        # DYNAMIC: Can redeem interest semi-annually, principal after hold period
-        if interest_periods_passed >= 6:  # At least 6 months for semi-annual
+        # DYNAMIC: Can redeem interest every 6 months after incubation, principal after 14 months total
+        if total_months >= 6:  # At least 6 months for semi-annual redemption
             if principal_hold_passed:
-                return True, f"Full redemption available - {interest_periods_passed} interest payments completed"
+                return True, f"Full redemption available - {int(total_months)} interest payments completed"
             else:
                 days_until_principal = (investment.minimum_hold_end_date - now).days
                 return True, f"Interest redemption available semi-annually. Principal available in {days_until_principal} days"
         else:
-            months_until_semiannual = 6 - (interest_periods_passed % 6)
-            next_semiannual_date = investment.interest_start_date + relativedelta(months=interest_periods_passed + months_until_semiannual)
+            months_until_semiannual = 6 - (int(total_months) % 6)
+            next_semiannual_date = investment.interest_start_date + relativedelta(months=int(total_months) + months_until_semiannual)
             days_until = (next_semiannual_date - now).days
             return False, f"Next semi-annual redemption in {days_until} days"
     
     else:
-        # Flexible or other redemption types
+        # UNLIMITED or flexible redemption types
         if principal_hold_passed:
-            return True, f"Full redemption available - {interest_periods_passed} interest payments completed"
+            return True, f"Full redemption available - {int(total_months)} performance periods completed"
         else:
             days_until_principal = (investment.minimum_hold_end_date - now).days
-            return True, f"Interest redemption available. Principal available in {days_until_principal} days"
+            return True, f"Performance sharing redemption available. Principal available in {days_until_principal} days"
 
 def create_activity_log(client_id: str, activity_type: str, amount: float, description: str, 
                        performed_by: str, investment_id: str = None, fund_code: str = None, 
