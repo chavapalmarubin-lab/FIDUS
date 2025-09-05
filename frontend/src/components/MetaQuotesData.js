@@ -21,6 +21,7 @@ import {
   Clock
 } from "lucide-react";
 import axios from "axios";
+import apiAxios from "../utils/apiAxios";
 import { format } from "date-fns";
 
 const MetaQuotesData = () => {
