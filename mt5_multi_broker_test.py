@@ -188,6 +188,10 @@ class MT5MultiBrokerTester:
     def test_add_dootechnology_manual_account(self):
         """Test POST /api/mt5/admin/add-manual-account with DooTechnology credentials"""
         
+        if not self.admin_token:
+            print("❌ No admin token available for authentication")
+            return False
+        
         # Exact credentials from review request
         dootechnology_account = {
             "client_id": "client_001",
@@ -199,12 +203,18 @@ class MT5MultiBrokerTester:
             "allocated_amount": 100000.00
         }
         
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.admin_token}'
+        }
+        
         success, response = self.run_test(
             "Add DooTechnology Manual Account (client_001, CORE fund)",
             "POST",
             "api/mt5/admin/add-manual-account",
             200,
-            data=dootechnology_account
+            data=dootechnology_account,
+            headers=headers
         )
         
         if success:
