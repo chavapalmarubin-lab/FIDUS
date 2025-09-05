@@ -30,6 +30,16 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const skipAnimation = urlParams.get('skip_animation') === 'true';
     
+    // Check if user is already authenticated
+    if (isAuthenticated()) {
+      const userData = getCurrentUser();
+      if (userData) {
+        setUser(userData);
+        setCurrentView(userData.type === "admin" ? "admin" : "client");
+        return;
+      }
+    }
+    
     if (skipAnimation) {
       // Skip animation for testing/production
       setCurrentView("login");
