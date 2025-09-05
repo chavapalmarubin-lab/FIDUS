@@ -2898,89 +2898,122 @@ async def screen_customer():
         raise HTTPException(status_code=500, detail="OFAC screening failed")
 @api_router.post("/auth/register")
 async def register_new_client(registration_data: dict):
-    """Register a new client and automatically add to CRM leads"""
+    """Register a new client from onboarding process and automatically add to CRM leads"""
     try:
-        # Extract registration data
-        name = registration_data.get("name")
-        email = registration_data.get("email")
-        phone = registration_data.get("phone")
-        password = registration_data.get("password")
+        # Extract registration data from ClientOnboarding component
+        extracted_data = registration_data.get("extracted_data", {})
+        client_data = registration_data.get("client_data", {})
+        kyc_status = registration_data.get("kyc_status", {})
         
-        if not all([name, email, password]):
+        # Get key fields
+        full_name = registration_data.get("full_name") or extracted_data.get("full_name")
+        email = registration_data.get("email") or client_data.get("email")
+        phone = registration_data.get("phone") or client_data.get("phone")
+        password = registration_data.get("password") or client_data.get("password")
+        
+        if not all([full_name, email, password]):
             raise HTTPException(status_code=400, detail="Name, email, and password are required")
         
         # Check if email already exists
         for existing_user in MOCK_USERS.values():
-            if existing_user["email"] == email:
+            if existing_user.get("email") == email:
                 raise HTTPException(status_code=400, detail="Email already registered")
         
         # Generate unique user ID and username
         user_id = f"client_{str(uuid.uuid4())[:8]}"
-        username = email.split('@')[0]  # Use email prefix as username
+        username = email.split('@')[0] if '@' in email else full_name.lower().replace(' ', '_')
         
         # Create user entry
         new_user = {
             "id": user_id,
             "username": username,
-            "name": name,
+            "name": full_name,
             "email": email,
             "type": "client",
             "status": "active",
-            "phone": phone,
+            "phone": phone or client_data.get("phone", ""),
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "notes": "Self-registered client"
+            "notes": "Client onboarded through document verification process",
+            # Store additional onboarding data
+            "document_data": extracted_data,
+            "kyc_completed": kyc_status.get("overall_status") == "approved",
+            "onboarding_method": "document_upload_kyc"
         }
         
         # Add to MOCK_USERS
         MOCK_USERS[username] = new_user
         
-        # Store password (in production, hash this properly)
+        # Store password
         user_temp_passwords[user_id] = {
             "temp_password": password,
-            "must_change": False,  # Self-registered clients don't need to change password immediately
+            "must_change": False,  # Client set their own password
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
-        # Initialize client readiness (not ready initially)
+        # Initialize client readiness based on KYC status
         client_readiness[user_id] = {
             "client_id": user_id,
-            "aml_kyc_completed": False,
-            "agreement_signed": False,
+            "aml_kyc_completed": kyc_status.get("overall_status") == "approved",
+            "agreement_signed": False,  # Still needs agreement
             "deposit_date": None,
-            "investment_ready": False,
-            "notes": "Self-registered - needs AML/KYC completion",
+            "investment_ready": kyc_status.get("overall_status") == "approved",
+            "notes": f"Onboarded via document verification - KYC Status: {kyc_status.get('overall_status', 'pending')}",
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "updated_by": "system"
+            "updated_by": "system",
+            "document_verified": kyc_status.get("document_verified", False),
+            "identity_verified": kyc_status.get("identity_verified", False),
+            "ofac_cleared": kyc_status.get("ofac_cleared", False)
         }
         
-        # AUTOMATICALLY ADD TO CRM LEADS
+        # ✅ CRITICAL: AUTOMATICALLY ADD TO CRM LEADS/PROSPECTS
         prospect_id = str(uuid.uuid4())
         new_prospect = {
             "id": prospect_id,
-            "name": name,
+            "name": full_name,
             "email": email,
-            "phone": phone,
-            "stage": "lead",  # Start as lead
-            "notes": f"Self-registered client - automatically added to CRM",
+            "phone": phone or client_data.get("phone", ""),
+            "stage": "qualified_lead",  # Start as qualified since they completed KYC
+            "notes": f"Auto-generated from client onboarding. KYC Status: {kyc_status.get('overall_status', 'pending')}. Document Type: {extracted_data.get('document_type', 'unknown')}",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "converted_to_client": False,
-            "client_id": None,
-            "agreement_sent": False
+            "converted_to_client": True,  # Already converted since they registered
+            "client_id": user_id,  # Link to actual client record
+            "agreement_sent": False,
+            "onboarding_completed": True,
+            
+            # Add rich onboarding data for admin review
+            "source": "website_onboarding",
+            "lead_score": 85 if kyc_status.get("overall_status") == "approved" else 65,
+            "kyc_status": kyc_status.get("overall_status", "pending"),
+            "document_verification": {
+                "document_type": extracted_data.get("document_type"),
+                "nationality": extracted_data.get("nationality"),
+                "date_of_birth": extracted_data.get("date_of_birth"),
+                "document_number": extracted_data.get("document_number"),
+                "verification_completed": kyc_status.get("document_verified", False)
+            },
+            "risk_assessment": {
+                "ofac_cleared": kyc_status.get("ofac_cleared", False),
+                "identity_verified": kyc_status.get("identity_verified", False),
+                "overall_risk": "low" if kyc_status.get("overall_status") == "approved" else "medium"
+            }
         }
         
-        # Add to prospects_storage (CRM system)
+        # Add to prospects_storage (this makes it appear in Admin CRM)
         prospects_storage[prospect_id] = new_prospect
         
-        logging.info(f"New client registered and added to CRM leads: {name} ({email})")
+        logging.info(f"New client registered and added to CRM leads: {full_name} ({email}) - Prospect ID: {prospect_id}")
         
         return {
             "success": True,
             "user_id": user_id,
             "username": username,
-            "message": f"Registration successful! Welcome {name}. You have been added to our CRM system for investment readiness processing.",
-            "added_to_crm": True
+            "message": f"Registration successful! Welcome {full_name}. Your account has been created and is ready for investment.",
+            "kyc_status": kyc_status.get("overall_status", "pending"),
+            "added_to_crm": True,
+            "prospect_id": prospect_id,
+            "investment_ready": kyc_status.get("overall_status") == "approved"
         }
         
     except HTTPException:
