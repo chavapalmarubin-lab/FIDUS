@@ -2775,7 +2775,202 @@ async def create_new_user(user_data: UserCreate):
         logging.error(f"User creation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
-# OCR and Document Processing Endpoints
+# Document Management Endpoints for CRM Prospects
+@api_router.get("/crm/prospects/{prospect_id}/documents")
+async def get_prospect_documents(prospect_id: str):
+    """Get all documents for a specific prospect"""
+    try:
+        # Mock document storage - in production, use proper database
+        if prospect_id not in prospect_documents:
+            prospect_documents[prospect_id] = []
+        
+        documents = prospect_documents[prospect_id]
+        
+        return {
+            "success": True,
+            "documents": documents,
+            "total_documents": len(documents)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get prospect documents error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch prospect documents")
+
+@api_router.post("/crm/prospects/{prospect_id}/documents")
+async def upload_prospect_document(
+    prospect_id: str,
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    notes: str = Form("")
+):
+    """Upload a document for a prospect"""
+    try:
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+        
+        # Check file extension
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.tiff', '.doc', '.docx']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="File type not supported")
+        
+        # Read file content
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large")
+        
+        # Create document record
+        document_id = str(uuid.uuid4())
+        document_record = {
+            "id": document_id,
+            "prospect_id": prospect_id,
+            "document_type": document_type,
+            "filename": file.filename,
+            "file_size": len(content),
+            "file_extension": file_ext,
+            "upload_date": datetime.now(timezone.utc).isoformat(),
+            "verification_status": "pending",
+            "notes": notes,
+            "uploaded_by": "admin",
+            "verified_by": None,
+            "verified_at": None,
+            "file_path": f"/documents/prospects/{prospect_id}/{document_id}{file_ext}"  # Mock path
+        }
+        
+        # Initialize storage if needed
+        if prospect_id not in prospect_documents:
+            prospect_documents[prospect_id] = []
+        
+        # Add document record
+        prospect_documents[prospect_id].append(document_record)
+        
+        # In production, save file to storage here
+        # e.g., save to AWS S3, Google Cloud Storage, etc.
+        
+        logging.info(f"Document uploaded for prospect {prospect_id}: {file.filename}")
+        
+        return {
+            "success": True,
+            "document_id": document_id,
+            "message": "Document uploaded successfully",
+            "document": document_record
+        }
+        
+    except Exception as e:
+        logging.error(f"Upload prospect document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload document")
+
+@api_router.post("/crm/prospects/{prospect_id}/documents/request")
+async def request_prospect_document(prospect_id: str, request_data: dict):
+    """Request a specific document from a prospect"""
+    try:
+        document_type = request_data.get("document_type")
+        message = request_data.get("message", "")
+        
+        if not document_type:
+            raise HTTPException(status_code=400, detail="Document type is required")
+        
+        # Find prospect
+        prospect = prospects_storage.get(prospect_id)
+        if not prospect:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        # Create document request record
+        request_id = str(uuid.uuid4())
+        document_request = {
+            "id": request_id,
+            "prospect_id": prospect_id,
+            "document_type": document_type,
+            "message": message,
+            "status": "requested",
+            "requested_at": datetime.now(timezone.utc).isoformat(),
+            "requested_by": "admin",
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),  # 7 days to submit
+            "reminder_sent": False
+        }
+        
+        # Initialize storage if needed
+        if prospect_id not in prospect_document_requests:
+            prospect_document_requests[prospect_id] = []
+        
+        # Add request record
+        prospect_document_requests[prospect_id].append(document_request)
+        
+        # In production, send email/SMS notification to prospect here
+        
+        # Update prospect notes
+        prospect["notes"] = f"{prospect.get('notes', '')} | Document requested: {document_type} on {datetime.now().strftime('%Y-%m-%d')}"
+        
+        logging.info(f"Document requested from prospect {prospect_id}: {document_type}")
+        
+        return {
+            "success": True,
+            "request_id": request_id,
+            "message": f"Document request sent to {prospect['name']}",
+            "request": document_request
+        }
+        
+    except Exception as e:
+        logging.error(f"Request prospect document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to request document")
+
+@api_router.patch("/crm/prospects/{prospect_id}/documents/{document_id}")
+async def verify_prospect_document(prospect_id: str, document_id: str, verification_data: dict):
+    """Verify/approve/reject a prospect document"""
+    try:
+        verification_status = verification_data.get("verification_status")  # approved, rejected, pending
+        verified_by = verification_data.get("verified_by", "admin")
+        verification_notes = verification_data.get("verification_notes", "")
+        
+        if verification_status not in ["approved", "rejected", "pending"]:
+            raise HTTPException(status_code=400, detail="Invalid verification status")
+        
+        # Find document
+        if prospect_id not in prospect_documents:
+            raise HTTPException(status_code=404, detail="No documents found for prospect")
+        
+        document = None
+        for doc in prospect_documents[prospect_id]:
+            if doc["id"] == document_id:
+                document = doc
+                break
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Update document verification
+        document["verification_status"] = verification_status
+        document["verified_by"] = verified_by
+        document["verified_at"] = datetime.now(timezone.utc).isoformat()
+        document["verification_notes"] = verification_notes
+        
+        # Update prospect stage if all required documents are approved
+        if verification_status == "approved":
+            prospect = prospects_storage.get(prospect_id)
+            if prospect:
+                # Check if all required KYC documents are approved
+                required_doc_types = ["identity", "proof_of_residence", "bank_statement", "source_of_funds"]
+                approved_docs = [
+                    doc for doc in prospect_documents[prospect_id] 
+                    if doc["verification_status"] == "approved" and doc["document_type"] in required_doc_types
+                ]
+                
+                if len(approved_docs) >= len(required_doc_types):
+                    prospect["stage"] = "qualified"
+                    prospect["notes"] = f"{prospect.get('notes', '')} | KYC documentation completed on {datetime.now().strftime('%Y-%m-%d')}"
+        
+        logging.info(f"Document {document_id} {verification_status} for prospect {prospect_id}")
+        
+        return {
+            "success": True,
+            "message": f"Document {verification_status} successfully",
+            "document": document
+        }
+        
+    except Exception as e:
+        logging.error(f"Verify prospect document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to verify document")
 @api_router.post("/ocr/extract/sync")
 async def extract_text_sync(file: UploadFile = File(...)):
     """Extract text from uploaded document using OCR"""
