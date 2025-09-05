@@ -6262,6 +6262,22 @@ async def create_client_investment(investment_data: InvestmentCreate):
         # Update the investment object with the actual ID from MongoDB
         investment.investment_id = investment_id
         
+        # Create or update MT5 account mapping
+        mt5_account_id = await mt5_service.get_or_create_mt5_account(
+            investment_data.client_id,
+            investment_data.fund_code,
+            {
+                'investment_id': investment_id,
+                'principal_amount': investment_data.amount,
+                'fund_code': investment_data.fund_code
+            }
+        )
+        
+        if mt5_account_id:
+            logging.info(f"MT5 account {mt5_account_id} linked to investment {investment_id}")
+        else:
+            logging.warning(f"Failed to create/link MT5 account for investment {investment_id}")
+        
         # Log the deposit activity in MongoDB
         mongodb_manager.log_activity({
             'client_id': investment_data.client_id,
@@ -6277,7 +6293,8 @@ async def create_client_investment(investment_data: InvestmentCreate):
             "success": True,
             "investment_id": investment.investment_id,
             "investment": investment.dict(),
-            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund"
+            "mt5_account_id": mt5_account_id,
+            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund with MT5 integration"
         }
         
     except HTTPException:
