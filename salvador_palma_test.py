@@ -395,7 +395,7 @@ class SalvadorPalmaInvestmentTester:
             print(f"   Client Count: {len(clients)}")
             
             # Check BALANCE fund specifically
-            balance_fund = fund_summaries.get('BALANCE', {})
+            balance_fund = fund_summaries.get('BALANCE', {}) if isinstance(fund_summaries, dict) else {}
             if balance_fund:
                 balance_aum = balance_fund.get('total_aum', 0)
                 balance_investors = balance_fund.get('total_investors', 0)
