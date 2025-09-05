@@ -193,17 +193,12 @@ class JWTRBACTester:
             )
             
             # Check if we got 403 Forbidden
-            if 'status_code' in response and response['status_code'] == 403:
-                self.log_test(f"Client 403 Test: {endpoint}", True, "403 Forbidden - Correctly blocked")
-            elif success and isinstance(response, dict) and response.get('detail'):
-                # Check for 403 in JSON response
-                if '403' in str(response.get('detail', '')) or 'Forbidden' in str(response.get('detail', '')):
-                    self.log_test(f"Client 403 Test: {endpoint}", True, f"403 Forbidden - {response.get('detail')}")
-                else:
-                    self.log_test(f"Client 403 Test: {endpoint}", False, f"Expected 403, got: {response}")
-                    all_passed = False
+            status_code = response.get('status_code', 0)
+            if status_code == 403:
+                error_msg = response.get('message', response.get('error', 'Forbidden'))
+                self.log_test(f"Client 403 Test: {endpoint}", True, f"403 Forbidden - {error_msg}")
             else:
-                self.log_test(f"Client 403 Test: {endpoint}", False, f"Expected 403 Forbidden, got different response")
+                self.log_test(f"Client 403 Test: {endpoint}", False, f"Expected 403, got {status_code}: {response}")
                 all_passed = False
         
         return all_passed
