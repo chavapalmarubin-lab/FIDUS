@@ -34,7 +34,7 @@ from mongodb_integration import mongodb_manager
 
 # Gmail API imports
 import pickle
-from google.auth.transport.requests import Request
+from google.auth.transport.requests import Request as GoogleRequest
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
