@@ -972,6 +972,11 @@ async def login(login_data: LoginRequest):
         if password == "password123":
             user_response_dict = mock_user_data.copy()
             user_response_dict["must_change_password"] = False
+            
+            # Generate JWT token
+            jwt_token = create_jwt_token(mock_user_data)
+            user_response_dict["token"] = jwt_token
+            
             return UserResponse(**user_response_dict)
         
         raise HTTPException(status_code=401, detail="Invalid credentials")
