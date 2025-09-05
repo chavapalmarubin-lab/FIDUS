@@ -42,6 +42,45 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// AML/KYC Document Types Configuration
+const KYC_DOCUMENT_TYPES = {
+  identity: {
+    label: "Identity Document",
+    description: "Passport, Driver's License, National ID",
+    icon: Shield,
+    required: true,
+    status: "completed" // Usually completed during onboarding
+  },
+  proof_of_residence: {
+    label: "Proof of Residence",
+    description: "Utility bill, Bank statement, Lease agreement (max 3 months old)",
+    icon: Home,
+    required: true,
+    status: "pending"
+  },
+  bank_statement: {
+    label: "Bank Statement",
+    description: "Recent bank statement (max 3 months old)",
+    icon: CreditCard,
+    required: true,
+    status: "pending"
+  },
+  source_of_funds: {
+    label: "Source of Funds",
+    description: "Salary slip, Business registration, Investment statement",
+    icon: Building,
+    required: true,
+    status: "pending"
+  },
+  employment_verification: {
+    label: "Employment Verification",
+    description: "Employment letter, Contract, Business license",
+    icon: Briefcase,
+    required: false,
+    status: "optional"
+  }
+};
+
 const STAGE_CONFIG = {
   lead: { 
     label: "Lead", 
