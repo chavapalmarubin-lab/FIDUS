@@ -91,7 +91,7 @@ const RedemptionManagement = ({ user }) => {
         reason: redemptionForm.reason || ""
       };
 
-      const response = await axios.post(`${API}/redemptions/request`, requestData);
+      const response = await apiAxios.post(`/redemptions/request`, requestData);
 
       if (response.data.success) {
         setSuccess("Redemption request submitted successfully!");
