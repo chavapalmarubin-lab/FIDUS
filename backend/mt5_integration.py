@@ -204,6 +204,8 @@ class MT5IntegrationService:
                 'account_id': account_id,
                 'client_id': client_id,
                 'fund_code': fund_code,
+                'broker_code': broker_code,
+                'broker_name': broker_config["name"],
                 'mt5_login': mt5_login,
                 'mt5_server': mt5_server,
                 'total_allocated': investment_data['principal_amount'],
@@ -219,7 +221,7 @@ class MT5IntegrationService:
                 # Attempt to connect to MT5 (mock for now)
                 await self._mock_mt5_connection(account_id, mt5_login, mt5_password, mt5_server)
                 
-                logging.info(f"Created new MT5 account {account_id} for client {client_id} fund {fund_code}")
+                logging.info(f"Created new MT5 account {account_id} for client {client_id} fund {fund_code} on {broker_config['name']}")
                 return created_account_id
             
             return None
