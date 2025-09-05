@@ -451,6 +451,45 @@ const DocumentPortal = ({ user, userType }) => {
           >
             <h3 className="text-xl font-semibold text-white mb-4">Upload Document</h3>
             
+            {/* Category Selection */}
+            <div className="mb-4">
+              <Label className="text-slate-300 mb-2 block">Document Category</Label>
+              <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  {/* Shared categories - visible to both admin and client */}
+                  <SelectItem value="other" className="text-white">Other</SelectItem>
+                  {availableCategories.shared_categories.map((category) => (
+                    <SelectItem key={category} value={category} className="text-white">
+                      {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                  
+                  {/* Admin-only categories - only visible to admin */}
+                  {userType === 'admin' && (
+                    <>
+                      <SelectItem disabled className="text-slate-500 font-semibold">
+                        — Internal Documents —
+                      </SelectItem>
+                      {availableCategories.admin_only_categories.map((category) => (
+                        <SelectItem key={category} value={category} className="text-white">
+                          {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-slate-400 mt-1">
+                {userType === 'admin' 
+                  ? "Choose category for document (internal categories visible only to admin)"
+                  : "Choose category for document (shared with admin)"
+                }
+              </div>
+            </div>
+            
             {/* Upload Options */}
             <div className="space-y-4">
               {/* File Upload Option */}
