@@ -8156,6 +8156,18 @@ PROTECTED_ENDPOINTS = [
     "/api/payment-confirmations/"
 ]
 
+# Admin-only endpoints that require admin role
+ADMIN_ONLY_ENDPOINTS = [
+    "/api/admin/",
+    "/api/clients/all",
+    "/api/investments/admin/",
+    "/api/documents/admin/",
+    "/api/mt5/admin/",
+    "/api/crm/",
+    "/api/fund-configurations/",
+    "/api/payment-confirmations/"
+]
+
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
 # Now properly implemented with JWT tokens
 @app.middleware("http") 
