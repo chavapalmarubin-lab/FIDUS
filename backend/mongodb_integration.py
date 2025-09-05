@@ -363,7 +363,8 @@ class MongoDBManager:
     def get_client(self, client_id: str) -> Dict[str, Any]:
         """Get client by ID"""
         try:
-            client = self.db.clients.find_one({"id": client_id})
+            # Look in users collection with user_id field for clients
+            client = self.db.users.find_one({"user_id": client_id, "user_type": "client"})
             if client:
                 # Remove MongoDB _id for JSON serialization
                 client.pop('_id', None)
