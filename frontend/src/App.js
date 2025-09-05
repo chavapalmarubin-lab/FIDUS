@@ -124,8 +124,9 @@ function App() {
             </Suspense>
           </motion.div>
         )}
-      </AnimatePresence>
-    </div>
+        </AnimatePresence>
+      </div>
+    </ToastProvider>
   );
 }
 
