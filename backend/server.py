@@ -985,6 +985,53 @@ async def login(login_data: LoginRequest):
         logging.error(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Authentication failed")
 
+@api_router.post("/auth/refresh-token")
+async def refresh_token(request: Request):
+    """Refresh JWT token for authenticated user"""
+    try:
+        # Extract current token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="No token provided")
+        
+        current_token = auth_header.split(" ")[1]
+        
+        # Verify current token (even if close to expiry)
+        try:
+            payload = jwt.decode(current_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            # Allow refresh of recently expired tokens (within 1 hour)
+            payload = jwt.decode(current_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
+            exp_time = payload.get('exp', 0)
+            current_time = datetime.now(timezone.utc).timestamp()
+            
+            # If token expired more than 1 hour ago, require re-login
+            if current_time - exp_time > 3600:  # 1 hour
+                raise HTTPException(status_code=401, detail="Token expired too long ago, please login again")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Create new token with fresh expiration
+        user_data = {
+            "id": payload["user_id"],
+            "username": payload["username"],
+            "type": payload["user_type"]
+        }
+        
+        new_token = create_jwt_token(user_data)
+        
+        return {
+            "success": True,
+            "token": new_token,
+            "message": "Token refreshed successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Token refresh error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Token refresh failed")
+
 @api_router.post("/auth/change-password")
 async def change_password(change_request: dict):
     """Change user password from temporary to permanent"""
