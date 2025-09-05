@@ -339,11 +339,13 @@ class JWTRBACTester:
         )
         
         # Should get 401 Unauthorized
-        if 'status_code' in response and response['status_code'] == 401:
-            self.log_test("No Token Access", True, "401 Unauthorized - Authentication required")
+        status_code = response.get('status_code', 0)
+        if status_code == 401:
+            error_msg = response.get('message', response.get('error', 'Unauthorized'))
+            self.log_test("No Token Access", True, f"401 Unauthorized - {error_msg}")
             return True
         else:
-            self.log_test("No Token Access", False, f"Expected 401, got: {response}")
+            self.log_test("No Token Access", False, f"Expected 401, got {status_code}: {response}")
             return False
 
     def test_invalid_token_access(self):
