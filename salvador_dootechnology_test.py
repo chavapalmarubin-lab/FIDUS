@@ -346,7 +346,7 @@ class SalvadorDooTechnologyTester:
             for account in accounts:
                 if (account.get('client_id') == 'client_0fd630c3' and 
                     account.get('fund_code') == 'BALANCE' and
-                    'dootechnology' in account.get('mt5_server', '').lower()):
+                    'dootechnology' in account.get('account_id', '').lower()):
                     salvador_mt5_account = account
                     break
             
@@ -361,7 +361,8 @@ class SalvadorDooTechnologyTester:
                     # Print MT5 performance details
                     profit_loss = salvador_mt5_account.get('profit_loss', 0)
                     print(f"   Profit/Loss: ${profit_loss:,.2f}")
-                    print(f"   Last Update: {salvador_mt5_account.get('last_update')}")
+                    print(f"   Last Update: {salvador_mt5_account.get('updated_at')}")
+                    print(f"   MT5 Server: {salvador_mt5_account.get('mt5_server')}")
                     
                     return True
                 else:
