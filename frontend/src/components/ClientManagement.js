@@ -1,95 +1,51 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { 
-  Download, 
-  Upload, 
+  Users, 
+  Plus, 
+  Edit2, 
+  Trash2, 
   Search, 
   Filter,
-  Users,
+  UserPlus,
+  UserCheck,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Mail,
+  Phone,
+  Calendar,
   DollarSign,
   TrendingUp,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  FileSpreadsheet,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  UserPlus,
-  Calendar,
-  Phone,
-  Mail,
-  Clock,
-  Settings,
-  Target
+  Eye
 } from "lucide-react";
-import axios from "axios";
-import { format } from "date-fns";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import apiAxios from "../utils/apiAxios";
 
 const ClientManagement = () => {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [selectedClients, setSelectedClients] = useState([]);
-  const [summary, setSummary] = useState({});
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showAddClientModal, setShowAddClientModal] = useState(false);
-  const [showReadinessModal, setShowReadinessModal] = useState(false);
-  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  
-  const fileInputRef = useRef(null);
-  
-  // Client creation form
-  const [newClientForm, setNewClientForm] = useState({
-    username: "",
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    notes: ""
-  });
-
-  // Investment readiness form
-  const [readinessForm, setReadinessForm] = useState({
-    aml_kyc_completed: false,
-    agreement_signed: false,
-    account_creation_date: "",
-    notes: "",
-    updated_by: "admin"
-  });
-
-  // Document upload states
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [selectedDocumentClient, setSelectedDocumentClient] = useState(null);
-  const [documentFile, setDocumentFile] = useState(null);
-  const [documentCategory, setDocumentCategory] = useState("");
-  const [documentUploadLoading, setDocumentUploadLoading] = useState(false);
-
-  // New user creation form
-  const [newUserForm, setNewUserForm] = useState({
-    username: "",
-    name: "",
-    email: "",
-    phone: "",
-    temporary_password: "",
+    type: "individual",
+    status: "active",
     notes: ""
   });
 
@@ -98,1165 +54,541 @@ const ClientManagement = () => {
   }, []);
 
   useEffect(() => {
-    applyFiltersAndSort();
-  }, [clients, searchTerm, statusFilter, sortBy, sortOrder]);
+    filterClients();
+  }, [clients, searchTerm, filterStatus]);
 
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/clients/all`);
-      setClients(response.data.clients);
-      setSummary({
-        total_clients: response.data.total_clients,
-        ready_for_investment: response.data.ready_for_investment
-      });
+      const response = await apiAxios.get('/clients/all');
+      setClients(response.data.clients || []);
     } catch (err) {
-      setError("Failed to fetch clients data");
+      setError("Failed to fetch clients");
       console.error("Error fetching clients:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFiltersAndSort = () => {
-    let filtered = [...clients];
+  const filterClients = () => {
+    let filtered = clients;
 
-    // Apply search filter
+    // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(client => 
-        (client.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(client =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.phone.includes(searchTerm)
       );
     }
 
-    // Apply status filter
-    if (statusFilter !== "all") {
-      if (statusFilter === "ready") {
-        filtered = filtered.filter(client => client.investment_ready);
-      } else if (statusFilter === "not_ready") {
-        filtered = filtered.filter(client => !client.investment_ready);
-      } else {
-        filtered = filtered.filter(client => client.status === statusFilter);
-      }
+    // Filter by status
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(client => client.status === filterStatus);
     }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case "name":
-          aValue = (a.name || "").toLowerCase();
-          bValue = (b.name || "").toLowerCase();
-          break;
-        case "created_at":
-          aValue = new Date(a.created_at || 0);
-          bValue = new Date(b.created_at || 0);
-          break;
-        case "email":
-          aValue = (a.email || "").toLowerCase();
-          bValue = (b.email || "").toLowerCase();
-          break;
-        default:
-          aValue = a[sortBy] || "";
-          bValue = b[sortBy] || "";
-      }
-
-      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
 
     setFilteredClients(filtered);
   };
 
-  const handleExportClients = async () => {
-    try {
-      setDownloadLoading(true);
-      setError("");
-      
-      const response = await axios.get(`${API}/admin/clients/export`);
-      
-      if (response.data.success) {
-        // Create and download file
-        const blob = new Blob([response.data.data], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = response.data.filename;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        
-        setSuccess(`Successfully exported ${response.data.total_clients} clients`);
-      }
-    } catch (err) {
-      setError("Failed to export clients data");
-      console.error("Export error:", err);
-    } finally {
-      setDownloadLoading(false);
-    }
-  };
-
-  const handleImportClients = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['.xlsx', '.xls', '.csv'];
-    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    
-    if (!allowedTypes.includes(fileExtension)) {
-      setError("Please upload an Excel (.xlsx, .xls) or CSV file");
-      return;
-    }
-
-    try {
-      setUploadLoading(true);
-      setError("");
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await axios.post(`${API}/admin/clients/import`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
-      if (response.data.success) {
-        setSuccess(`Successfully imported ${response.data.imported} new clients and updated ${response.data.updated} existing clients`);
-        fetchClients(); // Refresh the data
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to import clients data");
-      console.error("Import error:", err);
-    } finally {
-      setUploadLoading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleStatusUpdate = async (clientId, newStatus) => {
-    try {
-      const response = await axios.put(`${API}/admin/clients/${clientId}/status`, {
-        status: newStatus
-      });
-      
-      if (response.data.success) {
-        setSuccess(`Client status updated to ${newStatus}`);
-        fetchClients(); // Refresh data
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to update client status");
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getStatusBadgeVariant = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return 'default';
-      case 'inactive': return 'secondary';
-      case 'suspended': return 'destructive';
-      default: return 'outline';
-    }
-  };
-
-  const getRiskLevelColor = (risk) => {
-    switch (risk?.toLowerCase()) {
-      case 'low': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'high': return 'text-red-400';
-      default: return 'text-slate-400';
-    }
-  };
-
-  // Investment Readiness Functions
   const handleAddClient = async () => {
     try {
-      if (!newClientForm.username || !newClientForm.name || !newClientForm.email) {
+      if (!formData.name || !formData.email || !formData.phone) {
         setError("Please fill in all required fields");
         return;
       }
 
-      const response = await axios.post(`${API}/clients/create`, newClientForm);
+      const response = await apiAxios.post('/clients/create', formData);
       
       if (response.data.success) {
-        setSuccess(response.data.message);
-        setShowAddClientModal(false);
-        resetNewClientForm();
+        setSuccess("Client added successfully");
+        setShowAddModal(false);
+        resetForm();
         fetchClients();
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create client");
+      setError(err.response?.data?.detail || "Failed to add client");
     }
   };
 
-  const handleUpdateReadiness = async () => {
+  const handleUpdateClient = async () => {
     try {
       if (!selectedClient) return;
 
-      const updateData = {
-        ...readinessForm,
-        account_creation_date: readinessForm.account_creation_date ? new Date(readinessForm.account_creation_date).toISOString() : null
-      };
-
-      const response = await axios.put(`${API}/clients/${selectedClient.id}/readiness`, updateData);
+      const response = await apiAxios.put(`/clients/${selectedClient.id}`, formData);
       
       if (response.data.success) {
-        setSuccess(response.data.message);
-        setShowReadinessModal(false);
+        setSuccess("Client updated successfully");
+        setShowEditModal(false);
         setSelectedClient(null);
-        resetReadinessForm();
+        resetForm();
         fetchClients();
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to update client readiness");
+      setError(err.response?.data?.detail || "Failed to update client");
     }
   };
 
-  const resetNewClientForm = () => {
-    setNewClientForm({
-      username: "",
+  const handleDeleteClient = async (clientId) => {
+    if (!confirm("Are you sure you want to delete this client?")) return;
+
+    try {
+      const response = await apiAxios.delete(`/clients/${clientId}`);
+      
+      if (response.data.success) {
+        setSuccess("Client deleted successfully");
+        fetchClients();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to delete client");
+    }
+  };
+
+  const handleUpdateReadiness = async (clientId, readinessData) => {
+    try {
+      const response = await apiAxios.put(`/clients/${clientId}/readiness`, readinessData);
+      
+      if (response.data.success) {
+        setSuccess("Client readiness updated successfully");
+        fetchClients();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to update readiness");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
       name: "",
       email: "",
       phone: "",
+      type: "individual",
+      status: "active",
       notes: ""
     });
   };
 
-  const resetReadinessForm = () => {
-    setReadinessForm({
-      aml_kyc_completed: false,
-      agreement_signed: false,
-      account_creation_date: "",
-      notes: "",
-      updated_by: "admin"
-    });
-  };
-
-  const resetNewUserForm = () => {
-    setNewUserForm({
-      username: "",
-      name: "",
-      email: "",
-      phone: "",
-      temporary_password: "",
-      notes: ""
-    });
-  };
-
-  const handleCreateUser = async () => {
-    try {
-      if (!newUserForm.username || !newUserForm.name || !newUserForm.email || !newUserForm.temporary_password) {
-        setError("Please fill in all required fields");
-        return;
-      }
-
-      const response = await axios.post(`${API}/admin/users/create`, newUserForm);
-      
-      if (response.data.success) {
-        setSuccess(`User created successfully: ${response.data.message}`);
-        setShowCreateUserModal(false);
-        resetNewUserForm();
-        fetchClients();
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create user");
-    }
-  };
-
-  // Document upload functions
-  const openDocumentModal = (client) => {
-    setSelectedDocumentClient(client);
-    setShowDocumentModal(true);
-    setDocumentFile(null);
-    setDocumentCategory("");
-    setError("");
-  };
-
-  const handleDocumentUpload = async () => {
-    try {
-      if (!documentFile || !documentCategory || !selectedDocumentClient) {
-        setError("Please select a file and category");
-        return;
-      }
-
-      setDocumentUploadLoading(true);
-      
-      const formData = new FormData();
-      formData.append('document', documentFile);  // Changed from 'file' to 'document'
-      formData.append('category', documentCategory);
-      formData.append('uploader_id', 'admin_001');  // Changed from 'uploaded_by' to 'uploader_id'
-      // Removed client_id and description as they're not expected by the backend
-
-      const response = await axios.post(`${API}/documents/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
-
-      if (response.data.success) {
-        setSuccess(`Document uploaded successfully for ${selectedDocumentClient.name}`);
-        setShowDocumentModal(false);
-        setSelectedDocumentClient(null);
-        setDocumentFile(null);
-        setDocumentCategory("");
-      } else {
-        setError("Document upload failed");
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to upload document");
-    } finally {
-      setDocumentUploadLoading(false);
-    }
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setDocumentFile(file);
-    }
-  };
-
-  const openReadinessModal = (client) => {
+  const handleEditClient = (client) => {
     setSelectedClient(client);
-    const readiness = client.readiness_status || {};
-    // Default account creation date to today if not set
-    const defaultCreationDate = new Date().toISOString().split('T')[0];
-    setReadinessForm({
-      aml_kyc_completed: readiness.aml_kyc_completed || false,
-      agreement_signed: readiness.agreement_signed || false,
-      account_creation_date: readiness.account_creation_date ? readiness.account_creation_date.split('T')[0] : defaultCreationDate,
-      notes: readiness.notes || "",
-      updated_by: "admin"
+    setFormData({
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      type: client.type || "individual",
+      status: client.status || "active",
+      notes: client.notes || ""
     });
-    setShowReadinessModal(true);
+    setShowEditModal(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'inactive': return 'bg-gray-500';
+      case 'pending': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
   };
 
   const getReadinessStatus = (client) => {
     if (client.investment_ready) {
-      return (
-        <div className="flex items-center gap-2">
-          <Badge className="bg-green-500 text-white">Ready for Investment</Badge>
-          <CheckCircle className="w-4 h-4 text-green-400" />
-        </div>
-      );
+      return { status: 'Ready', color: 'text-green-500', icon: CheckCircle };
+    } else if (client.readiness_status) {
+      return { status: 'In Progress', color: 'text-yellow-500', icon: AlertCircle };
     }
-    
-    const readiness = client.readiness_status || {};
-    const completed = [
-      readiness.aml_kyc_completed,
-      readiness.agreement_signed
-    ].filter(Boolean).length;
-    
-    if (completed === 0) {
-      return (
-        <div className="flex items-center gap-2">
-          <Badge className="bg-red-500 text-white">Not Started</Badge>
-          <AlertCircle className="w-4 h-4 text-red-400" />
-        </div>
-      );
-    } else if (completed < 2) {
-      return (
-        <div className="flex items-center gap-2">
-          <Badge className="bg-yellow-500 text-white">In Progress ({completed}/2)</Badge>
-          <Clock className="w-4 h-4 text-yellow-400" />
-        </div>
-      );
-    } else {
-      return (
-        <div className="flex items-center gap-2">
-          <Badge className="bg-green-500 text-white">Ready</Badge>
-          <CheckCircle className="w-4 h-4 text-green-400" />
-        </div>
-      );
-    }
+    return { status: 'Not Started', color: 'text-red-500', icon: XCircle };
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-white text-xl">Loading clients...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Total Clients</p>
-                <p className="text-2xl font-bold text-white">{summary.total_clients || 0}</p>
-              </div>
-              <Users className="h-8 w-8 text-cyan-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Ready for Investment</p>
-                <p className="text-2xl font-bold text-green-400">{summary.ready_for_investment || 0}</p>
-              </div>
-              <Target className="h-8 w-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">In Progress</p>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {(summary.total_clients || 0) - (summary.ready_for_investment || 0)}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Completion Rate</p>
-                <p className="text-2xl font-bold text-cyan-400">
-                  {summary.total_clients > 0 
-                    ? Math.round((summary.ready_for_investment / summary.total_clients) * 100) 
-                    : 0}%
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-cyan-400" />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="client-management p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Client Management</h2>
+          <p className="text-slate-400">Manage client accounts and investment readiness</p>
+        </div>
+        <Button onClick={() => setShowAddModal(true)} className="bg-cyan-600 hover:bg-cyan-700">
+          <Plus size={16} className="mr-2" />
+          Add Client
+        </Button>
       </div>
 
-      {/* Controls Section */}
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center justify-between">
-            <span>Client Database Management</span>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => setShowAddClientModal(true)}
-                size="sm"
-                className="bg-cyan-600 hover:bg-cyan-700"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Client
-              </Button>
-              <Button 
-                onClick={() => setShowCreateUserModal(true)}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Create New User
-              </Button>
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadLoading}
-                variant="outline"
-                size="sm"
-                className="text-white border-slate-600"
-              >
-                {uploadLoading ? (
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
-                )}
-                Import Excel
-              </Button>
-              <Button 
-                onClick={handleExportClients}
-                disabled={downloadLoading}
-                variant="outline"
-                size="sm"
-                className="text-white border-slate-600"
-              >
-                {downloadLoading ? (
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="mr-2 h-4 w-4" />
-                )}
-                Export Excel
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            onChange={handleImportClients}
-            className="hidden"
-          />
-          
-          {/* Filters and Search */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <Label className="text-slate-300">Search Clients</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-                <Input
-                  placeholder="Search by name, email, or username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-slate-800 border-slate-600 text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-slate-300">Status Filter</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="all" className="text-white">All Status</SelectItem>
-                  <SelectItem value="active" className="text-white">Active</SelectItem>
-                  <SelectItem value="inactive" className="text-white">Inactive</SelectItem>
-                  <SelectItem value="suspended" className="text-white">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-slate-300">Sort By</Label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="name" className="text-white">Name</SelectItem>
-                  <SelectItem value="created_at" className="text-white">Registration Date</SelectItem>
-                  <SelectItem value="balance" className="text-white">Total Balance</SelectItem>
-                  <SelectItem value="last_activity" className="text-white">Last Activity</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-slate-300">Order</Label>
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="desc" className="text-white">Descending</SelectItem>
-                  <SelectItem value="asc" className="text-white">Ascending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Alerts */}
-          {error && (
-            <Alert className="mb-4 bg-red-900/20 border-red-600">
+      {/* Alerts */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-4"
+          >
+            <Alert className="border-red-500 bg-red-500/10">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-red-400">{error}</AlertDescription>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setError("")}
-                className="ml-auto text-red-400 hover:bg-red-900/30"
-              >
-                ×
-              </Button>
             </Alert>
-          )}
-
-          {success && (
-            <Alert className="mb-4 bg-green-900/20 border-green-600">
+          </motion.div>
+        )}
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-4"
+          >
+            <Alert className="border-green-500 bg-green-500/10">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription className="text-green-400">{success}</AlertDescription>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSuccess("")}
-                className="ml-auto text-green-400 hover:bg-green-900/30"
-              >
-                ×
-              </Button>
             </Alert>
-          )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* File Upload Instructions */}
-          <Alert className="mb-6 bg-slate-800 border-slate-600">
-            <FileSpreadsheet className="h-4 w-4" />
-            <AlertDescription className="text-slate-300">
-              <strong>Excel Import Format:</strong> Your Excel file should include columns: Full_Name, Email, Username, Status, Total_Balance, FIDUS_Funds, Core_Balance, Dynamic_Balance. 
-              <Button variant="link" className="p-0 h-auto text-cyan-400" onClick={handleExportClients}>
-                Download template
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      {/* Search and Filter */}
+      <div className="flex gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search clients by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-slate-800 border-slate-600 text-white"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-4 py-2 bg-slate-800 border border-slate-600 rounded-md text-white"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
 
-      {/* Clients Table */}
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center justify-between">
-            <span>Client Database ({filteredClients.length} of {clients.length})</span>
-            <div className="text-sm text-slate-400 font-normal">
-              💡 Click on any client row to manage their investment readiness
+      {/* Client Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-cyan-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">Total Clients</p>
+                <p className="text-2xl font-bold text-white">{clients.length}</p>
+              </div>
             </div>
-          </CardTitle>
+          </CardContent>
+        </Card>
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <UserCheck className="h-8 w-8 text-green-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">Ready for Investment</p>
+                <p className="text-2xl font-bold text-white">
+                  {clients.filter(c => c.investment_ready).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <AlertCircle className="h-8 w-8 text-yellow-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">In Progress</p>
+                <p className="text-2xl font-bold text-white">
+                  {clients.filter(c => c.readiness_status && !c.investment_ready).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-blue-500" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">Active Clients</p>
+                <p className="text-2xl font-bold text-white">
+                  {clients.filter(c => c.status === 'active').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Client List */}
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white">Client Directory</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-600">
-                  <th className="text-left p-3 text-slate-300">Client</th>
-                  <th className="text-left p-3 text-slate-300">Contact</th>
-                  <th className="text-left p-3 text-slate-300">Investments</th>
-                  <th className="text-left p-3 text-slate-300">Investment Readiness</th>
-                  <th className="text-left p-3 text-slate-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(filteredClients || []).map((client, index) => (
-                  <motion.tr
-                    key={client.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.02 }}
-                    className="border-b border-slate-700 hover:bg-slate-800/50 cursor-pointer transition-colors"
-                    onClick={() => openReadinessModal(client)}
-                    title="Click to manage investment readiness"
-                  >
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={client.profile_picture} 
-                          alt={client.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <div className="text-white font-medium">{client.name}</div>
-                          <div className="text-slate-400 text-sm">ID: {client.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="text-white">{client.email}</div>
-                      <div className="text-slate-400 text-sm">{client.phone || "N/A"}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="text-slate-400 text-sm">
-                        Investments: {client.total_investments || 0}
-                      </div>
-                      <div className="text-slate-400 text-xs">
-                        {client.last_login !== "Never" ? `Last: ${client.last_login}` : "Never logged in"}
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          {getReadinessStatus(client)}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          Click row to manage →
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Additional view functionality can be added here
-                          }}
-                          className="text-slate-400 hover:text-white"
-                          title="View Client Details"
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Select onValueChange={(value) => handleStatusUpdate(client.id, value)}>
-                          <SelectTrigger 
-                            className="w-24 h-8 bg-slate-800 border-slate-600"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal size={16} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-600">
-                            <SelectItem value="active" className="text-white">Set Active</SelectItem>
-                            <SelectItem value="inactive" className="text-white">Set Inactive</SelectItem>
-                            <SelectItem value="suspended" className="text-white">Suspend</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {filteredClients.length === 0 && (
-              <div className="text-center py-12 text-slate-400">
-                <Users size={48} className="mx-auto mb-4 opacity-50" />
-                <p>No clients found matching your criteria</p>
-              </div>
-            )}
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+              <p className="text-slate-400">Loading clients...</p>
+            </div>
+          ) : filteredClients.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+              <p className="text-slate-400">No clients found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-600">
+                    <th className="text-left py-3 px-4 text-slate-300">Name</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Email</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Phone</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Readiness</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Investments</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClients.map((client) => {
+                    const readiness = getReadinessStatus(client);
+                    const ReadinessIcon = readiness.icon;
+                    
+                    return (
+                      <tr key={client.id} className="border-b border-slate-700 hover:bg-slate-750">
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-white">{client.name}</div>
+                          <div className="text-sm text-slate-400">{client.type || 'Individual'}</div>
+                        </td>
+                        <td className="py-3 px-4 text-slate-300">{client.email}</td>
+                        <td className="py-3 px-4 text-slate-300">{client.phone}</td>
+                        <td className="py-3 px-4">
+                          <Badge className={`${getStatusColor(client.status)} text-white`}>
+                            {client.status || 'Active'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className={`flex items-center ${readiness.color}`}>
+                            <ReadinessIcon size={16} className="mr-2" />
+                            {readiness.status}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-slate-300">
+                          {client.total_investments || 0}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditClient(client)}
+                              className="text-cyan-400 border-cyan-400 hover:bg-cyan-400 hover:text-black"
+                            >
+                              <Edit2 size={14} />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteClient(client.id)}
+                              className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Add Client Modal */}
-      <AnimatePresence>
-        {showAddClientModal && (
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setShowAddClientModal(false)}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4"
           >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-semibold text-white mb-4">Add New Client</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Add New Client</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="text-slate-300">Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Client name"
+                />
+              </div>
               
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Username *</Label>
-                  <Input
-                    value={newClientForm.username}
-                    onChange={(e) => setNewClientForm({...newClientForm, username: e.target.value})}
-                    placeholder="Enter username"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Full Name *</Label>
-                  <Input
-                    value={newClientForm.name}
-                    onChange={(e) => setNewClientForm({...newClientForm, name: e.target.value})}
-                    placeholder="Enter full name"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Email *</Label>
-                  <Input
-                    type="email"
-                    value={newClientForm.email}
-                    onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
-                    placeholder="Enter email address"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Phone</Label>
-                  <Input
-                    value={newClientForm.phone}
-                    onChange={(e) => setNewClientForm({...newClientForm, phone: e.target.value})}
-                    placeholder="Enter phone number"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-slate-300">Notes</Label>
-                  <textarea
-                    value={newClientForm.notes}
-                    onChange={(e) => setNewClientForm({...newClientForm, notes: e.target.value})}
-                    placeholder="Additional notes..."
-                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="email" className="text-slate-300">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="client@example.com"
+                />
               </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddClientModal(false);
-                    resetNewClientForm();
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAddClient}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                >
-                  Add Client
-                </Button>
+              
+              <div>
+                <Label htmlFor="phone" className="text-slate-300">Phone *</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="+1 (555) 123-4567"
+                />
               </div>
-            </motion.div>
+              
+              <div>
+                <Label htmlFor="type" className="text-slate-300">Client Type</Label>
+                <select
+                  id="type"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                >
+                  <option value="individual">Individual</option>
+                  <option value="corporate">Corporate</option>
+                  <option value="trust">Trust</option>
+                </select>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes" className="text-slate-300">Notes</Label>
+                <Input
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetForm();
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddClient}
+                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+              >
+                Add Client
+              </Button>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
-      {/* Create New User Modal */}
-      <AnimatePresence>
-        {showCreateUserModal && (
+      {/* Edit Client Modal */}
+      {showEditModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setShowCreateUserModal(false)}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4"
           >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-semibold text-white mb-4">Create New User Account</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Edit Client</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name" className="text-slate-300">Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
               
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Username *</Label>
-                  <Input
-                    value={newUserForm.username}
-                    onChange={(e) => setNewUserForm({...newUserForm, username: e.target.value})}
-                    placeholder="Enter unique username"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Full Name *</Label>
-                  <Input
-                    value={newUserForm.name}
-                    onChange={(e) => setNewUserForm({...newUserForm, name: e.target.value})}
-                    placeholder="Enter full name"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Email *</Label>
-                  <Input
-                    type="email"
-                    value={newUserForm.email}
-                    onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
-                    placeholder="Enter email address"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Phone</Label>
-                  <Input
-                    value={newUserForm.phone}
-                    onChange={(e) => setNewUserForm({...newUserForm, phone: e.target.value})}
-                    placeholder="Enter phone number"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-slate-300">Temporary Password *</Label>
-                  <Input
-                    type="password"
-                    value={newUserForm.temporary_password}
-                    onChange={(e) => setNewUserForm({...newUserForm, temporary_password: e.target.value})}
-                    placeholder="Enter temporary password"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  <p className="text-xs text-yellow-400 mt-1">
-                    User will be required to change this password on first login
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-slate-300">Notes</Label>
-                  <textarea
-                    value={newUserForm.notes}
-                    onChange={(e) => setNewUserForm({...newUserForm, notes: e.target.value})}
-                    placeholder="Additional notes about this user..."
-                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="edit-email" className="text-slate-300">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
               </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreateUserModal(false);
-                    resetNewUserForm();
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateUser}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  Create User
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Investment Readiness Modal */}
-      <AnimatePresence>
-        {showReadinessModal && selectedClient && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setShowReadinessModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Investment Readiness - {selectedClient.name}
-              </h3>
               
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id="aml_kyc"
-                    checked={readinessForm.aml_kyc_completed}
-                    onChange={(e) => setReadinessForm({...readinessForm, aml_kyc_completed: e.target.checked})}
-                    className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
-                  />
-                  <Label htmlFor="aml_kyc" className="text-slate-300 flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-                    AML KYC Completed
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id="agreement_signed"
-                    checked={readinessForm.agreement_signed}
-                    onChange={(e) => setReadinessForm({...readinessForm, agreement_signed: e.target.checked})}
-                    className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
-                  />
-                  <Label htmlFor="agreement_signed" className="text-slate-300 flex items-center">
-                    <FileSpreadsheet className="w-4 h-4 mr-2 text-blue-400" />
-                    Agreement Signed
-                  </Label>
-                </div>
-
-                <div>
-                  <Label className="text-slate-300 flex items-center mb-2">
-                    <Calendar className="w-4 h-4 mr-2 text-cyan-400" />
-                    Account Creation Date *
-                  </Label>
-                  <Input
-                    type="date"
-                    value={readinessForm.account_creation_date}
-                    onChange={(e) => setReadinessForm({...readinessForm, account_creation_date: e.target.value})}
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    Date when the client account was officially created
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-slate-300">Notes</Label>
-                  <textarea
-                    value={readinessForm.notes}
-                    onChange={(e) => setReadinessForm({...readinessForm, notes: e.target.value})}
-                    placeholder="Additional notes about readiness..."
-                    className="mt-1 w-full min-h-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
-                  />
-                </div>
-
-                {/* Document Upload Section */}
-                <div className="pt-4 border-t border-slate-600">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowReadinessModal(false);
-                      openDocumentModal(selectedClient);
-                    }}
-                    className="w-full border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Client Document
-                  </Button>
-                </div>
+              <div>
+                <Label htmlFor="edit-phone" className="text-slate-300">Phone *</Label>
+                <Input
+                  id="edit-phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
               </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowReadinessModal(false);
-                    setSelectedClient(null);
-                    resetReadinessForm();
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpdateReadiness}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                >
-                  Update Readiness
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Document Upload Modal */}
-      <AnimatePresence>
-        {showDocumentModal && selectedDocumentClient && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setShowDocumentModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <Upload className="mr-2 h-6 w-6 text-blue-400" />
-                Upload Document - {selectedDocumentClient.name}
-              </h3>
               
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Document Category *</Label>
-                  <Select value={documentCategory} onValueChange={setDocumentCategory}>
-                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
-                      <SelectValue placeholder="Select document category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      <SelectItem value="kyc" className="text-white">KYC Documents</SelectItem>
-                      <SelectItem value="aml" className="text-white">AML Compliance</SelectItem>
-                      <SelectItem value="agreement" className="text-white">Client Agreement</SelectItem>
-                      <SelectItem value="identity" className="text-white">Identity Verification</SelectItem>
-                      <SelectItem value="financial" className="text-white">Financial Documents</SelectItem>
-                      <SelectItem value="other" className="text-white">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-slate-300">Select File *</Label>
-                  <Input
-                    type="file"
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1"
-                  />
-                  {documentFile && (
-                    <p className="text-sm text-green-400 mt-1">
-                      Selected: {documentFile.name}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-400 mt-1">
-                    Supported formats: PDF, Word, Images (JPG, PNG), Text files (Max 10MB)
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
-                    <p className="text-red-400 text-sm">{error}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowDocumentModal(false);
-                    setSelectedDocumentClient(null);
-                    setDocumentFile(null);
-                    setDocumentCategory("");
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                  disabled={documentUploadLoading}
+              <div>
+                <Label htmlFor="edit-status" className="text-slate-300">Status</Label>
+                <select
+                  id="edit-status"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
                 >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDocumentUpload}
-                  disabled={documentUploadLoading || !documentFile || !documentCategory}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  {documentUploadLoading ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload Document
-                    </>
-                  )}
-                </Button>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                </select>
               </div>
-            </motion.div>
+              
+              <div>
+                <Label htmlFor="edit-notes" className="text-slate-300">Notes</Label>
+                <Input
+                  id="edit-notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedClient(null);
+                  resetForm();
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateClient}
+                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+              >
+                Update Client
+              </Button>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };
