@@ -103,16 +103,11 @@ const LoginSelection = ({ onLogin }) => {
                   margin: "0 auto",
                   display: "block",
                   filter: `
-                    drop-shadow(0 0 25px rgba(255, 167, 38, 0.6))
-                    drop-shadow(0 0 50px rgba(59, 130, 246, 0.3))
-                    brightness(1.08)
-                    contrast(1.03)
+                    drop-shadow(0 0 20px rgba(255, 167, 38, 0.4))
+                    drop-shadow(0 0 35px rgba(59, 130, 246, 0.25))
+                    brightness(1.04)
+                    contrast(1.02)
                   `,
-                  background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.06) 0%, rgba(59, 130, 246, 0.03) 50%, transparent 70%)",
-                  borderRadius: "15px",
-                  padding: "12px",
-                  backdropFilter: "blur(1px)",
-                  border: "1px solid rgba(255, 167, 38, 0.08)",
                   transition: "all 0.3s ease"
                 }}
               />
