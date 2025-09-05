@@ -249,7 +249,7 @@ const ProspectManagement = () => {
     }
 
     try {
-      const response = await axios.delete(`${API}/crm/prospects/${prospectId}`);
+      const response = await apiAxios.delete(`/crm/prospects/${prospectId}`);
       
       if (response.data.success) {
         setSuccess("Prospect deleted successfully");
