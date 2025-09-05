@@ -265,6 +265,15 @@ class MT5MultiBrokerTester:
     def test_add_manual_account_validation(self):
         """Test manual account creation validation (missing fields, invalid data)"""
         
+        if not self.admin_token:
+            print("❌ No admin token available for authentication")
+            return False
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.admin_token}'
+        }
+        
         # Test missing required fields
         invalid_account = {
             "client_id": "client_001",
@@ -275,8 +284,9 @@ class MT5MultiBrokerTester:
             "Add Manual Account - Missing Fields Validation",
             "POST",
             "api/mt5/admin/add-manual-account",
-            422,  # Should return validation error
-            data=invalid_account
+            400,  # Should return validation error
+            data=invalid_account,
+            headers=headers
         )
         
         if success:
