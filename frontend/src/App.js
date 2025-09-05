@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
 import { ToastProvider } from "./components/ui/toast";
-import "./App.css";
+import { isAuthenticated, getCurrentUser } from "./utils/auth";
 
 // Lazy load heavy components for better performance
 const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
