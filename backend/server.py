@@ -8169,14 +8169,15 @@ ADMIN_ONLY_ENDPOINTS = [
 ]
 
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
-# Now properly implemented with JWT tokens
+# Now properly implemented with JWT tokens and role-based access control
 @app.middleware("http") 
 async def api_authentication_middleware(request: Request, call_next):
-    """Protect sensitive API endpoints with JWT token validation"""
+    """Protect sensitive API endpoints with JWT token validation and role-based access control"""
     path = request.url.path
     
     # Check if this is a protected endpoint
     is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
+    is_admin_only = any(path.startswith(endpoint) for endpoint in ADMIN_ONLY_ENDPOINTS)
     
     if is_protected and request.method != "OPTIONS":
         # Extract token from Authorization header
@@ -8202,6 +8203,18 @@ async def api_authentication_middleware(request: Request, call_next):
             request.state.user_id = payload["user_id"]
             request.state.username = payload["username"]
             request.state.user_type = payload["user_type"]
+            
+            # Check role-based access for admin-only endpoints
+            if is_admin_only and payload["user_type"] != "admin":
+                logging.warning(f"Access denied for non-admin user {payload['username']} to {path}")
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "error": "Forbidden", 
+                        "message": f"Admin access required. User type '{payload['user_type']}' cannot access this endpoint.",
+                        "endpoint": path
+                    }
+                )
             
         except HTTPException:
             # Token validation failed
