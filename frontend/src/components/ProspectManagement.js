@@ -212,7 +212,7 @@ const ProspectManagement = () => {
     try {
       if (!selectedProspect) return;
 
-      const response = await axios.put(`${API}/crm/prospects/${selectedProspect.id}`, formData);
+      const response = await apiAxios.put(`/crm/prospects/${selectedProspect.id}`, formData);
       
       if (response.data.success) {
         setSuccess("Prospect updated successfully");
