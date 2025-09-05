@@ -135,7 +135,8 @@ class SalvadorPalmaInvestmentTester:
             "Get All Clients",
             "GET", 
             "api/clients/all",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if not success:
