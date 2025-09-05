@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { User, Shield } from "lucide-react";
-import UserRegistration from "./UserRegistration";
+import ClientOnboarding from "./ClientOnboarding";
 import PasswordReset from "./PasswordReset";
 import PasswordChangeModal from "./PasswordChangeModal";
 import axios from "axios";
