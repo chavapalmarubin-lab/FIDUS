@@ -1243,6 +1243,20 @@ class MT5CredentialsRequest(BaseModel):
     mt5_login: int
     mt5_password: str
     mt5_server: str
+
+# MFA Models
+class MFASetupRequest(BaseModel):
+    user_id: str
+    user_email: str
+
+class MFAVerifyRequest(BaseModel):
+    user_id: str
+    token: str
+    method: str = "totp"  # totp, sms, backup_code
+
+class SMSRequest(BaseModel):
+    user_id: str
+    phone_number: str
 class OCRService:
     def __init__(self):
         # For this implementation, we'll use a hybrid approach:
