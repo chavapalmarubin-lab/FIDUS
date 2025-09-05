@@ -3624,7 +3624,7 @@ class GmailService:
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 try:
-                    creds.refresh(Request())
+                    creds.refresh(GoogleRequest())
                 except RefreshError:
                     creds = self._perform_oauth_flow()
             else:
