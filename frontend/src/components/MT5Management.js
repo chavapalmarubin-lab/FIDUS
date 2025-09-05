@@ -1,20 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Alert, AlertDescription } from './ui/alert';
+import { Badge } from './ui/badge';
+import { 
+    TrendingUp, 
+    TrendingDown, 
+    Users, 
+    Activity, 
+    Plus,
+    Settings,
+    Server,
+    User,
+    DollarSign,
+    BarChart3,
+    AlertCircle,
+    CheckCircle,
+    RefreshCw
+} from 'lucide-react';
 
 const MT5Management = () => {
-    const [mt5Accounts, setMt5Accounts] = useState([]);
-    const [performanceOverview, setPerformanceOverview] = useState(null);
+    const [accountsByBroker, setAccountsByBroker] = useState({});
+    const [totalStats, setTotalStats] = useState({});
+    const [availableBrokers, setAvailableBrokers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedAccount, setSelectedAccount] = useState(null);
-    const [credentialsModal, setCredentialsModal] = useState(false);
-    const [newCredentials, setNewCredentials] = useState({
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    
+    // Modal states
+    const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+    const [selectedBroker, setSelectedBroker] = useState('');
+    const [brokerServers, setBrokerServers] = useState([]);
+    const [newAccount, setNewAccount] = useState({
+        client_id: '',
+        fund_code: 'CORE',
+        broker_code: '',
         mt5_login: '',
         mt5_password: '',
-        mt5_server: ''
+        mt5_server: '',
+        allocated_amount: ''
     });
 
     useEffect(() => {
         fetchMT5Data();
+        fetchAvailableBrokers();
         // Set up auto-refresh for real-time data
         const interval = setInterval(fetchMT5Data, 30000); // Refresh every 30 seconds
         return () => clearInterval(interval);
@@ -22,371 +53,419 @@ const MT5Management = () => {
 
     const fetchMT5Data = async () => {
         try {
-            // Fetch all MT5 accounts
-            const accountsResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts`);
-            const accountsData = await accountsResponse.json();
-
-            // Fetch performance overview
-            const performanceResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/performance/overview`);
-            const performanceData = await performanceResponse.json();
-
-            if (accountsData.success) {
-                setMt5Accounts(accountsData.accounts);
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts/by-broker`, {
+                headers: {
+                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setAccountsByBroker(data.accounts_by_broker || {});
+                setTotalStats(data.total_stats || {});
+            } else {
+                throw new Error('Failed to fetch MT5 data');
             }
-
-            if (performanceData.success) {
-                setPerformanceOverview(performanceData.overview);
-            }
-
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching MT5 data:', error);
+        } catch (err) {
+            setError('Failed to load MT5 data');
+            console.error('MT5 data fetch error:', err);
+        } finally {
             setLoading(false);
         }
     };
 
-    const handleUpdateCredentials = async () => {
-        if (!selectedAccount) return;
-
+    const fetchAvailableBrokers = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/credentials/update`, {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/brokers`, {
+                headers: {
+                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setAvailableBrokers(data.brokers || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch brokers:', err);
+        }
+    };
+
+    const handleBrokerSelect = async (brokerCode) => {
+        setSelectedBroker(brokerCode);
+        setNewAccount(prev => ({ ...prev, broker_code: brokerCode }));
+        
+        try {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/brokers/${brokerCode}/servers`, {
+                headers: {
+                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setBrokerServers(data.servers || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch broker servers:', err);
+        }
+    };
+
+    const handleAddAccount = async () => {
+        try {
+            setError('');
+            
+            // Validation
+            if (!newAccount.client_id || !newAccount.mt5_login || !newAccount.mt5_password || !newAccount.mt5_server) {
+                setError('Please fill in all required fields');
+                return;
+            }
+
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/add-manual-account`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
                 },
-                body: JSON.stringify({
-                    client_id: selectedAccount.client_id,
-                    fund_code: selectedAccount.fund_code,
-                    mt5_login: parseInt(newCredentials.mt5_login),
-                    mt5_password: newCredentials.mt5_password,
-                    mt5_server: newCredentials.mt5_server
-                }),
+                body: JSON.stringify(newAccount)
             });
 
             const data = await response.json();
 
-            if (data.success) {
-                alert('MT5 credentials updated successfully');
-                setCredentialsModal(false);
-                setNewCredentials({ mt5_login: '', mt5_password: '', mt5_server: '' });
+            if (response.ok && data.success) {
+                setSuccess('MT5 account added successfully!');
+                setShowAddAccountModal(false);
+                resetForm();
                 fetchMT5Data(); // Refresh data
             } else {
-                alert('Failed to update credentials');
+                setError(data.detail || 'Failed to add MT5 account');
             }
-        } catch (error) {
-            console.error('Error updating credentials:', error);
-            alert('Error updating credentials');
+        } catch (err) {
+            setError('Failed to add MT5 account');
+            console.error('Add account error:', err);
         }
     };
 
-    const handleDisconnectAccount = async (accountId) => {
-        if (window.confirm('Are you sure you want to disconnect this MT5 account?')) {
-            try {
-                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/account/${accountId}/disconnect`, {
-                    method: 'POST',
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert('Account disconnected successfully');
-                    fetchMT5Data(); // Refresh data
-                } else {
-                    alert('Failed to disconnect account');
-                }
-            } catch (error) {
-                console.error('Error disconnecting account:', error);
-                alert('Error disconnecting account');
-            }
-        }
-    };
-
-    const openCredentialsModal = (account) => {
-        setSelectedAccount(account);
-        setNewCredentials({
-            mt5_login: account.mt5_login.toString(),
+    const resetForm = () => {
+        setNewAccount({
+            client_id: '',
+            fund_code: 'CORE',
+            broker_code: '',
+            mt5_login: '',
             mt5_password: '',
-            mt5_server: account.mt5_server
+            mt5_server: '',
+            allocated_amount: ''
         });
-        setCredentialsModal(true);
+        setSelectedBroker('');
+        setBrokerServers([]);
     };
 
     const getConnectionStatusColor = (status) => {
         switch (status) {
-            case 'connected': return 'text-green-600';
-            case 'disconnected': return 'text-red-600';
-            case 'connecting': return 'text-yellow-600';
-            default: return 'text-gray-600';
+            case 'connected': return 'bg-green-500';
+            case 'connecting': return 'bg-yellow-500';
+            case 'error': return 'bg-red-500';
+            default: return 'bg-gray-500';
         }
     };
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2,
-        }).format(amount);
+            currency: 'USD'
+        }).format(amount || 0);
     };
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+            <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+                <span className="ml-2 text-slate-400">Loading MT5 data...</span>
             </div>
         );
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">MT5 Account Management</h1>
-                <p className="text-gray-600">Manage client MT5 accounts and monitor real-time performance</p>
+        <div className="mt5-management p-6 space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management</h2>
+                    <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
+                </div>
+                <Button 
+                    onClick={() => setShowAddAccountModal(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700"
+                >
+                    <Plus size={16} className="mr-2" />
+                    Add MT5 Account
+                </Button>
             </div>
 
-            {/* Performance Overview */}
-            {performanceOverview && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="text-2xl font-bold text-indigo-600">
-                                {performanceOverview.total_accounts}
-                            </div>
-                            <div className="text-sm text-gray-600">Total MT5 Accounts</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="text-2xl font-bold text-blue-600">
-                                {formatCurrency(performanceOverview.total_allocated)}
-                            </div>
-                            <div className="text-sm text-gray-600">Total Allocated</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(performanceOverview.total_equity)}
-                            </div>
-                            <div className="text-sm text-gray-600">Total Equity</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className={`text-2xl font-bold ${performanceOverview.overall_performance_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {performanceOverview.overall_performance_percentage.toFixed(2)}%
-                            </div>
-                            <div className="text-sm text-gray-600">Overall Performance</div>
-                        </CardContent>
-                    </Card>
-                </div>
+            {/* Error/Success Messages */}
+            {error && (
+                <Alert className="border-red-500 bg-red-500/10">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-red-400">{error}</AlertDescription>
+                </Alert>
+            )}
+            {success && (
+                <Alert className="border-green-500 bg-green-500/10">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription className="text-green-400">{success}</AlertDescription>
+                </Alert>
             )}
 
-            {/* Fund Performance Breakdown */}
-            {performanceOverview && performanceOverview.fund_breakdown && (
-                <Card className="mb-8">
-                    <CardHeader>
-                        <CardTitle>Fund Performance Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {performanceOverview.fund_breakdown.map((fund) => (
-                                <div key={fund.fund_code} className="bg-gray-50 p-4 rounded-lg">
-                                    <div className="font-semibold text-lg">{fund.fund_code}</div>
-                                    <div className="text-sm text-gray-600 mb-2">{fund.accounts_count} accounts</div>
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between">
-                                            <span className="text-sm">Allocated:</span>
-                                            <span className="text-sm font-medium">{formatCurrency(fund.total_allocated)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-sm">Equity:</span>
-                                            <span className="text-sm font-medium">{formatCurrency(fund.total_equity)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-sm">Performance:</span>
-                                            <span className={`text-sm font-medium ${fund.performance_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                {fund.performance_percentage.toFixed(2)}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+            {/* Overall Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="bg-slate-800 border-slate-700">
+                    <CardContent className="p-4">
+                        <div className="flex items-center">
+                            <Users className="h-8 w-8 text-cyan-500" />
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-400">Total Accounts</p>
+                                <p className="text-2xl font-bold text-white">{totalStats.total_accounts || 0}</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
-            )}
-
-            {/* MT5 Accounts Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>MT5 Accounts</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="border-b bg-gray-50">
-                                    <th className="text-left p-3 font-semibold">Client</th>
-                                    <th className="text-left p-3 font-semibold">Fund</th>
-                                    <th className="text-left p-3 font-semibold">MT5 Login</th>
-                                    <th className="text-left p-3 font-semibold">Server</th>
-                                    <th className="text-left p-3 font-semibold">Allocated</th>
-                                    <th className="text-left p-3 font-semibold">Current Equity</th>
-                                    <th className="text-left p-3 font-semibold">P&L</th>
-                                    <th className="text-left p-3 font-semibold">Status</th>
-                                    <th className="text-left p-3 font-semibold">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {mt5Accounts.map((account) => (
-                                    <tr key={account.account_id} className="border-b hover:bg-gray-50">
-                                        <td className="p-3">
-                                            <div>
-                                                <div className="font-medium">{account.client_name}</div>
-                                                <div className="text-sm text-gray-600">{account.client_id}</div>
-                                            </div>
-                                        </td>
-                                        <td className="p-3">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                {account.fund_code}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 font-mono">{account.mt5_login}</td>
-                                        <td className="p-3 text-sm">{account.mt5_server}</td>
-                                        <td className="p-3">{formatCurrency(account.total_allocated)}</td>
-                                        <td className="p-3">{formatCurrency(account.current_equity)}</td>
-                                        <td className="p-3">
-                                            <div className={account.profit_loss >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                                {formatCurrency(account.profit_loss)}
-                                                <div className="text-xs">
-                                                    ({account.profit_loss_percentage.toFixed(2)}%)
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-3">
-                                            <span className={`capitalize ${getConnectionStatusColor(account.connection_status)}`}>
-                                                {account.connection_status}
-                                            </span>
-                                            {account.positions_count > 0 && (
-                                                <div className="text-xs text-gray-600">
-                                                    {account.positions_count} positions
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => openCredentialsModal(account)}
-                                                    className="text-blue-600 hover:text-blue-800 text-sm"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDisconnectAccount(account.account_id)}
-                                                    className="text-red-600 hover:text-red-800 text-sm"
-                                                >
-                                                    Disconnect
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {mt5Accounts.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">
-                                No MT5 accounts found
+                
+                <Card className="bg-slate-800 border-slate-700">
+                    <CardContent className="p-4">
+                        <div className="flex items-center">
+                            <DollarSign className="h-8 w-8 text-green-500" />
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-400">Total Allocated</p>
+                                <p className="text-2xl font-bold text-white">{formatCurrency(totalStats.total_allocated)}</p>
                             </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                <Card className="bg-slate-800 border-slate-700">
+                    <CardContent className="p-4">
+                        <div className="flex items-center">
+                            <BarChart3 className="h-8 w-8 text-blue-500" />
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-400">Current Equity</p>
+                                <p className="text-2xl font-bold text-white">{formatCurrency(totalStats.total_equity)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                <Card className="bg-slate-800 border-slate-700">
+                    <CardContent className="p-4">
+                        <div className="flex items-center">
+                            {totalStats.total_profit_loss >= 0 ? (
+                                <TrendingUp className="h-8 w-8 text-green-500" />
+                            ) : (
+                                <TrendingDown className="h-8 w-8 text-red-500" />
+                            )}
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-400">Total P&L</p>
+                                <p className={`text-2xl font-bold ${totalStats.total_profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {formatCurrency(totalStats.total_profit_loss)}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
-            {/* Credentials Modal */}
-            {credentialsModal && (
+            {/* Accounts by Broker */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-white">Accounts by Broker</h3>
+                
+                {Object.keys(accountsByBroker).length === 0 ? (
+                    <Card className="bg-slate-800 border-slate-700">
+                        <CardContent className="p-8 text-center">
+                            <Server className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                            <p className="text-slate-400">No MT5 accounts found</p>
+                            <p className="text-sm text-slate-500 mt-2">Add your first MT5 account to get started</p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    Object.entries(accountsByBroker).map(([brokerCode, brokerData]) => (
+                        <Card key={brokerCode} className="bg-slate-800 border-slate-700">
+                            <CardHeader>
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <CardTitle className="text-white">{brokerData.broker_name}</CardTitle>
+                                        <p className="text-slate-400 text-sm">
+                                            {brokerData.stats.account_count} accounts • 
+                                            {formatCurrency(brokerData.stats.total_allocated)} allocated
+                                        </p>
+                                    </div>
+                                    <Badge variant="outline" className="text-cyan-400 border-cyan-400">
+                                        {brokerCode.toUpperCase()}
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-slate-600">
+                                                <th className="text-left py-3 px-4 text-slate-300">Client</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Fund</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">MT5 Login</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Server</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Allocated</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Equity</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">P&L</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {brokerData.accounts.map((account) => (
+                                                <tr key={account.account_id} className="border-b border-slate-700 hover:bg-slate-750">
+                                                    <td className="py-3 px-4 text-white">{account.client_id}</td>
+                                                    <td className="py-3 px-4">
+                                                        <Badge className="bg-blue-600 text-white">
+                                                            {account.fund_code}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="py-3 px-4 text-slate-300">{account.mt5_login}</td>
+                                                    <td className="py-3 px-4 text-slate-300">{account.mt5_server}</td>
+                                                    <td className="py-3 px-4 text-white">{formatCurrency(account.total_allocated)}</td>
+                                                    <td className="py-3 px-4 text-white">{formatCurrency(account.current_equity)}</td>
+                                                    <td className={`py-3 px-4 ${account.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {formatCurrency(account.profit_loss)}
+                                                        <span className="text-sm ml-1">
+                                                            ({account.profit_loss_percentage?.toFixed(2)}%)
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <Badge className={`${getConnectionStatusColor(account.connection_status)} text-white`}>
+                                                            {account.connection_status}
+                                                        </Badge>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
+            </div>
+
+            {/* Add Account Modal */}
+            {showAddAccountModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-90vw">
-                        <h3 className="text-lg font-semibold mb-4">Update MT5 Credentials</h3>
+                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-white mb-4">Add MT5 Account</h3>
                         
-                        {selectedAccount && (
-                            <div className="mb-4 p-3 bg-gray-100 rounded">
-                                <div className="text-sm">
-                                    <strong>Client:</strong> {selectedAccount.client_name}
-                                </div>
-                                <div className="text-sm">
-                                    <strong>Fund:</strong> {selectedAccount.fund_code}
-                                </div>
-                            </div>
-                        )}
-
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    MT5 Login
-                                </label>
-                                <input
-                                    type="number"
-                                    value={newCredentials.mt5_login}
-                                    onChange={(e) => setNewCredentials({
-                                        ...newCredentials,
-                                        mt5_login: e.target.value
-                                    })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                <Label className="text-slate-300">Client ID *</Label>
+                                <Input
+                                    value={newAccount.client_id}
+                                    onChange={(e) => setNewAccount(prev => ({ ...prev, client_id: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                    placeholder="client_001"
                                 />
                             </div>
-
+                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    MT5 Password
-                                </label>
-                                <input
+                                <Label className="text-slate-300">Fund Code</Label>
+                                <select
+                                    value={newAccount.fund_code}
+                                    onChange={(e) => setNewAccount(prev => ({ ...prev, fund_code: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                                >
+                                    <option value="CORE">CORE</option>
+                                    <option value="BALANCE">BALANCE</option>
+                                    <option value="DYNAMIC">DYNAMIC</option>
+                                    <option value="UNLIMITED">UNLIMITED</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <Label className="text-slate-300">Broker *</Label>
+                                <select
+                                    value={selectedBroker}
+                                    onChange={(e) => handleBrokerSelect(e.target.value)}
+                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                                >
+                                    <option value="">Select Broker</option>
+                                    {availableBrokers.map((broker) => (
+                                        <option key={broker.code} value={broker.code}>
+                                            {broker.name} - {broker.description}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            {brokerServers.length > 0 && (
+                                <div>
+                                    <Label className="text-slate-300">MT5 Server *</Label>
+                                    <select
+                                        value={newAccount.mt5_server}
+                                        onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_server: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                                    >
+                                        <option value="">Select Server</option>
+                                        {brokerServers.map((server) => (
+                                            <option key={server} value={server}>
+                                                {server}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            
+                            <div>
+                                <Label className="text-slate-300">MT5 Login *</Label>
+                                <Input
+                                    value={newAccount.mt5_login}
+                                    onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_login: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                    placeholder="9928326"
+                                />
+                            </div>
+                            
+                            <div>
+                                <Label className="text-slate-300">MT5 Password *</Label>
+                                <Input
                                     type="password"
-                                    value={newCredentials.mt5_password}
-                                    onChange={(e) => setNewCredentials({
-                                        ...newCredentials,
-                                        mt5_password: e.target.value
-                                    })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter new password"
+                                    value={newAccount.mt5_password}
+                                    onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_password: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                    placeholder="R1d567j!"
                                 />
                             </div>
-
+                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    MT5 Server
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newCredentials.mt5_server}
-                                    onChange={(e) => setNewCredentials({
-                                        ...newCredentials,
-                                        mt5_server: e.target.value
-                                    })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                <Label className="text-slate-300">Allocated Amount</Label>
+                                <Input
+                                    type="number"
+                                    value={newAccount.allocated_amount}
+                                    onChange={(e) => setNewAccount(prev => ({ ...prev, allocated_amount: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                    placeholder="0.00"
                                 />
                             </div>
                         </div>
-
-                        <div className="flex justify-end space-x-3 mt-6">
-                            <button
+                        
+                        <div className="flex gap-3 mt-6">
+                            <Button
+                                variant="outline"
                                 onClick={() => {
-                                    setCredentialsModal(false);
-                                    setNewCredentials({ mt5_login: '', mt5_password: '', mt5_server: '' });
+                                    setShowAddAccountModal(false);
+                                    resetForm();
                                 }}
-                                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                className="flex-1"
                             >
                                 Cancel
-                            </button>
-                            <button
-                                onClick={handleUpdateCredentials}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            </Button>
+                            <Button
+                                onClick={handleAddAccount}
+                                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
                             >
-                                Update Credentials
-                            </button>
+                                Add Account
+                            </Button>
                         </div>
                     </div>
                 </div>
