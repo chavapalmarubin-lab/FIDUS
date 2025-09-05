@@ -21,9 +21,14 @@ import json
 
 class MT5DirectFixer:
     def __init__(self):
-        # Get MongoDB connection from environment
-        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-        db_name = os.environ.get('DB_NAME', 'test_database')
+        # Get MongoDB connection from environment (same as backend)
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/fidus_investment_db')
+        
+        # Extract database name from URL like the backend does
+        if '/' in mongo_url:
+            db_name = mongo_url.split('/')[-1]
+        else:
+            db_name = 'fidus_investment_db'
         
         try:
             self.client = MongoClient(mongo_url)
