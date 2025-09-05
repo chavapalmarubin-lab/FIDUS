@@ -187,7 +187,8 @@ class SalvadorPalmaInvestmentTester:
             "Check Salvador Investment Readiness",
             "GET",
             f"api/clients/{client_id}/readiness",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if success:
