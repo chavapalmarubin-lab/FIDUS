@@ -64,6 +64,10 @@ class MT5DuplicationInvestigator:
         url = f"{self.base_url}/{endpoint}"
         headers = {'Content-Type': 'application/json'}
         
+        # Add JWT token if available
+        if self.auth_token:
+            headers['Authorization'] = f'Bearer {self.auth_token}'
+        
         self.tests_run += 1
         print(f"\n🔍 {method} {endpoint}")
         print(f"   URL: {url}")
