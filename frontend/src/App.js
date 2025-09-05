@@ -5,6 +5,7 @@ import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
+import "./App.css";
 
 // Lazy load heavy components for better performance
 const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
