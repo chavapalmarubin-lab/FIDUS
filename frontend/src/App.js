@@ -28,6 +28,18 @@ function App() {
     }
   }, []);
 
+  // Update document title based on current view
+  useEffect(() => {
+    const titles = {
+      logo: "FIDUS Investment Management | Loading...",
+      login: "FIDUS Investment Management | Secure Login",
+      client: `FIDUS Investment Management | Client Portal${user ? ` - ${user.username}` : ''}`,
+      admin: `FIDUS Investment Management | Admin Dashboard${user ? ` - ${user.username}` : ''}`
+    };
+    
+    document.title = titles[currentView] || "FIDUS Investment Management";
+  }, [currentView, user]);
+
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("fidus_user", JSON.stringify(userData));
