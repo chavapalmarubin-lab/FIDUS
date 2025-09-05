@@ -7988,6 +7988,161 @@ async def update_mt5_credentials(credentials: MT5CredentialsRequest):
         logging.error(f"Update MT5 credentials error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update MT5 credentials")
 
+# ===============================================================================
+# MULTI-BROKER MT5 MANAGEMENT ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/mt5/brokers")
+async def get_available_brokers():
+    """Get list of available MT5 brokers"""
+    try:
+        from mt5_integration import MT5BrokerConfig
+        brokers = MT5BrokerConfig.get_broker_list()
+        
+        return {
+            "success": True,
+            "brokers": brokers
+        }
+        
+    except Exception as e:
+        logging.error(f"Get brokers error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch broker list")
+
+@api_router.get("/mt5/brokers/{broker_code}/servers")
+async def get_broker_servers(broker_code: str):
+    """Get available servers for a specific broker"""
+    try:
+        from mt5_integration import MT5BrokerConfig
+        
+        if not MT5BrokerConfig.is_valid_broker(broker_code):
+            raise HTTPException(status_code=400, detail="Invalid broker code")
+        
+        servers = MT5BrokerConfig.get_broker_servers(broker_code)
+        broker_info = MT5BrokerConfig.BROKERS[broker_code]
+        
+        return {
+            "success": True,
+            "broker": broker_info["name"],
+            "servers": servers
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get broker servers error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch broker servers")
+
+@api_router.post("/mt5/admin/add-manual-account")
+async def add_manual_mt5_account(request: Request):
+    """Manually add MT5 account with existing credentials"""
+    try:
+        data = await request.json()
+        
+        required_fields = ['client_id', 'fund_code', 'broker_code', 'mt5_login', 'mt5_password', 'mt5_server']
+        for field in required_fields:
+            if field not in data:
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        # Validate broker
+        from mt5_integration import MT5BrokerConfig
+        if not MT5BrokerConfig.is_valid_broker(data['broker_code']):
+            raise HTTPException(status_code=400, detail="Invalid broker code")
+        
+        # Validate client exists
+        client = mongodb_manager.get_client(data['client_id'])
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        account_id = await mt5_service.add_manual_mt5_account(
+            client_id=data['client_id'],
+            fund_code=data['fund_code'],
+            broker_code=data['broker_code'],
+            mt5_login=int(data['mt5_login']),
+            mt5_password=data['mt5_password'],
+            mt5_server=data['mt5_server'],
+            allocated_amount=float(data.get('allocated_amount', 0.0))
+        )
+        
+        if account_id:
+            return {
+                "success": True,
+                "message": "MT5 account added successfully",
+                "account_id": account_id
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create MT5 account")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Add manual MT5 account error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add MT5 account")
+
+@api_router.get("/mt5/admin/accounts/by-broker")
+async def get_mt5_accounts_by_broker():
+    """Get all MT5 accounts grouped by broker"""
+    try:
+        accounts = mongodb_manager.get_all_mt5_accounts()
+        
+        # Group accounts by broker
+        accounts_by_broker = {}
+        total_stats = {
+            "total_accounts": 0,
+            "total_allocated": 0,
+            "total_equity": 0,
+            "total_profit_loss": 0
+        }
+        
+        for account in accounts:
+            broker_code = account.get('broker_code', 'unknown')
+            broker_name = account.get('broker_name', 'Unknown Broker')
+            
+            if broker_code not in accounts_by_broker:
+                accounts_by_broker[broker_code] = {
+                    "broker_name": broker_name,
+                    "broker_code": broker_code,
+                    "accounts": [],
+                    "stats": {
+                        "account_count": 0,
+                        "total_allocated": 0,
+                        "total_equity": 0,
+                        "total_profit_loss": 0
+                    }
+                }
+            
+            # Get real-time performance data
+            performance = await mt5_service.get_account_performance(account['account_id'])
+            if performance:
+                account['current_equity'] = performance.equity
+                account['profit_loss'] = performance.profit
+                account['profit_loss_percentage'] = (performance.profit / account['total_allocated'] * 100) if account['total_allocated'] > 0 else 0
+            
+            # Get connection status
+            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
+            
+            # Add to broker group
+            accounts_by_broker[broker_code]["accounts"].append(account)
+            accounts_by_broker[broker_code]["stats"]["account_count"] += 1
+            accounts_by_broker[broker_code]["stats"]["total_allocated"] += account['total_allocated']
+            accounts_by_broker[broker_code]["stats"]["total_equity"] += account['current_equity']
+            accounts_by_broker[broker_code]["stats"]["total_profit_loss"] += account['profit_loss']
+            
+            # Update global stats
+            total_stats["total_accounts"] += 1
+            total_stats["total_allocated"] += account['total_allocated']
+            total_stats["total_equity"] += account['current_equity']
+            total_stats["total_profit_loss"] += account['profit_loss']
+        
+        return {
+            "success": True,
+            "accounts_by_broker": accounts_by_broker,
+            "total_stats": total_stats
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 accounts by broker error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 accounts by broker")
+
 @api_router.get("/mt5/client/{client_id}/performance")
 async def get_client_mt5_performance(client_id: str):
     """Get comprehensive MT5 performance summary for client"""
