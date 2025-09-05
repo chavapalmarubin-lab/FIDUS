@@ -922,6 +922,247 @@ const ProspectManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Document Management Modal */}
+      <AnimatePresence>
+        {showDocumentModal && selectedProspectForDocs && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Document Management</h2>
+                  <p className="text-slate-600">
+                    {selectedProspectForDocs.name} - KYC/AML Documentation
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowDocumentModal(false);
+                    setSelectedProspectForDocs(null);
+                  }}
+                  className="p-2"
+                >
+                  <XCircle size={24} />
+                </Button>
+              </div>
+
+              {/* Document Types Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {Object.entries(KYC_DOCUMENT_TYPES).map(([docType, config]) => {
+                  const IconComponent = config.icon;
+                  const status = getDocumentStatus(selectedProspectForDocs.id, docType);
+                  const isRequired = config.required;
+                  
+                  return (
+                    <Card key={docType} className="relative">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-5 w-5 text-slate-600" />
+                            <div>
+                              <h3 className="font-medium text-sm text-slate-900">
+                                {config.label}
+                                {isRequired && <span className="text-red-500 ml-1">*</span>}
+                              </h3>
+                            </div>
+                          </div>
+                          
+                          {/* Status Badge */}
+                          <Badge 
+                            className={`text-xs ${
+                              status === 'approved' ? 'bg-green-100 text-green-800' :
+                              status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              status === 'uploaded' ? 'bg-blue-100 text-blue-800' :
+                              'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {status === 'approved' && '✓ Approved'}
+                            {status === 'pending' && '⏳ Pending'}
+                            {status === 'rejected' && '✗ Rejected'}
+                            {status === 'uploaded' && '📄 Uploaded'}
+                            {status === 'missing' && '○ Missing'}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-xs text-slate-600 mb-3">{config.description}</p>
+                        
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRequestDocument(selectedProspectForDocs.id, docType)}
+                            className="text-xs flex-1"
+                          >
+                            <Send size={12} className="mr-1" />
+                            Request
+                          </Button>
+                          
+                          {status === 'uploaded' || status === 'pending' ? (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                onClick={() => handleVerifyDocument(selectedProspectForDocs.id, docType, 'approved')}
+                                className="text-xs bg-green-600 hover:bg-green-700 text-white px-2"
+                              >
+                                ✓
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleVerifyDocument(selectedProspectForDocs.id, docType, 'rejected')}
+                                className="text-xs bg-red-600 hover:bg-red-700 text-white px-2"
+                              >
+                                ✗
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Upload New Document */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Upload Document</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="document-type">Document Type</Label>
+                      <select
+                        id="document-type"
+                        value={documentToUpload.type}
+                        onChange={(e) => setDocumentToUpload(prev => ({ ...prev, type: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                      >
+                        <option value="">Select document type...</option>
+                        {Object.entries(KYC_DOCUMENT_TYPES).map(([key, config]) => (
+                          <option key={key} value={key}>
+                            {config.label} {config.required ? '*' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="document-file">Select File</Label>
+                      <input
+                        id="document-file"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.tiff"
+                        onChange={(e) => setDocumentToUpload(prev => ({ ...prev, file: e.target.files[0] }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="document-notes">Notes (Optional)</Label>
+                    <Input
+                      id="document-notes"
+                      value={documentToUpload.notes}
+                      onChange={(e) => setDocumentToUpload(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Additional notes about this document..."
+                      className="text-sm"
+                    />
+                  </div>
+                  
+                  <Button
+                    onClick={handleDocumentUpload}
+                    disabled={!documentToUpload.type || !documentToUpload.file || uploadingDocument}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {uploadingDocument ? (
+                      <>
+                        <Upload className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Document
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Existing Documents List */}
+              {prospectDocuments[selectedProspectForDocs.id] && prospectDocuments[selectedProspectForDocs.id].length > 0 && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Uploaded Documents</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {(prospectDocuments[selectedProspectForDocs.id] || []).map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <File className="h-5 w-5 text-slate-600" />
+                            <div>
+                              <p className="font-medium text-sm text-slate-900">{doc.filename}</p>
+                              <p className="text-xs text-slate-600">
+                                {KYC_DOCUMENT_TYPES[doc.document_type]?.label || doc.document_type} • 
+                                Uploaded {new Date(doc.upload_date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              className={`text-xs ${
+                                doc.verification_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                doc.verification_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                doc.verification_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {doc.verification_status}
+                            </Badge>
+                            
+                            {doc.verification_status === 'pending' && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleVerifyDocument(selectedProspectForDocs.id, doc.id, 'approved')}
+                                  className="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1"
+                                >
+                                  ✓ Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleVerifyDocument(selectedProspectForDocs.id, doc.id, 'rejected')}
+                                  className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1"
+                                >
+                                  ✗ Reject
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
