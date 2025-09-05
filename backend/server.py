@@ -373,46 +373,46 @@ FIDUS_FUND_CONFIG = {
     "CORE": FundConfiguration(
         fund_code="CORE",
         name="FIDUS Core Fund",
-        interest_rate=1.5,  # 1.5% monthly
-        minimum_investment=10000.0,
+        interest_rate=1.5,  # 1.5% simple interest per month
+        minimum_investment=10000.0,  # $10,000 minimum
         interest_frequency="monthly",
-        redemption_frequency="monthly",  # Interest can be redeemed monthly
+        redemption_frequency="monthly",  # Interest redemptions monthly
         invitation_only=False,
-        incubation_months=2,  # 2 months incubation (no interest)
-        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
+        incubation_months=2,  # 2 months incubation (no interest/redemptions)
+        minimum_hold_months=12  # 12 months commitment after incubation = 14 months total
     ),
     "BALANCE": FundConfiguration(
         fund_code="BALANCE", 
         name="FIDUS Balance Fund",
-        interest_rate=2.5,  # 2.5% monthly
-        minimum_investment=50000.0,
+        interest_rate=2.5,  # 2.5% simple interest per month
+        minimum_investment=50000.0,  # $50,000 minimum
         interest_frequency="monthly",
-        redemption_frequency="quarterly",  # Interest can be redeemed quarterly (every 3 months)
+        redemption_frequency="quarterly",  # Interest redemptions every 3 months
         invitation_only=False,
-        incubation_months=2,  # 2 months incubation (no interest)
-        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
+        incubation_months=2,  # 2 months incubation (no interest/redemptions)
+        minimum_hold_months=12  # 12 months commitment after incubation = 14 months total
     ),
     "DYNAMIC": FundConfiguration(
         fund_code="DYNAMIC",
         name="FIDUS Dynamic Fund", 
-        interest_rate=3.5,  # 3.5% monthly
-        minimum_investment=250000.0,
+        interest_rate=3.5,  # 3.5% simple interest per month
+        minimum_investment=250000.0,  # $250,000 minimum
         interest_frequency="monthly",
-        redemption_frequency="semi_annually",  # Interest can be redeemed semi-annually (every 6 months)
+        redemption_frequency="semi_annually",  # Interest redemptions every 6 months
         invitation_only=False,
-        incubation_months=2,  # 2 months incubation (no interest)
-        minimum_hold_months=12  # 12 months hold for PRINCIPAL after incubation
+        incubation_months=2,  # 2 months incubation (no interest/redemptions)
+        minimum_hold_months=12  # 12 months commitment after incubation = 14 months total
     ),
     "UNLIMITED": FundConfiguration(
         fund_code="UNLIMITED",
         name="FIDUS Unlimited Fund",
-        interest_rate=0.0,  # No specific monthly return
-        minimum_investment=1000000.0,
-        interest_frequency="none",
-        redemption_frequency="flexible",  # Flexible redemptions
-        invitation_only=True,
-        incubation_months=2,
-        minimum_hold_months=14
+        interest_rate=0.0,  # 50-50 performance sharing (calculated differently)
+        minimum_investment=1000000.0,  # $1,000,000 minimum
+        interest_frequency="none",  # Performance-based, not fixed interest
+        redemption_frequency="flexible",  # Flexible redemptions based on performance
+        invitation_only=True,  # By invitation only
+        incubation_months=2,  # 2 months incubation
+        minimum_hold_months=12  # 12 months commitment after incubation = 14 months total
     )
 }
 
