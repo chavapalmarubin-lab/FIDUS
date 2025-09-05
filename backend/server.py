@@ -28,6 +28,7 @@ import time
 import numpy as np
 import yfinance as yf
 import pandas as pd
+import jwt
 
 # MongoDB Integration
 from mongodb_integration import mongodb_manager
