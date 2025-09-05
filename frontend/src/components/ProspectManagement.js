@@ -292,7 +292,7 @@ const ProspectManagement = () => {
   // Document Management Functions
   const fetchProspectDocuments = async (prospectId) => {
     try {
-      const response = await axios.get(`${API}/crm/prospects/${prospectId}/documents`);
+      const response = await apiAxios.get(`/crm/prospects/${prospectId}/documents`);
       setProspectDocuments(prev => ({
         ...prev,
         [prospectId]: response.data.documents || []
