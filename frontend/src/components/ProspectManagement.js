@@ -229,7 +229,7 @@ const ProspectManagement = () => {
 
   const handleStageChange = async (prospectId, newStage) => {
     try {
-      const response = await axios.put(`${API}/crm/prospects/${prospectId}`, {
+      const response = await apiAxios.put(`/crm/prospects/${prospectId}`, {
         stage: newStage
       });
       
