@@ -4088,15 +4088,23 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @api_router.get("/documents/admin/all")
-async def get_all_documents():
-    """Get all documents for admin view"""
+async def get_all_documents(include_admin_only: bool = True):
+    """Get all documents for admin view with option to include admin-only documents"""
     try:
-        documents = []
-        for doc_data in documents_storage.values():
-            documents.append(doc_data)
+        # Get documents from MongoDB
+        documents = mongodb_manager.get_all_documents(include_admin_only=include_admin_only)
         
-        # Sort by created_at descending
-        documents.sort(key=lambda x: x['created_at'], reverse=True)
+        # Fallback to in-memory storage if MongoDB returns empty and we have memory data
+        if not documents and documents_storage:
+            documents = []
+            for doc_data in documents_storage.values():
+                # Filter admin-only if requested
+                if not include_admin_only and doc_data.get('document_type') == 'admin_only':
+                    continue
+                documents.append(doc_data)
+            
+            # Sort by created_at descending
+            documents.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
         return {"documents": documents}
         
@@ -4106,25 +4114,58 @@ async def get_all_documents():
 
 @api_router.get("/documents/client/{client_id}")
 async def get_client_documents(client_id: str):
-    """Get documents for specific client"""
+    """Get documents for specific client (shared documents only)"""
     try:
-        client_documents = []
-        for doc_data in documents_storage.values():
-            # Include documents uploaded by client or sent to client
-            if (doc_data['uploader_id'] == client_id or 
-                (doc_data.get('recipient_emails') and 
-                 any(email for email in doc_data.get('recipient_emails', []) 
-                     if client_id in email))):
-                client_documents.append(doc_data)
+        # Get client documents from MongoDB (excludes admin-only documents)
+        client_documents = mongodb_manager.get_client_documents(client_id, include_admin_shared=True)
         
-        # Sort by created_at descending
-        client_documents.sort(key=lambda x: x['created_at'], reverse=True)
+        # Fallback to in-memory storage if MongoDB returns empty and we have memory data
+        if not client_documents and documents_storage:
+            client_documents = []
+            for doc_data in documents_storage.values():
+                # Exclude admin-only documents from client view
+                if doc_data.get('document_type') == 'admin_only':
+                    continue
+                    
+                # Include documents uploaded by client, assigned to client, or shared
+                if (doc_data['uploader_id'] == client_id or 
+                    doc_data.get('client_id') == client_id or
+                    (doc_data.get('recipient_emails') and 
+                     any(email for email in doc_data.get('recipient_emails', []) 
+                         if client_id in email))):
+                    client_documents.append(doc_data)
+            
+            # Sort by created_at descending
+            client_documents.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
         return {"documents": client_documents}
         
     except Exception as e:
         logging.error(f"Get client documents error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client documents")
+
+@api_router.get("/documents/admin/internal")
+async def get_admin_only_documents():
+    """Get admin-only internal documents (compliance, AML KYC, etc.)"""
+    try:
+        # Get admin-only documents from MongoDB
+        admin_documents = mongodb_manager.get_admin_only_documents()
+        
+        # Fallback to in-memory storage if needed
+        if not admin_documents and documents_storage:
+            admin_documents = []
+            for doc_data in documents_storage.values():
+                if doc_data.get('document_type') == 'admin_only':
+                    admin_documents.append(doc_data)
+            
+            # Sort by created_at descending
+            admin_documents.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {"documents": admin_documents}
+        
+    except Exception as e:
+        logging.error(f"Get admin-only documents error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch admin-only documents")
 
 @api_router.post("/documents/{document_id}/send-for-signature")
 async def send_document_for_signature(
