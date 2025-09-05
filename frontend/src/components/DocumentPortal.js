@@ -76,6 +76,8 @@ const DocumentPortal = ({ user, userType }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [uploadCategory, setUploadCategory] = useState('other');
+  const [availableCategories, setAvailableCategories] = useState({ shared_categories: [], admin_only_categories: [] });
   const fileInputRef = useRef(null);
 
   useEffect(() => {
