@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoAnimation from "./components/LogoAnimation";
 import LoginSelection from "./components/LoginSelection";
+import { ToastProvider } from "./components/ui/toast";
 import "./App.css";
 
 // Lazy load heavy components for better performance
