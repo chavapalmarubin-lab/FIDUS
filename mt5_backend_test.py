@@ -525,7 +525,7 @@ class MT5BackendTester:
             
             # Verify server assignment
             mt5_server = account.get('mt5_server')
-            if mt5_server and 'FIDUS' in mt5_server:
+            if mt5_server and 'Multibank' in mt5_server:
                 print(f"   ✅ MT5 server assignment valid: {mt5_server}")
             else:
                 print(f"   ❌ MT5 server assignment invalid: {mt5_server}")
