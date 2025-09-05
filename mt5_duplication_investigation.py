@@ -26,6 +26,7 @@ class MT5DuplicationInvestigator:
         self.issues_found = []
         self.duplicate_accounts = []
         self.correct_account = None
+        self.auth_token = None
         
     def log_issue(self, severity, description, data=None):
         """Log an issue found during investigation"""
