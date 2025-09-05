@@ -323,11 +323,22 @@ class MT5MultiBrokerTester:
     
     def test_get_accounts_by_broker(self):
         """Test GET /api/mt5/admin/accounts/by-broker - Should show accounts grouped by broker"""
+        
+        if not self.admin_token:
+            print("❌ No admin token available for authentication")
+            return False
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.admin_token}'
+        }
+        
         success, response = self.run_test(
             "Get MT5 Accounts Grouped by Broker",
             "GET",
             "api/mt5/admin/accounts/by-broker",
-            200
+            200,
+            headers=headers
         )
         
         if success:
