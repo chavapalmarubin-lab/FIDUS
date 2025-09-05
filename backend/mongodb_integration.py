@@ -500,6 +500,8 @@ class MongoDBManager:
                 'account_id': mt5_account_data['account_id'],
                 'client_id': mt5_account_data['client_id'],
                 'fund_code': mt5_account_data['fund_code'],
+                'broker_code': mt5_account_data.get('broker_code'),  # NEW: Store broker code
+                'broker_name': mt5_account_data.get('broker_name'),  # NEW: Store broker name
                 'mt5_login': mt5_account_data['mt5_login'],
                 'mt5_server': mt5_account_data['mt5_server'],
                 'total_allocated': mt5_account_data['total_allocated'],
@@ -507,6 +509,7 @@ class MongoDBManager:
                 'profit_loss': mt5_account_data.get('profit_loss', 0.0),
                 'investment_ids': mt5_account_data.get('investment_ids', []),
                 'status': mt5_account_data.get('status', 'active'),
+                'manual_entry': mt5_account_data.get('manual_entry', False),  # NEW: Store manual entry flag
                 'created_at': datetime.now(timezone.utc),
                 'updated_at': datetime.now(timezone.utc)
             }
