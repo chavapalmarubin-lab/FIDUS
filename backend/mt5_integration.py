@@ -143,9 +143,29 @@ class MT5IntegrationService:
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
         return ''.join(secrets.choice(alphabet) for _ in range(12))
     
-    def _get_mt5_server(self, fund_code: str) -> str:
-        """Get MT5 server for specific fund"""
-        return self.server_configs.get(fund_code, "Multibank-Default-01.multibank.fx")
+    def _get_mt5_server(self, fund_code: str, broker_code: str = "multibank") -> str:
+        """Get MT5 server for specific fund and broker"""
+        broker_config = MT5BrokerConfig.BROKERS.get(broker_code, {})
+        default_servers = broker_config.get("servers", ["Multibank-Live"])
+        
+        # Map fund codes to server preferences
+        server_mapping = {
+            "multibank": {
+                "CORE": "Multibank-Live",
+                "BALANCE": "Multibank-Live", 
+                "DYNAMIC": "Multibank-Live",
+                "UNLIMITED": "Multibank-Live"
+            },
+            "dootechnology": {
+                "CORE": "DooTechnology-Live",
+                "BALANCE": "DooTechnology-Live",
+                "DYNAMIC": "DooTechnology-Live", 
+                "UNLIMITED": "DooTechnology-Live"
+            }
+        }
+        
+        broker_mapping = server_mapping.get(broker_code, {})
+        return broker_mapping.get(fund_code, default_servers[0])
     
     def _encrypt_password(self, password: str) -> str:
         """Encrypt MT5 password for secure storage"""
