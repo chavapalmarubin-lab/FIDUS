@@ -35,7 +35,7 @@ const ClientDashboard = ({ user, onLogout }) => {
 
   const fetchClientData = async () => {
     try {
-      const response = await axios.get(`${API}/client/${user.id}/data`);
+      const response = await apiAxios.get(`/client/${user.id}/data`);
       setClientData(response.data);
       setFilteredTransactions(response.data.transactions);
       setLoading(false);
