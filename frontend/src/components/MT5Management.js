@@ -31,6 +31,9 @@ const MT5Management = () => {
     
     // Modal states
     const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+    const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false);
+    const [selectedAccountDetails, setSelectedAccountDetails] = useState(null);
+    const [accountActivity, setAccountActivity] = useState([]);
     const [selectedBroker, setSelectedBroker] = useState('');
     const [brokerServers, setBrokerServers] = useState([]);
     const [newAccount, setNewAccount] = useState({
