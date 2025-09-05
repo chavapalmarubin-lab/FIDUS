@@ -47,14 +47,14 @@ const RedemptionManagement = ({ user }) => {
       setLoading(true);
       
       // Fetch available redemptions
-      const redemptionsResponse = await axios.get(`${API}/redemptions/client/${user.id}`);
+      const redemptionsResponse = await apiAxios.get(`/redemptions/client/${user.id}`);
       if (redemptionsResponse.data.success) {
         setAvailableRedemptions(redemptionsResponse.data.available_redemptions || []);
         setRedemptionRequests(redemptionsResponse.data.redemption_requests || []);
       }
       
       // Fetch activity logs
-      const logsResponse = await axios.get(`${API}/activity-logs/client/${user.id}`);
+      const logsResponse = await apiAxios.get(`/activity-logs/client/${user.id}`);
       if (logsResponse.data.success) {
         setActivityLogs(logsResponse.data.activity_logs || []);
       }
