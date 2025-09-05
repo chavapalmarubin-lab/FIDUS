@@ -468,6 +468,58 @@ class MT5IntegrationService:
             logging.error(f"Error disconnecting MT5 account {account_id}: {str(e)}")
             return False
     
+    async def add_manual_mt5_account(self, client_id: str, fund_code: str, 
+                                   broker_code: str, mt5_login: int, 
+                                   mt5_password: str, mt5_server: str,
+                                   allocated_amount: float = 0.0) -> Optional[str]:
+        """Manually add MT5 account with existing credentials (for pre-existing client accounts)"""
+        try:
+            # Validate broker
+            if not MT5BrokerConfig.is_valid_broker(broker_code):
+                logging.error(f"Invalid broker code: {broker_code}")
+                return None
+            
+            broker_config = MT5BrokerConfig.BROKERS[broker_code]
+            
+            # Generate unique account ID
+            account_id = f"mt5_{client_id}_{fund_code}_{broker_code}_{str(uuid.uuid4())[:8]}"
+            
+            # Store encrypted credentials
+            encrypted_password = self._encrypt_password(mt5_password)
+            mongodb_manager.store_mt5_credentials(account_id, encrypted_password)
+            
+            # Create MT5 account record with manual credentials
+            mt5_account_data = {
+                'account_id': account_id,
+                'client_id': client_id,
+                'fund_code': fund_code,
+                'broker_code': broker_code,
+                'broker_name': broker_config["name"],
+                'mt5_login': mt5_login,  # Use provided login
+                'mt5_server': mt5_server,  # Use provided server
+                'total_allocated': allocated_amount,
+                'current_equity': allocated_amount,
+                'profit_loss': 0.0,
+                'investment_ids': [],
+                'status': 'active',
+                'manual_entry': True  # Flag to indicate this was manually added
+            }
+            
+            created_account_id = mongodb_manager.create_mt5_account(mt5_account_data)
+            
+            if created_account_id:
+                # Attempt to connect to MT5 
+                await self._mock_mt5_connection(account_id, mt5_login, mt5_password, mt5_server)
+                
+                logging.info(f"Manually added MT5 account {account_id} for client {client_id} on {broker_config['name']} (Login: {mt5_login})")
+                return created_account_id
+            
+            return None
+            
+        except Exception as e:
+            logging.error(f"Error adding manual MT5 account: {str(e)}")
+            return None
+    
     async def get_account_summary(self, client_id: str) -> Dict[str, Any]:
         """Get comprehensive MT5 account summary for client"""
         try:
