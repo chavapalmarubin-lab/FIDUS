@@ -1,92 +1,87 @@
 <analysis>
-The AI engineer successfully progressed the FIDUS application from its initial state by systematically addressing user requirements and emergent bugs. Key achievements include resolving persistent frontend login issues stemming from React key duplication and modal rendering problems, implementing a comprehensive client investment readiness process with document upload, and building a robust redemption system with fund-specific rules. The engineer then meticulously refined fund calculations, redemption logic (distinguishing interest vs. principal), and integrated a client-facing investment calendar. Finally, a complete fund portfolio and cash flow management system for admins, including rebate tracking and FIDUS profitability logic, was integrated. Throughout, the engineer demonstrated strong debugging skills, particularly in rectifying backend data inconsistencies and frontend UI glitches, ensuring adherence to complex financial business rules. The trajectory concludes with a request for a comprehensive production readiness test.
+The AI engineer successfully transformed a problematic MVP application into a more robust and feature-rich platform. The trajectory highlights a systematic approach to debugging and feature development. Initial efforts focused on critical frontend stability (login, logo animation, dashboard rendering) and resolving backend data inconsistencies (mock data vs. MongoDB). Key achievements include a comprehensive client onboarding process with document OCR and KYC/AML, robust fund calculation and redemption logic, and seamless client-to-CRM lead integration. Significant time was spent fixing  errors across numerous frontend components and ensuring correct financial calculations. The final phase introduced advanced features like dynamic logo styling and initiated MT5 integration. The engineer consistently used testing agents and troubleshooting tools to diagnose and rectify complex issues, ensuring adherence to user-defined business rules and data integrity. The work concluded with the planning of MT5 integration.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is a full-stack platform featuring an animated logo, dual Client/Admin login, and respective dashboards. It includes user registration with AML/KYC, client management, password reset, and a comprehensive CRM for onboarding and investor allocation across CORE, BALANCE, DYNAMIC, UNLIMITED funds. The system requires automated capital flows, real-time AUM/NAV/performance dashboards, and role-based portals. Secure document storage with Gmail API integration, compliance reminders, MT4/MT5 API monitoring, multi-currency support, communication tools, exportable reports, encryption, audit trails, and accounting/n8n integrations are planned.
+The FIDUS financial portal is a full-stack platform with an animated logo, dual Client/Admin login, and role-based dashboards. It supports user registration (AML/KYC), client management, password reset, and a CRM for investor allocation across CORE, BALANCE, DYNAMIC, and UNLIMITED funds. The system requires automated capital flows, real-time AUM/NAV/performance dashboards, secure document storage with Gmail API, compliance, MT4/MT5 API monitoring, multi-currency support, communication tools, exportable reports, encryption, audit trails, and accounting/n8n integrations.
 
-Recent implementations include:
-*   Refined Gmail API integration.
-*   Camera capture for AML/KYC.
-*   Admin CRM: prospect management.
-*   FIDUS funds investment logic: 2-month incubation (no interest), 12-month principal hold (total 14 months), fund-specific monthly interest (CORE 1.5%, BALANCE 2.5%, DYNAMIC 3.5%), and fund-specific redemption schedules (CORE monthly, BALANCE quarterly, DYNAMIC semi-annually).
-*   Admin-only investment creation, client view-only.
-*   Client investment readiness tracking (AML KYC, Agreement Signed, Account Creation Date).
-*   User creation with temporary passwords and forced changes.
-*   Comprehensive redemption system for client/admin with fund-specific rules, approval process, and deposit/redemption activity tracking, distinguishing interest and principal redemptions.
-*   Payment confirmation system for deposits/redemptions (FIAT wires/crypto hashes).
-*   Client-side Investment Calendar displaying investment lifecycle events.
-*   Admin-side Fund Portfolio and Cash Flow management: real-time fund AUM (sum of client investments), fund performance, FIDUS profitability (fund performance - client interest + rebates), cash flow forecasting, and rebate entry.
+**Recent Implementations:**
+- Refined Gmail API and camera capture for AML/KYC.
+- Admin CRM with prospect management.
+- Detailed FIDUS funds investment logic (2-month incubation without interest, 12-month commitment, monthly simple interest, fund-specific redemption schedules, minimum investments).
+- Admin-only investment creation, client view-only.
+- Client investment readiness tracking (AML KYC, Agreement Signed, Account Creation Date).
+- User creation with temporary passwords and forced changes.
+- Comprehensive client/admin redemption system with approval, activity tracking, distinguishing interest/principal.
+- Payment confirmation for deposits/redemptions.
+- Client-side Investment Calendar.
+- Admin-side Fund Portfolio and Cash Flow management (real-time AUM, performance, FIDUS profitability, forecasting, rebate entry).
+- Transitioned backend from mock data to MongoDB for authentication, client, and investment endpoints.
+- Client registration auto-adds to CRM leads.
+- CRM now has document capabilities for Proof of Residence and other AML/KYC.
 </product_requirements>
 
 <key_technical_concepts>
-- React.js: Frontend framework for UI components and state management.
-- FastAPI: Python backend framework for API routes and business logic.
-- MongoDB: Database for data persistence (though mock data heavily used).
-- Google Gmail API: OAuth 2.0 for email functionality.
-- Shadcn UI, Tailwind CSS, Framer Motion: UI components, styling, and animations.
-- In-memory data structures: Used for CRM, client readiness, investments, and activity logs.
-- Complex Financial Logic: Incubation periods, interest calculations, multi-tiered redemption schedules, principal vs. interest redemptions.
-- Role-Based Access Control: Admin vs. Client functionalities.
+- React.js (Frontend, UI, state management, Framer Motion for animations)
+- FastAPI (Python backend, API routes, business logic)
+- MongoDB (Database for persistence, UUIDs for IDs)
+- Shadcn UI, Tailwind CSS (UI, styling)
+- Complex Financial Logic (Incubation, simple interest, multi-tiered redemptions, principal/interest distinction, AUM/NAV calculations)
+- Role-Based Access Control (Admin vs. Client)
+- Date and Timezone Handling (ISO strings, )
+- OCR/Document Processing (simulated with backend endpoints)
+- KYC/AML Compliance (OFAC screening)
+- MT5 API Integration (planned)
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****:
-    -   **Importance**: Centralizes all backend logic: API routes, data models, authentication, and financial calculations.
-    -   **Changes**:
-        *   Redemption logic heavily modified: ,  models updated for principal/interest separation, , ,  functions refined.
-        *   Duplicate  class definition removed (Line 343).
-        *    updated with correct minimum investment amounts (CORE 0k, BALANCE 0k) and precise hold/incubation periods (12+2 months for principal, fund-specific for interest).
-        *    updated to sum client investments instead of transaction history for accurate totals.
-        *   Payment confirmation models (, ) and related endpoints (, ) added.
-        *   Fund portfolio endpoints (, , ) added to provide fund-level AUM, investor counts, and rebate tracking.
--   ****:
-    -   **Importance**: Main application shell, handles routing and initial view.
-    -   **Changes**: Temporarily modified to skip logo animation for debugging, then reverted.
--   ****:
-    -   **Importance**: Admin UI for managing client readiness and profiles.
-    -   **Changes**: Date of Deposit replaced with Account Creation Date in readiness; document upload modal and associated functions () added,  adjusted. Corrected FormData fields (, ) for document upload.
--   ****:
-    -   **Importance**: Admin UI for creating and managing investments.
-    -   **Changes**: Payment confirmation fields integrated into investment creation form. Client dropdown visibility issues resolved by reverting to standard HTML select and adjusting modal styling (, , ).
--   ****:
-    -   **Importance**: Client UI for requesting redemptions.
-    -   **Changes**: UI updated to clearly distinguish Interest Redemption vs. Principal Redemption with separate buttons and clearer status messages.  adjusted to handle redemption types.
--   ****:
-    -   **Importance**: New component providing a visual calendar of investment events (start, interest, redemptions).
-    -   **Changes**: Newly created component, integrates with ClientDashboard for display.
--   ****:
-    -   **Importance**: Main client portal dashboard.
-    -   **Changes**: Integrated  as a new Calendar tab.
--   ****:
-    -   **Importance**: New admin component for overall fund performance and AUM.
-    -   **Changes**: Newly created. Displays real-time fund data based on client investments, FIDUS profitability, NAV, and performance.
--   ****:
-    -   **Importance**: New admin component for tracking money inflows/outflows and forecasting redemptions.
-    -   **Changes**: Newly created. Provides a detailed cash flow overview by fund.
--   ****:
-    -   **Importance**: Main admin portal dashboard.
-    -   **Changes**: Integrated  and  as new tabs, replacing old portfolio logic.
 
+-   ****: The core backend logic.
+    -   **Changes**: Fixed  to return client array. Updated  to use . Reworked  to create CRM leads. Fixed , ,  to use MongoDB data. Updated all redemption endpoints to use MongoDB. Added OCR and compliance endpoints. Modified  for UNLIMITED fund. Adjusted , ,  for precise 2-month incubation period.
+-   ****: Handles MongoDB interactions.
+    -   **Importance**: Abstracts database operations.
+    -   **Changes**: Used to retrieve fund configurations (after  fix).
+-   ****: Global CSS styles.
+    -   **Changes**: Enhanced logo styling for seamless integration (shadows, gradients, hover effects). Removed frame-like styling for a cleaner look.
+-   ****: Animated startup logo.
+    -   **Changes**: Updated logo URL. Applied enhanced styling and then removed frame styling.
+-   ****: Client/Admin login selection.
+    -   **Changes**: Updated logo URL. Applied enhanced styling. Replaced  with . Removed frame styling.
+-   ****: Password reset page.
+    -   **Changes**: Updated logo URL. Applied enhanced styling and then removed frame styling.
+-   ****: Client investment view.
+    -   **Changes**: Fixed  by introducing  and  utilities and applying them to all date parsing/formatting.
+-   ****: Admin redemption view.
+    -   **Changes**: Fixed  errors by adding defensive checks.
+-   ****: Admin CRM dashboard.
+    -   **Changes**: Fixed  errors. Enhanced with document management capabilities for prospects.
+-   ****: Details of investors in a fund.
+    -   **Changes**: Fixed  errors.
+-   ****: Client's main dashboard.
+    -   **Changes**: Fixed  errors.
+-   ****: Detailed client profile for admin.
+    -   **Changes**: Fixed  errors.
+-   ****: Admin investment UI.
+    -   **Changes**: Fixed  errors.
+-   ****: Admin fund AUM.
+    -   **Changes**: Frontend expected , backend returned . Backend fixed to return both. Fixed  to .
+-   ** (NEW)**: Client's 5-step registration process.
+    -   **Importance**: New component for document upload, OCR, KYC/AML, and account setup.
+-   ** (NEW)**: UI component for progress bar.
+    -   **Importance**: Used in .
+-   ****: Manages CRM prospects.
+    -   **Changes**: Enhanced with document management state, functions, and UI elements (modal) for AML/KYC documents like Proof of Residence.
 </code_architecture>
 
 <pending_tasks>
-- Conduct a comprehensive production readiness test of the entire application, including all flows and functionality.
-- Transition the application from current mock data to live data for production.
-- Implement the auto-add new client registrations to CRM Leads feature (pending client self-registration endpoint).
-- Implement the MT4/MT5 real-time data integration for fund performance and NAV updates.
+- Implement the MT5 account mapping system for real-time performance tracking per client per fund, ensuring the admin can manage investor login details within the application.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer had successfully implemented and thoroughly tested a comprehensive **Fund Portfolio Management and Cash Flow Management system** for the admin side of the FIDUS application. This involved:
-- **Backend:** Creation of new API endpoints (, , ) to calculate fund AUM based on aggregated client investments, track rebates, and provide cash flow data. Fund initial AUM values in  were reset to zero to reflect dynamic calculation.
-- **Frontend:** Development of two new components:  and . These were integrated into the  as new Fund Portfolio and Cash Flow tabs, respectively. The Fund Portfolio tab now displays real fund data (AUM, investors), FIDUS profitability (Fund Performance - Client Interest + Rebates), and is set up for real-time data entry for NAV/performance and rebate management. The Cash Flow tab provides an overview of money inflows, outflows, net cash flow, and a detailed redemption schedule.
-The system now accurately reflects FIDUS's business model for profitability and liquidity management.
-
-The user's last instruction was to conduct a comprehensive production readiness test.
+Immediately before this summary request (Chat Message 462), the AI engineer was tasked with implementing MT5 integration. The user provided detailed requirements for this integration: one MT5 account per client per fund (max 4 per client), existing funds in the same fund add to the existing MT5 account, new funds in different funds create a new MT5 account, and only admins see real-time MT5 performance while clients see fund commitments. The engineer successfully used the  tool to obtain comprehensive MT5 API integration guidance and acknowledged the plan to implement the system according to the specified logic.
 </current_work>
 
 <optional_next_step>
-Conduct a comprehensive production readiness test of the entire application, systematically testing all flows and functionality, and transitioning from mock data.
+Implement the MT5 account mapping system based on the gathered API integration guidance and user specifications.
 </optional_next_step>
