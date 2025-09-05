@@ -38,6 +38,19 @@ class APIClient {
         // Add request ID for debugging
         config.requestId = Math.random().toString(36).substr(2, 9);
         
+        // Add JWT token from localStorage if available
+        const userDataStr = localStorage.getItem('fidus_user');
+        if (userDataStr) {
+          try {
+            const userData = JSON.parse(userDataStr);
+            if (userData.token) {
+              config.headers['Authorization'] = `Bearer ${userData.token}`;
+            }
+          } catch (error) {
+            console.warn('Failed to parse user data from localStorage:', error);
+          }
+        }
+        
         console.log(`🚀 API Request [${config.requestId}]:`, config.method?.toUpperCase(), config.url);
         return config;
       },
