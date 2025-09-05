@@ -40,7 +40,7 @@ import {
   Bar, 
   Pie
 } from "recharts";
-import axios from "axios";
+import apiAxios from "../utils/apiAxios";
 import { format, differenceInDays } from "date-fns";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
