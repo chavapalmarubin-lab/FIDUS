@@ -7582,6 +7582,239 @@ async def get_investment_ready_clients():
         logging.error(f"Get investment ready clients error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
 
+# ===============================================================================
+# MT5 INTEGRATION ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/mt5/client/{client_id}/accounts")
+async def get_client_mt5_accounts(client_id: str):
+    """Get all MT5 accounts for a specific client"""
+    try:
+        accounts = mongodb_manager.get_client_mt5_accounts(client_id)
+        
+        # Get real-time performance for each account
+        enriched_accounts = []
+        for account in accounts:
+            # Get performance data
+            performance = await mt5_service.get_account_performance(account['account_id'])
+            
+            if performance:
+                account['current_equity'] = performance.equity
+                account['profit_loss'] = performance.profit
+                account['profit_loss_percentage'] = (performance.profit / account['total_allocated'] * 100) if account['total_allocated'] > 0 else 0
+                account['margin_level'] = performance.margin_level
+                account['positions_count'] = performance.positions_count
+                account['last_updated'] = performance.timestamp
+            
+            # Get connection status
+            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
+            
+            enriched_accounts.append(account)
+        
+        return {
+            "success": True,
+            "accounts": enriched_accounts,
+            "total_accounts": len(enriched_accounts)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client MT5 accounts error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 accounts")
+
+@api_router.get("/mt5/admin/accounts")
+async def get_all_mt5_accounts():
+    """Get all MT5 accounts for admin overview"""
+    try:
+        accounts = mongodb_manager.get_all_mt5_accounts()
+        
+        # Get real-time performance for each account
+        enriched_accounts = []
+        total_allocated = 0
+        total_equity = 0
+        total_profit_loss = 0
+        
+        for account in accounts:
+            # Get performance data
+            performance = await mt5_service.get_account_performance(account['account_id'])
+            
+            if performance:
+                account['current_equity'] = performance.equity
+                account['profit_loss'] = performance.profit
+                account['profit_loss_percentage'] = (performance.profit / account['total_allocated'] * 100) if account['total_allocated'] > 0 else 0
+                account['margin_level'] = performance.margin_level
+                account['positions_count'] = performance.positions_count
+                account['last_updated'] = performance.timestamp
+            
+            # Get connection status
+            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
+            
+            # Aggregate totals
+            total_allocated += account['total_allocated']
+            total_equity += account['current_equity']
+            total_profit_loss += account['profit_loss']
+            
+            enriched_accounts.append(account)
+        
+        # Calculate overall performance
+        overall_performance_percentage = (total_profit_loss / total_allocated * 100) if total_allocated > 0 else 0
+        
+        return {
+            "success": True,
+            "accounts": enriched_accounts,
+            "summary": {
+                "total_accounts": len(enriched_accounts),
+                "total_allocated": total_allocated,
+                "total_equity": total_equity,
+                "total_profit_loss": total_profit_loss,
+                "overall_performance_percentage": overall_performance_percentage
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all MT5 accounts error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 accounts")
+
+@api_router.post("/mt5/admin/credentials/update")
+async def update_mt5_credentials(credentials: MT5CredentialsRequest):
+    """Update MT5 login credentials for a specific client and fund (Admin only)"""
+    try:
+        success = await mt5_service.update_client_mt5_credentials(
+            credentials.client_id,
+            credentials.fund_code,
+            credentials.mt5_login,
+            credentials.mt5_password,
+            credentials.mt5_server
+        )
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"MT5 credentials updated for client {credentials.client_id} fund {credentials.fund_code}"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="MT5 account not found or update failed")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Update MT5 credentials error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update MT5 credentials")
+
+@api_router.get("/mt5/client/{client_id}/performance")
+async def get_client_mt5_performance(client_id: str):
+    """Get comprehensive MT5 performance summary for client"""
+    try:
+        summary = await mt5_service.get_account_summary(client_id)
+        
+        if not summary:
+            return {
+                "success": True,
+                "message": "No MT5 accounts found for client",
+                "summary": {
+                    "total_accounts": 0,
+                    "total_allocated": 0,
+                    "total_equity": 0,
+                    "total_profit_loss": 0,
+                    "overall_performance_percentage": 0,
+                    "accounts": []
+                }
+            }
+        
+        return {
+            "success": True,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client MT5 performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 performance")
+
+@api_router.get("/mt5/admin/performance/overview")
+async def get_mt5_performance_overview():
+    """Get system-wide MT5 performance overview (Admin only)"""
+    try:
+        # Get all accounts performance
+        all_performance = await mt5_service.get_all_accounts_performance()
+        
+        # Aggregate statistics
+        total_accounts = len(all_performance)
+        total_equity = sum(perf.equity for perf in all_performance.values())
+        total_profit = sum(perf.profit for perf in all_performance.values())
+        
+        # Get account allocation data
+        all_accounts = mongodb_manager.get_all_mt5_accounts()
+        total_allocated = sum(acc['total_allocated'] for acc in all_accounts)
+        
+        # Calculate performance metrics
+        overall_performance_percentage = (total_profit / total_allocated * 100) if total_allocated > 0 else 0
+        
+        # Group by fund
+        fund_performance = {}
+        for account in all_accounts:
+            fund_code = account['fund_code']
+            if fund_code not in fund_performance:
+                fund_performance[fund_code] = {
+                    'fund_code': fund_code,
+                    'accounts_count': 0,
+                    'total_allocated': 0,
+                    'total_equity': 0,
+                    'total_profit_loss': 0,
+                    'performance_percentage': 0
+                }
+            
+            fund_performance[fund_code]['accounts_count'] += 1
+            fund_performance[fund_code]['total_allocated'] += account['total_allocated']
+            
+            if account['account_id'] in all_performance:
+                perf = all_performance[account['account_id']]
+                fund_performance[fund_code]['total_equity'] += perf.equity
+                fund_performance[fund_code]['total_profit_loss'] += perf.profit
+        
+        # Calculate fund performance percentages
+        for fund_code in fund_performance:
+            fund_data = fund_performance[fund_code]
+            if fund_data['total_allocated'] > 0:
+                fund_data['performance_percentage'] = (
+                    fund_data['total_profit_loss'] / fund_data['total_allocated'] * 100
+                )
+        
+        return {
+            "success": True,
+            "overview": {
+                "total_accounts": total_accounts,
+                "total_allocated": total_allocated,
+                "total_equity": total_equity,
+                "total_profit_loss": total_profit,
+                "overall_performance_percentage": overall_performance_percentage,
+                "fund_breakdown": list(fund_performance.values()),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 performance overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch performance overview")
+
+@api_router.post("/mt5/admin/account/{account_id}/disconnect")
+async def disconnect_mt5_account(account_id: str):
+    """Disconnect specific MT5 account (Admin only)"""
+    try:
+        success = await mt5_service.disconnect_account(account_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"MT5 account {account_id} disconnected successfully"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Account not found or disconnect failed")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Disconnect MT5 account error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to disconnect MT5 account")
+
 # Include the router in the main app
 app.include_router(api_router)
 
