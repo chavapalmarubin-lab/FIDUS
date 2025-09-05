@@ -130,7 +130,7 @@ const InvestmentDashboard = ({ user, userType }) => {
   const fetchInvestments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/investments/client/${user.id}`);
+      const response = await apiAxios.get(`/investments/client/${user.id}`);
       setInvestments(response.data.investments);
       setPortfolioStats(response.data.portfolio_stats);
     } catch (err) {
