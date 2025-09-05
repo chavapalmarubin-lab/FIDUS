@@ -308,7 +308,8 @@ class MT5MultiBrokerTester:
             "POST",
             "api/mt5/admin/add-manual-account",
             400,  # Should return bad request
-            data=invalid_broker_account
+            data=invalid_broker_account,
+            headers=headers
         )
         
         if success2:
