@@ -25,7 +25,17 @@ import {
   XCircle,
   Clock,
   Target,
-  DollarSign
+  DollarSign,
+  Upload,
+  Download,
+  File,
+  Image,
+  Shield,
+  AlertCircle,
+  Home,
+  CreditCard,
+  Building,
+  Briefcase
 } from "lucide-react";
 import axios from "axios";
 
