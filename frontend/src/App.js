@@ -103,7 +103,9 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <ClientDashboard user={user} onLogout={handleLogout} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <ClientDashboard user={user} onLogout={handleLogout} />
+            </Suspense>
           </motion.div>
         )}
         
@@ -115,7 +117,9 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <AdminDashboard user={user} onLogout={handleLogout} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminDashboard user={user} onLogout={handleLogout} />
+            </Suspense>
           </motion.div>
         )}
       </AnimatePresence>
