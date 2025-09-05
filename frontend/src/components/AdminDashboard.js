@@ -33,6 +33,7 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 import axios from "axios";
+import { getAuthHeaders } from "../utils/auth";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
