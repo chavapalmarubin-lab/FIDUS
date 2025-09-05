@@ -516,8 +516,30 @@ const ProspectManagement = () => {
                 <div>
                   <h4 className="font-medium text-sm text-slate-900">{prospect.name}</h4>
                   <p className="text-xs text-slate-600">{prospect.email}</p>
+                  {/* KYC Completion Status */}
+                  {(() => {
+                    const kycStatus = getKYCCompletionStatus(prospect.id);
+                    return (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Shield className="h-3 w-3 text-slate-400" />
+                        <span className="text-xs text-slate-500">
+                          KYC: {kycStatus.completed}/{kycStatus.total} ({kycStatus.percentage}%)
+                        </span>
+                        {kycStatus.isComplete && <CheckCircle className="h-3 w-3 text-green-500" />}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openDocumentModal(prospect)}
+                    className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700"
+                    title="Manage Documents"
+                  >
+                    <FileText size={12} />
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
