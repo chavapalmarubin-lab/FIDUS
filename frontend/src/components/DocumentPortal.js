@@ -534,15 +534,13 @@ const DocumentPortal = ({ user, userType }) => {
           </p>
         </div>
         
-        {userType === 'admin' && (
-          <Button
-            onClick={() => setShowUploadModal(true)}
-            className="bg-cyan-600 hover:bg-cyan-700"
-          >
-            <Plus size={16} className="mr-2" />
-            Upload Document
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowUploadModal(true)}
+          className="bg-cyan-600 hover:bg-cyan-700"
+        >
+          <Plus size={16} className="mr-2" />
+          Upload Document
+        </Button>
       </div>
 
       {/* Filters */}
