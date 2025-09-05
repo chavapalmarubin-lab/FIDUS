@@ -219,16 +219,11 @@ const LogoAnimation = ({ onComplete }) => {
             width: "380px",
             height: "auto",
             filter: `
-              drop-shadow(0 0 30px rgba(255, 167, 38, 0.7))
-              drop-shadow(0 0 60px rgba(59, 130, 246, 0.4))
-              brightness(1.1)
-              contrast(1.05)
-            `,
-            background: "radial-gradient(ellipse at center, rgba(255, 167, 38, 0.08) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%)",
-            borderRadius: "20px",
-            padding: "15px",
-            backdropFilter: "blur(2px)",
-            border: "1px solid rgba(255, 167, 38, 0.1)"
+              drop-shadow(0 0 25px rgba(255, 167, 38, 0.5))
+              drop-shadow(0 0 45px rgba(59, 130, 246, 0.3))
+              brightness(1.06)
+              contrast(1.03)
+            `
           }}
           initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
