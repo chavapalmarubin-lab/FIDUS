@@ -181,7 +181,7 @@ const AdminInvestmentManagement = () => {
           confirmationData.wallet_address = investmentForm.wallet_address;
         }
 
-        const confirmationResponse = await axios.post(`${API}/payments/deposit/confirm`, confirmationData);
+        const confirmationResponse = await apiAxios.post(`/payments/deposit/confirm`, confirmationData);
 
         if (confirmationResponse.data.success) {
           setSuccess(`Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`);
