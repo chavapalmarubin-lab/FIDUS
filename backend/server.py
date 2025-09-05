@@ -1063,7 +1063,7 @@ async def readiness_check():
     
     try:
         # Check database connectivity
-        await db.admin.command('ping')
+        await db.command('ping')
         checks["database"] = True
         
         # All checks passed
