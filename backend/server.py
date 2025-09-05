@@ -936,6 +936,11 @@ async def login(login_data: LoginRequest):
             # MongoDB authentication successful
             user_response_dict = user_data.copy()
             user_response_dict["must_change_password"] = False
+            
+            # Generate JWT token
+            jwt_token = create_jwt_token(user_data)
+            user_response_dict["token"] = jwt_token
+            
             return UserResponse(**user_response_dict)
         
         # Fallback to mock data for backward compatibility during transition
