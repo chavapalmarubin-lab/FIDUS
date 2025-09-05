@@ -333,7 +333,8 @@ class SalvadorPalmaInvestmentTester:
             "Get Salvador Investment Portfolio",
             "GET",
             f"api/investments/client/{client_id}",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if success:
