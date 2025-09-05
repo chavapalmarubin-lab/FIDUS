@@ -166,7 +166,7 @@ const ProspectManagement = () => {
   const fetchProspects = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/crm/prospects`);
+      const response = await apiAxios.get(`/crm/prospects`);
       setProspects(response.data.prospects);
       setStats(response.data);
     } catch (err) {
@@ -179,7 +179,7 @@ const ProspectManagement = () => {
 
   const fetchPipeline = async () => {
     try {
-      const response = await axios.get(`${API}/crm/prospects/pipeline`);
+      const response = await apiAxios.get(`/crm/prospects/pipeline`);
       setPipeline(response.data.pipeline);
       setStats(prev => ({ ...prev, ...response.data.stats }));
     } catch (err) {
