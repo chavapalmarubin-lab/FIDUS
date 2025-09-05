@@ -1076,7 +1076,150 @@ async def get_all_clients():
     
     return {"clients": clients}
 
-# Real OCR Processing Service
+# MT5 Account Management and Client Investment Mapping System
+import MetaTrader5 as mt5
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any
+from enum import Enum
+
+@dataclass
+class MT5Account:
+    account_id: str
+    client_id: str
+    fund_code: str
+    mt5_login: int
+    mt5_password: str
+    mt5_server: str
+    total_allocated: float
+    current_equity: float
+    profit_loss: float
+    creation_date: str
+    last_update: str
+    status: str  # active, inactive, error
+    investment_ids: List[str]
+
+class ClientMT5Mapping:
+    def __init__(self):
+        # Storage for MT5 accounts mapped to clients and funds
+        self.mt5_accounts: Dict[str, MT5Account] = {}  # account_id -> MT5Account
+        self.client_fund_mapping: Dict[str, Dict[str, str]] = {}  # client_id -> {fund_code -> account_id}
+        self.investment_to_mt5: Dict[str, str] = {}  # investment_id -> account_id
+        
+    def get_or_create_mt5_account(self, client_id: str, fund_code: str, investment_data: dict) -> str:
+        """Get existing MT5 account for client+fund or create new one"""
+        
+        # Initialize client mapping if doesn't exist
+        if client_id not in self.client_fund_mapping:
+            self.client_fund_mapping[client_id] = {}
+        
+        # Check if client already has MT5 account for this fund
+        if fund_code in self.client_fund_mapping[client_id]:
+            account_id = self.client_fund_mapping[client_id][fund_code]
+            mt5_account = self.mt5_accounts[account_id]
+            
+            # Add investment amount to existing account
+            mt5_account.total_allocated += investment_data['principal_amount']
+            mt5_account.investment_ids.append(investment_data['investment_id'])
+            mt5_account.last_update = datetime.now(timezone.utc).isoformat()
+            
+            logging.info(f"Added ${investment_data['principal_amount']} to existing MT5 account {account_id} for client {client_id} fund {fund_code}")
+            return account_id
+        
+        else:
+            # Create new MT5 account for this client+fund combination
+            account_id = f"mt5_{client_id}_{fund_code}_{str(uuid.uuid4())[:8]}"
+            
+            # Generate MT5 credentials (in production, these would come from MT5 broker API)
+            mt5_login = self._generate_mt5_login()
+            mt5_password = self._generate_mt5_password()
+            mt5_server = self._get_mt5_server_for_fund(fund_code)
+            
+            mt5_account = MT5Account(
+                account_id=account_id,
+                client_id=client_id,
+                fund_code=fund_code,
+                mt5_login=mt5_login,
+                mt5_password=mt5_password,
+                mt5_server=mt5_server,
+                total_allocated=investment_data['principal_amount'],
+                current_equity=investment_data['principal_amount'],  # Initial equity = allocated amount
+                profit_loss=0.0,
+                creation_date=datetime.now(timezone.utc).isoformat(),
+                last_update=datetime.now(timezone.utc).isoformat(),
+                status="active",
+                investment_ids=[investment_data['investment_id']]
+            )
+            
+            # Store mappings
+            self.mt5_accounts[account_id] = mt5_account
+            self.client_fund_mapping[client_id][fund_code] = account_id
+            self.investment_to_mt5[investment_data['investment_id']] = account_id
+            
+            logging.info(f"Created new MT5 account {account_id} for client {client_id} fund {fund_code} with ${investment_data['principal_amount']}")
+            return account_id
+    
+    def _generate_mt5_login(self) -> int:
+        """Generate MT5 login number (in production, request from broker API)"""
+        # Mock generation - in production, this would call broker's account creation API
+        import random
+        return random.randint(10000000, 99999999)
+    
+    def _generate_mt5_password(self) -> str:
+        """Generate secure MT5 password"""
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        return ''.join(secrets.choice(alphabet) for _ in range(12))
+    
+    def _get_mt5_server_for_fund(self, fund_code: str) -> str:
+        """Get appropriate MT5 server for fund type"""
+        server_mapping = {
+            "CORE": "FIDUS-Core-Server",
+            "BALANCE": "FIDUS-Balance-Server", 
+            "DYNAMIC": "FIDUS-Dynamic-Server",
+            "UNLIMITED": "FIDUS-Unlimited-Server"
+        }
+        return server_mapping.get(fund_code, "FIDUS-Default-Server")
+    
+    def get_client_mt5_accounts(self, client_id: str) -> List[MT5Account]:
+        """Get all MT5 accounts for a client"""
+        if client_id not in self.client_fund_mapping:
+            return []
+        
+        accounts = []
+        for account_id in self.client_fund_mapping[client_id].values():
+            if account_id in self.mt5_accounts:
+                accounts.append(self.mt5_accounts[account_id])
+        
+        return accounts
+    
+    def update_mt5_account_performance(self, account_id: str, current_equity: float) -> bool:
+        """Update MT5 account performance from real-time data"""
+        if account_id not in self.mt5_accounts:
+            return False
+        
+        mt5_account = self.mt5_accounts[account_id]
+        mt5_account.current_equity = current_equity
+        mt5_account.profit_loss = current_equity - mt5_account.total_allocated
+        mt5_account.last_update = datetime.now(timezone.utc).isoformat()
+        
+        logging.info(f"Updated MT5 account {account_id} performance: equity=${current_equity}, P&L=${mt5_account.profit_loss}")
+        return True
+    
+    def get_mt5_account_by_investment(self, investment_id: str) -> Optional[MT5Account]:
+        """Get MT5 account associated with specific investment"""
+        if investment_id not in self.investment_to_mt5:
+            return None
+        
+        account_id = self.investment_to_mt5[investment_id]
+        return self.mt5_accounts.get(account_id)
+
+# Global MT5 mapping manager
+mt5_mapping_manager = ClientMT5Mapping()
+
+# Storage for MT5 account credentials and mappings
+mt5_account_credentials = {}  # account_id -> {login, password, server}
+client_mt5_accounts = {}  # client_id -> {fund_code -> account_id}
 class OCRService:
     def __init__(self):
         # For this implementation, we'll use a hybrid approach:
