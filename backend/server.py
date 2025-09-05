@@ -4167,6 +4167,20 @@ async def get_admin_only_documents():
         logging.error(f"Get admin-only documents error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch admin-only documents")
 
+@api_router.get("/documents/categories")
+async def get_document_categories():
+    """Get available document categories"""
+    try:
+        return {
+            "shared_categories": SHARED_DOCUMENT_CATEGORIES,
+            "admin_only_categories": ADMIN_ONLY_DOCUMENT_CATEGORIES,
+            "all_categories": SHARED_DOCUMENT_CATEGORIES + ADMIN_ONLY_DOCUMENT_CATEGORIES
+        }
+        
+    except Exception as e:
+        logging.error(f"Get document categories error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch document categories")
+
 @api_router.post("/documents/{document_id}/send-for-signature")
 async def send_document_for_signature(
     document_id: str,
