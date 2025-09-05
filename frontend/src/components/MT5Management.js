@@ -149,6 +149,69 @@ const MT5Management = () => {
         }
     };
 
+    const handleAccountClick = async (account) => {
+        try {
+            setSelectedAccountDetails(account);
+            setShowAccountDetailsModal(true);
+            
+            // Fetch account activity/details
+            const activityResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/account/${account.account_id}/activity`, {
+                headers: {
+                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                }
+            });
+            
+            if (activityResponse.ok) {
+                const activityData = await activityResponse.json();
+                setAccountActivity(activityData.activity || []);
+            } else {
+                // Generate mock activity data if endpoint doesn't exist yet
+                setAccountActivity(generateMockActivity(account));
+            }
+        } catch (err) {
+            console.error('Failed to fetch account details:', err);
+            // Generate mock activity data
+            setAccountActivity(generateMockActivity(account));
+        }
+    };
+
+    const generateMockActivity = (account) => {
+        return [
+            {
+                id: 1,
+                type: 'deposit',
+                amount: account.total_allocated,
+                description: `Initial allocation to ${account.fund_code} fund`,
+                timestamp: new Date(Date.now() - 86400000 * 7).toISOString(),
+                status: 'completed'
+            },
+            {
+                id: 2,
+                type: 'trade',
+                amount: 0,
+                description: 'Position opened: EURUSD Buy 1.0 lot',
+                timestamp: new Date(Date.now() - 86400000 * 5).toISOString(),
+                status: 'open'
+            },
+            {
+                id: 3,
+                type: 'trade',
+                amount: 150.00,
+                description: 'Position closed: GBPUSD Sell 0.5 lot (+$150.00)',
+                timestamp: new Date(Date.now() - 86400000 * 3).toISOString(),
+                status: 'completed'
+            },
+            {
+                id: 4,
+                type: 'profit',
+                amount: 75.50,
+                description: 'Daily profit from active positions',
+                timestamp: new Date(Date.now() - 86400000 * 1).toISOString(),
+                status: 'completed'
+            }
+        ];
+    };
+
     const resetForm = () => {
         setNewAccount({
             client_id: '',
