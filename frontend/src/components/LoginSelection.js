@@ -39,11 +39,19 @@ const LoginSelection = ({ onLogin }) => {
     setError("");
 
     try {
+      console.log('Attempting login with:', {
+        username: credentials.username,
+        user_type: selectedType,
+        api_url: API
+      });
+
       const response = await axios.post(`${API}/auth/login`, {
         username: credentials.username,
         password: credentials.password,
         user_type: selectedType
       });
+
+      console.log('Login response:', response.status, response.data);
 
       // Check if password change is required
       if (response.data.must_change_password) {
@@ -55,7 +63,31 @@ const LoginSelection = ({ onLogin }) => {
 
       onLogin(response.data);
     } catch (err) {
-      setError(err.response?.data?.detail || "Login failed");
+      console.error('Login error:', err);
+      console.error('Error response:', err.response);
+      
+      let errorMessage = "Login failed";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.status === 401) {
+          errorMessage = "Invalid username or password";
+        } else if (err.response.status === 500) {
+          errorMessage = "Server error. Please try again.";
+        } else if (err.response.data?.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = err.message || "An unexpected error occurred";
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
