@@ -152,7 +152,7 @@ const AdminInvestmentManagement = () => {
       }
 
       // First create the investment
-      const investmentResponse = await axios.post(`${API}/investments/create`, {
+      const investmentResponse = await apiAxios.post(`/investments/create`, {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
         amount: amount,
