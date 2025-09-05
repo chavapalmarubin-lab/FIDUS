@@ -18,9 +18,6 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import apiAxios from "../utils/apiAxios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
 const CashFlowManagement = () => {
   const [cashFlowData, setCashFlowData] = useState([]);
   const [redemptionSchedule, setRedemptionSchedule] = useState([]);
