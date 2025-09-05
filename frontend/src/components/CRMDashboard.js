@@ -99,7 +99,7 @@ const CRMDashboard = ({ user }) => {
   const handleViewAllClients = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${backendUrl}/api/crm/clients/all-details`);
+      const response = await apiAxios.get(`/crm/clients/all-details`);
       setAllClientsData(response.data);
       setCurrentView('all-clients');
     } catch (error) {
