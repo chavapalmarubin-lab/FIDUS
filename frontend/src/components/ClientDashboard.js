@@ -417,6 +417,10 @@ const ClientDashboard = ({ user, onLogout }) => {
             <InvestmentDashboard user={user} userType="client" />
           </TabsContent>
 
+          <TabsContent value="mt5" className="mt-6">
+            <ClientMT5View clientId={user.id} />
+          </TabsContent>
+
           <TabsContent value="redemptions" className="mt-6">
             <RedemptionManagement user={user} />
           </TabsContent>
