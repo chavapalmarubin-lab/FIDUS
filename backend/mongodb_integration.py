@@ -360,6 +360,20 @@ class MongoDBManager:
             print(f"❌ Error getting client readiness: {str(e)}")
             return {}
     
+    def get_client(self, client_id: str) -> Dict[str, Any]:
+        """Get client by ID"""
+        try:
+            client = self.db.clients.find_one({"id": client_id})
+            if client:
+                # Remove MongoDB _id for JSON serialization
+                client.pop('_id', None)
+                return client
+            return {}
+                
+        except Exception as e:
+            print(f"❌ Error getting client: {str(e)}")
+            return {}
+    
     def update_client_readiness(self, client_id: str, readiness_data: Dict[str, Any]) -> bool:
         """Update client readiness status"""
         try:
