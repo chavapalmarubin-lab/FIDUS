@@ -159,7 +159,7 @@ const FundPortfolioManagement = () => {
         return;
       }
 
-      const response = await axios.post(`${API}/admin/rebates/add`, {
+      const response = await apiAxios.post(`/admin/rebates/add`, {
         ...rebateForm,
         amount: parseFloat(rebateForm.amount)
       });
