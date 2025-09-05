@@ -245,7 +245,14 @@ const LoginSelection = ({ onLogin }) => {
                     disabled={loading}
                     className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
                   >
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      "Sign In"
+                    )}
                   </Button>
                 </div>
 
