@@ -1077,7 +1077,6 @@ async def get_all_clients():
     return {"clients": clients}
 
 # MT5 Account Management and Client Investment Mapping System
-import MetaTrader5 as mt5
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 from enum import Enum
