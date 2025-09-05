@@ -4001,11 +4001,24 @@ mock_docusign = MockDocuSignService()
 async def upload_document(
     document: UploadFile = File(...),
     category: str = Form(...),
-    uploader_id: str = Form(...)
+    uploader_id: str = Form(...),
+    uploader_type: str = Form(default="admin"),  # "admin" or "client"
+    client_id: str = Form(default=None)  # For client-specific documents
 ):
-    """Upload a document for archiving or signing"""
+    """Upload a document for archiving or signing with categorization support"""
     try:
-        # Validate file type - now includes images for camera captures
+        # Validate category and determine document type
+        document_type = "shared"  # Default to shared
+        
+        if category in ADMIN_ONLY_DOCUMENT_CATEGORIES:
+            document_type = "admin_only"
+        elif category in SHARED_DOCUMENT_CATEGORIES:
+            document_type = "shared"
+        else:
+            # Allow custom categories as shared by default
+            document_type = "shared"
+        
+        # Validate file type - includes images for camera captures
         allowed_types = [
             'application/pdf',
             'application/msword',
@@ -4035,23 +4048,37 @@ async def upload_document(
             buffer.write(content)
         
         # Create document record
-        doc_model = DocumentModel(
-            name=document.filename,
-            category=category,
-            uploader_id=uploader_id,
-            file_path=str(file_path),
-            file_size=len(content)
-        )
+        document_id = str(uuid.uuid4())
         
-        # Store in memory (in production, use database)
-        documents_storage[doc_model.id] = doc_model.dict()
+        document_data = {
+            'document_id': document_id,
+            'name': document.filename,
+            'category': category,
+            'document_type': document_type,
+            'uploader_id': uploader_id,
+            'uploader_type': uploader_type,
+            'client_id': client_id,  # Associate with specific client if provided
+            'file_path': str(file_path),
+            'file_size': len(content),
+            'content_type': document.content_type,
+            'status': 'uploaded'
+        }
         
-        logging.info(f"Document uploaded: {document.filename} by user {uploader_id}")
+        # Store in MongoDB
+        created_document_id = mongodb_manager.create_document(document_data)
+        
+        if not created_document_id:
+            # Fallback to in-memory storage if MongoDB fails
+            documents_storage[document_id] = document_data
+            logging.warning(f"Document stored in memory as MongoDB failed: {document.filename}")
+        
+        logging.info(f"Document uploaded: {document.filename} by {uploader_type} {uploader_id} (type: {document_type})")
         
         return {
             "success": True,
-            "document_id": doc_model.id,
-            "message": "Document uploaded successfully"
+            "document_id": document_id,
+            "document_type": document_type,
+            "message": f"Document uploaded successfully as {document_type} document"
         }
         
     except HTTPException:
