@@ -69,6 +69,8 @@ const LoginSelection = ({ onLogin }) => {
 
       console.log('Login response:', response.status, response.data);
 
+      console.log('Login response:', response.status, response.data);
+
       // Check if password change is required
       if (response.data.must_change_password) {
         setUserRequiringPasswordChange(response.data);
