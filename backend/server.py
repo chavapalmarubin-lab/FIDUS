@@ -3498,6 +3498,12 @@ documents_storage = {}
 # In-memory CRM prospect storage (in production, use proper database)
 prospects_storage = {}
 
+# In-memory prospect document storage (in production, use proper database)
+prospect_documents = {}  # {prospect_id: [document_records]}
+
+# In-memory prospect document request storage (in production, use proper database)
+prospect_document_requests = {}  # {prospect_id: [request_records]}
+
 # File storage directory
 import os
 from pathlib import Path
