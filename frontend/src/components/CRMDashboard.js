@@ -69,9 +69,9 @@ const CRMDashboard = ({ user }) => {
       
       // Fetch account, positions, and history
       const [accountRes, positionsRes, historyRes] = await Promise.all([
-        axios.get(`${backendUrl}/api/crm/mt5/client/${clientId}/account`),
-        axios.get(`${backendUrl}/api/crm/mt5/client/${clientId}/positions`),
-        axios.get(`${backendUrl}/api/crm/mt5/client/${clientId}/history?days=30`)
+        apiAxios.get(`/crm/mt5/client/${clientId}/account`),
+        apiAxios.get(`/crm/mt5/client/${clientId}/positions`),
+        apiAxios.get(`/crm/mt5/client/${clientId}/history?days=30`)
       ]);
 
       setClientMT5Data({
