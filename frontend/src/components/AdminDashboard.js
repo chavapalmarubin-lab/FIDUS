@@ -364,6 +364,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             <AdminInvestmentManagement />
           </TabsContent>
 
+          <TabsContent value="mt5" className="mt-6">
+            <MT5Management />
+          </TabsContent>
+
           <TabsContent value="redemptions" className="mt-6">
             <AdminRedemptionManagement />
           </TabsContent>
