@@ -275,7 +275,8 @@ class SalvadorPalmaInvestmentTester:
             "Get MT5 Accounts by Broker",
             "GET",
             "api/mt5/admin/accounts/by-broker",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if success:
