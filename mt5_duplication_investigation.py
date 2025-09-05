@@ -41,6 +41,24 @@ class MT5DuplicationInvestigator:
         if data:
             print(f"   Data: {json.dumps(data, indent=2)}")
     
+    def authenticate_admin(self):
+        """Authenticate as admin to get JWT token"""
+        print("\n🔐 Authenticating as admin...")
+        
+        success, response = self.run_api_call("POST", "api/auth/login", 200, {
+            "username": "admin",
+            "password": "password123", 
+            "user_type": "admin"
+        })
+        
+        if success and response.get('token'):
+            self.auth_token = response['token']
+            print(f"   ✅ Admin authentication successful")
+            return True
+        else:
+            print(f"   ❌ Admin authentication failed: {response}")
+            return False
+    
     def run_api_call(self, method, endpoint, expected_status=200, data=None):
         """Make API call and return response"""
         url = f"{self.base_url}/{endpoint}"
