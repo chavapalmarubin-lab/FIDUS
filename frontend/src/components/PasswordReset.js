@@ -487,7 +487,7 @@ const PasswordReset = ({ userType, onBack, onComplete }) => {
         <Card className="login-card max-w-lg">
           <CardHeader className="text-center">
             <motion.div
-              className="mb-4"
+              className="mb-4 logo-integrated"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
