@@ -24,6 +24,8 @@ class SalvadorPalmaInvestmentTester:
         self.salvador_client = None
         self.created_investment = None
         self.mt5_account = None
+        self.admin_token = None
+        self.client_token = None
         
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
