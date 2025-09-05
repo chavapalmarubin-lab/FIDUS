@@ -336,11 +336,10 @@ class MT5BackendTester:
         
         if success:
             overview = response.get('overview', {})
-            performance_data = response.get('performance_data', {})
             
-            # Check overview structure
+            # Check overview structure (updated to match actual API response)
             required_overview_fields = ['total_accounts', 'total_allocated', 'total_equity', 
-                                      'total_profit_loss', 'average_performance']
+                                      'total_profit_loss', 'overall_performance_percentage']
             missing_overview = [field for field in required_overview_fields if field not in overview]
             
             if missing_overview:
@@ -349,7 +348,7 @@ class MT5BackendTester:
             else:
                 print("   ✅ Performance overview structure correct")
                 print(f"   📈 Total P&L: ${overview.get('total_profit_loss', 0):,.2f}")
-                print(f"   📈 Average Performance: {overview.get('average_performance', 0):.2f}%")
+                print(f"   📈 Overall Performance: {overview.get('overall_performance_percentage', 0):.2f}%")
         else:
             print("   ❌ Failed to get MT5 performance overview")
             return False
