@@ -475,6 +475,197 @@ class MongoDBManager:
             return {}
     
     # ===============================================================================
+    # MT5 ACCOUNT MANAGEMENT
+    # ===============================================================================
+    
+    def create_mt5_account(self, mt5_account_data: Dict[str, Any]) -> Optional[str]:
+        """Create a new MT5 account mapping"""
+        try:
+            account_doc = {
+                'account_id': mt5_account_data['account_id'],
+                'client_id': mt5_account_data['client_id'],
+                'fund_code': mt5_account_data['fund_code'],
+                'mt5_login': mt5_account_data['mt5_login'],
+                'mt5_server': mt5_account_data['mt5_server'],
+                'total_allocated': mt5_account_data['total_allocated'],
+                'current_equity': mt5_account_data.get('current_equity', mt5_account_data['total_allocated']),
+                'profit_loss': mt5_account_data.get('profit_loss', 0.0),
+                'investment_ids': mt5_account_data.get('investment_ids', []),
+                'status': mt5_account_data.get('status', 'active'),
+                'created_at': datetime.now(timezone.utc),
+                'updated_at': datetime.now(timezone.utc)
+            }
+            
+            result = self.db.mt5_accounts.insert_one(account_doc)
+            
+            if result.inserted_id:
+                return mt5_account_data['account_id']
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error creating MT5 account: {str(e)}")
+            return None
+    
+    def get_client_mt5_accounts(self, client_id: str) -> List[Dict[str, Any]]:
+        """Get all MT5 accounts for a specific client"""
+        try:
+            accounts = []
+            
+            account_docs = self.db.mt5_accounts.find({'client_id': client_id, 'status': 'active'})
+            
+            for acc in account_docs:
+                account_data = {
+                    'account_id': acc['account_id'],
+                    'client_id': acc['client_id'],
+                    'fund_code': acc['fund_code'],
+                    'fund_name': f"FIDUS {acc['fund_code'].title()} Fund",
+                    'mt5_login': acc['mt5_login'],
+                    'mt5_server': acc['mt5_server'],
+                    'total_allocated': acc['total_allocated'],
+                    'current_equity': acc['current_equity'],
+                    'profit_loss': acc['profit_loss'],
+                    'profit_loss_percentage': (acc['profit_loss'] / acc['total_allocated'] * 100) if acc['total_allocated'] > 0 else 0,
+                    'investment_count': len(acc.get('investment_ids', [])),
+                    'status': acc['status'],
+                    'created_at': acc['created_at'].isoformat(),
+                    'updated_at': acc['updated_at'].isoformat()
+                }
+                
+                accounts.append(account_data)
+            
+            # Sort by creation date (newest first)
+            accounts.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return accounts
+            
+        except Exception as e:
+            print(f"❌ Error getting client MT5 accounts: {str(e)}")
+            return []
+    
+    def update_mt5_account_allocation(self, account_id: str, additional_amount: float, investment_id: str) -> bool:
+        """Add allocation to existing MT5 account"""
+        try:
+            result = self.db.mt5_accounts.update_one(
+                {'account_id': account_id},
+                {
+                    '$inc': {'total_allocated': additional_amount, 'current_equity': additional_amount},
+                    '$push': {'investment_ids': investment_id},
+                    '$set': {'updated_at': datetime.now(timezone.utc)}
+                }
+            )
+            
+            return result.acknowledged
+            
+        except Exception as e:
+            print(f"❌ Error updating MT5 account allocation: {str(e)}")
+            return False
+    
+    def update_mt5_account_performance(self, account_id: str, current_equity: float) -> bool:
+        """Update MT5 account performance data"""
+        try:
+            # Get current allocation to calculate P&L
+            account = self.db.mt5_accounts.find_one({'account_id': account_id})
+            if not account:
+                return False
+            
+            profit_loss = current_equity - account['total_allocated']
+            
+            result = self.db.mt5_accounts.update_one(
+                {'account_id': account_id},
+                {
+                    '$set': {
+                        'current_equity': current_equity,
+                        'profit_loss': profit_loss,
+                        'updated_at': datetime.now(timezone.utc)
+                    }
+                }
+            )
+            
+            return result.acknowledged
+            
+        except Exception as e:
+            print(f"❌ Error updating MT5 account performance: {str(e)}")
+            return False
+    
+    def get_all_mt5_accounts(self) -> List[Dict[str, Any]]:
+        """Get all MT5 accounts for admin overview"""
+        try:
+            accounts = []
+            
+            account_docs = self.db.mt5_accounts.find({'status': 'active'})
+            
+            for acc in account_docs:
+                # Get client name
+                client = self.db.users.find_one({'user_id': acc['client_id']})
+                client_profile = self.db.client_profiles.find_one({'client_id': acc['client_id']})
+                
+                client_name = client_profile.get('name', client['username']) if client_profile and client else acc['client_id']
+                
+                account_data = {
+                    'account_id': acc['account_id'],
+                    'client_id': acc['client_id'],
+                    'client_name': client_name,
+                    'fund_code': acc['fund_code'],
+                    'fund_name': f"FIDUS {acc['fund_code'].title()} Fund",
+                    'mt5_login': acc['mt5_login'],
+                    'mt5_server': acc['mt5_server'],
+                    'total_allocated': acc['total_allocated'],
+                    'current_equity': acc['current_equity'],
+                    'profit_loss': acc['profit_loss'],
+                    'profit_loss_percentage': (acc['profit_loss'] / acc['total_allocated'] * 100) if acc['total_allocated'] > 0 else 0,
+                    'investment_count': len(acc.get('investment_ids', [])),
+                    'status': acc['status'],
+                    'created_at': acc['created_at'].isoformat(),
+                    'updated_at': acc['updated_at'].isoformat()
+                }
+                
+                accounts.append(account_data)
+            
+            return accounts
+            
+        except Exception as e:
+            print(f"❌ Error getting all MT5 accounts: {str(e)}")
+            return []
+    
+    def store_mt5_credentials(self, account_id: str, encrypted_password: str) -> bool:
+        """Store encrypted MT5 credentials"""
+        try:
+            # Store encrypted password in separate collection for security
+            credentials_doc = {
+                'account_id': account_id,
+                'encrypted_password': encrypted_password,
+                'created_at': datetime.now(timezone.utc),
+                'updated_at': datetime.now(timezone.utc)
+            }
+            
+            result = self.db.mt5_credentials.update_one(
+                {'account_id': account_id},
+                {'$set': credentials_doc},
+                upsert=True
+            )
+            
+            return result.acknowledged
+            
+        except Exception as e:
+            print(f"❌ Error storing MT5 credentials: {str(e)}")
+            return False
+    
+    def get_mt5_credentials(self, account_id: str) -> Optional[str]:
+        """Get encrypted MT5 credentials"""
+        try:
+            credentials = self.db.mt5_credentials.find_one({'account_id': account_id})
+            
+            if credentials:
+                return credentials['encrypted_password']
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting MT5 credentials: {str(e)}")
+            return None
+
+    # ===============================================================================
     # DATABASE UTILITIES
     # ===============================================================================
     
