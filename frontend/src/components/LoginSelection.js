@@ -30,13 +30,29 @@ const LoginSelection = ({ onLogin }) => {
   };
 
   const handleLogin = async () => {
+    // Validate input
     if (!credentials.username || !credentials.password) {
-      setError("Please enter username and password");
+      setError("Please enter both username and password");
+      return;
+    }
+
+    // Trim whitespace from credentials
+    const trimmedCredentials = {
+      username: credentials.username.trim(),
+      password: credentials.password.trim()
+    };
+
+    // Validate trimmed credentials
+    if (!trimmedCredentials.username || !trimmedCredentials.password) {
+      setError("Please enter valid username and password");
       return;
     }
 
     setLoading(true);
     setError("");
+
+    // Small delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
       console.log('Attempting login with:', {
