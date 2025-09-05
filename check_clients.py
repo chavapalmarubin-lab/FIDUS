@@ -24,10 +24,23 @@ if login_response.status_code == 200:
     )
     
     if clients_response.status_code == 200:
-        clients = clients_response.json()
-        print(f"\nAvailable clients:")
+        clients_data = clients_response.json()
+        print(f"\nClients response: {json.dumps(clients_data, indent=2)}")
+        
+        # Handle different response formats
+        if isinstance(clients_data, list):
+            clients = clients_data
+        elif isinstance(clients_data, dict) and 'clients' in clients_data:
+            clients = clients_data['clients']
+        else:
+            clients = []
+            
+        print(f"\nAvailable clients ({len(clients)}):")
         for client in clients:
-            print(f"  ID: {client.get('id', 'N/A')}, Name: {client.get('name', 'N/A')}, Email: {client.get('email', 'N/A')}")
+            if isinstance(client, dict):
+                print(f"  ID: {client.get('id', 'N/A')}, Name: {client.get('name', 'N/A')}, Email: {client.get('email', 'N/A')}")
+            else:
+                print(f"  Client: {client}")
     else:
         print(f"Failed to get clients: {clients_response.status_code}")
         print(clients_response.text)
