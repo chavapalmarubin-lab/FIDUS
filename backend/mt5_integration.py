@@ -22,6 +22,48 @@ from cryptography.fernet import Fernet
 # MongoDB integration
 from mongodb_integration import mongodb_manager
 
+class MT5BrokerConfig:
+    """Configuration for supported MT5 brokers"""
+    BROKERS = {
+        "multibank": {
+            "name": "Multibank",
+            "servers": ["Multibank-Live", "Multibank-Demo"],
+            "description": "Multibank Group - Global Trading Platform",
+            "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER"],
+            "max_accounts_per_client": 4
+        },
+        "dootechnology": {
+            "name": "DooTechnology", 
+            "servers": ["DooTechnology-Live", "DooTechnology-Demo"],
+            "description": "DooTechnology - Advanced Trading Solutions",
+            "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER", "CRUDE"],
+            "max_accounts_per_client": 4
+        }
+    }
+    
+    @classmethod
+    def get_broker_list(cls):
+        """Get list of available brokers for dropdown"""
+        return [
+            {
+                "code": code,
+                "name": config["name"],
+                "description": config["description"],
+                "servers": config["servers"]
+            }
+            for code, config in cls.BROKERS.items()
+        ]
+    
+    @classmethod
+    def get_broker_servers(cls, broker_code: str):
+        """Get available servers for a specific broker"""
+        return cls.BROKERS.get(broker_code, {}).get("servers", [])
+    
+    @classmethod
+    def is_valid_broker(cls, broker_code: str):
+        """Check if broker code is valid"""
+        return broker_code in cls.BROKERS
+
 class MT5ConnectionStatus(Enum):
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
@@ -33,6 +75,8 @@ class MT5AccountInfo:
     account_id: str
     client_id: str
     fund_code: str
+    broker_code: str  # NEW: Broker identifier
+    broker_name: str  # NEW: Human-readable broker name
     mt5_login: int
     mt5_server: str
     total_allocated: float
