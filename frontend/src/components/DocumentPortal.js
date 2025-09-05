@@ -245,8 +245,12 @@ const DocumentPortal = ({ user, userType }) => {
       setUploadProgress(0);
       const formData = new FormData();
       formData.append('document', file);
-      formData.append('category', 'other'); // Default category
+      formData.append('category', uploadCategory);
       formData.append('uploader_id', user.id);
+      formData.append('uploader_type', userType);
+      if (userType === 'client') {
+        formData.append('client_id', user.id);
+      }
 
       const response = await axios.post(`${API}/documents/upload`, formData, {
         headers: {
