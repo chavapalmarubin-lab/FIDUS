@@ -340,7 +340,7 @@ const ProspectManagement = () => {
   
   const handleRequestDocument = async (prospectId, documentType) => {
     try {
-      const response = await axios.post(`${API}/crm/prospects/${prospectId}/documents/request`, {
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/documents/request`, {
         document_type: documentType,
         message: `Please upload your ${KYC_DOCUMENT_TYPES[documentType].label} to complete your KYC verification.`
       });
