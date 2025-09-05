@@ -89,7 +89,7 @@ const FundPortfolioManagement = () => {
 
   const fetchRebateData = async () => {
     try {
-      const response = await axios.get(`${API}/admin/rebates/all`);
+      const response = await apiAxios.get(`/admin/rebates/all`);
       if (response.data.success) {
         setRebateData(response.data.rebates || []);
       }
