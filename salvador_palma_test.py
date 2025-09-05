@@ -440,6 +440,12 @@ class SalvadorPalmaInvestmentTester:
         print("GOAL: Create Salvador Palma BALANCE fund investment that connects to DooTechnology MT5")
         print("="*80)
         
+        # Authentication first
+        print("\n🔐 AUTHENTICATING...")
+        if not self.authenticate_admin():
+            print("❌ CRITICAL: Cannot authenticate as admin")
+            return False
+        
         # Step 1: Check Available Clients
         step1_success = self.step_1_check_available_clients()
         
