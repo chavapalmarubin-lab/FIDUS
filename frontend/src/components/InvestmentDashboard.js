@@ -143,7 +143,7 @@ const InvestmentDashboard = ({ user, userType }) => {
 
   const fetchFundConfigs = async () => {
     try {
-      const response = await axios.get(`${API}/investments/funds/config`);
+      const response = await apiAxios.get(`/investments/funds/config`);
       setFundConfigs(response.data.funds);
     } catch (err) {
       console.error("Error fetching fund configs:", err);
