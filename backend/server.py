@@ -46,9 +46,18 @@ from email.mime.application import MIMEApplication
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
+# MongoDB connection with connection pooling
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(
+    mongo_url,
+    minPoolSize=5,           # Minimum connections in pool
+    maxPoolSize=100,         # Maximum connections in pool
+    maxIdleTimeMS=30000,     # Close connections after 30 seconds of inactivity
+    serverSelectionTimeoutMS=5000,  # 5 seconds timeout for server selection
+    socketTimeoutMS=10000,   # 10 seconds timeout for socket operations
+    connectTimeoutMS=10000,  # 10 seconds timeout for connection
+    retryWrites=True         # Enable retryable writes
+)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
