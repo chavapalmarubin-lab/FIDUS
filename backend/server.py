@@ -381,6 +381,7 @@ class InvestmentCreate(BaseModel):
     fund_code: str
     amount: float
     deposit_date: Optional[str] = None  # YYYY-MM-DD format
+    broker_code: Optional[str] = "multibank"  # Default to multibank for backward compatibility
 
 # Client Investment Readiness Models
 class ClientInvestmentReadiness(BaseModel):
