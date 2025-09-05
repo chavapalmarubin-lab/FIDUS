@@ -156,14 +156,23 @@ class MT5IntegrationService:
         return self.fernet.decrypt(encrypted_password.encode()).decode()
     
     async def get_or_create_mt5_account(self, client_id: str, fund_code: str, 
-                                      investment_data: Dict[str, Any]) -> Optional[str]:
-        """Get existing MT5 account for client+fund or create new one"""
+                                      investment_data: Dict[str, Any], 
+                                      broker_code: str = "multibank") -> Optional[str]:
+        """Get existing MT5 account for client+fund+broker or create new one"""
         try:
-            # Check if client already has MT5 account for this fund
+            # Validate broker
+            if not MT5BrokerConfig.is_valid_broker(broker_code):
+                logging.error(f"Invalid broker code: {broker_code}")
+                return None
+            
+            broker_config = MT5BrokerConfig.BROKERS[broker_code]
+            
+            # Check if client already has MT5 account for this fund with same broker
             existing_accounts = mongodb_manager.get_client_mt5_accounts(client_id)
             
             for account in existing_accounts:
-                if account['fund_code'] == fund_code:
+                if (account['fund_code'] == fund_code and 
+                    account.get('broker_code') == broker_code):
                     # Add investment to existing account
                     account_id = account['account_id']
                     
@@ -174,17 +183,17 @@ class MT5IntegrationService:
                     )
                     
                     if success:
-                        logging.info(f"Added ${investment_data['principal_amount']} to existing MT5 account {account_id}")
+                        logging.info(f"Added ${investment_data['principal_amount']} to existing MT5 account {account_id} on {broker_config['name']}")
                         return account_id
                     else:
                         logging.error(f"Failed to update MT5 account allocation for {account_id}")
                         return None
             
             # Create new MT5 account
-            account_id = f"mt5_{client_id}_{fund_code}_{str(uuid.uuid4())[:8]}"
+            account_id = f"mt5_{client_id}_{fund_code}_{broker_code}_{str(uuid.uuid4())[:8]}"
             mt5_login = self._generate_mt5_login()
             mt5_password = self._generate_mt5_password()
-            mt5_server = self._get_mt5_server(fund_code)
+            mt5_server = self._get_mt5_server(fund_code, broker_code)
             
             # Store encrypted credentials
             encrypted_password = self._encrypt_password(mt5_password)
