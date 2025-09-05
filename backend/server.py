@@ -1041,6 +1041,75 @@ async def refresh_token(request: Request):
         logging.error(f"Token refresh error: {str(e)}")
         raise HTTPException(status_code=500, detail="Token refresh failed")
 
+# Health check endpoints for monitoring and load balancer
+@api_router.get("/health")
+async def health_check():
+    """Basic health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0"
+    }
+
+@api_router.get("/health/ready")
+async def readiness_check():
+    """Readiness check - verifies all dependencies are available"""
+    checks = {
+        "database": False,
+        "status": "checking"
+    }
+    
+    try:
+        # Check database connectivity
+        await db.admin.command('ping')
+        checks["database"] = True
+        
+        # All checks passed
+        checks["status"] = "ready"
+        
+        return {
+            "status": "ready",
+            "checks": checks,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Readiness check failed: {str(e)}")
+        checks["status"] = "not_ready"
+        checks["error"] = str(e)
+        
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "checks": checks,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+
+@api_router.get("/health/metrics")
+async def metrics():
+    """System metrics for monitoring"""
+    try:
+        # Get database stats
+        db_stats = await db.command("dbStats")
+        
+        return {
+            "database": {
+                "collections": db_stats.get("collections", 0),
+                "objects": db_stats.get("objects", 0),
+                "dataSize": db_stats.get("dataSize", 0),
+                "indexSize": db_stats.get("indexSize", 0)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logging.error(f"Metrics collection failed: {str(e)}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": "Metrics collection failed"}
+        )
+
 @api_router.post("/auth/change-password")
 async def change_password(change_request: dict):
     """Change user password from temporary to permanent"""
