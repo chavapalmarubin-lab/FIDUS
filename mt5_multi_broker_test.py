@@ -171,14 +171,13 @@ class MT5MultiBrokerTester:
         
         if success:
             servers = response.get('servers', [])
+            broker_name = response.get('broker', 'Unknown')
+            print(f"   Broker: {broker_name}")
             print(f"   Multibank servers: {len(servers)}")
             
-            # Display server details
+            # Display server details (servers are strings)
             for server in servers:
-                name = server.get('name', 'Unknown')
-                host = server.get('host', 'Unknown')
-                status = server.get('status', 'unknown')
-                print(f"   Server: {name} - Host: {host} - Status: {status}")
+                print(f"   Server: {server}")
                 
         return success
 
