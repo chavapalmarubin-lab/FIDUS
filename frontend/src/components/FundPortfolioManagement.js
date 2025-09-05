@@ -131,7 +131,7 @@ const FundPortfolioManagement = () => {
       }
 
       // Update the fund's real-time data
-      const response = await axios.put(`${API}/admin/funds/${fundCode}/realtime`, {
+      const response = await apiAxios.put(`/admin/funds/${fundCode}/realtime`, {
         current_nav: parseFloat(data.current_nav),
         performance_today: parseFloat(data.performance_today),
         last_updated: new Date().toISOString()
