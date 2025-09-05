@@ -251,7 +251,7 @@ class SalvadorPalmaInvestmentTester:
             print(f"\n✅ INVESTMENT CREATED SUCCESSFULLY!")
             print(f"   Investment ID: {investment_id}")
             print(f"   Fund Code: {fund_code}")
-            print(f"   Principal Amount: ${principal_amount:,.2f}")
+            print(f"   Principal Amount: ${principal_amount:,.2f}" if principal_amount else f"   Principal Amount: {principal_amount}")
             print(f"   Deposit Date: {response.get('deposit_date')}")
             print(f"   Interest Start Date: {response.get('interest_start_date')}")
             
