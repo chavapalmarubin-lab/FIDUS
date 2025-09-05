@@ -109,7 +109,7 @@ const AdminInvestmentManagement = () => {
   const fetchOverviewData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/investments/admin/overview`);
+      const response = await apiAxios.get(`/investments/admin/overview`);
       setOverviewData(response.data);
     } catch (err) {
       setError("Failed to fetch investment overview");
