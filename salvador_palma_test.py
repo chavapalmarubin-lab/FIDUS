@@ -211,7 +211,8 @@ class SalvadorPalmaInvestmentTester:
                     "PUT",
                     f"api/clients/{client_id}/readiness",
                     200,
-                    data=readiness_update
+                    data=readiness_update,
+                    headers=self.get_auth_headers(use_admin=True)
                 )
                 
                 if not success:
