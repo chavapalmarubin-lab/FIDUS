@@ -541,6 +541,194 @@ const MT5Management = () => {
                     </div>
                 </div>
             )}
+
+            {/* Account Details Modal */}
+            {showAccountDetailsModal && selectedAccountDetails && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-semibold text-white">MT5 Account Details</h3>
+                                <p className="text-slate-400">
+                                    {selectedAccountDetails.broker_name || 'MT5'} • Login: {selectedAccountDetails.mt5_login}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowAccountDetailsModal(false);
+                                    setSelectedAccountDetails(null);
+                                    setAccountActivity([]);
+                                }}
+                                className="text-slate-400 hover:text-white text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Account Overview */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <Card className="bg-slate-700 border-slate-600">
+                                <CardContent className="p-4">
+                                    <div className="text-sm text-slate-400">Client</div>
+                                    <div className="text-lg font-semibold text-white">
+                                        {selectedAccountDetails.client_id}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card className="bg-slate-700 border-slate-600">
+                                <CardContent className="p-4">
+                                    <div className="text-sm text-slate-400">Fund</div>
+                                    <div className="text-lg font-semibold text-white">
+                                        {selectedAccountDetails.fund_code}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card className="bg-slate-700 border-slate-600">
+                                <CardContent className="p-4">
+                                    <div className="text-sm text-slate-400">Allocated</div>
+                                    <div className="text-lg font-semibold text-white">
+                                        {formatCurrency(selectedAccountDetails.total_allocated)}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card className="bg-slate-700 border-slate-600">
+                                <CardContent className="p-4">
+                                    <div className="text-sm text-slate-400">Current Equity</div>
+                                    <div className="text-lg font-semibold text-white">
+                                        {formatCurrency(selectedAccountDetails.current_equity)}
+                                    </div>
+                                    <div className={`text-sm ${selectedAccountDetails.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {selectedAccountDetails.profit_loss >= 0 ? '+' : ''}{formatCurrency(selectedAccountDetails.profit_loss)} 
+                                        ({selectedAccountDetails.profit_loss_percentage?.toFixed(2)}%)
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Account Information */}
+                        <Card className="bg-slate-700 border-slate-600 mb-6">
+                            <CardHeader>
+                                <CardTitle className="text-white">Account Information</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <div className="text-sm text-slate-400">MT5 Login</div>
+                                        <div className="text-white font-mono">{selectedAccountDetails.mt5_login}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-slate-400">MT5 Server</div>
+                                        <div className="text-white">{selectedAccountDetails.mt5_server}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-slate-400">Account ID</div>
+                                        <div className="text-white font-mono text-sm">{selectedAccountDetails.account_id}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-slate-400">Status</div>
+                                        <Badge className={`${getConnectionStatusColor(selectedAccountDetails.connection_status)} text-white`}>
+                                            {selectedAccountDetails.connection_status}
+                                        </Badge>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-slate-400">Created</div>
+                                        <div className="text-white">
+                                            {selectedAccountDetails.created_at ? 
+                                                new Date(selectedAccountDetails.created_at).toLocaleDateString() : 
+                                                'N/A'
+                                            }
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-slate-400">Last Updated</div>
+                                        <div className="text-white">
+                                            {selectedAccountDetails.updated_at ? 
+                                                new Date(selectedAccountDetails.updated_at).toLocaleDateString() : 
+                                                'N/A'
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Account Activity */}
+                        <Card className="bg-slate-700 border-slate-600">
+                            <CardHeader>
+                                <CardTitle className="text-white">Account Activity</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {accountActivity.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <Activity className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                                        <p className="text-slate-400">No activity recorded</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {accountActivity.map((activity, index) => (
+                                            <div key={activity.id || index} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                                        activity.type === 'deposit' ? 'bg-green-600' :
+                                                        activity.type === 'trade' ? 'bg-blue-600' :
+                                                        activity.type === 'profit' ? 'bg-cyan-600' :
+                                                        'bg-slate-600'
+                                                    }`}>
+                                                        {activity.type === 'deposit' ? <DollarSign size={16} /> :
+                                                         activity.type === 'trade' ? <BarChart3 size={16} /> :
+                                                         activity.type === 'profit' ? <TrendingUp size={16} /> :
+                                                         <Activity size={16} />
+                                                        }
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-white font-medium">{activity.description}</div>
+                                                        <div className="text-sm text-slate-400">
+                                                            {new Date(activity.timestamp).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    {activity.amount !== 0 && (
+                                                        <div className={`font-semibold ${
+                                                            activity.amount > 0 ? 'text-green-400' : 'text-red-400'
+                                                        }`}>
+                                                            {activity.amount > 0 ? '+' : ''}{formatCurrency(activity.amount)}
+                                                        </div>
+                                                    )}
+                                                    <Badge className={`${
+                                                        activity.status === 'completed' ? 'bg-green-600' :
+                                                        activity.status === 'open' ? 'bg-blue-600' :
+                                                        'bg-slate-600'
+                                                    } text-white text-xs`}>
+                                                        {activity.status}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Close Button */}
+                        <div className="mt-6 flex justify-end">
+                            <Button
+                                onClick={() => {
+                                    setShowAccountDetailsModal(false);
+                                    setSelectedAccountDetails(null);
+                                    setAccountActivity([]);
+                                }}
+                                className="bg-slate-600 hover:bg-slate-700"
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
