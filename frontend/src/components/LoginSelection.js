@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { User, Shield } from "lucide-react";
+import { User, Shield, Loader2 } from "lucide-react";
 import ClientOnboarding from "./ClientOnboarding";
 import PasswordReset from "./PasswordReset";
 import PasswordChangeModal from "./PasswordChangeModal";
