@@ -415,6 +415,30 @@ frontend:
         - agent: "testing"
         - comment: "🎉 CLIENT ONBOARDING PROCESS WITH DOCUMENT UPLOAD AND OCR TESTING COMPLETED SUCCESSFULLY! Comprehensive end-to-end testing confirms the new client onboarding process is working perfectly as a professional client-facing tool (NOT admin-style registration): ✅ NAVIGATION TO ONBOARDING: Successfully navigated to login page and clicked 'First Time Users - Create Account' button, which properly loads the ClientOnboarding component instead of admin-style UserRegistration. ✅ CLIENTONBOARDING COMPONENT VERIFICATION: Component loads with proper FIDUS logo branding, professional 'Welcome to FIDUS' title, and 'Complete your client onboarding with advanced document verification' subtitle. ✅ 5-STEP PROGRESS INDICATOR: Progress bar displays correctly showing 'Step 1 of 5' with '20% Complete' and proper step titles (Document Upload, Verify Information, Personal Details, Account Setup, KYC Verification). ✅ DOCUMENT UPLOAD INTERFACE: Both 'Take Photo' and 'Upload File' buttons appear and are functional, with clear instructions 'Take a photo or upload an image of your passport, driver's license, or national ID'. Camera functionality includes proper error handling with message 'Unable to access camera. Please use file upload instead.' when camera access is denied. ✅ OCR PROCESSING WORKFLOW: Document processing workflow properly implemented with OCR integration endpoints (/api/ocr/extract/sync), file validation (JPEG, PNG, TIFF, 10MB limit), processing states ('Processing document...'), and extracted data handling for KYC fields (full_name, date_of_birth, document_number, nationality, etc.). ✅ STEP NAVIGATION AND VALIDATION: 'Previous' and 'Next Step' buttons work properly with 'Back to Login' on step 1, 'Next Step' button correctly disabled without document upload, form validation prevents advancing without required data, and navigation between steps working correctly. ✅ KYC/AML COMPLIANCE WORKFLOW: 5-step process properly structured for compliance (Document Upload → Verify Information → Personal Details → Account Setup → KYC Verification), identity verification and OFAC screening endpoints integrated, AML assessment workflow implemented. ✅ PROFESSIONAL UI AND BRANDING: Professional FIDUS branding throughout the process, document-centric registration approach (not admin tool), step-by-step guided workflow with clear progress indicators, professional styling with proper color scheme and layout. RESULT: Client onboarding process is fully operational as a professional client-facing document verification system, completely different from admin-style user registration. All critical test scenarios passed (15/15 tests, 100% success rate)."
 
+  - task: "MT5 Admin Management Interface"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/MT5Management.js, /app/frontend/src/components/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented comprehensive MT5 Admin Management Interface with real-time performance tracking, credential management, and account oversight. Features: (1) Performance overview dashboard with total accounts, allocated funds, current equity, and overall performance percentage, (2) Fund performance breakdown showing performance by fund type, (3) Detailed MT5 accounts table with client info, fund allocation, P&L tracking, connection status, and action buttons, (4) Credentials management modal for updating MT5 login details, (5) Account disconnect functionality, (6) Real-time data refresh every 30 seconds, (7) Integrated into Admin Dashboard as new MT5 Accounts tab. Ready for frontend testing."
+
+  - task: "Client MT5 Fund Commitments View"
+    implemented: true
+    working: "NA"  
+    file: "/app/frontend/src/components/ClientMT5View.js, /app/frontend/src/components/ClientDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented Client MT5 View component that shows fund commitments instead of real MT5 performance data (per user requirements). Features: (1) Summary cards showing funds invested, total committed, current value, and total return, (2) Fund-based grouping of investments with performance metrics, (3) Individual investment details table with dates, amounts, and status, (4) Professional styling with fund information cards, (5) Educational content about MT5 integration benefits, (6) No real MT5 trading data exposed to clients - only fund commitments and calculated returns, (7) Integrated into Client Dashboard as 'Fund Commitments' tab. Ready for frontend testing."
+
   - task: "Admin Dashboard Map() Error Fix"
     implemented: true
     working: true
