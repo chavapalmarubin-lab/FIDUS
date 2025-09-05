@@ -481,11 +481,22 @@ class MT5MultiBrokerTester:
 
     def test_mt5_performance_overview(self):
         """Test MT5 performance overview endpoint"""
+        
+        if not self.admin_token:
+            print("❌ No admin token available for authentication")
+            return False
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.admin_token}'
+        }
+        
         success, response = self.run_test(
             "MT5 Performance Overview",
             "GET",
             "api/mt5/admin/performance/overview",
-            200
+            200,
+            headers=headers
         )
         
         if success:
