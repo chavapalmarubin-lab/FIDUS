@@ -6,7 +6,7 @@ import io
 from PIL import Image
 
 class FidusAPITester:
-    def __init__(self, base_url="https://fidus-finance-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://invest-platform-19.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
@@ -3262,7 +3262,7 @@ Document Content:
                             all_params_present = False
                             
                     elif param == 'redirect_uri':
-                        expected_redirect = 'https://fidus-finance-2.preview.emergentagent.com/api/gmail/oauth-callback'
+                        expected_redirect = 'https://invest-platform-19.preview.emergentagent.com/api/gmail/oauth-callback'
                         if value == expected_redirect:
                             print(f"   ✅ Redirect URI matches expected: {value}")
                         else:
@@ -3446,7 +3446,7 @@ Document Content:
             
             # 2. Redirect URI validation  
             redirect_uri = unquote(query_params.get('redirect_uri', [''])[0])
-            expected_redirect = 'https://fidus-finance-2.preview.emergentagent.com/api/gmail/oauth-callback'
+            expected_redirect = 'https://invest-platform-19.preview.emergentagent.com/api/gmail/oauth-callback'
             if redirect_uri == expected_redirect:
                 test_results['redirect_uri'] = True
                 print(f"✅ redirect_uri: {redirect_uri}")

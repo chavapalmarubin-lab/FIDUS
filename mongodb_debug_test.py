@@ -10,7 +10,7 @@ import json
 
 def test_mongodb_data():
     """Test MongoDB data directly"""
-    base_url = "https://fidus-finance-2.preview.emergentagent.com"
+    base_url = "https://invest-platform-19.preview.emergentagent.com"
     
     print("🔍 MONGODB DATA DEBUG TEST")
     print("=" * 50)
