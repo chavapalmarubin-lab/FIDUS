@@ -54,7 +54,7 @@ const CRMDashboard = ({ user }) => {
   const fetchCRMData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${backendUrl}/api/crm/admin/dashboard`);
+      const response = await apiAxios.get(`/crm/admin/dashboard`);
       setCrmData(response.data);
     } catch (error) {
       console.error('Error fetching CRM data:', error);
