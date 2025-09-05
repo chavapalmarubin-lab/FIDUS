@@ -8156,43 +8156,65 @@ PROTECTED_ENDPOINTS = [
     "/api/payment-confirmations/"
 ]
 
-# TEMPORARILY DISABLED - AUTHENTICATION MIDDLEWARE CAUSING ISSUES
-# The middleware was blocking legitimate admin API calls because the frontend
-# doesn't send session cookies. Need to implement proper JWT/session auth.
-#
-# @app.middleware("http") 
-# async def api_authentication_middleware(request: Request, call_next):
-#     """Protect sensitive API endpoints with authentication check"""
-#     path = request.url.path
-#     
-#     # Check if this is a protected endpoint
-#     is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
-#     
-#     if is_protected and request.method != "OPTIONS":
-#         # For now, we'll implement basic protection
-#         # In production, implement proper JWT token validation
-#         auth_header = request.headers.get("Authorization")
-#         
-#         # Basic auth check - should be replaced with proper JWT validation
-#         if not auth_header or not auth_header.startswith("Bearer "):
-#             # For development, allow requests with session cookies or basic auth
-#             # This should be replaced with proper JWT validation in production
-#             session_cookie = request.cookies.get("session_id")
-#             basic_auth = request.headers.get("Authorization")
-#             
-#             if not session_cookie and not basic_auth:
-#                 logging.warning(f"Unauthorized access attempt to {path}")
-#                 return JSONResponse(
-#                     status_code=401,
-#                     content={
-#                         "error": "Unauthorized", 
-#                         "message": "Authentication required for this endpoint",
-#                         "endpoint": path
-#                     }
-#                 )
-#     
-#     response = await call_next(request)
-#     return response
+# AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
+# Now properly implemented with JWT tokens
+@app.middleware("http") 
+async def api_authentication_middleware(request: Request, call_next):
+    """Protect sensitive API endpoints with JWT token validation"""
+    path = request.url.path
+    
+    # Check if this is a protected endpoint
+    is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
+    
+    if is_protected and request.method != "OPTIONS":
+        # Extract token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        
+        if not auth_header or not auth_header.startswith("Bearer "):
+            logging.warning(f"Missing or invalid Authorization header for {path}")
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "Unauthorized", 
+                    "message": "JWT token required. Please include 'Authorization: Bearer <token>' header.",
+                    "endpoint": path
+                }
+            )
+        
+        # Extract and validate JWT token
+        try:
+            token = auth_header.split(" ")[1]
+            payload = verify_jwt_token(token)
+            
+            # Add user info to request state for downstream use
+            request.state.user_id = payload["user_id"]
+            request.state.username = payload["username"]
+            request.state.user_type = payload["user_type"]
+            
+        except HTTPException:
+            # Token validation failed
+            logging.warning(f"Invalid JWT token for {path}")
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "Unauthorized", 
+                    "message": "Invalid or expired JWT token",
+                    "endpoint": path
+                }
+            )
+        except Exception as e:
+            logging.error(f"JWT token validation error for {path}: {str(e)}")
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "Unauthorized", 
+                    "message": "Token validation failed",
+                    "endpoint": path
+                }
+            )
+    
+    response = await call_next(request)
+    return response
 
 # Configure logging
 logging.basicConfig(
