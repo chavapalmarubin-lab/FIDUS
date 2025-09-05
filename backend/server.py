@@ -1215,6 +1215,7 @@ class ClientMT5Mapping:
 
 # MT5 Integration Service
 from mt5_integration import mt5_service
+from mfa_service import mfa_service
 
 # Global MT5 mapping manager
 mt5_mapping_manager = ClientMT5Mapping()
