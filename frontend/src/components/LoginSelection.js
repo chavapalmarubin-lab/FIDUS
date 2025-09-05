@@ -227,9 +227,8 @@ const LoginSelection = ({ onLogin }) => {
                 )}
 
                 <div className="text-xs text-slate-500 text-center bg-slate-800 p-3 rounded">
-                  <strong>Demo Credentials:</strong><br />
-                  Client: client1 / password123<br />
-                  Admin: admin / password123
+                  <strong>Secure Login:</strong><br />
+                  Enter your credentials to access the FIDUS Investment Management platform
                 </div>
 
                 <div className="flex gap-3">
