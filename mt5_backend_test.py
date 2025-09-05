@@ -545,18 +545,22 @@ class MT5BackendTester:
             )
             
             if success:
-                accounts_performance = response.get('accounts_performance', [])
+                summary = response.get('summary', {})
+                accounts = summary.get('accounts', [])
                 
-                for acc_perf in accounts_performance:
-                    profit_loss = acc_perf.get('profit_loss', 0)
-                    performance_percentage = acc_perf.get('profit_loss_percentage', 0)
-                    
-                    # Check if performance data shows realistic volatility
-                    if abs(performance_percentage) <= 50:  # Reasonable range
-                        print(f"   ✅ Realistic performance data: {performance_percentage:.2f}%")
-                    else:
-                        print(f"   ❌ Unrealistic performance data: {performance_percentage:.2f}%")
-                        return False
+                if accounts:
+                    for account in accounts:
+                        profit_loss = account.get('profit_loss', 0)
+                        performance_percentage = account.get('profit_loss_percentage', 0)
+                        
+                        # Check if performance data shows realistic volatility
+                        if abs(performance_percentage) <= 50:  # Reasonable range
+                            print(f"   ✅ Realistic performance data: {performance_percentage:.2f}%")
+                        else:
+                            print(f"   ❌ Unrealistic performance data: {performance_percentage:.2f}%")
+                            return False
+                else:
+                    print("   ✅ Performance data structure valid (no accounts yet)")
             else:
                 print("   ❌ Failed to get performance data")
                 return False
