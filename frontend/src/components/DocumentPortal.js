@@ -82,7 +82,19 @@ const DocumentPortal = ({ user, userType }) => {
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+    fetchCategories();
+  }, [user]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API}/documents/categories`);
+      if (response.data) {
+        setAvailableCategories(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching document categories:", err);
+    }
+  };
 
   useEffect(() => {
     applyFiltersAndSort();
