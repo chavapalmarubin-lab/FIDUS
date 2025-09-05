@@ -2775,7 +2775,127 @@ async def create_new_user(user_data: UserCreate):
         logging.error(f"User creation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
-# Client Registration Endpoint - automatically adds to CRM leads
+# OCR and Document Processing Endpoints
+@api_router.post("/ocr/extract/sync")
+async def extract_text_sync(file: UploadFile = File(...)):
+    """Extract text from uploaded document using OCR"""
+    try:
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+        
+        # Check file extension
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.tiff']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="File type not supported")
+        
+        # Read file content
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large")
+        
+        # Simulate OCR processing (in production, use actual OCR service)
+        await asyncio.sleep(2)  # Simulate processing time
+        
+        # Mock OCR response structure
+        ocr_response = {
+            "job_id": str(uuid.uuid4()),
+            "filename": file.filename,
+            "ocr_results": {
+                "raw_text": "PASSPORT\nJOHN SMITH\nP<USASMITH<<JOHN<<<<<<<<<<<<<<<<<<<<<<\n1234567890USA8001011M2501011234567890<<<<<<<<<<<<",
+                "confidence": 85.5,
+                "engine_used": "tesseract",
+                "processing_time": 1.8,
+                "bounding_boxes": []
+            },
+            "parsed_document": {
+                "document_type": "passport",
+                "fields": {
+                    "full_name": "JOHN SMITH",
+                    "first_name": "JOHN",
+                    "last_name": "SMITH",
+                    "document_number": "123456789",
+                    "nationality": "USA",
+                    "date_of_birth": "01/01/1980",
+                    "sex": "M",
+                    "date_of_expiry": "01/01/2025"
+                },
+                "validation_errors": []
+            },
+            "processing_metadata": {
+                "total_processing_time": 2.1,
+                "image_dimensions": [1920, 1080],
+                "file_size": len(content)
+            }
+        }
+        
+        return ocr_response
+        
+    except Exception as e:
+        logging.error(f"OCR processing error: {str(e)}")
+        raise HTTPException(status_code=500, detail="OCR processing failed")
+
+@api_router.post("/identity/verify/document")  
+async def verify_identity_document():
+    """Verify identity document (mock implementation)"""
+    try:
+        # Simulate identity verification processing
+        await asyncio.sleep(1.5)
+        
+        # Mock identity verification response
+        verification_response = {
+            "verification_id": str(uuid.uuid4()),
+            "timestamp": time.time(),
+            "identity_verification": {
+                "overall_status": "verified",
+                "overall_confidence": 0.92,
+                "provider_results": [
+                    {
+                        "provider": "mock_verifier",
+                        "status": "verified", 
+                        "confidence": 0.92,
+                        "processing_time": 1.2
+                    }
+                ],
+                "consensus": {
+                    "verified_count": 1,
+                    "rejected_count": 0,
+                    "review_count": 0,
+                    "total_providers": 1
+                }
+            }
+        }
+        
+        return verification_response
+        
+    except Exception as e:
+        logging.error(f"Identity verification error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Identity verification failed")
+
+@api_router.post("/compliance/screen")
+async def screen_customer():
+    """Screen customer against OFAC and sanctions lists (mock implementation)"""
+    try:
+        # Simulate OFAC screening
+        await asyncio.sleep(1)
+        
+        # Mock OFAC screening response
+        screening_response = {
+            "screening_id": str(uuid.uuid4()),
+            "screening_status": "clear",
+            "total_lists_checked": 5,
+            "matches": [],
+            "confidence_score": 0.95,
+            "processing_time": 0.8,
+            "lists_checked": ["sdn", "nonsdn", "eu", "un", "uk"]
+        }
+        
+        return screening_response
+        
+    except Exception as e:
+        logging.error(f"OFAC screening error: {str(e)}")
+        raise HTTPException(status_code=500, detail="OFAC screening failed")
 @api_router.post("/auth/register")
 async def register_new_client(registration_data: dict):
     """Register a new client and automatically add to CRM leads"""
