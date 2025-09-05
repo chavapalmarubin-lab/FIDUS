@@ -440,20 +440,15 @@ def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfigur
     if deposit_date.tzinfo is None:
         deposit_date = deposit_date.replace(tzinfo=timezone.utc)
     
-    # Incubation period (2 months from deposit)
-    incubation_end = deposit_date + timedelta(days=60)  # Approximately 2 months
+    # Incubation period: EXACTLY 2 months from deposit (no interest during this period)
+    incubation_end = deposit_date + relativedelta(months=2)
     
-    # Interest starts from beginning of month after incubation
-    interest_start = incubation_end.replace(day=1)
-    if interest_start <= incubation_end:
-        # Move to next month if incubation ends after month start
-        if interest_start.month == 12:
-            interest_start = interest_start.replace(year=interest_start.year + 1, month=1)
-        else:
-            interest_start = interest_start.replace(month=interest_start.month + 1)
+    # Interest starts EXACTLY 2 months after deposit date (same as incubation end)
+    # No interest accrues during the 2-month incubation period
+    interest_start = deposit_date + relativedelta(months=2)
     
-    # Minimum hold period (14 months from deposit)
-    minimum_hold_end = deposit_date + timedelta(days=420)  # Approximately 14 months
+    # Minimum hold period: EXACTLY 14 months from deposit (2 incubation + 12 commitment)
+    minimum_hold_end = deposit_date + relativedelta(months=14)
     
     return {
         "incubation_end_date": incubation_end,
