@@ -37,3 +37,7 @@ google-auth>=2.40.3
 google-auth-oauthlib>=1.2.2
 google-auth-httplib2>=0.2.0
 google-api-python-client>=2.179.0
+MetaTrader5>=5.0.45
+schedule>=1.2.0
+sqlalchemy>=2.0.0
+alembic>=1.13.0
