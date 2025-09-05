@@ -56,14 +56,14 @@ const LoginSelection = ({ onLogin }) => {
 
     try {
       console.log('Attempting login with:', {
-        username: credentials.username,
+        username: trimmedCredentials.username,
         user_type: selectedType,
         api_url: API
       });
 
       const response = await axios.post(`${API}/auth/login`, {
-        username: credentials.username,
-        password: credentials.password,
+        username: trimmedCredentials.username,
+        password: trimmedCredentials.password,
         user_type: selectedType
       });
 
