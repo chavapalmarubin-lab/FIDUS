@@ -61,6 +61,8 @@
 ##       message: "Initiating comprehensive production readiness testing. Focus areas: (1) Fix critical issues found during testing, (2) Integration framework preparation for MT4/MT5, (3) Full client lifecycle stress testing (registration → investment → redemption), (4) Live data transition away from mock data, (5) Demo environment setup, (6) Proper database structure with backup capabilities. Starting with systematic backend testing."
 ##     - agent: "main"
 ##       message: "Starting comprehensive application functionality testing based on user priority: (1) Client account creation → admin leads flow, (2) Admin leads/clients to investment readiness process, (3) Investment creation flow across client and admin sides, (4) All financial calculations flowing: admin fund → cash flow → client portal → redemptions. Testing backend first to identify and resolve critical data flow issues."
+##     - agent: "main"
+##       message: "STARTING MT5 INTEGRATION IMPLEMENTATION: Implementing MT5 account mapping system for Multibank integration. User will provide client-specific login details. System requirements: (1) One MT5 account per client per fund (max 4 per client), (2) Existing funds add to existing MT5 accounts, (3) New funds create new MT5 accounts, (4) Admin interface to manage MT5 client login details, (5) Real-time performance tracking with admin visibility only. Starting with MT5 integration setup and database schema extension."
 
 # Protocol Guidelines for Main agent
 #
