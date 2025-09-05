@@ -194,7 +194,7 @@ const ProspectManagement = () => {
         return;
       }
 
-      const response = await axios.post(`${API}/crm/prospects`, formData);
+      const response = await apiAxios.post(`/crm/prospects`, formData);
       
       if (response.data.success) {
         setSuccess("Prospect added successfully");
