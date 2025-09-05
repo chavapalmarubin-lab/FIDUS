@@ -6550,7 +6550,8 @@ async def create_client_investment(investment_data: InvestmentCreate):
         # Update the investment object with the actual ID from MongoDB
         investment.investment_id = investment_id
         
-        # Create or update MT5 account mapping
+        # Create or update MT5 account mapping (default to multibank for existing flow)
+        broker_code = investment_data.__dict__.get('broker_code', 'multibank')
         mt5_account_id = await mt5_service.get_or_create_mt5_account(
             investment_data.client_id,
             investment_data.fund_code,
@@ -6558,7 +6559,8 @@ async def create_client_investment(investment_data: InvestmentCreate):
                 'investment_id': investment_id,
                 'principal_amount': investment_data.amount,
                 'fund_code': investment_data.fund_code
-            }
+            },
+            broker_code
         )
         
         if mt5_account_id:
