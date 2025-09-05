@@ -8368,6 +8368,105 @@ async def api_authentication_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
+# ===============================================================================
+# RATE LIMITING MIDDLEWARE - PREVENT API ABUSE
+# ===============================================================================
+
+class RateLimiter:
+    def __init__(self):
+        self.requests = defaultdict(list)
+        self.cleanup_interval = 3600  # Clean up old entries every hour
+        self.last_cleanup = time()
+    
+    def is_allowed(self, key: str, limit: int = 100, window: int = 60) -> bool:
+        """Check if request is allowed under rate limit"""
+        current_time = time()
+        
+        # Clean up old entries periodically
+        if current_time - self.last_cleanup > self.cleanup_interval:
+            self.cleanup_old_entries()
+            self.last_cleanup = current_time
+        
+        # Get request history for this key
+        request_times = self.requests[key]
+        
+        # Remove requests outside the time window
+        cutoff_time = current_time - window
+        self.requests[key] = [t for t in request_times if t > cutoff_time]
+        
+        # Check if under limit
+        if len(self.requests[key]) < limit:
+            self.requests[key].append(current_time)
+            return True
+        
+        return False
+    
+    def cleanup_old_entries(self):
+        """Remove old entries to prevent memory leak"""
+        current_time = time()
+        cutoff_time = current_time - 3600  # Keep last hour of data
+        
+        keys_to_remove = []
+        for key, times in self.requests.items():
+            # Remove old timestamps
+            self.requests[key] = [t for t in times if t > cutoff_time]
+            
+            # Remove empty entries
+            if not self.requests[key]:
+                keys_to_remove.append(key)
+        
+        for key in keys_to_remove:
+            del self.requests[key]
+
+# Global rate limiter instance
+rate_limiter = RateLimiter()
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    """Rate limiting middleware to prevent API abuse"""
+    
+    # Skip rate limiting for health checks
+    if request.url.path.startswith('/api/health'):
+        return await call_next(request)
+    
+    # Get client identifier (prefer user ID, fallback to IP)
+    client_id = None
+    
+    # Try to get user ID from JWT token
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
+            client_id = f"user:{payload.get('user_id', 'unknown')}"
+        except:
+            pass
+    
+    # Fallback to IP address
+    if not client_id:
+        # Get real IP from headers (for proxy/load balancer)
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            client_id = f"ip:{forwarded_for.split(',')[0].strip()}"
+        else:
+            client_id = f"ip:{request.client.host}"
+    
+    # Apply rate limiting
+    limit = 100  # requests per minute
+    if not rate_limiter.is_allowed(client_id, limit=limit, window=60):
+        logging.warning(f"Rate limit exceeded for {client_id} on {request.url.path}")
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Rate limit exceeded",
+                "message": f"Too many requests. Limit: {limit} requests per minute.",
+                "retry_after": 60
+            },
+            headers={"Retry-After": "60"}
+        )
+    
+    return await call_next(request)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
