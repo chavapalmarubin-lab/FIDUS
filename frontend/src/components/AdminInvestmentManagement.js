@@ -160,13 +160,39 @@ const AdminInvestmentManagement = () => {
         }
       }
 
-      // First create the investment
-      const investmentResponse = await apiAxios.post(`/investments/create`, {
+      // Prepare investment data with MT5 mapping
+      const investmentData = {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
         amount: amount,
         deposit_date: investmentForm.deposit_date
-      });
+      };
+
+      // Add MT5 account mapping data if requested
+      if (investmentForm.create_mt5_account && investmentForm.mt5_login && investmentForm.mt5_password) {
+        investmentData.create_mt5_account = true;
+        investmentData.mt5_login = investmentForm.mt5_login;
+        investmentData.mt5_password = investmentForm.mt5_password;
+        investmentData.mt5_server = investmentForm.mt5_server;
+        investmentData.broker_name = investmentForm.broker_name;
+        
+        // Handle optional balance and fee fields
+        if (investmentForm.mt5_initial_balance) {
+          investmentData.mt5_initial_balance = parseFloat(investmentForm.mt5_initial_balance);
+        }
+        if (investmentForm.banking_fees) {
+          investmentData.banking_fees = parseFloat(investmentForm.banking_fees);
+        }
+        if (investmentForm.fee_notes) {
+          investmentData.fee_notes = investmentForm.fee_notes;
+        }
+      } else if (investmentForm.create_mt5_account) {
+        // Create default MT5 account mapping
+        investmentData.create_mt5_account = true;
+      }
+
+      // First create the investment
+      const investmentResponse = await apiAxios.post(`/investments/create`, investmentData);
 
       if (investmentResponse.data.success) {
         const investmentId = investmentResponse.data.investment_id;
