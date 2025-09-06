@@ -346,7 +346,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=partial_mt5_data
+            data=partial_mt5_data,
+            use_auth=True
         )
         
         if success:
