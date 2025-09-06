@@ -8524,6 +8524,16 @@ async def test_fund_performance_manager():
         
         # Test with Salvador's data
         from datetime import datetime
+        
+        # Test expected performance calculation
+        expected = await fpm.calculate_expected_performance(
+            "client_003", "BALANCE", 100000.0, datetime(2024, 12, 19)
+        )
+        
+        # Test MT5 actual performance
+        actual = await fpm.get_mt5_actual_performance("client_003", "BALANCE")
+        
+        # Test full gap analysis
         gap = await fpm.analyze_performance_gap(
             "client_003", "BALANCE", 100000.0, datetime(2024, 12, 19)
         )
@@ -8532,6 +8542,8 @@ async def test_fund_performance_manager():
             "success": True,
             "manager_type": str(type(fpm)),
             "fund_commitments": fund_commitments,
+            "expected_performance": expected,
+            "actual_performance": actual,
             "test_gap": {
                 "client_id": gap.client_id,
                 "fund_code": gap.fund_code,
