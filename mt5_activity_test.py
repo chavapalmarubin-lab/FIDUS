@@ -474,6 +474,11 @@ class MT5ActivityTester:
         print(f"Target Account: {self.target_account_id}")
         print("Expected: 6 activities (1 deposit + 5 trades with EURUSD, USDCHF, XAUUSD)")
         
+        # Setup authentication first
+        if not self.setup_authentication():
+            print("\n❌ Authentication setup failed - cannot proceed with MT5 tests")
+            return False
+        
         # Run all priority tests
         test_suites = [
             ("Priority 1: MT5 Activity API Endpoint", self.test_priority_1_mt5_activity_api),
