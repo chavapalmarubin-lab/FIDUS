@@ -114,7 +114,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Integrate a fully integrated CRM system for FIDUS extending the existing portal. The CRM must: manage client onboarding with digital KYC/AML, track investor allocations across four funds (CORE, BALANCE, DYNAMIC, UNLIMITED), automate capital flows (subscriptions, redemptions, distributions), and generate real-time dashboards for AUM, NAV, and performance. Include Python MetaQuotes MT4/MT5 integration for client activity monitoring in Admin portal. Focus on core features first."
+user_problem_statement: "PRODUCTION READINESS COMPREHENSIVE STRESS TEST - Going Live Monday: The FIDUS Investment Management System requires complete validation of all systems, data flows, calculations, and real MT5 feed integration before production deployment. Critical requirements: 1) All authentication flows working, 2) All fund performance calculations accurate, 3) Real MT5 data feeds operational, 4) All user journeys functional, 5) Database integrity validated, 6) Security protocols verified, 7) Admin and client dashboards fully operational, 8) Fund Performance vs MT5 Reality system accurate, 9) All API endpoints responding correctly, 10) Error handling robust, 11) UI/UX polished and professional."
 
 backend:
   - task: "Gmail OAuth Integration"
