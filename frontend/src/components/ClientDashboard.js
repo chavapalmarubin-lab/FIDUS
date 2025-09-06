@@ -135,9 +135,6 @@ const ClientDashboard = ({ user, onLogout }) => {
               Account Overview
             </TabsTrigger>
 
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
-              📈 Fund Commitments
-            </TabsTrigger>
             <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
