@@ -318,9 +318,12 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-9 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-10 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
               Fund Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600">
+              📊 Fund vs MT5
             </TabsTrigger>
             <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600">
               <DollarSign size={16} className="mr-2" />
