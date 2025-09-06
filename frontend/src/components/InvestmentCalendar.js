@@ -385,6 +385,66 @@ const InvestmentCalendar = ({ user }) => {
         </div>
       )}
 
+      {/* Upcoming Events View */}
+      {viewMode === 'upcoming' && (
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Clock className="mr-2 h-5 w-5 text-cyan-400" />
+              Upcoming Events (Next 90 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {getUpcomingEvents().slice(0, 10).map(event => {
+                const config = getEventTypeConfig(event.type);
+                const Icon = config.icon;
+                const daysUntil = Math.ceil((new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <motion.div
+                    key={event.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center p-4 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer"
+                    onClick={() => setSelectedEvent(event)}
+                  >
+                    <div className={`${config.color} p-3 rounded-lg mr-4`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white font-semibold">{event.title}</h3>
+                      <p className="text-slate-400 text-sm">{event.description}</p>
+                      <div className="flex items-center mt-2 space-x-4">
+                        <span className="text-cyan-400 text-sm font-medium">
+                          {formatDate(event.date)}
+                        </span>
+                        {daysUntil >= 0 && (
+                          <Badge variant="outline" className="text-slate-300">
+                            {daysUntil === 0 ? 'Today' : 
+                             daysUntil === 1 ? 'Tomorrow' :
+                             `${daysUntil} days`}
+                          </Badge>
+                        )}
+                        {event.amount && (
+                          <span className="text-green-400 font-semibold">
+                            {formatCurrency(event.amount)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              {getUpcomingEvents().length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">No upcoming events in the next 90 days</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Calendar Navigation */}
       <Card className="dashboard-card">
         <CardHeader>
