@@ -299,7 +299,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=minimal_mt5_data
+            data=minimal_mt5_data,
+            use_auth=True
         )
         
         if success:
