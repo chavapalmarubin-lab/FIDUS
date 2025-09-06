@@ -283,7 +283,7 @@ class FundPerformanceManager:
         )
     
     async def generate_fund_management_dashboard(self) -> Dict[str, Any]:
-        """Generate comprehensive fund management dashboard data"""
+        """Generate comprehensive fund management dashboard data based on MT5 accounts"""
         
         dashboard_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -294,21 +294,21 @@ class FundPerformanceManager:
             "action_items": []
         }
         
-        # Get all client investments
-        investments = []
-        async for investment in self.db.investments.find({}):
-            investments.append(investment)
+        # Get all MT5 accounts (these represent actual client positions)
+        mt5_accounts = []
+        async for account in self.db.mt5_accounts.find({}):
+            mt5_accounts.append(account)
         
-        # Process each investment
-        for investment in investments:
-            client_id = investment["client_id"]
-            fund_code = investment["fund_code"]
-            principal_amount = investment["principal_amount"]
-            investment_date = investment["deposit_date"]
+        # Process each MT5 account to calculate performance gaps
+        for account in mt5_accounts:
+            client_id = account["client_id"]
+            fund_code = account["fund_code"]
+            principal_amount = account.get("total_allocated", account.get("initial_deposit", 0))
+            deposit_date = account.get("deposit_date", account.get("created_at"))
             
-            # Calculate performance gap
-            gap = await self.analyze_performance_gap(
-                client_id, fund_code, principal_amount, investment_date
+            # Calculate performance gap using MT5 data as source
+            gap = await self.analyze_mt5_performance_gap(
+                client_id, fund_code, principal_amount, deposit_date, account
             )
             
             dashboard_data["performance_gaps"].append({
@@ -338,15 +338,18 @@ class FundPerformanceManager:
                     "recommendation": self.get_recommendation(gap)
                 })
         
-        # Add fund commitment info
-        for fund_code, commitment in self.fund_commitments.items():
-            dashboard_data["fund_commitments"][fund_code] = {
-                "monthly_return": commitment.monthly_return,
-                "redemption_frequency": commitment.redemption_frequency,
-                "risk_level": commitment.risk_level,
-                "guaranteed": commitment.guaranteed,
-                "description": commitment.description
-            }
+        # Only show fund commitments for funds that have actual MT5 accounts
+        active_funds = set(account["fund_code"] for account in mt5_accounts)
+        for fund_code in active_funds:
+            if fund_code in self.fund_commitments:
+                commitment = self.fund_commitments[fund_code]
+                dashboard_data["fund_commitments"][fund_code] = {
+                    "monthly_return": commitment.monthly_return,
+                    "redemption_frequency": commitment.redemption_frequency,
+                    "risk_level": commitment.risk_level,
+                    "guaranteed": commitment.guaranteed,
+                    "description": commitment.description
+                }
         
         return dashboard_data
     
