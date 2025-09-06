@@ -41,6 +41,73 @@ class SalvadorPalmaVerificationTester:
         self.expected_broker = "DooTechnology"
         self.expected_server = "DooTechnology-Live"
 
+    def authenticate_admin(self):
+        """Authenticate as admin to get JWT token"""
+        print("\n🔐 Authenticating as admin...")
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "admin",
+                "password": "password123",
+                "user_type": "admin"
+            }
+        )
+        
+        if success:
+            self.admin_token = response.get('token')
+            if self.admin_token:
+                print(f"✅ Admin authentication successful")
+                return True
+            else:
+                print(f"❌ No token received in admin login response")
+                return False
+        else:
+            print(f"❌ Admin authentication failed")
+            return False
+
+    def authenticate_client(self):
+        """Authenticate as Salvador Palma (client3) to get JWT token"""
+        print("\n🔐 Authenticating as Salvador Palma...")
+        success, response = self.run_test(
+            "Salvador Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "client3",
+                "password": "password123",
+                "user_type": "client"
+            }
+        )
+        
+        if success:
+            self.client_token = response.get('token')
+            client_name = response.get('name')
+            client_id = response.get('id')
+            if self.client_token:
+                print(f"✅ Salvador authentication successful: {client_name} ({client_id})")
+                return True
+            else:
+                print(f"❌ No token received in Salvador login response")
+                return False
+        else:
+            print(f"❌ Salvador authentication failed")
+            return False
+
+    def get_auth_headers(self, use_admin=True):
+        """Get authorization headers with JWT token"""
+        token = self.admin_token if use_admin else self.client_token
+        if token:
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
+            }
+        else:
+            return {'Content-Type': 'application/json'}
+
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
