@@ -858,7 +858,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Real-Time MT5 Data Collection System"
+    - "Fund Performance Management System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
