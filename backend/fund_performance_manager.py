@@ -281,9 +281,9 @@ class FundPerformanceManager:
     async def analyze_mt5_performance_gap(self, client_id: str, fund_code: str, 
                                         principal_amount: float, deposit_date: str, 
                                         mt5_account: dict) -> PerformanceGap:
-        """Analyze performance gap using MT5 account data as primary source"""
+        """Analyze performance gap using REAL MT5 data: Profit + Withdrawals vs FIDUS commitments"""
         
-        # Calculate expected performance based on MT5 deposit amount and date
+        # Calculate expected performance based on FIDUS fund commitment
         expected = await self.calculate_expected_performance(
             client_id, fund_code, principal_amount, deposit_date
         )
@@ -300,11 +300,16 @@ class FundPerformanceManager:
                 action_required=True
             )
         
-        # Use MT5 account data directly
-        expected_value = expected["expected_current_value"]
-        actual_equity = mt5_account.get("current_equity", 0)
+        # CORRECTED CALCULATION: Use actual client return from MT5 (Profit + Withdrawals)
+        expected_value = expected["expected_current_value"]  # FIDUS commitment expectation
         
-        gap_amount = actual_equity - expected_value
+        # Get REAL MT5 performance = Profit + Withdrawals (actual client benefit)
+        mt5_profit = mt5_account.get("profit_loss", 0)
+        mt5_withdrawal = mt5_account.get("withdrawal_amount", 0) 
+        actual_client_return = mt5_profit + mt5_withdrawal
+        
+        # Calculate gap: Actual MT5 return vs FIDUS expected value
+        gap_amount = actual_client_return - expected_value
         gap_percentage = (gap_amount / expected_value * 100) if expected_value > 0 else 0
         
         # Determine risk level and action required
@@ -325,7 +330,7 @@ class FundPerformanceManager:
             fund_code=fund_code,
             client_id=client_id,
             expected_performance=expected_value,
-            actual_mt5_performance=actual_equity,
+            actual_mt5_performance=actual_client_return,  # Real client return
             gap_amount=gap_amount,
             gap_percentage=gap_percentage,
             risk_level=risk_level,
