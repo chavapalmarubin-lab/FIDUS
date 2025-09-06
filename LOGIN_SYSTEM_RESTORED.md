@@ -92,7 +92,7 @@ Instead of spending more time debugging the complex component key conflicts, I i
 ## Production Readiness Status
 
 ### **Immediately Available for Demo**
-- **URL**: `https://fund-tracker-11.preview.emergentagent.com`
+- **URL**: `https://fund-performance.preview.emergentagent.com`
 - **Login Types**: Both Admin and Client working
 - **Authentication**: Secure MongoDB integration
 - **Session Management**: Persistent login state

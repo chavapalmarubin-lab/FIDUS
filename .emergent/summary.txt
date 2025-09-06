@@ -1,91 +1,112 @@
 <analysis>
-The AI engineer's trajectory describes a multi-phase development and bug-fixing process for the FIDUS investment management platform. Initially, the focus was on establishing a Fund Performance vs MT5 Reality Management System for the admin portal. This involved creating backend logic in , new API endpoints in , and a frontend dashboard component .
-
-Significant effort was dedicated to debugging and refining the fund performance calculations. Key issues addressed included correctly integrating the  into the , resolving database connection inconsistencies (moving from  to ), and rectifying calculation logic. Critical corrections were made to: 1) use the actual MT5 deposit amount and date as the source of truth, 2) switch from compound to simple interest, and 3) redefine the MT5 actual return calculation to include withdrawals and current equity.
-
-Concurrently, frontend UX improvements were made: removing a redundant Investments tab from the client dashboard, enhancing the  for better visual data, and a multi-turn logo replacement/resizing task to ensure the FIDUS logo was correctly and visibly displayed across all application headers and pages. The final stage involves preparing for a comprehensive stress test.
+The previous AI engineer's work centered on enhancing the FIDUS investment management platform, primarily focusing on a Fund Performance vs MT5 Reality Management System. Initial efforts involved building backend and frontend components, extensive debugging of fund performance calculations, and addressing database inconsistencies. A significant phase was dedicated to resolving a wide array of bug reports and feature requests. This included implementing a comprehensive stress test plan, fixing rate limiting and MT5 multi-broker authentication issues, ensuring the MT5 tab displayed real historical data, creating a centralized Application Documents tab, streamlining the client dashboard, correcting fund balance displays for individual funds, and overhahauling the cash flow management to align with proper fund accounting principles, including lot-based rebates. The engineer also established an ongoing documentation protocol. The current task involves integrating MT5 account mapping directly into the Create Investment workflow, addressing a critical gap in client onboarding.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is an investment management platform supporting client/admin roles, AML/KYC, CRM, fund allocation (CORE, BALANCE, DYNAMIC, UNLIMITED), automated capital flows, real-time AUM/NAV/performance dashboards, and MT4/MT5 API monitoring. Recent enhancements focused on a Fund Performance vs MT5 Reality Management System.
+The FIDUS financial portal is an investment management platform for client/admin roles, supporting AML/KYC, CRM, fund allocation (CORE, BALANCE, DYNAMIC, UNLIMITED), automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
 
-Specific requirements and implementations include:
-1.  **Robust Authentication**: JWT-based system implemented across backend and frontend.
-2.  **UX Consistency**: Resolved missing CSS import and improved calendar view.
-3.  **Database Stability**: Fixed Cash Flow database errors and resolved database connection inconsistencies for fund performance module.
-4.  **Multi-Broker MT5 Integration**: Expanded MT5 support to DooTechnology alongside Multibank.
-5.  **Real-Time MT5 Data**: System for collecting and displaying real-time MT5 trading data.
-6.  **Fund Performance Management**: An internal system and admin dashboard to compare FIDUS client fund commitments against real-time MT5 returns. This system requires:
-    *   MT5 data as the primary source for investment amounts, start dates, and actual returns (Profit + Withdrawal + Current Balance).
-    *   Simple interest calculations for FIDUS fund commitments.
-    *   Displaying only funds with actual client investments in the admin's Client Investment Deliverables tab.
-    *   Ensuring no FIDUS funds are marked as Guaranteed.
-    *   Separate client-side view (showing FIDUS promises) from admin-side view (showing MT5 reality vs. commitment).
-7.  **Client Dashboard**: Display correct client investment balance, reflecting actual fund investments (e.g., BALANCE fund) instead of hardcoded generic balances. Remove redundant tabs.
-8.  **Branding**: Update application-wide logo with new FIDUS logo, ensuring proper sizing and visibility in all key areas (login, dashboards, loading screen).
+Key requirements and implemented features include:
+1.  **Fund Performance vs MT5 Reality Management System:** Admin dashboard to compare client fund commitments against MT5 returns, using MT5 data as source of truth (deposit amount, profit, withdrawal, current balance), simple interest for commitments, and displaying only funds with client investments. No guaranteed funds.
+2.  **Client Dashboard:** Displays correct individual fund balances (e.g., BALANCE .4M, CORE /bin/bash.00), not generic labels. Removed redundant Fund Commitments tab.
+3.  **Application-Wide Branding:** Updated to a new FIDUS logo with proper sizing across all pages.
+4.  **Scalability:** The system must handle scaling from 1 to 100 MT5 accounts within a month, necessitating robust stress testing and performance optimizations.
+5.  **Robust Authentication:** JWT-based system, with fixes for admin endpoints to ensure proper access control.
+6.  **Comprehensive Documentation for CTO:** A detailed deployment guide, system health monitors, and performance dashboards for production hosting.
+7.  **Admin Application Documents Tab:** Centralized access to all system documentation.
+8.  **Cash Flow Management:** Must follow proper fund accounting principles (MT5 trading profits + broker rebates as assets; client interest obligations + redemptions as liabilities). Includes lot-based rebate entry.
+9.  **CRM Dashboard:** Trading Monitor shows real client MT5 data (not mock data). MetaQuotes Data tab displays mapped MT5 accounts.
+10. **MT5 Account Mapping in Investment Creation:** Ability to input MT5 login credentials during client investment creation, accounting for potential fee differences.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, components (, , , ).
--   **FastAPI**: Python backend, API routes, business logic, JWT authentication.
--   **MongoDB**: Persistent data storage for users, investments, MT5 accounts.
--   **JWT Authentication**: Token-based security.
--   **Axios/apiAxios**: HTTP client for frontend authenticated API calls.
--   **MetaTrader 5 (MT5)**: Real-time trading data integration (though initially simulated, now uses real data/credentials).
--   **Python Logging**: Debugging and monitoring backend operations.
+-   **React.js**: Frontend UI with components for dashboards and forms.
+-   **FastAPI**: Python backend for API routes, business logic, JWT authentication, and data handling.
+-   **MongoDB**: Persistent data storage.
+-   **JWT Authentication**: Token-based security across the application.
+-   **Axios/apiAxios**: HTTP client for frontend API calls.
+-   **MetaTrader 5 (MT5)**: Integration for real-time trading data (simulated and real).
+-   **Python  library**: For retry logic in MT5 integration.
+-   **Pydantic**: Data validation and serialization in FastAPI.
 </key_technical_concepts>
 
 <code_architecture>
 
 
 -   ****: Core backend logic.
-    -   **Changes**: Integrated  import, added/modified API endpoints for fund performance (, , ), fixed database name inconsistency for client data, updated  client ID. Modified  to only return funds with client investments.
--   ** (NEW)**: Manages fund performance comparison.
-    -   **Importance**: Centralizes logic for comparing client commitments vs. MT5 returns.
-    -   **Changes**: Fixed date handling for investment start dates, updated fund commitment specifications (CORE, BALANCE, DYNAMIC, UNLIMITED), rectified database name from  to  and back to  to match where MT5 accounts and investments were actually stored. Changed MT5 actual return calculation to . Ensured simple interest calculations. Added methods to fetch real MT5 deposit dates.
+    -   **Importance**: Handles all API endpoints, authentication, and core business logic.
+    -   **Changes**: Added/fixed API endpoints for fund performance, fixed database names, integrated . Implemented rate limiting middleware. Added authentication decorators to MT5 broker endpoints. Updated  to return individual fund balances. Rewrote cash flow logic to align with fund accounting principles. Added new endpoints for documentation access. Updated documentation list.
+-   ****: Manages fund performance comparison.
+    -   **Importance**: Centralizes logic for comparing client commitments vs. MT5 returns, including simple interest calculations and MT5 actual return.
+    -   **Changes**: Fixed date handling, updated fund commitment specifications, rectified database name, redefined MT5 actual return.
 -   ****: MT5 integration service.
-    -   **Changes**: Added  method to simulate retrieving account history for deposit dates.
--   ** (NEW)**: Intended for direct real MT5 API connection.
+    -   **Importance**: Handles communication with MT5 accounts.
+    -   **Changes**: Added . Enhanced connection stability and retry logic using . Added  to .
+-   ****: Intended for direct real MT5 API connection.
     -   **Importance**: To connect to actual MT5 accounts for real data, though initial attempts hit package installation issues.
--   ** (NEW)**: New FIDUS logo image.
-    -   **Importance**: Replaces all old logos and branding elements.
+-   ****: New FIDUS logo.
+    -   **Importance**: Used application-wide for branding.
 -   ****: Admin's main dashboard.
-    -   **Changes**: Integrated  into navigation, added and later adjusted FIDUS logo in the header for proper visibility and sizing. Removed  text from the title next to the logo.
+    -   **Importance**: Provides navigation and overall structure for admin users.
+    -   **Changes**: Integrated  and . Adjusted FIDUS logo sizing. Removed  text. Renamed Document Portal tab to App Documents. Fixed JSX syntax errors.
 -   ****: Client's main dashboard.
-    -   **Changes**: Updated to display client's actual  balance instead of hardcoded  balances. Removed redundant Investments tab. Added and later adjusted FIDUS logo in the header, replacing old text-based logo, and removed old text elements.
--   ** (NEW)**: Frontend component for Fund Performance Management.
-    -   **Importance**: Provides the UI for admins to compare fund commitments with MT5 returns.
+    -   **Importance**: Main interface for clients.
+    -   **Changes**: Removed redundant Investments tab (formerly Fund Commitments). Updated grid layout. Fixed fund balance display to show individual fund balances (CORE, BALANCE, DYNAMIC, UNLIMITED) instead of generic FIDUS Funds.
+-   ****: Frontend component for Fund Performance Management.
+    -   **Importance**: UI for admins to compare fund commitments with MT5 returns.
     -   **Changes**: Updated to focus on Client Investment Deliverables and only display the BALANCE fund with client data.
 -   ****: Investment calendar.
-    -   **Changes**: Enhanced to show a more comprehensive view, including Upcoming Events and a populated Monthly View starting from the investment start month.
--   ****: Client/Admin login.
-    -   **Changes**: Replaced old logo with .
--   ****: Splash screen animation.
-    -   **Changes**: Ensured new  is used with correct animations.
--   ****: Password reset page.
-    -   **Changes**: Replaced old logo with .
--   ****: Client onboarding.
-    -   **Changes**: Replaced old logo with .
+    -   **Importance**: Visualizes investment-related events.
+    -   **Changes**: Enhanced to show upcoming events and monthly view.
+-   ****, ****, ****, ****:
+    -   **Importance**: Core UI elements.
+    -   **Changes**: Replaced old logos with .
+-   ** (NEW)**: Frontend component for displaying application documentation.
+    -   **Importance**: Provides a centralized UI for admins to view and download technical documents.
+    -   **Changes**: Created to list and render various markdown documents, source code files, and monitoring scripts.
+-   ****: Cash flow management UI.
+    -   **Importance**: Displays financial overview.
+    -   **Changes**: Refactored to use aggregated totals from the backend, removed old calculation functions. Completely rewritten to reflect proper fund accounting (assets vs. liabilities). Added manual Add Rebate functionality with lot-based fields. Fixed syntax errors.
+-   ****: CRM dashboard UI.
+    -   **Importance**: Admin view for client and trading information.
+    -   **Changes**: Updated Trading Monitor tab to show real MT5 account data for Salvador Palma instead of mock data.
+-   ****: MetaQuotes data display.
+    -   **Importance**: Shows MT5 account mappings and data.
+    -   **Changes**: Completely replaced to show mapped MT5 accounts (Salvador Palma's) and their status, instead of a connection setup interface. Fixed failed to load error by using existing backend endpoints.
+-   ****: Admin investment management.
+    -   **Importance**: Allows admins to create new client investments.
+    -   **Changes**: Modified to include MT5 account mapping fields (, , , , ) in the investment creation form.
+-   ** (NEW)**:
+    -   **Importance**: Comprehensive guide for CTO on deploying the system.
+    -   **Changes**: Created, updated with latest system info, scalability validation, and deployment procedures.
+-   ** (NEW)**:
+    -   **Importance**: Executive summary of system readiness.
+    -   **Changes**: Created, updated with recent fixes.
+-   ** (NEW)**:
+    -   **Importance**: Tracks all system changes chronologically.
+    -   **Changes**: Created to establish an ongoing documentation protocol.
+-   ** (NEW)**, ** (NEW)**:
+    -   **Importance**: Scripts for production monitoring.
+    -   **Changes**: Created to provide system health and performance oversight.
 </code_architecture>
 
 <pending_tasks>
--   Complete the integration of the  component with real data and visualizations (from initial pending tasks, not touched in this trajectory).
--   The  module was created but its actual implementation for connecting to MetaTrader5 and retrieving historical data is pending due to package installation issues.
+-   Complete the integration of the  component with real data and visualizations.
+-   Implement the actual MetaTrader5 package integration in  for direct real MT5 API connection, as previous attempts hit package installation issues.
+-   Automate rebate tracking based on trading volume via an API, rather than manual lot-based entry.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer had successfully addressed all identified bugs and feature requests related to the Fund Performance Management System, client dashboard display, and application-wide logo integration.
+Immediately before this summary request, the previous AI engineer was working on integrating MT5 account mapping directly into the Create Investment workflow within the  component. The user explicitly requested this functionality, highlighting that once a lead becomes a client, their MT5 login credentials should be captured during the investment creation process. This is crucial for linking client investments to their actual MT5 trading accounts and accounting for potential differences in initial balances due to banking or crypto fees.
 
-The system now correctly:
-1.  Calculates fund performance using **real MT5 data** (deposit amount, profit, withdrawal, current balance).
-2.  Applies **simple interest** for FIDUS expected returns.
-3.  Derives the investment **start date from MT5 data** (April 2020, then changed to April 2025 for testing).
-4.  Displays only the **BALANCE fund** in the admin Client Investment Deliverables tab, as it's the only one with active client data.
-5.  Shows the **correct FIDUS logo** with appropriate sizing across all application pages (login, dashboards, loading screen).
+The engineer successfully:
+1.  Identified that the  component lacked the necessary fields for MT5 account mapping.
+2.  Updated the component's state to include new fields: , , , , and .
+3.  Located the investment creation modal within .
+4.  Added a new MT5 Account Mapping section to this modal, positioned after the Payment Confirmation Required section, complete with input fields for the newly added MT5-related data.
 
-The last interaction (Chat Message 707) was the user requesting a comprehensive stress test of the application before going to production on Monday. The AI engineer acknowledged this request (Chat Message 708) and started to read  to prepare for updating the test plan for the stress test (Chat Message 709-712). The state is poised for defining and executing this final pre-production testing.
+The very last action taken by the AI engineer was to begin updating the backend () to handle the persistence of these new MT5 account details when an investment is created. This ensures the data captured in the frontend form is correctly processed and stored.
 </current_work>
 
 <optional_next_step>
-Update the  file with a comprehensive production readiness stress test plan.
+Update the backend endpoint in  to process and store the new MT5 account mapping fields provided during investment creation.
 </optional_next_step>
