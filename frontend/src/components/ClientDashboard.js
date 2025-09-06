@@ -13,7 +13,7 @@ import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, Trend
 import { format } from "date-fns";
 import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
-import InvestmentDashboard from "./InvestmentDashboard";
+
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
 import ClientMT5View from "./ClientMT5View";
