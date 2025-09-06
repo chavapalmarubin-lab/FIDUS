@@ -188,7 +188,7 @@ const CashFlowManagement = () => {
         <Card className="dashboard-card">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <DollarSign className={`h-8 w-8 ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`} />
+              <DollarSign className={`h-8 w-8 ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`} />
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Net Cash Flow</p>
                 <p className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
