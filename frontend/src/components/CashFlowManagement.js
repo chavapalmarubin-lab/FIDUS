@@ -91,6 +91,45 @@ const CashFlowManagement = () => {
     }
   };
 
+  const handleAddRebate = async () => {
+    try {
+      if (!newRebate.fund_code || !newRebate.amount || !newRebate.broker || !newRebate.period) {
+        setError("Please fill in all required fields");
+        return;
+      }
+
+      const response = await apiAxios.post('/admin/rebates/add', {
+        fund_code: newRebate.fund_code,
+        amount: parseFloat(newRebate.amount),
+        broker: newRebate.broker,
+        description: newRebate.description || `${newRebate.period} rebate from ${newRebate.broker}`,
+        date: new Date().toISOString().split('T')[0] // Today's date
+      });
+
+      if (response.data.success) {
+        // Reset form
+        setNewRebate({
+          fund_code: '',
+          amount: '',
+          broker: '',
+          period: '',
+          description: ''
+        });
+        setShowAddRebateModal(false);
+        
+        // Refresh data
+        await fetchCashFlowData();
+        
+        console.log("✅ Rebate added successfully:", response.data.rebate);
+      } else {
+        throw new Error("Failed to add rebate");
+      }
+    } catch (err) {
+      console.error("❌ Add rebate error:", err);
+      setError("Failed to add rebate");
+    }
+  };
+
   const getMonthsFromTimeframe = (timeframe) => {
     switch (timeframe) {
       case '1month': return 1;
