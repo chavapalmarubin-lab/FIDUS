@@ -530,7 +530,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,  # Should succeed but MT5 mapping should fail
-            data=invalid_login_data
+            data=invalid_login_data,
+            use_auth=True
         )
         
         if success:
