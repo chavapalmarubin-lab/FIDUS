@@ -112,25 +112,33 @@ class DatabaseReset:
         print("STEP 2: VERIFYING SALVADOR PALMA USER EXISTS")
         print("="*60)
         
-        # Check in users collection
+        # Check in users collection - Salvador Palma is client3 with salvador.palma@fidus.com
         salvador_user = self.db.users.find_one({
             "user_type": "client",
-            "name": {"$regex": "Salvador.*Palma", "$options": "i"}
+            "email": "salvador.palma@fidus.com"
         })
+        
+        if not salvador_user:
+            # Also check by username
+            salvador_user = self.db.users.find_one({
+                "user_type": "client", 
+                "username": "client3"
+            })
         
         if salvador_user:
             print(f"✅ Found Salvador Palma user:")
             print(f"   User ID: {salvador_user.get('user_id')}")
-            print(f"   Name: {salvador_user.get('name')}")
+            print(f"   Username: {salvador_user.get('username')}")
             print(f"   Email: {salvador_user.get('email')}")
+            print(f"   Name: {salvador_user.get('name', 'Salvador Palma')}")
             return salvador_user.get('user_id')
         else:
             print("❌ Salvador Palma user not found")
             # Let's check what users exist
-            users = list(self.db.users.find({"user_type": "client"}, {"user_id": 1, "name": 1, "email": 1}))
+            users = list(self.db.users.find({"user_type": "client"}, {"user_id": 1, "username": 1, "email": 1}))
             print(f"Available client users ({len(users)}):")
             for user in users:
-                print(f"   - {user.get('name')} (ID: {user.get('user_id')})")
+                print(f"   - {user.get('username')} (ID: {user.get('user_id')}, Email: {user.get('email')})")
             return None
     
     def step_3_create_salvador_investment(self, salvador_user_id):
