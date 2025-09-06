@@ -284,11 +284,12 @@ const AdminDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="header-logo">
+        <div className="header-logo flex items-center">
           <img 
             src="/fidus-logo.png"
             alt="FIDUS Logo"
-            className="h-8 w-auto mr-3"
+            className="h-10 w-auto mr-3"
+            style={{ maxHeight: '40px', maxWidth: '120px' }}
           />
           <span className="text-slate-400 text-sm">Investment Committee</span>
         </div>
