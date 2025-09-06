@@ -7760,66 +7760,192 @@ async def get_all_rebates():
 # Cash Flow Management Endpoints
 @api_router.get("/admin/cashflow/overview")
 async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
-    """Get cash flow overview data"""
+    """Get proper fund cash flow overview based on fund accounting principles"""
     try:
-        # Get all clients and their investments from MongoDB
-        all_clients = mongodb_manager.get_all_clients()
+        logging.info(f"Getting cash flow overview for timeframe: {timeframe}, fund: {fund}")
         
-        # Calculate real cash flow data
-        fund_breakdown = {
-            "CORE": {"inflow": 0, "outflow": 0},
-            "BALANCE": {"inflow": 0, "outflow": 0},
-            "DYNAMIC": {"inflow": 0, "outflow": 0},
-            "UNLIMITED": {"inflow": 0, "outflow": 0}
+        # Calculate timeframe dates
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        if timeframe == "1month":
+            start_date = end_date - timedelta(days=30)
+        elif timeframe == "3months":
+            start_date = end_date - timedelta(days=90)
+        elif timeframe == "6months":
+            start_date = end_date - timedelta(days=180)
+        elif timeframe == "1year":
+            start_date = end_date - timedelta(days=365)
+        else:
+            start_date = end_date - timedelta(days=90)
+        
+        # =================================================================
+        # FUND ASSETS (Money Coming Into Fund)
+        # =================================================================
+        
+        # 1. MT5 Trading Profits/Losses (Fund's actual investments)
+        all_clients = mongodb_manager.get_all_clients()
+        mt5_profits = 0
+        mt5_breakdown = {
+            "CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0
         }
         
-        cash_flows = []
-        total_inflow = 0
-        total_outflow = 0
-        
-        # Calculate cash flows from actual investment data
         for client in all_clients:
-            client_investments_list = mongodb_manager.get_client_investments(client['id'])
-            for investment in client_investments_list:
+            client_investments = mongodb_manager.get_client_investments(client['id'])
+            for investment in client_investments:
                 fund_code = investment['fund_code']
-                principal_amount = investment['principal_amount']
-                current_value = investment['current_value']
-                interest_earned = investment['interest_earned']
-                
-                # Count principal as inflow (money coming into fund)
-                if fund_code in fund_breakdown:
-                    fund_breakdown[fund_code]["inflow"] += principal_amount
-                    total_inflow += principal_amount
-                    
-                    # Add cash flow record
+                # MT5 profit = current_value - principal (this is the fund's trading performance)
+                trading_profit = investment['current_value'] - investment['principal_amount']
+                mt5_profits += trading_profit
+                if fund_code in mt5_breakdown:
+                    mt5_breakdown[fund_code] += trading_profit
+        
+        # 2. Broker Rebates (Fund's commission income)
+        total_rebates = 0
+        rebate_breakdown = {
+            "CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0
+        }
+        
+        for rebate in fund_rebates:
+            rebate_date = datetime.fromisoformat(rebate['date'])
+            if start_date <= rebate_date <= end_date:
+                if fund == "all" or rebate['fund_code'] == fund:
+                    total_rebates += rebate['amount']
+                    if rebate['fund_code'] in rebate_breakdown:
+                        rebate_breakdown[rebate['fund_code']] += rebate['amount']
+        
+        # Total Fund Assets/Inflows
+        total_fund_inflows = mt5_profits + total_rebates
+        
+        # =================================================================
+        # FUND LIABILITIES (Money Fund Owes to Clients)
+        # =================================================================
+        
+        # 1. Client Interest Obligations (what fund promised to pay clients)
+        total_client_obligations = 0
+        client_breakdown = {
+            "CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0
+        }
+        
+        for client in all_clients:
+            client_investments = mongodb_manager.get_client_investments(client['id'])
+            for investment in client_investments:
+                fund_code = investment['fund_code']
+                # Interest earned = what fund owes to client
+                interest_obligation = investment['interest_earned']
+                total_client_obligations += interest_obligation
+                if fund_code in client_breakdown:
+                    client_breakdown[fund_code] += interest_obligation
+        
+        # 2. Scheduled Redemptions (upcoming withdrawals fund must pay)
+        upcoming_redemptions = 0
+        # This would be calculated from redemption requests - for now using placeholder
+        
+        # Total Fund Liabilities/Outflows
+        total_fund_outflows = total_client_obligations + upcoming_redemptions
+        
+        # =================================================================
+        # NET FUND CASH FLOW (Fund's Actual Profitability)
+        # =================================================================
+        net_fund_cash_flow = total_fund_inflows - total_fund_outflows
+        
+        # =================================================================
+        # DETAILED FUND BREAKDOWN
+        # =================================================================
+        fund_breakdown = {}
+        for fund_code in ["CORE", "BALANCE", "DYNAMIC", "UNLIMITED"]:
+            if fund == "all" or fund == fund_code:
+                fund_inflows = mt5_breakdown[fund_code] + rebate_breakdown[fund_code]
+                fund_outflows = client_breakdown[fund_code]
+                fund_breakdown[fund_code] = {
+                    "mt5_profits": mt5_breakdown[fund_code],
+                    "rebates": rebate_breakdown[fund_code],
+                    "total_inflows": fund_inflows,
+                    "client_obligations": client_breakdown[fund_code],
+                    "total_outflows": fund_outflows,
+                    "net_flow": fund_inflows - fund_outflows
+                }
+        
+        # =================================================================
+        # CASH FLOW RECORDS (Individual Transactions)
+        # =================================================================
+        cash_flows = []
+        
+        # Add MT5 profit records
+        for client in all_clients:
+            client_investments = mongodb_manager.get_client_investments(client['id'])
+            for investment in client_investments:
+                trading_profit = investment['current_value'] - investment['principal_amount']
+                if trading_profit != 0:
                     cash_flows.append({
                         "date": investment['deposit_date'],
-                        "type": "deposit",
-                        "amount": principal_amount,
-                        "fund_code": fund_code,
-                        "client_name": client['name'],
-                        "description": f"Investment deposit - {fund_code} Fund"
+                        "type": "mt5_profit" if trading_profit > 0 else "mt5_loss",
+                        "amount": abs(trading_profit),
+                        "fund_code": investment['fund_code'],
+                        "description": f"MT5 Trading {'Profit' if trading_profit > 0 else 'Loss'} - {investment['fund_code']} Fund",
+                        "source": "MT5 Trading Account"
                     })
         
-        # Round all values
-        for fund_code in fund_breakdown:
-            fund_breakdown[fund_code]["inflow"] = round(fund_breakdown[fund_code]["inflow"], 2)
-            fund_breakdown[fund_code]["outflow"] = round(fund_breakdown[fund_code]["outflow"], 2)
+        # Add rebate records
+        for rebate in fund_rebates:
+            rebate_date = datetime.fromisoformat(rebate['date'])
+            if start_date <= rebate_date <= end_date:
+                if fund == "all" or rebate['fund_code'] == fund:
+                    cash_flows.append({
+                        "date": rebate['date'],
+                        "type": "rebate_income",
+                        "amount": rebate['amount'],
+                        "fund_code": rebate['fund_code'],
+                        "description": f"Broker Rebate - {rebate['broker']}",
+                        "source": "Broker Commission"
+                    })
+        
+        # Add client obligation records
+        for client in all_clients:
+            client_investments = mongodb_manager.get_client_investments(client['id'])
+            for investment in client_investments:
+                if investment['interest_earned'] > 0:
+                    cash_flows.append({
+                        "date": investment['deposit_date'],
+                        "type": "client_obligation",
+                        "amount": investment['interest_earned'],
+                        "fund_code": investment['fund_code'],
+                        "description": f"Client Interest Obligation - {client['name']}",
+                        "source": "Client Commitment"
+                    })
+        
+        logging.info(f"Cash flow calculated: Inflows=${total_fund_inflows}, Outflows=${total_fund_outflows}, Net=${net_fund_cash_flow}")
         
         return {
             "success": True,
-            "cash_flows": cash_flows,
+            "fund_accounting": {
+                "assets": {
+                    "mt5_trading_profits": round(mt5_profits, 2),
+                    "broker_rebates": round(total_rebates, 2),
+                    "total_inflows": round(total_fund_inflows, 2)
+                },
+                "liabilities": {
+                    "client_obligations": round(total_client_obligations, 2),
+                    "upcoming_redemptions": round(upcoming_redemptions, 2),
+                    "total_outflows": round(total_fund_outflows, 2)
+                },
+                "net_fund_profitability": round(net_fund_cash_flow, 2)
+            },
             "fund_breakdown": fund_breakdown,
-            "total_inflow": round(total_inflow, 2),
-            "total_outflow": round(total_outflow, 2),
-            "net_cash_flow": round(total_inflow - total_outflow, 2),
+            "cash_flows": cash_flows,
+            "total_inflow": round(total_fund_inflows, 2),
+            "total_outflow": round(total_fund_outflows, 2),
+            "net_cash_flow": round(net_fund_cash_flow, 2),
             "timeframe": timeframe,
-            "selected_fund": fund
+            "selected_fund": fund,
+            "rebates_summary": {
+                "total_rebates": round(total_rebates, 2),
+                "rebate_breakdown": rebate_breakdown
+            }
         }
         
     except Exception as e:
         logging.error(f"Get cash flow overview error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch cash flow overview")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch cash flow overview: {str(e)}")
 
 @api_router.get("/admin/cashflow/redemption-schedule")
 async def get_redemption_schedule(timeframe: str = "3months"):
