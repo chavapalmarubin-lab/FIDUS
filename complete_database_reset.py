@@ -104,7 +104,10 @@ class DatabaseReset:
         total_cleared = sum(cleared_counts.values())
         print(f"\n✅ Total documents cleared: {total_cleared}")
         
-        return total_cleared > 0
+        if total_cleared == 0:
+            print("ℹ️  Database was already clean, proceeding...")
+        
+        return True  # Always return True since clearing 0 documents is also success
     
     def step_2_verify_salvador_palma_exists(self):
         """Step 2: Verify Salvador Palma exists as a user"""
