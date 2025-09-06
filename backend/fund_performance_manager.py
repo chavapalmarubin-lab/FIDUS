@@ -282,6 +282,60 @@ class FundPerformanceManager:
             action_required=action_required
         )
     
+    async def analyze_mt5_performance_gap(self, client_id: str, fund_code: str, 
+                                        principal_amount: float, deposit_date: str, 
+                                        mt5_account: dict) -> PerformanceGap:
+        """Analyze performance gap using MT5 account data as primary source"""
+        
+        # Calculate expected performance based on MT5 deposit amount and date
+        expected = await self.calculate_expected_performance(
+            client_id, fund_code, principal_amount, deposit_date
+        )
+        
+        if "error" in expected:
+            return PerformanceGap(
+                fund_code=fund_code,
+                client_id=client_id,
+                expected_performance=0,
+                actual_mt5_performance=0,
+                gap_amount=0,
+                gap_percentage=0,
+                risk_level="ERROR",
+                action_required=True
+            )
+        
+        # Use MT5 account data directly
+        expected_value = expected["expected_current_value"]
+        actual_equity = mt5_account.get("current_equity", 0)
+        
+        gap_amount = actual_equity - expected_value
+        gap_percentage = (gap_amount / expected_value * 100) if expected_value > 0 else 0
+        
+        # Determine risk level and action required
+        risk_level = "LOW"
+        action_required = False
+        
+        if abs(gap_percentage) > 50:
+            risk_level = "CRITICAL"
+            action_required = True
+        elif abs(gap_percentage) > 25:
+            risk_level = "HIGH"
+            action_required = True
+        elif abs(gap_percentage) > 10:
+            risk_level = "MEDIUM"
+            action_required = True
+        
+        return PerformanceGap(
+            fund_code=fund_code,
+            client_id=client_id,
+            expected_performance=expected_value,
+            actual_mt5_performance=actual_equity,
+            gap_amount=gap_amount,
+            gap_percentage=gap_percentage,
+            risk_level=risk_level,
+            action_required=action_required
+        )
+    
     async def generate_fund_management_dashboard(self) -> Dict[str, Any]:
         """Generate comprehensive fund management dashboard data based on MT5 accounts"""
         
