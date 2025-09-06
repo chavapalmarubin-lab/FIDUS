@@ -29,6 +29,8 @@ class SalvadorPalmaVerificationTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.critical_failures = []
+        self.admin_token = None
+        self.client_token = None
         
         # Expected Salvador Palma data
         self.expected_client_id = "client_003"
