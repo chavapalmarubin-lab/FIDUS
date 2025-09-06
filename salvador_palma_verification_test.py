@@ -303,7 +303,8 @@ class SalvadorPalmaVerificationTester:
             "Detailed MT5 Account Verification",
             "GET",
             "api/mt5/admin/accounts",
-            200
+            200,
+            auth_required=True
         )
         
         if success:
