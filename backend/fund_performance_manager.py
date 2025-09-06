@@ -182,20 +182,6 @@ class FundPerformanceManager:
     async def get_mt5_actual_performance(self, client_id: str, fund_code: str) -> Dict[str, Any]:
         """Get actual MT5 performance for the client's fund"""
         
-        # Debug: Check what accounts exist
-        self.logger.info(f"Looking for MT5 account: client_id='{client_id}', fund_code='{fund_code}'")
-        
-        # List all accounts for debugging
-        all_accounts = []
-        async for acc in self.db.mt5_accounts.find({}):
-            all_accounts.append({
-                "client_id": acc.get("client_id"),
-                "fund_code": acc.get("fund_code"),
-                "account_id": acc.get("account_id")
-            })
-        
-        self.logger.info(f"Available MT5 accounts: {all_accounts}")
-        
         # Find MT5 account for this client and fund
         mt5_account = await self.db.mt5_accounts.find_one({
             "client_id": client_id,
@@ -203,7 +189,7 @@ class FundPerformanceManager:
         })
         
         if not mt5_account:
-            return {"error": f"No MT5 account found for {client_id} {fund_code}. Available accounts: {all_accounts}"}
+            return {"error": f"No MT5 account found for {client_id} {fund_code}"}
         
         # Get current account data
         account_data = {
