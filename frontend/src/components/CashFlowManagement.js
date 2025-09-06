@@ -357,9 +357,19 @@ const CashFlowManagement = () => {
       {/* REBATES COMMISSION BREAKDOWN */}
       <Card className="dashboard-card">
         <CardHeader>
-          <CardTitle className="text-white flex items-center">
-            <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
-            Broker Rebates & Commission Structure
+          <CardTitle className="text-white flex items-center justify-between">
+            <div className="flex items-center">
+              <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
+              Broker Rebates & Commission Structure
+            </div>
+            <Button 
+              onClick={() => setShowAddRebateModal(true)}
+              className="bg-cyan-600 hover:bg-cyan-700"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Rebate
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -398,6 +408,9 @@ const CashFlowManagement = () => {
                     </span>
                   </div>
                 ))}
+                {Object.keys(rebatesSummary?.rebate_breakdown || {}).length === 0 && (
+                  <p className="text-slate-400 text-sm">No rebates recorded yet. Click "Add Rebate" to start tracking.</p>
+                )}
               </div>
             </div>
           </div>
