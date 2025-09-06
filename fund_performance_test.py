@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Fund Performance Management System Backend API Testing
-Testing the specific endpoints for fund performance analysis and comparison
+Fund Performance Management System Backend Testing
+Testing the corrected Fund Performance Management System that uses MT5 data as primary source
 """
 
 import requests
