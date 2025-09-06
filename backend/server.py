@@ -8386,10 +8386,19 @@ async def get_fund_performance_dashboard():
 async def get_client_fund_performance(client_id: str):
     """Get detailed fund performance comparison for specific client"""
     try:
-        if not fund_performance_manager:
-            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+        # Import fund performance manager directly
+        import sys
+        sys.path.append('/app/backend')
+        from fund_performance_manager import fund_performance_manager as fpm
         
-        client_comparison = await fund_performance_manager.get_client_fund_comparison(client_id)
+        if not fpm:
+            return {
+                "success": False,
+                "error": "Fund performance manager not available",
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+        
+        client_comparison = await fpm.get_client_fund_comparison(client_id)
         
         return {
             "success": True,
@@ -8399,7 +8408,11 @@ async def get_client_fund_performance(client_id: str):
         
     except Exception as e:
         logging.error(f"Client fund performance error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get client fund performance")
+        return {
+            "success": False,
+            "error": f"Failed to get client fund performance: {str(e)}",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
 
 @api_router.get("/admin/fund-performance/gaps")
 async def get_performance_gaps():
