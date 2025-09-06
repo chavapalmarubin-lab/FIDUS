@@ -366,6 +366,21 @@ backend:
         - agent: "testing"
         - comment: "🎉 SALVADOR PALMA BALANCE INVESTMENT WITH DOOTECHNOLOGY MT5 INTEGRATION COMPLETED SUCCESSFULLY! Conducted comprehensive end-to-end testing of the complete investment creation and data flow verification as requested in review: ✅ INVESTMENT CREATION (100% WORKING): Successfully created $100,000 BALANCE investment for Salvador Palma (client_0fd630c3) with DooTechnology broker code, deposit date 2024-12-19. Investment ID generated: 8f33cc13-18f4-4224-af17-82d8e3df4477. All investment timeline calculations working correctly (incubation, interest start, minimum hold periods). ✅ DOOTECHNOLOGY MT5 ACCOUNT CREATION (100% WORKING): DooTechnology MT5 account successfully created for Salvador - Account ID: mt5_client_0fd630c3_BALANCE_dootechnology_4293cad0, MT5 Login: 19638038, MT5 Server: DooTechnology-Live, Status: active, Allocated: $100,000. Account properly linked to BALANCE fund and client. ✅ CLIENT INVESTMENT VIEW (100% WORKING): Salvador can successfully view his BALANCE investment through GET /api/investments/client/client_0fd630c3 - shows correct principal ($100,000), current value ($117,500 with interest), investment ID, fund code, status, and deposit date. ✅ ADMIN PORTFOLIO SUMMARY (100% WORKING): Admin can see Salvador's investment in portfolio summary - Total AUM includes Salvador's investment, BALANCE fund allocation shows 16.21%, all fund allocations calculated correctly. ✅ MT5 ALLOCATION VERIFICATION (100% WORKING): MT5 account shows correct $100,000 allocation to DooTechnology broker with proper equity tracking and server assignment. Minor Issue: Broker categorization in /api/mt5/admin/accounts/by-broker groups all accounts under 'unknown' instead of proper broker codes, but core functionality works perfectly. RESULT: All 5 critical requirements PASSED (100% success rate). Complete end-to-end investment creation with DooTechnology MT5 integration is fully operational and ready for production use."
 
+  - task: "Fund Performance Management System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Implemented Fund Performance Management System with 4 endpoints: GET /api/admin/fund-performance/dashboard (comprehensive dashboard), GET /api/admin/fund-performance/gaps (performance gaps analysis), GET /api/admin/fund-commitments (FIDUS fund commitment details), GET /api/admin/fund-performance/client/{client_id} (detailed client comparison). System designed to compare FIDUS fund commitments vs MT5 actual performance and calculate performance gaps with risk analysis."
+        - working: false
+        - agent: "testing"
+        - comment: "⚠️ FUND PERFORMANCE ENDPOINTS ACCESSIBLE BUT MISSING CORE MODULE: Comprehensive testing reveals all 4 fund performance endpoints are accessible and return proper responses, but fund_performance_manager module is not available causing empty performance data. ✅ ENDPOINTS WORKING: All endpoints respond with 200 status and proper authentication, fund commitments correctly configured (CORE 1.5%, BALANCE 2.5%, DYNAMIC 3.5%, UNLIMITED 0%), Salvador Palma data verified ($100K→$117.5K BALANCE investment, MT5 login 9928326, DooTechnology server). ❌ CRITICAL MISSING COMPONENT: fund_performance_manager module not found, causing performance gaps to return empty arrays, dashboard showing empty performance_gaps/risk_summary/action_items, client comparison returning empty funds data. Expected 425.7% performance gap calculation not working due to missing module. ✅ INFRASTRUCTURE READY: All API endpoints, authentication, data structures, and Salvador's investment/MT5 data are correct and accessible. System architecture is sound but requires fund_performance_manager implementation for actual gap calculations and risk analysis functionality."
+
   - task: "Salvador Palma Clean Setup Verification"
     implemented: true
     working: true
