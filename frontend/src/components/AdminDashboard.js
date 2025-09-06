@@ -316,11 +316,16 @@ const AdminDashboard = ({ user, onLogout }) => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <img 
                 src="/fidus-logo.png"
                 alt="FIDUS Logo"
-                className="h-12 w-auto"
+                style={{ 
+                  height: '60px', 
+                  width: 'auto',
+                  maxWidth: '200px',
+                  objectFit: 'contain'
+                }}
               />
               <div>
                 <h1 className="text-3xl font-bold tracking-tight text-white">
