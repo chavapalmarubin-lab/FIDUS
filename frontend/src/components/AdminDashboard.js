@@ -371,7 +371,6 @@ const AdminDashboard = ({ user, onLogout }) => {
               <FileText size={16} className="mr-2" />
               📄 App Documents
             </TabsTrigger>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="portfolio" className="mt-6">
