@@ -358,7 +358,8 @@ class MT5ActivityTester:
             "Verify API Response Format",
             "GET",
             f"api/mt5/admin/account/{self.target_account_id}/activity",
-            200
+            200,
+            headers=self.get_auth_headers()
         )
         
         if success:
