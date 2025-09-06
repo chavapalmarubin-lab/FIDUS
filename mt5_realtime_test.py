@@ -407,12 +407,17 @@ class MT5RealtimeDataTester:
         
         if success:
             # Verify broker grouping structure
-            if isinstance(response, dict):
-                brokers = list(response.keys())
+            accounts_by_broker = response.get('accounts_by_broker', {})
+            total_stats = response.get('total_stats', {})
+            
+            if isinstance(accounts_by_broker, dict):
+                brokers = list(accounts_by_broker.keys())
                 print(f"   ✅ Found {len(brokers)} broker groups: {brokers}")
                 
                 # Check for DooTechnology broker (target account's broker)
-                dootechnology_accounts = response.get('dootechnology', [])
+                dootechnology_data = accounts_by_broker.get('dootechnology', {})
+                dootechnology_accounts = dootechnology_data.get('accounts', [])
+                
                 if dootechnology_accounts:
                     print(f"   ✅ DooTechnology broker has {len(dootechnology_accounts)} accounts")
                     
@@ -424,21 +429,23 @@ class MT5RealtimeDataTester:
                             print(f"   ✅ Target account found in DooTechnology group")
                             
                             # Verify account has real-time data
-                            balance = account.get('balance', 0)
-                            equity = account.get('equity', 0)
-                            last_update = account.get('last_update')
+                            balance = account.get('current_equity', 0)
+                            allocated = account.get('total_allocated', 0)
+                            profit_loss = account.get('profit_loss', 0)
+                            updated_at = account.get('updated_at')
                             
-                            print(f"   ✅ Account Balance: ${balance:,.2f}")
-                            print(f"   ✅ Account Equity: ${equity:,.2f}")
-                            print(f"   ✅ Last Update: {last_update}")
+                            print(f"   ✅ Account Equity: ${balance:,.2f}")
+                            print(f"   ✅ Account Allocated: ${allocated:,.2f}")
+                            print(f"   ✅ Account P&L: ${profit_loss:,.2f}")
+                            print(f"   ✅ Last Update: {updated_at}")
                             
                             # Check if data is recent (within last 10 minutes)
-                            if last_update:
+                            if updated_at:
                                 try:
-                                    if isinstance(last_update, str):
-                                        update_time = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+                                    if isinstance(updated_at, str):
+                                        update_time = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                                     else:
-                                        update_time = last_update
+                                        update_time = updated_at
                                     
                                     time_diff = (datetime.now(timezone.utc) - update_time).total_seconds()
                                     if time_diff <= 600:  # 10 minutes
