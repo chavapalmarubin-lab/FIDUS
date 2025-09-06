@@ -26,7 +26,43 @@ class SalvadorPalmaVerificationTester:
         self.expected_investment_amount = 100000.0
         self.expected_fund_code = "BALANCE"
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def authenticate_admin(self):
+        """Authenticate as admin to get JWT token"""
+        print("\n🔐 Authenticating as admin...")
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "admin",
+                "password": "password123",
+                "user_type": "admin"
+            }
+        )
+        
+        if success:
+            self.admin_token = response.get('token')
+            if self.admin_token:
+                print(f"   ✅ Admin authenticated successfully")
+                return True
+            else:
+                print(f"   ❌ No token received in response")
+                return False
+        else:
+            print(f"   ❌ Admin authentication failed")
+            return False
+
+    def get_auth_headers(self):
+        """Get headers with JWT token for authenticated requests"""
+        if self.admin_token:
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.admin_token}'
+            }
+        return {'Content-Type': 'application/json'}
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, auth_required=False):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
