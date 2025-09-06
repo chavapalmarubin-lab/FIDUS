@@ -22,6 +22,8 @@ class MT5ActivityTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.target_account_id = "mt5_client_003_BALANCE_dootechnology_34c231f6"
+        self.admin_token = None
+        self.client_token = None
         
     def run_test(self, name: str, method: str, endpoint: str, expected_status: int, 
                  data: Dict = None, headers: Dict = None) -> tuple[bool, Dict]:
