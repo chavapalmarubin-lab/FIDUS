@@ -90,8 +90,8 @@ class FundPerformanceManager:
             "CORE": FundCommitment(
                 fund_code="CORE",
                 monthly_return=1.5,  # 1.5% monthly
-                redemption_frequency=6,  # Every 6 months
-                minimum_investment=50000,
+                redemption_frequency=1,  # Monthly redemptions
+                minimum_investment=10000,  # $10K minimum
                 risk_level="LOW",
                 description="Conservative fund with steady returns",
                 guaranteed=True
@@ -99,28 +99,28 @@ class FundPerformanceManager:
             "BALANCE": FundCommitment(
                 fund_code="BALANCE",
                 monthly_return=2.5,  # 2.5% monthly
-                redemption_frequency=3,  # Every 3 months
-                minimum_investment=100000,
+                redemption_frequency=3,  # Every 3 months (quarterly)
+                minimum_investment=50000,  # $50K minimum
                 risk_level="MEDIUM",
                 description="Balanced fund with moderate risk/return",
                 guaranteed=True
             ),
             "DYNAMIC": FundCommitment(
                 fund_code="DYNAMIC",
-                monthly_return=4.0,  # 4.0% monthly
-                redemption_frequency=1,  # Monthly redemptions
-                minimum_investment=250000,
+                monthly_return=3.5,  # 3.5% monthly
+                redemption_frequency=6,  # Every 6 months (semi-annually)
+                minimum_investment=250000,  # $250K minimum
                 risk_level="HIGH",
                 description="Dynamic fund with high potential returns",
                 guaranteed=False
             ),
             "UNLIMITED": FundCommitment(
                 fund_code="UNLIMITED",
-                monthly_return=6.0,  # 6.0% monthly target
-                redemption_frequency=1,  # Monthly redemptions
-                minimum_investment=500000,
+                monthly_return=0.0,  # 0% guaranteed rate (performance sharing)
+                redemption_frequency=1,  # Flexible redemptions (monthly)
+                minimum_investment=1000000,  # $1M minimum
                 risk_level="VERY_HIGH",
-                description="Unlimited growth potential fund",
+                description="Unlimited growth potential fund with performance sharing",
                 guaranteed=False
             )
         }
