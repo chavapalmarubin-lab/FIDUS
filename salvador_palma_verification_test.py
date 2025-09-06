@@ -375,7 +375,8 @@ class SalvadorPalmaVerificationTester:
             "Admin Portfolio Summary (Clean System Check)",
             "GET",
             "api/admin/portfolio-summary",
-            200
+            200,
+            auth_required=True
         )
         
         if success:
