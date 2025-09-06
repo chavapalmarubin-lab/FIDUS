@@ -219,9 +219,25 @@ const AdminInvestmentManagement = () => {
         const confirmationResponse = await apiAxios.post(`/payments/deposit/confirm`, confirmationData);
 
         if (confirmationResponse.data.success) {
-          setSuccess(`Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`);
+          let successMessage = `Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`;
+          
+          // Add MT5 mapping status to success message
+          if (investmentResponse.data.mt5_mapping_success) {
+            successMessage += " 🔗 MT5 account mapping completed successfully.";
+          } else if (investmentForm.create_mt5_account) {
+            successMessage += " ⚠️ MT5 account mapping was attempted but may have failed.";
+          }
+          
+          setSuccess(successMessage);
         } else {
-          setSuccess(`Investment created but payment confirmation failed: ${investmentResponse.data.message}`);
+          let warningMessage = `Investment created but payment confirmation failed: ${investmentResponse.data.message}`;
+          
+          // Add MT5 mapping status even if payment confirmation failed
+          if (investmentResponse.data.mt5_mapping_success) {
+            warningMessage += " 🔗 MT5 account mapping completed successfully.";
+          }
+          
+          setSuccess(warningMessage);
         }
 
         setShowCreateInvestmentModal(false);
