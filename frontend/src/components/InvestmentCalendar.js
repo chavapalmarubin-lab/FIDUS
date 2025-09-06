@@ -499,6 +499,7 @@ const InvestmentCalendar = ({ user }) => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Legend */}
       <Card className="dashboard-card">
