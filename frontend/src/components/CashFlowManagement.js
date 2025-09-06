@@ -273,7 +273,7 @@ const CashFlowManagement = () => {
                     <span className="text-cyan-400 font-bold text-lg">TOTAL (All Funds)</span>
                   </td>
                   <td className="text-right text-green-400 font-bold text-lg py-4">
-                    {formatCurrency(totalInflow)}
+                    {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
                   </td>
                   <td className="text-right text-red-400 font-bold text-lg py-4">
                     {formatCurrency(totalOutflow)}
