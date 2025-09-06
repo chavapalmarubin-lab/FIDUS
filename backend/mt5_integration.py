@@ -1,6 +1,7 @@
 """
 MT5 Integration Service for FIDUS Investment Management System
 Handles MT5 account creation, management, and real-time performance tracking
+Enhanced with connection stability and multi-broker error handling for production scalability
 """
 
 import os
@@ -9,8 +10,9 @@ import asyncio
 import logging
 import secrets
 import string
+import time
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
 import json
@@ -21,6 +23,10 @@ from cryptography.fernet import Fernet
 
 # MongoDB integration
 from mongodb_integration import mongodb_manager
+
+# Connection stability and retry logic
+import aiohttp
+import backoff
 
 class MT5BrokerConfig:
     """Configuration for supported MT5 brokers"""
