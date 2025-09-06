@@ -207,11 +207,16 @@ class ComprehensiveFundTester:
 
     def test_client_fund_performance_detailed(self):
         """Test Client Fund Performance API with detailed validation"""
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+            
         success, response = self.run_test(
             "Client Fund Performance API - Salvador Palma Detailed",
             "GET",
             "api/admin/fund-performance/client/client_003",
-            200
+            200,
+            headers=headers
         )
         
         if success:
