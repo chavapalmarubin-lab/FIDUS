@@ -8392,34 +8392,34 @@ async def get_client_fund_performance(client_id: str):
 async def get_performance_gaps():
     """Get all performance gaps between FIDUS commitments and MT5 reality"""
     try:
-        if not fund_performance_manager:
-            logging.error("fund_performance_manager is None - import failed")
+        # Import fund performance manager directly
+        import sys
+        sys.path.append('/app/backend')
+        from fund_performance_manager import fund_performance_manager as fpm
+        
+        if not fpm:
             return {
                 "success": False,
                 "performance_gaps": [],
                 "total_gaps": 0,
-                "error": "Fund performance manager not available - import failed",
+                "error": "Fund performance manager not available",
                 "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
-        # Get all client investments
+        # Get all client investments from the correct database (fidus_investment_db)
         gaps = []
         
-        logging.info("Starting performance gap analysis...")
-        async for investment in db.investments.find({}):
+        # Use the fund performance manager's database connection
+        async for investment in fpm.db.investments.find({}):
             client_id = investment["client_id"]
             fund_code = investment["fund_code"]
             principal_amount = investment["principal_amount"]
             investment_date = investment["deposit_date"]
             
-            logging.info(f"Analyzing gap for {client_id} {fund_code} ${principal_amount}")
-            
             try:
-                gap = await fund_performance_manager.analyze_performance_gap(
+                gap = await fpm.analyze_performance_gap(
                     client_id, fund_code, principal_amount, investment_date
                 )
-                
-                logging.info(f"Gap analysis result: {gap.gap_percentage}% gap, risk: {gap.risk_level}")
                 
                 gaps.append({
                     "client_id": gap.client_id,
@@ -8430,12 +8430,10 @@ async def get_performance_gaps():
                     "gap_percentage": gap.gap_percentage,
                     "risk_level": gap.risk_level,
                     "action_required": gap.action_required,
-                    "recommendation": fund_performance_manager.get_recommendation(gap)
+                    "recommendation": fpm.get_recommendation(gap)
                 })
             except Exception as e:
                 logging.error(f"Error analyzing gap for {client_id} {fund_code}: {str(e)}")
-        
-        logging.info(f"Total gaps found: {len(gaps)}")
         
         return {
             "success": True,
@@ -8446,7 +8444,13 @@ async def get_performance_gaps():
         
     except Exception as e:
         logging.error(f"Performance gaps error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get performance gaps")
+        return {
+            "success": False,
+            "performance_gaps": [],
+            "total_gaps": 0,
+            "error": f"Failed to get performance gaps: {str(e)}",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
 
 @api_router.get("/admin/fund-commitments")
 async def get_fund_commitments():
