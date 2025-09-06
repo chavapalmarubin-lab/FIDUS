@@ -438,19 +438,35 @@ class FundPerformanceManager:
                     "recommendation": self.get_recommendation(gap)
                 })
         
-        # Only show fund commitments for funds that have actual client MT5 accounts with investments
+        # Only show fund commitments for funds with actual client investments
+        # This shows FIDUS deliverables to clients who have actually invested
         active_funds = set(account["fund_code"] for account in mt5_accounts)
         for fund_code in active_funds:
             if fund_code in self.fund_commitments:
                 commitment = self.fund_commitments[fund_code]
+                
+                # Get actual client investment details for this fund
+                client_investment_info = {}
+                for account in mt5_accounts:
+                    if account["fund_code"] == fund_code:
+                        client_investment_info = {
+                            "client_id": account["client_id"],
+                            "principal_amount": account.get("total_allocated", 0),
+                            "mt5_login": account.get("mt5_login"),
+                            "deposit_date": account.get("deposit_date")
+                        }
+                        break
+                
                 dashboard_data["fund_commitments"][fund_code] = {
                     "fund_code": fund_code,
                     "monthly_return": commitment.monthly_return,
                     "redemption_frequency": commitment.redemption_frequency,
                     "risk_level": commitment.risk_level,
-                    "guaranteed": commitment.guaranteed,
+                    "guaranteed": commitment.guaranteed,  # Now correctly False
                     "description": commitment.description,
-                    "minimum_investment": commitment.minimum_investment
+                    "minimum_investment": commitment.minimum_investment,
+                    "client_investment": client_investment_info,
+                    "note": f"FIDUS commitment to client who invested ${client_investment_info.get('principal_amount', 0):,.2f}"
                 }
         
         return dashboard_data
