@@ -8046,11 +8046,11 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
         }
         
         for client in all_clients:
-            client_investments = mongodb_manager.get_client_investments(client['id'])
+            client_id = client['id']
+            client_investments = mongodb_manager.get_client_investments(client_id)
             for investment in client_investments:
                 fund_code = investment['fund_code']
                 principal_amount = investment['principal_amount']
-                client_id = investment['client_id']
                 
                 # Get actual MT5 performance - should match Fund Performance dashboard
                 # For BALANCE fund with Salvador Palma, this should be ~$1,980,934
