@@ -177,7 +177,7 @@ const CashFlowManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Total Outflow</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {formatCurrency(totalOutflow)}
+                  {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
                 </p>
                 <p className="text-xs text-slate-400">All Funds Combined</p>
               </div>
