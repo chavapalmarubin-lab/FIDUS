@@ -278,8 +278,8 @@ const CashFlowManagement = () => {
                   <td className="text-right text-red-400 font-bold text-lg py-4">
                     {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
                   </td>
-                  <td className={`text-right font-bold text-lg py-4 ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatCurrency(netCashFlow)}
+                  <td className={`text-right font-bold text-lg py-4 ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(fundAccounting?.net_fund_profitability || 0)}
                   </td>
                   <td className="text-right py-4">
                     <Badge className={`text-lg ${netCashFlow >= 0 ? 'bg-green-600' : 'bg-red-600'}`}>
