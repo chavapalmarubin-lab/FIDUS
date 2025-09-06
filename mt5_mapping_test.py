@@ -496,7 +496,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,  # Should succeed but MT5 mapping should fail gracefully
-            data=incomplete_data
+            data=incomplete_data,
+            use_auth=True
         )
         
         if success:
