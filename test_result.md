@@ -357,16 +357,19 @@ backend:
         - comment: "✅ DATABASE SCALABILITY STRESS TEST PASSED - PRODUCTION READY FOR 100 MT5 ACCOUNTS: Comprehensive database performance testing completed successfully with excellent results. CONNECTION POOL PERFORMANCE: MongoDB connection pool (5-100 connections) handles concurrent load exceptionally well - 50 concurrent database operations completed with 100% success rate (50/50) in 0.10 seconds, achieving 500+ operations per second. This exceeds production requirements significantly. QUERY PERFORMANCE VALIDATION: Large dataset query simulation shows excellent performance - average query time for 10 MT5 accounts is 0.150s, well under the 1-second requirement. Projected time for 100 accounts (1.503s) indicates linear scaling which is acceptable for batch operations. CONCURRENT WRITE OPERATIONS: Investment creation stress test shows perfect performance - 20 concurrent investment creations completed successfully (100% success rate) in 0.26 seconds, demonstrating robust write capability under load. DATABASE INFRASTRUCTURE ASSESSMENT: Current MongoDB configuration with connection pooling (minPoolSize=5, maxPoolSize=100, proper timeouts) is well-architected for production scale. Database can easily handle 100x current MT5 account load with room for growth. PRODUCTION READINESS: Database layer is fully prepared for Monday deployment with 100 MT5 accounts. Performance metrics exceed requirements and demonstrate excellent scalability characteristics."
 
   - task: "MT5 Real-Time Data Collection Scalability Test"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: false
     file: "/app/backend/mt5_integration.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "MT5 data collection scalability testing plan: (1) SIMULATE 100 MT5 ACCOUNTS: Create mock MT5 accounts across multiple brokers (Multibank, DooTechnology) with realistic trading data, varying account sizes, different time zones. (2) COLLECTION PERFORMANCE: Test data collection service performance with 100 accounts updating every 30 seconds (200 operations per minute), validate system can handle 100x current load. (3) MEMORY USAGE: Monitor memory consumption during extended operation with 100 accounts, test for memory leaks, validate garbage collection effectiveness. (4) ERROR HANDLING: Test system resilience when some MT5 accounts become unavailable, validate automatic retry mechanisms, test fallback data sources. (5) BROKER INTEGRATION: Test multi-broker support at scale, validate DooTechnology and Multibank integration under load. Ready for comprehensive testing."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ MT5 DATA COLLECTION SCALABILITY ISSUES IDENTIFIED - REQUIRES OPTIMIZATION: Comprehensive testing of MT5 real-time data collection at 100-account scale reveals performance and reliability concerns that need addressing before production deployment. DATA COLLECTION PERFORMANCE: Real-time data collection achieved 200+ collections/sec which meets basic throughput requirements (200 ops/min for 100 accounts every 30 seconds), but reliability is concerning with only 90/100 successful collections (90% vs required 95%). This 10% failure rate could result in significant data gaps in production. MULTI-BROKER INTEGRATION STRESS: Multi-broker integration shows instability under load - only 15/20 broker connections successful (75% vs required 80%). This affects both Multibank and DooTechnology integrations and could impact client experience with delayed or missing MT5 data updates. SYSTEM RESILIENCE: Resilience testing shows acceptable performance (23/30 successful, 77%) when simulating network issues and account unavailability, indicating the system can handle some MT5 accounts being temporarily offline. CRITICAL ISSUES FOR PRODUCTION: (1) 10% data collection failure rate is too high for production - could cause client complaints about missing trading data, (2) Multi-broker connection instability may result in inconsistent data between different broker accounts, (3) Error handling and retry mechanisms need strengthening for production reliability. RECOMMENDATION: MT5 data collection system needs optimization for reliability before scaling to 100 accounts. Core performance is adequate but error handling and connection stability must be improved."
 
   - task: "Multi-Broker MT5 Integration System"
     implemented: true
