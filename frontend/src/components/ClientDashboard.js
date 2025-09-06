@@ -191,31 +191,53 @@ const ClientDashboard = ({ user, onLogout }) => {
                     {clientData && formatCurrency(clientData.balance.total_balance)}
                   </div>
                 </div>
+                
+                {/* All 4 Fund Balances */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* CORE Fund */}
                   <div>
-                    <div className="balance-label">FIDUS Funds</div>
-                    <div className="text-2xl font-bold text-cyan-400">
-                      {clientData && formatCurrency(clientData.balance.fidus_funds)}
-                    </div>
-                    <div className="text-xs text-gray-400">BALANCE & UNLIMITED</div>
-                  </div>
-                  <div>
-                    <div className="balance-label">Core Balance</div>
+                    <div className="balance-label">CORE Fund</div>
                     <div className="text-2xl font-bold text-orange-400">
                       {clientData && formatCurrency(clientData.balance.core_balance)}
                     </div>
-                    <div className="text-xs text-gray-400">CORE Fund</div>
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.core_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
+                  </div>
+                  
+                  {/* BALANCE Fund */}
+                  <div>
+                    <div className="balance-label">BALANCE Fund</div>
+                    <div className="text-2xl font-bold text-cyan-400">
+                      {clientData && formatCurrency(clientData.balance.balance_balance)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.balance_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
+                  </div>
+                  
+                  {/* DYNAMIC Fund */}
+                  <div>
+                    <div className="balance-label">DYNAMIC Fund</div>
+                    <div className="text-2xl font-bold text-green-400">
+                      {clientData && formatCurrency(clientData.balance.dynamic_balance)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.dynamic_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
+                  </div>
+                  
+                  {/* UNLIMITED Fund */}
+                  <div>
+                    <div className="balance-label">UNLIMITED Fund</div>
+                    <div className="text-2xl font-bold text-purple-400">
+                      {clientData && formatCurrency(clientData.balance.unlimited_balance)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.unlimited_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
                   </div>
                 </div>
-                {clientData && clientData.balance.dynamic_balance > 0 && (
-                  <div className="mt-4">
-                    <div className="balance-label">Dynamic Balance</div>
-                    <div className="text-2xl font-bold text-green-400">
-                      {formatCurrency(clientData.balance.dynamic_balance)}
-                    </div>
-                    <div className="text-xs text-gray-400">DYNAMIC Fund</div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
