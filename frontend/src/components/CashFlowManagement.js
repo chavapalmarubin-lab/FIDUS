@@ -282,8 +282,8 @@ const CashFlowManagement = () => {
                     {formatCurrency(fundAccounting?.net_fund_profitability || 0)}
                   </td>
                   <td className="text-right py-4">
-                    <Badge className={`text-lg ${netCashFlow >= 0 ? 'bg-green-600' : 'bg-red-600'}`}>
-                      {netCashFlow >= 0 ? 'Strong' : 'Weak'}
+                    <Badge className={`text-lg ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'bg-green-600' : 'bg-red-600'}`}>
+                      {(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'Strong' : 'Weak'}
                     </Badge>
                   </td>
                 </tr>
