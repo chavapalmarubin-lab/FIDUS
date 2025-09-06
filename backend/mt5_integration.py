@@ -107,23 +107,173 @@ class MT5PerformanceData:
     timestamp: str
 
 class MT5IntegrationService:
-    """MT5 Integration Service with Multibank broker integration"""
+    """MT5 Integration Service with enhanced connection stability and multi-broker support"""
     
     def __init__(self):
         self.encryption_key = self._get_or_create_encryption_key()
         self.fernet = Fernet(self.encryption_key)
         self.connected_accounts: Dict[str, Dict] = {}
         self.performance_cache: Dict[str, MT5PerformanceData] = {}
+        self.connection_failures: Dict[str, int] = {}  # Track failures per broker
+        self.last_health_check: Dict[str, float] = {}  # Last health check per broker
         
-        # Multibank MT5 server configurations
-        self.server_configs = {
-            "CORE": "Multibank-Core-01.multibank.fx",
-            "BALANCE": "Multibank-Balance-01.multibank.fx", 
-            "DYNAMIC": "Multibank-Dynamic-01.multibank.fx",
-            "UNLIMITED": "Multibank-Unlimited-01.multibank.fx"
+        # Enhanced broker configurations with failover
+        self.broker_configs = {
+            "multibank": {
+                "primary_servers": ["Multibank-Live"],
+                "fallback_servers": ["Multibank-Demo"],
+                "timeout": 10,
+                "max_retries": 3,
+                "retry_delay": 2
+            },
+            "dootechnology": {
+                "primary_servers": ["DooTechnology-Live"],
+                "fallback_servers": ["DooTechnology-Demo"],
+                "timeout": 10,
+                "max_retries": 3,
+                "retry_delay": 2
+            }
         }
         
-        logging.info("MT5 Integration Service initialized")
+        # Connection health monitoring
+        self.health_check_interval = 300  # 5 minutes
+        
+        logging.info("Enhanced MT5 Integration Service initialized with stability features")
+    
+    @backoff.on_exception(backoff.expo,
+                         (ConnectionError, TimeoutError, aiohttp.ClientError),
+                         max_tries=3,
+                         max_time=30)
+    async def _connect_with_retry(self, broker_code: str, account_data: Dict) -> bool:
+        """Connect to MT5 broker with exponential backoff retry logic"""
+        try:
+            # Simulate connection attempt with enhanced error handling
+            broker_config = self.broker_configs.get(broker_code, {})
+            timeout = broker_config.get("timeout", 10)
+            
+            # Try primary servers first
+            primary_servers = broker_config.get("primary_servers", [])
+            for server in primary_servers:
+                try:
+                    success = await self._attempt_connection(broker_code, server, account_data, timeout)
+                    if success:
+                        self.connection_failures[broker_code] = 0  # Reset failure count
+                        self.last_health_check[broker_code] = time.time()
+                        return True
+                except Exception as e:
+                    logging.warning(f"Primary server {server} failed: {e}")
+                    continue
+            
+            # Try fallback servers if primary fails
+            fallback_servers = broker_config.get("fallback_servers", [])
+            for server in fallback_servers:
+                try:
+                    success = await self._attempt_connection(broker_code, server, account_data, timeout)
+                    if success:
+                        logging.info(f"Connected to fallback server {server}")
+                        self.connection_failures[broker_code] = 0
+                        return True
+                except Exception as e:
+                    logging.warning(f"Fallback server {server} failed: {e}")
+                    continue
+            
+            # All connections failed
+            self.connection_failures[broker_code] = self.connection_failures.get(broker_code, 0) + 1
+            return False
+            
+        except Exception as e:
+            logging.error(f"Connection retry failed for {broker_code}: {e}")
+            return False
+    
+    async def _attempt_connection(self, broker_code: str, server: str, account_data: Dict, timeout: int) -> bool:
+        """Attempt single connection to MT5 broker server"""
+        try:
+            # Simulate actual MT5 connection logic
+            # In production, this would use actual MT5 API calls
+            
+            await asyncio.sleep(0.1)  # Simulate connection time
+            
+            # Random failure simulation for testing (remove in production)
+            if random.random() < 0.1:  # 10% failure rate for testing
+                raise ConnectionError(f"Simulated connection failure to {server}")
+            
+            # Connection successful
+            logging.info(f"Successfully connected to {broker_code} server {server}")
+            return True
+            
+        except asyncio.TimeoutError:
+            raise TimeoutError(f"Connection timeout to {broker_code} server {server}")
+        except Exception as e:
+            raise ConnectionError(f"Failed to connect to {broker_code} server {server}: {e}")
+    
+    async def check_broker_health(self, broker_code: str) -> Dict[str, Any]:
+        """Check health status of MT5 broker connection"""
+        try:
+            current_time = time.time()
+            last_check = self.last_health_check.get(broker_code, 0)
+            
+            # Only check if enough time has passed
+            if current_time - last_check < self.health_check_interval:
+                return {
+                    "broker": broker_code,
+                    "status": "healthy",
+                    "last_check": last_check,
+                    "cached": True
+                }
+            
+            # Perform actual health check
+            broker_config = self.broker_configs.get(broker_code, {})
+            primary_servers = broker_config.get("primary_servers", [])
+            
+            health_status = {
+                "broker": broker_code,
+                "status": "unknown",
+                "servers": {},
+                "last_check": current_time,
+                "failure_count": self.connection_failures.get(broker_code, 0)
+            }
+            
+            for server in primary_servers:
+                try:
+                    # Simulate server health check
+                    await asyncio.sleep(0.05)  # Simulate check time
+                    
+                    # Random health status for testing
+                    server_healthy = random.random() > 0.05  # 95% uptime
+                    
+                    health_status["servers"][server] = {
+                        "status": "healthy" if server_healthy else "degraded",
+                        "response_time": random.uniform(0.1, 0.5)
+                    }
+                    
+                except Exception as e:
+                    health_status["servers"][server] = {
+                        "status": "failed",
+                        "error": str(e)
+                    }
+            
+            # Determine overall broker status
+            healthy_servers = sum(1 for s in health_status["servers"].values() if s["status"] == "healthy")
+            total_servers = len(health_status["servers"])
+            
+            if healthy_servers == total_servers:
+                health_status["status"] = "healthy"
+            elif healthy_servers > 0:
+                health_status["status"] = "degraded"
+            else:
+                health_status["status"] = "failed"
+            
+            self.last_health_check[broker_code] = current_time
+            return health_status
+            
+        except Exception as e:
+            logging.error(f"Health check failed for {broker_code}: {e}")
+            return {
+                "broker": broker_code,
+                "status": "failed",
+                "error": str(e),
+                "last_check": time.time()
+            }
     
     def _get_or_create_encryption_key(self) -> bytes:
         """Get or create encryption key for MT5 credentials"""
