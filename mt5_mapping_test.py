@@ -936,7 +936,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=edge_case_data
+            data=edge_case_data,
+            use_auth=True
         )
         
         if success:
