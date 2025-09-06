@@ -88,6 +88,21 @@ def verify_jwt_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+def get_current_admin_user(request: Request) -> dict:
+    """Get current admin user from JWT token"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="No token provided")
+    
+    token = auth_header.split(" ")[1]
+    payload = verify_jwt_token(token)
+    
+    # Check if user is admin
+    if payload.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    return payload
+
 # Create the main app without a prefix
 app = FastAPI()
 
