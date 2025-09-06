@@ -197,8 +197,8 @@ class FundPerformanceManager:
         withdrawal = mt5_account.get("withdrawal_amount", 0) 
         current_balance = mt5_account.get("current_equity", 0)
         
-        # Calculate ACTUAL CLIENT RETURN = Profit + Withdrawals
-        actual_client_return = profit + withdrawal
+        # Calculate ACTUAL CLIENT RETURN = Withdrawal + Current Balance (total client value)
+        actual_client_return = withdrawal + current_balance
         
         # Calculate performance percentage based on actual return vs deposit
         if initial_deposit > 0:
