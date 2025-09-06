@@ -423,10 +423,6 @@ const ClientDashboard = ({ user, onLogout }) => {
 
 
 
-          <TabsContent value="mt5" className="mt-6">
-            <ClientMT5View clientId={user.id} />
-          </TabsContent>
-
           <TabsContent value="redemptions" className="mt-6">
             <RedemptionManagement user={user} />
           </TabsContent>
