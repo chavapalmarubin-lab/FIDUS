@@ -626,6 +626,8 @@ class MongoDBManager:
                     'client_name': client_name,
                     'fund_code': acc['fund_code'],
                     'fund_name': f"FIDUS {acc['fund_code'].title()} Fund",
+                    'broker_code': acc.get('broker_code', 'unknown'),
+                    'broker_name': acc.get('broker_name', 'Unknown Broker'),
                     'mt5_login': acc['mt5_login'],
                     'mt5_server': acc['mt5_server'],
                     'total_allocated': acc['total_allocated'],
