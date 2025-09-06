@@ -549,6 +549,123 @@ const CashFlowManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ADD REBATE MODAL */}
+      {showAddRebateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-white mb-4">Add Broker Rebate</h3>
+            
+            <div className="space-y-4">
+              {/* Fund Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Fund *</label>
+                <select
+                  value={newRebate.fund_code}
+                  onChange={(e) => setNewRebate({...newRebate, fund_code: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                  required
+                >
+                  <option value="">Select Fund</option>
+                  <option value="CORE">CORE Fund</option>
+                  <option value="BALANCE">BALANCE Fund</option>
+                  <option value="DYNAMIC">DYNAMIC Fund</option>
+                  <option value="UNLIMITED">UNLIMITED Fund</option>
+                </select>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Rebate Amount ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newRebate.amount}
+                  onChange={(e) => setNewRebate({...newRebate, amount: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              {/* Broker */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Broker *</label>
+                <select
+                  value={newRebate.broker}
+                  onChange={(e) => setNewRebate({...newRebate, broker: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                  required
+                >
+                  <option value="">Select Broker</option>
+                  <option value="Multibank">Multibank</option>
+                  <option value="DooTechnology">DooTechnology</option>
+                  <option value="IC Markets">IC Markets</option>
+                  <option value="FXCM">FXCM</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Period */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Period *</label>
+                <select
+                  value={newRebate.period}
+                  onChange={(e) => setNewRebate({...newRebate, period: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                  required
+                >
+                  <option value="">Select Period</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Description (Optional)</label>
+                <textarea
+                  value={newRebate.description}
+                  onChange={(e) => setNewRebate({...newRebate, description: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                  rows="2"
+                  placeholder="Additional notes about this rebate..."
+                />
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                onClick={() => {
+                  setShowAddRebateModal(false);
+                  setNewRebate({fund_code: '', amount: '', broker: '', period: '', description: ''});
+                  setError('');
+                }}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddRebate}
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                Add Rebate
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
