@@ -426,7 +426,7 @@ class FundPerformanceManager:
                 return f"ON TRACK: Performance within acceptable range"
     
     async def get_client_fund_comparison(self, client_id: str) -> Dict[str, Any]:
-        """Get detailed comparison for a specific client"""
+        """Get detailed comparison for a specific client using MT5 data as primary source"""
         
         client_data = {
             "client_id": client_id,
@@ -437,35 +437,37 @@ class FundPerformanceManager:
             "risk_level": "LOW"
         }
         
-        # Get all investments for this client
-        async for investment in self.db.investments.find({"client_id": client_id}):
-            fund_code = investment["fund_code"]
-            principal_amount = investment["principal_amount"]
-            investment_date = investment["deposit_date"]
+        # Get all MT5 accounts for this client (represents actual positions)
+        async for mt5_account in self.db.mt5_accounts.find({"client_id": client_id}):
+            fund_code = mt5_account["fund_code"]
+            principal_amount = mt5_account.get("total_allocated", mt5_account.get("initial_deposit", 0))
+            deposit_date = mt5_account.get("deposit_date", mt5_account.get("created_at"))
             
-            # Get expected performance
+            # Get expected performance based on MT5 data
             expected = await self.calculate_expected_performance(
-                client_id, fund_code, principal_amount, investment_date
+                client_id, fund_code, principal_amount, deposit_date
             )
             
-            # Get actual performance
-            actual = await self.get_mt5_actual_performance(client_id, fund_code)
-            
-            if "error" not in expected and "error" not in actual:
+            if "error" not in expected:
+                current_equity = mt5_account.get("current_equity", 0)
+                profit_loss_pct = mt5_account.get("profit_loss_percentage", 0)
+                
                 fund_data = {
                     "fund_code": fund_code,
                     "principal_amount": principal_amount,
                     "expected_current_value": expected["expected_current_value"],
-                    "actual_current_value": actual["mt5_account"]["current_equity"],
+                    "actual_current_value": current_equity,
                     "expected_monthly_return": expected["expected_monthly_amount"],
                     "months_elapsed": expected["months_elapsed"],
                     "next_redemption": expected["next_redemption_date"],
-                    "mt5_performance": actual["mt5_account"]["profit_loss_percentage"]
+                    "mt5_performance": profit_loss_pct,
+                    "mt5_login": mt5_account.get("mt5_login"),
+                    "deposit_date": deposit_date
                 }
                 
                 client_data["funds"].append(fund_data)
                 client_data["total_expected"] += expected["expected_current_value"]
-                client_data["total_actual"] += actual["mt5_account"]["current_equity"]
+                client_data["total_actual"] += current_equity
         
         # Calculate overall gap
         if client_data["total_expected"] > 0:
