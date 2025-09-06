@@ -197,9 +197,12 @@ class ComprehensiveFundTester:
             # Show fund commitments details
             print(f"\n   📈 FUND COMMITMENTS DETAILS:")
             for fund in fund_commitments:
-                fund_code = fund.get('fund_code', 'N/A')
-                monthly_return = fund.get('monthly_return', 0)
-                print(f"      {fund_code}: {monthly_return}% monthly")
+                if isinstance(fund, dict):
+                    fund_code = fund.get('fund_code', 'N/A')
+                    monthly_return = fund.get('monthly_return', 0)
+                    print(f"      {fund_code}: {monthly_return}% monthly")
+                else:
+                    print(f"      {fund}")
             
             return all_passed
         
