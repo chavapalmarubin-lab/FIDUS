@@ -685,6 +685,37 @@ class MongoDBManager:
             print(f"❌ Error getting MT5 credentials: {str(e)}")
             return None
 
+    def get_mt5_account_by_login(self, mt5_login: int) -> Optional[Dict[str, Any]]:
+        """Get MT5 account by login ID to prevent duplicates"""
+        try:
+            account = self.db.mt5_accounts.find_one({'mt5_login': mt5_login})
+            
+            if account:
+                # Convert ObjectId to string for JSON serialization
+                account['_id'] = str(account['_id'])
+                return account
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting MT5 account by login: {str(e)}")
+            return None
+    
+    def get_mt5_account(self, account_id: str) -> Optional[Dict[str, Any]]:
+        """Get MT5 account by account ID"""
+        try:
+            account = self.db.mt5_accounts.find_one({'account_id': account_id})
+            
+            if account:
+                # Convert ObjectId to string for JSON serialization
+                account['_id'] = str(account['_id'])
+                return account
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting MT5 account: {str(e)}")
+            return None
     # ===============================================================================
     # DATABASE UTILITIES
     # ===============================================================================
