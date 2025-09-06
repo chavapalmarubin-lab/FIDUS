@@ -152,22 +152,21 @@ const CashFlowManagement = () => {
       netCashFlow: mockTotalInflow - mockTotalOutflow
     });
   };
-      
-      // Mock cash outflow (redemptions)
-      if (Math.random() > 0.85) {
-        mockCashFlows.push({
-          id: `outflow-${i}`,
-          date: dateStr,
-          type: 'outflow',
-          amount: Math.floor(Math.random() * 200000) + 10000,
-          fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
-          client_name: `Client ${Math.floor(Math.random() * 100)}`,
-          description: Math.random() > 0.5 ? 'Interest Redemption' : 'Principal Redemption'
-        });
-      }
-    }
+  // Remove old calculation functions - now using backend totals directly
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
 
-    // Generate upcoming redemption schedule
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
     for (let i = 1; i <= 30; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
