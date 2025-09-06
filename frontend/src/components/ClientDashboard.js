@@ -93,10 +93,17 @@ const ClientDashboard = ({ user, onLogout }) => {
     return (
       <div className="dashboard">
         <div className="dashboard-header">
-          <div className="header-logo">
-            <span className="header-logo-text">
-              <span className="header-logo-f">F</span>IDUS
-            </span>
+          <div className="header-logo flex items-center p-4">
+            <img 
+              src="/fidus-logo.png"
+              alt="FIDUS Logo"
+              style={{ 
+                height: '48px', 
+                width: 'auto',
+                maxWidth: '180px',
+                objectFit: 'contain'
+              }}
+            />
           </div>
         </div>
         <div className="flex items-center justify-center min-h-screen">
