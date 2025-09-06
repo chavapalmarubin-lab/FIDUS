@@ -281,7 +281,8 @@ class MT5ActivityTester:
             "Get Client_003 MT5 Accounts",
             "GET",
             "api/mt5/client/client_003/accounts",
-            200
+            200,
+            headers=self.get_auth_headers()
         )
         
         if success:
