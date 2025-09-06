@@ -197,18 +197,29 @@ const ClientDashboard = ({ user, onLogout }) => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="balance-label">Core Balance</div>
+                    <div className="balance-label">FIDUS Funds</div>
                     <div className="text-2xl font-bold text-cyan-400">
-                      {clientData && formatCurrency(clientData.balance.core_balance)}
+                      {clientData && formatCurrency(clientData.balance.fidus_funds)}
                     </div>
+                    <div className="text-xs text-gray-400">BALANCE & UNLIMITED</div>
                   </div>
                   <div>
-                    <div className="balance-label">Dynamic Balance</div>
+                    <div className="balance-label">Core Balance</div>
                     <div className="text-2xl font-bold text-orange-400">
-                      {clientData && formatCurrency(clientData.balance.dynamic_balance)}
+                      {clientData && formatCurrency(clientData.balance.core_balance)}
                     </div>
+                    <div className="text-xs text-gray-400">CORE Fund</div>
                   </div>
                 </div>
+                {clientData && clientData.balance.dynamic_balance > 0 && (
+                  <div className="mt-4">
+                    <div className="balance-label">Dynamic Balance</div>
+                    <div className="text-2xl font-bold text-green-400">
+                      {formatCurrency(clientData.balance.dynamic_balance)}
+                    </div>
+                    <div className="text-xs text-gray-400">DYNAMIC Fund</div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
