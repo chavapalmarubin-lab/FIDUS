@@ -66,7 +66,10 @@ class SalvadorPalmaVerificationTester:
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
-            headers = {'Content-Type': 'application/json'}
+            if auth_required:
+                headers = self.get_auth_headers()
+            else:
+                headers = {'Content-Type': 'application/json'}
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
