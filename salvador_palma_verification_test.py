@@ -161,7 +161,8 @@ class SalvadorPalmaVerificationTester:
             "GET Salvador's Investment Data",
             "GET",
             f"api/investments/client/{self.expected_client_id}",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if not success:
