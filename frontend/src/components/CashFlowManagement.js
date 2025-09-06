@@ -98,6 +98,9 @@ const CashFlowManagement = () => {
     const mockRedemptions = [];
     const mockProjections = [];
     
+    let mockTotalInflow = 0;
+    let mockTotalOutflow = 0;
+    
     const today = new Date();
     for (let i = 90; i >= 0; i--) {
       const date = new Date(today);
@@ -106,16 +109,49 @@ const CashFlowManagement = () => {
       
       // Mock cash inflow (new investments)
       if (Math.random() > 0.7) {
+        const inflowAmount = Math.floor(Math.random() * 500000) + 50000;
         mockCashFlows.push({
           id: `inflow-${i}`,
           date: dateStr,
           type: 'inflow',
-          amount: Math.floor(Math.random() * 500000) + 50000,
+          amount: inflowAmount,
           fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
           client_name: `Client ${Math.floor(Math.random() * 100)}`,
           description: 'New Investment'
         });
+        mockTotalInflow += inflowAmount;
       }
+      
+      // Mock cash outflow (redemptions)
+      if (Math.random() > 0.9) {
+        const outflowAmount = Math.floor(Math.random() * 200000) + 25000;
+        mockCashFlows.push({
+          id: `outflow-${i}`,
+          date: dateStr,
+          type: 'outflow',
+          amount: outflowAmount,
+          fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
+          client_name: `Client ${Math.floor(Math.random() * 100)}`,
+          description: 'Redemption'
+        });
+        mockTotalOutflow += outflowAmount;
+      }
+    }
+    
+    // Set the mock data with calculated totals
+    setCashFlowData(mockCashFlows);
+    setTotalInflow(mockTotalInflow);
+    setTotalOutflow(mockTotalOutflow);
+    setNetCashFlow(mockTotalInflow - mockTotalOutflow);
+    setRedemptionSchedule(mockRedemptions);
+    setMonthlyProjections(mockProjections);
+    
+    console.log("📊 Generated mock cash flow data:", {
+      totalInflow: mockTotalInflow,
+      totalOutflow: mockTotalOutflow,
+      netCashFlow: mockTotalInflow - mockTotalOutflow
+    });
+  };
       
       // Mock cash outflow (redemptions)
       if (Math.random() > 0.85) {
