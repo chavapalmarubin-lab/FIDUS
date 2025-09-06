@@ -8483,63 +8483,39 @@ async def get_performance_gaps():
 
 @api_router.get("/admin/fund-commitments")
 async def get_fund_commitments():
-    """Get FIDUS fund commitment details for all funds"""
+    """Get FIDUS client investment deliverables - only funds with actual client investments"""
     try:
-        if not fund_performance_manager:
+        # Import fund performance manager directly
+        import sys
+        sys.path.append('/app/backend')
+        from fund_performance_manager import fund_performance_manager as fpm
+        
+        if not fpm:
             return {
-                "success": True,
-                "fund_commitments": {
-                    "CORE": {
-                        "monthly_return": 1.5,
-                        "redemption_frequency": 6,
-                        "risk_level": "LOW",
-                        "guaranteed": True,
-                        "description": "Conservative fund with steady returns"
-                    },
-                    "BALANCE": {
-                        "monthly_return": 2.5,
-                        "redemption_frequency": 3,
-                        "risk_level": "MEDIUM",
-                        "guaranteed": True,
-                        "description": "Balanced fund with moderate risk/return"
-                    },
-                    "DYNAMIC": {
-                        "monthly_return": 4.0,
-                        "redemption_frequency": 1,
-                        "risk_level": "HIGH",
-                        "guaranteed": False,
-                        "description": "Dynamic fund with high potential returns"
-                    },
-                    "UNLIMITED": {
-                        "monthly_return": 6.0,
-                        "redemption_frequency": 1,
-                        "risk_level": "VERY_HIGH",
-                        "guaranteed": False,
-                        "description": "Unlimited growth potential fund"
-                    }
-                }
+                "success": False,
+                "fund_commitments": {},
+                "error": "Fund performance manager not available",
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
-        commitments = {}
-        for fund_code, commitment in fund_performance_manager.fund_commitments.items():
-            commitments[fund_code] = {
-                "monthly_return": commitment.monthly_return,
-                "redemption_frequency": commitment.redemption_frequency,
-                "minimum_investment": commitment.minimum_investment,
-                "risk_level": commitment.risk_level,
-                "guaranteed": commitment.guaranteed,
-                "description": commitment.description
-            }
+        # Get dashboard data which only includes funds with actual client investments
+        dashboard_data = await fpm.generate_fund_management_dashboard()
         
         return {
             "success": True,
-            "fund_commitments": commitments,
+            "fund_commitments": dashboard_data.get("fund_commitments", {}),
+            "note": "Only showing funds with actual client investments (client investment deliverables)",
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
         logging.error(f"Fund commitments error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get fund commitments")
+        return {
+            "success": False,
+            "fund_commitments": {},
+            "error": f"Failed to get fund commitments: {str(e)}",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
 
 @api_router.get("/admin/fund-performance/test")
 async def test_fund_performance_manager():
