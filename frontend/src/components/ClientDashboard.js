@@ -111,9 +111,11 @@ const ClientDashboard = ({ user, onLogout }) => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-logo">
-          <span className="header-logo-text">
-            <span className="header-logo-f">F</span>IDUS
-          </span>
+          <img 
+            src="/fidus-logo.png"
+            alt="FIDUS Logo"
+            className="h-10 w-auto"
+          />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
