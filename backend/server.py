@@ -8338,10 +8338,17 @@ async def get_mt5_system_status():
 
 # Import the fund performance manager
 try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
     from fund_performance_manager import fund_performance_manager
-except ImportError:
+    logging.info("Fund performance manager successfully imported")
+except ImportError as e:
+    logging.error(f"Failed to import fund_performance_manager: {e}")
     fund_performance_manager = None
-    logging.warning("Fund performance manager not available")
+except Exception as e:
+    logging.error(f"Unexpected error importing fund_performance_manager: {e}")
+    fund_performance_manager = None
 
 @api_router.get("/admin/fund-performance/dashboard")
 async def get_fund_performance_dashboard():
