@@ -40,6 +40,21 @@ const InvestmentCalendar = ({ user }) => {
         const investmentData = response.data.investments;
         setInvestments(investmentData);
         generateCalendarEvents(investmentData);
+        
+        // Set initial view to current month or month with most events
+        if (investmentData.length > 0) {
+          const firstInvestment = investmentData[0];
+          const depositDate = new Date(firstInvestment.deposit_date);
+          const today = new Date();
+          
+          // Show current month if we have recent events, otherwise show investment start month
+          if (today.getFullYear() === depositDate.getFullYear() && 
+              Math.abs(today.getMonth() - depositDate.getMonth()) <= 3) {
+            setCurrentDate(today);
+          } else {
+            setCurrentDate(new Date(depositDate.getFullYear(), depositDate.getMonth(), 1));
+          }
+        }
       }
     } catch (err) {
       setError("Failed to load investment data");
