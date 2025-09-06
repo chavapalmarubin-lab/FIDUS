@@ -284,14 +284,18 @@ const AdminDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="header-logo flex items-center">
+        <div className="flex items-center gap-3">
           <img 
             src="/fidus-logo.png"
             alt="FIDUS Logo"
-            className="h-10 w-auto mr-3"
-            style={{ maxHeight: '40px', maxWidth: '120px' }}
+            style={{ 
+              height: '32px', 
+              width: 'auto',
+              maxWidth: '120px',
+              objectFit: 'contain'
+            }}
           />
-          <span className="text-slate-400 text-sm">Investment Committee</span>
+          <span className="text-slate-400 text-sm font-medium">Investment Committee</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
