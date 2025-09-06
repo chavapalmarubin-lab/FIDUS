@@ -13,16 +13,17 @@ The FIDUS Investment Management System is a production-ready financial platform 
 - **Backend:** Python FastAPI (Async/Await)
 - **Database:** MongoDB with Connection Pooling
 - **Authentication:** JWT Token-based
-- **Real-time Data:** MT5 API Integration
+- **Real-time Data:** MT5 API Integration (Salvador Palma account: 9928326)
 - **Deployment:** Docker-ready, Kubernetes-compatible
 
-### **Performance Benchmarks (Validated)**
+### **Performance Benchmarks (Validated December 2024)**
 - **Database Performance:** 500+ operations/second
 - **API Response Time:** <1 second average
 - **Concurrent Users:** 100+ simultaneous users supported
 - **Rate Limiting:** Tiered (Admin: 300/min, Client: 150/min, Guest: 100/min)
 - **Uptime Target:** 99.9% (validated with health checks)
 - **Scalability:** Tested for 100 MT5 accounts (100x current load)
+- **Data Accuracy:** Only real client data (Salvador Palma), all mock data removed
 
 ---
 
