@@ -236,7 +236,8 @@ class SalvadorPalmaVerificationTester:
             "GET All MT5 Accounts",
             "GET",
             "api/mt5/admin/accounts",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if not success:
