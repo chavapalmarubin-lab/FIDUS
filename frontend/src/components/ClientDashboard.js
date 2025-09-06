@@ -16,7 +16,6 @@ import DocumentPortal from "./DocumentPortal";
 
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
-import ClientMT5View from "./ClientMT5View";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
