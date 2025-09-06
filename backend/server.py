@@ -9037,10 +9037,12 @@ rate_limiter = RateLimiter()
 
 @app.middleware("http")
 async def rate_limiting_middleware(request: Request, call_next):
-    """Rate limiting middleware to prevent API abuse"""
+    """Enhanced rate limiting middleware to prevent API abuse"""
     
-    # Skip rate limiting for health checks
-    if request.url.path.startswith('/api/health'):
+    # Skip rate limiting for health checks and static files
+    if (request.url.path.startswith('/api/health') or 
+        request.url.path.startswith('/static') or
+        request.method == "OPTIONS"):
         return await call_next(request)
     
     # Get client identifier (prefer user ID, fallback to IP)
@@ -9053,28 +9055,38 @@ async def rate_limiting_middleware(request: Request, call_next):
             token = auth_header.split(" ")[1]
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
             client_id = f"user:{payload.get('user_id', 'unknown')}"
-        except:
-            pass
+        except Exception as e:
+            logging.debug(f"JWT decode error in rate limiter: {e}")
     
     # Fallback to IP address
     if not client_id:
         # Get real IP from headers (for proxy/load balancer)
         forwarded_for = request.headers.get("X-Forwarded-For")
+        real_ip = request.headers.get("X-Real-IP")
+        
         if forwarded_for:
             client_id = f"ip:{forwarded_for.split(',')[0].strip()}"
+        elif real_ip:
+            client_id = f"ip:{real_ip}"
         else:
-            client_id = f"ip:{request.client.host}"
+            client_id = f"ip:{request.client.host if request.client else 'unknown'}"
     
-    # Apply rate limiting
+    # Apply rate limiting with enhanced logging
     limit = 100  # requests per minute
-    if not rate_limiter.is_allowed(client_id, limit=limit, window=60):
+    is_allowed = rate_limiter.is_allowed(client_id, limit=limit, window=60)
+    
+    # Debug logging for rate limiter
+    logging.debug(f"Rate limiter check: client_id={client_id}, allowed={is_allowed}, path={request.url.path}")
+    
+    if not is_allowed:
         logging.warning(f"Rate limit exceeded for {client_id} on {request.url.path}")
         return JSONResponse(
             status_code=429,
             content={
                 "error": "Rate limit exceeded",
                 "message": f"Too many requests. Limit: {limit} requests per minute.",
-                "retry_after": 60
+                "retry_after": 60,
+                "client_id": client_id  # For debugging only
             },
             headers={"Retry-After": "60"}
         )
