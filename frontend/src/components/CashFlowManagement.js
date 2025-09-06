@@ -20,12 +20,9 @@ import apiAxios from "../utils/apiAxios";
 
 const CashFlowManagement = () => {
   const [cashFlowData, setCashFlowData] = useState([]);
-  const [redemptionSchedule, setRedemptionSchedule] = useState([]);
-  const [monthlyProjections, setMonthlyProjections] = useState([]);
+  const [fundAccounting, setFundAccounting] = useState({});
   const [fundBreakdown, setFundBreakdown] = useState({});
-  const [totalInflow, setTotalInflow] = useState(0);
-  const [totalOutflow, setTotalOutflow] = useState(0);
-  const [netCashFlow, setNetCashFlow] = useState(0);
+  const [rebatesSummary, setRebatesSummary] = useState({});
   const [selectedTimeframe, setSelectedTimeframe] = useState('3months');
   const [selectedFund, setSelectedFund] = useState('all');
   const [loading, setLoading] = useState(true);
