@@ -399,6 +399,16 @@ class InvestmentCreate(BaseModel):
     amount: float
     deposit_date: Optional[str] = None  # YYYY-MM-DD format
     broker_code: Optional[str] = "multibank"  # Default to multibank for backward compatibility
+    
+    # MT5 Account Mapping Fields (NEW)
+    create_mt5_account: Optional[bool] = False
+    mt5_login: Optional[str] = None
+    mt5_password: Optional[str] = None
+    mt5_server: Optional[str] = None
+    broker_name: Optional[str] = None
+    mt5_initial_balance: Optional[float] = None
+    banking_fees: Optional[float] = None
+    fee_notes: Optional[str] = None
 
 # Client Investment Readiness Models
 class ClientInvestmentReadiness(BaseModel):
