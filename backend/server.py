@@ -8432,19 +8432,19 @@ async def get_performance_gaps():
                 "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
-        # Get all client investments from the correct database (fidus_investment_db)
+        # Get all MT5 accounts (primary data source for actual client positions)
         gaps = []
         
-        # Use the fund performance manager's database connection
-        async for investment in fpm.db.investments.find({}):
-            client_id = investment["client_id"]
-            fund_code = investment["fund_code"]
-            principal_amount = investment["principal_amount"]
-            investment_date = investment["deposit_date"]
+        # Use MT5 accounts as the source of truth for client positions
+        async for account in fpm.db.mt5_accounts.find({}):
+            client_id = account["client_id"]
+            fund_code = account["fund_code"]
+            principal_amount = account.get("total_allocated", account.get("initial_deposit", 0))
+            deposit_date = account.get("deposit_date", account.get("created_at"))
             
             try:
-                gap = await fpm.analyze_performance_gap(
-                    client_id, fund_code, principal_amount, investment_date
+                gap = await fpm.analyze_mt5_performance_gap(
+                    client_id, fund_code, principal_amount, deposit_date, account
                 )
                 
                 gaps.append({
@@ -8456,7 +8456,10 @@ async def get_performance_gaps():
                     "gap_percentage": gap.gap_percentage,
                     "risk_level": gap.risk_level,
                     "action_required": gap.action_required,
-                    "recommendation": fpm.get_recommendation(gap)
+                    "recommendation": fpm.get_recommendation(gap),
+                    "principal_amount": principal_amount,
+                    "deposit_date": deposit_date,
+                    "mt5_login": account.get("mt5_login")
                 })
             except Exception as e:
                 logging.error(f"Error analyzing gap for {client_id} {fund_code}: {str(e)}")
