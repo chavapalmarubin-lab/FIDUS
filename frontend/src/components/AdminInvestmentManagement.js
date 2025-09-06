@@ -263,7 +263,16 @@ const AdminInvestmentManagement = () => {
       transaction_hash: "",
       blockchain_network: "",
       wallet_address: "",
-      payment_notes: ""
+      payment_notes: "",
+      // MT5 Account Mapping Fields
+      create_mt5_account: true,
+      mt5_login: "",
+      mt5_password: "",
+      mt5_server: "",
+      broker_name: "",
+      mt5_initial_balance: "",
+      banking_fees: "",
+      fee_notes: ""
     });
   };
 
