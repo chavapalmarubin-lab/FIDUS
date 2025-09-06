@@ -463,6 +463,11 @@ class SalvadorPalmaVerificationTester:
         print("Expected: PERFECT clean system with ONLY Salvador Palma data")
         print("=" * 80)
         
+        # First authenticate as admin
+        if not self.authenticate_admin():
+            print("❌ Cannot proceed without admin authentication")
+            return False
+        
         # Priority 1: Complete Salvador Data Check
         priority_1_success = True
         priority_1_success &= self.test_priority_1_salvador_investment_data()
