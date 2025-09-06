@@ -9119,8 +9119,21 @@ async def rate_limiting_middleware(request: Request, call_next):
         else:
             client_id = f"ip:{request.client.host if request.client else 'unknown'}"
     
-    # Apply rate limiting with enhanced logging
-    limit = 100  # requests per minute
+    # Apply rate limiting with different limits for different user types
+    limit = 100  # default requests per minute
+    
+    # Higher limits for authenticated admin users
+    if client_id.startswith("user:") and auth_header:
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
+            if payload.get('user_type') == 'admin':
+                limit = 300  # 300 requests/minute for admin users
+            elif payload.get('user_type') == 'client':
+                limit = 150  # 150 requests/minute for authenticated clients
+        except Exception:
+            pass  # Use default limit if token parsing fails
+    
     is_allowed = rate_limiter.is_allowed(client_id, limit=limit, window=60)
     
     # Debug logging for rate limiter
