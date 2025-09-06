@@ -262,15 +262,37 @@ const MT5Management = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management</h2>
-                    <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
+                    <div className="flex items-center space-x-4">
+                        <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
+                        <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-400">Real MT5 Data Available</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                <span className="text-xs text-yellow-400">Simulated Data (Demo)</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <Button 
-                    onClick={() => setShowAddAccountModal(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                >
-                    <Plus size={16} className="mr-2" />
-                    Add MT5 Account
-                </Button>
+                <div className="flex items-center space-x-3">
+                    <Button 
+                        onClick={fetchMT5Data}
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                        <RefreshCw size={16} className="mr-2" />
+                        Refresh Data
+                    </Button>
+                    <Button 
+                        onClick={() => setShowAddAccountModal(true)}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                    >
+                        <Plus size={16} className="mr-2" />
+                        Add MT5 Account
+                    </Button>
+                </div>
             </div>
 
             {/* Error/Success Messages */}
