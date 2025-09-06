@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://investment-portal-2.preview.emergentagent.com`
+`https://fund-tracker-11.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

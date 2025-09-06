@@ -84,7 +84,7 @@ if interest_start_date.tzinfo is None:
 
 ### ✅ **Client Dropdown Population**
 ```bash
-curl -s "https://investment-portal-2.preview.emergentagent.com/api/clients/ready-for-investment"
+curl -s "https://fund-tracker-11.preview.emergentagent.com/api/clients/ready-for-investment"
 ```
 **Result**: 3 ready clients returned successfully
 - client_001: Gerardo Briones
@@ -144,7 +144,7 @@ curl -s ".../api/investments/funds/config" | jq '.funds[] | {fund_code, aum}'
 ## User Action Required
 
 ### ✅ **Immediate Testing Available**
-1. **Login**: Go to `https://investment-portal-2.preview.emergentagent.com?skip_animation=true`
+1. **Login**: Go to `https://fund-tracker-11.preview.emergentagent.com?skip_animation=true`
 2. **Admin Access**: username: `admin`, password: `password123`
 3. **Navigate**: Admin Dashboard → Investments tab
 4. **Verify**: Client dropdown should now show 3 ready clients
