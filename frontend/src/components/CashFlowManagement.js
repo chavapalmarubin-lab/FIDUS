@@ -276,7 +276,7 @@ const CashFlowManagement = () => {
                     {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
                   </td>
                   <td className="text-right text-red-400 font-bold text-lg py-4">
-                    {formatCurrency(totalOutflow)}
+                    {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
                   </td>
                   <td className={`text-right font-bold text-lg py-4 ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(netCashFlow)}
