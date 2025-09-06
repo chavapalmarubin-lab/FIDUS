@@ -559,6 +559,7 @@ const CashFlowManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-xl font-bold text-white mb-4">Add Broker Rebate</h3>
+            <p className="text-sm text-slate-400 mb-4">Rebates are variable based on trading volume (lots)</p>
             
             <div className="space-y-4">
               {/* Fund Selection */}
@@ -578,9 +579,9 @@ const CashFlowManagement = () => {
                 </select>
               </div>
 
-              {/* Amount */}
+              {/* Total Rebate Amount */}
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Rebate Amount ($) *</label>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Total Rebate Amount ($) *</label>
                 <input
                   type="number"
                   step="0.01"
@@ -610,26 +611,35 @@ const CashFlowManagement = () => {
                 </select>
               </div>
 
-              {/* Period */}
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Period *</label>
-                <select
-                  value={newRebate.period}
-                  onChange={(e) => setNewRebate({...newRebate, period: e.target.value})}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
-                  required
-                >
-                  <option value="">Select Period</option>
-                  <option value="Daily">Daily</option>
-                  <option value="Weekly">Weekly</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Quarterly">Quarterly</option>
-                </select>
+              {/* Optional Trading Details */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Lots Traded (Optional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newRebate.lots_traded}
+                    onChange={(e) => setNewRebate({...newRebate, lots_traded: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">$ per Lot (Optional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newRebate.rebate_per_lot}
+                    onChange={(e) => setNewRebate({...newRebate, rebate_per_lot: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Description (Optional)</label>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Notes (Optional)</label>
                 <textarea
                   value={newRebate.description}
                   onChange={(e) => setNewRebate({...newRebate, description: e.target.value})}
@@ -637,6 +647,13 @@ const CashFlowManagement = () => {
                   rows="2"
                   placeholder="Additional notes about this rebate..."
                 />
+              </div>
+
+              {/* Info Note */}
+              <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                <p className="text-blue-400 text-xs">
+                  <strong>Note:</strong> Rebates are variable based on trading volume. API automation for lot tracking will be implemented later.
+                </p>
               </div>
             </div>
 
@@ -652,7 +669,7 @@ const CashFlowManagement = () => {
               <Button
                 onClick={() => {
                   setShowAddRebateModal(false);
-                  setNewRebate({fund_code: '', amount: '', broker: '', period: '', description: ''});
+                  setNewRebate({fund_code: '', amount: '', broker: '', lots_traded: '', rebate_per_lot: '', description: ''});
                   setError('');
                 }}
                 variant="outline"
