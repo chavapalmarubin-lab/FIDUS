@@ -393,17 +393,19 @@ class FundPerformanceManager:
                     "recommendation": self.get_recommendation(gap)
                 })
         
-        # Only show fund commitments for funds that have actual MT5 accounts
+        # Only show fund commitments for funds that have actual client MT5 accounts with investments
         active_funds = set(account["fund_code"] for account in mt5_accounts)
         for fund_code in active_funds:
             if fund_code in self.fund_commitments:
                 commitment = self.fund_commitments[fund_code]
                 dashboard_data["fund_commitments"][fund_code] = {
+                    "fund_code": fund_code,
                     "monthly_return": commitment.monthly_return,
                     "redemption_frequency": commitment.redemption_frequency,
                     "risk_level": commitment.risk_level,
                     "guaranteed": commitment.guaranteed,
-                    "description": commitment.description
+                    "description": commitment.description,
+                    "minimum_investment": commitment.minimum_investment
                 }
         
         return dashboard_data
