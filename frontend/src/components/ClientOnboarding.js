@@ -888,7 +888,7 @@ const ClientOnboarding = ({ onBack, onComplete }) => {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             <img 
-              src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
+              src="/fidus-logo.png"
               alt="FIDUS Logo"
               style={{
                 width: "200px",
