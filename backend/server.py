@@ -9126,6 +9126,9 @@ async def rate_limiting_middleware(request: Request, call_next):
     
     return await call_next(request)
 
+# Add rate limiting middleware to the app
+app.middleware("http")(rate_limiting_middleware)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
