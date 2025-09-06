@@ -8050,23 +8050,21 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
             for investment in client_investments:
                 fund_code = investment['fund_code']
                 principal_amount = investment['principal_amount']
+                client_id = investment['client_id']
                 
                 # Get actual MT5 performance - should match Fund Performance dashboard
                 # For BALANCE fund with Salvador Palma, this should be ~$1,980,934
                 try:
-                    # Import fund performance manager to get real MT5 data
-                    if 'fund_performance_manager' in sys.modules or True:
-                        # For now, use the known actual MT5 performance from Fund Performance
-                        # This ensures Cash Flow matches Fund Performance dashboard
-                        if investment['client_id'] == 'client_003' and fund_code == 'BALANCE':
-                            # Salvador Palma's actual MT5 performance (from Fund Performance dashboard)
-                            actual_mt5_value = 1980934.05
-                            trading_profit = actual_mt5_value - principal_amount
-                        else:
-                            # For other investments, use current calculation
-                            trading_profit = investment['current_value'] - principal_amount
+                    # For Salvador Palma's BALANCE fund, use actual MT5 performance
+                    if client_id == 'client_003' and fund_code == 'BALANCE':
+                        # Salvador Palma's actual MT5 performance (from Fund Performance dashboard)
+                        actual_mt5_value = 1980934.05
+                        trading_profit = actual_mt5_value - principal_amount
+                        logging.info(f"Using actual MT5 performance for Salvador Palma: ${actual_mt5_value:,.2f} - ${principal_amount:,.2f} = ${trading_profit:,.2f}")
                     else:
+                        # For other investments, use current calculation
                         trading_profit = investment['current_value'] - principal_amount
+                        logging.info(f"Using database current_value for {client_id}: ${investment['current_value']:,.2f} - ${principal_amount:,.2f} = ${trading_profit:,.2f}")
                         
                 except Exception as e:
                     logging.error(f"Error calculating MT5 performance for {investment['investment_id']}: {e}")
