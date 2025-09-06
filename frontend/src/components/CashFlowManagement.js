@@ -243,22 +243,6 @@ const CashFlowManagement = () => {
     });
   };
 
-  const calculateTotalInflow = () => {
-    return cashFlowData
-      .filter(item => item.type === 'inflow')
-      .reduce((sum, item) => sum + item.amount, 0);
-  };
-
-  const calculateTotalOutflow = () => {
-    return cashFlowData
-      .filter(item => item.type === 'outflow')
-      .reduce((sum, item) => sum + item.amount, 0);
-  };
-
-  const getNetCashFlow = () => {
-    return calculateTotalInflow() - calculateTotalOutflow();
-  };
-
   const getUpcomingRedemptions = (days = 7) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() + days);
