@@ -388,9 +388,9 @@ const CashFlowManagement = () => {
                   </span>
                 </div>
                 <div className="text-sm text-slate-300">
-                  <p><strong>Revenue Source:</strong> Broker commissions based on trading volume</p>
-                  <p><strong>Structure:</strong> Variable rate per lot traded</p>
-                  <p><strong>Frequency:</strong> Monthly settlements</p>
+                  <p><strong>Revenue Source:</strong> Broker commissions based on trading volume (lots)</p>
+                  <p><strong>Structure:</strong> Variable rate per lot traded on MT5 accounts</p>
+                  <p><strong>Calculation:</strong> Total lots × rebate per lot = total rebate</p>
                 </div>
               </div>
             </div>
