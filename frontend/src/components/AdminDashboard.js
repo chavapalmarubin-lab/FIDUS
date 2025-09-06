@@ -360,6 +360,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             <FundPortfolioManagement />
           </TabsContent>
 
+          <TabsContent value="fund-performance" className="mt-6">
+            <FundPerformanceDashboard />
+          </TabsContent>
+
           <TabsContent value="cashflow" className="mt-6">
             <CashFlowManagement />
           </TabsContent>
