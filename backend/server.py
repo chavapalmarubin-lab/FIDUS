@@ -8207,6 +8207,131 @@ async def get_mt5_account_positions(account_id: str):
         logging.error(f"Get MT5 account positions error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 account positions")
 
+@api_router.get("/mt5/admin/realtime-data")
+async def get_realtime_mt5_data():
+    """Get real-time MT5 data for all accounts with live updates"""
+    try:
+        accounts = []
+        
+        # Get all MT5 account records with latest real-time data
+        async for account in db.mt5_accounts.find({}):
+            account.pop('_id', None)
+            
+            # Get the latest historical data point for charts
+            latest_historical = await db.mt5_historical_data.find_one(
+                {'account_id': account['account_id']},
+                sort=[('timestamp', -1)]
+            )
+            
+            if latest_historical:
+                latest_historical.pop('_id', None)
+                account['latest_data'] = latest_historical
+            
+            # Get current real-time positions
+            positions = []
+            async for position in db.mt5_realtime_positions.find({'account_id': account['account_id']}):
+                position.pop('_id', None)
+                positions.append(position)
+            
+            account['current_positions'] = positions
+            account['position_count'] = len(positions)
+            
+            # Calculate real-time statistics
+            account['connection_status'] = 'connected'
+            account['last_update'] = account.get('last_sync', datetime.now(timezone.utc).isoformat())
+            
+            accounts.append(account)
+        
+        # Calculate aggregate statistics
+        total_stats = {
+            'total_accounts': len(accounts),
+            'total_allocated': sum(acc.get('total_allocated', 0) for acc in accounts),
+            'total_equity': sum(acc.get('current_equity', 0) for acc in accounts),
+            'total_balance': sum(acc.get('balance', 0) for acc in accounts),
+            'total_profit_loss': sum(acc.get('profit_loss', 0) for acc in accounts),
+            'connected_accounts': len([acc for acc in accounts if acc.get('connection_status') == 'connected']),
+            'last_update': datetime.now(timezone.utc).isoformat()
+        }
+        
+        return {
+            "success": True,
+            "accounts": accounts,
+            "total_stats": total_stats,
+            "data_source": "real_time",
+            "update_frequency": "30_seconds"
+        }
+        
+    except Exception as e:
+        logging.error(f"Get real-time MT5 data error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch real-time MT5 data")
+
+@api_router.get("/mt5/admin/historical-data/{account_id}")
+async def get_mt5_historical_data(account_id: str, hours: int = 24):
+    """Get historical MT5 data for charts and analysis"""
+    try:
+        # Calculate time window
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(hours=hours)
+        
+        # Get historical data points
+        historical_data = []
+        async for data_point in db.mt5_historical_data.find({
+            'account_id': account_id,
+            'timestamp': {
+                '$gte': start_time.isoformat(),
+                '$lte': end_time.isoformat()
+            }
+        }).sort('timestamp', 1):
+            data_point.pop('_id', None)
+            historical_data.append(data_point)
+        
+        return {
+            "success": True,
+            "account_id": account_id,
+            "historical_data": historical_data,
+            "time_window_hours": hours,
+            "data_points": len(historical_data),
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Get historical MT5 data error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch historical MT5 data")
+
+@api_router.get("/mt5/admin/system-status")
+async def get_mt5_system_status():
+    """Get MT5 data collection system status"""
+    try:
+        # Check recent data activity
+        recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+        recent_updates = await db.mt5_historical_data.count_documents({
+            'timestamp': {'$gte': recent_cutoff.isoformat()}
+        })
+        
+        # Get total data points
+        total_data_points = await db.mt5_historical_data.count_documents({})
+        
+        # Get account connection status
+        accounts = []
+        async for account in db.mt5_accounts.find({}, {'account_id': 1, 'connection_status': 1, 'last_sync': 1}):
+            account.pop('_id', None)
+            accounts.append(account)
+        
+        return {
+            "success": True,
+            "system_status": "operational" if recent_updates > 0 else "inactive",
+            "recent_updates": recent_updates,
+            "total_data_points": total_data_points,
+            "accounts": accounts,
+            "data_collection_active": recent_updates > 0,
+            "last_check": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 system status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get system status")
+
 @api_router.get("/mt5/client/{client_id}/performance")
 async def get_client_mt5_performance(client_id: str):
     """Get comprehensive MT5 performance summary for client"""
