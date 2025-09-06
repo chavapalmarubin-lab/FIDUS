@@ -70,7 +70,7 @@ const AdminInvestmentManagement = () => {
   const [investmentForm, setInvestmentForm] = useState({
     client_id: "",
     fund_code: "",
-    amount: "",
+    amount: "", // Amount received by FIDUS
     deposit_date: "",
     // Payment confirmation fields
     payment_method: "fiat", // fiat or crypto
@@ -79,7 +79,16 @@ const AdminInvestmentManagement = () => {
     transaction_hash: "",
     blockchain_network: "",
     wallet_address: "",
-    payment_notes: ""
+    payment_notes: "",
+    // MT5 Account Mapping Fields (NEW)
+    create_mt5_account: true, // Whether to create MT5 mapping
+    mt5_login: "",
+    mt5_password: "",
+    mt5_server: "",
+    broker_name: "",
+    mt5_initial_balance: "", // Could differ from FIDUS amount due to fees
+    banking_fees: "", // Difference between FIDUS received and MT5 balance
+    fee_notes: ""
   });
 
   useEffect(() => {
