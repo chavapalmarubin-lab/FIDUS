@@ -78,7 +78,6 @@ class FundPerformanceManager:
         
         self.client = AsyncIOMotorClient(mongo_url)
         self.db = self.client[db_name]
-        self.logger.info(f"Connected to MongoDB: {mongo_url}/{db_name}")
         
     def setup_logging(self):
         """Setup logging"""
