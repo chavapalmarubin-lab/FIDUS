@@ -33,7 +33,8 @@ const CashFlowManagement = () => {
     fund_code: '',
     amount: '',
     broker: '',
-    period: '',
+    lots_traded: '',
+    rebate_per_lot: '',
     description: ''
   });
 
