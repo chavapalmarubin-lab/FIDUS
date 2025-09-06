@@ -341,13 +341,16 @@ class ComprehensiveFundTester:
             
             found_funds = {}
             for commitment in commitments:
-                fund_code = commitment.get('fund_code')
-                found_funds[fund_code] = commitment
-                monthly_return = commitment.get('monthly_return', 0)
-                minimum_investment = commitment.get('minimum_investment', 0)
-                redemption_frequency = commitment.get('redemption_frequency', 0)
-                
-                print(f"      {fund_code}: {monthly_return}% monthly, ${minimum_investment:,.0f} min, {redemption_frequency}mo redemption")
+                if isinstance(commitment, dict):
+                    fund_code = commitment.get('fund_code')
+                    found_funds[fund_code] = commitment
+                    monthly_return = commitment.get('monthly_return', 0)
+                    minimum_investment = commitment.get('minimum_investment', 0)
+                    redemption_frequency = commitment.get('redemption_frequency', 0)
+                    
+                    print(f"      {fund_code}: {monthly_return}% monthly, ${minimum_investment:,.0f} min, {redemption_frequency}mo redemption")
+                else:
+                    print(f"      {commitment}")
             
             # Validate BALANCE fund specifications
             balance_fund = found_funds.get('BALANCE', {})
