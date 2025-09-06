@@ -563,7 +563,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=duplicate_login_data
+            data=duplicate_login_data,
+            use_auth=True
         )
         
         if success:
