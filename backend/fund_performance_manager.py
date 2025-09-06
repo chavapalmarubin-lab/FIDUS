@@ -72,12 +72,13 @@ class FundPerformanceManager:
         self.fund_commitments = self.initialize_fund_commitments()
         
     def setup_database(self):
-        """Setup MongoDB connection"""
-        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/fidus_investment_db')
-        self.db_name = mongo_url.split('/')[-1] if '/' in mongo_url else 'fidus_investment_db'
+        """Setup MongoDB connection using same config as main server"""
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+        db_name = os.environ.get('DB_NAME', 'test_database')
         
         self.client = AsyncIOMotorClient(mongo_url)
-        self.db = self.client[self.db_name]
+        self.db = self.client[db_name]
+        self.logger.info(f"Connected to MongoDB: {mongo_url}/{db_name}")
         
     def setup_logging(self):
         """Setup logging"""
