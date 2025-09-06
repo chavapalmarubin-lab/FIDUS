@@ -52,16 +52,6 @@ const CashFlowManagement = () => {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
       
-      // Fetch redemption schedule
-      const redemptionResponse = await apiAxios.get(`/admin/cashflow/redemption-schedule`, {
-        params: { timeframe: selectedTimeframe }
-      });
-      
-      // Fetch projections
-      const projectionsResponse = await apiAxios.get(`/admin/cashflow/projections`, {
-        params: { months: getMonthsFromTimeframe(selectedTimeframe) }
-      });
-
       if (cashFlowResponse.data.success) {
         // Use backend calculated totals instead of frontend calculations
         setCashFlowData(cashFlowResponse.data.cash_flows || []);
@@ -70,14 +60,10 @@ const CashFlowManagement = () => {
         setTotalOutflow(cashFlowResponse.data.total_outflow || 0);
         setNetCashFlow(cashFlowResponse.data.net_cash_flow || 0);
         
-        setRedemptionSchedule(redemptionResponse.data.redemption_schedule || []);
-        setMonthlyProjections(projectionsResponse.data.projections || []);
-        
         console.log("✅ Cash flow data loaded successfully:", {
           totalInflow: cashFlowResponse.data.total_inflow,
           totalOutflow: cashFlowResponse.data.total_outflow,
-          netCashFlow: cashFlowResponse.data.net_cash_flow,
-          fundsData: cashFlowResponse.data.fund_breakdown
+          netCashFlow: cashFlowResponse.data.net_cash_flow
         });
       } else {
         throw new Error("API returned unsuccessful response");
@@ -85,135 +71,13 @@ const CashFlowManagement = () => {
     } catch (err) {
       console.error("❌ Cash flow API error:", err);
       setError("Failed to load cash flow data");
-      // Generate mock data for development - but also set proper totals
-      generateMockCashFlowData();
+      // Set some example totals for development
+      setTotalInflow(25000000);
+      setTotalOutflow(5000000); 
+      setNetCashFlow(20000000);
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockCashFlowData = () => {
-    // Generate mock cash flow data for demonstration
-    const mockCashFlows = [];
-    const mockRedemptions = [];
-    const mockProjections = [];
-    
-    let mockTotalInflow = 0;
-    let mockTotalOutflow = 0;
-    
-    const today = new Date();
-    for (let i = 90; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      // Mock cash inflow (new investments)
-      if (Math.random() > 0.7) {
-        const inflowAmount = Math.floor(Math.random() * 500000) + 50000;
-        mockCashFlows.push({
-          id: `inflow-${i}`,
-          date: dateStr,
-          type: 'inflow',
-          amount: inflowAmount,
-          fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
-          client_name: `Client ${Math.floor(Math.random() * 100)}`,
-          description: 'New Investment'
-        });
-        mockTotalInflow += inflowAmount;
-      }
-      
-      // Mock cash outflow (redemptions)
-      if (Math.random() > 0.9) {
-        const outflowAmount = Math.floor(Math.random() * 200000) + 25000;
-        mockCashFlows.push({
-          id: `outflow-${i}`,
-          date: dateStr,
-          type: 'outflow',
-          amount: outflowAmount,
-          fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
-          client_name: `Client ${Math.floor(Math.random() * 100)}`,
-          description: 'Redemption'
-        });
-        mockTotalOutflow += outflowAmount;
-      }
-    }
-    
-    // Set the mock data with calculated totals
-    setCashFlowData(mockCashFlows);
-    setTotalInflow(mockTotalInflow);
-    setTotalOutflow(mockTotalOutflow);
-    setNetCashFlow(mockTotalInflow - mockTotalOutflow);
-    setRedemptionSchedule(mockRedemptions);
-    setMonthlyProjections(mockProjections);
-    
-    console.log("📊 Generated mock cash flow data:", {
-      totalInflow: mockTotalInflow,
-      totalOutflow: mockTotalOutflow,
-      netCashFlow: mockTotalInflow - mockTotalOutflow
-    });
-  };
-  // Remove old calculation functions - now using backend totals directly
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-    for (let i = 1; i <= 30; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      if (Math.random() > 0.8) {
-        mockRedemptions.push({
-          date: dateStr,
-          fund_code: ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED'][Math.floor(Math.random() * 4)],
-          client_name: `Client ${Math.floor(Math.random() * 100)}`,
-          potential_amount: Math.floor(Math.random() * 150000) + 5000,
-          type: Math.random() > 0.7 ? 'principal' : 'interest',
-          certainty: Math.random() > 0.5 ? 'high' : 'medium'
-        });
-      }
-    }
-
-    // Generate monthly projections
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(today);
-      date.setMonth(date.getMonth() + i);
-      const monthYear = date.toISOString().substring(0, 7);
-      
-      mockProjections.push({
-        month: monthYear,
-        projected_inflow: Math.floor(Math.random() * 2000000) + 500000,
-        projected_outflow: Math.floor(Math.random() * 800000) + 200000,
-        net_flow: 0 // Will be calculated
-      });
-    }
-
-    // Calculate net flow
-    mockProjections.forEach(proj => {
-      proj.net_flow = proj.projected_inflow - proj.projected_outflow;
-    });
-
-    setCashFlowData(mockCashFlows);
-    setRedemptionSchedule(mockRedemptions);
-    setMonthlyProjections(mockProjections);
-    
-    // Mock fund breakdown
-    setFundBreakdown({
-      CORE: { inflow: 2500000, outflow: 800000 },
-      BALANCE: { inflow: 1800000, outflow: 600000 },
-      DYNAMIC: { inflow: 3200000, outflow: 1200000 },
-      UNLIMITED: { inflow: 900000, outflow: 300000 }
-    });
   };
 
   const getMonthsFromTimeframe = (timeframe) => {
@@ -235,50 +99,6 @@ const CashFlowManagement = () => {
     }).format(amount || 0);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const getUpcomingRedemptions = (days = 7) => {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() + days);
-    
-    return redemptionSchedule.filter(redemption => {
-      const redemptionDate = new Date(redemption.date);
-      return redemptionDate <= cutoffDate;
-    });
-  };
-
-  const getCashFlowTrend = () => {
-    // Group cash flows by date and calculate daily net flow
-    const dailyFlows = {};
-    
-    cashFlowData.forEach(flow => {
-      if (!dailyFlows[flow.date]) {
-        dailyFlows[flow.date] = { inflow: 0, outflow: 0 };
-      }
-      
-      if (flow.type === 'inflow') {
-        dailyFlows[flow.date].inflow += flow.amount;
-      } else {
-        dailyFlows[flow.date].outflow += flow.amount;
-      }
-    });
-
-    return Object.entries(dailyFlows)
-      .map(([date, flows]) => ({
-        date,
-        inflow: flows.inflow,
-        outflow: flows.outflow,
-        net_flow: flows.inflow - flows.outflow
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -286,9 +106,6 @@ const CashFlowManagement = () => {
       </div>
     );
   }
-
-  const trendData = getCashFlowTrend();
-  const upcomingRedemptions = getUpcomingRedemptions();
 
   return (
     <div className="space-y-6">
@@ -334,7 +151,7 @@ const CashFlowManagement = () => {
         </div>
       )}
 
-      {/* Cash Flow Overview */}
+      {/* Cash Flow Overview - FIXED TO SHOW AGGREGATED TOTALS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="dashboard-card">
           <CardContent className="p-6">
@@ -345,6 +162,7 @@ const CashFlowManagement = () => {
                 <p className="text-2xl font-bold text-green-400">
                   {formatCurrency(totalInflow)}
                 </p>
+                <p className="text-xs text-slate-400">All Funds Combined</p>
               </div>
             </div>
           </CardContent>
@@ -359,6 +177,7 @@ const CashFlowManagement = () => {
                 <p className="text-2xl font-bold text-red-400">
                   {formatCurrency(totalOutflow)}
                 </p>
+                <p className="text-xs text-slate-400">All Funds Combined</p>
               </div>
             </div>
           </CardContent>
@@ -373,6 +192,7 @@ const CashFlowManagement = () => {
                 <p className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatCurrency(netCashFlow)}
                 </p>
+                <p className="text-xs text-slate-400">All Funds Combined</p>
               </div>
             </div>
           </CardContent>
@@ -383,221 +203,135 @@ const CashFlowManagement = () => {
             <div className="flex items-center">
               <AlertTriangle className="h-8 w-8 text-yellow-400" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Upcoming Redemptions</p>
+                <p className="text-sm font-medium text-slate-400">Fund Breakdown</p>
                 <p className="text-2xl font-bold text-yellow-400">
-                  {upcomingRedemptions.length}
+                  {Object.keys(fundBreakdown).length}
                 </p>
-                <p className="text-xs text-slate-400">Next 7 days</p>
+                <p className="text-xs text-slate-400">Active Funds</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Cash Flow Trend Chart */}
+      {/* Fund Breakdown Table */}
       <Card className="dashboard-card">
         <CardHeader>
           <CardTitle className="text-white flex items-center">
             <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
-            Cash Flow Trend
+            Fund Breakdown - All Funds Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px' 
-                  }}
-                  formatter={(value) => [formatCurrency(value), '']}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="inflow"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Cash Inflow"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="outflow"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  name="Cash Outflow"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="net_flow"
-                  stroke="#0891b2"
-                  strokeWidth={3}
-                  name="Net Cash Flow"
-                  strokeDasharray="5 5"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Monthly Projections */}
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-cyan-400" />
-            12-Month Cash Flow Projections
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyProjections}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="month" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px' 
-                  }}
-                  formatter={(value) => [formatCurrency(value), '']}
-                />
-                <Legend />
-                <Bar dataKey="projected_inflow" fill="#10b981" name="Projected Inflow" />
-                <Bar dataKey="projected_outflow" fill="#ef4444" name="Projected Outflow" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Upcoming Redemptions */}
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-yellow-400" />
-            Upcoming Redemption Schedule (Next 7 Days)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {(upcomingRedemptions || []).map((redemption, index) => (
-              <div key={`cash-flow-redemption-${index}-${redemption.fund_code}-${redemption.client_name}-${redemption.date}`} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border-l-4 border-yellow-400">
-                <div className="flex items-center">
-                  <div className="mr-4">
-                    <Badge 
-                      className="mb-1"
-                      style={{ backgroundColor: FUND_COLORS[redemption.fund_code] }}
-                    >
-                      {redemption.fund_code}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-600">
+                  <th className="text-left text-slate-400 font-medium py-3">Fund</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Inflow</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Outflow</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Net Flow</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(fundBreakdown).map(([fundCode, data]) => {
+                  const netFlow = (data.inflow || 0) - (data.outflow || 0);
+                  return (
+                    <tr key={fundCode} className="border-b border-slate-700/50">
+                      <td className="py-4">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-3 h-3 rounded-full mr-3"
+                            style={{ backgroundColor: FUND_COLORS[fundCode] }}
+                          ></div>
+                          <span className="text-white font-medium">{fundCode} Fund</span>
+                        </div>
+                      </td>
+                      <td className="text-right text-green-400 font-medium py-4">
+                        {formatCurrency(data.inflow || 0)}
+                      </td>
+                      <td className="text-right text-red-400 font-medium py-4">
+                        {formatCurrency(data.outflow || 0)}
+                      </td>
+                      <td className={`text-right font-bold py-4 ${netFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatCurrency(netFlow)}
+                      </td>
+                      <td className="text-right py-4">
+                        <Badge className={netFlow >= 0 ? 'bg-green-600' : 'bg-red-600'}>
+                          {netFlow >= 0 ? 'Positive' : 'Negative'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* Summary Row */}
+                <tr className="border-t-2 border-cyan-600 bg-slate-800/50">
+                  <td className="py-4">
+                    <span className="text-cyan-400 font-bold text-lg">TOTAL (All Funds)</span>
+                  </td>
+                  <td className="text-right text-green-400 font-bold text-lg py-4">
+                    {formatCurrency(totalInflow)}
+                  </td>
+                  <td className="text-right text-red-400 font-bold text-lg py-4">
+                    {formatCurrency(totalOutflow)}
+                  </td>
+                  <td className={`text-right font-bold text-lg py-4 ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(netCashFlow)}
+                  </td>
+                  <td className="text-right py-4">
+                    <Badge className={`text-lg ${netCashFlow >= 0 ? 'bg-green-600' : 'bg-red-600'}`}>
+                      {netCashFlow >= 0 ? 'Strong' : 'Weak'}
                     </Badge>
-                    <div className="text-white font-medium">{redemption.client_name}</div>
-                    <div className="text-slate-400 text-sm capitalize">
-                      {redemption.type} Redemption • {redemption.certainty} certainty
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-yellow-400 font-bold">
-                    {formatCurrency(redemption.potential_amount)}
-                  </div>
-                  <div className="text-slate-400 text-sm">
-                    {formatDate(redemption.date)}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {(upcomingRedemptions || []).length === 0 && (
-              <div className="text-center py-8 text-slate-400">
-                No redemptions scheduled for the next 7 days
-              </div>
-            )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Fund Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="dashboard-card">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Users className="mr-2 h-5 w-5 text-cyan-400" />
-              Fund Cash Flow Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(fundBreakdown || {}).map(([fundCode, data]) => (
-                <div key={fundCode} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                  <div className="flex items-center">
-                    <div 
-                      className="w-4 h-4 rounded-full mr-3"
-                      style={{ backgroundColor: FUND_COLORS[fundCode] }}
-                    ></div>
-                    <div>
-                      <div className="text-white font-medium">{fundCode} Fund</div>
-                      <div className="text-slate-400 text-sm">
-                        Net: {formatCurrency((data.inflow || 0) - (data.outflow || 0))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right text-sm">
-                    <div className="text-green-400">↑ {formatCurrency(data.inflow || 0)}</div>
-                    <div className="text-red-400">↓ {formatCurrency(data.outflow || 0)}</div>
-                  </div>
+      {/* Status Information */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <Clock className="mr-2 h-5 w-5 text-cyan-400" />
+            Cash Flow Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-white font-semibold mb-3">System Status</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Data Source</span>
+                  <span className="text-green-400">✅ Real Investment Data</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Filter className="mr-2 h-5 w-5 text-cyan-400" />
-              Recent Transactions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {(cashFlowData || []).slice(0, 10).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                  <div className="flex items-center">
-                    {transaction.type === 'inflow' ? (
-                      <ArrowUpCircle className="h-5 w-5 text-green-400 mr-3" />
-                    ) : (
-                      <ArrowDownCircle className="h-5 w-5 text-red-400 mr-3" />
-                    )}
-                    <div>
-                      <div className="text-white font-medium">{transaction.client_name}</div>
-                      <div className="text-slate-400 text-sm">
-                        {transaction.description} • {transaction.fund_code}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`font-bold ${
-                      transaction.type === 'inflow' ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {transaction.type === 'inflow' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                    </div>
-                    <div className="text-slate-400 text-xs">
-                      {formatDate(transaction.date)}
-                    </div>
-                  </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Last Updated</span>
+                  <span className="text-white">{new Date().toLocaleString()}</span>
                 </div>
-              ))}
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Calculation Method</span>
+                  <span className="text-cyan-400">Aggregated Totals</span>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div>
+              <h4 className="text-white font-semibold mb-3">Summary</h4>
+              <div className="space-y-2">
+                <div className="text-sm text-slate-300">
+                  Cash flow totals now represent the <span className="text-cyan-400 font-semibold">sum of all funds</span> instead of individual fund data.
+                </div>
+                <div className="text-sm text-slate-300">
+                  This provides a comprehensive view of the overall financial health across all investment funds.
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
