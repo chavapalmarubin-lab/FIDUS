@@ -49,12 +49,14 @@
 ##
 ## test_plan:
 ##   current_focus:
-##     - "Task name 1"
-##     - "Task name 2"
-##   stuck_tasks:
-##     - "Task name with persistent issues"
-##   test_all: false
-##   test_priority: "high_first"  # or "sequential" or "stuck_first"
+##     - "Scalability Stress Testing - 100 MT5 Accounts Simulation"
+##     - "Database Performance Under Load Testing"
+##     - "API Endpoint Concurrent Load Testing"
+##     - "Frontend Performance with Large Datasets"
+##     - "MT5 Real-Time Data Collection at Scale"
+##   stuck_tasks: []
+##   test_all: true
+##   test_priority: "scalability_first"  # Focus on production scalability requirements
 ##
 ## agent_communication:
 ##     - agent: "main"
