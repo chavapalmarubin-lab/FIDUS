@@ -501,6 +501,62 @@ const InvestmentCalendar = ({ user }) => {
       </Card>
       )}
 
+      {/* Investment Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-green-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Next Interest Payment</p>
+                <p className="text-2xl font-bold text-white">
+                  {getNextInterestPayment() ? formatDate(getNextInterestPayment().date) : 'N/A'}
+                </p>
+                {getNextInterestPayment() && (
+                  <p className="text-green-400 text-sm">
+                    {formatCurrency(getNextInterestPayment().amount)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <ArrowDownCircle className="h-8 w-8 text-orange-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Next Redemption</p>
+                <p className="text-2xl font-bold text-white">
+                  {getNextRedemption() ? formatDate(getNextRedemption().date) : 'N/A'}
+                </p>
+                {getNextRedemption() && (
+                  <p className="text-orange-400 text-sm">
+                    {getNextRedemption().frequency || 'Available'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-cyan-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Total Events</p>
+                <p className="text-2xl font-bold text-white">
+                  {getUpcomingEvents().length}
+                </p>
+                <p className="text-cyan-400 text-sm">Next 90 days</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Legend */}
       <Card className="dashboard-card">
         <CardHeader>
