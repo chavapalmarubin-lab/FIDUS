@@ -320,6 +320,54 @@ class MT5IntegrationService:
             logging.error(f"Error getting account performance for {account_id}: {str(e)}")
             return None
     
+    async def get_account_deposit_history(self, account_id: str) -> Optional[Dict[str, Any]]:
+        """Get account deposit history to find the first deposit date"""
+        try:
+            # Get account info from database
+            account_info = mongodb_manager.db.mt5_accounts.find_one({'account_id': account_id})
+            if not account_info:
+                return None
+            
+            mt5_login = account_info.get('mt5_login')
+            
+            # In a real implementation, this would connect to MT5 API and get:
+            # - Account history
+            # - First deposit date
+            # - All deposit/withdrawal transactions
+            
+            # For now, return real data based on the provided MT5 screenshot
+            # This would be replaced with actual MT5 API calls
+            if mt5_login == 9928326:  # Salvador's account
+                # Real data from MT5 account screenshot
+                return {
+                    "account_id": account_id,
+                    "mt5_login": mt5_login,
+                    "first_deposit_date": None,  # This needs to be retrieved from real MT5 API
+                    "deposits": [
+                        {
+                            "amount": 1263485.40,
+                            "date": None,  # To be determined from MT5 API
+                            "type": "deposit"
+                        }
+                    ],
+                    "withdrawals": [
+                        {
+                            "amount": 143000.00,
+                            "date": None,  # To be determined from MT5 API
+                            "type": "withdrawal"
+                        }
+                    ],
+                    "current_balance": 1837934.05,
+                    "total_profit": 717448.65,
+                    "status": "real_data_needed"
+                }
+            
+            return None
+            
+        except Exception as e:
+            logging.error(f"Error getting deposit history for {account_id}: {str(e)}")
+            return None
+    
     async def _get_mock_performance_data(self, account_id: str) -> Optional[MT5PerformanceData]:
         """Generate mock performance data (replace with real MT5 API calls)"""
         try:
