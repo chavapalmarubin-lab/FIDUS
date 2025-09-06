@@ -44,34 +44,39 @@ const CashFlowManagement = () => {
       setLoading(true);
       setError("");
       
-      // Fetch cash flow data
+      // Fetch fund accounting cash flow data
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
       
       if (cashFlowResponse.data.success) {
-        // Use backend calculated totals instead of frontend calculations
+        // Use proper fund accounting structure
         setCashFlowData(cashFlowResponse.data.cash_flows || []);
+        setFundAccounting(cashFlowResponse.data.fund_accounting || {});
         setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
-        setTotalInflow(cashFlowResponse.data.total_inflow || 0);
-        setTotalOutflow(cashFlowResponse.data.total_outflow || 0);
-        setNetCashFlow(cashFlowResponse.data.net_cash_flow || 0);
+        setRebatesSummary(cashFlowResponse.data.rebates_summary || {});
         
-        console.log("✅ Cash flow data loaded successfully:", {
-          totalInflow: cashFlowResponse.data.total_inflow,
-          totalOutflow: cashFlowResponse.data.total_outflow,
-          netCashFlow: cashFlowResponse.data.net_cash_flow
-        });
+        console.log("✅ Fund accounting cash flow data loaded successfully:", cashFlowResponse.data.fund_accounting);
       } else {
         throw new Error("API returned unsuccessful response");
       }
     } catch (err) {
       console.error("❌ Cash flow API error:", err);
       setError("Failed to load cash flow data");
-      // Set some example totals for development
-      setTotalInflow(25000000);
-      setTotalOutflow(5000000); 
-      setNetCashFlow(20000000);
+      // Set example fund accounting data
+      setFundAccounting({
+        assets: {
+          mt5_trading_profits: 500000,
+          broker_rebates: 50000,
+          total_inflows: 550000
+        },
+        liabilities: {
+          client_obligations: 300000,
+          upcoming_redemptions: 0,
+          total_outflows: 300000
+        },
+        net_fund_profitability: 250000
+      });
     } finally {
       setLoading(false);
     }
