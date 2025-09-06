@@ -287,12 +287,15 @@ class FundPerformanceManager:
             mt5_login = mt5_account.get("mt5_login")
             if mt5_login:
                 # For Salvador's account, we know it's login 9928326
-                # In a real implementation, this would query MT5 API for account history
+                # Get the real deposit date from the stored MT5 account data
                 if mt5_login == 9928326:
-                    # Based on the contract screenshot showing 04-2020
-                    # This should be retrieved from actual MT5 account history
-                    # For now, use April 2020 as indicated in the contract
-                    return datetime(2020, 4, 1, tzinfo=timezone.utc)
+                    # Use the actual deposit date stored in the MT5 account record
+                    stored_date = mt5_account.get("deposit_date")
+                    if stored_date:
+                        if isinstance(stored_date, str):
+                            return datetime.fromisoformat(stored_date.replace('Z', '+00:00'))
+                        elif isinstance(stored_date, datetime):
+                            return stored_date if stored_date.tzinfo else stored_date.replace(tzinfo=timezone.utc)
             
             # Fallback to stored deposit date if available
             stored_date = mt5_account.get("deposit_date")
