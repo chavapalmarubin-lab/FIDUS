@@ -368,6 +368,57 @@ class MT5IntegrationService:
             logging.error(f"Error getting deposit history for {account_id}: {str(e)}")
             return None
     
+    async def get_real_mt5_account_info(self, mt5_login: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve real account information from MT5 API
+        This method should be implemented to connect to actual MT5 API and get:
+        - Account creation date
+        - First deposit date
+        - Transaction history
+        """
+        try:
+            # TODO: Implement real MT5 API connection
+            # import MetaTrader5 as mt5
+            # 
+            # if not mt5.initialize():
+            #     return None
+            # 
+            # account_info = mt5.account_info()._asdict()
+            # history = mt5.history_deals_get(datetime(2020, 1, 1), datetime.now())
+            # 
+            # # Find first deposit
+            # first_deposit = None
+            # for deal in history:
+            #     if deal.type == mt5.DEAL_TYPE_BALANCE and deal.profit > 0:
+            #         first_deposit = {
+            #             "date": datetime.fromtimestamp(deal.time),
+            #             "amount": deal.profit
+            #         }
+            #         break
+            # 
+            # return {
+            #     "login": account_info["login"],
+            #     "creation_time": datetime.fromtimestamp(account_info.get("creation_time", 0)),
+            #     "first_deposit": first_deposit,
+            #     "balance": account_info["balance"],
+            #     "equity": account_info["equity"],
+            #     "profit": account_info["profit"]
+            # }
+            
+            # For now, return placeholder indicating real data is needed
+            logging.warning(f"Real MT5 API not implemented for account {mt5_login}")
+            logging.warning("To get real deposit date, implement MetaTrader5 API connection")
+            
+            return {
+                "status": "needs_real_mt5_api",
+                "message": "Real MT5 API connection required to get accurate deposit date",
+                "mt5_login": mt5_login
+            }
+            
+        except Exception as e:
+            logging.error(f"Error getting real MT5 account info for {mt5_login}: {str(e)}")
+            return None
+    
     async def _get_mock_performance_data(self, account_id: str) -> Optional[MT5PerformanceData]:
         """Generate mock performance data (replace with real MT5 API calls)"""
         try:
