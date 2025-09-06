@@ -86,7 +86,7 @@ class FundPerformanceManager:
         self.logger = logging.getLogger('FundPerformanceManager')
         
     def initialize_fund_commitments(self) -> Dict[str, FundCommitment]:
-        """Initialize FIDUS fund commitment structures"""
+        """Initialize FIDUS fund commitment structures - NONE are guaranteed"""
         return {
             "CORE": FundCommitment(
                 fund_code="CORE",
@@ -95,7 +95,7 @@ class FundPerformanceManager:
                 minimum_investment=10000,  # $10K minimum
                 risk_level="LOW",
                 description="Conservative fund with steady returns",
-                guaranteed=True
+                guaranteed=False  # NO FIDUS funds are guaranteed
             ),
             "BALANCE": FundCommitment(
                 fund_code="BALANCE",
@@ -104,7 +104,7 @@ class FundPerformanceManager:
                 minimum_investment=50000,  # $50K minimum
                 risk_level="MEDIUM",
                 description="Balanced fund with moderate risk/return",
-                guaranteed=True
+                guaranteed=False  # NO FIDUS funds are guaranteed
             ),
             "DYNAMIC": FundCommitment(
                 fund_code="DYNAMIC",
@@ -113,7 +113,7 @@ class FundPerformanceManager:
                 minimum_investment=250000,  # $250K minimum
                 risk_level="HIGH",
                 description="Dynamic fund with high potential returns",
-                guaranteed=False
+                guaranteed=False  # NO FIDUS funds are guaranteed
             ),
             "UNLIMITED": FundCommitment(
                 fund_code="UNLIMITED",
@@ -122,7 +122,7 @@ class FundPerformanceManager:
                 minimum_investment=1000000,  # $1M minimum
                 risk_level="VERY_HIGH",
                 description="Unlimited growth potential fund with performance sharing",
-                guaranteed=False
+                guaranteed=False  # NO FIDUS funds are guaranteed
             )
         }
     
