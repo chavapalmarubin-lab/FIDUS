@@ -9499,6 +9499,198 @@ async def generate_recovery_codes(user_id: str):
         logging.error(f"Generate recovery codes error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate recovery codes")
 
+# ===============================================================================
+# WALLET MANAGEMENT ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/wallets/fidus")
+async def get_fidus_official_wallets():
+    """Get FIDUS official wallet addresses for deposits"""
+    try:
+        fidus_wallets = []
+        for wallet in FIDUS_OFFICIAL_WALLETS:
+            fidus_wallets.append({
+                "wallet_id": wallet.wallet_id,
+                "network": wallet.network.value,
+                "currency": wallet.currency,
+                "address": wallet.address,
+                "wallet_name": wallet.wallet_name,
+                "memo_tag": wallet.memo_tag,
+                "is_active": wallet.is_active,
+                "qr_code_url": wallet.qr_code_url
+            })
+        
+        return {
+            "success": True,
+            "wallets": fidus_wallets,
+            "total_count": len(fidus_wallets)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching FIDUS wallets: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch FIDUS wallet addresses")
+
+@api_router.get("/client/{client_id}/wallets")
+async def get_client_wallets(client_id: str):
+    """Get all wallets for a specific client"""
+    try:
+        # For now, return from in-memory storage
+        # In production, this would fetch from MongoDB
+        wallets = client_wallets.get(client_id, [])
+        
+        # Convert to serializable format
+        serializable_wallets = []
+        for wallet in wallets:
+            wallet_dict = wallet.dict() if hasattr(wallet, 'dict') else wallet
+            serializable_wallets.append(wallet_dict)
+        
+        return {
+            "success": True,
+            "wallets": serializable_wallets,
+            "total_count": len(serializable_wallets)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching client wallets: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client wallets")
+
+@api_router.post("/client/{client_id}/wallets")
+async def create_client_wallet(client_id: str, wallet_data: ClientWalletCreate):
+    """Create a new wallet for a client"""
+    try:
+        # Create new wallet
+        wallet = ClientWallet(
+            client_id=client_id,
+            **wallet_data.dict()
+        )
+        
+        # Store in memory (in production, save to MongoDB)
+        if client_id not in client_wallets:
+            client_wallets[client_id] = []
+        
+        client_wallets[client_id].append(wallet)
+        
+        # If this is set as primary, unset other primary wallets
+        if wallet.is_primary:
+            for existing_wallet in client_wallets[client_id]:
+                if existing_wallet.wallet_id != wallet.wallet_id:
+                    existing_wallet.is_primary = False
+        
+        logging.info(f"Created wallet {wallet.wallet_id} for client {client_id}")
+        
+        return {
+            "success": True,
+            "wallet": wallet.dict(),
+            "message": "Wallet created successfully"
+        }
+        
+    except Exception as e:
+        logging.error(f"Error creating client wallet: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create wallet")
+
+@api_router.put("/client/{client_id}/wallets/{wallet_id}")
+async def update_client_wallet(client_id: str, wallet_id: str, wallet_data: ClientWalletUpdate):
+    """Update an existing client wallet"""
+    try:
+        if client_id not in client_wallets:
+            raise HTTPException(status_code=404, detail="Client wallets not found")
+        
+        # Find the wallet to update
+        wallet_to_update = None
+        for wallet in client_wallets[client_id]:
+            if wallet.wallet_id == wallet_id:
+                wallet_to_update = wallet
+                break
+        
+        if not wallet_to_update:
+            raise HTTPException(status_code=404, detail="Wallet not found")
+        
+        # Update wallet fields
+        update_data = wallet_data.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(wallet_to_update, field, value)
+        
+        wallet_to_update.updated_at = datetime.now(timezone.utc)
+        
+        # If this is set as primary, unset other primary wallets
+        if wallet_data.is_primary:
+            for existing_wallet in client_wallets[client_id]:
+                if existing_wallet.wallet_id != wallet_id:
+                    existing_wallet.is_primary = False
+        
+        logging.info(f"Updated wallet {wallet_id} for client {client_id}")
+        
+        return {
+            "success": True,
+            "wallet": wallet_to_update.dict(),
+            "message": "Wallet updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating client wallet: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update wallet")
+
+@api_router.delete("/client/{client_id}/wallets/{wallet_id}")
+async def delete_client_wallet(client_id: str, wallet_id: str):
+    """Delete a client wallet"""
+    try:
+        if client_id not in client_wallets:
+            raise HTTPException(status_code=404, detail="Client wallets not found")
+        
+        # Find and remove the wallet
+        original_count = len(client_wallets[client_id])
+        client_wallets[client_id] = [
+            wallet for wallet in client_wallets[client_id] 
+            if wallet.wallet_id != wallet_id
+        ]
+        
+        if len(client_wallets[client_id]) == original_count:
+            raise HTTPException(status_code=404, detail="Wallet not found")
+        
+        logging.info(f"Deleted wallet {wallet_id} for client {client_id}")
+        
+        return {
+            "success": True,
+            "message": "Wallet deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting client wallet: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete wallet")
+
+@api_router.get("/admin/client-wallets")
+async def get_all_client_wallets(current_user: dict = Depends(get_current_admin_user)):
+    """Get all client wallets for admin view"""
+    try:
+        all_wallets = []
+        
+        for client_id, wallets in client_wallets.items():
+            # Get client info
+            client_info = None
+            for user in MOCK_USERS.values():
+                if user.get('id') == client_id:
+                    client_info = user
+                    break
+            
+            for wallet in wallets:
+                wallet_dict = wallet.dict() if hasattr(wallet, 'dict') else wallet
+                wallet_dict['client_info'] = client_info
+                all_wallets.append(wallet_dict)
+        
+        return {
+            "success": True,
+            "wallets": all_wallets,
+            "total_count": len(all_wallets)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching all client wallets: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client wallets")
+
 # Include the router in the main app
 app.include_router(api_router)
 
