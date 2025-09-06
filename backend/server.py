@@ -1102,10 +1102,17 @@ async def get_application_documents(current_user: dict = Depends(get_current_adm
             },
             "FINAL_PRODUCTION_SUMMARY.md": {
                 "title": "Final Production Summary",
-                "description": "Executive summary of production readiness status and deployment approval",
+                "description": "Executive summary of production readiness status and deployment approval with latest updates",
                 "type": "guide",
                 "status": "current",
                 "category": "executive"
+            },
+            "CHANGELOG.md": {
+                "title": "System Changelog",
+                "description": "Complete version history and tracking of all system changes, fixes, and enhancements",
+                "type": "documentation",
+                "status": "current",
+                "category": "documentation"
             },
             "test_result.md": {
                 "title": "Comprehensive Test Results",
