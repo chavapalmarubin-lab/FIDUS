@@ -1044,73 +1044,83 @@ async def refresh_token(request: Request):
         logging.error(f"Token refresh error: {str(e)}")
         raise HTTPException(status_code=500, detail="Token refresh failed")
 
-# Health check endpoints for monitoring and load balancer
+# ===============================================================================
+# SYSTEM MONITORING AND HEALTH CHECK ENDPOINTS
+# ===============================================================================
+
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.0"
+        "service": "FIDUS Investment Management API"
     }
 
 @api_router.get("/health/ready")
 async def readiness_check():
-    """Readiness check - verifies all dependencies are available"""
-    checks = {
-        "database": False,
-        "status": "checking"
-    }
-    
+    """Readiness check with database connectivity"""
     try:
-        # Check database connectivity
-        await db.command('ping')
-        checks["database"] = True
+        # Test database connection
+        await db.admin.command('ping')
         
-        # All checks passed
-        checks["status"] = "ready"
+        # Get rate limiter stats
+        rate_limiter_stats = rate_limiter.get_stats()
         
         return {
             "status": "ready",
-            "checks": checks,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "database": "connected",
+            "rate_limiter": rate_limiter_stats
         }
-        
     except Exception as e:
-        logging.error(f"Readiness check failed: {str(e)}")
-        checks["status"] = "not_ready"
-        checks["error"] = str(e)
-        
         return JSONResponse(
             status_code=503,
             content={
-                "status": "not_ready",
-                "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "status": "not ready",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "error": str(e)
             }
         )
 
 @api_router.get("/health/metrics")
-async def metrics():
-    """System metrics for monitoring"""
+async def health_metrics():
+    """Detailed health metrics for monitoring"""
     try:
-        # Get database stats
+        # Database stats
         db_stats = await db.command("dbStats")
         
+        # Rate limiter stats
+        rate_limiter_stats = rate_limiter.get_stats()
+        
+        # System metrics
+        import psutil
+        system_metrics = {
+            "cpu_percent": psutil.cpu_percent(),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_usage": psutil.disk_usage('/').percent
+        }
+        
         return {
+            "status": "healthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "database": {
+                "status": "connected",
                 "collections": db_stats.get("collections", 0),
-                "objects": db_stats.get("objects", 0),
-                "dataSize": db_stats.get("dataSize", 0),
-                "indexSize": db_stats.get("indexSize", 0)
+                "data_size": db_stats.get("dataSize", 0),
+                "index_size": db_stats.get("indexSize", 0)
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "rate_limiter": rate_limiter_stats,
+            "system": system_metrics
         }
     except Exception as e:
-        logging.error(f"Metrics collection failed: {str(e)}")
         return JSONResponse(
-            status_code=500, 
-            content={"error": "Metrics collection failed"}
+            status_code=503,
+            content={
+                "status": "degraded",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "error": str(e)
+            }
         )
 
 @api_router.post("/auth/change-password")
