@@ -71,6 +71,48 @@ class MT5ActivityTester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def setup_authentication(self) -> bool:
+        """Setup admin authentication for MT5 API access"""
+        print("\n" + "="*80)
+        print("🔐 SETTING UP AUTHENTICATION")
+        print("="*80)
+        
+        # Test admin login
+        success, response = self.run_test(
+            "Admin Login for MT5 Access",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "admin", 
+                "password": "password123",
+                "user_type": "admin"
+            }
+        )
+        
+        if success:
+            self.admin_token = response.get('token')
+            if self.admin_token:
+                print(f"   ✅ Admin authenticated successfully")
+                print(f"   🔑 Token obtained: {self.admin_token[:20]}...")
+                return True
+            else:
+                print(f"   ❌ No token received in admin login response")
+                return False
+        else:
+            print(f"   ❌ Admin login failed")
+            return False
+
+    def get_auth_headers(self) -> Dict:
+        """Get authentication headers with JWT token"""
+        if self.admin_token:
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.admin_token}'
+            }
+        else:
+            return {'Content-Type': 'application/json'}
+
     def test_priority_1_mt5_activity_api(self) -> bool:
         """PRIORITY 1: Test MT5 Activity API Endpoint for specific account"""
         print("\n" + "="*80)
