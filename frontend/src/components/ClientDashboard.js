@@ -131,10 +131,7 @@ const ClientDashboard = ({ user, onLogout }) => {
               <DollarSign size={16} className="mr-2" />
               Account Overview
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
-              <Target size={16} className="mr-2" />
-              Investments
-            </TabsTrigger>
+
             <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
               📈 Fund Commitments
             </TabsTrigger>
