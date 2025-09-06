@@ -8991,39 +8991,60 @@ class RateLimiter:
         self.requests = defaultdict(list)
         self.cleanup_interval = 3600  # Clean up old entries every hour
         self.last_cleanup = time()
+        self.total_requests = 0  # For debugging
+        self.blocked_requests = 0  # For debugging
     
     def is_allowed(self, key: str, limit: int = 100, window: int = 60) -> bool:
         """Check if request is allowed under rate limit"""
         current_time = time()
+        self.total_requests += 1
         
         # Clean up old entries periodically
         if current_time - self.last_cleanup > self.cleanup_interval:
             self.cleanup_old_entries()
             self.last_cleanup = current_time
         
-        # Get request history for this key
-        request_times = self.requests[key]
+        # Remove expired entries for this key
+        if key in self.requests:
+            self.requests[key] = [
+                timestamp for timestamp in self.requests[key]
+                if current_time - timestamp < window
+            ]
         
-        # Remove requests outside the time window
-        cutoff_time = current_time - window
-        self.requests[key] = [t for t in request_times if t > cutoff_time]
+        # Check if we're under the limit
+        current_count = len(self.requests[key])
         
-        # Check if under limit
-        if len(self.requests[key]) < limit:
-            self.requests[key].append(current_time)
-            return True
+        if current_count >= limit:
+            self.blocked_requests += 1
+            logging.debug(f"Rate limit blocking {key}: {current_count}/{limit} requests in window")
+            return False
         
-        return False
+        # Add current request timestamp
+        self.requests[key].append(current_time)
+        logging.debug(f"Rate limit allowing {key}: {current_count + 1}/{limit} requests in window")
+        return True
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get rate limiter statistics for monitoring"""
+        return {
+            "total_requests": self.total_requests,
+            "blocked_requests": self.blocked_requests,
+            "block_rate": (self.blocked_requests / max(self.total_requests, 1)) * 100,
+            "active_clients": len(self.requests),
+            "cleanup_interval": self.cleanup_interval
+        }
     
     def cleanup_old_entries(self):
-        """Remove old entries to prevent memory leak"""
+        """Clean up old request entries to prevent memory leaks"""
         current_time = time()
-        cutoff_time = current_time - 3600  # Keep last hour of data
-        
         keys_to_remove = []
-        for key, times in self.requests.items():
-            # Remove old timestamps
-            self.requests[key] = [t for t in times if t > cutoff_time]
+        
+        for key, timestamps in self.requests.items():
+            # Keep only timestamps from last hour
+            self.requests[key] = [
+                timestamp for timestamp in timestamps
+                if current_time - timestamp < 3600
+            ]
             
             # Remove empty entries
             if not self.requests[key]:
@@ -9031,6 +9052,8 @@ class RateLimiter:
         
         for key in keys_to_remove:
             del self.requests[key]
+        
+        logging.info(f"Rate limiter cleanup: removed {len(keys_to_remove)} inactive clients")
 
 # Global rate limiter instance
 rate_limiter = RateLimiter()
