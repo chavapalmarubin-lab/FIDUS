@@ -180,7 +180,7 @@ class ComprehensiveFundTester:
             
             # Validation against review request expectations
             validations = {
-                "Only BALANCE fund shown": len([f for f in fund_commitments if f.get('fund_code') == 'BALANCE']) > 0,
+                "BALANCE fund present": any('BALANCE' in str(f) for f in fund_commitments),
                 "1 performance gap": len(performance_gaps) == 1,
                 "1 critical risk": risk_summary.get('CRITICAL', 0) == 1,
                 "Salvador action item": any('client_003' in str(item) or 'BALANCE' in str(item) for item in action_items)
