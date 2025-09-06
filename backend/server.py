@@ -8354,10 +8354,19 @@ except Exception as e:
 async def get_fund_performance_dashboard():
     """Get comprehensive fund performance vs MT5 reality dashboard"""
     try:
-        if not fund_performance_manager:
-            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+        # Import fund performance manager directly
+        import sys
+        sys.path.append('/app/backend')
+        from fund_performance_manager import fund_performance_manager as fpm
         
-        dashboard_data = await fund_performance_manager.generate_fund_management_dashboard()
+        if not fpm:
+            return {
+                "success": False,
+                "error": "Fund performance manager not available",
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+        
+        dashboard_data = await fpm.generate_fund_management_dashboard()
         
         return {
             "success": True,
@@ -8367,7 +8376,11 @@ async def get_fund_performance_dashboard():
         
     except Exception as e:
         logging.error(f"Fund performance dashboard error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate fund performance dashboard")
+        return {
+            "success": False,
+            "error": f"Failed to generate fund performance dashboard: {str(e)}",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
 
 @api_router.get("/admin/fund-performance/client/{client_id}")
 async def get_client_fund_performance(client_id: str):
