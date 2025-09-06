@@ -289,9 +289,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             src="/fidus-logo.png"
             alt="FIDUS Logo"
             style={{ 
-              height: '42px', 
+              height: '56px', 
               width: 'auto',
-              maxWidth: '150px',
+              maxWidth: '180px',
               objectFit: 'contain'
             }}
           />
