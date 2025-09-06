@@ -7017,7 +7017,9 @@ async def create_client_investment(investment_data: InvestmentCreate):
             "investment_id": investment.investment_id,
             "investment": investment.dict(),
             "mt5_account_id": mt5_account_id,
-            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund with MT5 integration"
+            "mt5_mapping_success": mt5_mapping_success,
+            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund" + 
+                      (" with MT5 account mapping" if mt5_mapping_success else " (MT5 mapping skipped)")
         }
         
     except HTTPException:
