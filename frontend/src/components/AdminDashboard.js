@@ -285,10 +285,12 @@ const AdminDashboard = ({ user, onLogout }) => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-logo">
-          <span className="header-logo-text">
-            <span className="header-logo-f">F</span>IDUS
-          </span>
-          <span className="text-slate-400 ml-4 text-sm">Investment Committee</span>
+          <img 
+            src="/fidus-logo.png"
+            alt="FIDUS Logo"
+            className="h-8 w-auto mr-3"
+          />
+          <span className="text-slate-400 text-sm">Investment Committee</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
