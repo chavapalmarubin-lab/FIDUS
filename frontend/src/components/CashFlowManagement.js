@@ -343,7 +343,7 @@ const CashFlowManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Total Inflow</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {formatCurrency(calculateTotalInflow())}
+                  {formatCurrency(totalInflow)}
                 </p>
               </div>
             </div>
@@ -357,7 +357,7 @@ const CashFlowManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Total Outflow</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {formatCurrency(calculateTotalOutflow())}
+                  {formatCurrency(totalOutflow)}
                 </p>
               </div>
             </div>
@@ -367,11 +367,11 @@ const CashFlowManagement = () => {
         <Card className="dashboard-card">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <DollarSign className={`h-8 w-8 ${getNetCashFlow() >= 0 ? 'text-green-400' : 'text-red-400'}`} />
+              <DollarSign className={`h-8 w-8 ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`} />
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Net Cash Flow</p>
-                <p className={`text-2xl font-bold ${getNetCashFlow() >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(getNetCashFlow())}
+                <p className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(netCashFlow)}
                 </p>
               </div>
             </div>
