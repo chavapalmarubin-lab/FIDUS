@@ -833,7 +833,7 @@ MOCK_USERS = {
         "profile_picture": "https://images.unsplash.com/photo-1494790108755-2616b812358f?w=150&h=150&fit=crop&crop=face"
     },
     "client3": {
-        "id": "client_0fd630c3",
+        "id": "client_003",
         "username": "client3", 
         "name": "SALVADOR PALMA",
         "email": "chava@alyarglobal.com",
