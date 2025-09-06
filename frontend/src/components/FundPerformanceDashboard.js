@@ -418,6 +418,12 @@ const FundPerformanceDashboard = () => {
                                         <p className="text-sm text-slate-400">Description</p>
                                         <p className="text-white">{commitment.description}</p>
                                     </div>
+
+                                    {commitment.note && (
+                                        <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-700">
+                                            <p className="text-sm text-blue-300">{commitment.note}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
