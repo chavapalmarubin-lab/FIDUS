@@ -360,6 +360,22 @@ const InvestmentCalendar = ({ user }) => {
           <CalendarIcon className="mr-3 h-8 w-8 text-cyan-400" />
           Investment Calendar
         </h2>
+        <div className="flex space-x-2">
+          <Button
+            variant={viewMode === 'upcoming' ? 'default' : 'outline'}
+            onClick={() => setViewMode('upcoming')}
+            className="text-white"
+          >
+            Upcoming Events
+          </Button>
+          <Button
+            variant={viewMode === 'month' ? 'default' : 'outline'}
+            onClick={() => setViewMode('month')}
+            className="text-white"
+          >
+            Monthly View
+          </Button>
+        </div>
       </div>
 
       {/* Error Message */}
