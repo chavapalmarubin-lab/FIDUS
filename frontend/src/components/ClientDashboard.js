@@ -117,18 +117,7 @@ const ClientDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="header-logo">
-          <img 
-            src="/fidus-logo.png"
-            alt="FIDUS Logo"
-            style={{ 
-              height: '48px', 
-              width: 'auto',
-              maxWidth: '180px',
-              objectFit: 'contain'
-            }}
-          />
-        </div>
+
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
           <Button onClick={onLogout} className="logout-btn">
