@@ -292,6 +292,20 @@ const InvestmentCalendar = ({ user }) => {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
+  const getNextInterestPayment = () => {
+    const today = new Date();
+    return calendarEvents
+      .filter(event => event.type === 'interest_payment' && new Date(event.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  };
+
+  const getNextRedemption = () => {
+    const today = new Date();
+    return calendarEvents
+      .filter(event => event.type === 'interest_redemption' && new Date(event.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  };
+
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + direction);
