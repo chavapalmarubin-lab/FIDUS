@@ -76,11 +76,16 @@ class ComprehensiveFundTester:
 
     def test_fund_performance_gaps_detailed(self):
         """Test Fund Performance Gaps API with detailed validation"""
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+            
         success, response = self.run_test(
             "Fund Performance Gaps API - Detailed Validation",
             "GET",
             "api/admin/fund-performance/gaps",
-            200
+            200,
+            headers=headers
         )
         
         if success:
