@@ -446,7 +446,9 @@ const ClientDashboard = ({ user, onLogout }) => {
         </motion.div>
           </TabsContent>
 
-
+          <TabsContent value="wallet" className="mt-6">
+            <ClientWallet user={user} />
+          </TabsContent>
 
           <TabsContent value="redemptions" className="mt-6">
             <RedemptionManagement user={user} />
