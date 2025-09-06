@@ -279,6 +279,19 @@ const InvestmentCalendar = ({ user }) => {
     });
   };
 
+  const getUpcomingEvents = () => {
+    const today = new Date();
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(today.getDate() + 90);
+    
+    return calendarEvents
+      .filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate >= today && eventDate <= ninetyDaysFromNow;
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  };
+
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + direction);
