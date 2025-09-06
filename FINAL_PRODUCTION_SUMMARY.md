@@ -13,6 +13,21 @@
 
 The FIDUS Investment Management System has successfully completed comprehensive stress testing and is **APPROVED FOR MONDAY PRODUCTION DEPLOYMENT**. All critical scalability requirements have been met, with particular focus on MT5 integration and the ability to scale from 1 to 100 MT5 accounts within the next month.
 
+### **RECENT UPDATES - December 2024:**
+
+#### **🔧 CRM Dashboard Data Cleanup (Latest)**
+- **Trading Monitor Tab:** Removed old mock data, now shows only Salvador Palma's real MT5 account
+- **MetaQuotes Data Tab:** Fixed "Failed to load MT5 account mappings" error, now displays actual account mappings
+- **Data Source:** All CRM trading data now uses real MongoDB data instead of mock/demo data
+
+#### **💰 Rebate System Enhancement (Latest)**
+- **Lot-Based Structure:** Updated rebate system to reflect variable rebates based on trading volume (lots)
+- **Removed Period Field:** Eliminated fixed period selections (Daily/Weekly/Monthly) as rebates are volume-dependent
+- **Enhanced Modal:** Added "Lots Traded" and "$ per Lot" fields for proper rebate tracking
+- **Business Alignment:** System now accurately reflects broker commission structure based on MT5 trading volume
+
+#### **🏦 Fund Accounting Implementation (Previous)**
+
 **Key Achievements:**
 - ✅ **100 MT5 Account Scalability:** Confirmed and tested
 - ✅ **Multi-Broker Integration:** Multibank and DooTechnology working
