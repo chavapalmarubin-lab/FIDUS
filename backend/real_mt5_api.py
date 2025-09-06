@@ -186,18 +186,16 @@ class RealMT5API:
         """
         Get Salvador's real MT5 account data (login 9928326)
         
-        NOTE: This requires real MT5 credentials
+        Using REAL MT5 credentials provided by user
         """
-        # Salvador's account details
+        # Salvador's REAL account details
         login = 9928326
-        # NOTE: Real password and server needed here
-        password = "REAL_PASSWORD_NEEDED"  # This must be provided
-        server = "DooTechnology-Live"  # Or actual server name
+        password = "R1d567j!"  # Real trading password provided
+        server = "DooTechnology-Live"  # Real server provided
         
-        self.logger.warning("⚠️  Real MT5 credentials needed for login 9928326")
-        self.logger.warning("⚠️  Cannot proceed without actual MT5 password and server")
+        self.logger.info(f"🔗 Connecting to REAL MT5 account {login} on {server}")
         
-        # In production, this would use real credentials
+        # Connect to real MT5 account and get actual transaction history
         return await self.get_real_account_history(login, password, server)
 
 # Example usage
