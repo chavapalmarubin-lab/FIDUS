@@ -8146,6 +8146,67 @@ async def get_mt5_accounts_by_broker():
         logging.error(f"Get MT5 accounts by broker error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 accounts by broker")
 
+@api_router.get("/mt5/admin/account/{account_id}/activity")
+async def get_mt5_account_activity(account_id: str):
+    """Get real trading activity for specific MT5 account"""
+    try:
+        # Get activity from mt5_activity collection
+        activities = []
+        
+        # Query the database directly for real trading activities
+        async for activity in db.mt5_activity.find({'account_id': account_id}).sort('timestamp', -1):
+            activity.pop('_id', None)  # Remove MongoDB ObjectId
+            activities.append(activity)
+        
+        if not activities:
+            # If no activities in database, return empty array
+            activities = []
+        
+        return {
+            "success": True,
+            "account_id": account_id,
+            "activity": activities,
+            "total_activities": len(activities)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 account activity error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 account activity")
+
+@api_router.get("/mt5/admin/account/{account_id}/positions")  
+async def get_mt5_account_positions(account_id: str):
+    """Get current trading positions for specific MT5 account"""
+    try:
+        # Get current open positions from activity
+        positions = []
+        
+        async for activity in db.mt5_activity.find({
+            'account_id': account_id,
+            'type': 'trade',
+            'status': 'open'
+        }).sort('timestamp', -1):
+            activity.pop('_id', None)
+            positions.append({
+                'symbol': activity.get('symbol'),
+                'type': activity.get('trade_type'),
+                'volume': activity.get('volume'),
+                'opening_price': activity.get('opening_price'),
+                'current_price': activity.get('current_price'),
+                'profit_loss': activity.get('profit_loss'),
+                'timestamp': activity.get('timestamp')
+            })
+        
+        return {
+            "success": True,
+            "account_id": account_id,
+            "positions": positions,
+            "total_positions": len(positions)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 account positions error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch MT5 account positions")
+
 @api_router.get("/mt5/client/{client_id}/performance")
 async def get_client_mt5_performance(client_id: str):
     """Get comprehensive MT5 performance summary for client"""
