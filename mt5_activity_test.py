@@ -125,7 +125,8 @@ class MT5ActivityTester:
             f"MT5 Activity API - Target Account",
             "GET",
             f"api/mt5/admin/account/{self.target_account_id}/activity",
-            200
+            200,
+            headers=self.get_auth_headers()
         )
         
         if success:
