@@ -8508,6 +8508,48 @@ async def get_fund_commitments():
         logging.error(f"Fund commitments error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get fund commitments")
 
+@api_router.get("/admin/fund-performance/test")
+async def test_fund_performance_manager():
+    """Test fund performance manager availability and basic functionality"""
+    try:
+        import sys
+        sys.path.append('/app/backend')
+        from fund_performance_manager import fund_performance_manager as fpm
+        
+        if not fpm:
+            return {"success": False, "error": "Fund performance manager is None"}
+        
+        # Test basic functionality
+        fund_commitments = list(fpm.fund_commitments.keys())
+        
+        # Test with Salvador's data
+        from datetime import datetime
+        gap = await fpm.analyze_performance_gap(
+            "client_003", "BALANCE", 100000.0, datetime(2024, 12, 19)
+        )
+        
+        return {
+            "success": True,
+            "manager_type": str(type(fpm)),
+            "fund_commitments": fund_commitments,
+            "test_gap": {
+                "client_id": gap.client_id,
+                "fund_code": gap.fund_code,
+                "expected": gap.expected_performance,
+                "actual": gap.actual_mt5_performance,
+                "gap_amount": gap.gap_amount,
+                "gap_percentage": gap.gap_percentage,
+                "risk_level": gap.risk_level
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
 @api_router.post("/admin/fund-performance/alert")
 async def create_performance_alert(request: Request):
     """Create alert for significant performance gaps"""
