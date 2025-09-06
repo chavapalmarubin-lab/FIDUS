@@ -133,12 +133,21 @@ class FundPerformanceManager:
         if not fund_commitment:
             return {"error": f"Unknown fund: {fund_code}"}
         
-        # Parse investment date
-        try:
-            invest_date = datetime.fromisoformat(investment_date.replace('Z', '+00:00'))
-        except:
-            invest_date = datetime.strptime(investment_date, '%Y-%m-%d')
-            invest_date = invest_date.replace(tzinfo=timezone.utc)
+        # Parse investment date - handle both string and datetime objects
+        if isinstance(investment_date, datetime):
+            invest_date = investment_date
+            if invest_date.tzinfo is None:
+                invest_date = invest_date.replace(tzinfo=timezone.utc)
+        else:
+            try:
+                invest_date = datetime.fromisoformat(str(investment_date).replace('Z', '+00:00'))
+            except:
+                try:
+                    invest_date = datetime.strptime(str(investment_date), '%Y-%m-%d')
+                    invest_date = invest_date.replace(tzinfo=timezone.utc)
+                except:
+                    # If all parsing fails, use current date
+                    invest_date = datetime.now(timezone.utc)
         
         current_date = datetime.now(timezone.utc)
         
