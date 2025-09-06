@@ -191,8 +191,8 @@ const CashFlowManagement = () => {
               <DollarSign className={`h-8 w-8 ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`} />
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-400">Net Cash Flow</p>
-                <p className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(netCashFlow)}
+                <p className={`text-2xl font-bold ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(fundAccounting?.net_fund_profitability || 0)}
                 </p>
                 <p className="text-xs text-slate-400">All Funds Combined</p>
               </div>
