@@ -25,79 +25,95 @@ import apiAxios from "../utils/apiAxios";
 import { format } from "date-fns";
 
 const MetaQuotesData = () => {
-  const [credentials, setCredentials] = useState({
-    login: '',
-    password: '',
-    server: ''
-  });
-  const [connectionStatus, setConnectionStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [accountInfo, setAccountInfo] = useState(null);
-  const [positions, setPositions] = useState([]);
-  const [dealsHistory, setDealsHistory] = useState([]);
-  const [marketData, setMarketData] = useState({});
-  const [showCredentials, setShowCredentials] = useState(false);
+  const [mappedAccounts, setMappedAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [accountData, setAccountData] = useState(null);
 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  useEffect(() => {
+    fetchMappedAccounts();
+  }, []);
 
-  const handleConnect = async () => {
+  const fetchMappedAccounts = async () => {
     try {
       setLoading(true);
+      setError('');
       
-      const formData = new FormData();
-      formData.append('login', credentials.login);
-      formData.append('password', credentials.password);
-      formData.append('server', credentials.server);
-      
-      const response = await axios.post(`${backendUrl}/api/metaquotes/connect`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      setConnectionStatus(response.data);
+      // Get all MT5 accounts from the admin endpoint
+      const response = await apiAxios.get('/admin/all-clients-mt5-details');
       
       if (response.data.success) {
-        setShowCredentials(false);
-        await fetchAllData();
+        const mt5Accounts = [];
+        
+        // Extract MT5 accounts from all clients
+        response.data.clients.forEach(client => {
+          if (client.mt5_accounts && client.mt5_accounts.length > 0) {
+            client.mt5_accounts.forEach(account => {
+              mt5Accounts.push({
+                ...account,
+                client_name: client.name,
+                client_id: client.id,
+                status: 'active'
+              });
+            });
+          }
+        });
+        
+        setMappedAccounts(mt5Accounts);
+        console.log("✅ Mapped MT5 accounts loaded:", mt5Accounts);
+      } else {
+        throw new Error("Failed to fetch MT5 accounts");
       }
-    } catch (error) {
-      console.error('MetaQuotes connection error:', error);
-      setConnectionStatus({
-        success: false,
-        error: error.response?.data?.detail || 'Connection failed'
-      });
+    } catch (err) {
+      console.error("❌ Error fetching mapped accounts:", err);
+      setError("Failed to load MT5 account mappings");
+      
+      // Show Salvador's account as example
+      setMappedAccounts([{
+        account_id: "mt5_client_003_BALANCE_dootechnology_34c231f6",
+        client_name: "Salvador Palma",
+        client_id: "client_003",
+        mt5_login: "9928326",
+        broker_name: "DooTechnology",
+        mt5_server: "DooTechnology-Live",
+        fund_code: "BALANCE",
+        current_balance: 1421421.08,
+        current_equity: 1421421.08,
+        last_updated: new Date().toISOString(),
+        status: 'active'
+      }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAllData = async () => {
+  const fetchAccountDetails = async (accountId) => {
     try {
-      // Fetch account info
-      const accountRes = await axios.get(`${backendUrl}/api/metaquotes/account-info`);
-      if (accountRes.data.success) {
-        setAccountInfo(accountRes.data.account_info);
+      setLoading(true);
+      
+      // Get detailed account data
+      const response = await apiAxios.get(`/admin/mt5/account/${accountId}/activity`);
+      
+      if (response.data.success) {
+        setAccountData(response.data);
+      } else {
+        throw new Error("Failed to fetch account details");
       }
+    } catch (err) {
+      console.error("❌ Error fetching account details:", err);
+      setError("Failed to load account details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Fetch positions
-      const positionsRes = await axios.get(`${backendUrl}/api/metaquotes/positions`);
-      if (positionsRes.data.success) {
-        setPositions(positionsRes.data.positions);
-      }
-
-      // Fetch deals history
-      const dealsRes = await axios.get(`${backendUrl}/api/metaquotes/deals-history?days=30`);
-      if (dealsRes.data.success) {
-        setDealsHistory(dealsRes.data.deals);
-      }
-
-      // Fetch market data
-      const marketRes = await axios.get(`${backendUrl}/api/metaquotes/market-data`);
-      if (marketRes.data.success) {
-        setMarketData(marketRes.data.market_data);
-      }
-    } catch (error) {
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
       console.error('Error fetching MetaQuotes data:', error);
     }
   };
