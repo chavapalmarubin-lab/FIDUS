@@ -23,6 +23,9 @@ const CashFlowManagement = () => {
   const [redemptionSchedule, setRedemptionSchedule] = useState([]);
   const [monthlyProjections, setMonthlyProjections] = useState([]);
   const [fundBreakdown, setFundBreakdown] = useState({});
+  const [totalInflow, setTotalInflow] = useState(0);
+  const [totalOutflow, setTotalOutflow] = useState(0);
+  const [netCashFlow, setNetCashFlow] = useState(0);
   const [selectedTimeframe, setSelectedTimeframe] = useState('3months');
   const [selectedFund, setSelectedFund] = useState('all');
   const [loading, setLoading] = useState(true);
