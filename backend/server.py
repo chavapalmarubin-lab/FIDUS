@@ -920,10 +920,16 @@ def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     return sorted(transactions, key=lambda x: x["date"], reverse=True)
 
 def calculate_balances(client_id: str) -> dict:
-    """Calculate balances from current investment values"""
-    balances = {"fidus_funds": 0, "core_balance": 0, "dynamic_balance": 0}
+    """Calculate balances from current investment values - showing individual fund balances"""
+    balances = {
+        "core_balance": 0, 
+        "balance_balance": 0,  # BALANCE fund balance
+        "dynamic_balance": 0, 
+        "unlimited_balance": 0,  # UNLIMITED fund balance
+        "fidus_funds": 0  # Keep for backward compatibility
+    }
     
-    # Get client investments from MongoDB - since we reset to zero, return zero balances
+    # Get client investments from MongoDB
     try:
         from mongodb_integration import mongodb_manager
         investments = mongodb_manager.get_client_investments(client_id)
@@ -934,16 +940,26 @@ def calculate_balances(client_id: str) -> dict:
             if investment['fund_code'] == "CORE":
                 balances["core_balance"] += current_value
             elif investment['fund_code'] == "BALANCE":
-                balances["fidus_funds"] += current_value  # BALANCE goes to fidus_funds
+                balances["balance_balance"] += current_value
             elif investment['fund_code'] == "DYNAMIC":
                 balances["dynamic_balance"] += current_value
             elif investment['fund_code'] == "UNLIMITED":
-                balances["fidus_funds"] += current_value  # UNLIMITED goes to fidus_funds
-    except:
+                balances["unlimited_balance"] += current_value
+        
+        # For backward compatibility, combine BALANCE and UNLIMITED into fidus_funds
+        balances["fidus_funds"] = balances["balance_balance"] + balances["unlimited_balance"]
+        
+    except Exception as e:
         # If MongoDB fails, default to zero balances (clean start)
+        logging.warning(f"Failed to get investments for client {client_id}: {e}")
         pass
     
-    balances["total_balance"] = sum(balances.values())
+    balances["total_balance"] = sum([
+        balances["core_balance"], 
+        balances["balance_balance"], 
+        balances["dynamic_balance"], 
+        balances["unlimited_balance"]
+    ])
     
     return balances
 
