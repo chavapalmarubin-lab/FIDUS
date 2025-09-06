@@ -368,11 +368,11 @@ backend:
 
   - task: "Fund Performance Management System"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/FundPerformanceDashboard.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
