@@ -306,13 +306,20 @@ const AdminDashboard = ({ user, onLogout }) => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
-                FIDUS Investment Committee — Admin Dashboard
-              </h1>
-              <p className="text-sm text-slate-400">
-                Manage fund allocations, monitor performance, and oversee client database.
-              </p>
+            <div className="flex items-center gap-4">
+              <img 
+                src="/fidus-logo.png"
+                alt="FIDUS Logo"
+                className="h-12 w-auto"
+              />
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-white">
+                  FIDUS Investment Committee — Admin Dashboard
+                </h1>
+                <p className="text-sm text-slate-400">
+                  Manage fund allocations, monitor performance, and oversee client database.
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
