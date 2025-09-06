@@ -114,7 +114,12 @@ const ClientDashboard = ({ user, onLogout }) => {
           <img 
             src="/fidus-logo.png"
             alt="FIDUS Logo"
-            className="h-10 w-auto"
+            style={{ 
+              height: '48px', 
+              width: 'auto',
+              maxWidth: '180px',
+              objectFit: 'contain'
+            }}
           />
         </div>
         <div className="flex items-center gap-4">
