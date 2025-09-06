@@ -27,6 +27,14 @@ const CashFlowManagement = () => {
   const [selectedFund, setSelectedFund] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddRebateModal, setShowAddRebateModal] = useState(false);
+  const [newRebate, setNewRebate] = useState({
+    fund_code: '',
+    amount: '',
+    broker: '',
+    period: '',
+    description: ''
+  });
 
   const FUND_COLORS = {
     CORE: '#0891b2',
