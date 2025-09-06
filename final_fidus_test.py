@@ -14,7 +14,7 @@ import json
 from dateutil.relativedelta import relativedelta
 
 class FinalFidusFundTester:
-    def __init__(self, base_url="https://invest-platform-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://investment-portal-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

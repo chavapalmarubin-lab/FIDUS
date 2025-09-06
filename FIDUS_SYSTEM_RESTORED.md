@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://invest-platform-19.preview.emergentagent.com`
+`https://investment-portal-2.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
