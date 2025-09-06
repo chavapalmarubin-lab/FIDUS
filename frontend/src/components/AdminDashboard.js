@@ -318,30 +318,13 @@ const AdminDashboard = ({ user, onLogout }) => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
-            <div className="flex items-center gap-6">
-              <img 
-                src="/fidus-logo.png"
-                alt="FIDUS Logo"
-                onError={(e) => { console.error('Main logo failed to load:', e); }}
-                onLoad={() => { console.log('Main logo loaded successfully'); }}
-                style={{ 
-                  height: '70px !important', 
-                  width: 'auto !important',
-                  maxWidth: '250px !important',
-                  objectFit: 'contain !important',
-                  display: 'block !important',
-                  zIndex: '1000',
-                  position: 'relative'
-                }}
-              />
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight text-white">
-                  Investment Committee — Admin Dashboard
-                </h1>
-                <p className="text-sm text-slate-400">
-                  Manage fund allocations, monitor performance, and oversee client database.
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                FIDUS Investment Committee — Admin Dashboard
+              </h1>
+              <p className="text-sm text-slate-400">
+                Manage fund allocations, monitor performance, and oversee client database.
+              </p>
             </div>
           </div>
         </motion.div>
