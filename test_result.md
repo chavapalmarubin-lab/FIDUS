@@ -123,6 +123,17 @@
 user_problem_statement: "PRODUCTION READINESS COMPREHENSIVE STRESS TEST WITH SCALABILITY FOCUS - Going Live Monday: The FIDUS Investment Management System requires complete validation of all systems, data flows, calculations, and real MT5 feed integration before production deployment. CRITICAL SCALABILITY REQUIREMENT: System currently has 1 MT5 account mapped but must scale to handle 100 MT5 accounts within one month. Core requirements: 1) All authentication flows working under load, 2) All fund performance calculations accurate at scale, 3) Real MT5 data feeds operational for multiple accounts, 4) All user journeys functional with concurrent users, 5) Database integrity validated under stress, 6) Security protocols verified with high throughput, 7) Admin and client dashboards fully operational with large datasets, 8) Fund Performance vs MT5 Reality system accurate across 100 accounts, 9) All API endpoints responding correctly under concurrent load, 10) Error handling robust during peak usage, 11) UI/UX polished and professional with large data volumes, 12) System scalability validated for 100x current MT5 account load."
 
 backend:
+  - task: "Comprehensive Crypto Wallet Management System"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTING COMPREHENSIVE CRYPTO WALLET SYSTEM: Building complete wallet management for FIDUS crypto payment processing. Implementation plan: (1) DATABASE MODELS: Create ClientWallet model for storing client payment instructions (fiat/crypto addresses), FidusWallet model for official FIDUS addresses, wallet transaction logging. (2) BACKEND ENDPOINTS: /api/client/wallet CRUD operations, /api/admin/wallets client wallet management, /api/wallets/fidus for FIDUS official addresses. (3) WALLET ADDRESSES: Store FIDUS official wallets - USDT/USDC ERC20 (0xDe2DC29591dBc6e540b63050D73E2E9430733A90), TRC20 (TGoTqWUhLMFQyAm3BeFUEwMuUPDMY4g3iG), BTC (1JT2h9aQ6KnP2vjRiPT13Dvc3ASp9mQ6fj), ETH (0xDe2DC29591dBc6e540b63050D73E2E9430733A90). (4) PAYMENT INTEGRATION: Update redemption system to use only wallet addresses, modify investment deposit confirmation to support wallet-based payments. Starting with database schema and backend API implementation."
   - task: "MT5 Account Mapping Integration in Investment Creation"
     implemented: true
     working: true
