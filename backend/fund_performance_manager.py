@@ -347,10 +347,11 @@ class FundPerformanceManager:
         # CORRECTED CALCULATION: Use actual client return from MT5 (Profit + Withdrawals)
         expected_value = expected["expected_current_value"]  # FIDUS commitment expectation
         
-        # Get REAL MT5 performance = Profit + Withdrawals (actual client benefit)
-        mt5_profit = mt5_account.get("profit_loss", 0)
-        mt5_withdrawal = mt5_account.get("withdrawal_amount", 0) 
-        actual_client_return = mt5_profit + mt5_withdrawal
+        # Get REAL MT5 performance = Withdrawal + Current Balance (total client value)
+        # This represents what client has withdrawn + what they still have in account
+        mt5_withdrawal = mt5_account.get("withdrawal_amount", 0)
+        mt5_current_balance = mt5_account.get("current_equity", mt5_account.get("balance", 0))
+        actual_client_return = mt5_withdrawal + mt5_current_balance
         
         # Calculate gap: Actual MT5 return vs FIDUS expected value
         gap_amount = actual_client_return - expected_value
