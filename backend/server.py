@@ -8393,7 +8393,14 @@ async def get_performance_gaps():
     """Get all performance gaps between FIDUS commitments and MT5 reality"""
     try:
         if not fund_performance_manager:
-            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+            logging.error("fund_performance_manager is None - import failed")
+            return {
+                "success": False,
+                "performance_gaps": [],
+                "total_gaps": 0,
+                "error": "Fund performance manager not available - import failed",
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
         
         # Get all client investments
         gaps = []
