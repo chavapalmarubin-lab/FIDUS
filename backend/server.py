@@ -436,6 +436,76 @@ class ClientCreate(BaseModel):
     phone: Optional[str] = None
     notes: Optional[str] = ""
 
+# ===============================================================================
+# WALLET MANAGEMENT MODELS
+# ===============================================================================
+
+class WalletType(str, Enum):
+    FIAT = "fiat"
+    CRYPTO = "crypto"
+
+class CryptoNetwork(str, Enum):
+    BITCOIN = "BTC"
+    ETHEREUM = "ETH"
+    ERC20 = "ERC20"
+    TRC20 = "TRC20"
+    BSC = "BSC"
+    POLYGON = "POLYGON"
+
+class FiatBankInfo(BaseModel):
+    bank_name: str
+    account_holder: str
+    account_number: str
+    routing_number: Optional[str] = None
+    swift_code: Optional[str] = None
+    iban: Optional[str] = None
+    country: str = "USA"
+
+class CryptoWalletInfo(BaseModel):
+    network: CryptoNetwork
+    currency: str  # USDT, USDC, BTC, ETH, etc.
+    address: str
+    memo_tag: Optional[str] = None  # For networks that require memo/tag
+
+class ClientWallet(BaseModel):
+    wallet_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    wallet_type: WalletType
+    wallet_name: str  # User-friendly name
+    is_active: bool = True
+    is_primary: bool = False
+    fiat_info: Optional[FiatBankInfo] = None
+    crypto_info: Optional[CryptoWalletInfo] = None
+    notes: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ClientWalletCreate(BaseModel):
+    wallet_type: WalletType
+    wallet_name: str
+    fiat_info: Optional[FiatBankInfo] = None
+    crypto_info: Optional[CryptoWalletInfo] = None
+    is_primary: bool = False
+    notes: str = ""
+
+class ClientWalletUpdate(BaseModel):
+    wallet_name: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_primary: Optional[bool] = None
+    fiat_info: Optional[FiatBankInfo] = None
+    crypto_info: Optional[CryptoWalletInfo] = None
+    notes: Optional[str] = None
+
+class FidusWallet(BaseModel):
+    wallet_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    network: CryptoNetwork
+    currency: str
+    address: str
+    memo_tag: Optional[str] = None
+    wallet_name: str
+    is_active: bool = True
+    qr_code_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 # FIDUS Investment Fund Configuration
 FIDUS_FUND_CONFIG = {
     "CORE": FundConfiguration(
