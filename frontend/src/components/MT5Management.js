@@ -154,7 +154,7 @@ const MT5Management = () => {
             setSelectedAccountDetails(account);
             setShowAccountDetailsModal(true);
             
-            // Fetch account activity/details
+            // Fetch real account activity from backend
             const activityResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/account/${account.account_id}/activity`, {
                 headers: {
                     'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
@@ -163,14 +163,20 @@ const MT5Management = () => {
             
             if (activityResponse.ok) {
                 const activityData = await activityResponse.json();
-                setAccountActivity(activityData.activity || []);
+                if (activityData.success) {
+                    setAccountActivity(activityData.activity || []);
+                    console.log('Real trading activity loaded:', activityData.activity);
+                } else {
+                    console.warn('No real trading activity found, using mock data');
+                    setAccountActivity(generateMockActivity(account));
+                }
             } else {
-                // Generate mock activity data if endpoint doesn't exist yet
+                console.warn('Trading activity API failed, using mock data');
                 setAccountActivity(generateMockActivity(account));
             }
         } catch (err) {
             console.error('Failed to fetch account details:', err);
-            // Generate mock activity data
+            // Fallback to mock data
             setAccountActivity(generateMockActivity(account));
         }
     };
