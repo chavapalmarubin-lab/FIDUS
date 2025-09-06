@@ -321,9 +321,12 @@ class FundPerformanceManager:
                                         mt5_account: dict) -> PerformanceGap:
         """Analyze performance gap using REAL MT5 data: Profit + Withdrawals vs FIDUS commitments"""
         
-        # Calculate expected performance based on FIDUS fund commitment
+        # Get the REAL MT5 deposit date (not the stored date)
+        real_deposit_date = await self.get_real_mt5_deposit_date(client_id, mt5_account)
+        
+        # Calculate expected performance based on FIDUS fund commitment using REAL date
         expected = await self.calculate_expected_performance(
-            client_id, fund_code, principal_amount, deposit_date
+            client_id, fund_code, principal_amount, real_deposit_date
         )
         
         if "error" in expected:
