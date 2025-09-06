@@ -443,7 +443,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=default_data
+            data=default_data,
+            use_auth=True
         )
         
         if success:
