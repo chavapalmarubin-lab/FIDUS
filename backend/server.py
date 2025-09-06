@@ -150,9 +150,11 @@ class Transaction(BaseModel):
 
 class ClientBalance(BaseModel):
     client_id: str
-    fidus_funds: float
     core_balance: float
+    balance_balance: float  # BALANCE fund
     dynamic_balance: float
+    unlimited_balance: float  # UNLIMITED fund
+    fidus_funds: float  # Combined BALANCE + UNLIMITED for backward compatibility
     total_balance: float
     last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
