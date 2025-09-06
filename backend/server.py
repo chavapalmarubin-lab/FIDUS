@@ -8332,6 +8332,189 @@ async def get_mt5_system_status():
         logging.error(f"Get MT5 system status error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get system status")
 
+# ===============================================================================
+# FUND PERFORMANCE vs MT5 REALITY MANAGEMENT SYSTEM
+# ===============================================================================
+
+# Import the fund performance manager
+try:
+    from fund_performance_manager import fund_performance_manager
+except ImportError:
+    fund_performance_manager = None
+    logging.warning("Fund performance manager not available")
+
+@api_router.get("/admin/fund-performance/dashboard")
+async def get_fund_performance_dashboard():
+    """Get comprehensive fund performance vs MT5 reality dashboard"""
+    try:
+        if not fund_performance_manager:
+            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+        
+        dashboard_data = await fund_performance_manager.generate_fund_management_dashboard()
+        
+        return {
+            "success": True,
+            "dashboard": dashboard_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Fund performance dashboard error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate fund performance dashboard")
+
+@api_router.get("/admin/fund-performance/client/{client_id}")
+async def get_client_fund_performance(client_id: str):
+    """Get detailed fund performance comparison for specific client"""
+    try:
+        if not fund_performance_manager:
+            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+        
+        client_comparison = await fund_performance_manager.get_client_fund_comparison(client_id)
+        
+        return {
+            "success": True,
+            "client_comparison": client_comparison,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Client fund performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get client fund performance")
+
+@api_router.get("/admin/fund-performance/gaps")
+async def get_performance_gaps():
+    """Get all performance gaps between FIDUS commitments and MT5 reality"""
+    try:
+        if not fund_performance_manager:
+            raise HTTPException(status_code=500, detail="Fund performance manager not available")
+        
+        # Get all client investments
+        gaps = []
+        
+        async for investment in db.investments.find({}):
+            client_id = investment["client_id"]
+            fund_code = investment["fund_code"]
+            principal_amount = investment["principal_amount"]
+            investment_date = investment["deposit_date"]
+            
+            gap = await fund_performance_manager.analyze_performance_gap(
+                client_id, fund_code, principal_amount, investment_date
+            )
+            
+            gaps.append({
+                "client_id": gap.client_id,
+                "fund_code": gap.fund_code,
+                "expected_performance": gap.expected_performance,
+                "actual_mt5_performance": gap.actual_mt5_performance,
+                "gap_amount": gap.gap_amount,
+                "gap_percentage": gap.gap_percentage,
+                "risk_level": gap.risk_level,
+                "action_required": gap.action_required,
+                "recommendation": fund_performance_manager.get_recommendation(gap)
+            })
+        
+        return {
+            "success": True,
+            "performance_gaps": gaps,
+            "total_gaps": len(gaps),
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Performance gaps error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get performance gaps")
+
+@api_router.get("/admin/fund-commitments")
+async def get_fund_commitments():
+    """Get FIDUS fund commitment details for all funds"""
+    try:
+        if not fund_performance_manager:
+            return {
+                "success": True,
+                "fund_commitments": {
+                    "CORE": {
+                        "monthly_return": 1.5,
+                        "redemption_frequency": 6,
+                        "risk_level": "LOW",
+                        "guaranteed": True,
+                        "description": "Conservative fund with steady returns"
+                    },
+                    "BALANCE": {
+                        "monthly_return": 2.5,
+                        "redemption_frequency": 3,
+                        "risk_level": "MEDIUM",
+                        "guaranteed": True,
+                        "description": "Balanced fund with moderate risk/return"
+                    },
+                    "DYNAMIC": {
+                        "monthly_return": 4.0,
+                        "redemption_frequency": 1,
+                        "risk_level": "HIGH",
+                        "guaranteed": False,
+                        "description": "Dynamic fund with high potential returns"
+                    },
+                    "UNLIMITED": {
+                        "monthly_return": 6.0,
+                        "redemption_frequency": 1,
+                        "risk_level": "VERY_HIGH",
+                        "guaranteed": False,
+                        "description": "Unlimited growth potential fund"
+                    }
+                }
+            }
+        
+        commitments = {}
+        for fund_code, commitment in fund_performance_manager.fund_commitments.items():
+            commitments[fund_code] = {
+                "monthly_return": commitment.monthly_return,
+                "redemption_frequency": commitment.redemption_frequency,
+                "minimum_investment": commitment.minimum_investment,
+                "risk_level": commitment.risk_level,
+                "guaranteed": commitment.guaranteed,
+                "description": commitment.description
+            }
+        
+        return {
+            "success": True,
+            "fund_commitments": commitments,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Fund commitments error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get fund commitments")
+
+@api_router.post("/admin/fund-performance/alert")
+async def create_performance_alert(request: Request):
+    """Create alert for significant performance gaps"""
+    try:
+        data = await request.json()
+        
+        alert_data = {
+            "alert_id": f"alert_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+            "client_id": data.get("client_id"),
+            "fund_code": data.get("fund_code"),
+            "alert_type": data.get("alert_type", "PERFORMANCE_GAP"),
+            "severity": data.get("severity", "MEDIUM"),
+            "message": data.get("message", "Performance alert"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "acknowledged": False,
+            "action_taken": None
+        }
+        
+        # Store alert in database
+        await db.fund_performance_alerts.insert_one(alert_data)
+        
+        return {
+            "success": True,
+            "alert_id": alert_data["alert_id"],
+            "message": "Performance alert created successfully"
+        }
+        
+    except Exception as e:
+        logging.error(f"Create performance alert error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create performance alert")
+
 @api_router.get("/mt5/client/{client_id}/performance")
 async def get_client_mt5_performance(client_id: str):
     """Get comprehensive MT5 performance summary for client"""
