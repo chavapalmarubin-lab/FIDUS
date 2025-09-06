@@ -284,27 +284,27 @@ const AdminDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="flex items-center gap-3" style={{ minHeight: '60px' }}>
+        <div className="flex items-center gap-4" style={{ minHeight: '64px' }}>
           <img 
             src="/fidus-logo.png"
             alt="FIDUS Logo"
             onError={(e) => { 
               console.error('Top left logo failed to load'); 
-              e.target.style.display = 'none';
             }}
             onLoad={() => { 
-              console.log('Top left logo loaded successfully'); 
+              console.log('BIG Top left logo loaded successfully at 64px'); 
             }}
             style={{ 
-              height: '56px', 
+              height: '64px', 
               width: 'auto',
-              maxWidth: '180px',
+              maxWidth: '200px',
               objectFit: 'contain',
-              display: 'block',
-              backgroundColor: 'transparent'
+              display: 'block !important',
+              visibility: 'visible !important',
+              opacity: '1 !important'
             }}
           />
-          <span className="text-slate-400 text-sm">Investment Committee</span>
+          <span className="text-slate-400 text-base">Investment Committee</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
