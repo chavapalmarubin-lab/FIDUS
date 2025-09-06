@@ -8086,8 +8086,51 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
             client_investments = mongodb_manager.get_client_investments(client['id'])
             for investment in client_investments:
                 fund_code = investment['fund_code']
-                # Interest earned = what fund owes to client
-                interest_obligation = investment['interest_earned']
+                principal_amount = investment['principal_amount']
+                investment_date = investment['deposit_date']
+                
+                # Calculate what client should have based on FIDUS fund commitments
+                # This should match Fund Performance dashboard methodology
+                try:
+                    if fund_code == "BALANCE":
+                        # BALANCE fund: 2.5% monthly return
+                        monthly_rate = 0.025
+                    elif fund_code == "CORE":
+                        # CORE fund: 1.5% monthly return  
+                        monthly_rate = 0.015
+                    elif fund_code == "DYNAMIC":
+                        # DYNAMIC fund: 3.5% monthly return
+                        monthly_rate = 0.035
+                    elif fund_code == "UNLIMITED":
+                        # UNLIMITED fund: Performance sharing (more complex calculation)
+                        monthly_rate = 0.045 * 0.5  # 4.5% fund performance, 50% client share
+                    else:
+                        monthly_rate = 0.02  # Default 2%
+                    
+                    # Calculate months elapsed
+                    if isinstance(investment_date, str):
+                        invest_date = datetime.fromisoformat(investment_date.replace('Z', '+00:00'))
+                    else:
+                        invest_date = investment_date
+                        if invest_date.tzinfo is None:
+                            invest_date = invest_date.replace(tzinfo=timezone.utc)
+                    
+                    current_date = datetime.now(timezone.utc)
+                    time_diff = current_date - invest_date
+                    months_elapsed = time_diff.days / 30.44  # Average days per month
+                    
+                    # Expected returns based on fund commitment
+                    expected_total_return = principal_amount * (monthly_rate * months_elapsed)
+                    expected_current_value = principal_amount + expected_total_return
+                    
+                    # Client Interest Obligation = what we owe client based on our fund commitments
+                    interest_obligation = expected_current_value
+                    
+                except Exception as e:
+                    logging.error(f"Error calculating expected performance for {investment['investment_id']}: {e}")
+                    # Fallback to current_value if calculation fails
+                    interest_obligation = investment.get('current_value', principal_amount)
+                
                 total_client_obligations += interest_obligation
                 if fund_code in client_breakdown:
                     client_breakdown[fund_code] += interest_obligation
