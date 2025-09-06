@@ -394,7 +394,8 @@ class SalvadorPalmaVerificationTester:
             "GET Admin Portfolio Summary",
             "GET",
             "api/admin/portfolio-summary",
-            200
+            200,
+            headers=self.get_auth_headers(use_admin=True)
         )
         
         if not success:
