@@ -315,11 +315,16 @@ class ComprehensiveFundTester:
 
     def test_fund_commitments_detailed(self):
         """Test Fund Commitments API with detailed validation"""
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+            
         success, response = self.run_test(
             "Fund Commitments API - Detailed Validation",
             "GET",
             "api/admin/fund-commitments",
-            200
+            200,
+            headers=headers
         )
         
         if success:
