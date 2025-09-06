@@ -306,12 +306,62 @@ const CashFlowManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Fund Breakdown Table */}
+      {/* REBATES COMMISSION BREAKDOWN */}
       <Card className="dashboard-card">
         <CardHeader>
           <CardTitle className="text-white flex items-center">
             <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
-            Fund Breakdown - All Funds Summary
+            Broker Rebates & Commission Structure
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-white font-semibold mb-3">Rebate Summary</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                  <span className="text-slate-400">Total Rebates Earned</span>
+                  <span className="text-cyan-400 font-bold">
+                    {formatCurrency(rebatesSummary?.total_rebates || 0)}
+                  </span>
+                </div>
+                <div className="text-sm text-slate-300">
+                  <p><strong>Revenue Source:</strong> Broker commissions based on trading volume</p>
+                  <p><strong>Structure:</strong> Variable rate per lot traded</p>
+                  <p><strong>Frequency:</strong> Monthly settlements</p>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-semibold mb-3">Commission by Fund</h4>
+              <div className="space-y-2">
+                {Object.entries(rebatesSummary?.rebate_breakdown || {}).map(([fundCode, amount]) => (
+                  <div key={fundCode} className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div 
+                        className="w-3 h-3 rounded-full mr-2"
+                        style={{ backgroundColor: FUND_COLORS[fundCode] }}
+                      ></div>
+                      <span className="text-slate-300">{fundCode} Fund</span>
+                    </div>
+                    <span className="text-cyan-400 font-medium">
+                      {formatCurrency(amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FUND ACCOUNTING BREAKDOWN TABLE */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
+            Fund Accounting Breakdown - Assets vs Liabilities
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -320,15 +370,17 @@ const CashFlowManagement = () => {
               <thead>
                 <tr className="border-b border-slate-600">
                   <th className="text-left text-slate-400 font-medium py-3">Fund</th>
-                  <th className="text-right text-slate-400 font-medium py-3">Inflow</th>
-                  <th className="text-right text-slate-400 font-medium py-3">Outflow</th>
-                  <th className="text-right text-slate-400 font-medium py-3">Net Flow</th>
-                  <th className="text-right text-slate-400 font-medium py-3">Performance</th>
+                  <th className="text-right text-slate-400 font-medium py-3">MT5 Profits</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Rebates</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Total Assets</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Client Obligations</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Net Position</th>
+                  <th className="text-right text-slate-400 font-medium py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(fundBreakdown).map(([fundCode, data]) => {
-                  const netFlow = (data.inflow || 0) - (data.outflow || 0);
+                  const netPosition = (data.net_flow || 0);
                   return (
                     <tr key={fundCode} className="border-b border-slate-700/50">
                       <td className="py-4">
@@ -341,28 +393,40 @@ const CashFlowManagement = () => {
                         </div>
                       </td>
                       <td className="text-right text-green-400 font-medium py-4">
-                        {formatCurrency(data.inflow || 0)}
+                        {formatCurrency(data.mt5_profits || 0)}
+                      </td>
+                      <td className="text-right text-cyan-400 font-medium py-4">
+                        {formatCurrency(data.rebates || 0)}
+                      </td>
+                      <td className="text-right text-blue-400 font-medium py-4">
+                        {formatCurrency(data.total_inflows || 0)}
                       </td>
                       <td className="text-right text-red-400 font-medium py-4">
-                        {formatCurrency(data.outflow || 0)}
+                        {formatCurrency(data.client_obligations || 0)}
                       </td>
-                      <td className={`text-right font-bold py-4 ${netFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(netFlow)}
+                      <td className={`text-right font-bold py-4 ${netPosition >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatCurrency(netPosition)}
                       </td>
                       <td className="text-right py-4">
-                        <Badge className={netFlow >= 0 ? 'bg-green-600' : 'bg-red-600'}>
-                          {netFlow >= 0 ? 'Positive' : 'Negative'}
+                        <Badge className={netPosition >= 0 ? 'bg-green-600' : 'bg-red-600'}>
+                          {netPosition >= 0 ? 'Profitable' : 'At Risk'}
                         </Badge>
                       </td>
                     </tr>
                   );
                 })}
-                {/* Summary Row */}
+                {/* TOTAL FUND POSITION */}
                 <tr className="border-t-2 border-cyan-600 bg-slate-800/50">
                   <td className="py-4">
-                    <span className="text-cyan-400 font-bold text-lg">TOTAL (All Funds)</span>
+                    <span className="text-cyan-400 font-bold text-lg">TOTAL FUND</span>
                   </td>
                   <td className="text-right text-green-400 font-bold text-lg py-4">
+                    {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
+                  </td>
+                  <td className="text-right text-cyan-400 font-bold text-lg py-4">
+                    {formatCurrency(fundAccounting?.assets?.broker_rebates || 0)}
+                  </td>
+                  <td className="text-right text-blue-400 font-bold text-lg py-4">
                     {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
                   </td>
                   <td className="text-right text-red-400 font-bold text-lg py-4">
@@ -373,7 +437,7 @@ const CashFlowManagement = () => {
                   </td>
                   <td className="text-right py-4">
                     <Badge className={`text-lg ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'bg-green-600' : 'bg-red-600'}`}>
-                      {(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'Strong' : 'Weak'}
+                      {(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'PROFITABLE' : 'AT RISK'}
                     </Badge>
                   </td>
                 </tr>
