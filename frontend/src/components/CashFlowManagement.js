@@ -94,7 +94,7 @@ const CashFlowManagement = () => {
 
   const handleAddRebate = async () => {
     try {
-      if (!newRebate.fund_code || !newRebate.amount || !newRebate.broker || !newRebate.period) {
+      if (!newRebate.fund_code || !newRebate.amount || !newRebate.broker) {
         setError("Please fill in all required fields");
         return;
       }
@@ -103,7 +103,9 @@ const CashFlowManagement = () => {
         fund_code: newRebate.fund_code,
         amount: parseFloat(newRebate.amount),
         broker: newRebate.broker,
-        description: newRebate.description || `${newRebate.period} rebate from ${newRebate.broker}`,
+        lots_traded: parseFloat(newRebate.lots_traded) || 0,
+        rebate_per_lot: parseFloat(newRebate.rebate_per_lot) || 0,
+        description: newRebate.description || `Lot-based rebate from ${newRebate.broker}`,
         date: new Date().toISOString().split('T')[0] // Today's date
       });
 
@@ -113,7 +115,8 @@ const CashFlowManagement = () => {
           fund_code: '',
           amount: '',
           broker: '',
-          period: '',
+          lots_traded: '',
+          rebate_per_lot: '',
           description: ''
         });
         setShowAddRebateModal(false);
