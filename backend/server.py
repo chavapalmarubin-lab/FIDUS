@@ -8405,27 +8405,37 @@ async def get_performance_gaps():
         # Get all client investments
         gaps = []
         
+        logging.info("Starting performance gap analysis...")
         async for investment in db.investments.find({}):
             client_id = investment["client_id"]
             fund_code = investment["fund_code"]
             principal_amount = investment["principal_amount"]
             investment_date = investment["deposit_date"]
             
-            gap = await fund_performance_manager.analyze_performance_gap(
-                client_id, fund_code, principal_amount, investment_date
-            )
+            logging.info(f"Analyzing gap for {client_id} {fund_code} ${principal_amount}")
             
-            gaps.append({
-                "client_id": gap.client_id,
-                "fund_code": gap.fund_code,
-                "expected_performance": gap.expected_performance,
-                "actual_mt5_performance": gap.actual_mt5_performance,
-                "gap_amount": gap.gap_amount,
-                "gap_percentage": gap.gap_percentage,
-                "risk_level": gap.risk_level,
-                "action_required": gap.action_required,
-                "recommendation": fund_performance_manager.get_recommendation(gap)
-            })
+            try:
+                gap = await fund_performance_manager.analyze_performance_gap(
+                    client_id, fund_code, principal_amount, investment_date
+                )
+                
+                logging.info(f"Gap analysis result: {gap.gap_percentage}% gap, risk: {gap.risk_level}")
+                
+                gaps.append({
+                    "client_id": gap.client_id,
+                    "fund_code": gap.fund_code,
+                    "expected_performance": gap.expected_performance,
+                    "actual_mt5_performance": gap.actual_mt5_performance,
+                    "gap_amount": gap.gap_amount,
+                    "gap_percentage": gap.gap_percentage,
+                    "risk_level": gap.risk_level,
+                    "action_required": gap.action_required,
+                    "recommendation": fund_performance_manager.get_recommendation(gap)
+                })
+            except Exception as e:
+                logging.error(f"Error analyzing gap for {client_id} {fund_code}: {str(e)}")
+        
+        logging.info(f"Total gaps found: {len(gaps)}")
         
         return {
             "success": True,
