@@ -370,7 +370,7 @@ const FundPerformanceDashboard = () => {
                             <CardHeader>
                                 <CardTitle className="text-white flex items-center gap-2">
                                     <Badge className="bg-blue-600 text-white">{fundCode}</Badge>
-                                    Fund Commitment
+                                    Client Investment Deliverable
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
