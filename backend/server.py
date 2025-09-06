@@ -8021,7 +8021,7 @@ async def update_mt5_credentials(credentials: MT5CredentialsRequest):
 # ===============================================================================
 
 @api_router.get("/mt5/brokers")
-async def get_available_brokers():
+async def get_available_brokers(current_user: dict = Depends(get_current_admin_user)):
     """Get list of available MT5 brokers"""
     try:
         from mt5_integration import MT5BrokerConfig
@@ -8037,7 +8037,7 @@ async def get_available_brokers():
         raise HTTPException(status_code=500, detail="Failed to fetch broker list")
 
 @api_router.get("/mt5/brokers/{broker_code}/servers")
-async def get_broker_servers(broker_code: str):
+async def get_broker_servers(broker_code: str, current_user: dict = Depends(get_current_admin_user)):
     """Get available servers for a specific broker"""
     try:
         from mt5_integration import MT5BrokerConfig
