@@ -6930,23 +6930,76 @@ async def create_client_investment(investment_data: InvestmentCreate):
         # Update the investment object with the actual ID from MongoDB
         investment.investment_id = investment_id
         
-        # Create or update MT5 account mapping with specified broker
-        broker_code = investment_data.broker_code or 'multibank'  # Use specified broker or default
-        mt5_account_id = await mt5_service.get_or_create_mt5_account(
-            investment_data.client_id,
-            investment_data.fund_code,
-            {
-                'investment_id': investment_id,
-                'principal_amount': investment_data.amount,
-                'fund_code': investment_data.fund_code
-            },
-            broker_code
-        )
+        # Handle MT5 Account Mapping if requested
+        mt5_account_id = None
+        mt5_mapping_success = False
         
-        if mt5_account_id:
-            logging.info(f"MT5 account {mt5_account_id} linked to investment {investment_id}")
-        else:
-            logging.warning(f"Failed to create/link MT5 account for investment {investment_id}")
+        if investment_data.create_mt5_account and investment_data.mt5_login and investment_data.mt5_password:
+            try:
+                # Validate required MT5 fields
+                if not investment_data.mt5_server:
+                    raise ValueError("MT5 server is required for account mapping")
+                
+                # Calculate actual MT5 balance (may differ from FIDUS amount due to fees)
+                mt5_balance = investment_data.mt5_initial_balance or investment_data.amount
+                banking_fees = investment_data.banking_fees or 0
+                
+                # Create MT5 account mapping with real credentials
+                mt5_account_data = {
+                    'investment_id': investment_id,
+                    'principal_amount': investment_data.amount,
+                    'fund_code': investment_data.fund_code,
+                    'mt5_login': investment_data.mt5_login,
+                    'mt5_password': investment_data.mt5_password,  # Will be encrypted by mt5_service
+                    'mt5_server': investment_data.mt5_server,
+                    'broker_name': investment_data.broker_name or 'Multibank',
+                    'mt5_initial_balance': mt5_balance,
+                    'banking_fees': banking_fees,
+                    'fee_notes': investment_data.fee_notes or ''
+                }
+                
+                # Use broker from MT5 mapping or default
+                broker_code = investment_data.broker_code or 'multibank'
+                
+                # Create MT5 account with real credentials
+                mt5_account_id = await mt5_service.create_mt5_account_with_credentials(
+                    investment_data.client_id,
+                    investment_data.fund_code,
+                    mt5_account_data,
+                    broker_code
+                )
+                
+                if mt5_account_id:
+                    mt5_mapping_success = True
+                    logging.info(f"MT5 account {mt5_account_id} created and linked to investment {investment_id}")
+                    logging.info(f"MT5 Initial Balance: ${mt5_balance:,.2f}, Banking Fees: ${banking_fees:,.2f}")
+                else:
+                    logging.error(f"Failed to create MT5 account mapping for investment {investment_id}")
+                    
+            except Exception as mt5_error:
+                logging.error(f"MT5 account mapping failed for investment {investment_id}: {str(mt5_error)}")
+                # Investment still succeeds even if MT5 mapping fails
+                mt5_mapping_success = False
+        
+        elif investment_data.create_mt5_account:
+            # Create default MT5 account mapping (existing behavior)
+            broker_code = investment_data.broker_code or 'multibank'
+            mt5_account_id = await mt5_service.get_or_create_mt5_account(
+                investment_data.client_id,
+                investment_data.fund_code,
+                {
+                    'investment_id': investment_id,
+                    'principal_amount': investment_data.amount,
+                    'fund_code': investment_data.fund_code
+                },
+                broker_code
+            )
+            
+            if mt5_account_id:
+                mt5_mapping_success = True
+                logging.info(f"Default MT5 account {mt5_account_id} linked to investment {investment_id}")
+            else:
+                logging.warning(f"Failed to create/link default MT5 account for investment {investment_id}")
         
         # Log the deposit activity in MongoDB
         mongodb_manager.log_activity({
