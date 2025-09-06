@@ -571,6 +571,45 @@ activity_logs = []  # List of ActivityLog entries
 # In-memory payment confirmation storage  
 payment_confirmations = {}  # {confirmation_id: PaymentConfirmation}
 
+# In-memory wallet management storage
+client_wallets = {}  # {client_id: [ClientWallet]}
+
+# FIDUS Official Wallets for deposits
+FIDUS_OFFICIAL_WALLETS = [
+    FidusWallet(
+        wallet_id="fidus_btc_001",
+        network=CryptoNetwork.BITCOIN,
+        currency="BTC",
+        address="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+        wallet_name="FIDUS Bitcoin Wallet",
+        qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+    ),
+    FidusWallet(
+        wallet_id="fidus_eth_001",
+        network=CryptoNetwork.ETHEREUM,
+        currency="ETH",
+        address="0x742d35Cc6634C0532925a3b8D4C9db96590c6C87",
+        wallet_name="FIDUS Ethereum Wallet",
+        qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
+    ),
+    FidusWallet(
+        wallet_id="fidus_usdt_erc20_001",
+        network=CryptoNetwork.ERC20,
+        currency="USDT",
+        address="0x742d35Cc6634C0532925a3b8D4C9db96590c6C87",
+        wallet_name="FIDUS USDT (ERC20) Wallet",
+        qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
+    ),
+    FidusWallet(
+        wallet_id="fidus_usdt_trc20_001",
+        network=CryptoNetwork.TRC20,
+        currency="USDT",
+        address="TQn9Y2khEsLJW1ChVWFMSMeRDow5oNDMnt",
+        wallet_name="FIDUS USDT (TRC20) Wallet",
+        qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TQn9Y2khEsLJW1ChVWFMSMeRDow5oNDMnt"
+    )
+]
+
 # Investment Calculation and Management Functions
 def calculate_investment_dates(deposit_date: datetime, fund_config: FundConfiguration):
     """Calculate key dates for an investment"""
