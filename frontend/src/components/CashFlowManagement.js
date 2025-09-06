@@ -153,68 +153,158 @@ const CashFlowManagement = () => {
         </div>
       )}
 
-      {/* Cash Flow Overview - FIXED TO SHOW AGGREGATED TOTALS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* FUND ACCOUNTING OVERVIEW */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* FUND ASSETS (What Fund Owns) */}
         <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <ArrowUpCircle className="h-8 w-8 text-green-400" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Total Inflow</p>
-                <p className="text-2xl font-bold text-green-400">
-                  {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
-                </p>
-                <p className="text-xs text-slate-400">All Funds Combined</p>
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <ArrowUpCircle className="mr-2 h-5 w-5 text-green-400" />
+              Fund Assets (Income Sources)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* MT5 Trading Profits */}
+              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-400">MT5 Trading Profits</p>
+                  <p className="text-xs text-slate-500">Fund's investment performance</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-400">
+                    {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Broker Rebates */}
+              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-400">Broker Rebates</p>
+                  <p className="text-xs text-slate-500">Commission from trading volume</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-cyan-400">
+                    {formatCurrency(fundAccounting?.assets?.broker_rebates || 0)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Total Assets */}
+              <div className="border-t border-slate-600 pt-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-white font-semibold">Total Fund Assets</p>
+                  <p className="text-xl font-bold text-green-400">
+                    {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* FUND LIABILITIES (What Fund Owes) */}
         <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <ArrowDownCircle className="h-8 w-8 text-red-400" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Total Outflow</p>
-                <p className="text-2xl font-bold text-red-400">
-                  {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
-                </p>
-                <p className="text-xs text-slate-400">All Funds Combined</p>
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <ArrowDownCircle className="mr-2 h-5 w-5 text-red-400" />
+              Fund Liabilities (Obligations)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Client Obligations */}
+              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-400">Client Interest Obligations</p>
+                  <p className="text-xs text-slate-500">Promised returns to clients</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-red-400">
+                    {formatCurrency(fundAccounting?.liabilities?.client_obligations || 0)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className={`h-8 w-8 ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`} />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Net Cash Flow</p>
-                <p className={`text-2xl font-bold ${(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(fundAccounting?.net_fund_profitability || 0)}
-                </p>
-                <p className="text-xs text-slate-400">All Funds Combined</p>
+              
+              {/* Upcoming Redemptions */}
+              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-400">Upcoming Redemptions</p>
+                  <p className="text-xs text-slate-500">Scheduled client withdrawals</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-yellow-400">
+                    {formatCurrency(fundAccounting?.liabilities?.upcoming_redemptions || 0)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="dashboard-card">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-yellow-400" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Fund Breakdown</p>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {Object.keys(fundBreakdown).length}
-                </p>
-                <p className="text-xs text-slate-400">Active Funds</p>
+              
+              {/* Total Liabilities */}
+              <div className="border-t border-slate-600 pt-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-white font-semibold">Total Fund Liabilities</p>
+                  <p className="text-xl font-bold text-red-400">
+                    {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* NET FUND PROFITABILITY */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <DollarSign className="mr-2 h-5 w-5 text-cyan-400" />
+            Net Fund Profitability Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-6 bg-green-900/20 rounded-lg border border-green-600/30">
+              <ArrowUpCircle className="h-12 w-12 text-green-400 mx-auto mb-2" />
+              <p className="text-green-400 font-semibold">Fund Revenue</p>
+              <p className="text-2xl font-bold text-green-400">
+                {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Trading + Rebates</p>
+            </div>
+            
+            <div className="text-center p-6 bg-red-900/20 rounded-lg border border-red-600/30">
+              <ArrowDownCircle className="h-12 w-12 text-red-400 mx-auto mb-2" />
+              <p className="text-red-400 font-semibold">Fund Obligations</p>
+              <p className="text-2xl font-bold text-red-400">
+                {formatCurrency(fundAccounting?.liabilities?.total_outflows || 0)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Client Commitments</p>
+            </div>
+            
+            <div className={`text-center p-6 rounded-lg border ${
+              (fundAccounting?.net_fund_profitability || 0) >= 0 
+                ? 'bg-cyan-900/20 border-cyan-600/30' 
+                : 'bg-red-900/20 border-red-600/30'
+            }`}>
+              <DollarSign className={`h-12 w-12 mx-auto mb-2 ${
+                (fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-cyan-400' : 'text-red-400'
+              }`} />
+              <p className={`font-semibold ${
+                (fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-cyan-400' : 'text-red-400'
+              }`}>Net Profit</p>
+              <p className={`text-2xl font-bold ${
+                (fundAccounting?.net_fund_profitability || 0) >= 0 ? 'text-cyan-400' : 'text-red-400'
+              }`}>
+                {formatCurrency(fundAccounting?.net_fund_profitability || 0)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {(fundAccounting?.net_fund_profitability || 0) >= 0 ? 'Profitable' : 'Loss Making'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Fund Breakdown Table */}
       <Card className="dashboard-card">
