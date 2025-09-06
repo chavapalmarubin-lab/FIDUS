@@ -15,6 +15,7 @@ class SalvadorPalmaVerificationTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.critical_failures = []
+        self.admin_token = None
         
         # Expected exact specifications
         self.expected_client_id = "client_003"
