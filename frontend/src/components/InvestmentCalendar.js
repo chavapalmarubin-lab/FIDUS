@@ -459,6 +459,7 @@ const InvestmentCalendar = ({ user }) => {
       )}
 
       {/* Calendar Navigation */}
+      {viewMode === 'month' && (
       <Card className="dashboard-card">
         <CardHeader>
           <div className="flex items-center justify-between">
