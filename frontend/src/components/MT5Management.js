@@ -674,46 +674,81 @@ const MT5Management = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {accountActivity.map((activity, index) => (
-                                            <div key={activity.id || index} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
-                                                <div className="flex items-center space-x-4">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                                        activity.type === 'deposit' ? 'bg-green-600' :
-                                                        activity.type === 'trade' ? 'bg-blue-600' :
-                                                        activity.type === 'profit' ? 'bg-cyan-600' :
-                                                        'bg-slate-600'
-                                                    }`}>
-                                                        {activity.type === 'deposit' ? <DollarSign size={16} /> :
-                                                         activity.type === 'trade' ? <BarChart3 size={16} /> :
-                                                         activity.type === 'profit' ? <TrendingUp size={16} /> :
-                                                         <Activity size={16} />
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-white font-medium">{activity.description}</div>
-                                                        <div className="text-sm text-slate-400">
-                                                            {new Date(activity.timestamp).toLocaleString()}
+                                        {accountActivity.map((activity, index) => {
+                                            // Determine activity icon and color based on type
+                                            let activityIcon, activityColor, activityBg;
+                                            
+                                            if (activity.type === 'deposit') {
+                                                activityIcon = <DollarSign size={16} />;
+                                                activityColor = 'text-green-400';
+                                                activityBg = 'bg-green-600';
+                                            } else if (activity.type === 'trade') {
+                                                activityIcon = <BarChart3 size={16} />;
+                                                if (activity.profit_loss >= 0) {
+                                                    activityColor = 'text-green-400';
+                                                    activityBg = 'bg-green-600';
+                                                } else {
+                                                    activityColor = 'text-red-400';
+                                                    activityBg = 'bg-red-600';
+                                                }
+                                            } else if (activity.type === 'profit') {
+                                                activityIcon = <TrendingUp size={16} />;
+                                                activityColor = 'text-cyan-400';
+                                                activityBg = 'bg-cyan-600';
+                                            } else {
+                                                activityIcon = <Activity size={16} />;
+                                                activityColor = 'text-slate-400';
+                                                activityBg = 'bg-slate-600';
+                                            }
+                                            
+                                            return (
+                                                <div key={activity.activity_id || index} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activityBg}`}>
+                                                            {activityIcon}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-white font-medium">
+                                                                {activity.description}
+                                                            </div>
+                                                            <div className="text-sm text-slate-400">
+                                                                {new Date(activity.timestamp).toLocaleString()}
+                                                            </div>
+                                                            {/* Show additional trading details */}
+                                                            {activity.type === 'trade' && activity.symbol && (
+                                                                <div className="text-xs text-slate-500 mt-1">
+                                                                    {activity.symbol} • Vol: {activity.volume} • 
+                                                                    Open: {activity.opening_price} • 
+                                                                    Current: {activity.current_price}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
+                                                    <div className="text-right">
+                                                        {(activity.amount !== 0 || activity.profit_loss !== 0) && (
+                                                            <div className={`font-semibold ${activityColor}`}>
+                                                                {activity.type === 'trade' ? (
+                                                                    <>
+                                                                        {activity.profit_loss > 0 ? '+' : ''}{formatCurrency(activity.profit_loss)}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        {activity.amount > 0 ? '+' : ''}{formatCurrency(activity.amount)}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        <Badge className={`${
+                                                            activity.status === 'completed' ? 'bg-green-600' :
+                                                            activity.status === 'open' ? 'bg-blue-600' :
+                                                            'bg-slate-600'
+                                                        } text-white text-xs mt-1`}>
+                                                            {activity.status}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    {activity.amount !== 0 && (
-                                                        <div className={`font-semibold ${
-                                                            activity.amount > 0 ? 'text-green-400' : 'text-red-400'
-                                                        }`}>
-                                                            {activity.amount > 0 ? '+' : ''}{formatCurrency(activity.amount)}
-                                                        </div>
-                                                    )}
-                                                    <Badge className={`${
-                                                        activity.status === 'completed' ? 'bg-green-600' :
-                                                        activity.status === 'open' ? 'bg-blue-600' :
-                                                        'bg-slate-600'
-                                                    } text-white text-xs`}>
-                                                        {activity.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </CardContent>
