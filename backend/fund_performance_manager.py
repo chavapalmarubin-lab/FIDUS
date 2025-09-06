@@ -180,7 +180,7 @@ class FundPerformanceManager:
         }
     
     async def get_mt5_actual_performance(self, client_id: str, fund_code: str) -> Dict[str, Any]:
-        """Get actual MT5 performance for the client's fund"""
+        """Get actual MT5 performance for the client's fund using REAL MT5 calculation"""
         
         # Find MT5 account for this client and fund
         mt5_account = await self.db.mt5_accounts.find_one({
@@ -191,39 +191,35 @@ class FundPerformanceManager:
         if not mt5_account:
             return {"error": f"No MT5 account found for {client_id} {fund_code}"}
         
-        # Get current account data
-        account_data = {
-            "account_id": mt5_account["account_id"],
-            "initial_balance": mt5_account.get("total_allocated", 0),
-            "current_balance": mt5_account.get("balance", 0),
-            "current_equity": mt5_account.get("current_equity", 0),
-            "profit_loss": mt5_account.get("profit_loss", 0),
-            "profit_loss_percentage": mt5_account.get("profit_loss_percentage", 0),
-            "connection_status": mt5_account.get("connection_status", "unknown"),
-            "last_update": mt5_account.get("last_sync")
-        }
+        # Get REAL MT5 data
+        initial_deposit = mt5_account.get("total_allocated", mt5_account.get("initial_deposit", 0))
+        profit = mt5_account.get("profit_loss", 0)
+        withdrawal = mt5_account.get("withdrawal_amount", 0) 
+        current_balance = mt5_account.get("current_equity", 0)
         
-        # Get historical performance
-        start_date = datetime.now(timezone.utc) - timedelta(days=30)
-        historical_data = []
+        # Calculate ACTUAL CLIENT RETURN = Profit + Withdrawals
+        actual_client_return = profit + withdrawal
         
-        async for data_point in self.db.mt5_historical_data.find({
-            "account_id": mt5_account["account_id"],
-            "timestamp": {"$gte": start_date.isoformat()}
-        }).sort("timestamp", 1):
-            historical_data.append({
-                "timestamp": data_point["timestamp"],
-                "balance": data_point.get("balance", 0),
-                "equity": data_point.get("equity", 0),
-                "profit_loss": data_point.get("profit_loss", 0)
-            })
+        # Calculate performance percentage based on actual return vs deposit
+        if initial_deposit > 0:
+            performance_percentage = (actual_client_return / initial_deposit) * 100
+        else:
+            performance_percentage = 0
         
         return {
-            "client_id": client_id,
-            "fund_code": fund_code,
-            "mt5_account": account_data,
-            "historical_performance": historical_data,
-            "data_points": len(historical_data)
+            "mt5_account": {
+                "account_id": mt5_account.get("account_id"),
+                "mt5_login": mt5_account.get("mt5_login"),
+                "initial_deposit": initial_deposit,
+                "current_balance": current_balance,
+                "profit": profit,
+                "withdrawal": withdrawal,
+                "actual_client_return": actual_client_return,  # This is the real return for comparison
+                "current_equity": actual_client_return,  # Use actual return for gap calculation
+                "profit_loss": profit,
+                "profit_loss_percentage": performance_percentage,
+                "last_sync": mt5_account.get("last_sync")
+            }
         }
     
     async def analyze_performance_gap(self, client_id: str, fund_code: str, 
