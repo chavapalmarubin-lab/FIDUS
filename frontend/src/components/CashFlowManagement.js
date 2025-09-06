@@ -45,6 +45,7 @@ const CashFlowManagement = () => {
   const fetchCashFlowData = async () => {
     try {
       setLoading(true);
+      setError("");
       
       // Fetch cash flow data
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
@@ -62,14 +63,29 @@ const CashFlowManagement = () => {
       });
 
       if (cashFlowResponse.data.success) {
+        // Use backend calculated totals instead of frontend calculations
         setCashFlowData(cashFlowResponse.data.cash_flows || []);
+        setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
+        setTotalInflow(cashFlowResponse.data.total_inflow || 0);
+        setTotalOutflow(cashFlowResponse.data.total_outflow || 0);
+        setNetCashFlow(cashFlowResponse.data.net_cash_flow || 0);
+        
         setRedemptionSchedule(redemptionResponse.data.redemption_schedule || []);
         setMonthlyProjections(projectionsResponse.data.projections || []);
-        setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
+        
+        console.log("✅ Cash flow data loaded successfully:", {
+          totalInflow: cashFlowResponse.data.total_inflow,
+          totalOutflow: cashFlowResponse.data.total_outflow,
+          netCashFlow: cashFlowResponse.data.net_cash_flow,
+          fundsData: cashFlowResponse.data.fund_breakdown
+        });
+      } else {
+        throw new Error("API returned unsuccessful response");
       }
     } catch (err) {
+      console.error("❌ Cash flow API error:", err);
       setError("Failed to load cash flow data");
-      // Generate mock data for development
+      // Generate mock data for development - but also set proper totals
       generateMockCashFlowData();
     } finally {
       setLoading(false);
