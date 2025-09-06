@@ -902,7 +902,8 @@ class MT5MappingTester:
             "POST",
             "api/investments/create",
             200,
-            data=recovery_data
+            data=recovery_data,
+            use_auth=True
         )
         
         if success:
