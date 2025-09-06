@@ -531,6 +531,11 @@ class SalvadorPalmaVerificationTester:
         print("- No other client data exists")
         print("="*100)
         
+        # First authenticate as admin
+        if not self.authenticate_admin():
+            print("🚨 CRITICAL: Cannot authenticate as admin - aborting verification")
+            return False
+        
         # Run all verification tests
         test_results = []
         
