@@ -346,9 +346,7 @@ const MetaQuotesData = () => {
 };
 
 export default MetaQuotesData;
-      console.error('Error fetching MetaQuotes data:', error);
-    }
-  };
+
 
   const handleDisconnect = async () => {
     try {
