@@ -170,7 +170,7 @@ const FundPerformanceDashboard = () => {
                     variant={selectedView === 'commitments' ? 'default' : 'outline'}
                     onClick={() => setSelectedView('commitments')}
                 >
-                    Fund Commitments
+                    Client Investment Deliverables
                 </Button>
             </div>
 
