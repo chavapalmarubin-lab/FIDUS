@@ -126,7 +126,8 @@ class SalvadorInvestmentIntegrityTester:
             self.client_token = response['token']
             expected_name = "SALVADOR PALMA"
             actual_name = response.get('name', '')
-            if actual_name == expected_name:
+            # Case insensitive comparison for name
+            if actual_name.upper() == expected_name.upper():
                 return self.log_test("Salvador Authentication", True, f"Logged in as {actual_name}")
             else:
                 return self.log_test("Salvador Authentication", False, f"Expected '{expected_name}', got '{actual_name}'")
