@@ -685,6 +685,28 @@ class MongoDBManager:
             print(f"❌ Error getting MT5 credentials: {str(e)}")
             return None
 
+    def update_mt5_account(self, account_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update an existing MT5 account"""
+        try:
+            # Prepare update data for MongoDB
+            update_doc = self.prepare_for_mongo(update_data.copy())
+            
+            result = self.db.mt5_accounts.update_one(
+                {'account_id': account_id},
+                {'$set': update_doc}
+            )
+            
+            if result.modified_count > 0:
+                print(f"✅ Updated MT5 account {account_id}")
+                return True
+            else:
+                print(f"❌ MT5 account {account_id} not found or no changes made")
+                return False
+            
+        except Exception as e:
+            print(f"❌ Error updating MT5 account: {str(e)}")
+            return False
+
     def get_mt5_account_by_login(self, mt5_login: int) -> Optional[Dict[str, Any]]:
         """Get MT5 account by login ID to prevent duplicates"""
         try:
