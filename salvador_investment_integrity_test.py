@@ -149,7 +149,7 @@ class SalvadorInvestmentIntegrityTester:
         print("\n🔍 Testing Fund Performance vs MT5 Reality Dashboard...")
         
         headers = self.get_auth_headers("admin")
-        success, response = self.make_request("GET", "api/admin/fund-performance", headers=headers)
+        success, response = self.make_request("GET", "api/admin/fund-performance/dashboard", headers=headers)
         
         if not success:
             return self.log_test("Fund Performance Dashboard Access", False, "Failed to access dashboard")
