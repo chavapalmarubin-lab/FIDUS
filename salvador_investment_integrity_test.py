@@ -319,7 +319,7 @@ class SalvadorInvestmentIntegrityTester:
         print("\n🔍 Testing MT5 Account Mapping Validation...")
         
         headers = self.get_auth_headers("admin")
-        success, response = self.make_request("GET", "api/admin/mt5-management", headers=headers)
+        success, response = self.make_request("GET", "api/mt5/admin/accounts", headers=headers)
         
         if not success:
             return self.log_test("MT5 Management Access", False, "Failed to access MT5 management")
