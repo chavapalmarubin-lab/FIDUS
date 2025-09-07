@@ -6668,15 +6668,19 @@ async def get_crm_admin_dashboard():
                             "client_id": client['id'],
                             "client_name": client['name'],
                             "account_number": mt5_account.get('mt5_login', 'N/A'),
-                            "balance": mt5_account.get('current_balance', 0),
+                            "balance": mt5_account.get('current_equity', 0),  # Use current_equity which contains the real balance
                             "equity": mt5_account.get('current_equity', 0),
                             "open_positions": mt5_account.get('open_positions', 0),
-                            "last_activity": mt5_account.get('last_updated', datetime.now(timezone.utc).isoformat()),
-                            "broker": mt5_account.get('broker_name', 'DooTechnology')
+                            "last_activity": mt5_account.get('updated_at', datetime.now(timezone.utc).isoformat()),
+                            "broker": mt5_account.get('broker_name', 'Unknown'),
+                            "fund_code": mt5_account.get('fund_code', 'Unknown'),
+                            "profit_loss": mt5_account.get('profit_loss', 0)
                         })
                         
-                        total_real_balance += mt5_account.get('current_balance', 0)
-                        total_real_equity += mt5_account.get('current_equity', 0)
+                        # Use current_equity for calculations (real account balance)
+                        account_balance = mt5_account.get('current_equity', 0)
+                        total_real_balance += account_balance
+                        total_real_equity += account_balance
                         total_real_positions += mt5_account.get('open_positions', 0)
         
         except Exception as e:
