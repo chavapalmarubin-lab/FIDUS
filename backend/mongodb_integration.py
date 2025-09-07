@@ -246,8 +246,17 @@ class MongoDBManager:
                 current_date = datetime.now(timezone.utc)
                 interest_earned = 0
                 
-                # Ensure interest_start_date is timezone-aware
-                if interest_start_date.tzinfo is None:
+                # Ensure interest_start_date is timezone-aware datetime
+                if isinstance(interest_start_date, str):
+                    # Parse string to datetime
+                    try:
+                        if 'T' in interest_start_date:
+                            interest_start_date = datetime.fromisoformat(interest_start_date.replace('Z', '+00:00'))
+                        else:
+                            interest_start_date = datetime.fromisoformat(interest_start_date).replace(tzinfo=timezone.utc)
+                    except ValueError:
+                        interest_start_date = datetime.now(timezone.utc)  # Fallback
+                elif interest_start_date.tzinfo is None:
                     interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
                 
                 if current_date > interest_start_date:
