@@ -742,8 +742,8 @@ def create_investment(client_id: str, fund_code: str, amount: float, deposit_dat
     
     fund_config = FIDUS_FUND_CONFIG[fund_code]
     
-    # Validate minimum investment
-    if amount < fund_config.minimum_investment:
+    # Validate minimum investment (with exception for Salvador Palma - minimum waived)
+    if amount < fund_config.minimum_investment and client_id != "client_003":
         raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
     
     # Check invitation-only restriction
