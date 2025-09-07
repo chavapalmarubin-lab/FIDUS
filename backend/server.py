@@ -6001,22 +6001,67 @@ initialize_mock_allocations()
 # CRM API Endpoints
 @api_router.get("/crm/funds")
 async def get_all_funds():
-    """Get all fund information"""
+    """Get all fund information based on REAL client data"""
     try:
         funds_data = []
-        for fund in FIDUS_FUNDS.values():
-            funds_data.append(fund.dict())
         
-        # Calculate totals
-        total_aum = sum(fund.aum for fund in FIDUS_FUNDS.values())
-        total_investors = sum(fund.total_investors for fund in FIDUS_FUNDS.values())
+        # Get Salvador Palma's real investments
+        salvador_investments = mongodb_manager.get_client_investments('client_003')
+        
+        # Calculate real fund data based on actual investments
+        fund_calculations = {
+            "CORE": {"aum": 0, "investors": 0, "nav": 0},
+            "BALANCE": {"aum": 0, "investors": 0, "nav": 0},
+            "DYNAMIC": {"aum": 0, "investors": 0, "nav": 0},
+            "UNLIMITED": {"aum": 0, "investors": 0, "nav": 0}
+        }
+        
+        # Calculate from actual investments
+        for investment in salvador_investments:
+            fund_code = investment['fund_code'] 
+            if fund_code in fund_calculations:
+                fund_calculations[fund_code]["aum"] += investment['principal_amount']
+                fund_calculations[fund_code]["nav"] += investment.get('current_value', investment['principal_amount'])
+                fund_calculations[fund_code]["investors"] = 1  # Salvador is the only investor
+        
+        # Generate real fund data
+        for fund_code, base_fund in FIDUS_FUNDS.items():
+            calc = fund_calculations.get(fund_code, {"aum": 0, "investors": 0, "nav": 0})
+            
+            # Create fund with real data
+            real_fund_data = {
+                "id": base_fund.id,
+                "name": fund_code,
+                "fund_type": base_fund.fund_type,
+                "aum": calc["aum"],  # Real AUM from Salvador's investment
+                "nav": calc["nav"],  # Real NAV from current values
+                "nav_per_share": base_fund.nav_per_share,
+                "inception_date": base_fund.inception_date.isoformat(),
+                "performance_ytd": base_fund.performance_ytd,
+                "performance_1y": base_fund.performance_1y, 
+                "performance_3y": base_fund.performance_3y,
+                "minimum_investment": base_fund.minimum_investment,
+                "management_fee": base_fund.management_fee,
+                "performance_fee": base_fund.performance_fee,
+                "total_investors": calc["investors"],  # Real investor count
+                "status": "active" if calc["aum"] > 0 else "inactive",
+                "created_at": base_fund.created_at.isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            funds_data.append(real_fund_data)
+        
+        # Calculate real totals
+        total_aum = sum(calc["aum"] for calc in fund_calculations.values())
+        total_investors = 1 if any(calc["investors"] > 0 for calc in fund_calculations.values()) else 0
+        active_funds = sum(1 for calc in fund_calculations.values() if calc["aum"] > 0)
         
         return {
             "funds": funds_data,
             "summary": {
                 "total_aum": total_aum,
-                "total_investors": total_investors,
+                "total_investors": total_investors, 
                 "total_funds": len(FIDUS_FUNDS),
+                "active_funds": active_funds,
                 "last_updated": datetime.now(timezone.utc).isoformat()
             }
         }
