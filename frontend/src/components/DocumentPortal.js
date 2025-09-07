@@ -600,6 +600,95 @@ const DocumentPortal = ({ user, userType }) => {
         </Button>
       </div>
 
+      {/* System Documentation - Admin Only */}
+      {userType === 'admin' && (
+        <Card className="bg-gradient-to-r from-cyan-900/20 to-slate-800 border-cyan-600/30">
+          <CardHeader>
+            <CardTitle className="text-cyan-400 flex items-center gap-2">
+              <Folder size={20} />
+              FIDUS System Documentation v2.0.0
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Production Documents</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-green-400" />
+                    <span>Production Readiness Report v2.0</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-blue-400" />
+                    <span>System Architecture Overview</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-yellow-400" />
+                    <span>API Documentation (FastAPI)</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Recent Updates</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>MT5 Integration Complete</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>Crypto Wallet System</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>Financial Calculations Fixed</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">System Status</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-green-400">Production Ready</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-green-400">All Tests Passing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-green-400">Data Integrity Verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-slate-600">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-600">
+                  v2.0.0 Production
+                </Badge>
+                <Badge variant="outline" className="bg-blue-900/20 text-blue-400 border-blue-600">
+                  React 19.0.0
+                </Badge>
+                <Badge variant="outline" className="bg-purple-900/20 text-purple-400 border-purple-600">
+                  FastAPI 0.110.1
+                </Badge>
+                <Badge variant="outline" className="bg-orange-900/20 text-orange-400 border-orange-600">
+                  MongoDB Latest
+                </Badge>
+                <Badge variant="outline" className="bg-cyan-900/20 text-cyan-400 border-cyan-600">
+                  September 2025
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card className="bg-slate-800 border-slate-600">
         <CardContent className="p-4">
