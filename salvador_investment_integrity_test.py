@@ -417,10 +417,10 @@ class SalvadorInvestmentIntegrityTester:
         success1, fund_response = self.make_request("GET", "api/crm/funds", headers=headers)
         
         # Test Trading Monitor tab  
-        success2, trading_response = self.make_request("GET", "api/crm/trading-monitor", headers=headers)
+        success2, trading_response = self.make_request("GET", "api/crm/mt5/admin/overview", headers=headers)
         
         # Test MetaQuotes Data tab
-        success3, meta_response = self.make_request("GET", "api/crm/metaquotes-data", headers=headers)
+        success3, meta_response = self.make_request("GET", "api/mt5/admin/realtime-data", headers=headers)
         
         if not (success1 and success2 and success3):
             return self.log_test("CRM Dashboard Access", False, "Failed to access all CRM tabs")
