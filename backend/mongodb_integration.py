@@ -226,69 +226,40 @@ class MongoDBManager:
             return None
     
     def get_client_investments(self, client_id: str) -> List[Dict[str, Any]]:
-        """Get all investments for a specific client"""
+        """Get all investments for a specific client - SIMPLIFIED VERSION"""
         try:
             investments = []
             
-            investment_docs = self.db.investments.find({'client_id': client_id})
+            # Get investments from database
+            investment_docs = list(self.db.investments.find({'client_id': client_id}))
             
             for inv in investment_docs:
-                # Calculate current value (simple interest)
-                principal = inv['principal_amount']
-                deposit_date = inv['deposit_date']
-                interest_start_date = inv['interest_start_date']
+                # Convert ObjectId to string
+                inv['_id'] = str(inv['_id'])
                 
-                # Get fund config for interest rate
-                fund_config = self.db.fund_configurations.find_one({'fund_code': inv['fund_code']})
-                monthly_rate = fund_config.get('monthly_interest_rate', 0) if fund_config else 0
-                
-                # Calculate interest earned
-                current_date = datetime.now(timezone.utc)
-                interest_earned = 0
-                
-                # Ensure interest_start_date is timezone-aware datetime
-                if isinstance(interest_start_date, str):
-                    # Parse string to datetime
-                    try:
-                        if 'T' in interest_start_date:
-                            interest_start_date = datetime.fromisoformat(interest_start_date.replace('Z', '+00:00'))
-                        else:
-                            interest_start_date = datetime.fromisoformat(interest_start_date).replace(tzinfo=timezone.utc)
-                    except ValueError:
-                        interest_start_date = datetime.now(timezone.utc)  # Fallback
-                elif interest_start_date.tzinfo is None:
-                    interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
-                
-                if current_date > interest_start_date:
-                    months_earning = max(0, (current_date.year - interest_start_date.year) * 12 + 
-                                          (current_date.month - interest_start_date.month))
-                    interest_earned = principal * monthly_rate * months_earning
-                
-                current_value = principal + interest_earned
-                
+                # Use stored values directly - no complex calculations
                 investment_data = {
                     'investment_id': inv['investment_id'],
                     'fund_code': inv['fund_code'],
                     'fund_name': f"FIDUS {inv['fund_code'].title()} Fund",
-                    'principal_amount': principal,
-                    'current_value': current_value,
-                    'interest_earned': interest_earned,
-                    'deposit_date': inv['deposit_date'] if isinstance(inv['deposit_date'], str) else inv['deposit_date'].isoformat(),
-                    'incubation_end_date': inv['incubation_end_date'] if isinstance(inv['incubation_end_date'], str) else inv['incubation_end_date'].isoformat(),
-                    'interest_start_date': inv['interest_start_date'] if isinstance(inv['interest_start_date'], str) else inv['interest_start_date'].isoformat(),
-                    'minimum_hold_end_date': inv['minimum_hold_end_date'] if isinstance(inv['minimum_hold_end_date'], str) else inv['minimum_hold_end_date'].isoformat(),
-                    'status': inv.get('status', 'active'),  # Use stored status or default
-                    'monthly_interest_rate': monthly_rate,
-                    'can_redeem_interest': current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']),
-                    'can_redeem_principal': current_date > (inv['minimum_hold_end_date'].replace(tzinfo=timezone.utc) if inv['minimum_hold_end_date'].tzinfo is None else inv['minimum_hold_end_date']),
-                    'created_at': inv.get('created_at', datetime.now(timezone.utc)).isoformat()
+                    'principal_amount': inv['principal_amount'],
+                    'current_value': inv.get('current_value', inv['principal_amount']),
+                    'interest_earned': inv.get('interest_earned', 0.0),
+                    'deposit_date': inv['deposit_date'],
+                    'incubation_end_date': inv.get('incubation_end_date', inv['deposit_date']),
+                    'interest_start_date': inv.get('interest_start_date', inv['deposit_date']),
+                    'minimum_hold_end_date': inv.get('minimum_hold_end_date', inv['deposit_date']),
+                    'status': inv.get('status', 'active'),
+                    'can_redeem_interest': inv.get('can_redeem_interest', False),
+                    'can_redeem_principal': inv.get('can_redeem_principal', False),
+                    'monthly_interest_rate': inv.get('monthly_interest_rate', 0.0),
+                    'created_at': inv.get('created_at', ''),
+                    'updated_at': inv.get('updated_at', '')
                 }
                 
                 investments.append(investment_data)
             
-            # Sort by creation date (newest first)
-            investments.sort(key=lambda x: x['created_at'], reverse=True)
-            
+            print(f"✅ Retrieved {len(investments)} investments for client {client_id}")
             return investments
             
         except Exception as e:
