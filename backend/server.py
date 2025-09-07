@@ -7141,6 +7141,13 @@ async def update_investment_deposit_date(
 async def create_client_investment(investment_data: InvestmentCreate):
     """Create a new investment for a client"""
     try:
+        # PRODUCTION SAFEGUARD: Prevent test data creation
+        if investment_data.client_id.startswith('test_') or investment_data.client_id.startswith('client_001'):
+            raise HTTPException(
+                status_code=403, 
+                detail="Test data creation is prohibited in production. Only legitimate client investments allowed."
+            )
+        
         # Validate fund exists
         if investment_data.fund_code not in FIDUS_FUND_CONFIG:
             raise HTTPException(status_code=400, detail=f"Invalid fund code: {investment_data.fund_code}")
