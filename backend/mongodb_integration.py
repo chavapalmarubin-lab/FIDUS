@@ -199,7 +199,8 @@ class MongoDBManager:
                 'incubation_end_date': incubation_end_date,
                 'interest_start_date': interest_start_date,
                 'minimum_hold_end_date': minimum_hold_end_date,
-                'status': 'incubating',
+                'status': 'pending_mt5_validation',  # NEW: Start with pending status until MT5 validation completes
+                'mt5_validation_required': True,
                 'created_at': datetime.now(timezone.utc)
             }
             
