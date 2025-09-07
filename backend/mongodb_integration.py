@@ -720,6 +720,35 @@ class MongoDBManager:
     # DATABASE UTILITIES
     # ===============================================================================
     
+    def prepare_for_mongo(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare data for MongoDB storage by converting datetime objects"""
+        prepared_data = {}
+        for key, value in data.items():
+            if isinstance(value, datetime):
+                prepared_data[key] = value
+            elif isinstance(value, str) and key.endswith('_date'):
+                # Try to parse date strings
+                try:
+                    prepared_data[key] = datetime.fromisoformat(value.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    try:
+                        prepared_data[key] = datetime.strptime(value, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                    except:
+                        prepared_data[key] = value
+            else:
+                prepared_data[key] = value
+        return prepared_data
+    
+    def parse_from_mongo(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Parse data from MongoDB by converting datetime objects to ISO strings"""
+        parsed_data = {}
+        for key, value in data.items():
+            if isinstance(value, datetime):
+                parsed_data[key] = value.isoformat()
+            else:
+                parsed_data[key] = value
+        return parsed_data
+    
     # ===============================================================================
     # DOCUMENT MANAGEMENT
     # ===============================================================================
