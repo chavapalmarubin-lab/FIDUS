@@ -18,7 +18,7 @@ def check_api_response():
     print("=" * 30)
     
     # Authenticate first
-    base_url = "https://fund-performance.preview.emergentagent.com"
+    base_url = "https://fidus-invest.preview.emergentagent.com"
     
     # Login
     login_response = requests.post(f"{base_url}/api/auth/login", json={

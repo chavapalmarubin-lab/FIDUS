@@ -151,7 +151,7 @@ sudo supervisorctl status
 ```
 
 ### 4. Demo Access
-- **URL**: `https://fund-performance.preview.emergentagent.com?skip_animation=true`
+- **URL**: `https://fidus-invest.preview.emergentagent.com?skip_animation=true`
 - **Admin Login**: admin / password123
 - **Client Login**: client1 / password123
 

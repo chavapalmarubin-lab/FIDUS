@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fund-performance.preview.emergentagent.com`
+`https://fidus-invest.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
