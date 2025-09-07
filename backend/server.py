@@ -8180,7 +8180,15 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
                         incubation_months = 2  # Default
                     
                     # Calculate interest start date (after incubation)
-                    interest_start_date = invest_date.replace(month=invest_date.month + incubation_months)
+                    from dateutil.relativedelta import relativedelta
+                    try:
+                        interest_start_date = invest_date + relativedelta(months=incubation_months)
+                    except:
+                        # Fallback calculation if dateutil not available
+                        interest_start_date = invest_date.replace(
+                            year=invest_date.year + (invest_date.month + incubation_months - 1) // 12,
+                            month=(invest_date.month + incubation_months - 1) % 12 + 1
+                        )
                     
                     current_date = datetime.now(timezone.utc)
                     
