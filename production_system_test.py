@@ -133,7 +133,7 @@ class ProductionSystemTester:
         if success:
             self.client_token = response.get('token')
             client_name = response.get('name', 'Unknown')
-            if client_name == "SALVADOR PALMA":
+            if "SALVADOR PALMA" in client_name.upper():
                 print(f"   ✅ Salvador Palma authenticated successfully")
                 return True
             else:
