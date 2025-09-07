@@ -44,6 +44,13 @@ class MT5BrokerConfig:
             "description": "DooTechnology - Advanced Trading Solutions",
             "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER", "CRUDE"],
             "max_accounts_per_client": 4
+        },
+        "vtmarkets": {
+            "name": "VT Markets",
+            "servers": ["VTMarkets-PAMM", "VTMarkets-Live"],
+            "description": "VT Markets - PAMM Trading Solutions",
+            "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER", "CRUDE", "INDICES"],
+            "max_accounts_per_client": 25
         }
     }
     
