@@ -750,6 +750,44 @@ class MongoDBManager:
         return parsed_data
     
     # ===============================================================================
+    def update_investment(self, investment_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update an existing investment"""
+        try:
+            # Prepare update data for MongoDB
+            update_doc = self.prepare_for_mongo(update_data.copy())
+            
+            result = self.db.investments.update_one(
+                {'investment_id': investment_id},
+                {'$set': update_doc}
+            )
+            
+            if result.modified_count > 0:
+                print(f"✅ Updated investment {investment_id}")
+                return True
+            else:
+                print(f"❌ Investment {investment_id} not found or no changes made")
+                return False
+            
+        except Exception as e:
+            print(f"❌ Error updating investment: {str(e)}")
+            return False
+
+    def get_investment(self, investment_id: str) -> Optional[Dict[str, Any]]:
+        """Get investment by ID"""
+        try:
+            investment = self.db.investments.find_one({'investment_id': investment_id})
+            
+            if investment:
+                # Convert ObjectId to string for JSON serialization
+                investment['_id'] = str(investment['_id'])
+                return self.parse_from_mongo(investment)
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting investment: {str(e)}")
+            return None
+
     # DOCUMENT MANAGEMENT
     # ===============================================================================
     
