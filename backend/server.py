@@ -8158,7 +8158,7 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
                     else:
                         monthly_rate = 0.02  # Default 2%
                     
-                    # Calculate months elapsed
+                    # Calculate months elapsed AFTER incubation period
                     if isinstance(investment_date, str):
                         invest_date = datetime.fromisoformat(investment_date.replace('Z', '+00:00'))
                     else:
@@ -8166,13 +8166,39 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
                         if invest_date.tzinfo is None:
                             invest_date = invest_date.replace(tzinfo=timezone.utc)
                     
-                    current_date = datetime.now(timezone.utc)
-                    time_diff = current_date - invest_date
-                    months_elapsed = time_diff.days / 30.44  # Average days per month
+                    # CRITICAL: Account for incubation period where NO INTEREST is paid
+                    # BALANCE fund: 2 months incubation, interest starts AFTER incubation
+                    if fund_code == "BALANCE":
+                        incubation_months = 2
+                    elif fund_code == "CORE":
+                        incubation_months = 2
+                    elif fund_code == "DYNAMIC":
+                        incubation_months = 2
+                    elif fund_code == "UNLIMITED":
+                        incubation_months = 2
+                    else:
+                        incubation_months = 2  # Default
                     
-                    # Expected returns based on fund commitment
-                    expected_total_return = principal_amount * (monthly_rate * months_elapsed)
-                    expected_current_value = principal_amount + expected_total_return
+                    # Calculate interest start date (after incubation)
+                    interest_start_date = invest_date.replace(month=invest_date.month + incubation_months)
+                    
+                    current_date = datetime.now(timezone.utc)
+                    
+                    # Only calculate interest if we're past incubation period
+                    if current_date > interest_start_date:
+                        # Calculate months of interest-earning period only
+                        interest_time_diff = current_date - interest_start_date
+                        interest_months = interest_time_diff.days / 30.44
+                        
+                        # Expected returns based on fund commitment (ONLY interest-earning months)
+                        expected_total_return = principal_amount * (monthly_rate * interest_months)
+                        expected_current_value = principal_amount + expected_total_return
+                        
+                        logging.info(f"Client {client['id']} {fund_code}: Interest months: {interest_months:.2f}, Expected return: ${expected_total_return:,.2f}")
+                    else:
+                        # Still in incubation period - NO INTEREST
+                        expected_current_value = principal_amount
+                        logging.info(f"Client {client['id']} {fund_code}: Still in incubation period, no interest earned")
                     
                     # Client Interest Obligation = what we owe client based on our fund commitments
                     interest_obligation = expected_current_value
