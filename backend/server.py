@@ -7099,6 +7099,200 @@ async def update_investment_from_mt5_history(investment_id: str, current_user: d
         logging.error(f"Error updating investment from MT5 history: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update investment from MT5 history")
 
+@api_router.post("/investments/{investment_id}/validate-mt5")
+async def validate_investment_mt5_mapping(investment_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Validate MT5 mapping, retrieve historical data, and identify start date for an investment"""
+    try:
+        # Get the investment
+        investment = mongodb_manager.get_investment(investment_id)
+        if not investment:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        # Find associated MT5 account
+        mt5_accounts = mongodb_manager.get_client_mt5_accounts(investment['client_id'])
+        matching_account = None
+        
+        for account in mt5_accounts:
+            if (account.get('fund_code') == investment['fund_code'] and 
+                investment_id in account.get('investment_ids', [])):
+                matching_account = account
+                break
+        
+        if not matching_account:
+            raise HTTPException(status_code=404, detail="No MT5 account found for this investment")
+        
+        # Perform comprehensive MT5 validation
+        validation_result = await mt5_service.validate_mt5_account_mapping(matching_account['account_id'])
+        
+        # Update investment status based on validation results
+        new_status = InvestmentStatus.PENDING_MT5_VALIDATION
+        
+        if validation_result['mt5_mapped'] and not validation_result['historical_data_retrieved']:
+            new_status = InvestmentStatus.PENDING_HISTORICAL_DATA
+        elif validation_result['historical_data_retrieved'] and not validation_result['start_date_identified']:
+            new_status = InvestmentStatus.PENDING_START_DATE
+        elif (validation_result['mt5_mapped'] and 
+              validation_result['historical_data_retrieved'] and 
+              validation_result['start_date_identified']):
+            new_status = InvestmentStatus.VALIDATED
+            
+            # If start date is identified, update investment with actual date
+            if validation_result['actual_start_date']:
+                await update_investment_deposit_date(
+                    investment_id, 
+                    validation_result['actual_start_date'],
+                    current_user
+                )
+        
+        # Update investment status
+        update_success = mongodb_manager.update_investment(investment_id, {
+            'status': new_status.value,
+            'mt5_validation_status': validation_result,
+            'mt5_validation_completed_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        if not update_success:
+            raise HTTPException(status_code=500, detail="Failed to update investment status")
+        
+        logging.info(f"MT5 validation completed for investment {investment_id}: {new_status}")
+        
+        return {
+            "success": True,
+            "investment_id": investment_id,
+            "validation_result": validation_result,
+            "new_status": new_status.value,
+            "mt5_account_id": matching_account['account_id'],
+            "message": f"MT5 validation completed. Status: {new_status.value}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error validating MT5 mapping for investment {investment_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to validate MT5 mapping")
+
+@api_router.post("/investments/{investment_id}/approve")
+async def approve_investment_for_activation(investment_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Approve a validated investment to become active"""
+    try:
+        # Get the investment
+        investment = mongodb_manager.get_investment(investment_id)
+        if not investment:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        # Check if investment is validated
+        if investment.get('status') != InvestmentStatus.VALIDATED.value:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Investment must be validated before approval. Current status: {investment.get('status')}"
+            )
+        
+        # Check if MT5 validation was successful
+        mt5_validation = investment.get('mt5_validation_status', {})
+        validation_passed = (
+            mt5_validation.get('mt5_mapped', False) and
+            mt5_validation.get('historical_data_retrieved', False) and
+            mt5_validation.get('start_date_identified', False)
+        )
+        
+        if not validation_passed:
+            raise HTTPException(
+                status_code=400,
+                detail="MT5 validation requirements not met. Please complete MT5 validation first."
+            )
+        
+        # Determine final status based on fund rules
+        from datetime import datetime, timezone
+        deposit_date = datetime.fromisoformat(investment['deposit_date'].replace('Z', '+00:00'))
+        incubation_end = datetime.fromisoformat(investment['incubation_end_date'].replace('Z', '+00:00'))
+        current_time = datetime.now(timezone.utc)
+        
+        if current_time < incubation_end:
+            final_status = InvestmentStatus.INCUBATING
+        else:
+            final_status = InvestmentStatus.ACTIVE
+        
+        # Update investment to approved status
+        update_success = mongodb_manager.update_investment(investment_id, {
+            'status': final_status.value,
+            'approved_at': datetime.now(timezone.utc).isoformat(),
+            'approved_by': current_user.get('username', 'admin'),
+            'mt5_validation_required': False
+        })
+        
+        if not update_success:
+            raise HTTPException(status_code=500, detail="Failed to approve investment")
+        
+        logging.info(f"Investment {investment_id} approved and activated with status: {final_status.value}")
+        
+        return {
+            "success": True,
+            "investment_id": investment_id,
+            "previous_status": InvestmentStatus.VALIDATED.value,
+            "new_status": final_status.value,
+            "approved_at": datetime.now(timezone.utc).isoformat(),
+            "message": f"Investment approved and activated with status: {final_status.value}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error approving investment {investment_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to approve investment")
+
+@api_router.get("/admin/investments/pending-validation")
+async def get_pending_validation_investments(current_user: dict = Depends(get_current_admin_user)):
+    """Get all investments pending MT5 validation"""
+    try:
+        # Get all investments that need validation
+        pending_investments = []
+        all_investments = mongodb_manager.db.investments.find({
+            'status': {
+                '$in': [
+                    InvestmentStatus.PENDING_MT5_VALIDATION.value,
+                    InvestmentStatus.PENDING_HISTORICAL_DATA.value,
+                    InvestmentStatus.PENDING_START_DATE.value,
+                    InvestmentStatus.VALIDATED.value
+                ]
+            }
+        })
+        
+        for investment in all_investments:
+            # Convert ObjectId to string
+            investment['_id'] = str(investment['_id'])
+            
+            # Get client info
+            client_info = None
+            for user in MOCK_USERS.values():
+                if user.get('id') == investment['client_id']:
+                    client_info = {
+                        'name': user.get('name', 'Unknown'),
+                        'username': [k for k, v in MOCK_USERS.items() if v == user][0]
+                    }
+                    break
+            
+            investment['client_info'] = client_info
+            pending_investments.append(investment)
+        
+        return {
+            "success": True,
+            "pending_investments": pending_investments,
+            "total_count": len(pending_investments),
+            "status_breakdown": {
+                status.value: len([inv for inv in pending_investments if inv['status'] == status.value])
+                for status in [
+                    InvestmentStatus.PENDING_MT5_VALIDATION,
+                    InvestmentStatus.PENDING_HISTORICAL_DATA,
+                    InvestmentStatus.PENDING_START_DATE,
+                    InvestmentStatus.VALIDATED
+                ]
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting pending validation investments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get pending investments")
+
 @api_router.post("/investments/{investment_id}/update-deposit-date")
 async def update_investment_deposit_date(
     investment_id: str, 
