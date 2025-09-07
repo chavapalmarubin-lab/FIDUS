@@ -82,8 +82,8 @@ const MetaQuotesData = () => {
     try {
       setLoading(true);
       
-      // Get detailed account data
-      const response = await apiAxios.get(`/admin/mt5/account/${accountId}/activity`);
+      // Get detailed account data - using correct endpoint
+      const response = await apiAxios.get(`/mt5/admin/account/${accountId}/activity`);
       
       if (response.data.success) {
         setAccountData(response.data);
