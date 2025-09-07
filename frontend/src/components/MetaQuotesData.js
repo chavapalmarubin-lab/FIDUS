@@ -37,8 +37,8 @@ const MetaQuotesData = () => {
       setLoading(true);
       setError('');
       
-      // Get MT5 accounts from the existing admin endpoint
-      const response = await apiAxios.get('/admin/mt5/accounts');
+      // Get MT5 accounts from the correct admin endpoint
+      const response = await apiAxios.get('/mt5/admin/accounts');
       
       if (response.data.success) {
         const mt5Accounts = response.data.accounts || [];
