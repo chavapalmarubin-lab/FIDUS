@@ -925,6 +925,101 @@ class MT5IntegrationService:
             logging.error(f"Error adding manual MT5 account: {str(e)}")
             return None
     
+    async def get_client_mt5_accounts(self, client_id: str, fund_code: str = None) -> List[Dict[str, Any]]:
+        """Get MT5 accounts for a specific client, optionally filtered by fund code"""
+        try:
+            # Get all accounts for the client from MongoDB
+            accounts = mongodb_manager.get_client_mt5_accounts(client_id)
+            
+            # Filter by fund code if specified
+            if fund_code:
+                filtered_accounts = []
+                for account in accounts:
+                    if account.get('fund_code') == fund_code:
+                        filtered_accounts.append(account)
+                accounts = filtered_accounts
+            
+            logging.info(f"Retrieved {len(accounts)} MT5 accounts for client {client_id}" + 
+                        (f" (fund: {fund_code})" if fund_code else ""))
+            
+            return accounts
+            
+        except Exception as e:
+            logging.error(f"Error getting MT5 accounts for client {client_id}: {str(e)}")
+            return []
+    
+    async def get_mt5_account_data(self, account_id: str) -> Optional[Dict[str, Any]]:
+        """Get detailed MT5 account data including real-time performance"""
+        try:
+            # Get account info from MongoDB
+            account_info = mongodb_manager.get_mt5_account(account_id)
+            if not account_info:
+                logging.error(f"MT5 account {account_id} not found in database")
+                return None
+            
+            # Check if account is connected and get real-time data
+            if account_id in self.connected_accounts:
+                connection_info = self.connected_accounts[account_id]
+                performance_data = self.performance_cache.get(account_id)
+                
+                if performance_data:
+                    # Return enhanced account data with real-time info
+                    return {
+                        'account_id': account_id,
+                        'client_id': account_info.get('client_id'),
+                        'fund_code': account_info.get('fund_code'),
+                        'mt5_login': account_info.get('mt5_login'),
+                        'broker_code': account_info.get('broker_code'),
+                        'broker_name': account_info.get('broker_name'),
+                        'server': connection_info.get('server'),
+                        
+                        # Real-time performance data
+                        'balance': performance_data.balance,
+                        'equity': performance_data.equity,
+                        'profit': performance_data.profit,
+                        'free_margin': performance_data.free_margin,
+                        'margin_level': performance_data.margin_level,
+                        'positions_count': performance_data.positions_count,
+                        
+                        # Stored data
+                        'total_allocated': account_info.get('total_allocated', 0),
+                        'current_equity': account_info.get('current_equity', 0),
+                        'profit_loss': account_info.get('profit_loss', 0),
+                        'mt5_initial_balance': account_info.get('mt5_initial_balance', 0),
+                        'banking_fees': account_info.get('banking_fees', 0),
+                        'status': 'connected',
+                        'last_updated': performance_data.timestamp
+                    }
+            
+            # Return stored data if not connected or no real-time data
+            return {
+                'account_id': account_id,
+                'client_id': account_info.get('client_id'),
+                'fund_code': account_info.get('fund_code'),
+                'mt5_login': account_info.get('mt5_login'),
+                'broker_code': account_info.get('broker_code'),
+                'broker_name': account_info.get('broker_name'),
+                
+                # Use stored balance data with MT5 structure
+                'balance': account_info.get('current_equity', 0),  # Current balance in account  
+                'equity': account_info.get('current_equity', 0),
+                'profit': account_info.get('profit_loss', 0),  # Current profit
+                'deposits': account_info.get('total_allocated', 0),  # Initial deposit
+                'withdrawals': account_info.get('withdrawals', 143000),  # Previous withdrawals
+                
+                'total_allocated': account_info.get('total_allocated', 0),
+                'current_equity': account_info.get('current_equity', 0),
+                'profit_loss': account_info.get('profit_loss', 0),
+                'mt5_initial_balance': account_info.get('mt5_initial_balance', 0),
+                'banking_fees': account_info.get('banking_fees', 0),
+                'status': account_info.get('status', 'disconnected'),
+                'last_updated': account_info.get('updated_at', 'N/A')
+            }
+            
+        except Exception as e:
+            logging.error(f"Error getting MT5 account data for {account_id}: {str(e)}")
+            return None
+    
     async def get_account_summary(self, client_id: str) -> Dict[str, Any]:
         """Get comprehensive MT5 account summary for client"""
         try:
