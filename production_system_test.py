@@ -226,8 +226,13 @@ class ProductionSystemTester:
         )
         
         if success:
+            # Check fund accounting structure
+            fund_accounting = response.get('fund_accounting', {})
+            assets = fund_accounting.get('assets', {})
+            liabilities = fund_accounting.get('liabilities', {})
+            
             # Check MT5 trading profits ($860,448.65 expected)
-            mt5_profits = response.get('mt5_trading_profits', 0)
+            mt5_profits = assets.get('mt5_trading_profits', 0)
             expected_mt5_profits = 860448.65
             
             print(f"   MT5 Trading Profits: ${mt5_profits:,.2f}")
@@ -238,7 +243,7 @@ class ProductionSystemTester:
                 self.log_critical_issue(f"MT5 profits incorrect: ${mt5_profits:,.2f} vs expected ${expected_mt5_profits:,.2f}")
             
             # Check client obligations ($1,421,421.07 expected)
-            client_obligations = response.get('client_obligations', 0)
+            client_obligations = liabilities.get('client_obligations', 0)
             expected_obligations = 1421421.07
             
             print(f"   Client Obligations: ${client_obligations:,.2f}")
@@ -247,6 +252,19 @@ class ProductionSystemTester:
                 print(f"   ✅ Client obligations match expected: ${expected_obligations:,.2f}")
             else:
                 self.log_critical_issue(f"Client obligations incorrect: ${client_obligations:,.2f} vs expected ${expected_obligations:,.2f}")
+            
+            # Check net fund profitability
+            net_profitability = fund_accounting.get('net_fund_profitability', 0)
+            print(f"   Net Fund Profitability: ${net_profitability:,.2f}")
+            
+            # Check fund breakdown for BALANCE fund
+            fund_breakdown = response.get('fund_breakdown', {})
+            balance_fund = fund_breakdown.get('BALANCE', {})
+            if balance_fund:
+                balance_mt5_profits = balance_fund.get('mt5_profits', 0)
+                balance_obligations = balance_fund.get('client_obligations', 0)
+                print(f"   BALANCE Fund MT5 Profits: ${balance_mt5_profits:,.2f}")
+                print(f"   BALANCE Fund Client Obligations: ${balance_obligations:,.2f}")
             
             return True
         else:
