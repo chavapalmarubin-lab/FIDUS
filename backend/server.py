@@ -8190,6 +8190,10 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
                             month=(invest_date.month + incubation_months - 1) % 12 + 1
                         )
                     
+                    # Ensure both dates have timezone info for comparison
+                    if interest_start_date.tzinfo is None:
+                        interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
+                    
                     current_date = datetime.now(timezone.utc)
                     
                     # Only calculate interest if we're past incubation period
