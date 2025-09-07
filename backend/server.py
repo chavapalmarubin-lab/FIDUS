@@ -7009,7 +7009,135 @@ async def get_fund_configurations():
         logging.error(f"Get fund configs error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch fund configurations")
 
-@api_router.post("/investments/create")
+@api_router.post("/investments/{investment_id}/update-from-mt5-history")
+async def update_investment_from_mt5_history(investment_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Update investment dates based on actual MT5 account history"""
+    try:
+        # Get the investment
+        investment = mongodb_manager.get_investment(investment_id)
+        if not investment:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        # Get associated MT5 accounts
+        mt5_accounts = mongodb_manager.get_client_mt5_accounts(investment['client_id'])
+        matching_account = None
+        
+        for account in mt5_accounts:
+            if (account.get('fund_code') == investment['fund_code'] and 
+                investment_id in account.get('investment_ids', [])):
+                matching_account = account
+                break
+        
+        if not matching_account:
+            raise HTTPException(status_code=404, detail="No MT5 account found for this investment")
+        
+        # Get MT5 account history to find actual deposit date
+        mt5_history = await mt5_service.get_account_deposit_history(matching_account['account_id'])
+        
+        if not mt5_history or not mt5_history.get('first_deposit_date'):
+            raise HTTPException(status_code=400, detail="Could not retrieve MT5 deposit history")
+        
+        # Parse the actual deposit date
+        actual_deposit_date = datetime.fromisoformat(mt5_history['first_deposit_date'])
+        
+        # Recalculate investment dates based on actual deposit date
+        fund_config = FIDUS_FUND_CONFIG[investment['fund_code']]
+        
+        # Calculate new dates
+        incubation_end_date = actual_deposit_date + timedelta(days=fund_config.incubation_period_months * 30)
+        interest_start_date = incubation_end_date
+        minimum_hold_end_date = actual_deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        
+        # Update investment in database
+        updated_investment = {
+            'deposit_date': actual_deposit_date.isoformat(),
+            'incubation_end_date': incubation_end_date.isoformat(),
+            'interest_start_date': interest_start_date.isoformat(),
+            'minimum_hold_end_date': minimum_hold_end_date.isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        success = mongodb_manager.update_investment(investment_id, updated_investment)
+        
+        if success:
+            logging.info(f"Updated investment {investment_id} with actual MT5 deposit date: {actual_deposit_date}")
+            
+            return {
+                "success": True,
+                "investment_id": investment_id,
+                "original_date": investment['deposit_date'],
+                "updated_date": actual_deposit_date.isoformat(),
+                "mt5_account_id": matching_account['account_id'],
+                "message": f"Investment dates updated based on actual MT5 deposit date: {actual_deposit_date.strftime('%Y-%m-%d')}"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to update investment")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating investment from MT5 history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update investment from MT5 history")
+
+@api_router.post("/investments/{investment_id}/update-deposit-date")
+async def update_investment_deposit_date(
+    investment_id: str, 
+    deposit_date: str, 
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Manually update investment deposit date and recalculate all related dates"""
+    try:
+        # Get the investment
+        investment = mongodb_manager.get_investment(investment_id)
+        if not investment:
+            raise HTTPException(status_code=404, detail="Investment not found")
+        
+        # Parse the new deposit date
+        try:
+            new_deposit_date = datetime.fromisoformat(deposit_date.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Recalculate investment dates based on new deposit date
+        fund_config = FIDUS_FUND_CONFIG[investment['fund_code']]
+        
+        # Calculate new dates
+        incubation_end_date = new_deposit_date + timedelta(days=fund_config.incubation_period_months * 30)
+        interest_start_date = incubation_end_date
+        minimum_hold_end_date = new_deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        
+        # Update investment in database
+        updated_investment = {
+            'deposit_date': new_deposit_date.isoformat(),
+            'incubation_end_date': incubation_end_date.isoformat(),
+            'interest_start_date': interest_start_date.isoformat(),
+            'minimum_hold_end_date': minimum_hold_end_date.isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        success = mongodb_manager.update_investment(investment_id, updated_investment)
+        
+        if success:
+            logging.info(f"Manually updated investment {investment_id} deposit date: {new_deposit_date}")
+            
+            return {
+                "success": True,
+                "investment_id": investment_id,
+                "original_date": investment['deposit_date'],
+                "updated_date": new_deposit_date.isoformat(),
+                "incubation_end_date": incubation_end_date.isoformat(),
+                "interest_start_date": interest_start_date.isoformat(),
+                "minimum_hold_end_date": minimum_hold_end_date.isoformat(),
+                "message": f"Investment dates updated. New deposit date: {new_deposit_date.strftime('%Y-%m-%d')}"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to update investment")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating investment deposit date: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update investment deposit date")
 async def create_client_investment(investment_data: InvestmentCreate):
     """Create a new investment for a client"""
     try:
