@@ -6,6 +6,57 @@ This document tracks all significant changes, fixes, and enhancements to the FID
 
 ---
 
+## **September 2025 - v2.0.0 - MAJOR RELEASE**
+
+### 🚀 **MT5 Account Mapping Integration**
+- **Added:** Complete MT5 account mapping in investment creation workflow
+- **Added:** Secure Fernet encryption for MT5 credentials storage
+- **Added:** Real-time MT5 data collection and synchronization
+- **Added:** Investment validation and approval process with PENDING statuses
+- **Enhanced:** Admin investment management with MT5 login capture
+- **Testing:** 94.4% success rate (17/18 tests passed)
+
+### 💰 **Comprehensive Crypto Wallet System**
+- **Added:** New "Wallet" tab in client dashboard
+- **Added:** FIDUS official wallet addresses display with QR codes:
+  - USDT/USDC ERC20: `0xDe2DC29591dBc6e540b63050D73E2E9430733A90`
+  - USDT/USDC TRC20: `TGoTqWUhLMFQyAm3BeFUEwMuUPDMY4g3iG`
+  - Bitcoin: `1JT2h9aQ6KnP2vjRiPT13Dvc3ASp9mQ6fj`
+  - Ethereum: `0xDe2DC29591dBc6e540b63050D73E2E9430733A90`
+- **Added:** Client personal wallet management (crypto/fiat)
+- **Added:** 6 complete backend CRUD API endpoints for wallet operations
+- **Enhanced:** QR code generation for all payment addresses
+
+### 📊 **Critical Financial Calculation Corrections**
+- **Fixed:** Cash Flow Management calculations now use real MT5 data structure
+- **Fixed:** Proper understanding of MT5 performance = withdrawals + current profit
+- **Fixed:** Accurate fund commitment calculations with 2-month incubation period
+- **Enhanced:** Real-time MT5 data integration for live performance tracking
+- **Result:** Accurate financial reporting matching business reality
+
+### 🔧 **Data Integrity & System Stability**
+- **Emergency Fix:** Salvador Palma investment restoration after data loss
+- **Cleanup:** Removed all test data contamination (10 fake investments)
+- **Added:** Data integrity safeguards to prevent test data mixing
+- **Enhanced:** Investment validation to ensure proper MT5 mapping
+- **Result:** Clean, consistent database with only legitimate production data
+
+### 🎨 **Enhanced CRM Dashboard**
+- **Fixed:** Trading Monitor now displays only real client data
+- **Fixed:** MetaQuotes Data tab "Failed to load MT5 account mappings" error
+- **Removed:** All mock/demo data from trading sections
+- **Enhanced:** Real-time AUM and performance metrics display
+- **Updated:** Fund management with actual MongoDB data integration
+
+### 🛡️ **Security & Architecture Improvements**
+- **Enhanced:** JWT authentication with proper role-based access
+- **Added:** Fernet symmetric encryption for sensitive MT5 credentials
+- **Improved:** MongoDB schema validation and data integrity checks
+- **Enhanced:** Error handling and recovery mechanisms
+- **Added:** Comprehensive activity logging and audit trails
+
+---
+
 ## **December 6, 2024 - v1.2.0**
 
 ### 🔧 **CRM Dashboard Data Cleanup**
