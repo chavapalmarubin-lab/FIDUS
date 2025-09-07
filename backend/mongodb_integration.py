@@ -546,6 +546,7 @@ class MongoDBManager:
                     'profit_loss': acc['profit_loss'],
                     'profit_loss_percentage': (acc['profit_loss'] / acc['total_allocated'] * 100) if acc['total_allocated'] > 0 else 0,
                     'investment_count': len(acc.get('investment_ids', [])),
+                    'investment_ids': acc.get('investment_ids', []),  # ADD: Include investment IDs
                     'status': acc['status'],
                     'created_at': acc['created_at'].isoformat() if hasattr(acc['created_at'], 'isoformat') else str(acc['created_at']),
                     'updated_at': acc['updated_at'].isoformat() if hasattr(acc['updated_at'], 'isoformat') else str(acc['updated_at'])
