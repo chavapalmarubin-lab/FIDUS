@@ -7203,8 +7203,24 @@ async def approve_investment_for_activation(investment_id: str, current_user: di
         
         # Determine final status based on fund rules
         from datetime import datetime, timezone
-        deposit_date = datetime.fromisoformat(investment['deposit_date'].replace('Z', '+00:00'))
-        incubation_end = datetime.fromisoformat(investment['incubation_end_date'].replace('Z', '+00:00'))
+        deposit_date_str = investment['deposit_date']
+        incubation_end_str = investment['incubation_end_date']
+        
+        # Parse dates with proper timezone handling
+        if deposit_date_str.endswith('Z'):
+            deposit_date = datetime.fromisoformat(deposit_date_str.replace('Z', '+00:00'))
+        elif '+' in deposit_date_str or deposit_date_str.endswith('00:00'):
+            deposit_date = datetime.fromisoformat(deposit_date_str)
+        else:
+            deposit_date = datetime.fromisoformat(deposit_date_str).replace(tzinfo=timezone.utc)
+            
+        if incubation_end_str.endswith('Z'):
+            incubation_end = datetime.fromisoformat(incubation_end_str.replace('Z', '+00:00'))
+        elif '+' in incubation_end_str or incubation_end_str.endswith('00:00'):
+            incubation_end = datetime.fromisoformat(incubation_end_str)
+        else:
+            incubation_end = datetime.fromisoformat(incubation_end_str).replace(tzinfo=timezone.utc)
+        
         current_time = datetime.now(timezone.utc)
         
         if current_time < incubation_end:
