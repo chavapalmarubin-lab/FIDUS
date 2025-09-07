@@ -7044,7 +7044,7 @@ async def update_investment_from_mt5_history(investment_id: str, current_user: d
         fund_config = FIDUS_FUND_CONFIG[investment['fund_code']]
         
         # Calculate new dates
-        incubation_end_date = actual_deposit_date + timedelta(days=fund_config.incubation_period_months * 30)
+        incubation_end_date = actual_deposit_date + timedelta(days=fund_config.incubation_months * 30)
         interest_start_date = incubation_end_date
         minimum_hold_end_date = actual_deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
         
