@@ -7206,20 +7206,20 @@ async def approve_investment_for_activation(investment_id: str, current_user: di
         deposit_date_str = investment['deposit_date']
         incubation_end_str = investment['incubation_end_date']
         
-        # Parse dates with proper timezone handling
-        if deposit_date_str.endswith('Z'):
-            deposit_date = datetime.fromisoformat(deposit_date_str.replace('Z', '+00:00'))
-        elif '+' in deposit_date_str or deposit_date_str.endswith('00:00'):
-            deposit_date = datetime.fromisoformat(deposit_date_str)
-        else:
-            deposit_date = datetime.fromisoformat(deposit_date_str).replace(tzinfo=timezone.utc)
-            
-        if incubation_end_str.endswith('Z'):
-            incubation_end = datetime.fromisoformat(incubation_end_str.replace('Z', '+00:00'))
-        elif '+' in incubation_end_str or incubation_end_str.endswith('00:00'):
-            incubation_end = datetime.fromisoformat(incubation_end_str)
-        else:
-            incubation_end = datetime.fromisoformat(incubation_end_str).replace(tzinfo=timezone.utc)
+        # Parse dates - assume UTC if no timezone info
+        try:
+            if 'T' in deposit_date_str and not any(x in deposit_date_str for x in ['+', 'Z']):
+                deposit_date = datetime.fromisoformat(deposit_date_str).replace(tzinfo=timezone.utc)
+            else:
+                deposit_date = datetime.fromisoformat(deposit_date_str.replace('Z', '+00:00'))
+                
+            if 'T' in incubation_end_str and not any(x in incubation_end_str for x in ['+', 'Z']):
+                incubation_end = datetime.fromisoformat(incubation_end_str).replace(tzinfo=timezone.utc)
+            else:
+                incubation_end = datetime.fromisoformat(incubation_end_str.replace('Z', '+00:00'))
+        except ValueError as e:
+            logging.error(f"Date parsing error: {e}")
+            raise HTTPException(status_code=400, detail="Invalid date format in investment")
         
         current_time = datetime.now(timezone.utc)
         
