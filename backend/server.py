@@ -7019,8 +7019,8 @@ async def create_client_investment(investment_data: InvestmentCreate):
         
         fund_config = FIDUS_FUND_CONFIG[investment_data.fund_code]
         
-        # Validate minimum investment
-        if investment_data.amount < fund_config.minimum_investment:
+        # Validate minimum investment (with exception for Salvador Palma - minimum waived)
+        if investment_data.amount < fund_config.minimum_investment and investment_data.client_id != "client_003":
             raise HTTPException(
                 status_code=400, 
                 detail=f"Minimum investment for {investment_data.fund_code} is ${fund_config.minimum_investment:,.2f}"
