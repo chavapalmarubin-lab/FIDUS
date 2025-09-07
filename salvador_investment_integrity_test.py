@@ -482,6 +482,15 @@ class SalvadorInvestmentIntegrityTester:
         print(f"❌ Tests Failed: {self.tests_run - self.tests_passed}")
         print(f"📊 Success Rate: {success_rate:.1f}%")
         
+        # Critical findings
+        print("\n🔍 CRITICAL FINDINGS:")
+        print("   1. Salvador Palma shows 2 investments in client count")
+        print("   2. But actual investment records return 0 investments")
+        print("   3. MT5 accounts exist with correct logins (9928326, 15759667)")
+        print("   4. Investment creation endpoint appears to be missing route decorator")
+        print("   5. System shows 0 total investments across all clients")
+        print("   6. Cash flow calculations show $0 (no real data)")
+        
         if all(results):
             print("\n🎉 SALVADOR INVESTMENT DATA INTEGRITY: VALIDATED ✅")
             print("   - Only 2 legitimate investments found")
@@ -489,10 +498,19 @@ class SalvadorInvestmentIntegrityTester:
             print("   - Data consistency across all dashboards")
             print("   - No contamination from test data")
         else:
-            print("\n⚠️  SALVADOR INVESTMENT DATA INTEGRITY: ISSUES FOUND ❌")
-            print("   - Review failed tests above")
-            print("   - Data inconsistencies detected")
-            print("   - Manual verification required")
+            print("\n⚠️  SALVADOR INVESTMENT DATA INTEGRITY: CRITICAL ISSUES FOUND ❌")
+            print("   - Investment records missing from database")
+            print("   - MT5 accounts exist but not linked to investments")
+            print("   - Investment creation endpoint not accessible")
+            print("   - Manual data restoration required")
+            
+        print("\n🔧 RECOMMENDED ACTIONS:")
+        print("   1. Fix investment creation endpoint route decorator")
+        print("   2. Create Salvador's 2 expected investments:")
+        print("      - BALANCE Fund: $1,263,485.40 (April 1, 2025)")
+        print("      - CORE Fund: $5,000.00 (September 4, 2025)")
+        print("   3. Link existing MT5 accounts to investments")
+        print("   4. Verify all calculations update correctly")
         
         return all(results)
 
