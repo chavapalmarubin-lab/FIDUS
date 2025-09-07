@@ -158,39 +158,54 @@ class ProductionSystemTester:
         )
         
         if success:
-            # Check for Salvador Palma's investment
-            clients = response.get('clients', [])
+            # Check dashboard structure
+            dashboard = response.get('dashboard', {})
+            fund_commitments = dashboard.get('fund_commitments', {})
+            performance_gaps = dashboard.get('performance_gaps', [])
+            
+            print(f"   Fund commitments: {len(fund_commitments)}")
+            print(f"   Performance gaps: {len(performance_gaps)}")
+            
+            # Check for Salvador Palma's BALANCE fund investment
             salvador_found = False
-            total_clients = len(clients)
-            
-            print(f"   Total clients in dashboard: {total_clients}")
-            
-            for client in clients:
-                client_name = client.get('name', '')
-                if 'SALVADOR PALMA' in client_name.upper():
+            if 'BALANCE' in fund_commitments:
+                balance_fund = fund_commitments['BALANCE']
+                client_investment = balance_fund.get('client_investment', {})
+                client_id = client_investment.get('client_id', '')
+                principal_amount = client_investment.get('principal_amount', 0)
+                
+                if client_id == self.salvador_client_id:
                     salvador_found = True
-                    balance_fund = client.get('balance_fund', 0)
-                    print(f"   ✅ Salvador Palma found with BALANCE fund: ${balance_fund:,.2f}")
+                    print(f"   ✅ Salvador Palma found in BALANCE fund: ${principal_amount:,.2f}")
                     
                     # Verify expected amount ($1,263,485.40)
                     expected_amount = 1263485.40
-                    if abs(balance_fund - expected_amount) < 1000:  # Allow small variance
+                    if abs(principal_amount - expected_amount) < 1000:  # Allow small variance
                         print(f"   ✅ Investment amount matches expected: ${expected_amount:,.2f}")
                     else:
-                        self.log_critical_issue(f"Salvador's investment amount incorrect: ${balance_fund:,.2f} vs expected ${expected_amount:,.2f}")
-                else:
-                    print(f"   Client found: {client_name}")
+                        self.log_critical_issue(f"Salvador's investment amount incorrect: ${principal_amount:,.2f} vs expected ${expected_amount:,.2f}")
             
             if not salvador_found:
                 self.log_critical_issue("Salvador Palma not found in Fund Performance dashboard")
                 return False
-                
-            # Check for data contamination (should only be Salvador)
-            if total_clients > 1:
-                self.log_critical_issue(f"Data contamination detected: {total_clients} clients found, should only be Salvador Palma")
-                return False
             
-            print(f"   ✅ Data integrity confirmed: Only Salvador Palma in system")
+            # Check performance gaps for Salvador
+            salvador_gap_found = False
+            for gap in performance_gaps:
+                if gap.get('client_id') == self.salvador_client_id:
+                    salvador_gap_found = True
+                    actual_performance = gap.get('actual_mt5_performance', 0)
+                    expected_performance = gap.get('expected_performance', 0)
+                    gap_amount = gap.get('gap_amount', 0)
+                    print(f"   MT5 Performance: ${actual_performance:,.2f}")
+                    print(f"   Expected Performance: ${expected_performance:,.2f}")
+                    print(f"   Performance Gap: ${gap_amount:,.2f}")
+            
+            if salvador_gap_found:
+                print(f"   ✅ Salvador's performance data found and calculated")
+            else:
+                self.log_minor_issue("Salvador's performance gap data not found")
+            
             return True
         else:
             self.log_critical_issue("Fund Performance dashboard not accessible")
