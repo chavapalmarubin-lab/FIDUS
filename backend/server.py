@@ -440,6 +440,26 @@ class ClientCreate(BaseModel):
 # WALLET MANAGEMENT MODELS
 # ===============================================================================
 
+# Investment Status Enum
+class InvestmentStatus(str, Enum):
+    PENDING_MT5_VALIDATION = "pending_mt5_validation"
+    PENDING_HISTORICAL_DATA = "pending_historical_data" 
+    PENDING_START_DATE = "pending_start_date"
+    VALIDATED = "validated"
+    ACTIVE = "active"
+    INCUBATING = "incubating"
+    PAUSED = "paused"
+    CLOSED = "closed"
+
+# MT5 Validation Status
+class MT5ValidationStatus(BaseModel):
+    mt5_mapped: bool = False
+    historical_data_retrieved: bool = False
+    start_date_identified: bool = False
+    actual_start_date: Optional[str] = None
+    validation_errors: List[str] = []
+    last_validation_attempt: Optional[datetime] = None
+
 class WalletType(str, Enum):
     FIAT = "fiat"
     CRYPTO = "crypto"
