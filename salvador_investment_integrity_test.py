@@ -202,7 +202,7 @@ class SalvadorInvestmentIntegrityTester:
         print("\n🔍 Testing Cash Flow Management Calculations...")
         
         headers = self.get_auth_headers("admin")
-        success, response = self.make_request("GET", "api/admin/cashflow", headers=headers)
+        success, response = self.make_request("GET", "api/admin/cashflow/overview", headers=headers)
         
         if not success:
             return self.log_test("Cash Flow Dashboard Access", False, "Failed to access cash flow dashboard")
