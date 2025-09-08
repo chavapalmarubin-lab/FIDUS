@@ -339,7 +339,8 @@ class SalvadorMT5IntegrationTester:
             "Get Fund Performance Dashboard",
             "GET",
             "api/admin/fund-performance/dashboard",
-            200
+            200,
+            use_auth=True
         )
         
         salvador_in_dashboard = False
