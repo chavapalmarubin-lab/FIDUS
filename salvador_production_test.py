@@ -540,13 +540,13 @@ class SalvadorProductionTester:
         )
         
         if success:
-            clients = response.get('clients', [])
-            salvador_perf = next(
-                (client for client in clients 
-                 if client.get('client_id') == self.salvador_client_id), 
-                None
-            )
-            integrity_checks.append(("Fund Performance Data", salvador_perf is not None))
+            dashboard = response.get('dashboard', {})
+            fund_commitments = dashboard.get('fund_commitments', {})
+            balance_fund = fund_commitments.get('BALANCE', {})
+            client_investment = balance_fund.get('client_investment', {})
+            
+            salvador_in_performance = (client_investment.get('client_id') == self.salvador_client_id)
+            integrity_checks.append(("Fund Performance Data", salvador_in_performance))
         else:
             integrity_checks.append(("Fund Performance Data", False))
         
