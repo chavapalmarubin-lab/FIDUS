@@ -334,7 +334,7 @@ class SalvadorPalmaInvestigator:
         success, response = self.run_test(
             "Get Fund Performance Dashboard",
             "GET",
-            "api/crm/fund-performance",
+            "api/admin/fund-performance/dashboard",
             200,
             headers=headers
         )
