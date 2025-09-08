@@ -106,17 +106,26 @@ class SalvadorMT5DatabaseUpdateTester:
         )
         
         if success:
-            name = response.get('name', 'Unknown')
-            email = response.get('email', 'Unknown')
-            total_balance = response.get('total_balance', 0)
-            print(f"   ✅ Salvador Profile: {name} ({email})")
-            print(f"   Total Balance: ${total_balance:,.2f}")
+            clients = response.get('clients', [])
+            salvador_found = False
             
-            if name == "SALVADOR PALMA":
-                print(f"   ✅ Correct client found")
+            for client in clients:
+                if client.get('id') == self.salvador_client_id:
+                    name = client.get('name', 'Unknown')
+                    email = client.get('email', 'Unknown')
+                    total_balance = client.get('total_balance', 0)
+                    print(f"   ✅ Salvador Profile: {name} ({email})")
+                    print(f"   Total Balance: ${total_balance:,.2f}")
+                    
+                    if "SALVADOR" in name.upper():
+                        print(f"   ✅ Correct client found")
+                        salvador_found = True
+                        break
+            
+            if salvador_found:
                 return True
             else:
-                print(f"   ❌ Wrong client: {name}")
+                print(f"   ❌ Salvador not found in clients list")
                 return False
         return False
 
