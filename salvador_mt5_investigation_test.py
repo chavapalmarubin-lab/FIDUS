@@ -36,11 +36,15 @@ class SalvadorMT5InvestigationTester:
         self.missing_vt_markets_account = None
         self.investigation_results = {}
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, use_auth=True):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
             headers = {'Content-Type': 'application/json'}
+            
+        # Add JWT token for authenticated requests
+        if use_auth and self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
 
         self.tests_run += 1
         print(f"\n🔍 {name}...")
