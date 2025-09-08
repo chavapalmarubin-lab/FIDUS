@@ -516,7 +516,7 @@ class SalvadorProductionTester:
         # Check 2: MT5 account linked
         success, status, response = self.make_request(
             'GET',
-            'api/mt5/admin/overview'
+            'api/mt5/admin/accounts'
         )
         
         if success:
