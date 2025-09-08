@@ -7418,7 +7418,7 @@ async def update_investment_deposit_date(
         logging.error(f"Error updating investment deposit date: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update investment deposit date")
 
-@api_router.post("/api/investments/create")
+@api_router.post("/investments/create")
 async def create_client_investment(investment_data: InvestmentCreate):
     """Create a new investment for a client"""
     try:
