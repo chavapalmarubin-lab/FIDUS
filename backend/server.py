@@ -9171,7 +9171,7 @@ async def get_all_mt5_accounts():
                 account['last_updated'] = performance.timestamp
             
             # Get connection status
-            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
+            account['connection_status'] = (await mt5_service.get_connection_status(account['account_id'])).value
             
             # Aggregate totals
             total_allocated += account['total_allocated']
