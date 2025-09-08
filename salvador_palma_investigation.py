@@ -361,7 +361,7 @@ class SalvadorPalmaInvestigator:
         success, response = self.run_test(
             "Get Cash Flow Management Data",
             "GET",
-            "api/admin/cashflow/summary",
+            "api/admin/cashflow/overview",
             200,
             headers=headers
         )
