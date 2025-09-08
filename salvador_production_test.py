@@ -520,10 +520,10 @@ class SalvadorProductionTester:
         )
         
         if success:
-            clients = response.get('clients', [])
+            accounts = response.get('accounts', [])
             salvador_mt5 = next(
-                (client for client in clients 
-                 if str(client.get('mt5_login')) == str(self.salvador_data['mt5_login'])), 
+                (account for account in accounts 
+                 if str(account.get('mt5_login')) == str(self.salvador_data['mt5_login'])), 
                 None
             )
             integrity_checks.append(("MT5 Account Linked", salvador_mt5 is not None))
