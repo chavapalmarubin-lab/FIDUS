@@ -329,14 +329,14 @@ class SalvadorProductionTester:
         )
         
         if success:
-            clients = response.get('clients', [])
+            accounts = response.get('accounts', [])
             salvador_mt5 = None
             
-            for client in clients:
-                if (client.get('client_id') == self.salvador_client_id or 
-                    str(client.get('mt5_login')) == str(self.salvador_data['mt5_login'])):
-                    salvador_mt5 = client
-                    self.salvador_mt5_account_id = client.get('account_id')
+            for account in accounts:
+                if (account.get('client_id') == self.salvador_client_id or 
+                    str(account.get('mt5_login')) == str(self.salvador_data['mt5_login'])):
+                    salvador_mt5 = account
+                    self.salvador_mt5_account_id = account.get('account_id')
                     break
             
             if salvador_mt5:
