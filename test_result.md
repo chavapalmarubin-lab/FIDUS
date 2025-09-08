@@ -192,6 +192,21 @@ backend:
         - agent: "testing"
         - comment: "🎯 DETAILED OAUTH URL ANALYSIS COMPLETED - DIAGNOSING 'ACCOUNTS.GOOGLE.REFUSE TO CONNECT' ISSUE! Comprehensive analysis of Gmail OAuth URL generation reveals PERFECT backend implementation: (1) OAUTH URL STRUCTURE: Generated URL follows exact Google OAuth format - https://accounts.google.com/o/oauth2/auth with all required parameters correctly formatted and URL-encoded. (2) CLIENT ID VERIFICATION: Using NEW client_id (909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com) which should resolve previous 403 errors. Client ID format is valid Google OAuth client format. (3) PARAMETER VALIDATION: All 6 required OAuth parameters present and correct - client_id (valid), redirect_uri (matches expected), scope (gmail.send), response_type (code), access_type (offline), state (30 chars, CSRF protection). (4) GOOGLE OAUTH COMPLIANCE: URL structure matches Google's OAuth 2.0 specification exactly. Base URL, parameter encoding, and format all correct. (5) DIAGNOSIS CONCLUSION: Backend OAuth implementation is PERFECT! If 'accounts.google.refuse to connect' error persists, the issue is in Google Cloud Console configuration (OAuth consent screen, domain verification, redirect URI whitelist, external user approval, or testing mode restrictions) - NOT in backend code. All 7/7 critical OAuth tests passed with 16/16 total tests successful. Backend requires no fixes for OAuth functionality."
 
+  - task: "Salvador Palma VT Markets MT5 Account Investigation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "🚨 CRITICAL SALVADOR PALMA VT MARKETS MT5 ACCOUNT INVESTIGATION COMPLETED! User reported missing VT Markets account for Salvador Palma. Expected: (1) ✅ DooTechnology account (Login: 9928326) - RESTORED, (2) ❌ VT Markets account - MISSING. INVESTIGATION FINDINGS: (1) ✅ SALVADOR PROFILE VERIFIED: Client ID client_003, Name: Salvador Palma, Email: salvador.palma@fidus.com, Status: active, Total Balance: $5,059,941.60. (2) ✅ INVESTMENT PORTFOLIO CONFIRMED: 6 total investments (5 BALANCE fund, 1 CORE fund), Total Current Value: $5,059,941.60, Main BALANCE investment found ($1,263,485.40). (3) ✅ MT5 ACCOUNTS ANALYSIS: Found 5 MT5 accounts for Salvador - 4 DooTechnology accounts (Login: 9928326) and 1 VT Markets account (Login: 15759667). CRITICAL DISCOVERY: CONTRARY TO USER REPORT, VT MARKETS ACCOUNT EXISTS! VT Markets account found with Login: 15759667, Broker: VT Markets, Server: VTMarkets-PAMM, Created: 2025-09-07T13:28:54.837000. HOWEVER, CRITICAL ISSUES IDENTIFIED: (1) ❌ Salvador missing from fund performance dashboard (0 performance records), (2) ❌ Salvador missing from cash flow calculations, (3) ❌ Investment-MT5 account mismatch (6 investments vs 5 MT5 accounts), (4) ❌ Health ready endpoint failing. CONCLUSION: VT Markets account EXISTS but system integration is INCOMPLETE. Salvador's MT5 accounts are not properly integrated into fund performance and cash flow systems. Test Results: 10/11 tests passed (90.9% success rate). URGENT ACTION REQUIRED: Fix fund performance and cash flow integration for Salvador's MT5 accounts."
+        - working: false
+        - agent: "testing"
+        - comment: "🔍 DETAILED MT5 ACCOUNT STRUCTURE ANALYSIS: Salvador has 5 MT5 accounts total: (1) DooTechnology accounts: 4 accounts all with Login 9928326, (2) VT Markets account: 1 account with Login 15759667. USER REPORT CONTRADICTION: User claimed VT Markets account was MISSING, but investigation shows it EXISTS. However, CRITICAL INTEGRATION ISSUES found: MT5 accounts are not properly linked to investments (all show Investment ID: None), accounts not appearing in fund performance calculations, missing from cash flow management. ROOT CAUSE: MT5 accounts exist in database but are not integrated into business logic calculations. RECOMMENDATION: Fix MT5-to-investment linking and ensure all accounts appear in performance/cash flow dashboards."
+
   - task: "Document Upload Camera Capture Support"
     implemented: true
     working: true
