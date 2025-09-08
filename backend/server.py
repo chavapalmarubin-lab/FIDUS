@@ -8479,10 +8479,10 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
                     if client_id == 'client_003' and fund_code == 'BALANCE':
                         # Get real-time MT5 data for Salvador Palma
                         if mt5_service:
-                            mt5_accounts = mt5_service.get_client_mt5_accounts(client_id, fund_code)
+                            mt5_accounts = await mt5_service.get_client_mt5_accounts(client_id, fund_code)
                             if mt5_accounts:
                                 # Get real-time account data
-                                account_data = mt5_service.get_mt5_account_data(mt5_accounts[0]['account_id'])
+                                account_data = await mt5_service.get_mt5_account_data(mt5_accounts[0]['account_id'])
                                 if account_data:
                                     # CORRECT CALCULATION: Total fund performance = withdrawals + current profit
                                     withdrawals = abs(account_data.get('withdrawals', 143000))  # Already paid out
