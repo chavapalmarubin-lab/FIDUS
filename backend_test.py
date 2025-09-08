@@ -1,3 +1,23 @@
+#!/usr/bin/env python3
+"""
+COMPREHENSIVE BACKEND TESTING FOR SALVADOR PALMA VT MARKETS MT5 INVESTIGATION
+============================================================================
+
+This test investigates and validates Salvador Palma's MT5 account structure
+based on the critical user report:
+
+USER REPORT:
+- ✅ DooTechnology account (Login: 9928326) - RESTORED  
+- ❌ VT Markets account - MISSING
+
+INVESTIGATION OBJECTIVES:
+1. Check Salvador's complete MT5 account history
+2. Investigate the original investment structure  
+3. Restore the missing VT Markets MT5 account
+4. Test MT5 accounts display
+5. Validate fund performance calculations include both accounts
+"""
+
 import requests
 import sys
 from datetime import datetime
@@ -5,7 +25,7 @@ import json
 import io
 from PIL import Image
 
-class FidusAPITester:
+class ComprehensiveBackendTester:
     def __init__(self, base_url="https://fidus-invest.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
