@@ -35,11 +35,15 @@ class SalvadorMT5IntegrationTester:
         self.critical_issues = []
         
     def run_test(self, name: str, method: str, endpoint: str, expected_status: int, 
-                 data: Dict = None, headers: Dict = None) -> tuple[bool, Dict]:
+                 data: Dict = None, headers: Dict = None, use_auth: bool = False) -> tuple[bool, Dict]:
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
             headers = {'Content-Type': 'application/json'}
+        
+        # Add JWT token for authenticated endpoints
+        if use_auth and self.admin_user and self.admin_user.get('token'):
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
