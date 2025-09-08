@@ -393,8 +393,8 @@ class SalvadorPalmaInvestigator:
         critical_endpoints = [
             ("Investment Client Endpoint", "GET", f"api/investments/client/{self.expected_salvador_data['client_id']}"),
             ("MT5 Admin Accounts", "GET", "api/mt5/admin/accounts"),
-            ("Fund Performance Dashboard", "GET", "api/crm/fund-performance"),
-            ("Cash Flow Summary", "GET", "api/admin/cashflow/summary"),
+            ("Fund Performance Dashboard", "GET", "api/admin/fund-performance/dashboard"),
+            ("Cash Flow Overview", "GET", "api/admin/cashflow/overview"),
             ("Client Data", "GET", f"api/client/{self.expected_salvador_data['client_id']}/data")
         ]
         
