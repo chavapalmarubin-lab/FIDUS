@@ -400,7 +400,8 @@ class SalvadorMT5IntegrationTester:
             "Get Cash Flow Overview",
             "GET",
             "api/admin/cashflow/overview",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
