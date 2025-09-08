@@ -95,7 +95,8 @@ class SalvadorMT5InvestigationTester:
                 "username": "admin", 
                 "password": "password123",
                 "user_type": "admin"
-            }
+            },
+            use_auth=False  # Don't use auth for login
         )
         if success:
             self.admin_user = response
