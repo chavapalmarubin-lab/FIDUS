@@ -101,7 +101,7 @@ class SalvadorMT5DatabaseUpdateTester:
         success, response = self.run_test(
             "Verify Salvador Palma Profile",
             "GET",
-            f"api/clients/{self.salvador_client_id}",
+            f"api/admin/clients",
             200
         )
         
