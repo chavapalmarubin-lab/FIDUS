@@ -368,23 +368,24 @@ class SalvadorProductionTester:
         )
         
         if success:
-            clients = response.get('clients', [])
-            salvador_performance = None
+            dashboard = response.get('dashboard', {})
+            fund_commitments = dashboard.get('fund_commitments', {})
+            performance_gaps = dashboard.get('performance_gaps', [])
             
-            for client in clients:
-                if client.get('client_id') == self.salvador_client_id:
-                    salvador_performance = client
-                    break
+            # Check if Salvador's BALANCE fund is in fund commitments
+            balance_fund = fund_commitments.get('BALANCE', {})
+            client_investment = balance_fund.get('client_investment', {})
             
-            if salvador_performance:
-                fund_commitment = salvador_performance.get('fund_commitment', 0)
-                mt5_performance = salvador_performance.get('mt5_performance', 0)
-                performance_gap = salvador_performance.get('performance_gap', 0)
+            if (client_investment.get('client_id') == self.salvador_client_id and 
+                abs(client_investment.get('principal_amount', 0) - self.salvador_data['principal_amount']) < 1):
+                
+                # Check performance gaps for Salvador
+                salvador_gaps = [gap for gap in performance_gaps if gap.get('client_id') == self.salvador_client_id]
                 
                 return self.log_test(
                     "Fund Performance Dashboard",
                     True,
-                    f"Fund: ${fund_commitment:,.2f}, MT5: ${mt5_performance:,.2f}, Gap: ${performance_gap:,.2f}"
+                    f"Salvador found with ${client_investment.get('principal_amount'):,.2f} BALANCE fund, {len(salvador_gaps)} performance gaps tracked"
                 )
             else:
                 return self.log_test(
