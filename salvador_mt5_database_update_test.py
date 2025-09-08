@@ -165,7 +165,7 @@ class SalvadorMT5DatabaseUpdateTester:
         success, response = self.run_test(
             "Get Current MT5 Accounts Status",
             "GET",
-            f"api/admin/mt5/accounts",
+            f"api/mt5/admin/accounts",
             200
         )
         
