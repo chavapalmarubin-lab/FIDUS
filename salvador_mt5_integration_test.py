@@ -120,7 +120,8 @@ class SalvadorMT5IntegrationTester:
             "Get All Clients",
             "GET",
             "api/clients/all",
-            200
+            200,
+            use_auth=True
         )
         
         salvador_found = False
