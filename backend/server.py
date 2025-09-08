@@ -1519,7 +1519,7 @@ async def readiness_check():
     """Readiness check with database connectivity"""
     try:
         # Test database connection
-        await db.admin.command('ping')
+        await db.command('ping')
         
         # Get rate limiter stats
         rate_limiter_stats = rate_limiter.get_stats()
