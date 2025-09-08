@@ -569,9 +569,9 @@ class SalvadorProductionTester:
             ('GET', 'api/health', 200),
             ('GET', 'api/clients/all', 200),
             ('GET', f'api/investments/client/{self.salvador_client_id}', 200),
-            ('GET', 'api/mt5/admin/overview', 200),
-            ('GET', 'api/admin/fund-performance', 200),
-            ('GET', 'api/admin/cashflow/summary', 200)
+            ('GET', 'api/mt5/admin/accounts', 200),
+            ('GET', 'api/admin/fund-performance/dashboard', 200),
+            ('GET', 'api/admin/cashflow/overview', 200)
         ]
         
         endpoint_results = []
