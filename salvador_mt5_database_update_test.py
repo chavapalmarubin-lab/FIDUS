@@ -35,6 +35,10 @@ class SalvadorMT5DatabaseUpdateTester:
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
             headers = {'Content-Type': 'application/json'}
+        
+        # Add JWT token to headers if admin user is logged in
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
