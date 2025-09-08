@@ -533,7 +533,7 @@ class SalvadorProductionTester:
         # Check 3: Fund performance data
         success, status, response = self.make_request(
             'GET',
-            'api/admin/fund-performance'
+            'api/admin/fund-performance/dashboard'
         )
         
         if success:
