@@ -370,7 +370,13 @@ class SalvadorPalmaInvestigator:
             cash_flow_data = response
             print(f"   Cash flow data: {cash_flow_data}")
             
-            mt5_profits = cash_flow_data.get('mt5_trading_profits', 0)
+            # Check MT5 trading profits in fund accounting
+            fund_accounting = cash_flow_data.get('fund_accounting', {})
+            assets = fund_accounting.get('assets', {})
+            mt5_profits = assets.get('mt5_trading_profits', 0)
+            
+            print(f"   MT5 Trading Profits: ${mt5_profits:,.2f}")
+            
             if mt5_profits == 0:
                 self.log_critical_issue(
                     "CASH_FLOW_MT5_ZERO",
@@ -378,6 +384,14 @@ class SalvadorPalmaInvestigator:
                     f"Positive MT5 profits from Salvador's account",
                     f"${mt5_profits:,.2f}"
                 )
+            else:
+                print(f"   ✅ MT5 Trading Profits found: ${mt5_profits:,.2f}")
+                
+            # Check BALANCE fund specific data
+            fund_breakdown = cash_flow_data.get('fund_breakdown', {})
+            balance_fund = fund_breakdown.get('BALANCE', {})
+            balance_mt5_profits = balance_fund.get('mt5_profits', 0)
+            print(f"   BALANCE Fund MT5 Profits: ${balance_mt5_profits:,.2f}")
 
     def test_critical_endpoints(self):
         """Test all critical endpoints mentioned in the review"""
