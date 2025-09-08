@@ -432,7 +432,8 @@ class SalvadorMT5IntegrationTester:
             "Get Cash Flow Breakdown",
             "GET",
             "api/admin/cashflow/breakdown",
-            200
+            200,
+            use_auth=True
         )
         
         salvador_in_cashflow = False
