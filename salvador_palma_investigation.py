@@ -285,13 +285,18 @@ class SalvadorPalmaInvestigator:
         salvador_mt5_found = False
         for account in mt5_accounts:
             print(f"   MT5 Account: {account}")
-            if str(account.get('login')) == self.expected_salvador_data['mt5_login']:
+            # Check both login field and mt5_login field
+            account_login = str(account.get('login', account.get('mt5_login', '')))
+            if account_login == self.expected_salvador_data['mt5_login']:
                 salvador_mt5_found = True
                 print(f"   ✅ SALVADOR'S MT5 ACCOUNT FOUND: {account}")
                 
-                # Check account details
+                # Check account details - use current_equity instead of balance
                 expected_balance = self.expected_salvador_data['mt5_balance']
-                actual_balance = account.get('balance', 0)
+                actual_balance = account.get('current_equity', account.get('balance', 0))
+                
+                print(f"   Expected MT5 Balance: ${expected_balance:,.2f}")
+                print(f"   Actual MT5 Balance: ${actual_balance:,.2f}")
                 
                 if abs(actual_balance - expected_balance) > 10000:  # Allow 10K variance
                     self.log_critical_issue(
@@ -300,6 +305,8 @@ class SalvadorPalmaInvestigator:
                         f"${expected_balance:,.2f}",
                         f"${actual_balance:,.2f}"
                     )
+                else:
+                    print(f"   ✅ MT5 Balance matches expected value (within tolerance)")
                 break
         
         if not salvador_mt5_found:
