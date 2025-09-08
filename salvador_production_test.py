@@ -405,7 +405,7 @@ class SalvadorProductionTester:
         
         success, status, response = self.make_request(
             'GET',
-            'api/admin/cashflow/summary'
+            'api/admin/cashflow/overview'
         )
         
         if success:
