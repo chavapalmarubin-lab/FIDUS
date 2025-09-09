@@ -1395,6 +1395,7 @@ mt5_monitor_status = {
     'healthy_accounts': 0,
     'salvador_status': 'unknown'
 }
+
 from mfa_service import mfa_service
 
 # Global MT5 mapping manager
