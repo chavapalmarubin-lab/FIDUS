@@ -151,7 +151,7 @@ sudo supervisorctl status
 ```
 
 ### 4. Demo Access
-- **URL**: `https://investment-portal-2.preview.emergentagent.com?skip_animation=true`
+- **URL**: `https://mt5-portal.preview.emergentagent.com?skip_animation=true`
 - **Admin Login**: admin / password123
 - **Client Login**: client1 / password123
 
