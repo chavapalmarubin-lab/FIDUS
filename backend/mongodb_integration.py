@@ -155,8 +155,28 @@ class MongoDBManager:
     # ===============================================================================
     
     def create_investment(self, investment_data: Dict[str, Any]) -> Optional[str]:
-        """Create a new investment in the database"""
+        """Create new investment - MT5 MAPPING REQUIRED"""
         try:
+            # PRODUCTION CONSTRAINT: Enforce MT5 mapping requirement
+            required_mt5_fields = ['mt5_login', 'broker_code', 'data_source']
+            for field in required_mt5_fields:
+                if field not in investment_data:
+                    raise ValueError(f"PRODUCTION ERROR: Investment must have {field} - NO MOCK DATA ALLOWED")
+            
+            # Validate data source is MT5 only
+            if investment_data['data_source'] != 'MT5_REAL_TIME':
+                raise ValueError(f"PRODUCTION ERROR: Only MT5_REAL_TIME data source allowed, got: {investment_data['data_source']}")
+            
+            # Verify MT5 account exists
+            mt5_account = self.db.mt5_accounts.find_one({
+                'mt5_login': investment_data['mt5_login'],
+                'broker_code': investment_data['broker_code'],
+                'status': 'active'
+            })
+            
+            if not mt5_account:
+                raise ValueError(f"PRODUCTION ERROR: MT5 account {investment_data['mt5_login']} not found or inactive")
+            
             # Generate investment ID
             investment_id = str(uuid.uuid4())
             
@@ -189,7 +209,7 @@ class MongoDBManager:
                 except:
                     minimum_hold_end_date = datetime.strptime(minimum_hold_end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
             
-            # Prepare investment document
+            # Prepare investment document with MT5 mapping
             investment_doc = {
                 'investment_id': investment_id,
                 'client_id': investment_data['client_id'],
@@ -199,11 +219,14 @@ class MongoDBManager:
                 'incubation_end_date': incubation_end_date,
                 'interest_start_date': interest_start_date,
                 'minimum_hold_end_date': minimum_hold_end_date,
+                'mt5_login': investment_data['mt5_login'],
+                'broker_code': investment_data['broker_code'],
+                'data_source': investment_data['data_source'],
                 'status': 'incubating',
                 'created_at': datetime.now(timezone.utc)
             }
             
-            # Insert investment
+            # Insert investment with MT5 validation
             result = self.db.investments.insert_one(investment_doc)
             
             if result.inserted_id:
@@ -213,15 +236,16 @@ class MongoDBManager:
                     'activity_type': 'deposit',
                     'amount': investment_data['amount'],
                     'fund_code': investment_data['fund_code'],
-                    'description': f"Investment created in {investment_data['fund_code']} fund"
+                    'description': f"MT5-backed investment created in {investment_data['fund_code']} fund (MT5: {investment_data['mt5_login']})"
                 })
                 
+                print(f"✅ Created MT5-backed investment: {investment_data['fund_code']} (MT5: {investment_data['mt5_login']})")
                 return investment_id
             
             return None
             
         except Exception as e:
-            print(f"❌ Error creating investment: {str(e)}")
+            print(f"❌ Error creating MT5 investment: {str(e)}")
             return None
     
     def get_client_investments(self, client_id: str) -> List[Dict[str, Any]]:
