@@ -129,14 +129,10 @@ const ClientDashboard = ({ user, onLogout }) => {
 
       <div className="p-6 max-w-7xl mx-auto">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-slate-600 mb-6">
+          <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-600 mb-6">
             <TabsTrigger value="overview" className="text-white data-[state=active]:bg-cyan-600">
               <DollarSign size={16} className="mr-2" />
               Account Overview
-            </TabsTrigger>
-
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
-              📈 Fund Commitments
             </TabsTrigger>
             <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
               <ArrowDownCircle size={16} className="mr-2" />
