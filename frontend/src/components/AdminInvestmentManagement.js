@@ -133,8 +133,15 @@ const AdminInvestmentManagement = () => {
 
   const handleCreateInvestment = async () => {
     try {
+      // Basic validation
       if (!investmentForm.client_id || !investmentForm.fund_code || !investmentForm.amount || !investmentForm.deposit_date) {
-        setError("Please fill in all fields including the deposit date");
+        setError("Please fill in all basic investment fields");
+        return;
+      }
+
+      // MT5 validation - REQUIRED
+      if (!investmentForm.mt5_login || !investmentForm.mt5_password || !investmentForm.mt5_server || !investmentForm.broker_code) {
+        setError("MT5 account mapping is REQUIRED. Please fill in all MT5 fields.");
         return;
       }
 
@@ -144,7 +151,14 @@ const AdminInvestmentManagement = () => {
         return;
       }
 
-      // Validate payment confirmation fields based on method
+      // Validate MT5 server if custom
+      const mt5_server = investmentForm.mt5_server === 'other' ? investmentForm.mt5_server_custom : investmentForm.mt5_server;
+      if (!mt5_server) {
+        setError("Please select or enter a valid MT5 server");
+        return;
+      }
+
+      // Payment method validation (existing logic)
       if (investmentForm.payment_method === "fiat") {
         if (!investmentForm.wire_confirmation_number) {
           setError("Please enter wire confirmation number for FIAT payment");
@@ -157,12 +171,13 @@ const AdminInvestmentManagement = () => {
         }
       }
 
-      // First create the investment
-      const investmentResponse = await apiAxios.post(`/investments/create`, {
+      // Create investment via MT5 mapping endpoint (not the old one)
+      const investmentResponse = await apiAxios.post(`/investments/create-from-mt5`, {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
-        amount: amount,
-        deposit_date: investmentForm.deposit_date
+        mt5_login: parseInt(investmentForm.mt5_login),
+        password: investmentForm.mt5_password,
+        server: mt5_server
       });
 
       if (investmentResponse.data.success) {
