@@ -3731,23 +3731,32 @@ async def update_client_status(client_id: str, status_data: dict):
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
     try:
+        print("🔍 Portfolio Summary API called")
         # Calculate real total AUM from MongoDB
         all_clients = mongodb_manager.get_all_clients()
+        print(f"Found {len(all_clients)} clients")
+        
         total_aum = 0.0
         client_count = 0
         fund_allocation = {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0}
         
         # Sum AUM from all client investments
         for client in all_clients:
+            print(f"Processing client: {client['name']} ({client['id']})")
             client_investments_list = mongodb_manager.get_client_investments(client['id'])
+            print(f"  Found {len(client_investments_list)} investments")
+            
             if client_investments_list:
                 client_count += 1
                 for investment in client_investments_list:
                     current_value = investment['current_value']
                     total_aum += current_value
                     fund_code = investment['fund_code']
+                    print(f"    Adding {fund_code}: ${current_value:,.2f}")
                     if fund_code in fund_allocation:
                         fund_allocation[fund_code] += current_value
+        
+        print(f"Final totals: AUM=${total_aum:,.2f}, Clients={client_count}")
         
         # Calculate allocation percentages
         allocation = {}
