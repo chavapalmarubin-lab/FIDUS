@@ -6574,6 +6574,139 @@ async def create_client_investment(investment_data: InvestmentCreate):
         logging.error(f"Create investment error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
 
+@api_router.post("/admin/mt5/connect-real-account")
+async def connect_real_mt5_account(connection_data: dict):
+    """Connect to REAL MT5 account and get historical data - NO MOCK DATA"""
+    try:
+        mt5_login = connection_data.get('mt5_login')
+        password = connection_data.get('password')
+        server = connection_data.get('server')
+        client_id = connection_data.get('client_id')
+        fund_code = connection_data.get('fund_code')
+        
+        if not all([mt5_login, password, server, client_id, fund_code]):
+            raise HTTPException(
+                status_code=400, 
+                detail="Missing required fields: mt5_login, password, server, client_id, fund_code"
+            )
+        
+        # Import real MT5 API
+        from real_mt5_api import real_mt5_api
+        
+        # Connect to real MT5 account and get historical data
+        real_data = await real_mt5_api.connect_and_get_real_data(mt5_login, password, server)
+        
+        if real_data['status'] == 'error':
+            return {
+                'success': False,
+                'error': real_data['error'],
+                'message': 'Failed to connect to real MT5 account'
+            }
+        
+        # Update database with REAL MT5 data
+        if real_data['connected']:
+            # Update MT5 account with real data
+            result = mongodb_manager.db.mt5_accounts.update_one(
+                {'client_id': client_id, 'mt5_login': mt5_login},
+                {
+                    '$set': {
+                        'status': 'connected',
+                        'server': server,
+                        'fund_code': fund_code,
+                        'current_balance': real_data['current_balance'],
+                        'current_equity': real_data['current_equity'],
+                        'total_allocated': real_data['total_deposits'],  # Real deposits from MT5
+                        'profit_loss': real_data['profit_loss'],
+                        'last_mt5_sync': datetime.now(timezone.utc),
+                        'data_source': 'MT5_REAL_API'
+                    }
+                }
+            )
+            
+            # Create investment based on REAL MT5 historical data
+            if real_data['deposit_history'] and len(real_data['deposit_history']) > 0:
+                first_deposit = real_data['deposit_history'][0]
+                
+                investment_data = {
+                    'client_id': client_id,
+                    'fund_code': fund_code,
+                    'principal_amount': real_data['total_deposits'],
+                    'current_value': real_data['current_equity'],
+                    'mt5_login': mt5_login,
+                    'broker_code': server.lower().split('-')[0] if '-' in server else 'unknown',
+                    'data_source': 'MT5_REAL_TIME',
+                    'deposit_date': first_deposit['date']
+                }
+                
+                investment_id = mongodb_manager.create_investment(investment_data)
+                
+                return {
+                    'success': True,
+                    'message': f'Connected to real MT5 account {mt5_login}',
+                    'investment_id': investment_id,
+                    'real_data': {
+                        'current_balance': real_data['current_balance'],
+                        'current_equity': real_data['current_equity'],
+                        'total_deposits': real_data['total_deposits'],
+                        'profit_loss': real_data['profit_loss'],
+                        'deposit_count': len(real_data['deposit_history'])
+                    }
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'No deposit history found in MT5 account',
+                    'message': 'Account connected but no deposits found'
+                }
+        
+        return {
+            'success': False,
+            'error': 'Failed to establish MT5 connection',
+            'details': real_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Real MT5 connection error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to connect to real MT5: {str(e)}")
+
+@api_router.get("/admin/mt5/connection-status")
+async def get_mt5_connection_status():
+    """Get status of all MT5 connections"""
+    try:
+        all_accounts = mongodb_manager.get_all_mt5_accounts()
+        
+        status_report = {
+            'total_accounts': len(all_accounts),
+            'connected_accounts': 0,
+            'disconnected_accounts': 0,
+            'accounts': []
+        }
+        
+        for account in all_accounts:
+            account_status = {
+                'client_name': account.get('client_name', 'Unknown'),
+                'mt5_login': account['mt5_login'],
+                'broker': account.get('broker_name', 'Unknown'),
+                'status': account.get('status', 'unknown'),
+                'fund_code': account.get('fund_code', 'Unknown'),
+                'current_equity': account.get('current_equity', 0),
+                'last_sync': account.get('last_mt5_sync', 'Never'),
+                'data_source': account.get('data_source', 'Unknown')
+            }
+            
+            if account.get('status') == 'connected':
+                status_report['connected_accounts'] += 1
+            else:
+                status_report['disconnected_accounts'] += 1
+            
+            status_report['accounts'].append(account_status)
+        
+        return status_report
+        
+    except Exception as e:
+        logging.error(f"MT5 status check error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get MT5 status: {str(e)}")
+
 @api_router.get("/test/salvador-investments")
 async def test_salvador_investments():
     """Test endpoint to verify Salvador's investments"""
