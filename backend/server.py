@@ -3779,6 +3779,9 @@ async def get_portfolio_summary():
         
     except Exception as e:
         logging.error(f"Portfolio summary error: {str(e)}")
+        print(f"❌ Portfolio Summary Exception: {str(e)}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
         # Return fallback data instead of zeros
         return {
             "total_aum": 0,
