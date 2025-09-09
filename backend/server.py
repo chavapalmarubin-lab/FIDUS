@@ -3735,7 +3735,9 @@ async def get_portfolio_summary():
         "aum": 999999.99,
         "client_count": 99,
         "allocation": {"CORE": 25.0, "BALANCE": 75.0, "DYNAMIC": 0.0, "UNLIMITED": 0.0},
-        "fund_breakdown": {"CORE": 0, "BALANCE": 999999.99, "DYNAMIC": 0, "UNLIMITED": 0}
+        "fund_breakdown": {"CORE": 0, "BALANCE": 999999.99, "DYNAMIC": 0, "UNLIMITED": 0},
+        "debug_marker": "NEW_ENDPOINT_WORKING",
+        "timestamp": "2025-01-08_v2"
     }
 
 # Gmail Service Integration
