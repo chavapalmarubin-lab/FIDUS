@@ -6503,6 +6503,61 @@ async def get_fund_configurations():
         logging.error(f"Get fund configs error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch fund configurations")
 
+@api_router.post("/investments/create-from-mt5")
+async def create_investment_from_mt5(mt5_investment_data: dict):
+    """Create investment ONLY from existing MT5 account - PRODUCTION METHOD"""
+    try:
+        client_id = mt5_investment_data.get('client_id')
+        mt5_login = mt5_investment_data.get('mt5_login')
+        fund_code = mt5_investment_data.get('fund_code')
+        
+        if not all([client_id, mt5_login, fund_code]):
+            raise HTTPException(status_code=400, detail="Missing required fields: client_id, mt5_login, fund_code")
+        
+        # Verify MT5 account exists and is active
+        mt5_account = mongodb_manager.db.mt5_accounts.find_one({
+            'client_id': client_id,
+            'mt5_login': mt5_login,
+            'status': 'active'
+        })
+        
+        if not mt5_account:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Active MT5 account not found for client {client_id} with login {mt5_login}"
+            )
+        
+        # Create investment with MT5 mapping
+        investment_data = {
+            'client_id': client_id,
+            'fund_code': fund_code,
+            'principal_amount': mt5_account['total_allocated'],
+            'current_value': mt5_account['current_equity'],
+            'mt5_login': mt5_login,
+            'broker_code': mt5_account['broker_code'],
+            'broker_name': mt5_account.get('broker_name', 'Unknown'),
+            'data_source': 'MT5_REAL_TIME',
+            'deposit_date': datetime.now(timezone.utc)
+        }
+        
+        investment_id = mongodb_manager.create_investment(investment_data)
+        
+        if not investment_id:
+            raise HTTPException(status_code=500, detail="Failed to create MT5-mapped investment")
+        
+        return {
+            "success": True,
+            "investment_id": investment_id,
+            "message": f"Investment created from MT5 account {mt5_login} with current equity ${mt5_account['current_equity']:,.2f}",
+            "data_source": "MT5_REAL_TIME"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Create MT5 investment error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create MT5 investment: {str(e)}")
+
 @api_router.post("/investments/create")
 async def create_client_investment(investment_data: InvestmentCreate):
     """Create a new investment for a client - REQUIRES MT5 MAPPING"""
