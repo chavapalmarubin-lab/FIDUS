@@ -690,6 +690,115 @@ const AdminInvestmentManagement = () => {
                 </div>
                 </div>
 
+                {/* MT5 Account Mapping Section - REQUIRED */}
+                <div className="border-t border-amber-600 pt-4 bg-amber-900/10 p-4 rounded-lg">
+                  <h4 className="text-lg font-medium text-amber-200 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                    </svg>
+                    MT5 Account Mapping (REQUIRED)
+                  </h4>
+                  
+                  <div className="bg-amber-800/20 border border-amber-600 p-3 rounded mb-4">
+                    <p className="text-amber-200 text-sm font-medium">⚠️ PRODUCTION REQUIREMENT:</p>
+                    <p className="text-amber-100 text-sm">
+                      All investments MUST be backed by real MT5 accounts. No mock data allowed.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-slate-300">MT5 Login Number *</Label>
+                      <Input
+                        type="number"
+                        value={investmentForm.mt5_login || ''}
+                        onChange={(e) => setInvestmentForm({...investmentForm, mt5_login: e.target.value})}
+                        placeholder="Enter MT5 account login number"
+                        className="mt-1 bg-slate-700 border-slate-600 text-white"
+                        required
+                      />
+                      <p className="text-slate-400 text-sm mt-1">
+                        Example: 9928326 (DooTechnology), 15759668 (VT Markets PAMM)
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-slate-300">MT5 Password *</Label>
+                      <Input
+                        type="password"
+                        value={investmentForm.mt5_password || ''}
+                        onChange={(e) => setInvestmentForm({...investmentForm, mt5_password: e.target.value})}
+                        placeholder="Enter MT5 account password"
+                        className="mt-1 bg-slate-700 border-slate-600 text-white"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-slate-300">MT5 Server *</Label>
+                      <Select 
+                        value={investmentForm.mt5_server || ''} 
+                        onValueChange={(value) => setInvestmentForm({...investmentForm, mt5_server: value})}
+                      >
+                        <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                          <SelectValue placeholder="Choose MT5 server" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                          <SelectItem value="DooTechnology-Live" className="text-white">
+                            DooTechnology-Live (Recommended for BALANCE Fund)
+                          </SelectItem>
+                          <SelectItem value="VTMarkets-PAMM" className="text-white">
+                            VTMarkets-PAMM (Recommended for CORE Fund)
+                          </SelectItem>
+                          <SelectItem value="other" className="text-white">
+                            Other Server (Enter manually)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {investmentForm.mt5_server === 'other' && (
+                        <Input
+                          type="text"
+                          value={investmentForm.mt5_server_custom || ''}
+                          onChange={(e) => setInvestmentForm({...investmentForm, mt5_server_custom: e.target.value})}
+                          placeholder="Enter custom MT5 server name"
+                          className="mt-2 bg-slate-700 border-slate-600 text-white"
+                        />
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-slate-300">Broker *</Label>
+                      <Select 
+                        value={investmentForm.broker_code || ''} 
+                        onValueChange={(value) => setInvestmentForm({...investmentForm, broker_code: value})}
+                      >
+                        <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                          <SelectValue placeholder="Choose broker" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                          <SelectItem value="dootechnology" className="text-white">
+                            DooTechnology (For BALANCE Fund)
+                          </SelectItem>
+                          <SelectItem value="vt" className="text-white">
+                            VT Markets (For CORE Fund)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="bg-blue-900/20 border border-blue-600 p-3 rounded">
+                      <p className="text-blue-200 text-sm font-medium">💡 Investment-MT5 Mapping:</p>
+                      <p className="text-blue-100 text-xs mt-1">
+                        • BALANCE Fund → DooTechnology-Live MT5 accounts<br/>
+                        • CORE Fund → VT Markets PAMM MT5 accounts<br/>
+                        • Investment amount will be verified against MT5 deposit history
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Payment Confirmation Section */}
                 <div className="border-t border-slate-600 pt-4">
                   <h4 className="text-lg font-medium text-white mb-4 flex items-center">
