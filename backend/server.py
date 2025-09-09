@@ -3730,31 +3730,13 @@ async def update_client_status(client_id: str, status_data: dict):
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
-    try:
-        print("🔍 Portfolio Summary API called - START")
-        
-        # Test basic functionality first
-        return {
-            "total_aum": 1895746.80,
-            "aum": 1895746.80,
-            "client_count": 1,
-            "allocation": {"CORE": 0.0, "BALANCE": 100.0, "DYNAMIC": 0.0, "UNLIMITED": 0.0},
-            "fund_breakdown": {"CORE": 0, "BALANCE": 1895746.80, "DYNAMIC": 0, "UNLIMITED": 0}
-        }
-        
-    except Exception as e:
-        logging.error(f"Portfolio summary error: {str(e)}")
-        print(f"❌ Portfolio Summary Exception: {str(e)}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
-        # Return fallback data instead of zeros
-        return {
-            "total_aum": 0,
-            "aum": 0,  # Add for frontend compatibility
-            "client_count": 0,
-            "allocation": {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0},
-            "fund_breakdown": {}
-        }
+    return {
+        "total_aum": 999999.99,
+        "aum": 999999.99,
+        "client_count": 99,
+        "allocation": {"CORE": 25.0, "BALANCE": 75.0, "DYNAMIC": 0.0, "UNLIMITED": 0.0},
+        "fund_breakdown": {"CORE": 0, "BALANCE": 999999.99, "DYNAMIC": 0, "UNLIMITED": 0}
+    }
 
 # Gmail Service Integration
 class GmailService:
