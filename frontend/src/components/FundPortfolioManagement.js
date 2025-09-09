@@ -70,18 +70,30 @@ const FundPortfolioManagement = () => {
   const fetchFundPortfolioData = async () => {
     try {
       setLoading(true);
+      setError(""); // Clear any previous errors
       
       // Fetch fund overview data
       const fundsResponse = await apiAxios.get(`/admin/funds-overview`);
       const portfolioResponse = await apiAxios.get(`/admin/portfolio-summary`);
       
-      if (fundsResponse.data.success) {
+      console.log('Funds Response:', fundsResponse.data);
+      console.log('Portfolio Response:', portfolioResponse.data);
+      
+      if (fundsResponse.data.success && portfolioResponse.data) {
         setFundData(fundsResponse.data.funds);
         setPortfolioStats(portfolioResponse.data);
         generatePerformanceData(fundsResponse.data.funds);
+        console.log('Portfolio stats set:', portfolioResponse.data);
+      } else {
+        setError("Failed to load complete fund data - check authentication");
+        console.error('Failed to load data:', {
+          fundsSuccess: fundsResponse.data.success,
+          portfolioData: portfolioResponse.data
+        });
       }
     } catch (err) {
-      setError("Failed to load fund portfolio data");
+      setError(`Failed to load fund portfolio data: ${err.message}`);
+      console.error('API Error:', err);
     } finally {
       setLoading(false);
     }
