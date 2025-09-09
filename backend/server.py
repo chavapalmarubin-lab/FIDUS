@@ -6597,8 +6597,11 @@ async def create_client_investment(investment_data: InvestmentCreate):
 async def get_client_investments(client_id: str):
     """Get all investments for a specific client - MongoDB version"""
     try:
+        print(f"🔍 Get investments called for client: {client_id}")
+        
         # Get investments from MongoDB (already enriched with calculations)
         client_investments_list = mongodb_manager.get_client_investments(client_id)
+        print(f"   MongoDB returned {len(client_investments_list)} investments")
         
         # Calculate portfolio statistics from MongoDB data
         enriched_investments = []
@@ -6607,6 +6610,7 @@ async def get_client_investments(client_id: str):
         total_earned_interest = 0.0
         
         for investment in client_investments_list:
+            print(f"   Processing investment: {investment['fund_code']} - ${investment['current_value']:,.2f}")
             # MongoDB data already includes calculations and current values
             enriched_investment = {
                 "investment_id": investment["investment_id"],
