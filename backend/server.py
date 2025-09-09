@@ -6593,6 +6593,22 @@ async def create_client_investment(investment_data: InvestmentCreate):
         logging.error(f"Create investment error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
 
+@api_router.get("/test/salvador-investments")
+async def test_salvador_investments():
+    """Test endpoint to verify Salvador's investments"""
+    client_investments = mongodb_manager.get_client_investments('client_003')
+    return {
+        "test_endpoint": "WORKING",
+        "investments_count": len(client_investments),
+        "investments": [
+            {
+                "fund": inv["fund_code"],
+                "principal": inv["principal_amount"],
+                "current": inv["current_value"]
+            } for inv in client_investments
+        ]
+    }
+
 @api_router.get("/investments/client/{client_id}")
 async def get_client_investments(client_id: str):
     """Get all investments for a specific client - MongoDB version"""
