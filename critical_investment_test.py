@@ -269,7 +269,8 @@ class CriticalInvestmentTester:
             "Admin Portfolio Summary",
             "GET",
             "api/admin/portfolio-summary",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
