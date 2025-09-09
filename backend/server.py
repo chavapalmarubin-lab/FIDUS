@@ -6505,87 +6505,13 @@ async def get_fund_configurations():
 
 @api_router.post("/investments/create")
 async def create_client_investment(investment_data: InvestmentCreate):
-    """Create a new investment for a client"""
+    """Create a new investment for a client - REQUIRES MT5 MAPPING"""
     try:
-        # Validate fund exists
-        if investment_data.fund_code not in FIDUS_FUND_CONFIG:
-            raise HTTPException(status_code=400, detail=f"Invalid fund code: {investment_data.fund_code}")
-        
-        fund_config = FIDUS_FUND_CONFIG[investment_data.fund_code]
-        
-        # Validate minimum investment
-        if investment_data.amount < fund_config.minimum_investment:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Minimum investment for {investment_data.fund_code} is ${fund_config.minimum_investment:,.2f}"
-            )
-        
-        # Check invitation-only restriction
-        if fund_config.invitation_only:
-            # In a real system, verify client has invitation
-            logging.info(f"Creating invitation-only fund investment for client {investment_data.client_id}")
-        
-        # Create investment
-        investment = create_investment(
-            investment_data.client_id,
-            investment_data.fund_code,
-            investment_data.amount,
-            investment_data.deposit_date
+        # PRODUCTION CONSTRAINT: Investment creation blocked - must be MT5-mapped only
+        raise HTTPException(
+            status_code=403, 
+            detail="PRODUCTION RESTRICTION: New investments can only be created through MT5 account mapping. Use MT5 integration system."
         )
-        
-        # Store investment in MongoDB
-        investment_id = mongodb_manager.create_investment({
-            'client_id': investment_data.client_id,
-            'fund_code': investment_data.fund_code,
-            'amount': investment_data.amount,
-            'deposit_date': investment_data.deposit_date or datetime.now(timezone.utc),
-            'incubation_end_date': investment.incubation_end_date,
-            'interest_start_date': investment.interest_start_date,
-            'minimum_hold_end_date': investment.minimum_hold_end_date
-        })
-        
-        if not investment_id:
-            raise HTTPException(status_code=500, detail="Failed to create investment in database")
-        
-        # Update the investment object with the actual ID from MongoDB
-        investment.investment_id = investment_id
-        
-        # Create or update MT5 account mapping with specified broker
-        broker_code = investment_data.broker_code or 'multibank'  # Use specified broker or default
-        mt5_account_id = await mt5_service.get_or_create_mt5_account(
-            investment_data.client_id,
-            investment_data.fund_code,
-            {
-                'investment_id': investment_id,
-                'principal_amount': investment_data.amount,
-                'fund_code': investment_data.fund_code
-            },
-            broker_code
-        )
-        
-        if mt5_account_id:
-            logging.info(f"MT5 account {mt5_account_id} linked to investment {investment_id}")
-        else:
-            logging.warning(f"Failed to create/link MT5 account for investment {investment_id}")
-        
-        # Log the deposit activity in MongoDB
-        mongodb_manager.log_activity({
-            'client_id': investment_data.client_id,
-            'activity_type': 'deposit',
-            'amount': investment_data.amount,
-            'fund_code': investment_data.fund_code,
-            'description': f"Investment deposit in {fund_config.name}"
-        })
-        
-        logging.info(f"Investment created: {investment.investment_id} for client {investment_data.client_id}")
-        
-        return {
-            "success": True,
-            "investment_id": investment.investment_id,
-            "investment": investment.dict(),
-            "mt5_account_id": mt5_account_id,
-            "message": f"Investment of ${investment_data.amount:,.2f} created in {investment_data.fund_code} fund with MT5 integration"
-        }
         
     except HTTPException:
         raise
