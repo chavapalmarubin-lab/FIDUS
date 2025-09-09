@@ -1386,6 +1386,15 @@ class ClientMT5Mapping:
 
 # MT5 Integration Service
 from mt5_integration import mt5_service
+
+# MT5 Monitor Status Storage (in production, use Redis or database)
+mt5_monitor_status = {
+    'running': False,
+    'last_health_check': None,
+    'total_accounts': 0,
+    'healthy_accounts': 0,
+    'salvador_status': 'unknown'
+}
 from mfa_service import mfa_service
 
 # Global MT5 mapping manager
