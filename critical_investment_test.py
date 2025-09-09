@@ -19,7 +19,42 @@ class CriticalInvestmentTester:
         self.admin_token = None
         self.client_token = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def authenticate_admin(self):
+        """Authenticate as admin to get JWT token"""
+        print("\n🔐 Authenticating as admin...")
+        
+        success, response = self.run_test(
+            "Admin Authentication",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "admin",
+                "password": "password123", 
+                "user_type": "admin"
+            }
+        )
+        
+        if success:
+            self.admin_token = response.get('token')
+            if self.admin_token:
+                print(f"   ✅ Admin authenticated successfully")
+                return True
+            else:
+                print(f"   ❌ No token received in response")
+        
+        return False
+
+    def get_auth_headers(self):
+        """Get authorization headers with JWT token"""
+        if self.admin_token:
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.admin_token}'
+            }
+        return {'Content-Type': 'application/json'}
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, use_auth=False):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
