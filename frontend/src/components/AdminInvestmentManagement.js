@@ -211,6 +211,13 @@ const AdminInvestmentManagement = () => {
       fund_code: "",
       amount: "",
       deposit_date: "",
+      // MT5 Account Mapping (REQUIRED)
+      mt5_login: "",
+      mt5_password: "",
+      mt5_server: "",
+      mt5_server_custom: "",
+      broker_code: "",
+      // Reset payment confirmation fields
       // Payment confirmation fields
       payment_method: "fiat",
       wire_confirmation_number: "",
