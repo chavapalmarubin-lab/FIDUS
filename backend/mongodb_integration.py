@@ -225,52 +225,44 @@ class MongoDBManager:
             return None
     
     def get_client_investments(self, client_id: str) -> List[Dict[str, Any]]:
-        """Get all investments for a specific client"""
+        """Get all investments for a specific client - MT5 DATA ONLY"""
         try:
             investments = []
             
             investment_docs = self.db.investments.find({'client_id': client_id})
             
             for inv in investment_docs:
-                # Calculate current value (simple interest)
-                principal = inv['principal_amount']
-                deposit_date = inv['deposit_date']
-                interest_start_date = inv['interest_start_date']
-                
-                # Get fund config for interest rate
-                fund_config = self.db.fund_configurations.find_one({'fund_code': inv['fund_code']})
-                monthly_rate = fund_config.get('monthly_interest_rate', 0) if fund_config else 0
-                
-                # Calculate interest earned
-                current_date = datetime.now(timezone.utc)
+                # Get MT5 account data if mapped
+                current_value = inv['principal_amount']  # Fallback
                 interest_earned = 0
                 
-                # Ensure interest_start_date is timezone-aware
-                if interest_start_date.tzinfo is None:
-                    interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
-                
-                if current_date > interest_start_date:
-                    months_earning = max(0, (current_date.year - interest_start_date.year) * 12 + 
-                                          (current_date.month - interest_start_date.month))
-                    interest_earned = principal * monthly_rate * months_earning
-                
-                current_value = principal + interest_earned
+                if inv.get('mt5_login') and inv.get('data_source') == 'MT5_REAL_TIME':
+                    # Find the corresponding MT5 account
+                    mt5_account = self.db.mt5_accounts.find_one({
+                        'client_id': client_id,
+                        'mt5_login': inv['mt5_login'],
+                        'broker_code': inv['broker_code']
+                    })
+                    
+                    if mt5_account:
+                        # Use REAL MT5 current equity as current value
+                        current_value = mt5_account['current_equity']
+                        interest_earned = current_value - inv['principal_amount']
+                    else:
+                        print(f"⚠️ MT5 account not found for investment {inv['investment_id']}")
                 
                 investment_data = {
                     'investment_id': inv['investment_id'],
                     'fund_code': inv['fund_code'],
                     'fund_name': f"FIDUS {inv['fund_code'].title()} Fund",
-                    'principal_amount': principal,
+                    'principal_amount': inv['principal_amount'],
                     'current_value': current_value,
                     'interest_earned': interest_earned,
                     'deposit_date': inv['deposit_date'].isoformat(),
-                    'incubation_end_date': inv['incubation_end_date'].isoformat(),
-                    'interest_start_date': inv['interest_start_date'].isoformat(),
-                    'minimum_hold_end_date': inv['minimum_hold_end_date'].isoformat(),
-                    'status': 'active' if current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']) else 'incubating',
-                    'monthly_interest_rate': monthly_rate,
-                    'can_redeem_interest': current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']),
-                    'can_redeem_principal': current_date > (inv['minimum_hold_end_date'].replace(tzinfo=timezone.utc) if inv['minimum_hold_end_date'].tzinfo is None else inv['minimum_hold_end_date']),
+                    'status': 'active',
+                    'data_source': inv.get('data_source', 'LEGACY'),
+                    'mt5_login': inv.get('mt5_login'),
+                    'broker_name': inv.get('broker_name', 'Unknown'),
                     'created_at': inv.get('created_at', datetime.now(timezone.utc)).isoformat()
                 }
                 
@@ -278,6 +270,12 @@ class MongoDBManager:
             
             # Sort by creation date (newest first)
             investments.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return investments
+            
+        except Exception as e:
+            print(f"❌ Error getting client investments: {str(e)}")
+            return []
             
             return investments
             
