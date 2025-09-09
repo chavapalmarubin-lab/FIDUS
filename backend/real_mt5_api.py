@@ -235,33 +235,114 @@ class RealMT5API:
         }
     
     async def _try_windows_bridge_connection(self, mt5_login: int, password: str, server: str) -> Dict[str, Any]:
-        """Try connecting via Windows bridge service"""
+        """Connect via Windows bridge service"""
         
-        # This would connect to a Windows service that has MetaTrader5 installed
-        bridge_url = os.environ.get('MT5_BRIDGE_URL')
+        bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://mt5-bridge.internal:8080')
         
         if not bridge_url:
             return {
                 'status': 'error',
-                'error': 'No MT5 Windows bridge service configured',
+                'error': 'No MT5_BRIDGE_URL configured in environment',
                 'connected': False
             }
         
         try:
-            # Would make API call to Windows bridge service
-            self.logger.info(f"Attempting Windows bridge connection to {bridge_url}")
+            self.logger.info(f"🌉 Connecting to Windows MT5 bridge: {bridge_url}")
+            
+            # Step 1: Connect to MT5 account via bridge
+            connect_response = requests.post(
+                f'{bridge_url}/api/mt5/connect',
+                json={
+                    'mt5_login': mt5_login,
+                    'password': password,
+                    'server': server
+                },
+                timeout=30
+            )
+            
+            if connect_response.status_code != 200:
+                return {
+                    'status': 'error',
+                    'error': f'Bridge connection failed: {connect_response.text}',
+                    'connected': False
+                }
+            
+            # Step 2: Get account info
+            info_response = requests.get(
+                f'{bridge_url}/api/mt5/account/{mt5_login}/info',
+                timeout=30
+            )
+            
+            if info_response.status_code != 200:
+                return {
+                    'status': 'error',
+                    'error': f'Failed to get account info: {info_response.text}',
+                    'connected': False
+                }
+            
+            account_info = info_response.json()
+            
+            # Step 3: Get deposit history
+            history_response = requests.get(
+                f'{bridge_url}/api/mt5/account/{mt5_login}/deposits',
+                timeout=60
+            )
+            
+            if history_response.status_code != 200:
+                return {
+                    'status': 'error',
+                    'error': f'Failed to get deposit history: {history_response.text}',
+                    'connected': False
+                }
+            
+            history_data = history_response.json()
+            
+            # Process the data to match our expected format
+            deposits = []
+            for deposit in history_data.get('deposits', []):
+                deposits.append({
+                    'date': datetime.fromisoformat(deposit['date'].replace('Z', '+00:00')),
+                    'amount': deposit['amount'],
+                    'comment': deposit.get('comment', '')
+                })
+            
+            current_balance = account_info['balance']
+            current_equity = account_info['equity']
+            total_deposits = history_data['total_deposits']
+            profit_loss = current_equity - total_deposits if total_deposits > 0 else current_equity
+            
+            self.logger.info(f"✅ Bridge connection successful for {mt5_login}")
+            self.logger.info(f"   Balance: ${current_balance:,.2f}")
+            self.logger.info(f"   Equity: ${current_equity:,.2f}")
+            self.logger.info(f"   Total Deposits: ${total_deposits:,.2f}")
+            self.logger.info(f"   Deposits Count: {len(deposits)}")
             
             return {
-                'status': 'error',
-                'error': 'Windows bridge service not implemented',
-                'connected': False,
-                'requires_implementation': True
+                'status': 'connected',
+                'connected': True,
+                'account_login': mt5_login,
+                'server': server,
+                'current_balance': current_balance,
+                'current_equity': current_equity,
+                'total_deposits': total_deposits,
+                'profit_loss': profit_loss,
+                'deposit_history': deposits,
+                'last_updated': datetime.now(timezone.utc).isoformat(),
+                'connection_method': 'windows_bridge',
+                'bridge_url': bridge_url
             }
             
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             return {
                 'status': 'error',
                 'error': f'Bridge connection failed: {str(e)}',
+                'connected': False,
+                'bridge_url': bridge_url
+            }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'error': f'Unexpected error: {str(e)}',
                 'connected': False
             }
     
