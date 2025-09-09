@@ -58,7 +58,7 @@ class CriticalInvestmentTester:
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
-            headers = {'Content-Type': 'application/json'}
+            headers = self.get_auth_headers() if use_auth else {'Content-Type': 'application/json'}
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
