@@ -450,6 +450,11 @@ class CriticalInvestmentTester:
         print("Testing endpoints after database cleanup to verify correct data display")
         print("="*80)
         
+        # Authenticate first
+        if not self.authenticate_admin():
+            print("❌ CRITICAL: Failed to authenticate as admin - cannot test admin endpoints")
+            self.critical_issues.append("❌ CRITICAL: Admin authentication failed")
+        
         # Run all tests
         test_results = {
             "Salvador Investments": self.test_salvador_investments(),
