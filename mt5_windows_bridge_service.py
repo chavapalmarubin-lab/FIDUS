@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """
-MT5 Windows Bridge Service
-==========================
+MT5 Windows Bridge Service - FIDUS Production
+=============================================
 
-This service runs on Windows VM with MetaTrader5 installed.
-It provides REST API access to MT5 data for the Linux application.
+OPTIMIZED FOR FIDUS REQUIREMENTS:
+- Real-time account data (balance, equity)
+- Historical deposit/withdrawal data
+- NOT trading functionality
+- NOT market data (OHLC, ticks)
+
+Based on ChatGPT recommendations:
+- Uses official MetaTrader5 package (v5.0.5260+)
+- Compatible with Python 3.6-3.11
+- FastAPI REST API wrapper
+- Windows-only deployment
 
 DEPLOYMENT: Copy this file to Windows VM and run:
-pip install fastapi uvicorn MetaTrader5 python-dotenv
+pip install MetaTrader5==5.0.5260 fastapi uvicorn python-dotenv
 python mt5_windows_bridge_service.py
 """
 
@@ -28,7 +37,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="MT5 Windows Bridge Service", version="1.0.0")
+app = FastAPI(
+    title="MT5 Windows Bridge Service - FIDUS Production", 
+    version="2.0.0",
+    description="Real-time MT5 data for FIDUS Investment Management"
+)
 
 # CORS middleware for Linux application access
 app.add_middleware(
