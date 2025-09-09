@@ -3730,15 +3730,51 @@ async def update_client_status(client_id: str, status_data: dict):
 @api_router.get("/admin/portfolio-summary")
 async def get_portfolio_summary():
     """Get portfolio summary for admin dashboard"""
-    return {
-        "total_aum": 999999.99,
-        "aum": 999999.99,
-        "client_count": 99,
-        "allocation": {"CORE": 25.0, "BALANCE": 75.0, "DYNAMIC": 0.0, "UNLIMITED": 0.0},
-        "fund_breakdown": {"CORE": 0, "BALANCE": 999999.99, "DYNAMIC": 0, "UNLIMITED": 0},
-        "debug_marker": "NEW_ENDPOINT_WORKING",
-        "timestamp": "2025-01-08_v2"
-    }
+    try:
+        # Calculate real total AUM from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        total_aum = 0.0
+        client_count = 0
+        fund_allocation = {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0}
+        
+        # Sum AUM from all client investments
+        for client in all_clients:
+            client_investments_list = mongodb_manager.get_client_investments(client['id'])
+            if client_investments_list:
+                client_count += 1
+                for investment in client_investments_list:
+                    current_value = investment['current_value']
+                    total_aum += current_value
+                    fund_code = investment['fund_code']
+                    if fund_code in fund_allocation:
+                        fund_allocation[fund_code] += current_value
+        
+        # Calculate allocation percentages
+        allocation_percentage = {}
+        if total_aum > 0:
+            for fund, amount in fund_allocation.items():
+                allocation_percentage[fund] = round((amount / total_aum) * 100, 1)
+        else:
+            allocation_percentage = {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0}
+        
+        return {
+            "total_aum": total_aum,
+            "aum": total_aum,  # Add for frontend compatibility
+            "client_count": client_count,
+            "allocation": allocation_percentage,
+            "fund_breakdown": fund_allocation
+        }
+        
+    except Exception as e:
+        logging.error(f"Portfolio summary error: {str(e)}")
+        # Return fallback data instead of zeros
+        return {
+            "total_aum": 0,
+            "aum": 0,  # Add for frontend compatibility
+            "client_count": 0,
+            "allocation": {"CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0},
+            "fund_breakdown": {}
+        }
 
 @api_router.get("/admin/test-endpoint-unique")
 async def test_endpoint_unique():
