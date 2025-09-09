@@ -3740,6 +3740,15 @@ async def get_portfolio_summary():
         "timestamp": "2025-01-08_v2"
     }
 
+@api_router.get("/admin/test-endpoint-unique")
+async def test_endpoint_unique():
+    """Test endpoint to verify server identity"""
+    return {
+        "message": "THIS_IS_THE_CORRECT_SERVER",
+        "server_id": "FIDUS_PRODUCTION_FIX",
+        "timestamp": "2025-01-08_23:54"
+    }
+
 # Gmail Service Integration
 class GmailService:
     def __init__(self):
