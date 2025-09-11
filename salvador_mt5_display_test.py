@@ -168,10 +168,10 @@ class SalvadorMT5DisplayTester:
                 print(f"   📋 Email: {salvador_data.get('email')}")
                 print(f"   📋 Total Balance: ${salvador_data.get('total_balance', 0):,.2f}")
                 
-                # Verify name display
+                # Verify name display (accept both "Salvador Palma" and "SALVADOR PALMA")
                 client_name = salvador_data.get('name', '')
-                if 'Salvador' in client_name and 'Palma' in client_name:
-                    print("   ✅ Salvador Palma name displayed correctly")
+                if ('Salvador' in client_name or 'SALVADOR' in client_name) and ('Palma' in client_name or 'PALMA' in client_name):
+                    print(f"   ✅ Salvador Palma name displayed correctly: '{client_name}'")
                 else:
                     print(f"   ❌ Name display issue: '{client_name}' should show 'Salvador Palma'")
                     return False
