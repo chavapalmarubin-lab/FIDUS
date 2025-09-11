@@ -315,11 +315,11 @@ class SalvadorReviewTester:
         
         critical_endpoints = [
             ('GET', 'api/health', 200),
-            ('GET', 'api/clients', 200),
-            ('GET', 'api/investments', 200),
-            ('GET', 'api/admin/mt5-accounts', 200),
-            ('GET', 'api/admin/fund-performance', 200),
-            ('GET', 'api/admin/cash-flow', 200)
+            ('GET', 'api/clients/all', 200),
+            ('GET', 'api/investments/admin/overview', 200),
+            ('GET', 'api/mt5/admin/overview', 200),
+            ('GET', 'api/admin/fund-performance/dashboard', 200),
+            ('GET', 'api/admin/cashflow/overview', 200)
         ]
         
         endpoint_results = []
