@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
-SALVADOR PALMA MT5 ACCOUNTS DISPLAY - FINAL COMPREHENSIVE TEST
-==============================================================
+SALVADOR PALMA MT5 FINAL VERIFICATION TEST
+==========================================
 
-This test addresses the specific review request issues:
+This test verifies that Salvador's MT5 accounts now display correctly after fixing async/await issues.
 
-TESTING OBJECTIVES:
-1. ✅ Verify Salvador Palma client profile exists and is visible
-2. ✅ Verify Salvador's investment amounts are correct (VT Markets corrected to $4,000)
-3. ❌ Test MT5 accounts endpoint (currently failing due to backend async bugs)
-4. ❌ Test Fund Performance dashboard integration (Salvador missing)
-5. ❌ Test Cash Flow Management integration (Salvador missing)
+BACKEND FIXES COMPLETED:
+✅ VT Markets investment corrected: $5,000 → $4,000
+✅ Fixed async/await errors in MT5 connection status calls
+✅ All MT5 service calls now properly structured
 
-EXPECTED RESULTS:
-- DooTechnology account (9928326) linked to BALANCE investment ($1,263,485.40)
-- VT Markets account (15759667) linked to CORE investment ($4,000) ✅ corrected
-- Salvador Palma name displayed prominently in all dashboards
+FINAL VERIFICATION NEEDED:
+1. Test /api/mt5/admin/accounts endpoint - Should now work without async errors
+2. Verify both Salvador's MT5 accounts appear:
+   - DooTechnology account (Login: 9928326) linked to BALANCE investment ($1,263,485.40)
+   - VT Markets account (Login: 15759667) linked to CORE investment ($4,000) ✅
+3. Check data completeness
+4. Test Fund Performance Dashboard - Should now include Salvador
+5. Test Cash Flow Management - Should now show Salvador's MT5 data
 """
 
 import requests
