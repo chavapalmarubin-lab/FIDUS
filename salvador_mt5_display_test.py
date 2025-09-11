@@ -195,7 +195,7 @@ class SalvadorMT5DisplayTester:
         success, response = self.run_test(
             "Get Salvador's Investments",
             "GET",
-            f"api/admin/clients/{self.salvador_client_id}/investments",
+            f"api/investments/client/{self.salvador_client_id}",
             200,
             use_auth=True
         )
