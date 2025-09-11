@@ -3,17 +3,22 @@
 SALVADOR PALMA PRODUCTION DATA RESTORATION TEST
 ==============================================
 
-This test script validates the complete production data restoration for Salvador Palma
-as requested in the urgent production deployment requirements.
+This test validates the creation of Salvador's missing investments and MT5 accounts 
+in PRODUCTION database as requested in the urgent review.
 
-Test Requirements:
-1. Create Salvador Palma's complete client profile (client_003)
-2. Create BALANCE fund investment ($1,263,485.40)
-3. Create MT5 account mapping (Login: 9928326)
-4. Verify all data is properly linked and accessible
-5. Test all endpoints return correct data
+REVIEW REQUEST SUMMARY:
+✅ Salvador client profile exists (client_003, SALVADOR PALMA)
+❌ 0 investments (missing BALANCE $1,263,485.40 and CORE $4,000)  
+❌ 0 MT5 accounts (missing both DooTechnology and VT Markets)
 
-Production Environment: https://fidus-invest.preview.emergentagent.com
+REQUIRED ACTIONS:
+1. Create BALANCE fund investment ($1,263,485.40)
+2. Create CORE fund investment ($4,000.00)
+3. Create DooTechnology MT5 account (Login: 9928326)
+4. Create VT Markets MT5 account (Login: 15759667)
+5. Verify Salvador appears in Fund Performance and Cash Flow dashboards
+
+Production Environment: https://fidus-invest.emergent.host
 """
 
 import requests
@@ -21,6 +26,10 @@ import sys
 import json
 from datetime import datetime, timezone
 import time
+import pymongo
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
 
 class SalvadorProductionTester:
     def __init__(self, base_url="https://fidus-invest.emergent.host"):
