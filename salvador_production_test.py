@@ -38,26 +38,48 @@ class SalvadorProductionTester:
         self.tests_passed = 0
         self.admin_token = None
         self.salvador_client_id = "client_003"
-        self.salvador_investment_id = None
-        self.salvador_mt5_account_id = None
         
-        # Salvador's expected data
+        # MongoDB connection for direct database operations
+        load_dotenv('/app/backend/.env')
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+        db_name = os.environ.get('DB_NAME', 'test_database')
+        
+        try:
+            self.mongo_client = MongoClient(mongo_url)
+            self.db = self.mongo_client[db_name]
+            print(f"✅ Connected to MongoDB: {mongo_url}/{db_name}")
+        except Exception as e:
+            print(f"❌ Failed to connect to MongoDB: {e}")
+            self.mongo_client = None
+            self.db = None
+        
+        # Salvador's expected data from review request
         self.salvador_data = {
             "client_id": "client_003",
             "name": "SALVADOR PALMA",
             "email": "chava@alyarglobal.com",
-            "phone": "+52-663-123-4567",
-            "registration_date": "2025-04-01",
-            "location": "Mexico",
-            "fund_code": "BALANCE",
-            "principal_amount": 1263485.40,
-            "start_date": "2025-04-01",
-            "mt5_login": "9928326",
-            "mt5_server": "DooTechnology-Live",
-            "mt5_balance": 1837934.05,
-            "trading_profits": 860448.65,
-            "withdrawals": 143000,
-            "current_profit": 717448.65
+            "balance_investment": {
+                "investment_id": "5e4c7092-d5e7-46d7-8efd-ca29db8f33a4",
+                "fund_code": "BALANCE",
+                "principal_amount": 1263485.40,
+                "deposit_date": "2025-04-01"
+            },
+            "core_investment": {
+                "investment_id": "68ce0609-dae8-48a5-bb86-a84d5e0d3184",
+                "fund_code": "CORE",
+                "principal_amount": 4000.00,
+                "deposit_date": "2025-04-01"
+            },
+            "doo_mt5": {
+                "login": "9928326",
+                "broker": "DooTechnology",
+                "server": "DooTechnology-Live"
+            },
+            "vt_mt5": {
+                "login": "15759667",
+                "broker": "VT Markets",
+                "server": "VTMarkets-PAMM"
+            }
         }
 
     def log_test(self, name, success, details=""):
