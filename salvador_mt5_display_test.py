@@ -33,6 +33,7 @@ class SalvadorMT5DisplayTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.admin_user = None
+        self.admin_token = None
         self.salvador_client_id = "client_003"
         self.salvador_name = "Salvador Palma"
         
