@@ -9355,7 +9355,7 @@ async def get_mt5_accounts_by_broker():
                 account['profit_loss_percentage'] = (performance.profit / account['total_allocated'] * 100) if account['total_allocated'] > 0 else 0
             
             # Get connection status
-            account['connection_status'] = (await mt5_service.get_connection_status(account['account_id'])).value
+            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
             
             # Add to broker group
             accounts_by_broker[broker_code]["accounts"].append(account)
