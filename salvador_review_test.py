@@ -317,7 +317,7 @@ class SalvadorReviewTester:
             ('GET', 'api/health', 200),
             ('GET', 'api/clients/all', 200),
             ('GET', 'api/investments/admin/overview', 200),
-            ('GET', 'api/mt5/admin/overview', 200),
+            ('GET', 'api/mt5/admin/accounts', 200),
             ('GET', 'api/admin/fund-performance/dashboard', 200),
             ('GET', 'api/admin/cashflow/overview', 200)
         ]
