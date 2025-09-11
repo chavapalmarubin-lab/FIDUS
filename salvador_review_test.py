@@ -182,7 +182,7 @@ class SalvadorReviewTester:
         
         success, status, response = self.make_request(
             'GET',
-            'api/admin/mt5-accounts'
+            'api/mt5/admin/overview'
         )
         
         if success:
