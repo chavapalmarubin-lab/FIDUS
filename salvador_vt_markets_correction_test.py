@@ -30,9 +30,9 @@ class SalvadorVTMarketsCorrection:
         
         # MongoDB connection for direct database operations
         mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-        db_name = os.environ.get('DB_NAME', 'test_database')
+        # Use the actual database name from MongoDB manager
         self.mongo_client = MongoClient(mongo_url)
-        self.db = self.mongo_client[db_name]
+        self.db = self.mongo_client['fidus_investment_db']
         
         # Critical investment details
         self.salvador_client_id = "client_003"
