@@ -136,7 +136,7 @@ class ProductionVerificationTester:
         success, response = self.run_test(
             "Salvador Investments Check",
             "GET",
-            f"api/admin/clients/{self.salvador_client_id}/investments",
+            f"api/investments/client/{self.salvador_client_id}",
             200,
             headers=headers
         )
