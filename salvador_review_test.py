@@ -144,7 +144,7 @@ class SalvadorReviewTester:
         
         success, status, response = self.make_request(
             'GET',
-            'api/investments'
+            'api/investments/admin/overview'
         )
         
         if success:
