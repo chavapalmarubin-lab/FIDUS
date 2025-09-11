@@ -9132,7 +9132,7 @@ async def get_client_mt5_accounts(client_id: str):
                 account['last_updated'] = performance.timestamp
             
             # Get connection status
-            account['connection_status'] = (await mt5_service.get_connection_status(account['account_id'])).value
+            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
             
             enriched_accounts.append(account)
         
