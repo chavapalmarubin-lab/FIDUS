@@ -255,7 +255,8 @@ class SalvadorMT5DisplayTester:
             "Get MT5 Admin Accounts",
             "GET",
             "api/mt5/admin/accounts",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
