@@ -223,7 +223,7 @@ class ProductionVerificationTester:
         success, response = self.run_test(
             "Fund Performance Dashboard",
             "GET",
-            "api/admin/fund-performance",
+            "api/admin/fund-performance/dashboard",
             200,
             headers=headers
         )
