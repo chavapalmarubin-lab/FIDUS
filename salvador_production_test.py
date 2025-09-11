@@ -633,8 +633,10 @@ class SalvadorProductionTester:
         print("=" * 80)
         print(f"Testing Environment: {self.base_url}")
         print(f"Target Client: {self.salvador_data['name']} ({self.salvador_client_id})")
-        print(f"Expected Investment: ${self.salvador_data['principal_amount']:,.2f} BALANCE fund")
-        print(f"Expected MT5 Login: {self.salvador_data['mt5_login']}")
+        print(f"Expected BALANCE Investment: ${self.salvador_data['balance_investment']['principal_amount']:,.2f}")
+        print(f"Expected CORE Investment: ${self.salvador_data['core_investment']['principal_amount']:,.2f}")
+        print(f"Expected DooTechnology MT5: {self.salvador_data['doo_mt5']['login']}")
+        print(f"Expected VT Markets MT5: {self.salvador_data['vt_mt5']['login']}")
         print("=" * 80)
         
         # Test sequence
