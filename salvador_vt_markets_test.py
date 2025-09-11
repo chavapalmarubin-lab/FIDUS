@@ -501,7 +501,8 @@ class SalvadorVTMarketsDataTester:
             "Basic Health Check",
             "GET",
             "api/health",
-            200
+            200,
+            use_auth=False  # Health endpoints don't require auth
         )
         
         if not success:
@@ -515,7 +516,8 @@ class SalvadorVTMarketsDataTester:
             "Readiness Check",
             "GET",
             "api/health/ready",
-            200
+            200,
+            use_auth=False  # Health endpoints don't require auth
         )
         
         if success:
