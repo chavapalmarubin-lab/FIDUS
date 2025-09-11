@@ -259,7 +259,7 @@ class SalvadorReviewTester:
         
         success, status, response = self.make_request(
             'GET',
-            'api/admin/cash-flow'
+            'api/admin/cashflow/overview'
         )
         
         if success:
