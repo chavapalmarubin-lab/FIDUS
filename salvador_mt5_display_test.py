@@ -196,7 +196,8 @@ class SalvadorMT5DisplayTester:
             "Get Salvador's Investments",
             "GET",
             f"api/admin/clients/{self.salvador_client_id}/investments",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
