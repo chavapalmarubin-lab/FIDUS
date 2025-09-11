@@ -369,7 +369,8 @@ class SalvadorMT5DisplayTester:
             "Get Fund Performance Dashboard",
             "GET",
             "api/admin/fund-performance",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
