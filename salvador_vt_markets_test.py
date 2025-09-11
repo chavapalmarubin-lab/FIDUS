@@ -350,7 +350,7 @@ class SalvadorVTMarketsDataTester:
         success, response = self.run_test(
             "Get Fund Performance Dashboard",
             "GET",
-            "api/admin/fund-performance",
+            "api/admin/fund-performance/dashboard",
             200
         )
         
