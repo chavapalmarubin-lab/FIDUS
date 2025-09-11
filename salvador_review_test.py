@@ -109,7 +109,7 @@ class SalvadorReviewTester:
         
         success, status, response = self.make_request(
             'GET',
-            'api/clients'
+            'api/clients/all'
         )
         
         if success:
