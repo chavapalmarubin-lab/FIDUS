@@ -408,7 +408,7 @@ class SalvadorVTMarketsDataTester:
         success, response = self.run_test(
             "Get Cash Flow Management Data",
             "GET",
-            "api/admin/cash-flow-management",
+            "api/admin/cashflow/overview",
             200
         )
         
