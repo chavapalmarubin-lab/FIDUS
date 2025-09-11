@@ -116,8 +116,15 @@ class SalvadorMT5DisplayTester:
         )
         if success:
             self.admin_user = response
-            print(f"   ✅ Admin logged in: {response.get('name', 'Unknown')} (ID: {response.get('id')})")
-            return True
+            # Extract JWT token for authenticated requests
+            self.admin_token = response.get('token')
+            if self.admin_token:
+                print(f"   ✅ Admin logged in: {response.get('name', 'Unknown')} (ID: {response.get('id')})")
+                print(f"   🔑 JWT token obtained for authenticated requests")
+                return True
+            else:
+                print("   ❌ No JWT token received in login response")
+                return False
         else:
             print("   ❌ Admin login failed - cannot proceed with MT5 admin tests")
             return False
