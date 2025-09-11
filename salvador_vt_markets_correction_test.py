@@ -195,7 +195,7 @@ class SalvadorVTMarketsCorrection:
         success, response = self.run_test(
             "Verify Corrected Investment Amount",
             "GET",
-            f"api/clients/{self.salvador_client_id}/investments",
+            f"api/investments/client/{self.salvador_client_id}",
             200
         )
         
