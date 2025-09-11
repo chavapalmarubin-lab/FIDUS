@@ -179,7 +179,7 @@ class ProductionVerificationTester:
         success, response = self.run_test(
             "MT5 Accounts Check",
             "GET",
-            "api/admin/mt5-accounts",
+            "api/mt5/admin/accounts",
             200,
             headers=headers
         )
