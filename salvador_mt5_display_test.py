@@ -54,11 +54,15 @@ class SalvadorMT5DisplayTester:
         }
         
     def run_test(self, name: str, method: str, endpoint: str, expected_status: int, 
-                 data: Dict = None, headers: Dict = None) -> tuple[bool, Dict]:
+                 data: Dict = None, headers: Dict = None, use_auth: bool = False) -> tuple[bool, Dict]:
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         if headers is None:
             headers = {'Content-Type': 'application/json'}
+        
+        # Add JWT token for authenticated requests
+        if use_auth and self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
