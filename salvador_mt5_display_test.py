@@ -146,7 +146,8 @@ class SalvadorMT5DisplayTester:
             "Get All Clients",
             "GET",
             "api/admin/clients",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
