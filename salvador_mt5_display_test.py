@@ -429,10 +429,11 @@ class SalvadorMT5DisplayTester:
         )
         
         if success:
-            cash_flow_data = response.get('cash_flow_summary', {})
-            mt5_trading_profits = cash_flow_data.get('mt5_trading_profits', 0)
-            client_obligations = cash_flow_data.get('client_interest_obligations', 0)
-            net_profitability = cash_flow_data.get('net_fund_profitability', 0)
+            # Check both possible response structures
+            cash_flow_data = response.get('cash_flow_summary', response.get('summary', {}))
+            mt5_trading_profits = cash_flow_data.get('mt5_trading_profits', response.get('mt5_trading_profits', 0))
+            client_obligations = cash_flow_data.get('client_interest_obligations', response.get('client_interest_obligations', 0))
+            net_profitability = cash_flow_data.get('net_fund_profitability', response.get('net_cash_flow', 0))
             
             print(f"   📊 MT5 Trading Profits: ${mt5_trading_profits:,.2f}")
             print(f"   📊 Client Interest Obligations: ${client_obligations:,.2f}")
