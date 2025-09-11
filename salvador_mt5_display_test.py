@@ -423,7 +423,7 @@ class SalvadorMT5DisplayTester:
         success, response = self.run_test(
             "Get Cash Flow Management",
             "GET",
-            "api/admin/cash-flow",
+            "api/admin/cashflow/overview",
             200,
             use_auth=True
         )
