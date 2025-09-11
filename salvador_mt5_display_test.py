@@ -424,7 +424,8 @@ class SalvadorMT5DisplayTester:
             "Get Cash Flow Management",
             "GET",
             "api/admin/cash-flow",
-            200
+            200,
+            use_auth=True
         )
         
         if success:
