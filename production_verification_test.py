@@ -252,7 +252,7 @@ class ProductionVerificationTester:
         success, response = self.run_test(
             "Cash Flow Management",
             "GET",
-            "api/admin/cash-flow",
+            "api/admin/cashflow/overview",
             200,
             headers=headers
         )
