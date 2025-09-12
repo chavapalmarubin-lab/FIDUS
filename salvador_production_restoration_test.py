@@ -420,18 +420,23 @@ class SalvadorProductionRestorationTester:
         """Test all critical endpoints are responding"""
         print(f"\n🔍 TESTING CRITICAL ENDPOINTS...")
         
+        # Prepare headers with admin token
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
+        
         endpoints = [
-            ("Health Check", "GET", "api/health", 200),
-            ("Get All Clients", "GET", "api/admin/clients", 200),
-            ("Get All Investments", "GET", "api/admin/investments", 200),
-            ("Get MT5 Accounts", "GET", "api/mt5/admin/accounts", 200),
-            ("Fund Performance Dashboard", "GET", "api/admin/fund-performance/dashboard", 200),
-            ("Cash Flow Overview", "GET", "api/admin/cashflow/overview", 200)
+            ("Health Check", "GET", "api/health", 200, None),  # No auth needed
+            ("Get All Clients", "GET", "api/admin/clients", 200, headers),
+            ("Get All Investments", "GET", "api/admin/investments", 200, headers),
+            ("Get MT5 Accounts", "GET", "api/mt5/admin/accounts", 200, headers),
+            ("Fund Performance Dashboard", "GET", "api/admin/fund-performance/dashboard", 200, headers),
+            ("Cash Flow Overview", "GET", "api/admin/cashflow/overview", 200, headers)
         ]
         
         passed = 0
-        for name, method, endpoint, expected_status in endpoints:
-            success, _ = self.run_test(name, method, endpoint, expected_status)
+        for name, method, endpoint, expected_status, endpoint_headers in endpoints:
+            success, _ = self.run_test(name, method, endpoint, expected_status, headers=endpoint_headers)
             if success:
                 passed += 1
         
