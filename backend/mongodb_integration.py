@@ -11,7 +11,8 @@ from pymongo.errors import PyMongoError
 import bcrypt
 
 # Get MongoDB URL from environment
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/fidus_investment_db')
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'fidus_investment_db')
 
 class MongoDBManager:
     def __init__(self):
