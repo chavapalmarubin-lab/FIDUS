@@ -377,7 +377,7 @@ class SalvadorProductionDataCreator:
         
         # Verify MT5 accounts
         try:
-            response = self.session.get(f"{self.base_url}/admin/mt5/accounts", timeout=30)
+            response = self.session.get(f"{self.base_url}/mt5/admin/accounts", timeout=30)
             if response.status_code == 200:
                 mt5_accounts = response.json()
                 mt5_count = len(mt5_accounts.get('accounts', []))
