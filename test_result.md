@@ -173,6 +173,18 @@
 user_problem_statement: "PRODUCTION READINESS COMPREHENSIVE STRESS TEST WITH SCALABILITY FOCUS - Going Live Monday: The FIDUS Investment Management System requires complete validation of all systems, data flows, calculations, and real MT5 feed integration before production deployment. CRITICAL SCALABILITY REQUIREMENT: System currently has 1 MT5 account mapped but must scale to handle 100 MT5 accounts within one month. Core requirements: 1) All authentication flows working under load, 2) All fund performance calculations accurate at scale, 3) Real MT5 data feeds operational for multiple accounts, 4) All user journeys functional with concurrent users, 5) Database integrity validated under stress, 6) Security protocols verified with high throughput, 7) Admin and client dashboards fully operational with large datasets, 8) Fund Performance vs MT5 Reality system accurate across 100 accounts, 9) All API endpoints responding correctly under concurrent load, 10) Error handling robust during peak usage, 11) UI/UX polished and professional with large data volumes, 12) System scalability validated for 100x current MT5 account load."
 
 backend:
+  - task: "Production Salvador Palma Data Verification After Frontend URL Fix"
+    implemented: true
+    working: false
+    file: "/app/production_verification_test.py"
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL PRODUCTION DATA ACCESS FAILURE DISCOVERED! Conducted comprehensive production verification testing as requested in review after frontend URL configuration fix. DEVASTATING FINDINGS: (1) ❌ PRODUCTION DATABASE AUTHORIZATION ISSUES: Fund Performance endpoint shows 'not authorized on fidus_investment_db to execute command' - production MongoDB has different authorization settings than preview environment. (2) ❌ SALVADOR'S DATA INACCESSIBLE VIA API: Despite backend logs showing 'Retrieved 2 investments for client client_003', API endpoints return empty results - investments: [], MT5 accounts: [], all dashboards show $0 values. (3) ❌ DATABASE-API DISCONNECT: Direct MongoDB query confirms Salvador's 2 investments exist (BALANCE: $1,263,485.40, CORE: $4,000.00) but API layer cannot access this data. (4) ❌ FRONTEND WILL STILL SHOW $0 VALUES: Even with correct production URL (https://fidus-invest.emergent.host), frontend will display empty dashboards because API endpoints return no data. ROOT CAUSE: Production environment uses managed MongoDB service with different authorization/connection settings than development environment. The backend can connect to database but lacks proper read permissions for business logic queries. URGENT MAIN AGENT ACTIONS REQUIRED: (1) Fix production MongoDB authorization settings to allow full read/write access, (2) Verify database connection configuration in production environment, (3) Test complete API-to-database integration after authorization fixes, (4) Ensure Salvador's data flows through all business logic calculations. TEST RESULTS: 2/7 tests passed (28.6% success rate). CONCLUSION: Frontend URL fix is correct but production database authorization issues prevent Salvador's data from being accessible via API endpoints. System cannot pass deployment verification until database access is resolved."
+
   - task: "URGENT Salvador Palma Database Cleanup - Remove Mock/Test Data Contamination"
     implemented: true
     working: true
