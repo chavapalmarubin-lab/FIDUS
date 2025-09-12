@@ -251,6 +251,48 @@ class SalvadorProductionRestorationTester:
             print(f"   Client ID: {response.get('id', 'Unknown')}")
         return success
 
+    def verify_salvador_client_exists(self):
+        """First verify Salvador's client profile exists"""
+        print(f"\n🔍 VERIFYING SALVADOR'S CLIENT PROFILE...")
+        
+        # Use admin token for authentication
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
+        
+        success, response = self.run_test(
+            "Get All Clients",
+            "GET",
+            "api/admin/clients",
+            200,
+            headers=headers
+        )
+        
+        if success:
+            clients = response.get('clients', [])
+            print(f"   Total clients found: {len(clients)}")
+            
+            salvador_found = False
+            for client in clients:
+                client_id = client.get('id')
+                name = client.get('name', '')
+                email = client.get('email', '')
+                
+                if client_id == 'client_003' or 'SALVADOR' in name.upper():
+                    salvador_found = True
+                    print(f"   ✅ Salvador found: {name} ({client_id}) - {email}")
+                    break
+            
+            if not salvador_found:
+                print(f"   ❌ Salvador Palma (client_003) NOT found in clients list")
+                print(f"   Available clients:")
+                for client in clients[:5]:  # Show first 5 clients
+                    print(f"     - {client.get('name')} ({client.get('id')})")
+            
+            return salvador_found
+        
+        return False
+
     def verify_salvador_investments(self):
         """Verify Salvador's investments are accessible via API"""
         print(f"\n🔍 VERIFYING SALVADOR'S INVESTMENTS...")
