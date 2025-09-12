@@ -226,15 +226,15 @@ class SalvadorCleanupVerificationTester:
                 
                 if mt5_accounts:
                     # Check for DooTechnology and VT Markets accounts
-                    doo_accounts = [acc for acc in mt5_accounts if acc.get('broker') == 'DooTechnology']
-                    vt_accounts = [acc for acc in mt5_accounts if acc.get('broker') == 'VT Markets']
+                    doo_accounts = [acc for acc in mt5_accounts if acc.get('broker_name') == 'DooTechnology']
+                    vt_accounts = [acc for acc in mt5_accounts if acc.get('broker_name') == 'VT Markets']
                     
                     print(f"   DooTechnology accounts: {len(doo_accounts)}")
                     print(f"   VT Markets accounts: {len(vt_accounts)}")
                     
                     # Check login numbers
-                    doo_login_correct = any(acc.get('login') == '9928326' for acc in doo_accounts)
-                    vt_login_correct = any(acc.get('login') == '15759667' for acc in vt_accounts)
+                    doo_login_correct = any(acc.get('mt5_login') == '9928326' for acc in doo_accounts)
+                    vt_login_correct = any(acc.get('mt5_login') == '15759667' for acc in vt_accounts)
                     
                     print(f"   ✅ DooTechnology login (9928326): {doo_login_correct}")
                     print(f"   ✅ VT Markets login (15759667): {vt_login_correct}")
