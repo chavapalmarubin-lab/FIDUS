@@ -1053,10 +1053,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Fund Performance Management System"
-  stuck_tasks: []
+    - "CRITICAL Production Database Connectivity Investigation"
+    - "Salvador Palma VT Markets MT5 Account Investigation"
+    - "API Endpoint Data Creation Fixes"
+    - "Production Environment Database Configuration"
+    - "Salvador Data Deployment to Production Database"
+  stuck_tasks: 
+    - "CRITICAL Production Database Connectivity Investigation"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
