@@ -143,9 +143,9 @@ class EmergencySalvadorDataCreation:
         
         # Try multiple client creation endpoints
         endpoints_to_try = [
+            ("/clients/create", "Client Creation Endpoint"),
             ("/admin/clients/create", "Admin Client Creation"),
-            ("/clients/register", "Client Registration"),
-            ("/admin/clients", "Admin Clients Endpoint")
+            ("/clients/register", "Client Registration")
         ]
         
         for endpoint, description in endpoints_to_try:
