@@ -1,31 +1,45 @@
 #!/usr/bin/env python3
 """
-PRODUCTION ENVIRONMENT VERIFICATION TEST
-========================================
+PRODUCTION SALVADOR PALMA DATA VERIFICATION TEST
+===============================================
 
-This test verifies Salvador Palma's data restoration in the PRODUCTION environment
-at https://fidus-invest.emergent.host/ as requested in the urgent review.
+This test verifies Salvador's data accessibility in production after fixing frontend URL configuration.
 
-CRITICAL VERIFICATION REQUIREMENTS:
-1. Salvador Palma Client Profile (client_003) exists
-2. BALANCE Fund Investment ($1,263,485.40) exists  
-3. CORE Fund Investment ($4,000.00) exists - corrected amount
-4. MT5 Account Mappings are properly linked
-5. Fund Performance and Cash Flow dashboards include Salvador
+FRONTEND CONFIG FIXED:
+✅ Changed REACT_APP_BACKEND_URL from preview URL to production URL
+✅ Frontend will now connect to correct production backend at https://fidus-invest.emergent.host
+
+VERIFICATION NEEDED:
+1. Test Salvador's client data: GET /api/client/client_003/data
+2. Test Salvador's investments: GET /api/investments/client/client_003  
+3. Test MT5 accounts: GET /api/mt5/admin/accounts
+4. Test fund performance: GET /api/admin/fund-performance/dashboard
+5. Test cash flow: GET /api/admin/cashflow/overview
+
+EXPECTED RESULTS AFTER FRONTEND FIX:
+- Client dashboard should show Salvador's correct balances
+- Total AUM: $1,267,485.40 (BALANCE: $1,263,485.40 + CORE: $4,000)
+- MT5 accounts should be visible (DooTechnology + VT Markets)
+- Fund performance dashboard should include Salvador
+- No more $0 values in frontend
 """
 
 import requests
+import json
 import sys
 from datetime import datetime
-import json
+import time
 
-class ProductionVerificationTester:
+# Configuration - PRODUCTION BACKEND URL
+BACKEND_URL = "https://fidus-invest.emergent.host/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
+
+class ProductionSalvadorVerificationTest:
     def __init__(self):
-        self.base_url = "https://fidus-invest.emergent.host"
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.admin_user = None
-        self.salvador_client_id = "client_003"
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
