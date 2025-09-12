@@ -1,52 +1,81 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE BACKEND TESTING FOR SALVADOR PALMA VT MARKETS MT5 INVESTIGATION
-============================================================================
+SALVADOR PALMA DATABASE RESTORATION VERIFICATION TEST
+====================================================
 
-This test investigates and validates Salvador Palma's MT5 account structure
-based on the critical user report:
+This test verifies the critical database restoration as requested in the urgent review:
+- Clean database of test data contamination
+- Create Salvador's correct client profile (client_003)
+- Create exactly 2 investments: BALANCE ($1,263,485.40) and CORE ($4,000.00)
+- Create 2 MT5 accounts: DooTechnology (9928326) and VT Markets (15759667)
+- Verify all API endpoints work correctly
 
-USER REPORT:
-- ✅ DooTechnology account (Login: 9928326) - RESTORED  
-- ❌ VT Markets account - MISSING
-
-INVESTIGATION OBJECTIVES:
-1. Check Salvador's complete MT5 account history
-2. Investigate the original investment structure  
-3. Restore the missing VT Markets MT5 account
-4. Test MT5 accounts display
-5. Validate fund performance calculations include both accounts
+Expected Results:
+- Salvador Palma visible in clients
+- Exactly 2 investments with correct amounts
+- Both MT5 accounts properly linked
+- Total AUM: $1,267,485.40 (not millions)
 """
 
 import requests
+import json
 import sys
 from datetime import datetime
-import json
-import io
-from PIL import Image
+import time
 
-class ComprehensiveBackendTester:
-    def __init__(self, base_url="https://fidus-invest.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.client_user = None
-        self.admin_user = None
-        self.application_id = None
-        self.extracted_data = None
-        self.uploaded_document_id = None
-        self.envelope_id = None
-        self.created_investments = []  # Track created investments for payment confirmation tests
+# Configuration
+BACKEND_URL = "https://fidus-invest.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
-        """Run a single API test"""
-        url = f"{self.base_url}/{endpoint}"
-        if headers is None:
-            headers = {'Content-Type': 'application/json'}
-
-        self.tests_run += 1
-        print(f"\n🔍 Testing {name}...")
-        print(f"   URL: {url}")
+class SalvadorDataRestorationTest:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        
+    def log_result(self, test_name, success, message, details=None):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        result = {
+            "test": test_name,
+            "status": status,
+            "success": success,
+            "message": message,
+            "details": details or {},
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        print(f"{status}: {test_name} - {message}")
+        if details and not success:
+            print(f"   Details: {details}")
+    
+    def authenticate_admin(self):
+        """Authenticate as admin user"""
+        try:
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
+                "user_type": "admin"
+            })
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("token")
+                if self.admin_token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_result("Admin Authentication", True, "Successfully authenticated as admin")
+                    return True
+                else:
+                    self.log_result("Admin Authentication", False, "No token received", {"response": data})
+                    return False
+            else:
+                self.log_result("Admin Authentication", False, f"HTTP {response.status_code}", {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
+            return False
         
         try:
             if method == 'GET':
