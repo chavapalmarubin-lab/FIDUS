@@ -384,11 +384,17 @@ class SalvadorProductionRestorationTester:
         """Verify Salvador's data contributes to cash flow calculations"""
         print(f"\n🔍 VERIFYING CASH FLOW OVERVIEW...")
         
+        # Use admin token for authentication
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
+        
         success, response = self.run_test(
             "Get Cash Flow Overview",
             "GET",
             "api/admin/cashflow/overview",
-            200
+            200,
+            headers=headers
         )
         
         if success:
