@@ -1067,13 +1067,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "CRITICAL Production Database Connectivity Investigation"
-    - "Salvador Palma VT Markets MT5 Account Investigation"
-    - "API Endpoint Data Creation Fixes"
-    - "Production Environment Database Configuration"
-    - "Salvador Data Deployment to Production Database"
+    - "Production Salvador Palma Data Verification After Frontend URL Fix"
+    - "CRITICAL Production Database Authorization Issues"
+    - "MongoDB Access Permissions in Production Environment"
+    - "API-to-Database Integration Layer Fixes"
+    - "Salvador Data Accessibility via Production API Endpoints"
   stuck_tasks: 
-    - "CRITICAL Production Database Connectivity Investigation"
+    - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
   test_priority: "critical_first"
   redemption_system_testing: "completed"
