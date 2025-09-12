@@ -161,13 +161,15 @@ class EmergencySalvadorDataCreation:
                                   f"Salvador client created successfully via {description}",
                                   {"client_data": data, "endpoint": endpoint})
                     return True
-                elif response.status_code == 409:
+                elif response.status_code in [409, 400]:
                     # Client already exists - this is actually good!
-                    self.salvador_client_id = "client_003"
-                    self.log_result("Salvador Client Creation", True, 
-                                  f"Salvador client already exists (HTTP 409) - this is expected",
-                                  {"endpoint": endpoint})
-                    return True
+                    response_text = response.text.lower()
+                    if "already exists" in response_text or "username already exists" in response_text:
+                        self.salvador_client_id = "client_003"
+                        self.log_result("Salvador Client Creation", True, 
+                                      f"Salvador client already exists (HTTP {response.status_code}) - this is expected",
+                                      {"endpoint": endpoint, "response": response.text})
+                        return True
                 else:
                     print(f"      HTTP {response.status_code}: {response.text[:200]}")
                     
