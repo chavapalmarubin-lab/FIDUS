@@ -580,6 +580,7 @@ class SalvadorProductionRestorationTester:
         print(f"="*80)
         
         verification_results = {
+            "Database Direct Verification": database_verified,
             "Salvador's Client Profile": client_exists,
             "Salvador's Investments": investments_verified,
             "Salvador's MT5 Accounts": mt5_accounts_verified,
