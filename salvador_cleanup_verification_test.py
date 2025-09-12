@@ -211,6 +211,11 @@ class SalvadorCleanupVerificationTester:
                     mt5_accounts = response['mt5_accounts']
                 elif isinstance(response, list):
                     mt5_accounts = response
+                elif 'accounts_by_broker' in response:
+                    # Handle by-broker format (correct format)
+                    for broker_data in response['accounts_by_broker'].values():
+                        if 'accounts' in broker_data:
+                            mt5_accounts.extend(broker_data['accounts'])
                 elif 'brokers' in response:
                     # Handle by-broker format
                     for broker_data in response['brokers'].values():
