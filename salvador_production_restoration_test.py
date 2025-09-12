@@ -296,11 +296,17 @@ class SalvadorProductionRestorationTester:
         """Verify Salvador's MT5 accounts are accessible via API"""
         print(f"\n🔍 VERIFYING SALVADOR'S MT5 ACCOUNTS...")
         
+        # Use admin token for authentication
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
+        
         success, response = self.run_test(
             "Get All MT5 Accounts",
             "GET",
             "api/mt5/admin/accounts",
-            200
+            200,
+            headers=headers
         )
         
         if success:
