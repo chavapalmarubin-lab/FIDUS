@@ -103,15 +103,15 @@ class SalvadorProductionDataCreator:
         
         try:
             client_data = {
-                "id": "client_003",
+                "username": "client3",
                 "name": "SALVADOR PALMA",
                 "email": "chava@alyarglobal.com",
                 "phone": "+52-663-123-4567",
-                "status": "active"
+                "notes": "Production client - Salvador Palma"
             }
             
             response = self.session.post(
-                f"{self.base_url}/admin/clients",
+                f"{self.base_url}/clients/create",
                 headers={"Content-Type": "application/json"},
                 json=client_data,
                 timeout=30
