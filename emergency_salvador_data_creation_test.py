@@ -306,9 +306,7 @@ class EmergencySalvadorDataCreation:
         
         # Try multiple MT5 creation endpoints
         mt5_endpoints = [
-            "/mt5/admin/add-manual-account",
-            "/admin/mt5/create",
-            "/mt5/accounts/create"
+            "/mt5/admin/add-manual-account"
         ]
         
         accounts_created = 0
