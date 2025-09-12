@@ -214,6 +214,46 @@ class SalvadorProductionRestorationTester:
             print(f"❌ Database operations failed: {str(e)}")
             return False
 
+    def verify_database_directly(self):
+        """Verify data was inserted directly in MongoDB"""
+        print(f"\n🔍 VERIFYING DATABASE DIRECTLY...")
+        
+        try:
+            # Check investments
+            investments = list(self.db.investments.find({"client_id": "client_003"}))
+            print(f"   Investments in DB: {len(investments)}")
+            
+            for inv in investments:
+                fund_code = inv.get('fund_code')
+                amount = inv.get('principal_amount')
+                inv_id = inv.get('investment_id')
+                print(f"     - {fund_code}: ${amount:,.2f} (ID: {inv_id})")
+            
+            # Check MT5 accounts
+            mt5_accounts = list(self.db.mt5_accounts.find({"client_id": "client_003"}))
+            print(f"   MT5 accounts in DB: {len(mt5_accounts)}")
+            
+            for acc in mt5_accounts:
+                broker = acc.get('broker')
+                login = acc.get('login')
+                equity = acc.get('current_equity')
+                print(f"     - {broker}: Login {login} - ${equity:,.2f}")
+            
+            # Check clients
+            clients = list(self.db.clients.find({"id": "client_003"}))
+            print(f"   Client records in DB: {len(clients)}")
+            
+            if clients:
+                client = clients[0]
+                print(f"     - Name: {client.get('name')}")
+                print(f"     - Email: {client.get('email')}")
+            
+            return len(investments) == 2 and len(mt5_accounts) == 2
+            
+        except Exception as e:
+            print(f"   ❌ Database verification failed: {str(e)}")
+            return False
+
     def test_admin_login(self):
         """Test admin login for verification"""
         success, response = self.run_test(
