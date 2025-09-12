@@ -345,11 +345,17 @@ class SalvadorProductionRestorationTester:
         """Verify Salvador appears in fund performance dashboard"""
         print(f"\n🔍 VERIFYING FUND PERFORMANCE DASHBOARD...")
         
+        # Use admin token for authentication
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_user and 'token' in self.admin_user:
+            headers['Authorization'] = f"Bearer {self.admin_user['token']}"
+        
         success, response = self.run_test(
             "Get Fund Performance Dashboard",
             "GET",
             "api/admin/fund-performance/dashboard",
-            200
+            200,
+            headers=headers
         )
         
         if success:
