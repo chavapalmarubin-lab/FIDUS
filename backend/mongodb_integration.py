@@ -18,7 +18,7 @@ class MongoDBManager:
     def __init__(self):
         try:
             self.client = MongoClient(MONGO_URL)
-            self.db_name = MONGO_URL.split('/')[-1]
+            self.db_name = DB_NAME  
             self.db = self.client[self.db_name]
             
             # Test connection
