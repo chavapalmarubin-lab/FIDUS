@@ -560,6 +560,7 @@ class SalvadorProductionRestorationTester:
         print(f"✅ VERIFYING DATA RESTORATION")
         print(f"-"*60)
         
+        database_verified = self.verify_database_directly()
         client_exists = self.verify_salvador_client_exists()
         investments_verified = self.verify_salvador_investments()
         mt5_accounts_verified = self.verify_salvador_mt5_accounts()
