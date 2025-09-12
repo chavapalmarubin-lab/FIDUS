@@ -611,7 +611,7 @@ class ProductionDatabaseInvestigator:
             else:
                 print("   ❌ BOTH environments are empty - system-wide data issue")
                 print("   🔍 ROOT CAUSE: Database restoration may have failed in both environments")
-        elif prod_clients > 0 but prod_investments == 0:
+        elif prod_clients > 0 and prod_investments == 0:
             print("   ❌ PARTIAL DATA: Production has clients but no investments")
             print("   🔍 ROOT CAUSE: Investment data not properly synced to production database")
         else:
