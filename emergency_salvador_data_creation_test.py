@@ -287,20 +287,22 @@ class EmergencySalvadorDataCreation:
         # DooTechnology MT5 Account
         doo_account_data = {
             "client_id": self.salvador_client_id,
-            "login": "9928326",
-            "broker": "DooTechnology",
-            "server": "Multibank-Live",
-            "investment_id": self.balance_investment_id,
+            "fund_code": "BALANCE",
+            "broker_code": "multibank",
+            "mt5_login": "9928326",
+            "mt5_password": "Salvador123!",
+            "mt5_server": "Multibank-Live",
             "allocated_amount": 1263485.40
         }
         
         # VT Markets MT5 Account
         vt_account_data = {
             "client_id": self.salvador_client_id,
-            "login": "15759667",
-            "broker": "VT Markets",
-            "server": "VTMarkets-PAMM",
-            "investment_id": self.core_investment_id,
+            "fund_code": "CORE", 
+            "broker_code": "vtmarkets",
+            "mt5_login": "15759667",
+            "mt5_password": "Salvador123!",
+            "mt5_server": "VTMarkets-PAMM",
             "allocated_amount": 4000.00
         }
         
