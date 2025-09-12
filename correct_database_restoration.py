@@ -174,7 +174,7 @@ class CorrectDatabaseRestoration:
                 "principal_amount": 4000.00,
                 "current_value": 4000.00,
                 "deposit_date": datetime.fromisoformat("2025-04-01T00:00:00+00:00"),
-                "status": "ACTIVE",
+                "status": "active",
                 "created_at": datetime.utcnow()
             }
             
