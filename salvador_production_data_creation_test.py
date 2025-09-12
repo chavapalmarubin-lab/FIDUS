@@ -243,13 +243,14 @@ class SalvadorProductionDataCreator:
             mt5_data = {
                 "client_id": "client_003",
                 "login": "9928326",
-                "broker": "DooTechnology",
+                "password": "TempPassword123!",
                 "server": "DooTechnology-Live",
-                "investment_id": getattr(self, 'balance_investment_id', 'BALANCE_INVESTMENT_ID')
+                "broker_code": "dootechnology",
+                "investment_ids": [getattr(self, 'balance_investment_id', 'BALANCE_INVESTMENT_ID')]
             }
             
             response = self.session.post(
-                f"{self.base_url}/admin/mt5/accounts",
+                f"{self.base_url}/mt5/admin/add-manual-account",
                 headers={"Content-Type": "application/json"},
                 json=mt5_data,
                 timeout=30
