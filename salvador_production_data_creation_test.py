@@ -287,13 +287,14 @@ class SalvadorProductionDataCreator:
             mt5_data = {
                 "client_id": "client_003",
                 "login": "15759667",
-                "broker": "VT Markets",
+                "password": "TempPassword123!",
                 "server": "VTMarkets-PAMM",
-                "investment_id": getattr(self, 'core_investment_id', 'CORE_INVESTMENT_ID')
+                "broker_code": "vtmarkets",
+                "investment_ids": [getattr(self, 'core_investment_id', 'CORE_INVESTMENT_ID')]
             }
             
             response = self.session.post(
-                f"{self.base_url}/admin/mt5/accounts",
+                f"{self.base_url}/mt5/admin/add-manual-account",
                 headers={"Content-Type": "application/json"},
                 json=mt5_data,
                 timeout=30
