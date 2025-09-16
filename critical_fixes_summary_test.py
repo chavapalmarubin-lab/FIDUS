@@ -26,7 +26,7 @@ import time
 import io
 
 # Configuration
-BACKEND_URL = "https://fidus-invest.preview.emergentagent.com/api"
+BACKEND_URL = "https://aml-kyc-portal.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

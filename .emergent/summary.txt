@@ -1,32 +1,33 @@
 <analysis>
-The previous AI engineer’s work has largely focused on enhancing the FIDUS investment management platform, addressing both new feature requests and critical bug fixes. Key achievements include the integration of MT5 account mapping into the investment creation workflow, a comprehensive crypto wallet system for clients and admins, and significant refactoring of financial calculations in the Cash Flow Management dashboard to accurately reflect MT5 performance and fund incubation periods. An MT5 investment validation process was also implemented to ensure data integrity.
-
-A recurring theme in the trajectory was persistent data integrity issues, particularly accidental test data contamination, leading to multiple cleanup operations. The engineer also tackled inconsistencies in MT5 data display and the CRM dashboard. The trajectory concludes with a critical unresolved issue: despite numerous attempts and a restoration, the  API endpoint in  is still failing to retrieve Salvador Palma's investments, indicating a lingering problem with date parsing and retrieval logic that the engineer was actively debugging at the very end.
+The AI engineer's work evolved through several distinct phases. Initially, it involved summarizing prior enhancements to the FIDUS platform, including MT5 account mapping, crypto wallet system, and cash flow calculation refactoring. The first explicit user request in this trajectory was to update documentation, which was completed with version v2.0.0. This was followed by an immediate deployment request, which uncovered critical production data and configuration issues related to Salvador Palma's investments and MT5 accounts, leading to extensive debugging of database access, environment variables, and API integration. After resolving these, the focus shifted entirely to building a comprehensive client/prospect/lead onboarding system with AML/KYC checks and a pipeline. The trajectory concludes with debugging a persistent Convert button visibility issue for a prospect (Lilian Limon Leite), attributed to data inconsistency in the production database.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is an investment management platform for client/admin roles, supporting AML/KYC, CRM, fund allocation (CORE, BALANCE, DYNAMIC, UNLIMITED), automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
+The FIDUS financial portal is an investment management platform supporting client/admin roles, AML/KYC, CRM, fund allocation, automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
 
-Key requirements and implemented/addressed features include:
-1.  **Fund Performance vs MT5 Reality Management System:** Admin dashboard compares client fund commitments against real MT5 returns, correctly using total MT5 performance (profit + withdrawals) and accounting for incubation periods in client obligations.
-2.  **Client Dashboard:** Displays correct individual fund balances and updated branding.
-3.  **MT5 Account Mapping in Investment Creation:** Ability to input MT5 login details during client investment creation, with secure credential storage.
-4.  **Comprehensive Crypto Wallet System:** New client Wallet tab for managing personal crypto/fiat payment instructions and viewing FIDUS official deposit addresses (USDT, USDC, Bitcoin, Ethereum). Includes backend CRUD APIs for client and admin access.
-5.  **Cash Flow Management:** Refactored calculations to align with proper fund accounting, using actual MT5 trading profits and accurate client interest obligations after incubation. Manual lot-based rebate entry is supported.
-6.  **CRM Dashboard:** Trading Monitor and Fund Management tabs now display real client MT5 data and calculated metrics, eliminating mock data and resolving broker name inconsistencies.
-7.  **Investment Validation Process:** Investments require proper MT5 mapping, historical data retrieval, and start date identification, transitioning through various  statuses before  and . Admin approval is required.
+**Implemented/Addressed Features:**
+1.  **Fund Performance vs MT5 Reality Management System:** Admin dashboard compares client fund commitments against real MT5 returns, accounting for incubation periods.
+2.  **Client Dashboard:** Displays individual fund balances and updated branding.
+3.  **MT5 Account Mapping in Investment Creation:** Allows input of MT5 login details during investment creation with secure storage.
+4.  **Comprehensive Crypto Wallet System:** Client Wallet tab for managing personal crypto/fiat payment instructions and viewing FIDUS official deposit addresses. Backend CRUD APIs for wallet management.
+5.  **Cash Flow Management:** Refactored calculations using actual MT5 trading profits and accurate client interest obligations after incubation, supporting manual lot-based rebate entry.
+6.  **CRM Dashboard:** Trading Monitor and Fund Management tabs display real client MT5 data and calculated metrics, resolving mock data and broker inconsistencies.
+7.  **Investment Validation Process:** Investments require MT5 mapping, historical data, and start date identification, progressing through PENDING statuses to VALIDATED, ACTIVE/INCUBATING with admin approval.
 8.  **Data Integrity Safeguards:** Implemented validation to prevent test data contamination.
+9.  **Lead/Client Onboarding (New Feature):** Comprehensive workflow including a public signup form, lead stages (Lead, Qualified, Proposal, Negotiation, Won, Lost), OFAC AML/KYC checks, document management, and conversion of 'Won' prospects to clients, visible in the admin CRM.
+10. **Client Detail View (New Feature):** Admin ability to view all client documents, history, and logs from the Client Management section.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI with components for dashboards and forms.
--   **FastAPI**: Python backend for API routes, business logic, JWT authentication.
--   **MongoDB**: Persistent NoSQL data storage.
--   **JWT Authentication**: Token-based security.
--   **MetaTrader 5 (MT5)**: Integration for real-time trading data (simulated and real).
--   **Pydantic**: Data validation and serialization in FastAPI.
+-   **React.js**: Frontend UI, components for dashboards, forms, and client views.
+-   **FastAPI**: Python backend for API routes, business logic, and authentication.
+-   **MongoDB**: Persistent NoSQL data storage for all application data.
+-   **JWT Authentication**: Token-based security for backend API access.
+-   **MetaTrader 5 (MT5)**: Integration for real-time trading data and account management.
+-   **Pydantic**: Data validation and serialization in FastAPI models.
 -   **Fernet**: Symmetric encryption for secure credential storage.
 -   ****: For timezone-aware date/time handling.
+-   **Axios**: HTTP client for frontend API calls.
 </key_technical_concepts>
 
 <code_architecture>
@@ -34,54 +35,67 @@ Key requirements and implemented/addressed features include:
 
 -   ****:
     -   **Importance**: Central API routing, business logic, and data processing.
-    -   **Changes**: Updated  model and  endpoint for MT5 mapping, added wallet management endpoints (CRUD for client and FIDUS wallets), rewrote cash flow calculations for MT5 performance and incubation, fixed CRM dashboard endpoints to use real data, added investment validation/approval endpoints, implemented test client safeguards, fixed timezone/date parsing.
+    -   **Changes**: AML/KYC endpoints, enhanced prospect conversion (CRM endpoints to use MongoDB for persistence),  fixes for  calls, new endpoints for client details (documents, history, logs, investments). Database connection standardized to . Authentication middleware updated to exclude public CRM endpoints.
 -   ****:
-    -   **Importance**: Manages all interactions with the MongoDB database.
-    -   **Changes**: Added methods for MT5 account retrieval (), creation (), and updates (, ). Modified  for pending status. Updated schema validation for investment statuses. Fixed date parsing and  errors in  (multiple attempts, including a rewrite). Includes methods for cleaning up duplicate investments.
+    -   **Importance**: Manages interactions with MongoDB.
+    -   **Changes**: Date parsing fixes for . Updated to support  for consistent database access. Methods for , , .
 -   ****:
-    -   **Importance**: Provides services for MetaTrader 5 account interactions.
-    -   **Changes**: Added methods for creating MT5 accounts with credentials, retrieving client-specific MT5 accounts (), and historical data (). Enhanced PAMM historical data retrieval and broker detection logic.
--   ****:
-    -   **Importance**: Frontend component for administrators to create new client investments.
-    -   **Changes**: Modified to include input fields for MT5 account mapping details in the investment creation form and updated to send this data to the backend. Form reset logic was also updated.
--   ****:
-    -   **Importance**: Main user interface for clients.
-    -   **Changes**: Updated layout to accommodate and integrate a new Wallet tab.
+    -   **Importance**: MT5 account interactions.
+    -   **Changes**: Removed  from  as it's a synchronous function.
 -   ** (NEW)**:
-    -   **Importance**: New frontend component for clients to manage payment instructions.
-    -   **Changes**: Created to display FIDUS official wallet addresses, allow clients to add/manage personal fiat/crypto wallets, and show QR codes.
+    -   **Importance**: Provides AML/KYC compliance checks.
+    -   **Changes**: Created to encapsulate OFAC sanctions screening, document verification, risk assessment, and compliance note generation.
 -   ****:
-    -   **Importance**: Admin interface for CRM functionalities, client, and trading information.
-    -   **Changes**: Updated API calls to backend endpoints (, ) to fetch real MT5 and investment data, eliminating static mock data.
+    -   **Importance**: Stores environment variables for frontend.
+    -   **Changes**:  fixed to point to the actual production backend URL instead of the preview URL.
 -   ****:
-    -   **Importance**: Frontend display for MT5 account mappings and detailed activity for administrators.
-    -   **Changes**: Fixed API endpoint calls to use the correct backend routes ( and ) to resolve MT5 view details error.
+    -   **Importance**: Frontend display for application documentation.
+    -   **Changes**: Updated to reflect v2.0.0, included links to updated documentation, and a new section for system documentation/version.
+-   ****:
+    -   **Importance**: Entry point for user login/registration.
+    -   **Changes**: Modified to use  for First Time Users - Create Account instead of .
 -   ** (NEW)**:
-    -   **Importance**: Utility script for emergency removal of test-generated database entries.
-    -   **Changes**: Created to specifically delete fake  investments and associated MT5 accounts.
+    -   **Importance**: New public-facing multi-step form for prospect registration.
+    -   **Changes**: Created to capture personal information, document uploads, and investment interests, creating prospects in the CRM.
+-   ****:
+    -   **Importance**: Admin interface for managing leads/prospects through a pipeline.
+    -   **Changes**: Enhanced  with AML/KYC integration, updated  to show AML/KYC status and action buttons, improved button styling and error handling for stage progression. Added Complete KYC Process button to document modal. Fixed styling of stage progression buttons.
+-   ****:
+    -   **Importance**: Admin interface for managing existing clients.
+    -   **Changes**: Added a View Details button to each client entry, integrating with the new  component. Fixed tab styling.
 -   ** (NEW)**:
-    -   **Importance**: Daily summary of critical work and system status for production readiness.
-    -   **Changes**: Created to document the comprehensive work done, including bug fixes and new features, on a specific date.
+    -   **Importance**: New frontend component for displaying detailed client information.
+    -   **Changes**: Created to show client profile, documents, investment history, and logs.
+-   ****:
+    -   **Importance**: Frontend display for MT5 account mappings.
+    -   **Changes**: UI enhancements to show more detailed MT5 account information.
+-   ** (NEW)**:
+    -   **Importance**: Reusable UI component for tab navigation.
+    -   **Changes**: Created to provide standardized tab functionality.
+-   **, , **:
+    -   **Importance**: Core documentation files.
+    -   **Changes**: Updated to reflect v2.0.0 with the latest features and fixes.
+-   ** (NEW)**:
+    -   **Importance**: Comprehensive status reference document.
+    -   **Changes**: Created to summarize system status.
+-   ****:
+    -   **Importance**: Backend environment variables.
+    -   **Changes**:  set to  for consistency across services.
 </code_architecture>
 
 <pending_tasks>
--   Complete the integration of the  component with real data and visualizations.
--   Implement the actual MetaTrader5 package integration in  for direct real MT5 API connection.
--   Automate rebate tracking based on trading volume via an API, rather than manual lot-based entry.
--   **CRITICAL**: Debug and fix the  method in  which is currently failing to retrieve Salvador Palma's investments.
+- Complete the integration of the  component with real data and visualizations.
+- Implement the actual MetaTrader5 package integration in .
+- Automate rebate tracking based on trading volume via an API.
+- Debug and fix the Convert button visibility for prospects in the CRM.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer was troubleshooting a critical and persistent bug where the  endpoint was returning zero investments for Salvador Palma. This issue surfaced despite earlier successful investment creation and verification.
+Immediately before this summary, the AI engineer was actively troubleshooting a persistent issue where the Convert button for a prospect in the Won stage was not visible in the CRM Dashboard's Pipeline tab. This was for Lilian Limon Leite, who had completed AML/KYC checks.
 
-The investigation revealed:
-1.  A DEVASTATING DISCOVERY that Salvador Palma had zero investments in the database, leading to an **emergency restoration** of his two legitimate investments (BALANCE and CORE funds).
-2.  The persistence of duplicate investments, which were subsequently identified and **cleaned up** from the database.
-3.  Recurring **date format and timezone comparison errors** () within the  method in . The code struggled with correctly parsing and comparing date strings and datetime objects, leading to retrieval failures.
-
-The engineer made multiple attempts to fix these date handling issues, including modifying the parsing logic to handle stringified dates and addressing  comparisons. The very last action taken in the trajectory was a **rewrite of a problematic section within the  method** in  to resolve the persistent  error. However, the trajectory concludes immediately after this rewrite, without a successful verification that the method now correctly retrieves Salvador Palma's investments. Therefore, the core problem of the API returning zero investments is the immediate context.
+The investigation revealed that Lilian's prospect data was in an inconsistent state in the production database: , , and critically, . The system requires , , and  for the Convert button to appear. The root cause was identified as Lilian being incorrectly marked as converted to a client, while the actual client record did not exist, leading to a logical mismatch preventing the button's display. The AI engineer was preparing to fix this data inconsistency directly in the production database.
 </current_work>
 
 <optional_next_step>
-Debug and verify that the  method in  correctly retrieves Salvador Palma's investments.
+Fix the data inconsistency for Lilian Limon Leite in the production database to enable the Convert button.
 </optional_next_step>

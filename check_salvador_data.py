@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://fidus-invest.preview.emergentagent.com'
+base_url = 'https://aml-kyc-portal.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={
