@@ -195,7 +195,7 @@ class LilianProductionFixTest:
                 "send_agreement": False  # Don't send email during fix
             }
             
-            response = self.session.post(f"{PRODUCTION_URL}/crm/prospects/convert", json=conversion_data)
+            response = self.session.post(f"{PRODUCTION_URL}/crm/prospects/{self.lilian_prospect_id}/convert", json=conversion_data)
             
             if response.status_code == 200:
                 result = response.json()
