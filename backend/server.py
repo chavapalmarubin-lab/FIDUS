@@ -7091,6 +7091,18 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
         # Add to MOCK_USERS
         MOCK_USERS[username] = new_client
         
+        # Also add to MongoDB users collection for persistence
+        try:
+            mongodb_client_data = new_client.copy()
+            mongodb_client_data['user_id'] = client_id
+            mongodb_client_data['user_type'] = 'client'
+            mongodb_client_data['username'] = username
+            await db.users.insert_one(mongodb_client_data)
+            logging.info(f"Client {client_id} added to MongoDB users collection")
+        except Exception as mongo_error:
+            logging.error(f"Failed to add client to MongoDB: {str(mongo_error)}")
+            # Continue anyway - client is still in MOCK_USERS
+        
         # Generate AML/KYC approval document
         approval_document_path = None
         if prospect_data.get('aml_kyc_result_id'):
