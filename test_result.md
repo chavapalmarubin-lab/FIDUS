@@ -1160,8 +1160,8 @@ test_plan:
     - "CRM Lead Management System Validation"
     - "End-to-End Prospect to Client Conversion"
   stuck_tasks: 
+    - "Lilian Limon Leite AML/KYC Button Investigation and Fix"
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
-    - "Prospect Pipeline Stage Progression Backend Fix - Data Synchronization Issue"
   test_all: false
   test_priority: "workflow_validation_first"
   redemption_system_testing: "completed"
