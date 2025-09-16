@@ -30,7 +30,7 @@ export const Tabs = ({ defaultValue, value, onValueChange, className = "", child
 export const TabsList = ({ className = "", children, ...props }) => {
   return (
     <div 
-      className={`inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground ${className}`} 
+      className={`inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-600 ${className}`} 
       {...props}
     >
       {children}
