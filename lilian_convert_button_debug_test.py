@@ -421,6 +421,7 @@ class LilianConvertButtonDebugTest:
             
             # Test the convert endpoint
             response = self.session.post(f"{BACKEND_URL}/crm/prospects/{lilian_id}/convert", json={
+                "prospect_id": lilian_id,
                 "send_agreement": True
             })
             
