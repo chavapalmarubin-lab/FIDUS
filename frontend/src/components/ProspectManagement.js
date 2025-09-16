@@ -654,7 +654,7 @@ const ProspectManagement = () => {
               </div>
 
               {/* Stage progression buttons */}
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-2 flex-wrap mt-2">
                 {Object.keys(STAGE_CONFIG).map(nextStage => {
                   if (nextStage === stage) return null;
                   const nextConfig = STAGE_CONFIG[nextStage];
@@ -663,9 +663,10 @@ const ProspectManagement = () => {
                     <Button
                       key={nextStage}
                       size="sm"
-                      variant="outline"
+                      variant="default"
                       onClick={() => handleStageChange(prospect.id, nextStage)}
-                      className="text-xs h-6 px-2"
+                      disabled={loading}
+                      className={`text-xs h-7 px-3 font-medium transition-all ${nextConfig.bgColor} ${nextConfig.textColor} hover:scale-105 hover:shadow-md border-0`}
                     >
                       {nextConfig.label}
                     </Button>
