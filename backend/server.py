@@ -3802,20 +3802,47 @@ async def create_new_user(user_data: UserCreate):
 # Document Management Endpoints for CRM Prospects
 @api_router.get("/crm/prospects/{prospect_id}/documents")
 async def get_prospect_documents(prospect_id: str):
-    """Get all documents for a specific prospect"""
+    """Get all documents for a prospect - FIXED to use MongoDB for persistence"""
     try:
-        # Mock document storage - in production, use proper database
-        if prospect_id not in prospect_documents:
-            prospect_documents[prospect_id] = []
+        # Check if prospect exists in MongoDB
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        if not prospect_doc:
+            raise HTTPException(status_code=404, detail="Prospect not found")
         
-        documents = prospect_documents[prospect_id]
+        # Get documents from MongoDB
+        documents_cursor = db.prospect_documents.find({"prospect_id": prospect_id})
+        documents = await documents_cursor.to_list(length=None)
+        
+        # Convert MongoDB documents to clean format
+        clean_documents = []
+        for doc in documents:
+            clean_doc = {
+                "document_id": doc.get("document_id"),
+                "prospect_id": doc.get("prospect_id"),
+                "file_name": doc.get("file_name"),
+                "document_type": doc.get("document_type"),
+                "file_size": doc.get("file_size"),
+                "content_type": doc.get("content_type"),
+                "notes": doc.get("notes", ""),
+                "uploaded_at": doc.get("uploaded_at"),
+                "verification_status": doc.get("verification_status", "pending"),
+                "file_path": doc.get("file_path")
+            }
+            clean_documents.append(clean_doc)
+        
+        # Also update in-memory storage for backwards compatibility
+        prospect_documents[prospect_id] = clean_documents
+        
+        logging.info(f"Retrieved {len(clean_documents)} documents for prospect {prospect_id} from MongoDB")
         
         return {
             "success": True,
-            "documents": documents,
-            "total_documents": len(documents)
+            "documents": clean_documents,
+            "total_documents": len(clean_documents)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Get prospect documents error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch prospect documents")
