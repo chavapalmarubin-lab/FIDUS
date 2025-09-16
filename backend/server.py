@@ -4738,7 +4738,7 @@ ADMIN_ONLY_DOCUMENT_CATEGORIES = [
 
 # In-memory CRM prospect storage (in production, use proper database)
 prospects_storage = {}
-prospect_documents_storage = {}  # {prospect_id: [document_data]}
+# NOTE: prospect_documents_storage removed - now using MongoDB for persistence
 
 # In-memory prospect document storage (in production, use proper database)
 prospect_documents = {}  # {prospect_id: [document_records]}
