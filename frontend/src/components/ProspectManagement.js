@@ -1275,6 +1275,60 @@ const ProspectManagement = () => {
                   </CardContent>
                 </Card>
               )}
+              
+              {/* KYC Completion Action - Show when all required documents are approved */}
+              {(() => {
+                const requiredDocs = Object.entries(KYC_DOCUMENT_TYPES).filter(([key, config]) => config.required);
+                const allRequiredApproved = requiredDocs.every(([docType]) => 
+                  getDocumentStatus(selectedProspectForDocs.id, docType) === 'approved'
+                );
+                
+                if (allRequiredApproved && requiredDocs.length > 0) {
+                  return (
+                    <Card className="mt-6 bg-green-50 border-green-200">
+                      <CardContent className="p-6">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center mb-4">
+                            <div className="bg-green-100 p-3 rounded-full">
+                              <CheckCircle className="h-8 w-8 text-green-600" />
+                            </div>
+                          </div>
+                          <h3 className="text-lg font-semibold text-green-800 mb-2">
+                            KYC Documentation Complete!
+                          </h3>
+                          <p className="text-sm text-green-700 mb-4">
+                            All required documents have been approved. You can now proceed with the client conversion process.
+                          </p>
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              onClick={() => {
+                                setShowDocumentModal(false);
+                                setSelectedProspectForDocs(null);
+                                setSuccess("KYC documentation completed successfully! You can now run AML/KYC check and convert to client.");
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle size={16} className="mr-2" />
+                              Complete KYC Process
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowDocumentModal(false);
+                                setSelectedProspectForDocs(null);
+                              }}
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                            >
+                              Close
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
             </motion.div>
           </motion.div>
         )}
