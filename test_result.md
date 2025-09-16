@@ -1138,13 +1138,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive Lead Onboarding to Client Conversion Workflow"
+    - "Prospect Pipeline Stage Progression Backend Fix - Data Synchronization Issue"
+    - "Production Salvador Palma Data Verification After Frontend URL Fix"
     - "CRM Lead Management System Validation"
-    - "AML/KYC Integration Testing"
     - "End-to-End Prospect to Client Conversion"
-    - "Workflow Enforcement and Business Rules"
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
+    - "Prospect Pipeline Stage Progression Backend Fix - Data Synchronization Issue"
   test_all: false
   test_priority: "workflow_validation_first"
   redemption_system_testing: "completed"
