@@ -6867,10 +6867,17 @@ async def create_prospect(prospect_data: ProspectCreate):
 async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
     """Update an existing prospect"""
     try:
-        if prospect_id not in prospects_storage:
+        # Try to find prospect in MongoDB first
+        prospect_data = await db.crm_prospects.find_one({"id": prospect_id})
+        if prospect_data:
+            # Remove MongoDB _id
+            if '_id' in prospect_data:
+                del prospect_data['_id']
+        elif prospect_id in prospects_storage:
+            # Fallback to in-memory storage
+            prospect_data = prospects_storage[prospect_id].copy()
+        else:
             raise HTTPException(status_code=404, detail="Prospect not found")
-        
-        prospect_data = prospects_storage[prospect_id].copy()
         
         # Update provided fields
         if update_data.name is not None:
