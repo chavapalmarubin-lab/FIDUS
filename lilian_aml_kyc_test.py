@@ -126,10 +126,19 @@ class LilianAMLKYCInvestigationTest:
                         return True
                 
                 if not lilian_found:
+                    # Show existing prospects for debugging
+                    prospect_names = []
+                    for p in prospects[:10]:
+                        if isinstance(p, dict):
+                            prospect_names.append(p.get('name', 'Unknown'))
+                        else:
+                            prospect_names.append(str(p))
+                    
                     self.log_result("Find Lilian Prospect", False, 
                                   "Lilian Limon Leite not found in prospects database",
                                   {"total_prospects": len(prospects), 
-                                   "prospect_names": [p.get('name', 'Unknown') for p in prospects[:10]]})
+                                   "prospect_names": prospect_names,
+                                   "raw_response": prospects_data})
                     return False
                     
             else:
