@@ -10419,7 +10419,7 @@ PROTECTED_ENDPOINTS = [
     "/api/investments/admin/",
     "/api/documents/admin/",
     "/api/mt5/admin/",
-    "/api/crm/",
+    "/api/crm/prospects/convert",  # Only protect prospect conversion (admin-only)
     "/api/fund-configurations/",
     "/api/payment-confirmations/"
 ]
@@ -10431,9 +10431,16 @@ ADMIN_ONLY_ENDPOINTS = [
     "/api/investments/admin/",
     "/api/documents/admin/",
     "/api/mt5/admin/",
-    "/api/crm/",
+    "/api/crm/prospects/convert",  # Only protect prospect conversion (admin-only)
     "/api/fund-configurations/",
     "/api/payment-confirmations/"
+]
+
+# Public CRM endpoints for lead registration (no authentication required)
+PUBLIC_CRM_ENDPOINTS = [
+    "/api/crm/prospects",  # POST - create prospect (public)
+    "/api/crm/prospects/{prospect_id}/documents",  # POST - upload documents (public)
+    "/api/crm/prospects/{prospect_id}/aml-kyc"  # POST - run AML/KYC check (public)
 ]
 
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
