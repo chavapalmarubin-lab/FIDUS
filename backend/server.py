@@ -7103,11 +7103,21 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             except Exception as doc_error:
                 logging.error(f"Failed to generate AML approval document: {str(doc_error)}")
         
-        # Update prospect as converted
-        prospect_data['converted_to_client'] = True
-        prospect_data['client_id'] = client_id
-        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-        prospects_storage[prospect_id] = prospect_data
+        # Update prospect as converted in MongoDB
+        conversion_update = {
+            'converted_to_client': True,
+            'client_id': client_id,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.crm_prospects.update_one(
+            {"id": prospect_id},
+            {"$set": conversion_update}
+        )
+        
+        # Also update memory storage if it exists (for backwards compatibility)
+        if prospect_id in prospects_storage:
+            prospects_storage[prospect_id].update(conversion_update)
         
         # Send FIDUS agreement if requested
         agreement_sent = False
