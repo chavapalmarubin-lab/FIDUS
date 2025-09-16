@@ -40,6 +40,7 @@ const ClientManagement = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailView, setShowDetailView] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
