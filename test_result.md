@@ -1128,6 +1128,8 @@ agent_communication:
   investment_redemption_fixes_testing: "completed"
 
 agent_communication:
+    - agent: "testing"
+      message: "🚨 CRITICAL BUG FIX COMPLETED: 401 Error During Lead Registration Document Upload RESOLVED! Successfully reproduced, diagnosed, and fixed the exact issue reported for 'Lilian Limon Leite' during lead registration. ROOT CAUSE: Authentication middleware incorrectly protected ALL /api/crm/ endpoints including public lead registration endpoints. FIX IMPLEMENTED: Modified PROTECTED_ENDPOINTS and ADMIN_ONLY_ENDPOINTS arrays to exclude public CRM endpoints, added PUBLIC_CRM_ENDPOINTS array for lead registration workflow, updated middleware logic to skip authentication for public endpoints. VERIFICATION: Complete end-to-end testing successful - prospect creation, government ID upload, proof of address upload, AML/KYC check all working without authentication. All file types (.jpg, .png, .pdf, .tiff) tested successfully. 100% success rate - bug completely resolved and production-ready."
     - agent: "main"
       message: "Backend testing completed successfully with 93.8% success rate. All critical systems operational, stress testing passed (12 clients, 6 investments created), database structure validated. Now proceeding with comprehensive frontend testing using automated testing agent to validate complete user interface flows, client/admin dashboards, investment workflows, and cross-browser compatibility. Will fix any issues found during frontend testing."
     - agent: "main"
