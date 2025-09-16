@@ -6843,8 +6843,13 @@ async def create_prospect(prospect_data: ProspectCreate):
             stage="lead"
         )
         
-        # Store in memory (MongoDB schema validation issues - will fix separately)
+        # Store in MongoDB for consistency with other endpoints
         prospect_dict = prospect.dict()
+        
+        # Add to MongoDB
+        await db.crm_prospects.insert_one(prospect_dict)
+        
+        # Also store in memory for backwards compatibility
         prospects_storage[prospect.id] = prospect_dict
         
         logging.info(f"Prospect created: {prospect.name} ({prospect.email})")
