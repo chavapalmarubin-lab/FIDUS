@@ -36,6 +36,9 @@ from time import time
 # MongoDB Integration
 from mongodb_integration import mongodb_manager
 
+# AML/KYC Service Integration
+from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
+
 # Gmail API imports
 import pickle
 from google.auth.transport.requests import Request as GoogleRequest
