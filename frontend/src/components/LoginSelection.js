@@ -220,11 +220,14 @@ const LoginSelection = ({ onLogin }) => {
                 </motion.div>
               </div>
             ) : selectedType === "register" ? (
-              <ClientOnboarding 
+              <LeadRegistrationForm 
                 onBack={() => setSelectedType(null)}
                 onComplete={(userData) => {
-                  // After successful registration, automatically log them in
-                  onLogin(userData);
+                  // After successful lead registration, show success message
+                  setSuccess(`Thank you for your interest, ${userData.name}! We will contact you within 24 hours to discuss your investment opportunities.`);
+                  setTimeout(() => {
+                    setSelectedType(null);
+                  }, 5000);
                 }}
               />
             ) : selectedType === "forgot_password" ? (
