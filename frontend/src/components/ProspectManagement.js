@@ -232,17 +232,29 @@ const ProspectManagement = () => {
 
   const handleStageChange = async (prospectId, newStage) => {
     try {
+      setLoading(true);
+      console.log(`Updating prospect ${prospectId} to stage: ${newStage}`);
+      
       const response = await apiAxios.put(`/crm/prospects/${prospectId}`, {
-        stage: newStage
+        stage: newStage,
+        notes: `Moved to ${newStage} stage on ${new Date().toLocaleDateString()}`
       });
       
+      console.log('Stage update response:', response.data);
+      
       if (response.data.success) {
-        setSuccess(`Prospect moved to ${STAGE_CONFIG[newStage].label} stage`);
-        fetchProspects();
-        fetchPipeline();
+        setSuccess(`✅ Prospect moved to ${STAGE_CONFIG[newStage].label} stage successfully!`);
+        await fetchProspects();
+        await fetchPipeline();
+      } else {
+        setError(`Failed to update prospect stage: ${response.data.message || 'Unknown error'}`);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to update prospect stage");
+      console.error('Stage change error:', err);
+      const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || "Failed to update prospect stage";
+      setError(`❌ Error: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
