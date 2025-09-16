@@ -6775,12 +6775,33 @@ async def get_crm_admin_dashboard():
 async def get_all_prospects():
     """Get all prospects with pipeline information"""
     try:
-        prospects = []
-        for prospect_data in prospects_storage.values():
-            prospects.append(prospect_data)
+        # Get prospects from MongoDB first
+        prospects_cursor = db.crm_prospects.find()
+        prospects = await prospects_cursor.to_list(length=None)
+        
+        # Convert MongoDB _id to string and remove it
+        for prospect in prospects:
+            if '_id' in prospect:
+                del prospect['_id']
+        
+        # Fallback to in-memory storage if MongoDB is empty
+        if not prospects:
+            prospects = list(prospects_storage.values())
         
         # Sort by created_at descending (newest first)
-        prospects.sort(key=lambda x: x['created_at'], reverse=True)
+        def get_sort_key(x):
+            created_at = x.get('created_at')
+            if isinstance(created_at, str):
+                try:
+                    return datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                except:
+                    return datetime.min.replace(tzinfo=timezone.utc)
+            elif isinstance(created_at, datetime):
+                return created_at
+            else:
+                return datetime.min.replace(tzinfo=timezone.utc)
+        
+        prospects.sort(key=get_sort_key, reverse=True)
         
         # Calculate pipeline statistics
         pipeline_stats = {
