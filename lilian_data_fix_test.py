@@ -28,14 +28,14 @@ import sys
 from datetime import datetime
 import time
 
-# Configuration
-BACKEND_URL = "https://fidus-invest.preview.emergentagent.com/api"
+# Configuration - PRODUCTION ENDPOINT as specified in review request
+BACKEND_URL = "https://fidus-invest.emergent.host/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
 # Lilian's prospect ID from review request
-LILIAN_PROSPECT_ID = "65ab697c-6e94-4a3b-8018-12a91022425c"
-INVALID_CLIENT_ID = "client_104e451b"
+LILIAN_PROSPECT_ID = "4de9c592-9b15-4c32-a268-e1f8459878b9"
+INVALID_CLIENT_ID = "client_abd45072"
 
 class LilianDataFixTest:
     def __init__(self):
