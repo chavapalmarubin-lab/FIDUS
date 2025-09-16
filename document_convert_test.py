@@ -97,7 +97,8 @@ class DocumentConvertTest:
         try:
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospects = response.json()
+                data = response.json()
+                prospects = data.get('prospects', []) if isinstance(data, dict) else data
                 
                 for prospect in prospects:
                     if "Lilian" in prospect.get('name', '') and "Limon" in prospect.get('name', ''):
