@@ -7156,7 +7156,7 @@ async def get_prospect_pipeline():
             pipeline[stage].sort(key=get_sort_key, reverse=True)
         
         # Calculate statistics
-        total_prospects = len(prospects_storage)
+        total_prospects = len(prospects_list)
         active_prospects = sum(len(prospects) for stage, prospects in pipeline.items() if stage not in ['won', 'lost'])
         conversion_rate = 0
         if total_prospects > 0:
