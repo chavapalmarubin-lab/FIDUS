@@ -85,15 +85,27 @@ class LilianConvertButtonDebugTest:
             # Get all prospects
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospects = response.json()
+                prospects_data = response.json()
+                
+                # Handle different response formats
+                if isinstance(prospects_data, dict):
+                    prospects = prospects_data.get('prospects', [])
+                elif isinstance(prospects_data, list):
+                    prospects = prospects_data
+                else:
+                    self.log_result("Find Lilian Prospect", False, 
+                                  f"Unexpected response format: {type(prospects_data)}",
+                                  {"response": prospects_data})
+                    return False
                 
                 # Search for Lilian
                 lilian_found = False
                 for prospect in prospects:
-                    name = prospect.get('name', '').upper()
-                    if 'LILIAN' in name and 'LIMON' in name:
-                        lilian_found = True
-                        self.lilian_data = prospect
+                    if isinstance(prospect, dict):
+                        name = prospect.get('name', '').upper()
+                        if 'LILIAN' in name and 'LIMON' in name:
+                            lilian_found = True
+                            self.lilian_data = prospect
                         
                         self.log_result("Find Lilian Prospect", True, 
                                       f"Found Lilian: {prospect.get('name')} (ID: {prospect.get('id')})",
