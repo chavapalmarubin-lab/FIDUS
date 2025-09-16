@@ -1199,16 +1199,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Production Salvador Palma Data Verification After Frontend URL Fix"
-    - "CRM Lead Management System Validation"
-    - "End-to-End Prospect to Client Conversion"
+    - "CRITICAL: Document Upload Persistence Issue - Lilian Limon Leite"
+    - "Prospect Document Storage System Fix"
+    - "MongoDB Integration for Prospect Documents"
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
-  test_priority: "workflow_validation_first"
+  test_priority: "document_persistence_critical"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
-  document_upload_testing: "completed"
+  document_upload_testing: "critical_issue_found"
   modal_ux_testing: "completed"
   fund_portfolio_cashflow_testing: "completed"
   user_reported_issues_testing: "completed"
