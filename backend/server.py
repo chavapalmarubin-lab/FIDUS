@@ -6898,7 +6898,14 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
         # Update timestamp
         prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
         
-        # Save updated data
+        # Save updated data to MongoDB
+        await db.crm_prospects.update_one(
+            {"id": prospect_id},
+            {"$set": prospect_data},
+            upsert=True
+        )
+        
+        # Also save to in-memory storage for backward compatibility
         prospects_storage[prospect_id] = prospect_data
         
         logging.info(f"Prospect updated: {prospect_id}")
