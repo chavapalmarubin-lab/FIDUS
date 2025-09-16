@@ -366,10 +366,13 @@ class LilianConvertButtonDebugTest:
                 convert_blocked = []
                 
                 for prospect in won_prospects:
-                    name = prospect.get('name')
-                    stage = prospect.get('stage')
-                    aml_kyc_status = prospect.get('aml_kyc_status')
-                    converted_to_client = prospect.get('converted_to_client')
+                    if isinstance(prospect, dict):
+                        name = prospect.get('name')
+                        stage = prospect.get('stage')
+                        aml_kyc_status = prospect.get('aml_kyc_status')
+                        converted_to_client = prospect.get('converted_to_client')
+                    else:
+                        continue
                     
                     # Check Convert button conditions
                     if (stage == "won" and 
