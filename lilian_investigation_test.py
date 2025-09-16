@@ -139,7 +139,15 @@ class LilianInvestigationTest:
         try:
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospects = response.json()
+                response_data = response.json()
+                
+                # Handle both direct list and wrapped response formats
+                if isinstance(response_data, dict) and 'prospects' in response_data:
+                    prospects = response_data['prospects']
+                elif isinstance(response_data, list):
+                    prospects = response_data
+                else:
+                    prospects = []
                 
                 if isinstance(prospects, list):
                     # Look for Lilian in prospects
