@@ -487,7 +487,7 @@ class DocumentConvertTest:
         print("\n🔄 Testing End-to-End Workflow...")
         print("-" * 40)
         
-        # Step 1: Ensure Lilian prospect exists
+        # Step 1: Create a fresh test prospect
         prospect = self.create_lilian_prospect_if_needed()
         if not prospect:
             return False
