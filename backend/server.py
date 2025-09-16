@@ -7120,7 +7120,21 @@ async def get_prospect_pipeline():
             "lost": []
         }
         
-        for prospect_data in prospects_storage.values():
+        # Get prospects from MongoDB first
+        prospects_cursor = db.crm_prospects.find()
+        prospects_list = await prospects_cursor.to_list(length=None)
+        
+        # Convert MongoDB _id to string and remove it
+        for prospect in prospects_list:
+            if '_id' in prospect:
+                del prospect['_id']
+        
+        # Fallback to in-memory storage if MongoDB is empty
+        if not prospects_list:
+            prospects_list = list(prospects_storage.values())
+        
+        # Organize prospects by stage
+        for prospect_data in prospects_list:
             stage = prospect_data.get('stage', 'lead')
             if stage in pipeline:
                 pipeline[stage].append(prospect_data)
