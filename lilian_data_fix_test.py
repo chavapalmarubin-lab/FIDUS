@@ -227,7 +227,8 @@ class LilianDataFixTest:
             # Re-fetch Lilian's prospect data
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospects = response.json()
+                data = response.json()
+                prospects = data.get('prospects', []) if isinstance(data, dict) else data
                 
                 if isinstance(prospects, list):
                     for prospect in prospects:
