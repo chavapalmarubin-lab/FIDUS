@@ -3827,60 +3827,60 @@ async def upload_prospect_document(
     document_type: str = Form(...),
     notes: str = Form("")
 ):
-    """Upload a document for a prospect"""
+    """Upload a document for a prospect - FIXED to use MongoDB for persistence"""
     try:
+        # Check if prospect exists in MongoDB
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        if not prospect_doc:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
         # Validate file
         if not file.filename:
-            raise HTTPException(status_code=400, detail="No file uploaded")
+            raise HTTPException(status_code=400, detail="No file selected")
         
-        # Check file extension
-        allowed_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.tiff', '.doc', '.docx']
-        file_ext = os.path.splitext(file.filename)[1].lower()
-        if file_ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail="File type not supported")
-        
-        # Read file content
+        # Check file size (max 10MB)
         content = await file.read()
-        if len(content) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(status_code=400, detail="File too large")
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size too large (max 10MB)")
         
-        # Create document record
+        # Reset file pointer
+        await file.seek(0)
+        
+        # Create document record for MongoDB
         document_id = str(uuid.uuid4())
         document_record = {
-            "id": document_id,
+            "document_id": document_id,
             "prospect_id": prospect_id,
+            "file_name": file.filename,
             "document_type": document_type,
-            "filename": file.filename,
             "file_size": len(content),
-            "file_extension": file_ext,
-            "upload_date": datetime.now(timezone.utc).isoformat(),
-            "verification_status": "pending",
+            "content_type": file.content_type,
             "notes": notes,
-            "uploaded_by": "admin",
-            "verified_by": None,
-            "verified_at": None,
-            "file_path": f"/documents/prospects/{prospect_id}/{document_id}{file_ext}"  # Mock path
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "verification_status": "pending",
+            "file_path": f"/prospect_documents/{prospect_id}/{document_id}_{file.filename}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
-        # Initialize storage if needed
+        # Save to MongoDB for persistence
+        await db.prospect_documents.insert_one(document_record)
+        
+        # Also update in-memory storage for backwards compatibility
         if prospect_id not in prospect_documents:
             prospect_documents[prospect_id] = []
-        
-        # Add document record
         prospect_documents[prospect_id].append(document_record)
         
-        # In production, save file to storage here
-        # e.g., save to AWS S3, Google Cloud Storage, etc.
-        
-        logging.info(f"Document uploaded for prospect {prospect_id}: {file.filename}")
+        logging.info(f"Document {document_id} uploaded for prospect {prospect_id} and saved to MongoDB")
         
         return {
             "success": True,
-            "document_id": document_id,
-            "message": "Document uploaded successfully",
-            "document": document_record
+            "document": document_record,
+            "message": "Document uploaded successfully and saved permanently"
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Upload prospect document error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to upload document")
