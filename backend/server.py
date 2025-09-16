@@ -6862,41 +6862,65 @@ async def create_prospect(prospect_data: ProspectCreate):
 
 @api_router.put("/crm/prospects/{prospect_id}")
 async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
-    """Update an existing prospect"""
+    """Update an existing prospect - FIXED to use MongoDB consistently"""
     try:
-        # Find prospect in memory storage
-        if prospect_id not in prospects_storage:
+        # Find prospect in MongoDB (consistent with GET endpoint)
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        
+        if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
-        prospect_data = prospects_storage[prospect_id].copy()
+        # Prepare update fields
+        update_fields = {}
         
-        # Update provided fields
         if update_data.name is not None:
-            prospect_data['name'] = update_data.name
+            update_fields['name'] = update_data.name
         if update_data.email is not None:
-            prospect_data['email'] = update_data.email
+            update_fields['email'] = update_data.email
         if update_data.phone is not None:
-            prospect_data['phone'] = update_data.phone
+            update_fields['phone'] = update_data.phone
         if update_data.stage is not None:
             # Validate stage
             valid_stages = ["lead", "qualified", "proposal", "negotiation", "won", "lost"]
             if update_data.stage not in valid_stages:
                 raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
-            prospect_data['stage'] = update_data.stage
+            update_fields['stage'] = update_data.stage
         if update_data.notes is not None:
-            prospect_data['notes'] = update_data.notes
+            update_fields['notes'] = update_data.notes
         
-        # Update timestamp
-        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        # Add update timestamp
+        update_fields['updated_at'] = datetime.now(timezone.utc).isoformat()
         
-        # Save updated data to memory storage
-        prospects_storage[prospect_id] = prospect_data
+        # Update in MongoDB
+        result = await db.crm_prospects.update_one(
+            {"id": prospect_id},
+            {"$set": update_fields}
+        )
         
-        logging.info(f"Prospect updated: {prospect_id}")
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No changes made to prospect")
+        
+        # Get updated prospect data
+        updated_prospect = await db.crm_prospects.find_one({"id": prospect_id})
+        
+        # Also update memory storage if it exists (for backwards compatibility)
+        if prospect_id in prospects_storage:
+            prospects_storage[prospect_id].update(update_fields)
+        
+        logging.info(f"Prospect {prospect_id} updated successfully in MongoDB")
         
         return {
             "success": True,
-            "prospect": prospect_data,
+            "prospect": {
+                "id": updated_prospect["id"],
+                "name": updated_prospect["name"],
+                "email": updated_prospect["email"],
+                "phone": updated_prospect.get("phone", ""),
+                "stage": updated_prospect.get("stage", "lead"),
+                "notes": updated_prospect.get("notes", ""),
+                "created_at": updated_prospect.get("created_at", ""),
+                "updated_at": updated_prospect.get("updated_at", "")
+            },
             "message": "Prospect updated successfully"
         }
         
