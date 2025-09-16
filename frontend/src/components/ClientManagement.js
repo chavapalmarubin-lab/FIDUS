@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiAxios from "../utils/apiAxios";
+import ClientDetailView from "./ClientDetailView";
 
 const ClientManagement = () => {
   const [clients, setClients] = useState([]);
