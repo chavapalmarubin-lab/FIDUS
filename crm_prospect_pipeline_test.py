@@ -187,14 +187,28 @@ class CRMProspectPipelineTest:
             # First verify prospect is in "won" stage by getting all prospects and finding ours
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospect_data = response.json()
+                prospects = response.json()
+                prospect_data = None
+                
+                # Find our prospect
+                if isinstance(prospects, list):
+                    for prospect in prospects:
+                        if prospect.get("id") == self.prospect_id:
+                            prospect_data = prospect
+                            break
+                
+                if not prospect_data:
+                    self.log_result("AML/KYC Check", False, 
+                                  f"Prospect {self.prospect_id} not found in prospects list")
+                    return False
+                
                 if prospect_data.get("stage") != "won":
                     self.log_result("AML/KYC Check", False, 
                                   f"Prospect not in 'won' stage: {prospect_data.get('stage')}")
                     return False
             else:
                 self.log_result("AML/KYC Check", False, 
-                              f"Failed to get prospect data: HTTP {response.status_code}")
+                              f"Failed to get prospects list: HTTP {response.status_code}")
                 return False
             
             # Run AML/KYC check
