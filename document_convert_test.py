@@ -348,10 +348,9 @@ class DocumentConvertTest:
     def fix_lilian_status(self):
         """Fix Lilian's status to enable Convert button"""
         try:
-            # Update Lilian to Won stage with clear AML/KYC
+            # Step 1: Update Lilian to Won stage
             update_data = {
                 "stage": "won",
-                "aml_kyc_status": "clear",
                 "converted_to_client": False,
                 "client_id": ""
             }
@@ -360,11 +359,24 @@ class DocumentConvertTest:
                                       json=update_data)
             
             if response.status_code == 200:
-                updated_prospect = response.json()
-                self.log_result("Fix Lilian Status", True, 
-                              "Updated Lilian to Won stage with clear AML/KYC",
-                              {"updated_data": updated_prospect})
-                return True
+                self.log_result("Update Prospect Stage", True, "Updated prospect to Won stage")
+                
+                # Step 2: Run AML/KYC check to set status to clear
+                aml_response = self.session.post(f"{BACKEND_URL}/crm/prospects/{self.lilian_prospect_id}/aml-kyc")
+                
+                if aml_response.status_code == 200:
+                    aml_result = aml_response.json()
+                    aml_status = aml_result.get('aml_result', {}).get('overall_status', 'unknown')
+                    
+                    self.log_result("Fix Lilian Status", True, 
+                                  f"Updated Lilian to Won stage and ran AML/KYC check: {aml_status}",
+                                  {"aml_result": aml_result})
+                    return True
+                else:
+                    self.log_result("AML/KYC Check", False, 
+                                  f"Failed to run AML/KYC check: HTTP {aml_response.status_code}",
+                                  {"response": aml_response.text})
+                    return False
             else:
                 self.log_result("Fix Lilian Status", False, 
                               f"Failed to update prospect: HTTP {response.status_code}",
