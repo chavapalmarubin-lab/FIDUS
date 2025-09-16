@@ -1084,15 +1084,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Production Salvador Palma Data Verification After Frontend URL Fix"
-    - "CRITICAL Production Database Authorization Issues"
-    - "MongoDB Access Permissions in Production Environment"
-    - "API-to-Database Integration Layer Fixes"
-    - "Salvador Data Accessibility via Production API Endpoints"
+    - "Comprehensive Lead Onboarding to Client Conversion Workflow"
+    - "CRM Lead Management System Validation"
+    - "AML/KYC Integration Testing"
+    - "End-to-End Prospect to Client Conversion"
+    - "Workflow Enforcement and Business Rules"
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
-  test_priority: "critical_first"
+  test_priority: "workflow_validation_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "completed"
@@ -1100,6 +1100,7 @@ test_plan:
   fund_portfolio_cashflow_testing: "completed"
   user_reported_issues_testing: "completed"
   mt5_realtime_data_testing: "completed"
+  lead_onboarding_workflow_testing: "completed"
 
 agent_communication:
     - agent: "testing"
