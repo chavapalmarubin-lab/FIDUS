@@ -292,10 +292,22 @@ class DocumentConvertTest:
             return False
         
         try:
-            response = self.session.get(f"{BACKEND_URL}/crm/prospects/{self.lilian_prospect_id}")
+            # Get all prospects and find Lilian
+            response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             
             if response.status_code == 200:
-                prospect = response.json()
+                data = response.json()
+                prospects = data.get('prospects', []) if isinstance(data, dict) else data
+                
+                prospect = None
+                for p in prospects:
+                    if p.get('id') == self.lilian_prospect_id:
+                        prospect = p
+                        break
+                
+                if not prospect:
+                    self.log_result("Lilian Status Check", False, "Lilian prospect not found in prospects list")
+                    return False
                 
                 # Check required status for Convert button
                 stage = prospect.get('stage')
@@ -325,7 +337,7 @@ class DocumentConvertTest:
                     return self.fix_lilian_status()
             else:
                 self.log_result("Lilian Status Check", False, 
-                              f"Failed to get prospect: HTTP {response.status_code}")
+                              f"Failed to get prospects: HTTP {response.status_code}")
                 return False
                 
         except Exception as e:
