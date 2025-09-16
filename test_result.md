@@ -1143,6 +1143,7 @@ test_plan:
   user_reported_issues_testing: "completed"
   mt5_realtime_data_testing: "completed"
   lead_onboarding_workflow_testing: "completed"
+  pipeline_button_improvements_testing: "completed"
 
 agent_communication:
     - agent: "testing"
