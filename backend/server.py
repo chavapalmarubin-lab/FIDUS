@@ -6904,6 +6904,12 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
         prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
         
         # Save updated data to MongoDB
+        # Ensure required fields for MongoDB schema
+        if 'prospect_id' not in prospect_data:
+            prospect_data['prospect_id'] = prospect_data['id']
+        if 'client_id' not in prospect_data or prospect_data['client_id'] is None:
+            prospect_data['client_id'] = ""  # Empty string instead of None
+            
         await db.crm_prospects.update_one(
             {"id": prospect_id},
             {"$set": prospect_data},
