@@ -122,17 +122,13 @@ class DocumentConvertTest:
             return None
     
     def create_lilian_prospect_if_needed(self):
-        """Create Lilian prospect if she doesn't exist"""
+        """Create Lilian prospect if she doesn't exist or create a fresh one for testing"""
         try:
-            # First try to find existing Lilian
-            existing_prospect = self.find_lilian_prospect()
-            if existing_prospect:
-                return existing_prospect
-            
-            # Create new Lilian prospect
+            # Create a fresh test prospect for this test run
+            timestamp = datetime.now().strftime("%H%M%S")
             prospect_data = {
-                "name": "Lilian Limon Leite",
-                "email": "lilian.limon@example.com",
+                "name": f"Lilian Limon Leite Test {timestamp}",
+                "email": f"lilian.test.{timestamp}@example.com",
                 "phone": "+1-555-0123",
                 "notes": "Test prospect for document persistence and convert button testing"
             }
@@ -141,18 +137,23 @@ class DocumentConvertTest:
             if response.status_code == 200 or response.status_code == 201:
                 prospect = response.json()
                 self.lilian_prospect_id = prospect.get('id')
-                self.log_result("Create Lilian Prospect", True, 
-                              f"Created Lilian Limon Leite: {self.lilian_prospect_id}",
+                self.log_result("Create Test Prospect", True, 
+                              f"Created test prospect: {self.lilian_prospect_id}",
                               {"prospect_data": prospect})
                 return prospect
             else:
-                self.log_result("Create Lilian Prospect", False, 
+                # If creation fails, try to find existing Lilian
+                existing_prospect = self.find_lilian_prospect()
+                if existing_prospect:
+                    return existing_prospect
+                
+                self.log_result("Create Test Prospect", False, 
                               f"Failed to create prospect: HTTP {response.status_code}",
                               {"response": response.text})
                 return None
                 
         except Exception as e:
-            self.log_result("Create Lilian Prospect", False, f"Exception: {str(e)}")
+            self.log_result("Create Test Prospect", False, f"Exception: {str(e)}")
             return None
     
     def test_document_upload_persistence(self):
