@@ -84,8 +84,8 @@ class LeadConversionTest:
         try:
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
-                prospects = response.json()
-                self.prospects_data = prospects if isinstance(prospects, list) else []
+                prospects_response = response.json()
+                self.prospects_data = prospects_response.get('prospects', []) if isinstance(prospects_response, dict) else []
                 
                 if len(self.prospects_data) > 0:
                     self.log_result("Find All Prospects", True, 
