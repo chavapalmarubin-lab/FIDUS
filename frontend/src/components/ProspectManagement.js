@@ -548,18 +548,18 @@ const ProspectManagement = () => {
             </Button>
           )}
           
-          {/* Convert Button - Show only if AML/KYC is clear/approved */}
+          {/* Convert Button - Show only if AML/KYC is clear/approved - MADE BIGGER AND BOLDER */}
           {prospect.stage === 'won' && 
            (prospect.aml_kyc_status === 'clear' || prospect.aml_kyc_status === 'approved') && 
            !prospect.converted_to_client && (
             <Button
-              size="sm"
+              size="lg"
               onClick={() => handleConvertProspect(prospect.id)}
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700 min-w-0"
+              className="flex-1 bg-green-600 hover:bg-green-700 min-w-0 h-10 px-6 font-bold text-base shadow-lg border-2 border-green-500 hover:border-green-400"
             >
-              <UserCheck size={14} className="mr-1" />
-              Convert
+              <UserCheck size={18} className="mr-2" />
+              CONVERT TO CLIENT
             </Button>
           )}
           
