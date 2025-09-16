@@ -285,7 +285,8 @@ class LeadConversionTest:
             # Get all clients for comparison
             response = self.session.get(f"{BACKEND_URL}/admin/clients")
             if response.status_code == 200:
-                self.clients_data = response.json() if response.status_code == 200 else []
+                clients_response = response.json()
+                self.clients_data = clients_response if isinstance(clients_response, list) else []
                 client_ids = [client.get('id') for client in self.clients_data if isinstance(self.clients_data, list)]
                 
                 inconsistencies = []
