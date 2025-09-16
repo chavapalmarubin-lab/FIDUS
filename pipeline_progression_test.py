@@ -185,8 +185,15 @@ class PipelineProgressionTest:
                                           json=update_data)
                 
                 if response.status_code == 200:
-                    updated_prospect = response.json()
-                    actual_stage = updated_prospect.get('stage')
+                    response_data = response.json()
+                    
+                    # Handle different response formats
+                    if 'prospect' in response_data:
+                        updated_prospect = response_data['prospect']
+                        actual_stage = updated_prospect.get('stage')
+                    else:
+                        updated_prospect = response_data
+                        actual_stage = updated_prospect.get('stage')
                     
                     if actual_stage == stage:
                         self.log_result(f"Stage Progression - {stage.title()}", True, 
@@ -195,7 +202,7 @@ class PipelineProgressionTest:
                     else:
                         self.log_result(f"Stage Progression - {stage.title()}", False, 
                                       f"Stage update failed: expected '{stage}', got '{actual_stage}'",
-                                      {"prospect_data": updated_prospect})
+                                      {"prospect_data": response_data})
                         return False
                 else:
                     self.log_result(f"Stage Progression - {stage.title()}", False, 
