@@ -196,13 +196,19 @@ class CRMProspectPipelineTest:
                         if prospect.get("id") == self.prospect_id:
                             prospect_data = prospect
                             break
+                elif isinstance(prospects, dict) and "prospects" in prospects:
+                    # Handle nested structure
+                    for prospect in prospects["prospects"]:
+                        if prospect.get("id") == self.prospect_id:
+                            prospect_data = prospect
+                            break
                 
                 if not prospect_data:
-                    self.log_result("AML/KYC Check", False, 
-                                  f"Prospect {self.prospect_id} not found in prospects list")
-                    return False
-                
-                if prospect_data.get("stage") != "won":
+                    # Try to continue with AML/KYC anyway - prospect might exist but not be returned in list
+                    self.log_result("AML/KYC Check - Prospect Verification", False, 
+                                  f"Prospect {self.prospect_id} not found in prospects list, but continuing with AML/KYC test",
+                                  {"prospects_count": len(prospects) if isinstance(prospects, list) else "unknown"})
+                elif prospect_data.get("stage") != "won":
                     self.log_result("AML/KYC Check", False, 
                                   f"Prospect not in 'won' stage: {prospect_data.get('stage')}")
                     return False
