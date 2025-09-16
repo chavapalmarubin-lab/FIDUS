@@ -10450,6 +10450,17 @@ async def api_authentication_middleware(request: Request, call_next):
     """Protect sensitive API endpoints with JWT token validation and role-based access control"""
     path = request.url.path
     
+    # Check if this is a public CRM endpoint (lead registration)
+    is_public_crm = any(
+        path.startswith(endpoint.replace("{prospect_id}", "")) or 
+        (endpoint.count("{") > 0 and path.startswith(endpoint.split("{")[0]))
+        for endpoint in PUBLIC_CRM_ENDPOINTS
+    )
+    
+    # Skip authentication for public CRM endpoints
+    if is_public_crm:
+        return await call_next(request)
+    
     # Check if this is a protected endpoint
     is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
     is_admin_only = any(path.startswith(endpoint) for endpoint in ADMIN_ONLY_ENDPOINTS)
