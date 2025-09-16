@@ -150,12 +150,17 @@ class CRMProspectPipelineTest:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    if data.get("stage") == stage:
+                    # Handle nested prospect structure
+                    prospect_data = data.get("prospect", data)
+                    actual_stage = prospect_data.get("stage")
+                    
+                    if actual_stage == stage:
                         self.log_result(f"Move to {stage.title()} Stage", True, 
                                       f"Successfully moved prospect to {stage} stage")
                     else:
                         self.log_result(f"Move to {stage.title()} Stage", False, 
-                                      f"Stage update failed - expected {stage}, got {data.get('stage')}")
+                                      f"Stage update failed - expected {stage}, got {actual_stage}",
+                                      {"response": data})
                         return False
                 else:
                     self.log_result(f"Move to {stage.title()} Stage", False, 
