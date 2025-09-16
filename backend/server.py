@@ -7045,6 +7045,8 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
+        # Remove MongoDB _id for JSON serialization
+        prospect_doc.pop('_id', None)
         prospect_data = prospect_doc
         
         # Validate prospect stage
