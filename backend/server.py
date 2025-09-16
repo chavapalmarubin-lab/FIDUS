@@ -6963,6 +6963,8 @@ async def run_aml_kyc_check(prospect_id: str):
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
+        # Remove MongoDB _id for JSON serialization
+        prospect_doc.pop('_id', None)
         prospect_data = prospect_doc
         
         # Extract person data from prospect
