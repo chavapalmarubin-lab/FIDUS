@@ -83,7 +83,15 @@ class LilianInvestigationTest:
         try:
             response = self.session.get(f"{BACKEND_URL}/admin/clients")
             if response.status_code == 200:
-                clients = response.json()
+                response_data = response.json()
+                
+                # Handle both direct list and wrapped response formats
+                if isinstance(response_data, dict) and 'clients' in response_data:
+                    clients = response_data['clients']
+                elif isinstance(response_data, list):
+                    clients = response_data
+                else:
+                    clients = []
                 
                 if isinstance(clients, list):
                     client_names = [client.get('name', 'Unknown') for client in clients]
