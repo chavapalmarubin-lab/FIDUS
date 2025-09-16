@@ -165,14 +165,13 @@ class DocumentConvertTest:
             # Create a test document (PDF-like content)
             test_document_content = b"Test document content for Lilian Limon Leite - Document persistence test"
             
-            # Upload document
+            # Upload document using correct API format
             files = {
-                'document': ('test_document.pdf', io.BytesIO(test_document_content), 'application/pdf')
+                'file': ('test_document.pdf', io.BytesIO(test_document_content), 'application/pdf')
             }
             data = {
-                'prospect_id': self.lilian_prospect_id,
                 'document_type': 'identity_document',
-                'description': 'Test document for persistence verification'
+                'notes': 'Test document for persistence verification'
             }
             
             response = self.session.post(f"{BACKEND_URL}/crm/prospects/{self.lilian_prospect_id}/documents", 
@@ -180,7 +179,8 @@ class DocumentConvertTest:
             
             if response.status_code == 200 or response.status_code == 201:
                 upload_result = response.json()
-                document_id = upload_result.get('document_id')
+                document_data = upload_result.get('document', {})
+                document_id = document_data.get('document_id')
                 
                 self.log_result("Document Upload", True, 
                               f"Document uploaded successfully: {document_id}",
