@@ -653,8 +653,9 @@ const ProspectManagement = () => {
                 <span>{prospect.phone}</span>
               </div>
 
-              {/* Stage progression buttons */}
-              <div className="flex gap-2 flex-wrap mt-2">
+              {/* Stage progression buttons - IMPROVED VISIBILITY */}
+              <div className="flex gap-2 flex-wrap mt-3 pt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-500 w-full mb-1">Move to stage:</p>
                 {Object.keys(STAGE_CONFIG).map(nextStage => {
                   if (nextStage === stage) return null;
                   const nextConfig = STAGE_CONFIG[nextStage];
@@ -664,9 +665,14 @@ const ProspectManagement = () => {
                       key={nextStage}
                       size="sm"
                       variant="default"
-                      onClick={() => handleStageChange(prospect.id, nextStage)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`Moving prospect ${prospect.id} to ${nextStage}`);
+                        handleStageChange(prospect.id, nextStage);
+                      }}
                       disabled={loading}
-                      className={`text-xs h-7 px-3 font-medium transition-all ${nextConfig.bgColor} ${nextConfig.textColor} hover:scale-105 hover:shadow-md border-0`}
+                      className="text-xs h-8 px-3 font-medium bg-slate-600 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-700 transition-all hover:scale-105 hover:shadow-md"
                     >
                       {nextConfig.label}
                     </Button>
