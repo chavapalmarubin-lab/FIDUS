@@ -23,7 +23,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-invest.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-invest.emergent.host/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
