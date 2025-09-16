@@ -6995,11 +6995,21 @@ async def run_aml_kyc_check(prospect_id: str):
         # Run AML/KYC check
         aml_result = await aml_kyc_service.perform_full_aml_kyc_check(prospect_id, person_data, documents)
         
-        # Update prospect with AML/KYC status
-        prospect_data['aml_kyc_status'] = aml_result.overall_status.value
-        prospect_data['aml_kyc_result_id'] = aml_result.result_id
-        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-        prospects_storage[prospect_id] = prospect_data
+        # Update prospect with AML/KYC status in MongoDB
+        update_fields = {
+            'aml_kyc_status': aml_result.overall_status.value,
+            'aml_kyc_result_id': aml_result.result_id,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.crm_prospects.update_one(
+            {"id": prospect_id},
+            {"$set": update_fields}
+        )
+        
+        # Also update memory storage if it exists (for backwards compatibility)
+        if prospect_id in prospects_storage:
+            prospects_storage[prospect_id].update(update_fields)
         
         logging.info(f"AML/KYC check completed for prospect {prospect_id}: {aml_result.overall_status.value}")
         
