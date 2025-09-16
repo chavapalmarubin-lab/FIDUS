@@ -509,25 +509,68 @@ const ProspectManagement = () => {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1 flex-wrap">
           <Button
             size="sm"
             variant="outline"
             onClick={() => openEditModal(prospect)}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             <Edit2 size={14} className="mr-1" />
             Edit
           </Button>
           
-          {prospect.stage === 'won' && !prospect.converted_to_client && (
+          {/* AML/KYC Check Button - Show for won prospects without AML/KYC status */}
+          {prospect.stage === 'won' && !prospect.aml_kyc_status && (
+            <Button
+              size="sm"
+              onClick={() => handleAMLKYCCheck(prospect.id)}
+              disabled={loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 min-w-0"
+            >
+              <ShieldCheck size={14} className="mr-1" />
+              AML/KYC
+            </Button>
+          )}
+          
+          {/* Convert Button - Show only if AML/KYC is clear/approved */}
+          {prospect.stage === 'won' && 
+           (prospect.aml_kyc_status === 'clear' || prospect.aml_kyc_status === 'approved') && 
+           !prospect.converted_to_client && (
             <Button
               size="sm"
               onClick={() => handleConvertProspect(prospect.id)}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              disabled={loading}
+              className="flex-1 bg-green-600 hover:bg-green-700 min-w-0"
             >
               <UserCheck size={14} className="mr-1" />
               Convert
+            </Button>
+          )}
+          
+          {/* Show AML/KYC status for manual review cases */}
+          {prospect.stage === 'won' && prospect.aml_kyc_status === 'manual_review' && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 bg-yellow-50 border-yellow-300 text-yellow-800 min-w-0"
+              disabled
+            >
+              <AlertTriangle size={14} className="mr-1" />
+              Manual Review
+            </Button>
+          )}
+          
+          {/* Show rejected status */}
+          {prospect.stage === 'won' && (prospect.aml_kyc_status === 'hit' || prospect.aml_kyc_status === 'rejected') && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 bg-red-50 border-red-300 text-red-800 min-w-0"
+              disabled
+            >
+              <X size={14} className="mr-1" />
+              Rejected
             </Button>
           )}
           
