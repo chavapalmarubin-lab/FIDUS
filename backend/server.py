@@ -7102,7 +7102,19 @@ async def get_prospect_pipeline():
         
         # Sort each stage by updated_at descending
         for stage in pipeline:
-            pipeline[stage].sort(key=lambda x: x['updated_at'], reverse=True)
+            def get_sort_key(x):
+                updated_at = x.get('updated_at')
+                if isinstance(updated_at, str):
+                    try:
+                        return datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                    except:
+                        return datetime.min.replace(tzinfo=timezone.utc)
+                elif isinstance(updated_at, datetime):
+                    return updated_at
+                else:
+                    return datetime.min.replace(tzinfo=timezone.utc)
+            
+            pipeline[stage].sort(key=get_sort_key, reverse=True)
         
         # Calculate statistics
         total_prospects = len(prospects_storage)
