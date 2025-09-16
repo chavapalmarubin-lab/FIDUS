@@ -1155,7 +1155,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Prospect Pipeline Stage Progression Backend Fix - Data Synchronization Issue"
+    - "Lilian Limon Leite AML/KYC Button Investigation and Fix"
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
     - "CRM Lead Management System Validation"
     - "End-to-End Prospect to Client Conversion"
