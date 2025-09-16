@@ -333,8 +333,8 @@ class CRMProspectPipelineTest:
         """Test all CRM prospect pipeline endpoints are working"""
         endpoints_to_test = [
             ("/crm/prospects", "GET", "List Prospects"),
-            ("/crm/prospects/stages", "GET", "Get Prospect Stages"),
-            ("/crm/dashboard", "GET", "CRM Dashboard")
+            ("/crm/prospects/pipeline", "GET", "Prospect Pipeline"),
+            ("/crm/admin/dashboard", "GET", "CRM Admin Dashboard")
         ]
         
         for endpoint, method, name in endpoints_to_test:
