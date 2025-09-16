@@ -6905,9 +6905,76 @@ async def delete_prospect(prospect_id: str):
         logging.error(f"Delete prospect error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete prospect")
 
+@api_router.post("/crm/prospects/{prospect_id}/aml-kyc")
+async def run_aml_kyc_check(prospect_id: str):
+    """Run AML/KYC compliance check for a prospect"""
+    try:
+        if prospect_id not in prospects_storage:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        prospect_data = prospects_storage[prospect_id]
+        
+        # Extract person data from prospect
+        person_data = PersonData(
+            first_name=prospect_data['name'].split()[0],
+            last_name=' '.join(prospect_data['name'].split()[1:]) if len(prospect_data['name'].split()) > 1 else '',
+            full_name=prospect_data['name'],
+            date_of_birth="1990-01-01",  # Default - should be extracted from prospect notes
+            nationality="USA",  # Default - should be extracted from prospect data
+            address="",  # Extract from prospect notes
+            city="",
+            country="USA",
+            email=prospect_data['email'],
+            phone=prospect_data['phone']
+        )
+        
+        # Get uploaded documents
+        documents = []
+        prospect_documents = prospect_documents_storage.get(prospect_id, [])
+        
+        for doc_data in prospect_documents:
+            kyc_doc = KYCDocument(
+                document_id=doc_data.get('document_id', str(uuid.uuid4())),
+                document_type=doc_data.get('document_type', 'identity'),
+                file_path=doc_data.get('file_path', ''),
+                verification_status='pending'
+            )
+            documents.append(kyc_doc)
+        
+        # Run AML/KYC check
+        aml_result = await aml_kyc_service.perform_full_aml_kyc_check(prospect_id, person_data, documents)
+        
+        # Update prospect with AML/KYC status
+        prospect_data['aml_kyc_status'] = aml_result.overall_status.value
+        prospect_data['aml_kyc_result_id'] = aml_result.result_id
+        prospect_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        prospects_storage[prospect_id] = prospect_data
+        
+        logging.info(f"AML/KYC check completed for prospect {prospect_id}: {aml_result.overall_status.value}")
+        
+        return {
+            "success": True,
+            "aml_result": {
+                "result_id": aml_result.result_id,
+                "overall_status": aml_result.overall_status.value,
+                "risk_assessment": aml_result.risk_assessment.value,
+                "ofac_status": aml_result.ofac_result.status.value,
+                "ofac_matches": aml_result.ofac_result.matches_found,
+                "compliance_notes": aml_result.compliance_notes,
+                "can_convert": aml_result.overall_status in [AMLStatus.CLEAR, AMLStatus.APPROVED]
+            },
+            "message": f"AML/KYC check completed with status: {aml_result.overall_status.value}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"AML/KYC check error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to run AML/KYC check")
+
 @api_router.post("/crm/prospects/{prospect_id}/convert")
 async def convert_prospect_to_client(prospect_id: str, conversion_data: ProspectConversionRequest):
-    """Convert a won prospect to a client and send FIDUS agreement"""
+    """Convert a won prospect to a client after AML/KYC approval"""
     try:
         if prospect_id not in prospects_storage:
             raise HTTPException(status_code=404, detail="Prospect not found")
@@ -6920,10 +6987,25 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
         
         if prospect_data.get('converted_to_client', False):
             raise HTTPException(status_code=400, detail="Prospect has already been converted to a client")
+            
+        # Check AML/KYC status
+        aml_status = prospect_data.get('aml_kyc_status', 'pending')
+        if aml_status not in ['clear', 'approved']:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"AML/KYC compliance required. Current status: {aml_status}. Please complete AML/KYC check first."
+            )
         
         # Generate new client ID
         client_id = f"client_{str(uuid.uuid4())[:8]}"
         username = prospect_data['email'].split('@')[0].lower().replace('.', '').replace('-', '')[:10]
+        
+        # Ensure username uniqueness
+        counter = 1
+        original_username = username
+        while username in MOCK_USERS:
+            username = f"{original_username}{counter}"
+            counter += 1
         
         # Create new client in MOCK_USERS
         new_client = {
@@ -6936,12 +7018,26 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             "status": "active",
             "created_from_prospect": True,
             "prospect_id": prospect_id,
+            "aml_kyc_status": aml_status,
+            "aml_kyc_result_id": prospect_data.get('aml_kyc_result_id'),
             "createdAt": datetime.now(timezone.utc).isoformat(),
             "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
         }
         
         # Add to MOCK_USERS
         MOCK_USERS[username] = new_client
+        
+        # Generate AML/KYC approval document
+        approval_document_path = None
+        if prospect_data.get('aml_kyc_result_id'):
+            try:
+                aml_result = aml_kyc_service.get_aml_result(prospect_data['aml_kyc_result_id'])
+                if aml_result:
+                    aml_result.client_id = client_id  # Update result with client ID
+                    approval_document_path = await aml_kyc_service.generate_aml_approval_document(aml_result)
+                    new_client['aml_approval_document'] = approval_document_path
+            except Exception as doc_error:
+                logging.error(f"Failed to generate AML approval document: {str(doc_error)}")
         
         # Update prospect as converted
         prospect_data['converted_to_client'] = True
@@ -6959,7 +7055,6 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
                 # For now, we'll simulate this and log it
                 logging.info(f"Sending FIDUS agreement to {prospect_data['email']} for client {client_id}")
                 
-                # You can add actual Gmail integration here using the existing Gmail service
                 agreement_sent = True
                 agreement_message = f"FIDUS agreement sent to {prospect_data['email']}"
                 
@@ -6967,15 +7062,17 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
                 logging.error(f"Failed to send FIDUS agreement: {str(email_error)}")
                 agreement_message = "Client created but failed to send FIDUS agreement"
         
-        logging.info(f"Prospect {prospect_id} converted to client {client_id}")
+        logging.info(f"Prospect {prospect_id} converted to client {client_id} with AML/KYC approval")
         
         return {
             "success": True,
             "client_id": client_id,
+            "username": username,
             "prospect": prospect_data,
             "client": new_client,
             "agreement_sent": agreement_sent,
-            "message": f"Prospect converted to client successfully. {agreement_message}".strip()
+            "aml_approval_document": approval_document_path,
+            "message": f"Prospect converted to client successfully with AML/KYC compliance. {agreement_message}".strip()
         }
         
     except HTTPException:
