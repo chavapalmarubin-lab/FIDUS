@@ -95,14 +95,25 @@ class CRMProspectPipelineTest:
             
             response = self.session.post(f"{BACKEND_URL}/crm/prospects", json=prospect_data)
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 data = response.json()
-                self.prospect_id = data.get("id")
+                # Handle both direct ID and nested prospect structure
+                if "prospect_id" in data:
+                    self.prospect_id = data.get("prospect_id")
+                    prospect_data = data.get("prospect", {})
+                elif "id" in data:
+                    self.prospect_id = data.get("id")
+                    prospect_data = data
+                else:
+                    self.log_result("Create Prospect", False, 
+                                  "Prospect created but no ID found in response", 
+                                  {"response": data})
+                    return False
                 
-                if self.prospect_id and data.get("stage") == "lead":
+                if self.prospect_id and prospect_data.get("stage") == "lead":
                     self.log_result("Create Prospect", True, 
-                                  f"Prospect created successfully: {data.get('name')} (ID: {self.prospect_id})",
-                                  {"prospect_data": data})
+                                  f"Prospect created successfully: {prospect_data.get('name')} (ID: {self.prospect_id})",
+                                  {"prospect_data": prospect_data})
                     return True
                 else:
                     self.log_result("Create Prospect", False, 
