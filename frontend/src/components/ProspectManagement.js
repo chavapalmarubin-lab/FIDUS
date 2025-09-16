@@ -1067,9 +1067,10 @@ const ProspectManagement = () => {
                     setShowDocumentModal(false);
                     setSelectedProspectForDocs(null);
                   }}
-                  className="p-2"
+                  className="p-2 hover:bg-slate-100 rounded-full"
+                  title="Close Modal"
                 >
-                  <XCircle size={24} />
+                  <XCircle size={24} className="text-slate-500 hover:text-slate-700" />
                 </Button>
               </div>
 
