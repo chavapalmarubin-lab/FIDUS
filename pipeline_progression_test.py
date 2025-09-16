@@ -426,8 +426,15 @@ class PipelineProgressionTest:
                                       json=update_data)
             
             if response.status_code == 200:
-                updated_prospect = response.json()
-                updated_notes = updated_prospect.get('notes', '')
+                response_data = response.json()
+                
+                # Handle different response formats
+                if 'prospect' in response_data:
+                    updated_prospect = response_data['prospect']
+                    updated_notes = updated_prospect.get('notes', '')
+                else:
+                    updated_prospect = response_data
+                    updated_notes = updated_prospect.get('notes', '')
                 
                 if "Pipeline progression test completed" in updated_notes:
                     self.log_result("Prospect Update Endpoint", True, 
