@@ -93,7 +93,7 @@ class DocumentConvertTest:
             return False
     
     def find_lilian_prospect(self):
-        """Find Lilian Limon Leite prospect in the system"""
+        """Find Lilian Limon Leite prospect in the system (for reference only)"""
         try:
             response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
@@ -101,24 +101,24 @@ class DocumentConvertTest:
                 prospects = data.get('prospects', []) if isinstance(data, dict) else data
                 
                 for prospect in prospects:
-                    if "Lilian" in prospect.get('name', '') and "Limon" in prospect.get('name', ''):
+                    if "Lilian" in prospect.get('name', '') and "Limon" in prospect.get('name', '') and not prospect.get('converted_to_client', False):
                         self.lilian_prospect_id = prospect.get('id')
-                        self.log_result("Find Lilian Prospect", True, 
-                                      f"Found Lilian Limon Leite: {self.lilian_prospect_id}",
+                        self.log_result("Find Available Lilian Prospect", True, 
+                                      f"Found available Lilian prospect: {self.lilian_prospect_id}",
                                       {"prospect_data": prospect})
                         return prospect
                 
-                self.log_result("Find Lilian Prospect", False, 
-                              "Lilian Limon Leite not found in prospects",
+                self.log_result("Find Available Lilian Prospect", False, 
+                              "No available Lilian prospect found (all may be converted)",
                               {"total_prospects": len(prospects)})
                 return None
             else:
-                self.log_result("Find Lilian Prospect", False, 
+                self.log_result("Find Available Lilian Prospect", False, 
                               f"Failed to get prospects: HTTP {response.status_code}")
                 return None
                 
         except Exception as e:
-            self.log_result("Find Lilian Prospect", False, f"Exception: {str(e)}")
+            self.log_result("Find Available Lilian Prospect", False, f"Exception: {str(e)}")
             return None
     
     def create_lilian_prospect_if_needed(self):
