@@ -138,14 +138,26 @@ class PipelineProgressionTest:
             }
             
             response = self.session.post(f"{BACKEND_URL}/crm/prospects", json=prospect_data)
-            if response.status_code == 201:
-                created_prospect = response.json()
-                self.lilian_prospect_id = created_prospect.get('id')
+            if response.status_code in [200, 201]:
+                response_data = response.json()
+                # Handle different response formats
+                if 'prospect_id' in response_data:
+                    self.lilian_prospect_id = response_data['prospect_id']
+                elif 'prospect' in response_data and 'id' in response_data['prospect']:
+                    self.lilian_prospect_id = response_data['prospect']['id']
+                elif 'id' in response_data:
+                    self.lilian_prospect_id = response_data['id']
                 
-                self.log_result("Create Lilian Prospect", True, 
-                              f"Created Lilian Limon Leite prospect (ID: {self.lilian_prospect_id})",
-                              {"prospect_data": created_prospect})
-                return True
+                if self.lilian_prospect_id:
+                    self.log_result("Create Lilian Prospect", True, 
+                                  f"Created Lilian Limon Leite prospect (ID: {self.lilian_prospect_id})",
+                                  {"prospect_data": response_data})
+                    return True
+                else:
+                    self.log_result("Create Lilian Prospect", False, 
+                                  "Prospect created but no ID found in response",
+                                  {"response": response_data})
+                    return False
             else:
                 self.log_result("Create Lilian Prospect", False, 
                               f"Failed to create prospect: HTTP {response.status_code}",
