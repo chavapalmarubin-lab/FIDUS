@@ -184,8 +184,8 @@ class CRMProspectPipelineTest:
             return False
         
         try:
-            # First verify prospect is in "won" stage
-            response = self.session.get(f"{BACKEND_URL}/crm/prospects/{self.prospect_id}")
+            # First verify prospect is in "won" stage by getting all prospects and finding ours
+            response = self.session.get(f"{BACKEND_URL}/crm/prospects")
             if response.status_code == 200:
                 prospect_data = response.json()
                 if prospect_data.get("stage") != "won":
