@@ -407,7 +407,10 @@ class LilianConvertButtonDebugTest:
         # Step 1: Find Lilian in production
         if not self.find_lilian_prospect():
             print("❌ CRITICAL: Cannot find Lilian Limon Leite in production database.")
-            return False
+            print("🔧 ATTEMPTING TO CREATE LILIAN'S PROSPECT PROFILE...")
+            if not self.create_lilian_prospect():
+                print("❌ FAILED: Could not create Lilian's prospect profile.")
+                return False
         
         # Step 2: Debug Convert button conditions
         conditions_met = self.debug_convert_button_conditions()
