@@ -7037,10 +7037,13 @@ async def run_aml_kyc_check(prospect_id: str):
 async def convert_prospect_to_client(prospect_id: str, conversion_data: ProspectConversionRequest):
     """Convert a won prospect to a client after AML/KYC approval"""
     try:
-        if prospect_id not in prospects_storage:
+        # Find prospect in MongoDB (consistent with GET endpoint)
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        
+        if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
-        prospect_data = prospects_storage[prospect_id]
+        prospect_data = prospect_doc
         
         # Validate prospect stage
         if prospect_data['stage'] != 'won':
