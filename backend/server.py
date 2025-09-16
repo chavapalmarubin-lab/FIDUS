@@ -1716,6 +1716,164 @@ async def get_all_clients():
             })
     
     return {"clients": clients}
+# ============================================
+# ADMIN CLIENT MANAGEMENT ENDPOINTS
+# ============================================
+
+@api_router.get("/admin/clients/{client_id}/details")
+async def get_client_details(client_id: str):
+    """Get comprehensive client details including profile and metadata"""
+    try:
+        # Find client in MOCK_USERS
+        client_data = None
+        for username, user in MOCK_USERS.items():
+            if user.get('id') == client_id:
+                client_data = user
+                break
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Enhance with additional details
+        enhanced_client = {
+            **client_data,
+            "registration_method": "prospect_conversion" if client_data.get('created_from_prospect') else "direct",
+            "last_activity": client_data.get('updatedAt', client_data.get('createdAt')),
+            "compliance_status": client_data.get('aml_kyc_status', 'pending'),
+            "account_age_days": (datetime.now(timezone.utc) - datetime.fromisoformat(client_data.get('createdAt', '2025-01-01T00:00:00Z').replace('Z', '+00:00'))).days
+        }
+        
+        return {
+            "success": True,
+            "client": enhanced_client
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get client details error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client details")
+
+@api_router.get("/admin/clients/{client_id}/documents")
+async def get_client_documents(client_id: str):
+    """Get all documents for a specific client"""
+    try:
+        # Check if client exists
+        client_exists = any(user.get('id') == client_id for user in MOCK_USERS.values())
+        if not client_exists:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # For now, return mock documents - in production this would query actual document storage
+        mock_documents = [
+            {
+                "document_id": f"doc_gov_id_{client_id}",
+                "document_type": "government_id",
+                "file_name": "government_id.pdf",
+                "file_path": f"/documents/{client_id}/government_id.pdf",
+                "verification_status": "approved",
+                "uploaded_at": "2025-09-16T10:00:00Z",
+                "verified_at": "2025-09-16T11:00:00Z",
+                "verified_by": "system",
+                "notes": "Government ID verified and approved"
+            },
+            {
+                "document_id": f"doc_proof_addr_{client_id}",
+                "document_type": "proof_of_address",
+                "file_name": "proof_of_address.pdf", 
+                "file_path": f"/documents/{client_id}/proof_of_address.pdf",
+                "verification_status": "approved",
+                "uploaded_at": "2025-09-16T10:05:00Z",
+                "verified_at": "2025-09-16T11:05:00Z",
+                "verified_by": "system",
+                "notes": "Proof of address verified and approved"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "documents": mock_documents
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get client documents error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client documents")
+
+@api_router.get("/admin/clients/{client_id}/activity")
+async def get_client_activity_log(client_id: str):
+    """Get activity timeline for a specific client"""
+    try:
+        # Check if client exists
+        client_data = None
+        for username, user in MOCK_USERS.items():
+            if user.get('id') == client_id:
+                client_data = user
+                break
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Generate activity log based on available data
+        activities = []
+        
+        # Account creation activity
+        activities.append({
+            "id": 1,
+            "type": "registration",
+            "title": "Account Created",
+            "description": f"Client account created{' from prospect conversion' if client_data.get('created_from_prospect') else ''}",
+            "timestamp": client_data.get('createdAt', datetime.now(timezone.utc).isoformat()),
+            "status": "completed",
+            "metadata": {
+                "method": "prospect_conversion" if client_data.get('created_from_prospect') else "direct",
+                "user_type": client_data.get('type', 'client')
+            }
+        })
+        
+        # AML/KYC activity
+        if client_data.get('aml_kyc_status'):
+            activities.append({
+                "id": 2,
+                "type": "compliance",
+                "title": "AML/KYC Screening",
+                "description": f"AML/KYC compliance check completed with status: {client_data['aml_kyc_status'].upper()}",
+                "timestamp": client_data.get('createdAt', datetime.now(timezone.utc).isoformat()),
+                "status": "completed" if client_data['aml_kyc_status'] == 'clear' else "pending",
+                "metadata": {
+                    "aml_status": client_data['aml_kyc_status'],
+                    "result_id": client_data.get('aml_kyc_result_id')
+                }
+            })
+        
+        # Sort by timestamp (newest first)
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return {
+            "success": True,
+            "activities": activities,
+            "total_count": len(activities)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get client activity error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client activity log")
+
+@api_router.get("/admin/documents/{document_id}/download")
+async def download_client_document(document_id: str):
+    """Download a specific client document"""
+    try:
+        # In production, this would retrieve the actual file from storage
+        # For now, return a mock response
+        raise HTTPException(status_code=501, detail="Document download not implemented in demo")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Download document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to download document")
 
 # MT5 Account Management and Client Investment Mapping System
 from dataclasses import dataclass
