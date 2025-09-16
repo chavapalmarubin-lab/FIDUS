@@ -382,6 +382,18 @@ const ClientManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setShowDetailView(true);
+                              }}
+                              className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+                              title="View client details, documents, and history"
+                            >
+                              <Eye size={14} />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleEditClient(client)}
                               className="text-cyan-400 border-cyan-400 hover:bg-cyan-400 hover:text-black"
                             >
