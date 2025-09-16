@@ -205,12 +205,13 @@ class DocumentConvertTest:
             response = self.session.get(f"{BACKEND_URL}/crm/prospects/{self.lilian_prospect_id}/documents")
             
             if response.status_code == 200:
-                documents = response.json()
+                data = response.json()
+                documents = data.get('documents', []) if isinstance(data, dict) else data
                 
                 # Check if our document exists
                 document_found = False
                 for doc in documents:
-                    if doc.get('id') == document_id or doc.get('document_id') == document_id:
+                    if doc.get('document_id') == document_id:
                         document_found = True
                         self.log_result("Document MongoDB Persistence", True, 
                                       f"Document found in MongoDB: {document_id}",
@@ -228,9 +229,10 @@ class DocumentConvertTest:
                 response2 = self.session.get(f"{BACKEND_URL}/crm/prospects/{self.lilian_prospect_id}/documents")
                 
                 if response2.status_code == 200:
-                    documents2 = response2.json()
+                    data2 = response2.json()
+                    documents2 = data2.get('documents', []) if isinstance(data2, dict) else data2
                     document_still_exists = any(
-                        doc.get('id') == document_id or doc.get('document_id') == document_id 
+                        doc.get('document_id') == document_id 
                         for doc in documents2
                     )
                     
