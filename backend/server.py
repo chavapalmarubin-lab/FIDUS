@@ -6957,10 +6957,13 @@ async def delete_prospect(prospect_id: str):
 async def run_aml_kyc_check(prospect_id: str):
     """Run AML/KYC compliance check for a prospect"""
     try:
-        if prospect_id not in prospects_storage:
+        # Find prospect in MongoDB (consistent with GET endpoint)
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        
+        if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
-        prospect_data = prospects_storage[prospect_id]
+        prospect_data = prospect_doc
         
         # Extract person data from prospect
         person_data = PersonData(
