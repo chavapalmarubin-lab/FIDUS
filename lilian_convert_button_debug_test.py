@@ -139,6 +139,59 @@ class LilianConvertButtonDebugTest:
             self.log_result("Find Lilian Prospect", False, f"Exception: {str(e)}")
             return False
     
+    def create_lilian_prospect(self):
+        """Create Lilian's prospect profile in production"""
+        try:
+            # Create Lilian's prospect data
+            lilian_prospect_data = {
+                "name": "Lilian Limon Leite",
+                "email": "lilian.limon@fidus.com",
+                "phone": "+1-555-0123",
+                "notes": "Created for Convert button testing"
+            }
+            
+            # Create prospect
+            response = self.session.post(f"{BACKEND_URL}/crm/prospects", json=lilian_prospect_data)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                created_prospect = response.json()
+                prospect_id = created_prospect.get('id')
+                
+                self.log_result("Create Lilian Prospect", True, 
+                              f"Successfully created Lilian's prospect profile (ID: {prospect_id})")
+                
+                # Now update to Won stage with AML/KYC clear
+                update_data = {
+                    "stage": "won",
+                    "aml_kyc_status": "clear",
+                    "converted_to_client": False,
+                    "client_id": ""
+                }
+                
+                update_response = self.session.put(f"{BACKEND_URL}/crm/prospects/{prospect_id}", json=update_data)
+                
+                if update_response.status_code == 200:
+                    updated_prospect = update_response.json()
+                    self.lilian_data = updated_prospect
+                    
+                    self.log_result("Update Lilian to Won", True, 
+                                  "Successfully updated Lilian to Won stage with AML/KYC clear")
+                    return True
+                else:
+                    self.log_result("Update Lilian to Won", False, 
+                                  f"Failed to update Lilian: HTTP {update_response.status_code}",
+                                  {"response": update_response.text})
+                    return False
+            else:
+                self.log_result("Create Lilian Prospect", False, 
+                              f"Failed to create Lilian: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Create Lilian Prospect", False, f"Exception: {str(e)}")
+            return False
+    
     def debug_convert_button_conditions(self):
         """Debug Convert button logic conditions"""
         if not self.lilian_data:
