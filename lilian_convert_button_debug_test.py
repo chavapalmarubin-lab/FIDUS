@@ -158,7 +158,8 @@ class LilianConvertButtonDebugTest:
                 prospect_id = created_prospect.get('id')
                 
                 self.log_result("Create Lilian Prospect", True, 
-                              f"Successfully created Lilian's prospect profile (ID: {prospect_id})")
+                              f"Successfully created Lilian's prospect profile (ID: {prospect_id})",
+                              {"created_prospect": created_prospect})
                 
                 # Now update to Won stage with AML/KYC clear
                 update_data = {
