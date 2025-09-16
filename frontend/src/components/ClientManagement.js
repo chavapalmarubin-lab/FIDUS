@@ -603,6 +603,24 @@ const ClientManagement = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Client Detail View Modal */}
+      {showDetailView && selectedClient && (
+        <ClientDetailView
+          client={selectedClient}
+          onClose={() => {
+            setShowDetailView(false);
+            setSelectedClient(null);
+          }}
+          onUpdate={(updatedClient) => {
+            // Update the client in the list
+            setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+            setShowDetailView(false);
+            setSelectedClient(null);
+            fetchClients(); // Refresh the client list
+          }}
+        />
+      )}
     </div>
   );
 };
