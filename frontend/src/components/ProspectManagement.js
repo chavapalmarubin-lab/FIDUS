@@ -261,20 +261,51 @@ const ProspectManagement = () => {
     }
   };
 
+  const handleAMLKYCCheck = async (prospectId) => {
+    try {
+      setLoading(true);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-kyc`);
+      
+      if (response.data.success) {
+        const amlResult = response.data.aml_result;
+        setSuccess(`AML/KYC check completed: ${amlResult.overall_status.toUpperCase()}`);
+        
+        // Show detailed results
+        if (amlResult.ofac_matches > 0) {
+          setError(`⚠️ OFAC Alert: ${amlResult.ofac_matches} potential match(es) found. Status: ${amlResult.ofac_status}`);
+        }
+        
+        fetchProspects();
+        fetchPipeline();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to run AML/KYC check");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConvertProspect = async (prospectId) => {
     try {
+      setLoading(true);
       const response = await apiAxios.post(`/crm/prospects/${prospectId}/convert`, {
         prospect_id: prospectId,
         send_agreement: true
       });
       
       if (response.data.success) {
-        setSuccess(`Prospect converted to client successfully! ${response.data.message}`);
+        setSuccess(`Prospect converted to client successfully! Username: ${response.data.username}. ${response.data.message}`);
         fetchProspects();
         fetchPipeline();
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to convert prospect");
+      if (err.response?.data?.detail?.includes('AML/KYC compliance required')) {
+        setError(`${err.response.data.detail} Please run AML/KYC check first.`);
+      } else {
+        setError(err.response?.data?.detail || "Failed to convert prospect");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
