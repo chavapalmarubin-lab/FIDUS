@@ -138,7 +138,7 @@ class LilianProductionFixTest:
             
             if response.status_code == 200:
                 result = response.json()
-                self.lilian_prospect_id = result.get('id')
+                self.lilian_prospect_id = result.get('id') or result.get('prospect_id')
                 
                 self.log_result("Create Lilian Prospect", True, 
                               f"Successfully created Lilian as prospect: {self.lilian_prospect_id}",
