@@ -157,7 +157,8 @@ class LilianDataFixTest:
             # Try to get the client record
             response = self.session.get(f"{BACKEND_URL}/admin/clients")
             if response.status_code == 200:
-                clients = response.json()
+                data = response.json()
+                clients = data.get('clients', []) if isinstance(data, dict) else data
                 client_exists = False
                 
                 if isinstance(clients, list):
