@@ -1181,12 +1181,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Lilian Limon Leite AML/KYC Button Investigation and Fix"
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
     - "CRM Lead Management System Validation"
     - "End-to-End Prospect to Client Conversion"
   stuck_tasks: 
-    - "Lilian Limon Leite AML/KYC Button Investigation and Fix"
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
   test_priority: "workflow_validation_first"
