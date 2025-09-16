@@ -128,7 +128,7 @@ class LilianConversionWorkflowTest:
                 "send_agreement": True
             }
             
-            response = self.session.post(f"{BACKEND_URL}/crm/prospects/convert", json=conversion_data)
+            response = self.session.post(f"{BACKEND_URL}/crm/prospects/{LILIAN_PROSPECT_ID}/convert", json=conversion_data)
             
             if response.status_code == 200:
                 conversion_result = response.json()
