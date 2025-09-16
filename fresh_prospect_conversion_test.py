@@ -94,6 +94,9 @@ class FreshProspectConversionTest:
                 self.log_result("Create Test Prospect", True, 
                               f"Created test prospect: {self.test_prospect_name} (ID: {self.test_prospect_id})")
                 
+                # Wait a moment for MongoDB consistency
+                time.sleep(1)
+                
                 # Move to Won stage
                 update_data = {"stage": "won"}
                 response = self.session.put(f"{BACKEND_URL}/crm/prospects/{self.test_prospect_id}", json=update_data)
