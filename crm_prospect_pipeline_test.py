@@ -228,14 +228,18 @@ class CRMProspectPipelineTest:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("status") in ["passed", "completed", "cleared"]:
+                # Check for success and clear status
+                aml_result = data.get("aml_result", {})
+                overall_status = aml_result.get("overall_status")
+                
+                if data.get("success") and overall_status in ["clear", "passed", "completed", "cleared"]:
                     self.log_result("AML/KYC Check", True, 
-                                  f"AML/KYC check completed successfully: {data.get('status')}",
+                                  f"AML/KYC check completed successfully: {overall_status}",
                                   {"aml_kyc_results": data})
                     return True
                 else:
                     self.log_result("AML/KYC Check", False, 
-                                  f"AML/KYC check failed or pending: {data.get('status')}",
+                                  f"AML/KYC check failed or pending: {overall_status}",
                                   {"response": data})
                     return False
             else:
