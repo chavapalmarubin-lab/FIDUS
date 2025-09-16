@@ -6845,6 +6845,11 @@ async def create_prospect(prospect_data: ProspectCreate):
         
         # Store in MongoDB for persistence
         prospect_dict = prospect.dict()
+        # Add required fields for MongoDB schema
+        prospect_dict['prospect_id'] = prospect_dict['id']
+        if 'client_id' not in prospect_dict or prospect_dict['client_id'] is None:
+            prospect_dict['client_id'] = ""  # Empty string instead of None
+        
         await db.crm_prospects.insert_one(prospect_dict)
         
         # Also store in memory for backward compatibility
