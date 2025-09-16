@@ -92,11 +92,13 @@ def main():
         print(f"Total clients: {len(clients)}")
         
         lilian_client = None
-        for client in clients:
-            name = client.get('name', '').upper()
-            if 'LILIAN' in name:
-                lilian_client = client
-                break
+        if isinstance(clients, list):
+            for client in clients:
+                if isinstance(client, dict):
+                    name = client.get('name', '').upper()
+                    if 'LILIAN' in name:
+                        lilian_client = client
+                        break
         
         if lilian_client:
             print("✅ FOUND LILIAN AS CLIENT:")
