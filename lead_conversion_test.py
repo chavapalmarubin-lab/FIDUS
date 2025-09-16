@@ -194,7 +194,12 @@ class LeadConversionTest:
         
         try:
             # Test the conversion endpoint
-            response = self.session.post(f"{BACKEND_URL}/crm/prospects/{prospect_id}/convert")
+            conversion_request = {
+                "prospect_id": prospect_id,
+                "send_agreement": True
+            }
+            response = self.session.post(f"{BACKEND_URL}/crm/prospects/{prospect_id}/convert", 
+                                       json=conversion_request)
             
             if response.status_code == 200:
                 conversion_result = response.json()
