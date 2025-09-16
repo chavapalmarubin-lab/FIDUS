@@ -482,6 +482,25 @@ const ProspectManagement = () => {
             <Calendar className="h-3 w-3" />
             <span>Created: {new Date(prospect.created_at).toLocaleDateString()}</span>
           </div>
+          
+          {/* AML/KYC Status */}
+          {prospect.aml_kyc_status && (
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3" />
+              <span className={`text-xs font-medium ${
+                prospect.aml_kyc_status === 'clear' || prospect.aml_kyc_status === 'approved' 
+                  ? 'text-green-600' 
+                  : prospect.aml_kyc_status === 'manual_review' 
+                  ? 'text-yellow-600' 
+                  : prospect.aml_kyc_status === 'hit' || prospect.aml_kyc_status === 'rejected'
+                  ? 'text-red-600'
+                  : 'text-gray-600'
+              }`}>
+                AML/KYC: {prospect.aml_kyc_status.toUpperCase()}
+              </span>
+            </div>
+          )}
+          
           {prospect.notes && (
             <div className="flex items-start gap-2">
               <FileText className="h-3 w-3 mt-0.5" />
