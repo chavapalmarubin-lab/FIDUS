@@ -21,7 +21,8 @@ import {
   Wallet,
   LineChart,
   Save,
-  Play
+  Play,
+  Plus
 } from "lucide-react";
 import {
   LineChart as RechartsLineChart,
