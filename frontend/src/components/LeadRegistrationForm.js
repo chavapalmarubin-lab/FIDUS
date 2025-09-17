@@ -19,9 +19,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Upload,
-  DollarSign
+  DollarSign,
+  Calculator
 } from "lucide-react";
 import axios from "axios";
+import InvestmentSimulator from './InvestmentSimulator';
 
 const LeadRegistrationForm = ({ onBack, onComplete }) => {
   const [formData, setFormData] = useState({
