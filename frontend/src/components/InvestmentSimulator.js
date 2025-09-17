@@ -171,18 +171,211 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
     }
   };
 
-  const exportSimulation = () => {
+  const exportSimulation = async () => {
     if (!simulationResult) return;
     
-    const dataStr = JSON.stringify(simulationResult, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `FIDUS_Investment_Simulation_${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    try {
+      setLoading(true);
+      
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      let yPosition = margin;
+      
+      // Add FIDUS Logo (you can replace this with actual logo if available)
+      pdf.setFontSize(24);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(59, 130, 246); // Blue color
+      pdf.text('FIDUS', margin, yPosition);
+      
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(100, 116, 139); // Gray color
+      pdf.text('Professional Investment Management Platform', margin, yPosition + 8);
+      
+      yPosition += 30;
+      
+      // Title
+      pdf.setFontSize(20);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(17, 24, 39); // Dark gray
+      pdf.text('Investment Portfolio Simulation Report', margin, yPosition);
+      
+      yPosition += 15;
+      
+      // Date and Simulation Info
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(75, 85, 99);
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      pdf.text(`Generated: ${currentDate}`, margin, yPosition);
+      
+      if (simulationResult.simulation_name) {
+        pdf.text(`Simulation: ${simulationResult.simulation_name}`, margin, yPosition + 5);
+        yPosition += 5;
+      }
+      
+      if (simulationResult.lead_info?.name) {
+        pdf.text(`Prepared for: ${simulationResult.lead_info.name}`, margin, yPosition + 5);
+        yPosition += 5;
+      }
+      
+      yPosition += 20;
+      
+      // Executive Summary Box
+      pdf.setDrawColor(59, 130, 246);
+      pdf.setFillColor(239, 246, 255);
+      pdf.roundedRect(margin, yPosition, pageWidth - 2*margin, 35, 3, 3, 'FD');
+      
+      yPosition += 8;
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(59, 130, 246);
+      pdf.text('Executive Summary', margin + 5, yPosition);
+      
+      yPosition += 8;
+      pdf.setFontSize(11);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(17, 24, 39);
+      
+      const summaryStats = [
+        `Total Investment: ${formatCurrency(simulationResult.summary.total_investment)}`,
+        `Projected Final Value: ${formatCurrency(simulationResult.summary.final_value)}`,
+        `Total Interest Earned: ${formatCurrency(simulationResult.summary.total_interest_earned)}`,
+        `Return on Investment: ${formatPercentage(simulationResult.summary.total_roi_percentage)}`
+      ];
+      
+      summaryStats.forEach((stat, index) => {
+        pdf.text(stat, margin + 5, yPosition);
+        yPosition += 5;
+      });
+      
+      yPosition += 15;
+      
+      // Fund Breakdown
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Investment Fund Breakdown', margin, yPosition);
+      yPosition += 10;
+      
+      simulationResult.fund_breakdown.forEach((fund, index) => {
+        // Check if we need a new page
+        if (yPosition > pageHeight - 60) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        // Fund header
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(`${fund.fund_name} (${fund.fund_code})`, margin, yPosition);
+        
+        yPosition += 8;
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(75, 85, 99);
+        
+        const fundDetails = [
+          `Investment Amount: ${formatCurrency(fund.investment_amount)}`,
+          `Interest Rate: ${fund.interest_rate}% monthly`,
+          `Redemption Frequency: ${fund.redemption_frequency}`,
+          `Final Value: ${formatCurrency(fund.final_value)}`,
+          `Total Interest: ${formatCurrency(fund.total_interest)}`,
+          `ROI: ${formatPercentage(fund.roi_percentage)}`
+        ];
+        
+        fundDetails.forEach(detail => {
+          pdf.text(`• ${detail}`, margin + 5, yPosition);
+          yPosition += 4;
+        });
+        
+        yPosition += 8;
+      });
+      
+      // Investment Timeline (Key Events)
+      if (yPosition > pageHeight - 100) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Key Investment Timeline Events', margin, yPosition);
+      yPosition += 10;
+      
+      // Get key events (investment starts, incubation ends, principal redeemable)
+      const keyEvents = simulationResult.calendar_events.filter(event => 
+        ['investment_start', 'incubation_end', 'principal_redeemable'].includes(event.type)
+      ).slice(0, 10); // Limit to first 10 events
+      
+      keyEvents.forEach(event => {
+        if (yPosition > pageHeight - 30) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(`${new Date(event.date).toLocaleDateString()} - ${event.title}`, margin, yPosition);
+        
+        yPosition += 4;
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(75, 85, 99);
+        const description = pdf.splitTextToSize(event.description, pageWidth - 2*margin - 10);
+        pdf.text(description, margin + 5, yPosition);
+        yPosition += description.length * 4 + 5;
+      });
+      
+      // Add disclaimer/footer
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = margin;
+      } else {
+        yPosition = pageHeight - 35;
+      }
+      
+      pdf.setDrawColor(229, 231, 235);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, 'italic');
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('This simulation is for illustrative purposes only and does not constitute investment advice.', margin, yPosition);
+      pdf.text('Past performance does not guarantee future results. Please consult with a financial advisor.', margin, yPosition + 4);
+      pdf.text('Generated by FIDUS Investment Management Platform', margin, yPosition + 8);
+      
+      // Add page numbers
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 10);
+      }
+      
+      // Save the PDF
+      const fileName = `FIDUS_Investment_Simulation_${simulationResult.lead_info?.name?.replace(/\s+/g, '_') || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      setSuccess("Investment simulation PDF exported successfully!");
+      
+    } catch (error) {
+      console.error('PDF export error:', error);
+      setError("Failed to export PDF. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const emailSimulation = async () => {
