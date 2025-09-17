@@ -7431,6 +7431,10 @@ async def get_prospect_pipeline():
         logging.error(f"Get pipeline error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch prospect pipeline")
 
+class SimulationInvestmentItem(BaseModel):
+    fund_code: str
+    amount: float
+
 # ===============================================================================
 # INVESTMENT SIMULATION ENDPOINTS
 # ===============================================================================
