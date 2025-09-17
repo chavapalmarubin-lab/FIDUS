@@ -864,6 +864,33 @@ const ProspectManagement = () => {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="simulator" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="w-5 h-5" />
+                Investment Portfolio Simulator
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-blue-900 mb-1">Sales Tool - Investment Simulator</h3>
+                    <p className="text-blue-700 text-sm">
+                      Use this powerful tool during prospect calls to show real-time projections across FIDUS fund combinations. 
+                      Demonstrate potential returns, incubation periods, and redemption schedules to convert leads effectively.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <InvestmentSimulator isPublic={false} />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Add Prospect Modal */}
