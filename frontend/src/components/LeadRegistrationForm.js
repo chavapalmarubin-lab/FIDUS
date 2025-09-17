@@ -422,8 +422,39 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
             </motion.div>
           )}
           
-          {/* Step 4: Document Upload */}
+          {/* Step 4: Investment Simulator */}
           {step === 4 && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
+              <div className="bg-slate-700 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calculator className="w-5 h-5 text-cyan-400" />
+                  <h3 className="text-lg font-medium text-white">Investment Portfolio Simulator</h3>
+                </div>
+                <p className="text-slate-300 text-sm mb-4">
+                  Explore potential returns with our fund combination tool. See how different investment allocations 
+                  across CORE, BALANCE, DYNAMIC, and UNLIMITED funds could perform over time.
+                </p>
+              </div>
+
+              <div className="bg-slate-900 rounded-lg">
+                <InvestmentSimulator 
+                  isPublic={true} 
+                  leadInfo={{
+                    name: `${formData.firstName} ${formData.lastName}`.trim(),
+                    email: formData.email,
+                    phone: formData.phone
+                  }}
+                />
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Step 5: Document Upload */}
+          {step === 5 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
