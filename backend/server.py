@@ -7440,7 +7440,7 @@ class SimulationInvestmentItem(BaseModel):
 # ===============================================================================
 
 class InvestmentSimulationRequest(BaseModel):
-    investments: List[Dict[str, float]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
+    investments: List[Dict[str, Any]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
     lead_info: Optional[Dict[str, str]] = None  # {"name": "John Doe", "email": "john@example.com"}
     simulation_name: Optional[str] = None
     timeframe_months: Optional[int] = 24  # Default 2 years
@@ -7456,7 +7456,7 @@ class SimulationResult(BaseModel):
     simulation_name: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-def calculate_simulation_projections(investments: List[Dict[str, float]], timeframe_months: int = 24) -> Dict[str, Any]:
+def calculate_simulation_projections(investments: List[Dict[str, Any]], timeframe_months: int = 24) -> Dict[str, Any]:
     """Calculate comprehensive investment simulation projections"""
     total_investment = sum(inv['amount'] for inv in investments)
     fund_breakdown = []
@@ -7702,7 +7702,7 @@ async def get_public_fund_configurations():
 # ===============================================================================
 
 class InvestmentSimulationRequest(BaseModel):
-    investments: List[Dict[str, float]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
+    investments: List[Dict[str, Any]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
     lead_info: Optional[Dict[str, str]] = None  # {"name": "John Doe", "email": "john@example.com"}
     simulation_name: Optional[str] = None
     timeframe_months: Optional[int] = 24  # Default 2 years
@@ -7718,7 +7718,7 @@ class SimulationResult(BaseModel):
     simulation_name: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-def calculate_simulation_projections(investments: List[Dict[str, float]], timeframe_months: int = 24) -> Dict[str, Any]:
+def calculate_simulation_projections(investments: List[Dict[str, Any]], timeframe_months: int = 24) -> Dict[str, Any]:
     """Calculate comprehensive investment simulation projections"""
     total_investment = sum(inv['amount'] for inv in investments)
     fund_breakdown = []
@@ -7964,7 +7964,7 @@ async def get_public_fund_configurations():
 # ===============================================================================
 
 class InvestmentSimulationRequest(BaseModel):
-    investments: List[Dict[str, float]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
+    investments: List[Dict[str, Any]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
     lead_info: Optional[Dict[str, str]] = None  # {"name": "John Doe", "email": "john@example.com"}
     simulation_name: Optional[str] = None
     timeframe_months: Optional[int] = 24  # Default 2 years
@@ -7980,7 +7980,7 @@ class SimulationResult(BaseModel):
     simulation_name: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-def calculate_simulation_projections(investments: List[Dict[str, float]], timeframe_months: int = 24) -> Dict[str, Any]:
+def calculate_simulation_projections(investments: List[Dict[str, Any]], timeframe_months: int = 24) -> Dict[str, Any]:
     """Calculate comprehensive investment simulation projections"""
     total_investment = sum(inv['amount'] for inv in investments)
     fund_breakdown = []
