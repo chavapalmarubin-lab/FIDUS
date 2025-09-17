@@ -1286,7 +1286,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Investment Simulator Feature Testing - Pie Chart Fix Verification" # COMPLETED
+    - "Investment Simulator PDF Export with FIDUS Logo Integration Testing" # COMPLETED
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
