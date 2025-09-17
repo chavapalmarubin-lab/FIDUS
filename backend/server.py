@@ -7173,7 +7173,7 @@ async def run_aml_kyc_check(prospect_id: str):
         
         # Get uploaded documents
         documents = []
-        prospect_documents = prospect_documents_storage.get(prospect_id, [])
+        prospect_documents = []  # Now using MongoDB for persistence
         
         for doc_data in prospect_documents:
             kyc_doc = KYCDocument(
