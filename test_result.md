@@ -1270,13 +1270,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Investment Simulator Feature Testing - Pie Chart Fix Verification"
-    - "Lead Registration Multi-Step Form Testing"
-    - "Admin Investment Simulator Interface Testing"
+    - "Investment Simulator Feature Testing - Pie Chart Fix Verification" # COMPLETED
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
-  test_priority: "investment_simulator_critical"
+  test_priority: "investment_simulator_completed"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "critical_issue_found"
