@@ -257,7 +257,8 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
             {step === 1 && "Personal Information"}
             {step === 2 && "Address & Verification"}
             {step === 3 && "Investment Interest"}
-            {step === 4 && "Document Upload"}
+            {step === 4 && "Investment Simulator"}
+            {step === 5 && "Document Upload"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
