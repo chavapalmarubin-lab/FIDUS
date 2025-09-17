@@ -826,6 +826,10 @@ const ProspectManagement = () => {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="simulator">
+            <Calculator className="w-4 h-4 mr-2" />
+            Investment Simulator
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
