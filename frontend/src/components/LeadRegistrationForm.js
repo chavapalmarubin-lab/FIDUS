@@ -540,19 +540,19 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
               {step === 1 ? "Back to Login" : "Previous"}
             </Button>
             
-            {step < 4 ? (
+            {step < 5 ? (
               <Button
                 onClick={nextStep}
                 disabled={loading}
                 className="bg-cyan-600 hover:bg-cyan-700"
               >
-                Next
+                {step === 4 ? "Skip Simulator" : "Next"}
                 <ArrowRight size={16} className="ml-2" />
               </Button>
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || !documents.governmentId || !documents.proofOfAddress}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {loading ? (
@@ -562,7 +562,7 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
                   </>
                 ) : (
                   <>
-                    Complete Registration
+                    Submit Application
                     <CheckCircle size={16} className="ml-2" />
                   </>
                 )}
