@@ -184,18 +184,39 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
       const margin = 20;
       let yPosition = margin;
       
-      // Add FIDUS Logo (you can replace this with actual logo if available)
-      pdf.setFontSize(24);
-      pdf.setFont(undefined, 'bold');
-      pdf.setTextColor(59, 130, 246); // Blue color
-      pdf.text('FIDUS', margin, yPosition);
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'normal');
-      pdf.setTextColor(100, 116, 139); // Gray color
-      pdf.text('Professional Investment Management Platform', margin, yPosition + 8);
-      
-      yPosition += 30;
+      // Load and add FIDUS Logo
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'anonymous';
+        
+        await new Promise((resolve, reject) => {
+          logoImg.onload = () => resolve();
+          logoImg.onerror = () => reject();
+          logoImg.src = '/fidus-logo-complete.png';
+        });
+        
+        // Add logo to PDF (adjust size as needed)
+        const logoWidth = 40;
+        const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+        pdf.addImage(logoImg, 'PNG', margin, yPosition, logoWidth, logoHeight);
+        
+        yPosition += logoHeight + 15;
+        
+      } catch (logoError) {
+        console.warn('Could not load logo, using text fallback:', logoError);
+        // Fallback to text logo if image fails to load
+        pdf.setFontSize(24);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(59, 130, 246); // Blue color
+        pdf.text('FIDUS', margin, yPosition);
+        
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(100, 116, 139); // Gray color
+        pdf.text('Professional Investment Management Platform', margin, yPosition + 8);
+        
+        yPosition += 30;
+      }
       
       // Title
       pdf.setFontSize(20);
