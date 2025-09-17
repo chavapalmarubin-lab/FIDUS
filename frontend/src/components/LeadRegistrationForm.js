@@ -127,6 +127,9 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
       isValid = validateStep2();
     } else if (step === 3) {
       isValid = validateStep3();
+    } else if (step === 4) {
+      // Investment simulator step - always valid (optional step)
+      isValid = true;
     }
     
     if (isValid) {
