@@ -760,9 +760,9 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                       Fund Breakdown
                     </CardTitle>
                     <div className="flex gap-2">
-                      <Button onClick={exportSimulation} variant="outline" size="sm">
+                      <Button onClick={exportSimulation} variant="outline" size="sm" disabled={loading}>
                         <Download className="w-4 h-4 mr-2" />
-                        Export
+                        {loading ? "Generating PDF..." : "Export PDF"}
                       </Button>
                       <Button onClick={emailSimulation} variant="outline" size="sm">
                         <Mail className="w-4 h-4 mr-2" />
