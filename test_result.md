@@ -1267,13 +1267,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "CRITICAL: Document Upload Persistence Issue - Lilian Limon Leite"
-    - "Prospect Document Storage System Fix"
-    - "MongoDB Integration for Prospect Documents"
+    - "Investment Simulator Feature Testing - Pie Chart Fix Verification"
+    - "Lead Registration Multi-Step Form Testing"
+    - "Admin Investment Simulator Interface Testing"
   stuck_tasks: 
     - "Production Salvador Palma Data Verification After Frontend URL Fix"
   test_all: false
-  test_priority: "document_persistence_critical"
+  test_priority: "investment_simulator_critical"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "critical_issue_found"
