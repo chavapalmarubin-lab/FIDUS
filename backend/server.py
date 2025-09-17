@@ -67,7 +67,9 @@ client = AsyncIOMotorClient(
 db = client[os.environ.get('DB_NAME', 'fidus_investment_db')]
 
 # JWT Configuration
-JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-investment-management-secret-key-2024')
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+if not JWT_SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable is required")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
