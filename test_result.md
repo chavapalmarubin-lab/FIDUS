@@ -193,6 +193,18 @@
 user_problem_statement: "PRODUCTION READINESS COMPREHENSIVE STRESS TEST WITH SCALABILITY FOCUS - Going Live Monday: The FIDUS Investment Management System requires complete validation of all systems, data flows, calculations, and real MT5 feed integration before production deployment. CRITICAL SCALABILITY REQUIREMENT: System currently has 1 MT5 account mapped but must scale to handle 100 MT5 accounts within one month. Core requirements: 1) All authentication flows working under load, 2) All fund performance calculations accurate at scale, 3) Real MT5 data feeds operational for multiple accounts, 4) All user journeys functional with concurrent users, 5) Database integrity validated under stress, 6) Security protocols verified with high throughput, 7) Admin and client dashboards fully operational with large datasets, 8) Fund Performance vs MT5 Reality system accurate across 100 accounts, 9) All API endpoints responding correctly under concurrent load, 10) Error handling robust during peak usage, 11) UI/UX polished and professional with large data volumes, 12) System scalability validated for 100x current MT5 account load."
 
 frontend:
+  - task: "Investment Simulator Feature Testing - Pie Chart Fix Verification"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/InvestmentSimulator.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "INVESTMENT SIMULATOR FEATURE IMPLEMENTED: Fixed critical 'Pie is not defined' error by adding missing Pie import from Recharts. The Investment Simulator is now integrated into both Lead Registration (step 4) and Admin Prospect Management (Investment Simulator tab). Key features: (1) Fund configuration cards for CORE, BALANCE, DYNAMIC, UNLIMITED funds, (2) Investment input fields for different fund combinations, (3) 'Run Investment Simulation' button functionality, (4) Results display with charts, tables, and calendar timeline, (5) All visualizations render properly (line charts, pie charts, bar charts). Ready for comprehensive testing of both lead registration flow and admin simulator interface."
+
   - task: "Pipeline Stage Progression Button Visibility and Functionality Improvements"
     implemented: true
     working: true
