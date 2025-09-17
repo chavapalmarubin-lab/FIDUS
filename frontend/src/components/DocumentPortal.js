@@ -610,7 +610,7 @@ const DocumentPortal = ({ user, userType }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-3">
                 <h4 className="text-white font-medium">Production Documents</h4>
                 <div className="space-y-2 text-sm">
@@ -625,6 +625,34 @@ const DocumentPortal = ({ user, userType }) => {
                   <div className="flex items-center gap-2 text-slate-300">
                     <FileText size={14} className="text-yellow-400" />
                     <span>API Documentation (FastAPI)</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Environment Configuration</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <h5 className="text-cyan-400 font-medium mb-2">Frontend (.env)</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">REACT_APP_BACKEND_URL</div>
+                      <div className="text-slate-400">→ Production API endpoint</div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <h5 className="text-cyan-400 font-medium mb-2">Backend (.env)</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">MONGO_URL</div>
+                      <div className="text-slate-400">→ MongoDB connection string</div>
+                      <div className="font-mono">DB_NAME</div>
+                      <div className="text-slate-400">→ Database name</div>
+                      <div className="font-mono">JWT_SECRET_KEY</div>
+                      <div className="text-slate-400">→ JWT token signing key</div>
+                      <div className="font-mono">FRONTEND_URL</div>
+                      <div className="text-slate-400">→ Frontend domain URL</div>
+                      <div className="font-mono">CORS_ORIGINS</div>
+                      <div className="text-slate-400">→ Allowed CORS origins</div>
+                    </div>
                   </div>
                 </div>
               </div>
