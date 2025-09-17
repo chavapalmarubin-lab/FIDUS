@@ -7956,6 +7956,268 @@ async def get_public_fund_configurations():
         raise HTTPException(status_code=500, detail="Failed to fetch fund configurations")
 
 # ===============================================================================
+# INVESTMENT SIMULATION ENDPOINTS
+# ===============================================================================
+
+class InvestmentSimulationRequest(BaseModel):
+    investments: List[Dict[str, float]]  # [{"fund_code": "CORE", "amount": 10000}, ...]
+    lead_info: Optional[Dict[str, str]] = None  # {"name": "John Doe", "email": "john@example.com"}
+    simulation_name: Optional[str] = None
+    timeframe_months: Optional[int] = 24  # Default 2 years
+
+class SimulationResult(BaseModel):
+    simulation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    total_investment: float
+    fund_breakdown: List[Dict[str, Any]]
+    projected_timeline: List[Dict[str, Any]]
+    summary: Dict[str, float]
+    calendar_events: List[Dict[str, Any]]
+    lead_info: Optional[Dict[str, str]] = None
+    simulation_name: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+def calculate_simulation_projections(investments: List[Dict[str, float]], timeframe_months: int = 24) -> Dict[str, Any]:
+    """Calculate comprehensive investment simulation projections"""
+    total_investment = sum(inv['amount'] for inv in investments)
+    fund_breakdown = []
+    projected_timeline = []
+    calendar_events = []
+    
+    # Process each fund investment
+    fund_simulations = []
+    for investment in investments:
+        fund_code = investment['fund_code']
+        amount = investment['amount']
+        
+        if fund_code not in FIDUS_FUND_CONFIG:
+            continue
+            
+        fund_config = FIDUS_FUND_CONFIG[fund_code]
+        
+        # Validate minimum investment
+        if amount < fund_config.minimum_investment:
+            raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
+        
+        # Calculate dates (assuming investment starts today)
+        deposit_date = datetime.now(timezone.utc)
+        incubation_end_date = deposit_date + timedelta(days=fund_config.incubation_months * 30)
+        interest_start_date = incubation_end_date
+        minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        
+        # Calculate projections for this fund
+        fund_projections = []
+        total_interest_earned = 0.0
+        current_date = deposit_date
+        end_date = deposit_date + timedelta(days=timeframe_months * 30)
+        
+        # Generate monthly projections
+        for month in range(timeframe_months + 1):
+            projection_date = deposit_date + timedelta(days=month * 30)
+            
+            # Check if we're past incubation period
+            if projection_date >= interest_start_date and fund_config.interest_rate > 0:
+                # Calculate accumulated interest
+                months_since_interest_start = max(0, (projection_date - interest_start_date).days / 30)
+                accumulated_interest = calculate_simple_interest(amount, fund_config.interest_rate, months_since_interest_start)
+                current_value = amount + accumulated_interest
+                
+                # Check if it's a redemption month (for interest)
+                can_redeem_interest = False
+                if fund_config.redemption_frequency == "monthly":
+                    can_redeem_interest = months_since_interest_start >= 1
+                elif fund_config.redemption_frequency == "quarterly":
+                    can_redeem_interest = months_since_interest_start >= 3 and int(months_since_interest_start) % 3 == 0
+                elif fund_config.redemption_frequency == "semi_annually":
+                    can_redeem_interest = months_since_interest_start >= 6 and int(months_since_interest_start) % 6 == 0
+                
+                # Add calendar events for redemption opportunities
+                if can_redeem_interest and month <= timeframe_months:
+                    monthly_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    calendar_events.append({
+                        "date": projection_date.isoformat().split('T')[0],
+                        "title": f"{fund_code} Interest Available",
+                        "description": f"${monthly_interest:,.2f} interest can be redeemed",
+                        "amount": monthly_interest,
+                        "fund_code": fund_code,
+                        "type": "interest_redemption"
+                    })
+                    
+            else:
+                # Still in incubation period
+                current_value = amount
+                accumulated_interest = 0.0
+            
+            fund_projections.append({
+                "month": month,
+                "date": projection_date.isoformat().split('T')[0],
+                "principal": amount,
+                "current_value": round(current_value, 2),
+                "interest_earned": round(accumulated_interest, 2),
+                "in_incubation": projection_date < interest_start_date
+            })
+        
+        # Add key milestone events
+        calendar_events.extend([
+            {
+                "date": deposit_date.isoformat().split('T')[0],
+                "title": f"{fund_code} Investment Start",
+                "description": f"${amount:,.2f} invested in {fund_config.name}",
+                "amount": amount,
+                "fund_code": fund_code,
+                "type": "investment_start"
+            },
+            {
+                "date": incubation_end_date.isoformat().split('T')[0],
+                "title": f"{fund_code} Incubation Ends",
+                "description": f"Interest earnings begin ({fund_config.interest_rate}% monthly)",
+                "amount": 0,
+                "fund_code": fund_code,
+                "type": "incubation_end"
+            },
+            {
+                "date": minimum_hold_end_date.isoformat().split('T')[0],
+                "title": f"{fund_code} Principal Redeemable",
+                "description": f"Principal of ${amount:,.2f} becomes available for redemption",
+                "amount": amount,
+                "fund_code": fund_code,
+                "type": "principal_redeemable"
+            }
+        ])
+        
+        # Calculate final fund summary
+        final_projection = fund_projections[-1]
+        fund_breakdown.append({
+            "fund_code": fund_code,
+            "fund_name": fund_config.name,
+            "investment_amount": amount,
+            "minimum_investment": fund_config.minimum_investment,
+            "interest_rate": fund_config.interest_rate,
+            "redemption_frequency": fund_config.redemption_frequency,
+            "incubation_months": fund_config.incubation_months,
+            "minimum_hold_months": fund_config.minimum_hold_months,
+            "final_value": final_projection['current_value'],
+            "total_interest": final_projection['interest_earned'],
+            "roi_percentage": round((final_projection['interest_earned'] / amount) * 100, 2),
+            "projections": fund_projections
+        })
+        
+        fund_simulations.append({
+            "fund_code": fund_code,
+            "projections": fund_projections
+        })
+    
+    # Create combined timeline showing total portfolio value over time
+    for month in range(timeframe_months + 1):
+        projection_date = (datetime.now(timezone.utc) + timedelta(days=month * 30))
+        total_value = 0.0
+        total_interest = 0.0
+        
+        for fund_sim in fund_simulations:
+            if month < len(fund_sim['projections']):
+                proj = fund_sim['projections'][month]
+                total_value += proj['current_value']
+                total_interest += proj['interest_earned']
+        
+        projected_timeline.append({
+            "month": month,
+            "date": projection_date.isoformat().split('T')[0],
+            "total_investment": total_investment,
+            "total_value": round(total_value, 2),
+            "total_interest": round(total_interest, 2),
+            "growth_percentage": round(((total_value - total_investment) / total_investment) * 100, 2) if total_investment > 0 else 0
+        })
+    
+    # Calculate summary statistics
+    final_timeline = projected_timeline[-1]
+    summary = {
+        "total_investment": total_investment,
+        "final_value": final_timeline['total_value'],
+        "total_interest_earned": final_timeline['total_interest'],
+        "total_roi_percentage": final_timeline['growth_percentage'],
+        "monthly_average_interest": round(final_timeline['total_interest'] / timeframe_months, 2) if timeframe_months > 0 else 0,
+        "timeframe_months": timeframe_months
+    }
+    
+    # Sort calendar events by date
+    calendar_events.sort(key=lambda x: x['date'])
+    
+    return {
+        "total_investment": total_investment,
+        "fund_breakdown": fund_breakdown,
+        "projected_timeline": projected_timeline,
+        "summary": summary,
+        "calendar_events": calendar_events
+    }
+
+@api_router.post("/investments/simulate")
+async def simulate_investment(simulation_request: InvestmentSimulationRequest):
+    """Simulate investment portfolio performance"""
+    try:
+        # Validate investments
+        if not simulation_request.investments:
+            raise HTTPException(status_code=400, detail="At least one investment is required")
+        
+        # Calculate projections
+        simulation_data = calculate_simulation_projections(
+            simulation_request.investments, 
+            simulation_request.timeframe_months or 24
+        )
+        
+        # Create simulation result
+        result = SimulationResult(
+            total_investment=simulation_data["total_investment"],
+            fund_breakdown=simulation_data["fund_breakdown"],
+            projected_timeline=simulation_data["projected_timeline"],
+            summary=simulation_data["summary"],
+            calendar_events=simulation_data["calendar_events"],
+            lead_info=simulation_request.lead_info,
+            simulation_name=simulation_request.simulation_name
+        )
+        
+        # Store simulation (in production, save to database)
+        # For now, just return the result
+        
+        return {
+            "success": True,
+            "simulation": result.dict(),
+            "message": "Investment simulation completed successfully"
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logging.error(f"Investment simulation error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to simulate investment")
+
+@api_router.get("/investments/funds/config")
+async def get_public_fund_configurations():
+    """Get public fund configurations for simulation (no authentication required)"""
+    try:
+        funds = []
+        
+        for fund_code, config in FIDUS_FUND_CONFIG.items():
+            funds.append({
+                'fund_code': fund_code,
+                'name': config.name,
+                'interest_rate': config.interest_rate,
+                'minimum_investment': config.minimum_investment,
+                'redemption_frequency': config.redemption_frequency,
+                'incubation_months': config.incubation_months,
+                'minimum_hold_months': config.minimum_hold_months,
+                'invitation_only': config.invitation_only,
+                'description': f"{config.interest_rate}% monthly simple interest, {config.redemption_frequency} redemptions, ${config.minimum_investment:,.0f} min"
+            })
+        
+        return {
+            "success": True,
+            "funds": funds
+        }
+        
+    except Exception as e:
+        logging.error(f"Get fund configurations error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch fund configurations")
+
+# ===============================================================================
 # INVESTMENT MANAGEMENT ENDPOINTS
 # ===============================================================================
 
