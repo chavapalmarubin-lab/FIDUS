@@ -229,7 +229,7 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
     <div className="space-y-6">
       {/* Progress Indicator */}
       <div className="flex items-center justify-between mb-6">
-        {[1, 2, 3, 4].map((stepNum) => (
+        {[1, 2, 3, 4, 5].map((stepNum) => (
           <div key={stepNum} className="flex items-center">
             <div className={`
               w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -240,7 +240,7 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
             `}>
               {step > stepNum ? <CheckCircle size={16} /> : stepNum}
             </div>
-            {stepNum < 4 && (
+            {stepNum < 5 && (
               <div className={`
                 h-1 w-12 mx-2
                 ${step > stepNum ? 'bg-cyan-600' : 'bg-slate-600'}
