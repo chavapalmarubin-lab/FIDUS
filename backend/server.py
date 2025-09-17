@@ -5045,7 +5045,7 @@ async def send_document_for_signature(
                 break
         
         # Create document viewing URL (you can customize this)
-        document_url = f"https://aml-kyc-portal.preview.emergentagent.com/documents/{document_id}/view"
+        document_url = f"{os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')}/documents/{document_id}/view"
         
         # Send emails to all recipients using Gmail
         successful_sends = []
