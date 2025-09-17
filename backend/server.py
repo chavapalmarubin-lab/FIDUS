@@ -5247,7 +5247,7 @@ async def gmail_oauth_callback(code: str, state: str):
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
             ],
-            redirect_uri='https://aml-kyc-portal.preview.emergentagent.com/api/gmail/oauth-callback'
+            redirect_uri=f"{os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')}/api/gmail/oauth-callback"
         )
         
         # Exchange authorization code for tokens
