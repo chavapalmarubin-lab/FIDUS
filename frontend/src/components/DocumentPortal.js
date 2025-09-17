@@ -662,6 +662,10 @@ const DocumentPortal = ({ user, userType }) => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-slate-300">
                     <CheckCircle size={14} className="text-green-400" />
+                    <span>Investment Simulator with PDF Export</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
                     <span>MT5 Integration Complete</span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-300">
@@ -670,25 +674,44 @@ const DocumentPortal = ({ user, userType }) => {
                   </div>
                   <div className="flex items-center gap-2 text-slate-300">
                     <CheckCircle size={14} className="text-green-400" />
-                    <span>Financial Calculations Fixed</span>
+                    <span>AML/KYC Lead Pipeline</span>
                   </div>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <h4 className="text-white font-medium">System Status</h4>
+                <h4 className="text-white font-medium">Deployment Secrets</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-green-400">Production Ready</span>
+                  <div className="bg-red-900/20 p-3 rounded-lg border border-red-600/30">
+                    <h5 className="text-red-400 font-medium mb-2">⚠️ Required Secrets</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono">JWT_SECRET_KEY</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ Secure random string for JWT tokens</div>
+                      
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-mono">MONGO_URL</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ MongoDB connection string from Emergent</div>
+                      
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-mono">FRONTEND_URL</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ https://fidus-invest.emergent.host</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-green-400">All Tests Passing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-green-400">Data Integrity Verified</span>
+                  
+                  <div className="bg-yellow-900/20 p-3 rounded-lg border border-yellow-600/30">
+                    <h5 className="text-yellow-400 font-medium mb-2">📧 Optional Gmail Integration</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">GMAIL_CLIENT_ID</div>
+                      <div className="font-mono">GMAIL_CLIENT_SECRET</div>
+                      <div className="text-slate-400">→ For automated email features</div>
+                    </div>
                   </div>
                 </div>
               </div>
