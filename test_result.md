@@ -1362,11 +1362,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Investment Simulator PDF Export with FIDUS Logo Integration Testing" # COMPLETED
+    - "Google Admin OAuth Integration Testing"
   stuck_tasks: 
-    - "Production Salvador Palma Data Verification After Frontend URL Fix"
+    - "Google Admin OAuth Integration Testing"
   test_all: false
-  test_priority: "investment_simulator_completed"
+  test_priority: "google_oauth_backend_fix_required"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "critical_issue_found"
