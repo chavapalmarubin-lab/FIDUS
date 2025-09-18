@@ -160,58 +160,32 @@ class InvestmentApprovalTest:
     def test_approve_investments(self):
         """Approve the investments to change status from pending_mt5_validation to active"""
         try:
-            # Try different possible approval endpoints
-            approval_endpoints = [
-                "/admin/investments/approve",
-                "/admin/investments/validate",
-                "/investments/approve",
-                "/investments/validate"
-            ]
-            
             investments_to_approve = [
                 {"id": BALANCE_INVESTMENT_ID, "fund": "BALANCE", "amount": 100000.0},
                 {"id": CORE_INVESTMENT_ID, "fund": "CORE", "amount": 4000.0}
             ]
             
             for investment in investments_to_approve:
-                approved = False
-                
-                for endpoint in approval_endpoints:
-                    try:
-                        # Try different payload formats
-                        payloads = [
-                            {"investment_id": investment["id"], "action": "approve"},
-                            {"investment_id": investment["id"], "status": "active"},
-                            {"id": investment["id"], "action": "approve"},
-                            {"id": investment["id"], "status": "active"},
-                            [investment["id"]],  # Array format
-                            {"investment_ids": [investment["id"]]}
-                        ]
+                try:
+                    # Use the correct approval endpoint found in backend code
+                    endpoint = f"/investments/{investment['id']}/approve"
+                    response = self.session.post(f"{BACKEND_URL}{endpoint}")
+                    
+                    if response.status_code in [200, 201]:
+                        data = response.json()
+                        if data.get('success'):
+                            self.log_result(f"Approve {investment['fund']} Investment", True, 
+                                          f"Successfully approved {investment['fund']} investment")
+                        else:
+                            self.log_result(f"Approve {investment['fund']} Investment", False, 
+                                          f"Approval request returned success=false: {data}")
+                    else:
+                        self.log_result(f"Approve {investment['fund']} Investment", False, 
+                                      f"HTTP {response.status_code}: {response.text[:200]}")
                         
-                        for payload in payloads:
-                            response = self.session.post(f"{BACKEND_URL}{endpoint}", json=payload)
-                            if response.status_code in [200, 201]:
-                                data = response.json()
-                                if data.get('success') or 'approved' in str(data).lower():
-                                    self.log_result(f"Approve {investment['fund']} Investment", True, 
-                                                  f"Successfully approved {investment['fund']} investment via {endpoint}")
-                                    approved = True
-                                    break
-                            elif response.status_code == 404:
-                                continue  # Try next endpoint
-                            else:
-                                # Log non-404 errors for debugging
-                                print(f"   Debug: {endpoint} returned {response.status_code}: {response.text[:200]}")
-                        
-                        if approved:
-                            break
-                            
-                    except Exception as e:
-                        continue  # Try next endpoint
-                
-                if not approved:
+                except Exception as e:
                     self.log_result(f"Approve {investment['fund']} Investment", False, 
-                                  f"Failed to approve {investment['fund']} investment - no working endpoint found")
+                                  f"Exception: {str(e)}")
                     
         except Exception as e:
             self.log_result("Approve Investments", False, f"Exception: {str(e)}")
