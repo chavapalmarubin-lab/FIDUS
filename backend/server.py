@@ -7439,6 +7439,84 @@ class SimulationInvestmentItem(BaseModel):
     amount: float
 
 # ===============================================================================
+# CURRENCY CONVERSION ENDPOINTS
+# ===============================================================================
+
+class CurrencyConversionRequest(BaseModel):
+    amount: float
+    from_currency: str = "USD"
+    to_currency: str = "USD"
+
+@api_router.get("/currency/rates")
+async def get_exchange_rates():
+    """Get current exchange rates for supported currencies"""
+    try:
+        rates = currency_service.get_exchange_rates()
+        currency_info = currency_service.get_currency_info()
+        
+        return {
+            "success": True,
+            "rates": rates,
+            "supported_currencies": currency_info,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Get exchange rates error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch exchange rates")
+
+@api_router.post("/currency/convert")
+async def convert_currency(conversion_request: CurrencyConversionRequest):
+    """Convert amount between currencies"""
+    try:
+        converted_amount = currency_service.convert_amount(
+            conversion_request.amount,
+            conversion_request.from_currency,
+            conversion_request.to_currency
+        )
+        
+        formatted_amount = currency_service.format_currency(
+            converted_amount,
+            conversion_request.to_currency
+        )
+        
+        rates = currency_service.get_exchange_rates()
+        exchange_rate = rates.get(conversion_request.to_currency, 1.0)
+        
+        return {
+            "success": True,
+            "original_amount": conversion_request.amount,
+            "converted_amount": converted_amount,
+            "formatted_amount": formatted_amount,
+            "from_currency": conversion_request.from_currency,
+            "to_currency": conversion_request.to_currency,
+            "exchange_rate": exchange_rate
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logging.error(f"Currency conversion error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to convert currency")
+
+@api_router.get("/currency/summary/{amount}")
+async def get_currency_summary(amount: float):
+    """Get conversion summary for amount in all supported currencies"""
+    try:
+        summary = currency_service.get_conversion_summary(amount)
+        
+        return {
+            "success": True,
+            "base_amount": amount,
+            "base_currency": "USD",
+            "conversions": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Currency summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get currency summary")
+
+# ===============================================================================
 # INVESTMENT SIMULATION ENDPOINTS
 # ===============================================================================
 
