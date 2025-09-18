@@ -197,15 +197,18 @@ class DataSyncFixesTest:
             # Test the FIXED endpoint /mt5/admin/accounts
             response = self.session.get(f"{BACKEND_URL}/mt5/admin/accounts")
             if response.status_code == 200:
-                mt5_accounts = response.json()
+                mt5_response = response.json()
                 
                 doo_technology_found = False
                 vt_markets_found = False
                 
+                # Handle the response structure - it has 'accounts' key
+                mt5_accounts = mt5_response.get('accounts', []) if isinstance(mt5_response, dict) else mt5_response
+                
                 if isinstance(mt5_accounts, list):
                     for account in mt5_accounts:
-                        login = str(account.get('login', ''))
-                        broker = str(account.get('broker', ''))
+                        login = str(account.get('mt5_login', ''))
+                        broker = str(account.get('broker_name', ''))
                         
                         # Look for DooTechnology account (9928326)
                         if login == '9928326' or 'DooTechnology' in broker:
@@ -232,7 +235,7 @@ class DataSyncFixesTest:
                     
                     self.log_result("MT5 Accounts Missing", False, 
                                   f"Missing MT5 accounts: {', '.join(missing)}",
-                                  {"found_accounts": mt5_accounts[:5] if isinstance(mt5_accounts, list) else mt5_accounts})
+                                  {"found_accounts": mt5_accounts[:2] if isinstance(mt5_accounts, list) else mt5_accounts})
                 
             else:
                 self.log_result("MT5 Admin Accounts Endpoint", False, 
