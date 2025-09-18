@@ -7511,7 +7511,7 @@ async def process_google_session(auth_request: GoogleAuthRequest):
             }
             
             # Insert or update session
-            await mongodb_manager.admin_sessions.update_one(
+            await mongodb_manager.db.admin_sessions.update_one(
                 {"google_id": session_data['google_id']},
                 {"$set": session_doc},
                 upsert=True
