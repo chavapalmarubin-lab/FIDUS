@@ -65,6 +65,7 @@ function App() {
     const titles = {
       logo: "FIDUS Investment Management | Loading...",
       login: "FIDUS Investment Management | Secure Login",
+      "google-callback": "FIDUS Investment Management | Google Authentication",
       client: `FIDUS Investment Management | Client Portal${user ? ` - ${user.username}` : ''}`,
       admin: `FIDUS Investment Management | Admin Dashboard${user ? ` - ${user.username}` : ''}`
     };
