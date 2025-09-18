@@ -7440,6 +7440,235 @@ class SimulationInvestmentItem(BaseModel):
     amount: float
 
 # ===============================================================================
+# GOOGLE ADMIN AUTHENTICATION ENDPOINTS
+# ===============================================================================
+
+class GoogleAuthRequest(BaseModel):
+    session_id: str
+
+class AdminGoogleProfile(BaseModel):
+    id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    is_google_connected: bool = True
+    google_scopes: List[str] = []
+    login_type: str = "google_oauth"
+    connected_at: str
+
+@api_router.get("/admin/google/auth-url")
+async def get_google_auth_url():
+    """Get Google OAuth URL for admin authentication"""
+    try:
+        # Get the frontend URL for redirect after authentication
+        redirect_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host') + "/admin/google-callback"
+        
+        auth_url = google_admin_service.get_google_login_url(redirect_url)
+        
+        return {
+            "success": True,
+            "auth_url": auth_url,
+            "redirect_url": redirect_url,
+            "scopes": google_admin_service.get_google_api_scopes()
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Google auth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate Google auth URL")
+
+@api_router.post("/admin/google/process-session")
+async def process_google_session(auth_request: GoogleAuthRequest):
+    """Process Google OAuth session ID and create admin session"""
+    try:
+        # Process session ID with Emergent auth service
+        user_data = await google_admin_service.process_session_id(auth_request.session_id)
+        
+        # Validate admin email authorization
+        if not google_admin_service.validate_admin_email(user_data['email']):
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Email {user_data['email']} is not authorized for admin access"
+            )
+        
+        # Create admin session
+        session_data = google_admin_service.create_admin_session(user_data)
+        
+        # Store session in database (using MongoDB)
+        try:
+            session_doc = {
+                "session_token": session_data['session_token'],
+                "google_id": session_data['google_id'],
+                "email": session_data['email'],
+                "name": session_data['name'],
+                "picture": session_data.get('picture', ''),
+                "is_admin": True,
+                "login_type": "google_oauth",
+                "google_scopes": session_data['google_scopes'],
+                "created_at": session_data['created_at'],
+                "expires_at": session_data['expires_at'],
+                "last_accessed": datetime.now(timezone.utc)
+            }
+            
+            # Insert or update session
+            await mongodb_manager.admin_sessions.update_one(
+                {"google_id": session_data['google_id']},
+                {"$set": session_doc},
+                upsert=True
+            )
+            
+        except Exception as db_error:
+            logging.error(f"Database session storage error: {str(db_error)}")
+            # Continue anyway, session will work for this request
+        
+        # Format profile for response
+        profile = google_admin_service.format_admin_profile(session_data)
+        
+        return {
+            "success": True,
+            "profile": profile,
+            "session_token": session_data['session_token'],
+            "expires_at": session_data['expires_at'].isoformat(),
+            "message": f"Successfully authenticated as admin: {user_data['email']}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Process Google session error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process Google authentication")
+
+@api_router.get("/admin/google/profile")
+async def get_admin_google_profile(request: Request):
+    """Get current admin's Google profile"""
+    try:
+        # Get session token from cookie or authorization header
+        session_token = None
+        
+        # Try cookie first
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        # Fallback to authorization header
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Find session in database
+        session_doc = await mongodb_manager.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid or expired session")
+        
+        # Check if session is expired
+        if session_doc['expires_at'] < datetime.now(timezone.utc):
+            # Clean up expired session
+            await mongodb_manager.admin_sessions.delete_one({"session_token": session_token})
+            raise HTTPException(status_code=401, detail="Session expired")
+        
+        # Update last accessed time
+        await mongodb_manager.admin_sessions.update_one(
+            {"session_token": session_token},
+            {"$set": {"last_accessed": datetime.now(timezone.utc)}}
+        )
+        
+        # Format profile response
+        profile = {
+            "id": session_doc['google_id'],
+            "email": session_doc['email'],
+            "name": session_doc['name'],
+            "picture": session_doc.get('picture', ''),
+            "is_google_connected": True,
+            "google_scopes": session_doc.get('google_scopes', []),
+            "login_type": session_doc.get('login_type', 'google_oauth'),
+            "connected_at": session_doc['created_at'].isoformat(),
+            "last_accessed": session_doc['last_accessed'].isoformat()
+        }
+        
+        return {
+            "success": True,
+            "profile": profile,
+            "is_authenticated": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get admin profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get admin profile")
+
+@api_router.post("/admin/google/logout")
+async def logout_admin_google(request: Request):
+    """Logout admin and clear Google session"""
+    try:
+        # Get session token
+        session_token = None
+        
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if session_token:
+            # Remove session from database
+            await mongodb_manager.admin_sessions.delete_one({"session_token": session_token})
+        
+        return {
+            "success": True,
+            "message": "Successfully logged out"
+        }
+        
+    except Exception as e:
+        logging.error(f"Admin logout error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to logout")
+
+@api_router.post("/admin/google/send-email")
+async def send_email_via_google(request: Request, email_data: dict):
+    """Send email using admin's Google account"""
+    try:
+        # Get admin session
+        session_token = request.cookies.get('session_token') or \
+                       (request.headers.get('Authorization', '').replace('Bearer ', '') if request.headers.get('Authorization') else None)
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        
+        # Validate session
+        session_doc = await mongodb_manager.admin_sessions.find_one({"session_token": session_token})
+        if not session_doc or session_doc['expires_at'] < datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="Invalid or expired session")
+        
+        # Send email using Google service
+        success = await google_admin_service.send_email_via_google(
+            session_token,
+            email_data.get('to_email'),
+            email_data.get('subject'),
+            email_data.get('body'),
+            email_data.get('attachments')
+        )
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Email sent successfully",
+                "sent_by": session_doc['email']
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send email")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Send email error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
+
+# ===============================================================================
 # CURRENCY CONVERSION ENDPOINTS
 # ===============================================================================
 
