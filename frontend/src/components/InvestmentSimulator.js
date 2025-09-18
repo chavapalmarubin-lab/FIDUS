@@ -750,8 +750,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                       <div>
                         <p className="text-sm font-medium text-gray-600">Total Investment</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(simulationResult.summary.total_investment)}
+                          {selectedCurrency === 'USD' 
+                            ? formatCurrency(simulationResult.summary.total_investment)
+                            : formatCurrencyAmount(convertCurrencyAmount(simulationResult.summary.total_investment, 'USD', selectedCurrency), selectedCurrency)
+                          }
                         </p>
+                        {selectedCurrency !== 'USD' && (
+                          <p className="text-sm text-gray-500">
+                            {formatCurrency(simulationResult.summary.total_investment)} USD
+                          </p>
+                        )}
                       </div>
                       <DollarSign className="w-8 h-8 text-blue-600" />
                     </div>
@@ -764,8 +772,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                       <div>
                         <p className="text-sm font-medium text-gray-600">Final Value</p>
                         <p className="text-2xl font-bold text-green-600">
-                          {formatCurrency(simulationResult.summary.final_value)}
+                          {selectedCurrency === 'USD' 
+                            ? formatCurrency(simulationResult.summary.final_value)
+                            : formatCurrencyAmount(convertCurrencyAmount(simulationResult.summary.final_value, 'USD', selectedCurrency), selectedCurrency)
+                          }
                         </p>
+                        {selectedCurrency !== 'USD' && (
+                          <p className="text-sm text-gray-500">
+                            {formatCurrency(simulationResult.summary.final_value)} USD
+                          </p>
+                        )}
                       </div>
                       <TrendingUp className="w-8 h-8 text-green-600" />
                     </div>
@@ -778,8 +794,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                       <div>
                         <p className="text-sm font-medium text-gray-600">Total Interest</p>
                         <p className="text-2xl font-bold text-emerald-600">
-                          {formatCurrency(simulationResult.summary.total_interest_earned)}
+                          {selectedCurrency === 'USD' 
+                            ? formatCurrency(simulationResult.summary.total_interest_earned)
+                            : formatCurrencyAmount(convertCurrencyAmount(simulationResult.summary.total_interest_earned, 'USD', selectedCurrency), selectedCurrency)
+                          }
                         </p>
+                        {selectedCurrency !== 'USD' && (
+                          <p className="text-sm text-gray-500">
+                            {formatCurrency(simulationResult.summary.total_interest_earned)} USD
+                          </p>
+                        )}
                       </div>
                       <Target className="w-8 h-8 text-emerald-600" />
                     </div>
@@ -793,6 +817,9 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                         <p className="text-sm font-medium text-gray-600">Total ROI</p>
                         <p className="text-2xl font-bold text-purple-600">
                           {formatPercentage(simulationResult.summary.total_roi_percentage)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Same in all currencies
                         </p>
                       </div>
                       <LineChart className="w-8 h-8 text-purple-600" />
