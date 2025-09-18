@@ -11,41 +11,73 @@ const GoogleCallback = () => {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        // Check if we have a session_id in the URL hash
+        setMessage('Processing Google authentication...');
+        
+        // Check if we have a session_id in the URL hash or query params
         const hash = window.location.hash;
-        if (!hash) {
+        const search = window.location.search;
+        
+        console.log('URL hash:', hash);
+        console.log('URL search:', search);
+        
+        let sessionId = null;
+        
+        // Try to extract session_id from hash first
+        if (hash) {
+          const sessionIdMatch = hash.match(/session_id=([^&]+)/);
+          if (sessionIdMatch) {
+            sessionId = sessionIdMatch[1];
+          }
+        }
+        
+        // Fallback to query parameters
+        if (!sessionId && search) {
+          const urlParams = new URLSearchParams(search);
+          sessionId = urlParams.get('session_id');
+        }
+
+        if (!sessionId) {
           setStatus('error');
-          setMessage('No authentication data received from Google');
+          setMessage('No authentication data received from Google. Please try again.');
           return;
         }
 
-        // Extract session_id from hash
-        const sessionIdMatch = hash.match(/session_id=([^&]+)/);
-        if (!sessionIdMatch) {
-          setStatus('error');
-          setMessage('Invalid authentication response from Google');
-          return;
-        }
-
-        const sessionId = sessionIdMatch[1];
         console.log('Processing session ID:', sessionId);
+        setMessage('Validating authentication with Google...');
 
-        // The useGoogleAdmin hook should automatically process this
-        // Wait a bit to let it process
-        setTimeout(() => {
-          if (isAuthenticated && profile) {
+        // Now process the session ID using the Google admin hook
+        try {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('fidus_user') ? JSON.parse(localStorage.getItem('fidus_user')).token : ''}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({ session_id: sessionId })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
             setStatus('success');
-            setMessage(`Successfully authenticated as ${profile.name}`);
+            setMessage(`Successfully authenticated as ${data.profile.name}`);
             
-            // Redirect to admin dashboard after 2 seconds
+            // Store the Google profile info if needed
+            console.log('Google authentication successful:', data.profile);
+            
+            // Redirect to admin dashboard after 3 seconds
             setTimeout(() => {
               window.location.href = '/?skip_animation=true';
-            }, 2000);
-          } else if (error) {
-            setStatus('error');
-            setMessage(error);
+            }, 3000);
+          } else {
+            throw new Error(data.detail || 'Authentication failed');
           }
-        }, 2000);
+        } catch (processError) {
+          console.error('Session processing error:', processError);
+          setStatus('error');
+          setMessage(`Authentication failed: ${processError.message}`);
+        }
 
       } catch (err) {
         console.error('Callback processing error:', err);
@@ -54,8 +86,10 @@ const GoogleCallback = () => {
       }
     };
 
-    processCallback();
-  }, [isAuthenticated, profile, error]);
+    // Wait a bit before processing to ensure the page is fully loaded
+    const timer = setTimeout(processCallback, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleReturnToDashboard = () => {
     window.location.href = '/?skip_animation=true';
