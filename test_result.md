@@ -410,6 +410,18 @@ backend:
           agent: "testing"
           comment: "🎉 CURRENCY CONVERSION API ENDPOINTS TESTING COMPLETED SUCCESSFULLY - 100% SUCCESS RATE! Conducted comprehensive testing of all new currency conversion API endpoints as requested in review. CRITICAL FINDINGS: (1) ✅ CURRENCY RATES ENDPOINT (/api/currency/rates): All requirements verified - success: true ✓, USD rate: 1.0 ✓, MXN rate: 18.5 (reasonable range 18-20) ✓, EUR rate: 0.85 (reasonable range 0.8-0.9) ✓, supported_currencies array with 3 currencies ✓, currency info structure (code, name, symbol) ✓, last_updated timestamp present ✓. (2) ✅ CURRENCY CONVERSION ENDPOINT (/api/currency/convert): USD to MXN conversion working perfectly - original amount: 1000 USD ✓, converted amount: 18,500 MXN (reasonable) ✓, exchange rate: 18.5 ✓, currency codes correct in response ✓, formatted amount includes MXN: '$18,500.00 MXN' ✓. (3) ✅ CURRENCY SUMMARY ENDPOINT (/api/currency/summary/100000): All conversions working - base amount: 100,000 USD ✓, base currency: USD ✓, USD amount exactly 100,000 ✓, MXN amount: 1,850,000 (reasonable) ✓, EUR amount: 85,000 (reasonable) ✓, all currencies have required fields (amount, formatted, rate, name, symbol) ✓. (4) ✅ ERROR HANDLING: Invalid currency codes properly return HTTP 400 with 'Unsupported currency' error messages ✓. COMPREHENSIVE RESULTS: 27 tests run, 27 passed (100% success rate). All currency endpoints operational and returning expected data. Backend currency conversion system is ready for frontend integration. MINOR FIX APPLIED: Fixed import error in server.py (PersonData, KYCDocument, AMLStatus moved from currency_service to aml_kyc_service) - backend service now running correctly."
 
+  - task: "Multi-Currency Conversion Frontend Integration Testing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/InvestmentSimulator.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "User requested comprehensive testing of new multi-currency conversion functionality in FIDUS platform: (1) Investment Simulator Currency Features - Navigate to Admin CRM → Investment Simulator tab, set up test portfolio (CORE $25K, BALANCE $100K, DYNAMIC $250K), test Currency Selector in Simulation Settings, change currency from USD to MXN and EUR, verify summary cards show converted amounts with USD secondary text, fund breakdown shows converted investment amounts, charts/tables display converted values, PDF export includes converted amounts. (2) Client Dashboard Currency Features - Login as client, test Currency Selector in Account Balance section, change currency from USD to MXN and EUR, verify total balance shows converted amount with USD secondary, individual fund balances show conversions, monthly statement amounts converted, UI updates real-time. (3) Currency Conversion Accuracy - Verify exchange rate badges displayed, check MXN rates ~18-20, EUR rates ~0.8-0.9, verify converted amounts mathematically correct. Need comprehensive frontend testing of complete multi-currency functionality for international clients."
+
   - task: "Comprehensive Crypto Wallet Management System"
     implemented: false
     working: false
