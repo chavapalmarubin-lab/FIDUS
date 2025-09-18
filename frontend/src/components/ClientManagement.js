@@ -344,10 +344,8 @@ const ClientManagement = () => {
                   <tr className="border-b border-slate-600">
                     <th className="text-left py-3 px-4 text-slate-300">Name</th>
                     <th className="text-left py-3 px-4 text-slate-300">Email</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Phone</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Readiness</th>
                     <th className="text-left py-3 px-4 text-slate-300">Investments</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
                     <th className="text-left py-3 px-4 text-slate-300">Actions</th>
                   </tr>
                 </thead>
