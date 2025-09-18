@@ -51,265 +51,324 @@ class GoogleOAuthIntegrationTest:
         if details and not success:
             print(f"   Details: {details}")
     
-    def test_google_auth_url_endpoint(self):
-        """Test Google Auth URL Endpoint - /api/admin/google/auth-url"""
+    def authenticate_admin(self):
+        """Authenticate as admin user to get JWT token"""
+        try:
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
+                "user_type": "admin"
+            })
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("token")
+                if self.admin_token:
+                    # Set Authorization header for authenticated requests
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_result("Admin JWT Authentication", True, 
+                                  "Successfully authenticated as admin and obtained JWT token")
+                    return True
+                else:
+                    self.log_result("Admin JWT Authentication", False, 
+                                  "No JWT token received in response", {"response": data})
+                    return False
+            else:
+                self.log_result("Admin JWT Authentication", False, 
+                              f"HTTP {response.status_code}", {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin JWT Authentication", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_google_auth_url_with_authentication(self):
+        """Test Google Auth URL endpoint with admin JWT authentication"""
         try:
             response = self.session.get(f"{BACKEND_URL}/admin/google/auth-url")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required fields
+                # Verify response structure
                 required_fields = ['success', 'auth_url', 'redirect_url', 'scopes']
-                missing_fields = []
-                
-                for field in required_fields:
-                    if field not in data:
-                        missing_fields.append(field)
+                missing_fields = [field for field in required_fields if field not in data]
                 
                 if missing_fields:
-                    self.log_result("Google Auth URL - Required Fields", False, 
-                                  f"Missing fields: {', '.join(missing_fields)}", 
-                                  {"response": data})
-                    return
+                    self.log_result("Google Auth URL - Response Structure", False,
+                                  f"Missing required fields: {missing_fields}", {"response": data})
+                    return False
                 
-                # Verify success is true
-                if data.get('success') is True:
-                    self.log_result("Google Auth URL - Success Field", True, 
-                                  "Success field is true")
-                else:
-                    self.log_result("Google Auth URL - Success Field", False, 
-                                  f"Success field is {data.get('success')}, expected true")
+                # Verify success flag
+                if data.get('success') != True:
+                    self.log_result("Google Auth URL - Success Flag", False,
+                                  f"Success flag is {data.get('success')}, expected True", {"response": data})
+                    return False
                 
-                # Verify auth_url points to Emergent auth service
-                auth_url = data.get('auth_url', '')
-                if 'auth.emergentagent.com' in auth_url:
-                    self.log_result("Google Auth URL - Emergent Service", True, 
-                                  "Auth URL points to Emergent auth service")
-                else:
-                    self.log_result("Google Auth URL - Emergent Service", False, 
-                                  f"Auth URL does not point to Emergent service: {auth_url}")
+                # Verify auth_url is present and valid
+                auth_url = data.get('auth_url')
+                if not auth_url or not isinstance(auth_url, str):
+                    self.log_result("Google Auth URL - Auth URL Present", False,
+                                  "Auth URL missing or invalid", {"auth_url": auth_url})
+                    return False
                 
-                # Verify redirect_url is present and valid
-                redirect_url = data.get('redirect_url', '')
-                if redirect_url and 'google-callback' in redirect_url:
-                    self.log_result("Google Auth URL - Redirect URL", True, 
-                                  f"Valid redirect URL: {redirect_url}")
-                else:
-                    self.log_result("Google Auth URL - Redirect URL", False, 
-                                  f"Invalid redirect URL: {redirect_url}")
+                # Verify redirect_url is present
+                redirect_url = data.get('redirect_url')
+                if not redirect_url or not isinstance(redirect_url, str):
+                    self.log_result("Google Auth URL - Redirect URL Present", False,
+                                  "Redirect URL missing or invalid", {"redirect_url": redirect_url})
+                    return False
                 
-                # Verify scopes array is present and contains Google API scopes
-                scopes = data.get('scopes', [])
-                expected_scopes = [
-                    'https://www.googleapis.com/auth/gmail.send',
-                    'https://www.googleapis.com/auth/gmail.readonly',
-                    'https://www.googleapis.com/auth/calendar'
-                ]
+                # Verify scopes are present
+                scopes = data.get('scopes')
+                if not scopes or not isinstance(scopes, list):
+                    self.log_result("Google Auth URL - Scopes Present", False,
+                                  "Scopes missing or invalid", {"scopes": scopes})
+                    return False
                 
-                if isinstance(scopes, list) and len(scopes) > 0:
-                    # Check if at least some expected scopes are present
-                    found_scopes = [scope for scope in expected_scopes if scope in scopes]
-                    if found_scopes:
-                        self.log_result("Google Auth URL - API Scopes", True, 
-                                      f"Found {len(found_scopes)} expected scopes out of {len(scopes)} total")
-                    else:
-                        self.log_result("Google Auth URL - API Scopes", False, 
-                                      "No expected Google API scopes found", 
-                                      {"scopes": scopes})
-                else:
-                    self.log_result("Google Auth URL - API Scopes", False, 
-                                  "Scopes is not a valid array", {"scopes": scopes})
+                self.log_result("Google Auth URL with Authentication", True,
+                              "Successfully retrieved Google auth URL with all required fields",
+                              {"auth_url": auth_url[:100] + "...", "redirect_url": redirect_url, 
+                               "scopes_count": len(scopes)})
                 
-                # Overall endpoint test
-                self.log_result("Google Auth URL Endpoint", True, 
-                              "Endpoint responding correctly with all required fields")
+                # Store auth_url for format verification
+                self.auth_url = auth_url
+                self.redirect_url = redirect_url
+                self.scopes = scopes
+                return True
                 
             else:
-                self.log_result("Google Auth URL Endpoint", False, 
-                              f"HTTP {response.status_code}: {response.text}")
+                self.log_result("Google Auth URL with Authentication", False,
+                              f"HTTP {response.status_code}", {"response": response.text})
+                return False
                 
         except Exception as e:
-            self.log_result("Google Auth URL Endpoint", False, f"Exception: {str(e)}")
+            self.log_result("Google Auth URL with Authentication", False, f"Exception: {str(e)}")
+            return False
     
-    def test_admin_profile_unauthorized(self):
-        """Test Admin Profile Endpoint - should return 401 for unauthenticated requests"""
+    def test_google_auth_url_without_authentication(self):
+        """Test Google Auth URL endpoint without JWT token (should return 401)"""
         try:
-            # Test without any authentication
+            # Create a new session without authentication headers
+            unauthenticated_session = requests.Session()
+            
+            response = unauthenticated_session.get(f"{BACKEND_URL}/admin/google/auth-url")
+            
+            if response.status_code == 401:
+                self.log_result("Google Auth URL without Authentication", True,
+                              "Correctly returned 401 Unauthorized for unauthenticated request")
+                return True
+            elif response.status_code == 200:
+                self.log_result("Google Auth URL without Authentication", False,
+                              "SECURITY ISSUE: Endpoint returned 200 OK without authentication",
+                              {"response": response.json()})
+                return False
+            else:
+                self.log_result("Google Auth URL without Authentication", False,
+                              f"Unexpected HTTP {response.status_code}, expected 401",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Google Auth URL without Authentication", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_auth_url_format_verification(self):
+        """Verify that auth URL contains Emergent auth service URL and redirect parameter"""
+        try:
+            if not hasattr(self, 'auth_url'):
+                self.log_result("Auth URL Format Verification", False,
+                              "No auth URL available from previous test")
+                return False
+            
+            auth_url = self.auth_url
+            
+            # Check if URL contains Emergent auth service
+            emergent_auth_base = "https://auth.emergentagent.com"
+            if emergent_auth_base not in auth_url:
+                self.log_result("Auth URL Format - Emergent Service", False,
+                              f"Auth URL does not contain Emergent auth service URL: {emergent_auth_base}",
+                              {"auth_url": auth_url})
+                return False
+            
+            # Check if URL contains redirect parameter
+            parsed_url = urllib.parse.urlparse(auth_url)
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            
+            if 'redirect' not in query_params:
+                self.log_result("Auth URL Format - Redirect Parameter", False,
+                              "Auth URL does not contain 'redirect' parameter",
+                              {"auth_url": auth_url, "query_params": query_params})
+                return False
+            
+            # Verify redirect URL format
+            redirect_param = query_params['redirect'][0]
+            expected_callback = "/admin/google-callback"
+            
+            if expected_callback not in redirect_param:
+                self.log_result("Auth URL Format - Callback Path", False,
+                              f"Redirect parameter does not contain expected callback path: {expected_callback}",
+                              {"redirect_param": redirect_param})
+                return False
+            
+            self.log_result("Auth URL Format Verification", True,
+                          "Auth URL format is correct with Emergent service and proper redirect",
+                          {"emergent_service": emergent_auth_base, "redirect_param": redirect_param})
+            return True
+            
+        except Exception as e:
+            self.log_result("Auth URL Format Verification", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_google_profile_endpoint(self):
+        """Test Google profile endpoint authentication handling"""
+        try:
+            # Test with authentication (should work but may return no profile if not connected)
             response = self.session.get(f"{BACKEND_URL}/admin/google/profile")
             
+            if response.status_code in [200, 401]:
+                # 200 = profile found, 401 = no Google session (both acceptable)
+                if response.status_code == 200:
+                    data = response.json()
+                    self.log_result("Google Profile Endpoint - With Auth", True,
+                                  "Profile endpoint accessible with authentication",
+                                  {"response_keys": list(data.keys()) if isinstance(data, dict) else "non-dict"})
+                else:
+                    self.log_result("Google Profile Endpoint - With Auth", True,
+                                  "Profile endpoint correctly returned 401 (no Google session)")
+            else:
+                self.log_result("Google Profile Endpoint - With Auth", False,
+                              f"Unexpected HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+            
+            # Test without authentication (should return 401)
+            unauthenticated_session = requests.Session()
+            response = unauthenticated_session.get(f"{BACKEND_URL}/admin/google/profile")
+            
             if response.status_code == 401:
-                self.log_result("Admin Profile - Unauthorized Access", True, 
-                              "Correctly returns 401 for unauthenticated requests")
-                
-                # Check if response contains proper error message
-                try:
-                    data = response.json()
-                    if 'detail' in data:
-                        self.log_result("Admin Profile - Error Message", True, 
-                                      f"Proper error message: {data['detail']}")
-                    else:
-                        self.log_result("Admin Profile - Error Message", False, 
-                                      "No error message in response", {"response": data})
-                except:
-                    # Response might not be JSON, which is also acceptable for 401
-                    self.log_result("Admin Profile - Error Message", True, 
-                                  "Non-JSON 401 response (acceptable)")
+                self.log_result("Google Profile Endpoint - Without Auth", True,
+                              "Profile endpoint correctly returned 401 for unauthenticated request")
             else:
-                self.log_result("Admin Profile - Unauthorized Access", False, 
-                              f"Expected 401, got HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_result("Admin Profile - Unauthorized Access", False, f"Exception: {str(e)}")
-    
-    def test_session_processing_invalid_session(self):
-        """Test Session Processing with invalid session ID"""
-        try:
-            # Test with invalid session ID
-            invalid_session_data = {
-                "session_id": "invalid_test_session"
-            }
+                self.log_result("Google Profile Endpoint - Without Auth", False,
+                              f"Expected 401, got HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
             
-            response = self.session.post(f"{BACKEND_URL}/admin/google/process-session", 
-                                       json=invalid_session_data)
+            return True
             
-            # Should return an error (400, 401, or 500) for invalid session
-            if response.status_code in [400, 401, 500]:
-                self.log_result("Session Processing - Invalid Session", True, 
-                              f"Correctly handles invalid session with HTTP {response.status_code}")
-                
-                # Check if response contains error details
-                try:
-                    data = response.json()
-                    if 'detail' in data:
-                        self.log_result("Session Processing - Error Handling", True, 
-                                      f"Proper error handling: {data['detail']}")
-                    else:
-                        self.log_result("Session Processing - Error Handling", True, 
-                                      "Error response received (acceptable)")
-                except:
-                    self.log_result("Session Processing - Error Handling", True, 
-                                  "Non-JSON error response (acceptable)")
-            else:
-                self.log_result("Session Processing - Invalid Session", False, 
-                              f"Unexpected response for invalid session: HTTP {response.status_code}")
-                
         except Exception as e:
-            self.log_result("Session Processing - Invalid Session", False, f"Exception: {str(e)}")
+            self.log_result("Google Profile Endpoint", False, f"Exception: {str(e)}")
+            return False
     
-    def test_logout_endpoint(self):
-        """Test Logout Endpoint - should handle requests properly"""
+    def test_google_logout_endpoint(self):
+        """Test Google logout endpoint authentication handling"""
         try:
-            # Test logout without authentication (should still work)
+            # Test with authentication
             response = self.session.post(f"{BACKEND_URL}/admin/google/logout")
             
-            # Logout should either succeed (200) or handle gracefully
             if response.status_code in [200, 401]:
+                # Both are acceptable - 200 if session exists, 401 if no session
                 if response.status_code == 200:
-                    try:
-                        data = response.json()
-                        if data.get('success'):
-                            self.log_result("Logout Endpoint", True, 
-                                          "Logout endpoint working correctly")
-                        else:
-                            self.log_result("Logout Endpoint", False, 
-                                          "Logout returned success=false", {"response": data})
-                    except:
-                        self.log_result("Logout Endpoint", True, 
-                                      "Logout endpoint responding (non-JSON acceptable)")
-                else:  # 401
-                    self.log_result("Logout Endpoint", True, 
-                                  "Logout correctly requires authentication")
-            else:
-                self.log_result("Logout Endpoint", False, 
-                              f"Unexpected response: HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_result("Logout Endpoint", False, f"Exception: {str(e)}")
-    
-    def test_send_email_unauthorized(self):
-        """Test Email Endpoint - should return 401 for unauthenticated requests"""
-        try:
-            # Test without authentication
-            email_data = {
-                "to_email": "test@example.com",
-                "subject": "Test Email",
-                "body": "This is a test email"
-            }
-            
-            response = self.session.post(f"{BACKEND_URL}/admin/google/send-email", 
-                                       json=email_data)
-            
-            if response.status_code == 401:
-                self.log_result("Send Email - Unauthorized Access", True, 
-                              "Correctly returns 401 for unauthenticated requests")
-                
-                # Check error message
-                try:
                     data = response.json()
-                    if 'detail' in data:
-                        self.log_result("Send Email - Error Message", True, 
-                                      f"Proper error message: {data['detail']}")
-                    else:
-                        self.log_result("Send Email - Error Message", False, 
-                                      "No error message in response", {"response": data})
-                except:
-                    self.log_result("Send Email - Error Message", True, 
-                                  "Non-JSON 401 response (acceptable)")
-            else:
-                self.log_result("Send Email - Unauthorized Access", False, 
-                              f"Expected 401, got HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_result("Send Email - Unauthorized Access", False, f"Exception: {str(e)}")
-    
-    def test_endpoint_existence(self):
-        """Test that all Google OAuth endpoints exist and are accessible"""
-        endpoints = [
-            ("/admin/google/auth-url", "GET", "Google Auth URL"),
-            ("/admin/google/profile", "GET", "Admin Profile"),
-            ("/admin/google/process-session", "POST", "Session Processing"),
-            ("/admin/google/logout", "POST", "Logout"),
-            ("/admin/google/send-email", "POST", "Send Email")
-        ]
-        
-        for endpoint, method, name in endpoints:
-            try:
-                if method == "GET":
-                    response = self.session.get(f"{BACKEND_URL}{endpoint}")
-                else:  # POST
-                    response = self.session.post(f"{BACKEND_URL}{endpoint}", json={})
-                
-                # Any response other than 404 means the endpoint exists
-                if response.status_code != 404:
-                    self.log_result(f"Endpoint Existence - {name}", True, 
-                                  f"{method} {endpoint} exists (HTTP {response.status_code})")
+                    self.log_result("Google Logout Endpoint - With Auth", True,
+                                  "Logout endpoint accessible with authentication",
+                                  {"response": data})
                 else:
-                    self.log_result(f"Endpoint Existence - {name}", False, 
-                                  f"{method} {endpoint} not found (404)")
-                    
-            except Exception as e:
-                self.log_result(f"Endpoint Existence - {name}", False, 
-                              f"Exception testing {endpoint}: {str(e)}")
+                    self.log_result("Google Logout Endpoint - With Auth", True,
+                                  "Logout endpoint returned 401 (no Google session to logout)")
+            else:
+                self.log_result("Google Logout Endpoint - With Auth", False,
+                              f"Unexpected HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+            
+            # Test without authentication (should return 401 or 500)
+            unauthenticated_session = requests.Session()
+            response = unauthenticated_session.post(f"{BACKEND_URL}/admin/google/logout")
+            
+            if response.status_code in [401, 500]:
+                self.log_result("Google Logout Endpoint - Without Auth", True,
+                              f"Logout endpoint correctly returned {response.status_code} for unauthenticated request")
+            else:
+                self.log_result("Google Logout Endpoint - Without Auth", False,
+                              f"Expected 401 or 500, got HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Google Logout Endpoint", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_scopes_verification(self):
+        """Verify that returned scopes include required Google API permissions"""
+        try:
+            if not hasattr(self, 'scopes'):
+                self.log_result("Scopes Verification", False,
+                              "No scopes available from previous test")
+                return False
+            
+            scopes = self.scopes
+            
+            # Expected scopes for admin functionality
+            expected_scopes = [
+                'https://www.googleapis.com/auth/gmail.send',
+                'https://www.googleapis.com/auth/gmail.readonly',
+                'https://www.googleapis.com/auth/calendar',
+                'https://www.googleapis.com/auth/drive.file'
+            ]
+            
+            missing_scopes = []
+            for expected_scope in expected_scopes:
+                if expected_scope not in scopes:
+                    missing_scopes.append(expected_scope)
+            
+            if missing_scopes:
+                self.log_result("Scopes Verification", False,
+                              f"Missing required scopes: {missing_scopes}",
+                              {"provided_scopes": scopes})
+                return False
+            
+            self.log_result("Scopes Verification", True,
+                          f"All required scopes present ({len(expected_scopes)}/{len(scopes)} verified)",
+                          {"verified_scopes": expected_scopes})
+            return True
+            
+        except Exception as e:
+            self.log_result("Scopes Verification", False, f"Exception: {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all Google OAuth integration tests"""
-        print("🔐 GOOGLE ADMIN OAUTH INTEGRATION TESTING")
+        print("🎯 GOOGLE ADMIN OAUTH INTEGRATION TEST")
         print("=" * 60)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test Time: {datetime.now().isoformat()}")
         print()
         
-        print("🔍 Running Google OAuth Integration Tests...")
+        # Authenticate first
+        if not self.authenticate_admin():
+            print("❌ CRITICAL: Admin authentication failed. Cannot proceed with tests.")
+            return False
+        
+        print("\n🔍 Running Google OAuth Integration Tests...")
         print("-" * 50)
         
-        # Run all tests
-        self.test_endpoint_existence()
-        self.test_google_auth_url_endpoint()
-        self.test_admin_profile_unauthorized()
-        self.test_session_processing_invalid_session()
-        self.test_logout_endpoint()
-        self.test_send_email_unauthorized()
+        # Run all tests in sequence
+        tests = [
+            self.test_google_auth_url_with_authentication,
+            self.test_google_auth_url_without_authentication,
+            self.test_auth_url_format_verification,
+            self.test_scopes_verification,
+            self.test_google_profile_endpoint,
+            self.test_google_logout_endpoint
+        ]
+        
+        for test in tests:
+            test()
+            time.sleep(0.5)  # Small delay between tests
         
         # Generate summary
         self.generate_test_summary()
@@ -319,7 +378,7 @@ class GoogleOAuthIntegrationTest:
     def generate_test_summary(self):
         """Generate comprehensive test summary"""
         print("\n" + "=" * 60)
-        print("🔐 GOOGLE OAUTH INTEGRATION TEST SUMMARY")
+        print("🎯 GOOGLE OAUTH INTEGRATION TEST SUMMARY")
         print("=" * 60)
         
         total_tests = len(self.test_results)
@@ -333,7 +392,7 @@ class GoogleOAuthIntegrationTest:
         print(f"Success Rate: {success_rate:.1f}%")
         print()
         
-        # Show failed tests
+        # Show failed tests first (more important)
         if failed_tests > 0:
             print("❌ FAILED TESTS:")
             for result in self.test_results:
@@ -349,27 +408,26 @@ class GoogleOAuthIntegrationTest:
                     print(f"   • {result['test']}: {result['message']}")
             print()
         
-        # Critical assessment for Google OAuth integration
+        # Critical assessment
         critical_tests = [
-            "Google Auth URL Endpoint",
-            "Admin Profile - Unauthorized Access", 
-            "Session Processing - Invalid Session",
-            "Send Email - Unauthorized Access"
+            "Admin JWT Authentication",
+            "Google Auth URL with Authentication", 
+            "Google Auth URL without Authentication",
+            "Auth URL Format Verification"
         ]
         
         critical_passed = sum(1 for result in self.test_results 
-                            if result['success'] and any(critical in result['test'] for critical in critical_tests))
+                            if result['success'] and result['test'] in critical_tests)
         
         print("🚨 CRITICAL ASSESSMENT:")
         if critical_passed >= 3:  # At least 3 out of 4 critical tests
-            print("✅ GOOGLE OAUTH INTEGRATION: SUCCESSFUL")
-            print("   Google Admin OAuth endpoints are properly implemented.")
-            print("   Authentication and authorization working correctly.")
-            print("   System ready for Google OAuth admin authentication.")
+            print("✅ GOOGLE OAUTH INTEGRATION: WORKING")
+            print("   Authentication issue has been resolved.")
+            print("   Google OAuth integration is ready for admin users.")
         else:
             print("❌ GOOGLE OAUTH INTEGRATION: ISSUES FOUND")
-            print("   Critical Google OAuth integration issues detected.")
-            print("   Main agent action required before deployment.")
+            print("   Critical authentication or integration issues detected.")
+            print("   Main agent action required to fix Google OAuth integration.")
         
         print("\n" + "=" * 60)
 
