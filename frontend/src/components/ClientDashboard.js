@@ -211,9 +211,20 @@ const ClientDashboard = ({ user, onLogout }) => {
           {/* Account Balance */}
           <Card className="dashboard-card lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <DollarSign className="mr-2" size={20} />
-                Account Balance
+              <CardTitle className="text-white flex items-center justify-between">
+                <div className="flex items-center">
+                  <DollarSign className="mr-2" size={20} />
+                  Account Balance
+                </div>
+                <div className="flex-shrink-0">
+                  <CurrencySelector
+                    selectedCurrency={selectedCurrency}
+                    onCurrencyChange={setSelectedCurrency}
+                    showRates={false}
+                    showSummary={false}
+                    size="sm"
+                  />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -222,6 +233,15 @@ const ClientDashboard = ({ user, onLogout }) => {
                   <div className="balance-amount">
                     {clientData && formatCurrency(clientData.balance.total_balance)}
                   </div>
+                  {selectedCurrency !== 'USD' && clientData && (
+                    <div className="text-slate-400 text-sm mt-1">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 2
+                      }).format(clientData.balance.total_balance)} USD
+                    </div>
+                  )}
                 </div>
                 
                 {/* All 4 Fund Balances */}
@@ -232,6 +252,14 @@ const ClientDashboard = ({ user, onLogout }) => {
                     <div className="text-2xl font-bold text-orange-400">
                       {clientData && formatCurrency(clientData.balance.core_balance)}
                     </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.core_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.core_balance)} USD
+                      </div>
+                    )}
                     <div className="text-xs text-gray-400">
                       {clientData && clientData.balance.core_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
                     </div>
@@ -243,6 +271,14 @@ const ClientDashboard = ({ user, onLogout }) => {
                     <div className="text-2xl font-bold text-cyan-400">
                       {clientData && formatCurrency(clientData.balance.balance_balance)}
                     </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.balance_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.balance_balance)} USD
+                      </div>
+                    )}
                     <div className="text-xs text-gray-400">
                       {clientData && clientData.balance.balance_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
                     </div>
@@ -254,6 +290,14 @@ const ClientDashboard = ({ user, onLogout }) => {
                     <div className="text-2xl font-bold text-green-400">
                       {clientData && formatCurrency(clientData.balance.dynamic_balance)}
                     </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.dynamic_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.dynamic_balance)} USD
+                      </div>
+                    )}
                     <div className="text-xs text-gray-400">
                       {clientData && clientData.balance.dynamic_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
                     </div>
@@ -265,6 +309,14 @@ const ClientDashboard = ({ user, onLogout }) => {
                     <div className="text-2xl font-bold text-purple-400">
                       {clientData && formatCurrency(clientData.balance.unlimited_balance)}
                     </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.unlimited_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.unlimited_balance)} USD
+                      </div>
+                    )}
                     <div className="text-xs text-gray-400">
                       {clientData && clientData.balance.unlimited_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
                     </div>
