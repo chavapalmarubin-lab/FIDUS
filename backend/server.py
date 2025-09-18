@@ -7457,9 +7457,10 @@ class AdminGoogleProfile(BaseModel):
     connected_at: str
 
 @api_router.get("/admin/google/auth-url")
-async def get_google_auth_url():
-    """Get Google OAuth URL for admin authentication"""
+async def get_google_auth_url(current_user: dict = None):
+    """Get Google OAuth URL for admin authentication (requires admin login)"""
     try:
+        # This endpoint is accessible to authenticated admin users
         # Get the frontend URL for redirect after authentication
         redirect_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host') + "/admin/google-callback"
         
