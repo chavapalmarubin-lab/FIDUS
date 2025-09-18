@@ -588,15 +588,26 @@ const ProspectManagement = () => {
           
           {/* Show AML/KYC status for manual review cases */}
           {prospect.stage === 'won' && prospect.aml_kyc_status === 'manual_review' && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 bg-yellow-50 border-yellow-300 text-yellow-800 min-w-0"
-              disabled
-            >
-              <AlertTriangle size={14} className="mr-1" />
-              Manual Review
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 bg-yellow-50 border-yellow-300 text-yellow-800 min-w-0"
+                disabled
+              >
+                <AlertTriangle size={14} className="mr-1" />
+                Manual Review Required
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleManualAMLApproval(prospect.id)}
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4"
+              >
+                <ShieldCheck size={14} className="mr-1" />
+                Approve AML/KYC
+              </Button>
+            </div>
           )}
           
           {/* Show rejected status */}
