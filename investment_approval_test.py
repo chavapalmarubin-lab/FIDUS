@@ -146,8 +146,9 @@ class InvestmentApprovalTest:
                                   f"CORE investment with ID {CORE_INVESTMENT_ID} not found")
                 
                 # Log total investment count
+                total_count = data.get('portfolio_stats', {}).get('total_investments', len(investments))
                 self.log_result("Total Investment Count", True, 
-                              f"Salvador has {len(investments)} total investments")
+                              f"Salvador has {total_count} total investments")
                 
             else:
                 self.log_result("Check New Investments", False, 
