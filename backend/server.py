@@ -720,34 +720,48 @@ def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfig
         return investment.minimum_hold_end_date if datetime.now(timezone.utc) < investment.minimum_hold_end_date else datetime.now(timezone.utc)
 
 def generate_investment_projections(investment: FundInvestment, fund_config: FundConfiguration) -> InvestmentProjection:
-    """Generate projected interest payments and values for an investment"""
+    """Generate projected interest payments and values for an investment based on REDEMPTION FREQUENCY"""
     projections = []
     current_date = investment.interest_start_date
     end_date = datetime.now(timezone.utc) + timedelta(days=730)  # Project 2 years ahead
     total_projected_interest = 0.0
     
-    if fund_config.interest_frequency == "monthly" and fund_config.interest_rate > 0:
+    if fund_config.interest_rate > 0:
+        # Generate payments based on REDEMPTION FREQUENCY, not interest frequency
         while current_date <= end_date:
-            # Calculate monthly interest
-            monthly_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, 1)
+            # Determine payment frequency based on redemption frequency
+            if fund_config.redemption_frequency == "monthly":
+                payment_months = 1
+                next_payment_date = current_date + relativedelta(months=1)
+            elif fund_config.redemption_frequency == "quarterly":
+                payment_months = 3
+                next_payment_date = current_date + relativedelta(months=3)
+            elif fund_config.redemption_frequency == "semi_annually":
+                payment_months = 6
+                next_payment_date = current_date + relativedelta(months=6)
+            else:
+                payment_months = 1  # Default to monthly
+                next_payment_date = current_date + relativedelta(months=1)
+            
+            # Calculate accumulated interest for the payment period
+            period_interest = calculate_simple_interest(investment.principal_amount, fund_config.interest_rate, payment_months)
             
             projection = {
                 "date": current_date.isoformat(),
                 "type": "interest_payment",
-                "amount": round(monthly_interest, 2),
+                "amount": round(period_interest, 2),
                 "principal_balance": investment.principal_amount,
                 "period": current_date.strftime("%Y-%m"),
-                "status": "projected"
+                "status": "projected",
+                "payment_months": payment_months,
+                "frequency": fund_config.redemption_frequency
             }
             
             projections.append(projection)
-            total_projected_interest += monthly_interest
+            total_projected_interest += period_interest
             
-            # Move to next month
-            if current_date.month == 12:
-                current_date = current_date.replace(year=current_date.year + 1, month=1)
-            else:
-                current_date = current_date.replace(month=current_date.month + 1)
+            # Move to next payment date
+            current_date = next_payment_date
     
     # Get next redemption date
     next_redemption = get_next_redemption_date(investment, fund_config)
