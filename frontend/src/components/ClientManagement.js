@@ -351,9 +351,6 @@ const ClientManagement = () => {
                 </thead>
                 <tbody>
                   {filteredClients.map((client) => {
-                    const readiness = getReadinessStatus(client);
-                    const ReadinessIcon = readiness.icon;
-                    
                     return (
                       <tr key={client.id} className="border-b border-slate-700 hover:bg-slate-750">
                         <td className="py-3 px-4">
