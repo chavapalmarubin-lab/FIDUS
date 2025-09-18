@@ -203,9 +203,9 @@ class AuthDataDisplayTest:
             vt_account = None
             
             for account in salvador_accounts:
-                login = str(account.get('login', ''))
-                broker = str(account.get('broker', ''))
-                allocation = account.get('allocation', 0)
+                login = str(account.get('mt5_login', ''))
+                broker = str(account.get('broker_name', ''))
+                allocation = account.get('total_allocated', 0)
                 
                 if login == '9928326' and 'DooTechnology' in broker:
                     doo_account = account
