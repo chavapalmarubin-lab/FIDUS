@@ -92,8 +92,11 @@ class DataSyncFixesTest:
             # Test the NEW endpoint /admin/clients
             response = self.session.get(f"{BACKEND_URL}/admin/clients")
             if response.status_code == 200:
-                clients = response.json()
+                clients_data = response.json()
                 salvador_found = False
+                
+                # Handle the response structure - it's wrapped in a 'clients' key
+                clients = clients_data.get('clients', []) if isinstance(clients_data, dict) else clients_data
                 
                 # Look for Salvador Palma (client_003)
                 if isinstance(clients, list):
@@ -102,8 +105,15 @@ class DataSyncFixesTest:
                             'SALVADOR' in client.get('name', '').upper() or
                             'PALMA' in client.get('name', '').upper()):
                             salvador_found = True
-                            self.log_result("Admin Clients - Salvador Found", True, 
-                                          f"Salvador Palma found in /admin/clients: {client.get('name')}")
+                            # Check if the expected value is close to $1,371,485.40
+                            total_balance = client.get('total_balance', 0)
+                            expected_balance = 1371485.40
+                            if abs(total_balance - expected_balance) < 1000:  # Allow small variance
+                                self.log_result("Admin Clients - Salvador Found", True, 
+                                              f"Salvador Palma found in /admin/clients: {client.get('name')} with balance ${total_balance:,.2f}")
+                            else:
+                                self.log_result("Admin Clients - Salvador Balance Issue", False, 
+                                              f"Salvador found but balance ${total_balance:,.2f} differs from expected ${expected_balance:,.2f}")
                             break
                 
                 if not salvador_found:
