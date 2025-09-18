@@ -56,14 +56,10 @@ const MT5Management = () => {
 
     const fetchMT5Data = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts`, {
-                headers: {
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
-                }
-            });
+            const response = await apiAxios.get('/mt5/admin/accounts');
             
-            if (response.ok) {
-                const data = await response.json();
+            if (response.data) {
+                const data = response.data;
                 // Group accounts by broker for display
                 const accountsByBroker = {};
                 let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0 };
