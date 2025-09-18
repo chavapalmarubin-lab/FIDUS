@@ -224,7 +224,7 @@ class SalvadorInvestmentTest:
                 "fee_notes": "BALANCE Fund Investment - DooTechnology MT5 Mapping"
             }
             
-            response = self.session.post(f"{BACKEND_URL}/investments/deposit", json=investment_data)
+            response = self.session.post(f"{BACKEND_URL}/investments/create", json=investment_data)
             
             if response.status_code == 200:
                 result = response.json()
