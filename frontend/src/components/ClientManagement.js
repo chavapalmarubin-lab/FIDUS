@@ -63,7 +63,8 @@ const ClientManagement = () => {
     try {
       setLoading(true);
       const response = await apiAxios.get('/admin/clients');
-      setClients(response.data || []);
+      // Handle the wrapped format: response.data = { clients: [...] }
+      setClients(response.data.clients || []);
     } catch (err) {
       setError("Failed to fetch clients");
       console.error("Error fetching clients:", err);
