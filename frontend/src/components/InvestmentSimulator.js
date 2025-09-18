@@ -76,7 +76,12 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
   const [activeTab, setActiveTab] = useState("setup");
 
   // Currency conversion hook
-  const { convertAmount, formatCurrency, getAllConversions, exchangeRates } = useCurrency();
+  const { 
+    convertAmount: convertCurrencyAmount, 
+    formatCurrency: formatCurrencyAmount, 
+    getAllConversions, 
+    exchangeRates 
+  } = useCurrency();
 
   useEffect(() => {
     fetchFundConfigurations();
