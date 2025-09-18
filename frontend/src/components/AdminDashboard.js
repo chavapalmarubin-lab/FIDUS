@@ -18,6 +18,7 @@ import CashFlowManagement from "./CashFlowManagement";
 import MT5Management from "./MT5Management";
 import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
+import GoogleAdminAuth from './GoogleAdminAuth';
 import {
   LineChart,
   Line,
