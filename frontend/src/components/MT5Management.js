@@ -56,7 +56,7 @@ const MT5Management = () => {
 
     const fetchMT5Data = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts/by-broker`, {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts`, {
                 headers: {
                     'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
                 }
@@ -64,8 +64,25 @@ const MT5Management = () => {
             
             if (response.ok) {
                 const data = await response.json();
-                setAccountsByBroker(data.accounts_by_broker || {});
-                setTotalStats(data.total_stats || {});
+                // Group accounts by broker for display
+                const accountsByBroker = {};
+                let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0 };
+                
+                if (Array.isArray(data)) {
+                    data.forEach(account => {
+                        const broker = account.broker || 'Unknown';
+                        if (!accountsByBroker[broker]) {
+                            accountsByBroker[broker] = [];
+                        }
+                        accountsByBroker[broker].push(account);
+                        totalStats.total_accounts++;
+                        totalStats.total_balance += account.balance || 0;
+                        totalStats.total_equity += account.equity || 0;
+                    });
+                }
+                
+                setAccountsByBroker(accountsByBroker);
+                setTotalStats(totalStats);
             } else {
                 throw new Error('Failed to fetch MT5 data');
             }
