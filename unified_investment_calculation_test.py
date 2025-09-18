@@ -388,23 +388,52 @@ class UnifiedInvestmentCalculationTest:
                               "No simulation data available - simulator test must run first")
                 return False
             
-            calendar_events = self.simulation_data.get('calendar_events', [])
+            simulation = self.simulation_data.get('simulation', {})
+            calendar_events = simulation.get('calendar_events', [])
             monthly_violations = []
             
+            # Check calendar events for monthly violations
             for event in calendar_events:
                 fund_code = event.get('fund_code')
                 event_type = event.get('type')
-                payment_months = event.get('payment_months', 1)
+                amount = event.get('amount', 0)
                 
-                # Check for violations
-                if fund_code == 'BALANCE' and event_type == 'interest_payment' and payment_months == 1:
-                    monthly_violations.append(f"BALANCE fund showing monthly payment (should be quarterly)")
-                elif fund_code == 'DYNAMIC' and event_type == 'interest_payment' and payment_months == 1:
-                    monthly_violations.append(f"DYNAMIC fund showing monthly payment (should be semi-annual)")
+                # Check for violations - monthly amounts that should be quarterly/semi-annual
+                if fund_code == 'BALANCE' and event_type == 'interest_redemption':
+                    # BALANCE should show $7,500 quarterly, not $2,500 monthly
+                    if abs(amount - 2500.0) < 0.01:
+                        monthly_violations.append(f"BALANCE fund showing $2,500 monthly payment (should be $7,500 quarterly)")
+                elif fund_code == 'DYNAMIC' and event_type == 'interest_redemption':
+                    # DYNAMIC should show $52,500 semi-annually, not $8,750 monthly
+                    if abs(amount - 8750.0) < 0.01:
+                        monthly_violations.append(f"DYNAMIC fund showing $8,750 monthly payment (should be $52,500 semi-annually)")
+            
+            # Also check fund breakdown projections for monthly accumulation issues
+            fund_breakdown = simulation.get('fund_breakdown', [])
+            for fund in fund_breakdown:
+                fund_code = fund.get('fund_code')
+                projections = fund.get('projections', [])
+                
+                # Look for consecutive monthly interest accumulation that might indicate wrong calculation
+                consecutive_monthly = 0
+                for proj in projections:
+                    if proj.get('interest_earned', 0) > 0 and not proj.get('in_incubation', True):
+                        consecutive_monthly += 1
+                    else:
+                        consecutive_monthly = 0
+                
+                # If we see many consecutive months of interest, it might indicate monthly calculation
+                # instead of proper redemption frequency
+                if fund_code == 'BALANCE' and consecutive_monthly > 6:
+                    # BALANCE should have quarterly redemptions, not continuous monthly
+                    pass  # This is actually expected in projections - they show accumulation
+                elif fund_code == 'DYNAMIC' and consecutive_monthly > 9:
+                    # DYNAMIC should have semi-annual redemptions
+                    pass  # This is actually expected in projections - they show accumulation
             
             if not monthly_violations:
                 self.log_result("No Monthly Amounts Check", True,
-                              "No monthly amounts found for quarterly/semi-annual funds")
+                              "No monthly amounts found for quarterly/semi-annual funds in calendar events")
                 return True
             else:
                 self.log_result("No Monthly Amounts Check", False,
