@@ -9,26 +9,57 @@ const GoogleCallback = () => {
   const { profile, loading, error, isAuthenticated } = useGoogleAdmin();
 
   useEffect(() => {
-    // The useGoogleAdmin hook will automatically handle the session_id from URL
-    // and process the authentication
-    
-    const timer = setTimeout(() => {
-      if (isAuthenticated && profile) {
-        setStatus('success');
-        setMessage(`Successfully authenticated as ${profile.name}`);
-        
-        // Redirect to admin dashboard after 2 seconds
-        setTimeout(() => {
-          window.location.href = '/admin';
-        }, 2000);
-      } else if (error) {
-        setStatus('error');
-        setMessage(error);
-      }
-    }, 1000);
+    const processCallback = async () => {
+      try {
+        // Check if we have a session_id in the URL hash
+        const hash = window.location.hash;
+        if (!hash) {
+          setStatus('error');
+          setMessage('No authentication data received from Google');
+          return;
+        }
 
-    return () => clearTimeout(timer);
+        // Extract session_id from hash
+        const sessionIdMatch = hash.match(/session_id=([^&]+)/);
+        if (!sessionIdMatch) {
+          setStatus('error');
+          setMessage('Invalid authentication response from Google');
+          return;
+        }
+
+        const sessionId = sessionIdMatch[1];
+        console.log('Processing session ID:', sessionId);
+
+        // The useGoogleAdmin hook should automatically process this
+        // Wait a bit to let it process
+        setTimeout(() => {
+          if (isAuthenticated && profile) {
+            setStatus('success');
+            setMessage(`Successfully authenticated as ${profile.name}`);
+            
+            // Redirect to admin dashboard after 2 seconds
+            setTimeout(() => {
+              window.location.href = '/?skip_animation=true';
+            }, 2000);
+          } else if (error) {
+            setStatus('error');
+            setMessage(error);
+          }
+        }, 2000);
+
+      } catch (err) {
+        console.error('Callback processing error:', err);
+        setStatus('error');
+        setMessage('Failed to process authentication');
+      }
+    };
+
+    processCallback();
   }, [isAuthenticated, profile, error]);
+
+  const handleReturnToDashboard = () => {
+    window.location.href = '/?skip_animation=true';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -84,7 +115,7 @@ const GoogleCallback = () => {
                 </div>
                 
                 <button
-                  onClick={() => window.location.href = '/admin'}
+                  onClick={handleReturnToDashboard}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
                 >
                   Return to Admin Dashboard
@@ -110,7 +141,7 @@ const GoogleCallback = () => {
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-white font-medium">
-                      {profile.name.charAt(0).toUpperCase()}
+                      {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   </div>
                 )}
