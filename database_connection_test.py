@@ -231,7 +231,17 @@ class DatabaseConnectionVerificationTest:
             salvador_mt5_accounts = []
             
             if response.status_code == 200:
-                all_mt5_accounts = response.json()
+                mt5_response = response.json()
+                
+                # Handle both list format and object format
+                if isinstance(mt5_response, list):
+                    all_mt5_accounts = mt5_response
+                elif isinstance(mt5_response, dict) and 'accounts' in mt5_response:
+                    all_mt5_accounts = mt5_response['accounts']
+                else:
+                    all_mt5_accounts = []
+                
+                # Filter for Salvador's accounts
                 if isinstance(all_mt5_accounts, list):
                     for account in all_mt5_accounts:
                         if account.get('client_id') == 'client_003':
@@ -247,7 +257,8 @@ class DatabaseConnectionVerificationTest:
                                       {"total_mt5_accounts": len(all_mt5_accounts)})
                 else:
                     self.log_result("Salvador MT5 Accounts", False, 
-                                  "MT5 accounts endpoint returned non-list data")
+                                  "MT5 accounts endpoint returned invalid format",
+                                  {"response": mt5_response})
             else:
                 self.log_result("Salvador MT5 Accounts", False, 
                               f"Failed to get MT5 accounts: HTTP {response.status_code}")
