@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCurrentUser } from '../utils/auth';
+import { getAuthHeaders, getCurrentUser, getAuthToken } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -10,20 +10,12 @@ const useGoogleAdmin = () => {
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Get JWT token from existing auth system
-  const getAuthHeaders = () => {
-    const user = getCurrentUser();
-    const token = localStorage.getItem('fidus_token');
-    
-    const headers = {
-      'Content-Type': 'application/json'
+  // Get auth headers using the utility function
+  const getRequestHeaders = () => {
+    return {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
     };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    return headers;
   };
 
   // Check for existing session on mount
