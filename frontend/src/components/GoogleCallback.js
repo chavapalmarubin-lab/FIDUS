@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import useGoogleAdmin from '../hooks/useGoogleAdmin';
 
 const GoogleCallback = () => {
   const [status, setStatus] = useState('processing'); // processing, success, error
