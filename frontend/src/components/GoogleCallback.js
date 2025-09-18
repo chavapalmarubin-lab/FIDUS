@@ -5,7 +5,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 const GoogleCallback = () => {
   const [status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Processing Google authentication...');
-  const { profile, loading, error, isAuthenticated } = useGoogleAdmin();
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const processCallback = async () => {
