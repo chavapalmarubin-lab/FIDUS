@@ -469,9 +469,6 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="gmail" className="mt-6">
-            <GmailSettings />
-          </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
             <ApplicationDocuments />
