@@ -32,6 +32,12 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const skipAnimation = urlParams.get('skip_animation') === 'true';
     
+    // Handle Google OAuth callback
+    if (window.location.pathname === '/admin/google-callback') {
+      setCurrentView('google-callback');
+      return;
+    }
+    
     // Check if user is already authenticated
     if (isAuthenticated()) {
       const userData = getCurrentUser();
