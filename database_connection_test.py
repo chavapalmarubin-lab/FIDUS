@@ -198,7 +198,16 @@ class DatabaseConnectionVerificationTest:
             salvador_investments = []
             
             if response.status_code == 200:
-                investments = response.json()
+                investments_response = response.json()
+                
+                # Handle both list format and object format with 'investments' key
+                if isinstance(investments_response, list):
+                    investments = investments_response
+                elif isinstance(investments_response, dict) and 'investments' in investments_response:
+                    investments = investments_response['investments']
+                else:
+                    investments = []
+                
                 if isinstance(investments, list):
                     salvador_investments = investments
                     if len(investments) > 0:
@@ -211,8 +220,8 @@ class DatabaseConnectionVerificationTest:
                                       "Salvador has 0 investments in current database")
                 else:
                     self.log_result("Salvador Investments", False, 
-                                  "Investments endpoint returned non-list data",
-                                  {"response": investments})
+                                  "Investments endpoint returned invalid format",
+                                  {"response": investments_response})
             else:
                 self.log_result("Salvador Investments", False, 
                               f"Failed to get Salvador's investments: HTTP {response.status_code}")
