@@ -125,26 +125,34 @@ class SalvadorInvestmentTest:
             response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
             if response.status_code == 200:
                 investments = response.json()
+                
+                # Handle both list and dict responses
+                if isinstance(investments, dict):
+                    investments = investments.get('investments', [])
+                elif not isinstance(investments, list):
+                    investments = []
+                
                 self.salvador_current_state['current_investments'] = investments
                 
                 investment_summary = []
                 total_value = 0
                 
                 for investment in investments:
-                    fund_code = investment.get('fund_code')
-                    principal_amount = investment.get('principal_amount', 0)
-                    current_value = investment.get('current_value', 0)
-                    deposit_date = investment.get('deposit_date')
-                    investment_id = investment.get('investment_id')
-                    
-                    investment_summary.append({
-                        'fund_code': fund_code,
-                        'principal_amount': principal_amount,
-                        'current_value': current_value,
-                        'deposit_date': deposit_date,
-                        'investment_id': investment_id
-                    })
-                    total_value += current_value
+                    if isinstance(investment, dict):
+                        fund_code = investment.get('fund_code')
+                        principal_amount = investment.get('principal_amount', 0)
+                        current_value = investment.get('current_value', 0)
+                        deposit_date = investment.get('deposit_date')
+                        investment_id = investment.get('investment_id')
+                        
+                        investment_summary.append({
+                            'fund_code': fund_code,
+                            'principal_amount': principal_amount,
+                            'current_value': current_value,
+                            'deposit_date': deposit_date,
+                            'investment_id': investment_id
+                        })
+                        total_value += current_value
                 
                 self.log_result("Salvador Current Investments", True, 
                               f"Found {len(investments)} investments, Total Value: ${total_value:,.2f}",
