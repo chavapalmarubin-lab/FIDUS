@@ -7935,14 +7935,17 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
             "growth_percentage": round(((total_value - total_investment) / total_investment) * 100, 2) if total_investment > 0 else 0
         })
     
-    # Calculate summary statistics
-    final_timeline = projected_timeline[-1]
+    # Calculate summary statistics DIRECTLY from corrected fund breakdown
+    total_final_value = sum(fund['final_value'] for fund in fund_breakdown)
+    total_interest_earned = sum(fund['total_interest'] for fund in fund_breakdown)
+    total_roi_percentage = (total_interest_earned / total_investment * 100) if total_investment > 0 else 0
+    
     summary = {
         "total_investment": total_investment,
-        "final_value": final_timeline['total_value'],
-        "total_interest_earned": final_timeline['total_interest'],
-        "total_roi_percentage": final_timeline['growth_percentage'],
-        "monthly_average_interest": round(final_timeline['total_interest'] / timeframe_months, 2) if timeframe_months > 0 else 0,
+        "final_value": round(total_final_value, 2),
+        "total_interest_earned": round(total_interest_earned, 2),
+        "total_roi_percentage": round(total_roi_percentage, 2),
+        "monthly_average_interest": round(total_interest_earned / 12, 2),  # Based on 12 months of interest
         "timeframe_months": timeframe_months
     }
     
