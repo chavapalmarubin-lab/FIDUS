@@ -10,7 +10,7 @@ import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp, Ar
 import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
-import GmailSettings from "./GmailSettings";
+
 import AdminInvestmentManagement from "./AdminInvestmentManagement";
 import AdminRedemptionManagement from "./AdminRedemptionManagement";
 import FundPortfolioManagement from "./FundPortfolioManagement";
