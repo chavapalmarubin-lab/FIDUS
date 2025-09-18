@@ -7641,7 +7641,7 @@ async def send_email_via_google(request: Request, email_data: dict):
             raise HTTPException(status_code=401, detail="Authentication required")
         
         # Validate session
-        session_doc = await mongodb_manager.admin_sessions.find_one({"session_token": session_token})
+        session_doc = await mongodb_manager.db.admin_sessions.find_one({"session_token": session_token})
         if not session_doc or session_doc['expires_at'] < datetime.now(timezone.utc):
             raise HTTPException(status_code=401, detail="Invalid or expired session")
         
