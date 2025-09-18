@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 """
-INVESTMENT SIMULATOR BACKEND API CALCULATION TEST
-=================================================
+INVESTMENT SIMULATOR CALCULATIONS VERIFICATION TEST
+==================================================
 
-This test verifies the corrected Investment Simulator backend API calculations as requested in the review:
-- Test /api/investments/simulate endpoint with specific payload
-- Verify correct ROI calculations: CORE (18%), BALANCE (30%), DYNAMIC (42%)
-- Validate fund breakdown structure with 12 months of interest after 2-month incubation
-- Check that 77% error is eliminated (no ROI values should exceed 50%)
-- Verify contract structure in calendar events
+This test verifies the FIXED Investment Simulator backend API after removing duplicate functions
+to verify the mathematical calculations are now CORRECT as requested in the review.
 
-Expected Results:
-- CORE Fund: 1.5% × 12 months = 18% ROI = $4,500 interest on $25,000
-- BALANCE Fund: 2.5% × 12 months = 30% ROI = $30,000 interest on $100,000  
-- DYNAMIC Fund: 3.5% × 12 months = 42% ROI = $105,000 interest on $250,000
-- Total interest: $139,500
-- All funds: 2-month incubation + 12-month interest period = 14-month total contract
+Testing Requirements:
+1. Test the /api/investments/simulate endpoint with specific payload
+2. Verify CORRECT ROI calculations for each fund:
+   - CORE Fund: 1.5% × 12 months = 18% ROI = $4,500 interest on $25,000
+   - BALANCE Fund: 2.5% × 12 months = 30% ROI = $30,000 interest on $100,000  
+   - DYNAMIC Fund: 3.5% × 12 months = 42% ROI = $105,000 interest on $250,000
+3. Validate that 77% error is ELIMINATED - no ROI values should exceed 50%
+4. Check total calculations:
+   - Total investment: $375,000
+   - Total interest: $139,500 ($4,500 + $30,000 + $105,000)
+   - Total final value: $514,500
+5. Verify fund breakdown structure with 2-month incubation + 12-month interest = 14-month total
+
+Expected Results: The calculations should now be mathematically correct with CORE=18%, 
+BALANCE=30%, DYNAMIC=42% ROI, and the 77% error completely eliminated.
 """
 
 import requests
