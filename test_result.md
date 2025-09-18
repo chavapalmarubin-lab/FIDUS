@@ -292,6 +292,20 @@ frontend:
         - comment: "🎉 PIPELINE BUTTON IMPROVEMENTS SUCCESSFULLY VERIFIED! Conducted comprehensive testing of the improved pipeline stage progression buttons for lead management. VISIBILITY IMPROVEMENTS CONFIRMED: (1) ✅ 'Move to stage:' labels now clearly visible (4 labels found in pipeline view), addressing user complaint that 'buttons are not properly visible' and 'only when cursor is above them'. (2) ✅ Enhanced button styling verified - all 20 stage progression buttons show improved styling with bg-slate-600 (dark background), text-white, hover:bg-slate-700 (hover effects), hover:scale-105 (scale animation), hover:shadow-md (shadow effects). FUNCTIONALITY CONFIRMED: (3) ✅ All stage progression buttons (Qualified, Proposal, Negotiation, Won, Lost) are clickable and functional. Console logs show proper JavaScript execution with 'Moving prospect [ID] to [stage]' messages. (4) ✅ Complete pipeline workflow operational - Lead → Qualified → Proposal → Negotiation → Won with proper stage organization. (5) ✅ Professional user interface with clear stage labels, intuitive button placement, and enhanced visual feedback. USER ISSUE RESOLUTION: ❌ BEFORE: 'buttons dont work and are not properly visible' ❌ BEFORE: 'only when cursor is above them' ✅ AFTER: Buttons clearly visible with proper labels and improved styling ✅ AFTER: Functional button system with enhanced user experience. CONCLUSION: Main agent's pipeline button improvements successfully resolve all user complaints about visibility and functionality. The enhanced styling, clear labeling, and professional interface provide an excellent lead management experience."
 
 backend:
+  - task: "Investment Simulator Backend API Calculations Correction"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Backend API endpoint /api/investments/simulate needs correction for mathematical calculations. User reported 77% ROI error for CORE Fund instead of expected 18% ROI. Backend should calculate ROI based on 12 months of interest after 2-month incubation period, not full simulation timeframe."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL INVESTMENT SIMULATOR BACKEND API CALCULATION ERROR CONFIRMED - 77% ROI ERROR STILL PRESENT! Comprehensive testing of /api/investments/simulate endpoint reveals the mathematical calculations are INCORRECT and the 77% error has NOT been eliminated. CRITICAL FINDINGS: (1) ❌ CORE Fund shows 33% ROI instead of expected 18% ROI, (2) ❌ BALANCE Fund shows 55% ROI instead of expected 30% ROI, (3) ❌ DYNAMIC Fund shows 77% ROI instead of expected 42% ROI - the exact same 77% error reported by user, (4) ❌ Multiple ROI values exceed 50% throughout the simulation (52.7%, 55.8%, 58.9%, 62.0%, 65.1%, 68.2%, 77.0%), (5) ❌ Total portfolio ROI shows 68.2% instead of expected calculation. ROOT CAUSE IDENTIFIED: Backend calculation logic in server.py line 8170 calculates ROI over entire 24-month timeframe instead of just the 12 months after 2-month incubation period. The formula 'roi_percentage = (final_projection[interest_earned] / amount) * 100' uses 22 months of interest (24 total - 2 incubation) instead of 12 months as specified in FIDUS fund structure. CORRECT CALCULATION SHOULD BE: CORE (1.5% × 12 months = 18%), BALANCE (2.5% × 12 months = 30%), DYNAMIC (3.5% × 12 months = 42%). URGENT MAIN AGENT ACTION REQUIRED: Fix ROI calculation logic to use only 12 months of interest after incubation period, not the full simulation timeframe. Test Results: 2/7 tests passed (28.6% success rate). The Investment Simulator backend API calculations are mathematically incorrect and require immediate correction."
   - task: "Lilian Convert Button Missing Issue - Data Inconsistency Fix"
     implemented: true
     working: true
