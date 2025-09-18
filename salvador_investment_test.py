@@ -313,22 +313,29 @@ class SalvadorInvestmentTest:
             if response.status_code == 200:
                 investments = response.json()
                 
+                # Handle both list and dict responses
+                if isinstance(investments, dict):
+                    investments = investments.get('investments', [])
+                elif not isinstance(investments, list):
+                    investments = []
+                
                 # Look for the new investments
                 balance_found = False
                 core_found = False
                 
                 for investment in investments:
-                    fund_code = investment.get('fund_code')
-                    principal_amount = investment.get('principal_amount')
-                    
-                    if fund_code == 'BALANCE':
-                        balance_found = True
-                        self.log_result("BALANCE Investment Verification", True, 
-                                      f"BALANCE investment verified: ${principal_amount:,.2f}")
-                    elif fund_code == 'CORE' and principal_amount == 4000.00:
-                        core_found = True
-                        self.log_result("CORE Investment Verification", True, 
-                                      f"CORE investment verified: ${principal_amount:,.2f}")
+                    if isinstance(investment, dict):
+                        fund_code = investment.get('fund_code')
+                        principal_amount = investment.get('principal_amount')
+                        
+                        if fund_code == 'BALANCE':
+                            balance_found = True
+                            self.log_result("BALANCE Investment Verification", True, 
+                                          f"BALANCE investment verified: ${principal_amount:,.2f}")
+                        elif fund_code == 'CORE' and principal_amount == 4000.00:
+                            core_found = True
+                            self.log_result("CORE Investment Verification", True, 
+                                          f"CORE investment verified: ${principal_amount:,.2f}")
                 
                 if balance_found and core_found:
                     self.log_result("New Investments Verification", True, 
