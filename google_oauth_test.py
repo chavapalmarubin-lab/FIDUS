@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
 """
-GOOGLE ADMIN OAUTH INTEGRATION TESTING
-=====================================
+GOOGLE ADMIN OAUTH INTEGRATION TEST
+==================================
 
-This test verifies the new Google Admin OAuth integration endpoints as requested:
+This test verifies the fixed Google Admin OAuth integration endpoints as requested:
 
-1. Test Google Auth URL Endpoint (/api/admin/google/auth-url)
-   - Returns success: true
-   - Includes auth_url pointing to Emergent auth service
-   - Includes redirect_url for callback
-   - Includes Google API scopes array
+1. Test Google Auth URL Endpoint with Admin Authentication
+2. Test Without Authentication (should return 401 Unauthorized)
+3. Verify Auth URL Format (contains Emergent auth service URL and redirect parameter)
+4. Test Other Google Endpoints (profile, logout) respond appropriately to authentication
 
-2. Test Admin Profile Endpoint (/api/admin/google/profile)
-   - Returns proper 401 unauthorized response for unauthenticated requests
-
-3. Test Session Processing (/api/admin/google/process-session)
-   - Verify endpoint exists and returns proper error handling for invalid session IDs
-
-4. Test Logout Endpoint (/api/admin/google/logout)
-   - Verify it handles requests properly
-
-5. Test Email Endpoint (/api/admin/google/send-email)
-   - Returns proper 401 response without authentication
-
-This verifies the Google OAuth backend integration is properly implemented and ready for admin authentication.
+Expected Results:
+- Admin authentication works with JWT token
+- /api/admin/google/auth-url requires authentication
+- Auth URL contains proper Emergent service URL
+- Other Google endpoints handle authentication correctly
 """
 
 import requests
@@ -31,9 +22,12 @@ import json
 import sys
 from datetime import datetime
 import time
+import urllib.parse
 
-# Configuration - Use the backend URL from frontend .env
+# Configuration
 BACKEND_URL = "https://aml-kyc-portal.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
 
 class GoogleOAuthIntegrationTest:
     def __init__(self):
