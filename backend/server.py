@@ -7838,12 +7838,25 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                 
                 # Add calendar events for redemption opportunities
                 if can_redeem_interest and months_since_interest_start <= 12:
-                    monthly_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    # Calculate accumulated interest for the redemption period
+                    if fund_config.redemption_frequency == "monthly":
+                        redemption_period_months = 1
+                        redemption_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    elif fund_config.redemption_frequency == "quarterly":
+                        redemption_period_months = 3
+                        redemption_interest = calculate_simple_interest(amount, fund_config.interest_rate, 3)
+                    elif fund_config.redemption_frequency == "semi_annually":
+                        redemption_period_months = 6
+                        redemption_interest = calculate_simple_interest(amount, fund_config.interest_rate, 6)
+                    else:
+                        redemption_period_months = 1
+                        redemption_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    
                     calendar_events.append({
                         "date": projection_date.isoformat().split('T')[0],
                         "title": f"{fund_code} Interest Available",
-                        "description": f"${monthly_interest:,.2f} monthly interest can be redeemed",
-                        "amount": monthly_interest,
+                        "description": f"${redemption_interest:,.2f} accumulated interest ({redemption_period_months}-month period) can be redeemed",
+                        "amount": redemption_interest,
                         "fund_code": fund_code,
                         "type": "interest_redemption"
                     })
