@@ -61,6 +61,7 @@ const GoogleCallback = () => {
           if (response.ok && data.success) {
             setStatus('success');
             setMessage(`Successfully authenticated as ${data.profile.name}`);
+            setProfile(data.profile);
             
             // Store the Google profile info if needed
             console.log('Google authentication successful:', data.profile);
