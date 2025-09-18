@@ -620,6 +620,24 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                   />
                 </div>
 
+                {/* Currency Selector */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Display Currency
+                  </Label>
+                  <CurrencySelector
+                    selectedCurrency={selectedCurrency}
+                    onCurrencyChange={setSelectedCurrency}
+                    showRates={true}
+                    showSummary={false}
+                    size="default"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    All investments are in USD. Display amounts will be converted for reference.
+                  </p>
+                </div>
+
                 {isPublic && (
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-900">Lead Information</h4>
