@@ -13,6 +13,8 @@ import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, Trend
 import { format } from "date-fns";
 import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
+import CurrencySelector from "./CurrencySelector";
+import useCurrency from "../hooks/useCurrency";
 
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
