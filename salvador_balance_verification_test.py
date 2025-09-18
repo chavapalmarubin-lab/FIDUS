@@ -193,7 +193,10 @@ class SalvadorBalanceVerificationTest:
         try:
             response = self.session.get(f"{BACKEND_URL}/mt5/admin/accounts")
             if response.status_code == 200:
-                mt5_accounts = response.json()
+                data = response.json()
+                
+                # Handle the correct response format
+                mt5_accounts = data.get('accounts', []) if isinstance(data, dict) else data
                 
                 if len(mt5_accounts) > 0:
                     salvador_mt5_accounts = []
@@ -202,13 +205,13 @@ class SalvadorBalanceVerificationTest:
                     for account in mt5_accounts:
                         if account.get('client_id') == 'client_003':
                             salvador_mt5_accounts.append(account)
-                            allocated_amount = account.get('allocated_amount', 0) or account.get('balance', 0)
+                            allocated_amount = account.get('total_allocated', 0) or account.get('current_equity', 0) or account.get('balance', 0)
                             total_allocated += allocated_amount
                     
                     if len(salvador_mt5_accounts) >= 2:
                         # Check for specific accounts
-                        doo_found = any(acc.get('login') == '9928326' for acc in salvador_mt5_accounts)
-                        vt_found = any(acc.get('login') == '15759667' for acc in salvador_mt5_accounts)
+                        doo_found = any(acc.get('mt5_login') == '9928326' for acc in salvador_mt5_accounts)
+                        vt_found = any(acc.get('mt5_login') == '15759667' for acc in salvador_mt5_accounts)
                         
                         if doo_found and vt_found:
                             if total_allocated > 1000000:
@@ -217,7 +220,7 @@ class SalvadorBalanceVerificationTest:
                                               {"account_count": len(salvador_mt5_accounts), "accounts": salvador_mt5_accounts})
                             else:
                                 self.log_result("MT5 Accounts Data", False, 
-                                              f"❌ MT5 accounts found but allocation is $0 or low: ${total_allocated:,.2f}",
+                                              f"❌ MT5 accounts found but allocation is low: ${total_allocated:,.2f}",
                                               {"account_count": len(salvador_mt5_accounts), "accounts": salvador_mt5_accounts})
                         else:
                             missing = []
