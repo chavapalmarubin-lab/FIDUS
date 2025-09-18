@@ -43,6 +43,20 @@
         - working: true
           agent: "testing"
           comment: "🎉 INVESTMENT SIMULATOR PDF EXPORT WITH FIDUS LOGO TESTING COMPLETED SUCCESSFULLY - 100% SUCCESS RATE! Comprehensive testing confirms the updated PDF export functionality with real FIDUS logo integration is working perfectly. VERIFIED: (1) ✅ Navigation to Investment Simulator via Admin CRM → Prospects → Investment Simulator successful, (2) ✅ Portfolio setup with specified amounts (CORE $25K, BALANCE $100K, DYNAMIC $250K) working correctly, (3) ✅ Simulation execution successful with proper results display, (4) ✅ PDF export functionality operational - 'Export PDF' button found and functional, PDF downloads with correct FIDUS branding filename, (5) ✅ FIDUS logo file (/fidus-logo-complete.png) accessible with HTTP 200 status and proper content-type, (6) ✅ Logo integration indicators show successful loading, (7) ✅ Error handling verified with graceful fallback to text if logo fails. The key improvement - actual FIDUS logo image appearing at top of PDF instead of just 'FIDUS' text - has been successfully implemented. Professional PDF formatting maintained with proper logo sizing (40mm width) and positioning as specified."
+  - task: "Google Admin OAuth Integration Testing"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/GoogleAdminAuth.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed Google Admin OAuth integration to resolve 'Failed to get auth URL' error. Need to verify that clicking 'Sign in with Google' button no longer shows error and properly redirects to Emergent OAuth service."
+        - working: false
+          agent: "testing"
+          comment: "🚨 GOOGLE ADMIN OAUTH INTEGRATION TESTING COMPLETED - CRITICAL BACKEND AUTHENTICATION ISSUE IDENTIFIED! Comprehensive testing shows frontend UI is working correctly but backend OAuth service is failing. VERIFIED WORKING: (1) ✅ Admin dashboard access successful (admin/password123), (2) ✅ Google Integration tab accessible with proper header and description, (3) ✅ All UI components render correctly (Gmail, Calendar, Drive, Secure Access cards), (4) ✅ 'Sign in with Google' button present and enabled, (5) ✅ Authorized email (chavapalmarubin@gmail.com) displayed correctly. CRITICAL ISSUES: (1) ❌ 'Failed to get auth URL' error still appears in red alert box at top of page, (2) ❌ Backend API endpoints return 401 Unauthorized errors (/api/admin/google/profile, /api/admin/google/auth-url), (3) ❌ OAuth flow blocked - clicking button fails with 401 error preventing redirect to Emergent OAuth service. ROOT CAUSE: Backend Google OAuth endpoints have authentication/authorization issues. Frontend implementation is correct but backend service integration is broken. URGENT BACKEND FIXES REQUIRED: Fix authentication for Google OAuth API endpoints and verify Google OAuth service configuration."
 ##   - task: "Task name"
 ##     implemented: true
 ##     working: true  # or false or "NA"
