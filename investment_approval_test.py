@@ -467,9 +467,9 @@ class InvestmentApprovalTest:
                             if result['success'] and any(critical in result['test'] for critical in critical_tests))
         
         print("🚨 CRITICAL ASSESSMENT:")
-        if critical_passed >= 4:  # At least 4 out of 5 critical tests
+        if critical_passed >= 6:  # At least 6 out of 8 critical tests
             print("✅ INVESTMENT APPROVAL PROCESS: SUCCESSFUL")
-            print("   Both investments found and approved successfully.")
+            print("   Both investments found, validated, and approved successfully.")
             print("   Salvador's portfolio updated with active investments.")
             print("   System ready for production use.")
         else:
