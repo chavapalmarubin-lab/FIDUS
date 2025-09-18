@@ -884,7 +884,17 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Investment:</span>
-                            <div className="font-medium">{formatCurrency(fund.investment_amount)}</div>
+                            <div className="font-medium">
+                              {selectedCurrency === 'USD' 
+                                ? formatCurrency(fund.investment_amount)
+                                : formatCurrencyAmount(convertCurrencyAmount(fund.investment_amount, 'USD', selectedCurrency), selectedCurrency)
+                              }
+                            </div>
+                            {selectedCurrency !== 'USD' && (
+                              <div className="text-xs text-gray-500">
+                                {formatCurrency(fund.investment_amount)} USD
+                              </div>
+                            )}
                           </div>
                           <div>
                             <span className="text-gray-600">Interest Rate:</span>
