@@ -118,7 +118,7 @@ const useGoogleAdmin = () => {
 
       const response = await fetch(`${API}/admin/google/process-session`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: getRequestHeaders(),
         credentials: 'include',
         body: JSON.stringify({ session_id: sessionId })
       });
@@ -152,7 +152,7 @@ const useGoogleAdmin = () => {
       const response = await fetch(`${API}/admin/google/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: getAuthHeaders()
+        headers: getRequestHeaders()
       });
 
       const data = await response.json();
@@ -178,7 +178,7 @@ const useGoogleAdmin = () => {
       const response = await fetch(`${API}/admin/google/send-email`, {
         method: 'POST',
         credentials: 'include',
-        headers: getAuthHeaders(),
+        headers: getRequestHeaders(),
         body: JSON.stringify(emailData)
       });
 
