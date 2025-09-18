@@ -7457,7 +7457,7 @@ class AdminGoogleProfile(BaseModel):
     connected_at: str
 
 @api_router.get("/admin/google/auth-url")
-async def get_google_auth_url(current_user: dict = None):
+async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
     """Get Google OAuth URL for admin authentication (requires admin login)"""
     try:
         # This endpoint is accessible to authenticated admin users
