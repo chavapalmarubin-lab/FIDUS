@@ -336,7 +336,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-11 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-10 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
               Fund Portfolio
             </TabsTrigger>
@@ -366,10 +366,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               Redemptions
             </TabsTrigger>
             <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600">
-              🔗 Google Integration
-            </TabsTrigger>
-            <TabsTrigger value="gmail" className="text-white data-[state=active]:bg-cyan-600">
-              📧 Gmail Settings
+              📧 Google Integration
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
               <FileText size={16} className="mr-2" />
