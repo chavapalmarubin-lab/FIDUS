@@ -62,8 +62,8 @@ const ClientManagement = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await apiAxios.get('/clients/all');
-      setClients(response.data.clients || []);
+      const response = await apiAxios.get('/admin/clients');
+      setClients(response.data || []);
     } catch (err) {
       setError("Failed to fetch clients");
       console.error("Error fetching clients:", err);
