@@ -381,12 +381,21 @@ class FundPortfolioEndpointTest:
                                             zero_value_issues.append(f"{name}: Salvador's balance is zero")
                         
                         elif endpoint == "/investments/client/client_003":
-                            if isinstance(data, list) and len(data) == 0:
-                                zero_value_issues.append(f"{name}: No investments found for Salvador")
+                            if isinstance(data, dict) and 'investments' in data:
+                                investments = data['investments']
+                                if len(investments) == 0:
+                                    zero_value_issues.append(f"{name}: No investments found for Salvador")
+                                else:
+                                    for inv in investments:
+                                        if inv.get('current_value', 0) == 0:
+                                            zero_value_issues.append(f"{name}: Investment {inv.get('fund_code')} has zero value")
                             elif isinstance(data, list):
-                                for inv in data:
-                                    if inv.get('current_value', 0) == 0:
-                                        zero_value_issues.append(f"{name}: Investment {inv.get('fund_code')} has zero value")
+                                if len(data) == 0:
+                                    zero_value_issues.append(f"{name}: No investments found for Salvador")
+                                else:
+                                    for inv in data:
+                                        if inv.get('current_value', 0) == 0:
+                                            zero_value_issues.append(f"{name}: Investment {inv.get('fund_code')} has zero value")
                 
                 except Exception as e:
                     zero_value_issues.append(f"{name}: Exception checking values - {str(e)}")
