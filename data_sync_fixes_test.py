@@ -143,59 +143,47 @@ class DataSyncFixesTest:
             self.log_result("Admin Clients Endpoint Fix", False, f"Exception: {str(e)}")
     
     def test_fund_portfolio_endpoint_fix(self):
-        """Test FIX 2: Fixed FundPortfolioManagement endpoints to use /fund-portfolio/overview"""
+        """Test FIX 2: Fixed FundPortfolioManagement endpoints to use /admin/funds-overview"""
         try:
             print("\n🔧 Testing FIX 2: FundPortfolioManagement endpoint fix")
             
-            # Test the FIXED endpoint /fund-portfolio/overview
-            response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
+            # Test the CORRECT endpoint /admin/funds-overview (not /fund-portfolio/overview)
+            response = self.session.get(f"{BACKEND_URL}/admin/funds-overview")
             if response.status_code == 200:
                 portfolio_data = response.json()
                 
                 # Check for non-zero investment values
-                total_value = 0
-                investment_found = False
-                
-                if isinstance(portfolio_data, dict):
-                    # Look for various possible fields that indicate investment values
-                    possible_value_fields = [
-                        'total_value', 'total_investment', 'total_aum', 'total_assets',
-                        'portfolio_value', 'investment_value', 'current_value'
-                    ]
-                    
-                    for field in possible_value_fields:
-                        if field in portfolio_data and portfolio_data[field] > 0:
-                            total_value = portfolio_data[field]
-                            investment_found = True
-                            break
-                    
-                    # Also check if there are investment arrays with values
-                    if not investment_found and 'investments' in portfolio_data:
-                        investments = portfolio_data['investments']
-                        if isinstance(investments, list) and len(investments) > 0:
-                            for inv in investments:
-                                if isinstance(inv, dict) and inv.get('current_value', 0) > 0:
-                                    total_value += inv.get('current_value', 0)
-                                    investment_found = True
+                total_aum = portfolio_data.get('total_aum', 0)
+                investment_found = total_aum > 0
                 
                 # Expected value should be around $1,371,485.40 as mentioned in review
                 expected_value = 1371485.40
-                if investment_found and total_value > 0:
-                    if abs(total_value - expected_value) < 100000:  # Allow some variance
+                if investment_found and total_aum > 0:
+                    if abs(total_aum - expected_value) < 1000:  # Allow small variance
                         self.log_result("Fund Portfolio - Investment Values", True, 
-                                      f"Fund portfolio shows non-zero values: ${total_value:,.2f}")
+                                      f"Fund portfolio shows correct total AUM: ${total_aum:,.2f}")
+                        
+                        # Also check individual fund values
+                        balance_fund = portfolio_data.get('funds', {}).get('BALANCE', {})
+                        balance_aum = balance_fund.get('aum', 0)
+                        if balance_aum > 1000000:  # Should be around $1.36M
+                            self.log_result("Fund Portfolio - BALANCE Fund", True, 
+                                          f"BALANCE fund shows correct AUM: ${balance_aum:,.2f}")
+                        else:
+                            self.log_result("Fund Portfolio - BALANCE Fund Issue", False, 
+                                          f"BALANCE fund AUM too low: ${balance_aum:,.2f}")
                     else:
                         self.log_result("Fund Portfolio - Value Mismatch", False, 
-                                      f"Portfolio value ${total_value:,.2f} differs significantly from expected ${expected_value:,.2f}",
+                                      f"Portfolio total AUM ${total_aum:,.2f} differs from expected ${expected_value:,.2f}",
                                       {"portfolio_data": portfolio_data})
                 else:
                     self.log_result("Fund Portfolio - Zero Values", False, 
                                   "Fund portfolio shows zero or no investment values",
-                                  {"portfolio_data": portfolio_data})
+                                  {"total_aum": total_aum})
                 
             else:
                 self.log_result("Fund Portfolio Endpoint", False, 
-                              f"/fund-portfolio/overview endpoint failed: HTTP {response.status_code}",
+                              f"/admin/funds-overview endpoint failed: HTTP {response.status_code}",
                               {"response": response.text[:500]})
                 
         except Exception as e:
