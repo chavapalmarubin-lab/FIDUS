@@ -54,7 +54,7 @@ const useGoogleAdmin = () => {
       const response = await fetch(`${API}/admin/google/profile`, {
         method: 'GET',
         credentials: 'include',
-        headers: getAuthHeaders()
+        headers: getRequestHeaders()
       });
 
       if (response.ok) {
@@ -80,7 +80,7 @@ const useGoogleAdmin = () => {
     try {
       const response = await fetch(`${API}/admin/google/auth-url`, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getRequestHeaders()
       });
 
       const data = await response.json();
