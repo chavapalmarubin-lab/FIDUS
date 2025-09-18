@@ -7618,7 +7618,7 @@ async def logout_admin_google(request: Request):
         
         if session_token:
             # Remove session from database
-            await mongodb_manager.db.admin_sessions.delete_one({"session_token": session_token})
+            delete_result = await mongodb_manager.db.admin_sessions.delete_one({"session_token": session_token})
         
         return {
             "success": True,
