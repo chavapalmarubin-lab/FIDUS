@@ -88,6 +88,17 @@
         - working: "NA"
           agent: "main"
           comment: "Updated Gmail Settings to use unified Google Integration system instead of old direct Google OAuth that was causing redirect_uri_mismatch errors. Need to verify Gmail Settings tab shows migration notice, Authenticate Gmail uses new OAuth system, and no redirect_uri_mismatch errors occur."
+  - task: "Frontend Data Display Fixes Verification Testing"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/components/ClientManagement.js, /app/frontend/src/components/FundPortfolioManagement.js, /app/frontend/src/components/MT5Management.js, /app/frontend/src/components/ProspectManagement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL FRONTEND DATA DISPLAY TESTING FAILED - ALL USER-REPORTED ISSUES CONFIRMED UNRESOLVED! Comprehensive testing at https://investsim-1.preview.emergentagent.com reveals MAJOR SYSTEM FAILURES: (1) ❌ SALVADOR PALMA MISSING: ClientManagement component crashes with 'clients.filter is not a function' error - backend API returning null/undefined instead of array, preventing Salvador from appearing in clients list. (2) ❌ FUND PORTFOLIO ALL ZEROS: Dashboard shows Total AUM: $0, Total Returns: 0.00%, Total Clients: 0, Active Funds: 0 with 'Failed to load fund portfolio data' error - exactly matching user's zero values complaint. (3) ❌ BACKEND API FAILURES: Console shows 404 errors for /api/fund-portfolio/overview and other critical endpoints. (4) ❌ FRONTEND COMPONENT CRASHES: Runtime errors prevent access to MT5 Accounts and CRM Prospects sections for testing Lilian Limon AML/KYC functionality. (5) ✅ AUTHENTICATION WORKS: Admin login successful but all data display broken. ROOT CAUSE: Backend API endpoints failing (404s) and returning wrong data types (null instead of arrays), causing frontend crashes. CRITICAL CONCLUSION: All user-reported issues are REAL and COMPLETELY UNRESOLVED - Salvador missing, investment values zero, MT5 accounts inaccessible, system unusable for business operations. URGENT FIXES REQUIRED: Fix /api/fund-portfolio/overview (404), fix /api/admin/clients (wrong data type), restore Salvador's data, fix zero displays, ensure MT5 data loads properly."
 ##   - task: "Task name"
 ##     implemented: true
 ##     working: true  # or false or "NA"
