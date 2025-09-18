@@ -530,8 +530,13 @@ class Client3SalvadorAuthenticationTest:
             self.test_balance_and_core_fund_visibility(investments)
             self.test_total_investment_value(investments)
             self.test_mt5_mappings_visibility(investments)
+            
+            # Step 5: Test MT5 account data access
+            print("\n🏦 Testing MT5 Account Data Access...")
+            print("-" * 50)
+            self.test_mt5_account_data_access()
         
-        # Step 5: Test client dashboard functionality
+        # Step 6: Test client dashboard functionality
         print("\n📈 Testing Client Dashboard Functionality...")
         print("-" * 50)
         self.test_client_dashboard_functionality()
