@@ -967,7 +967,7 @@ class MongoDBManager:
             collections = ['users', 'client_profiles', 'investments', 'client_readiness', 
                           'fund_configurations', 'activity_logs', 'redemption_requests',
                           'payment_confirmations', 'crm_prospects', 'fund_rebates',
-                          'mt5_accounts', 'mt5_credentials', 'documents']
+                          'mt5_accounts', 'mt5_credentials', 'documents', 'admin_sessions']
             
             for collection_name in collections:
                 count = self.db[collection_name].count_documents({})
