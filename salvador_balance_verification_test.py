@@ -290,7 +290,7 @@ class SalvadorBalanceVerificationTest:
             if response.status_code == 200:
                 portfolio_data = response.json()
                 
-                total_aum = portfolio_data.get('total_aum', 0)
+                total_aum = portfolio_data.get('aum', 0)
                 if total_aum > 1000000:
                     self.log_result("Fund Portfolio Overview", True, 
                                   f"Fund portfolio shows correct total AUM: ${total_aum:,.2f}")
@@ -299,7 +299,7 @@ class SalvadorBalanceVerificationTest:
                                   "❌ CRITICAL: Fund portfolio shows $0 AUM (user's reported issue)")
                 else:
                     self.log_result("Fund Portfolio Overview", False, 
-                                  f"Fund portfolio AUM incorrect: ${total_aum:,.2f} (expected >$1M)")
+                                  f"Fund portfolio AUM: ${total_aum:,.2f} (expected >$1M)")
             else:
                 self.log_result("Fund Portfolio Overview", False, 
                               f"Failed to get fund portfolio overview: HTTP {response.status_code}")
