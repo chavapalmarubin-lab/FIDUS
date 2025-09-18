@@ -299,8 +299,9 @@ class InvestmentApprovalTest:
             # Get Salvador's investments
             response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
             if response.status_code == 200:
-                investments = response.json()
-                total_investments = len(investments)
+                data = response.json()
+                investments = data.get('investments', []) if isinstance(data, dict) else data
+                total_investments = data.get('portfolio_stats', {}).get('total_investments', len(investments))
                 
                 if total_investments == 6:
                     self.log_result("Total Investment Count", True, 
