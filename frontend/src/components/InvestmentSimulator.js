@@ -861,10 +861,23 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                             <h3 className="font-medium">{fund.fund_name}</h3>
                           </div>
                           <div className="text-right">
-                            <div className="font-medium">{formatCurrency(fund.final_value)}</div>
-                            <div className="text-sm text-gray-600">
-                              +{formatCurrency(fund.total_interest)} ({formatPercentage(fund.roi_percentage)})
+                            <div className="font-medium">
+                              {selectedCurrency === 'USD' 
+                                ? formatCurrency(fund.final_value)
+                                : formatCurrencyAmount(convertCurrencyAmount(fund.final_value, 'USD', selectedCurrency), selectedCurrency)
+                              }
                             </div>
+                            <div className="text-sm text-gray-600">
+                              +{selectedCurrency === 'USD' 
+                                ? formatCurrency(fund.total_interest)
+                                : formatCurrencyAmount(convertCurrencyAmount(fund.total_interest, 'USD', selectedCurrency), selectedCurrency)
+                              } ({formatPercentage(fund.roi_percentage)})
+                            </div>
+                            {selectedCurrency !== 'USD' && (
+                              <div className="text-xs text-gray-500">
+                                {formatCurrency(fund.final_value)} USD
+                              </div>
+                            )}
                           </div>
                         </div>
                         
