@@ -302,6 +302,27 @@ const ProspectManagement = () => {
     }
   };
 
+  const handleManualAMLApproval = async (prospectId) => {
+    try {
+      setLoading(true);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-approve`, {
+        prospect_id: prospectId,
+        approved: true,
+        admin_notes: "Manual AML/KYC review completed and approved by admin"
+      });
+      
+      if (response.data.success) {
+        setSuccess("AML/KYC status approved manually. Prospect can now be converted to client.");
+        fetchProspects();
+        fetchPipeline();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to approve AML/KYC manually");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConvertProspect = async (prospectId) => {
     try {
       setLoading(true);
