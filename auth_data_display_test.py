@@ -177,14 +177,20 @@ class AuthDataDisplayTest:
                               "Invalid JSON response", {"response": response.text})
                 return False
             
-            # Check if data is an array
-            if not isinstance(data, list):
-                self.log_result("MT5 Admin Accounts - Data Format", False, 
-                              "Response is not an array", {"data": data})
+            # Check if data has success flag and accounts array
+            if not data.get("success"):
+                self.log_result("MT5 Admin Accounts - Success Flag", False, 
+                              "Response does not have success=true", {"data": data})
+                return False
+            
+            accounts = data.get("accounts", [])
+            if not isinstance(accounts, list):
+                self.log_result("MT5 Admin Accounts - Accounts Format", False, 
+                              "Accounts field is not an array", {"data": data})
                 return False
             
             # Filter for Salvador's accounts (client_003)
-            salvador_accounts = [acc for acc in data if acc.get('client_id') == 'client_003']
+            salvador_accounts = [acc for acc in accounts if acc.get('client_id') == 'client_003']
             
             if len(salvador_accounts) != 2:
                 self.log_result("MT5 Admin Accounts - Salvador Account Count", False, 
