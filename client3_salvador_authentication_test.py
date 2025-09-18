@@ -170,7 +170,18 @@ class Client3SalvadorAuthenticationTest:
             response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
             
             if response.status_code == 200:
-                investments = response.json()
+                response_data = response.json()
+                
+                # Handle both direct list format and wrapped format
+                if isinstance(response_data, list):
+                    investments = response_data
+                elif isinstance(response_data, dict) and 'investments' in response_data:
+                    investments = response_data['investments']
+                else:
+                    self.log_result("Investment Data Access", False, 
+                                  "Invalid response format - no investments found",
+                                  {"response": response_data})
+                    return None
                 
                 if isinstance(investments, list):
                     investment_count = len(investments)
@@ -178,12 +189,12 @@ class Client3SalvadorAuthenticationTest:
                     
                     self.log_result("Investment Data Access", True, 
                                   f"Successfully accessed {investment_count} investments, total value: ${total_value:,.2f}",
-                                  {"investments": investments})
+                                  {"investments": investments, "portfolio_stats": response_data.get('portfolio_stats')})
                     return investments
                 else:
                     self.log_result("Investment Data Access", False, 
-                                  "Invalid response format - expected list of investments",
-                                  {"response": investments})
+                                  "Invalid investments format - expected list",
+                                  {"response": response_data})
                     return None
             else:
                 self.log_result("Investment Data Access", False, 
