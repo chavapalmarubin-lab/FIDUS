@@ -449,8 +449,8 @@ class SalvadorInvestmentTest:
             print(f"   Current Investments: {len(current_investments)}")
             print(f"   MT5 Accounts: {len(mt5_accounts)}")
             
-            if current_investments:
-                total_value = sum(inv.get('current_value', 0) for inv in current_investments)
+            if current_investments and isinstance(current_investments, list):
+                total_value = sum(inv.get('current_value', 0) for inv in current_investments if isinstance(inv, dict))
                 print(f"   Total Investment Value: ${total_value:,.2f}")
             print()
         
