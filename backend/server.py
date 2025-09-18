@@ -7914,8 +7914,9 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
             "projections": fund_projections
         })
     
-    # Create combined timeline showing total portfolio value over time
-    for month in range(timeframe_months + 1):
+    # Create combined timeline showing total portfolio value over time (CORRECTED)
+    projection_months = min(timeframe_months + 1, 15)  # Cap at 15 months (14 + 1 for month 0)
+    for month in range(projection_months):
         projection_date = (datetime.now(timezone.utc) + timedelta(days=month * 30))
         total_value = 0.0
         total_interest = 0.0
