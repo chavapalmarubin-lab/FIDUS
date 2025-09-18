@@ -1,26 +1,39 @@
 #!/usr/bin/env python3
 """
-INVESTMENT SIMULATOR CALCULATIONS VERIFICATION TEST
-==================================================
+INVESTMENT SIMULATOR TOTAL VALUE CALCULATION FIX VERIFICATION TEST
+================================================================
 
-This test verifies the FIXED Investment Simulator backend API after removing duplicate functions
-to verify the mathematical calculations are now CORRECT as requested in the review.
+This test verifies the critical Investment Simulator total value calculation fix as requested in the review:
 
-Testing Requirements:
-1. Test the /api/investments/simulate endpoint with specific payload
-2. Verify CORRECT ROI calculations for each fund:
-   - CORE Fund: 1.5% × 12 months = 18% ROI = $4,500 interest on $25,000
-   - BALANCE Fund: 2.5% × 12 months = 30% ROI = $30,000 interest on $100,000  
-   - DYNAMIC Fund: 3.5% × 12 months = 42% ROI = $105,000 interest on $250,000
-3. Validate that 77% error is ELIMINATED - no ROI values should exceed 50%
-4. Check total calculations:
-   - Total investment: $375,000
-   - Total interest: $139,500 ($4,500 + $30,000 + $105,000)
-   - Total final value: $514,500
-5. Verify fund breakdown structure with 2-month incubation + 12-month interest = 14-month total
+CRITICAL ISSUE TO VERIFY:
+User reported that while individual fund calculations show correct ROI (18%, 30%, 42%), 
+the **total summary shows wrong values**:
+- Total Final Value: $0 (should be sum of all funds)
+- Total Interest: $0 (should be sum of all fund interest)
+- Total ROI: -100% (should be weighted average of fund ROIs)
 
-Expected Results: The calculations should now be mathematically correct with CORE=18%, 
-BALANCE=30%, DYNAMIC=42% ROI, and the 77% error completely eliminated.
+TESTING PAYLOAD:
+{
+  "investments": [
+    {"fund_code": "CORE", "amount": 25000},
+    {"fund_code": "BALANCE", "amount": 100000},
+    {"fund_code": "DYNAMIC", "amount": 250000}
+  ],
+  "timeframe_months": 24,
+  "simulation_name": "Total Value Fix Test"
+}
+
+EXPECTED CORRECT RESULTS:
+- Total Investment: $375,000
+- Total Final Value: $514,500 (sum: $29,500 + $130,000 + $355,000)
+- Total Interest: $139,500 (sum: $4,500 + $30,000 + $105,000)
+- Total ROI: 37.2% (weighted average: $139,500/$375,000)
+
+CRITICAL VERIFICATION:
+1. ✅ Individual fund calculations should remain correct (18%, 30%, 42%)
+2. ✅ Summary totals should be sum of individual fund values (not $0)
+3. ✅ Final value should equal total investment + total interest
+4. ✅ ROI should be positive percentage, not -100%
 """
 
 import requests
