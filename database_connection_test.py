@@ -161,7 +161,16 @@ class DatabaseConnectionVerificationTest:
             total_clients = 0
             
             if response.status_code == 200:
-                clients = response.json()
+                clients_response = response.json()
+                
+                # Handle both list format and object format with 'clients' key
+                if isinstance(clients_response, list):
+                    clients = clients_response
+                elif isinstance(clients_response, dict) and 'clients' in clients_response:
+                    clients = clients_response['clients']
+                else:
+                    clients = []
+                
                 if isinstance(clients, list):
                     total_clients = len(clients)
                     for client in clients:
@@ -178,8 +187,8 @@ class DatabaseConnectionVerificationTest:
                                       {"all_clients": clients})
                 else:
                     self.log_result("Salvador in Clients List", False, 
-                                  "Clients endpoint returned non-list data",
-                                  {"response": clients})
+                                  "Clients endpoint returned invalid format",
+                                  {"response": clients_response})
             else:
                 self.log_result("Salvador in Clients List", False, 
                               f"Failed to get clients: HTTP {response.status_code}")
