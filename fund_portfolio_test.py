@@ -245,8 +245,12 @@ class FundPortfolioEndpointTest:
             client_total = 0
             
             if client_response.status_code == 200:
-                investments = client_response.json()
-                client_total = sum(inv.get('current_value', 0) for inv in investments)
+                client_data = client_response.json()
+                if isinstance(client_data, dict) and 'investments' in client_data:
+                    investments = client_data['investments']
+                    client_total = sum(inv.get('current_value', 0) for inv in investments)
+                elif isinstance(client_data, list):
+                    client_total = sum(inv.get('current_value', 0) for inv in client_data)
             
             # Compare totals
             if fund_total > 0 and client_total > 0:
