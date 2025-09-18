@@ -87,11 +87,30 @@ const ClientDashboard = ({ user, onLogout }) => {
   }, [dateRange, fundFilter, searchTerm, clientData]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(Math.abs(amount));
+    if (selectedCurrency === 'USD') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(Math.abs(amount));
+    } else {
+      // Convert to selected currency and format
+      const convertedAmount = convertCurrencyAmount(Math.abs(amount), 'USD', selectedCurrency);
+      return formatCurrencyAmount(convertedAmount, selectedCurrency);
+    }
+  };
+
+  const formatCurrencyWithConversion = (amount) => {
+    const primaryAmount = formatCurrency(amount);
+    if (selectedCurrency !== 'USD') {
+      const usdAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(Math.abs(amount));
+      return { primary: primaryAmount, secondary: usdAmount };
+    }
+    return { primary: primaryAmount, secondary: null };
   };
 
   const formatDate = (dateString) => {
