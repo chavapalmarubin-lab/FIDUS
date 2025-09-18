@@ -361,20 +361,13 @@ const ClientManagement = () => {
                           <div className="text-sm text-slate-400">{client.type || 'Individual'}</div>
                         </td>
                         <td className="py-3 px-4 text-slate-300">{client.email}</td>
-                        <td className="py-3 px-4 text-slate-300">{client.phone}</td>
+                        <td className="py-3 px-4 text-slate-300">
+                          {client.total_investments || 0}
+                        </td>
                         <td className="py-3 px-4">
                           <Badge className={`${getStatusColor(client.status)} text-white`}>
                             {client.status || 'Active'}
                           </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className={`flex items-center ${readiness.color}`}>
-                            <ReadinessIcon size={16} className="mr-2" />
-                            {readiness.status}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-300">
-                          {client.total_investments || 0}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
