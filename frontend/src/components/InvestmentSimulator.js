@@ -67,12 +67,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
   const [success, setSuccess] = useState("");
   const [timeframeMonths, setTimeframeMonths] = useState(24);
   const [simulationName, setSimulationName] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [leadInfoForm, setLeadInfoForm] = useState({
     name: leadInfo?.name || "",
     email: leadInfo?.email || "",
     phone: leadInfo?.phone || ""
   });
   const [activeTab, setActiveTab] = useState("setup");
+
+  // Currency conversion hook
+  const { convertAmount, formatCurrency, getAllConversions, exchangeRates } = useCurrency();
 
   useEffect(() => {
     fetchFundConfigurations();
