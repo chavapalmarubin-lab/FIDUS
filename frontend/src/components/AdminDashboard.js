@@ -365,8 +365,8 @@ const AdminDashboard = ({ user, onLogout }) => {
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="gmail" className="text-white data-[state=active]:bg-cyan-600">
-              Gmail Settings
+            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600">
+              🔗 Google Integration
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
               <FileText size={16} className="mr-2" />
