@@ -157,8 +157,41 @@ class InvestmentApprovalTest:
         except Exception as e:
             self.log_result("Check New Investments", False, f"Exception: {str(e)}")
     
+    def test_validate_investments(self):
+        """Validate the investments first (required before approval)"""
+        try:
+            investments_to_validate = [
+                {"id": BALANCE_INVESTMENT_ID, "fund": "BALANCE", "amount": 100000.0},
+                {"id": CORE_INVESTMENT_ID, "fund": "CORE", "amount": 4000.0}
+            ]
+            
+            for investment in investments_to_validate:
+                try:
+                    # Use the MT5 validation endpoint found in backend code
+                    endpoint = f"/investments/{investment['id']}/validate-mt5"
+                    response = self.session.post(f"{BACKEND_URL}{endpoint}")
+                    
+                    if response.status_code in [200, 201]:
+                        data = response.json()
+                        if data.get('success'):
+                            self.log_result(f"Validate {investment['fund']} Investment", True, 
+                                          f"Successfully validated {investment['fund']} investment")
+                        else:
+                            self.log_result(f"Validate {investment['fund']} Investment", False, 
+                                          f"Validation request returned success=false: {data}")
+                    else:
+                        self.log_result(f"Validate {investment['fund']} Investment", False, 
+                                      f"HTTP {response.status_code}: {response.text[:200]}")
+                        
+                except Exception as e:
+                    self.log_result(f"Validate {investment['fund']} Investment", False, 
+                                  f"Exception: {str(e)}")
+                    
+        except Exception as e:
+            self.log_result("Validate Investments", False, f"Exception: {str(e)}")
+    
     def test_approve_investments(self):
-        """Approve the investments to change status from pending_mt5_validation to active"""
+        """Approve the investments to change status from validated to active"""
         try:
             investments_to_approve = [
                 {"id": BALANCE_INVESTMENT_ID, "fund": "BALANCE", "amount": 100000.0},
