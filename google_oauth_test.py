@@ -32,6 +32,7 @@ ADMIN_PASSWORD = "password123"
 class GoogleOAuthIntegrationTest:
     def __init__(self):
         self.session = requests.Session()
+        self.admin_token = None
         self.test_results = []
         
     def log_result(self, test_name, success, message, details=None):
