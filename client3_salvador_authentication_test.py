@@ -377,7 +377,65 @@ class Client3SalvadorAuthenticationTest:
             self.log_result("MT5 Mappings Visibility", False, f"Exception: {str(e)}")
             return False
     
-    def test_client_dashboard_functionality(self):
+    def test_mt5_account_data_access(self):
+        """Test MT5 account data access for Salvador"""
+        if not self.client_token:
+            self.log_result("MT5 Account Data Access", False, 
+                          "No client token available - authentication may have failed")
+            return None
+        
+        try:
+            # Test access to Salvador's MT5 accounts using client3 token
+            response = self.session.get(f"{BACKEND_URL}/mt5/client/client_003/accounts")
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                
+                if response_data.get('success') and 'accounts' in response_data:
+                    mt5_accounts = response_data['accounts']
+                    account_count = len(mt5_accounts)
+                    
+                    # Check for expected MT5 accounts
+                    doo_found = False
+                    vt_found = False
+                    
+                    for account in mt5_accounts:
+                        mt5_login = account.get('mt5_login')
+                        mt5_server = account.get('mt5_server', '')
+                        
+                        if mt5_login == '9928326' and 'DooTechnology' in mt5_server:
+                            doo_found = True
+                        elif mt5_login == '15759667' and 'VTMarkets' in mt5_server:
+                            vt_found = True
+                    
+                    if doo_found and vt_found:
+                        self.log_result("MT5 Account Data Access", True, 
+                                      f"Successfully accessed {account_count} MT5 accounts with correct logins (9928326, 15759667)",
+                                      {"mt5_accounts": mt5_accounts})
+                    else:
+                        missing = []
+                        if not doo_found:
+                            missing.append("DooTechnology (9928326)")
+                        if not vt_found:
+                            missing.append("VT Markets (15759667)")
+                        self.log_result("MT5 Account Data Access", False, 
+                                      f"MT5 accounts accessible but missing expected accounts: {', '.join(missing)}",
+                                      {"mt5_accounts": mt5_accounts})
+                    
+                    return mt5_accounts
+                else:
+                    self.log_result("MT5 Account Data Access", False, 
+                                  "Invalid response format - no MT5 accounts found",
+                                  {"response": response_data})
+                    return None
+            else:
+                self.log_result("MT5 Account Data Access", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            self.log_result("MT5 Account Data Access", False, f"Exception: {str(e)}")
+            return None
         """Test client dashboard functionality and portfolio statistics"""
         if not self.client_token:
             self.log_result("Client Dashboard Functionality", False, 
