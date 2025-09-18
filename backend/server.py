@@ -7243,6 +7243,48 @@ async def run_aml_kyc_check(prospect_id: str):
         logging.error(f"AML/KYC check error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to run AML/KYC check")
 
+@api_router.post("/crm/prospects/{prospect_id}/aml-approve")
+async def manual_aml_approval(prospect_id: str):
+    """Manually approve AML/KYC status for a prospect"""
+    try:
+        # Find prospect in MongoDB
+        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        
+        if not prospect_doc:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        # Update AML/KYC status to approved
+        update_result = await db.crm_prospects.update_one(
+            {"id": prospect_id},
+            {
+                "$set": {
+                    "aml_kyc_status": "approved",
+                    "manual_review_approved": True,
+                    "manual_review_date": datetime.now(timezone.utc),
+                    "manual_review_by": "admin",
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if update_result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update prospect AML/KYC status")
+        
+        logging.info(f"Manual AML/KYC approval completed for prospect {prospect_id}")
+        
+        return {
+            "success": True,
+            "message": "AML/KYC status manually approved. Prospect can now be converted to client.",
+            "prospect_id": prospect_id,
+            "aml_kyc_status": "approved"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Manual AML approval error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to approve AML/KYC: {str(e)}")
+
 @api_router.post("/crm/prospects/{prospect_id}/convert")
 async def convert_prospect_to_client(prospect_id: str, conversion_data: ProspectConversionRequest):
     """Convert a won prospect to a client after AML/KYC approval"""
