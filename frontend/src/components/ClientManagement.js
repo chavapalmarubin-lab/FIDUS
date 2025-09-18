@@ -206,7 +206,7 @@ const ClientManagement = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Client Management</h2>
-          <p className="text-slate-400">Manage client accounts and investment readiness</p>
+          <p className="text-slate-400">Manage client accounts and investments</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="bg-cyan-600 hover:bg-cyan-700">
           <Plus size={16} className="mr-2" />
