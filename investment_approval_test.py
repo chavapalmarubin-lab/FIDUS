@@ -455,9 +455,12 @@ class InvestmentApprovalTest:
         critical_tests = [
             "BALANCE Investment Found",
             "CORE Investment Found", 
+            "Validate BALANCE Investment",
+            "Validate CORE Investment",
+            "Approve BALANCE Investment",
+            "Approve CORE Investment",
             "BALANCE Investment Active",
-            "CORE Investment Active",
-            "Total Investment Count"
+            "CORE Investment Active"
         ]
         
         critical_passed = sum(1 for result in self.test_results 
