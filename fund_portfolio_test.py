@@ -106,7 +106,7 @@ class FundPortfolioEndpointTest:
                                   "Endpoint does not return success=true", {"response": data})
                 
                 # Check for Salvador's fund data
-                funds = data.get('funds', [])
+                funds = data.get('funds', {})
                 total_aum = data.get('total_aum', 0)
                 
                 # Look for BALANCE fund (~$1.36M)
@@ -115,29 +115,26 @@ class FundPortfolioEndpointTest:
                 balance_amount = 0
                 core_amount = 0
                 
-                for fund in funds:
-                    fund_code = fund.get('fund_code', '')
-                    aum = fund.get('aum', 0)
-                    
-                    if fund_code == 'BALANCE':
-                        balance_fund_found = True
-                        balance_amount = aum
-                        if aum > 1300000:  # Should be around $1.36M
-                            self.log_result("Fund Portfolio - BALANCE Fund", True, 
-                                          f"BALANCE fund found with correct amount: ${aum:,.2f}")
-                        else:
-                            self.log_result("Fund Portfolio - BALANCE Fund", False, 
-                                          f"BALANCE fund amount too low: ${aum:,.2f} (expected ~$1.36M)")
-                    
-                    elif fund_code == 'CORE':
-                        core_fund_found = True
-                        core_amount = aum
-                        if aum > 0:  # Should be around $8K
-                            self.log_result("Fund Portfolio - CORE Fund", True, 
-                                          f"CORE fund found with amount: ${aum:,.2f}")
-                        else:
-                            self.log_result("Fund Portfolio - CORE Fund", False, 
-                                          f"CORE fund shows zero amount: ${aum:,.2f}")
+                # Handle funds as dictionary format
+                if 'BALANCE' in funds:
+                    balance_fund_found = True
+                    balance_amount = funds['BALANCE'].get('aum', 0)
+                    if balance_amount > 1300000:  # Should be around $1.36M
+                        self.log_result("Fund Portfolio - BALANCE Fund", True, 
+                                      f"BALANCE fund found with correct amount: ${balance_amount:,.2f}")
+                    else:
+                        self.log_result("Fund Portfolio - BALANCE Fund", False, 
+                                      f"BALANCE fund amount too low: ${balance_amount:,.2f} (expected ~$1.36M)")
+                
+                if 'CORE' in funds:
+                    core_fund_found = True
+                    core_amount = funds['CORE'].get('aum', 0)
+                    if core_amount > 0:  # Should be around $8K
+                        self.log_result("Fund Portfolio - CORE Fund", True, 
+                                      f"CORE fund found with amount: ${core_amount:,.2f}")
+                    else:
+                        self.log_result("Fund Portfolio - CORE Fund", False, 
+                                      f"CORE fund shows zero amount: ${core_amount:,.2f}")
                 
                 # Check total AUM matches expected
                 if abs(total_aum - self.expected_salvador_total) < 10000:  # Allow $10K variance
