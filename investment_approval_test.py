@@ -406,6 +406,7 @@ class InvestmentApprovalTest:
         
         # Run all tests in sequence
         self.test_check_new_investments()
+        self.test_validate_investments()
         self.test_approve_investments()
         self.test_verify_approved_status()
         self.test_verify_mt5_mappings()
