@@ -30,6 +30,13 @@ const ClientDashboard = ({ user, onLogout }) => {
   const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [fundFilter, setFundFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+
+  // Currency conversion hook
+  const { 
+    convertAmount: convertCurrencyAmount, 
+    formatCurrency: formatCurrencyAmount 
+  } = useCurrency();
 
   useEffect(() => {
     fetchClientData();
