@@ -7769,7 +7769,7 @@ class SimulationResult(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 def calculate_simulation_projections(investments: List[Dict[str, Any]], timeframe_months: int = 24) -> Dict[str, Any]:
-    """Calculate comprehensive investment simulation projections"""
+    """Calculate comprehensive investment simulation projections with CORRECT FIDUS fund logic"""
     total_investment = sum(inv['amount'] for inv in investments)
     fund_breakdown = []
     projected_timeline = []
@@ -7790,52 +7790,66 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         if amount < fund_config.minimum_investment:
             raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
         
-        # Calculate dates (assuming investment starts today)
+        # CORRECT FIDUS FUND STRUCTURE:
+        # - ALL funds have 2-month incubation (no interest during this time)
+        # - ALL funds have 14-month total contract = 2 months incubation + 12 months interest
+        # - Simple interest calculation (not compound)
+        
         deposit_date = datetime.now(timezone.utc)
-        incubation_end_date = deposit_date + timedelta(days=fund_config.incubation_months * 30)
+        incubation_end_date = deposit_date + timedelta(days=2 * 30)  # Exactly 2 months
         interest_start_date = incubation_end_date
-        minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        contract_end_date = deposit_date + timedelta(days=14 * 30)  # Total 14 months from start
         
-        # Calculate projections for this fund
+        # Calculate correct ROI based on 12 months of simple interest
+        # CORE: 1.5% × 12 = 18%, BALANCE: 2.5% × 12 = 30%, DYNAMIC: 3.5% × 12 = 42%
+        interest_months = 12  # Always 12 months of interest after 2-month incubation
+        total_simple_interest = calculate_simple_interest(amount, fund_config.interest_rate, interest_months)
+        final_value = amount + total_simple_interest
+        correct_roi_percentage = (total_simple_interest / amount) * 100
+        
+        # Generate monthly projections up to the contract end OR timeframe, whichever is shorter
         fund_projections = []
-        total_interest_earned = 0.0
-        current_date = deposit_date
-        end_date = deposit_date + timedelta(days=timeframe_months * 30)
+        projection_months = min(timeframe_months + 1, 15)  # Cap at 15 months max (14 + 1 for month 0)
         
-        # Generate monthly projections
-        for month in range(timeframe_months + 1):
+        for month in range(projection_months):
             projection_date = deposit_date + timedelta(days=month * 30)
             
             # Check if we're past incubation period
-            if projection_date >= interest_start_date and fund_config.interest_rate > 0:
-                # Calculate accumulated interest
-                months_since_interest_start = max(0, (projection_date - interest_start_date).days / 30)
-                accumulated_interest = calculate_simple_interest(amount, fund_config.interest_rate, months_since_interest_start)
+            if month >= 2 and fund_config.interest_rate > 0:  # After 2-month incubation
+                # Calculate accumulated simple interest since interest start
+                months_since_interest_start = month - 2
+                if months_since_interest_start <= 12:  # Only 12 months of interest maximum
+                    accumulated_interest = calculate_simple_interest(amount, fund_config.interest_rate, months_since_interest_start)
+                else:
+                    # Cap at 12 months of interest (contract ends at month 14)
+                    accumulated_interest = total_simple_interest
+                
                 current_value = amount + accumulated_interest
                 
                 # Check if it's a redemption month (for interest)
                 can_redeem_interest = False
-                if fund_config.redemption_frequency == "monthly":
-                    can_redeem_interest = months_since_interest_start >= 1
-                elif fund_config.redemption_frequency == "quarterly":
-                    can_redeem_interest = months_since_interest_start >= 3 and int(months_since_interest_start) % 3 == 0
-                elif fund_config.redemption_frequency == "semi_annually":
-                    can_redeem_interest = months_since_interest_start >= 6 and int(months_since_interest_start) % 6 == 0
+                if months_since_interest_start > 0:
+                    if fund_config.redemption_frequency == "monthly":
+                        can_redeem_interest = months_since_interest_start >= 1
+                    elif fund_config.redemption_frequency == "quarterly":
+                        can_redeem_interest = months_since_interest_start >= 3 and months_since_interest_start % 3 == 0
+                    elif fund_config.redemption_frequency == "semi_annually":
+                        can_redeem_interest = months_since_interest_start >= 6 and months_since_interest_start % 6 == 0
                 
                 # Add calendar events for redemption opportunities
-                if can_redeem_interest and month <= timeframe_months:
+                if can_redeem_interest and months_since_interest_start <= 12:
                     monthly_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
                     calendar_events.append({
                         "date": projection_date.isoformat().split('T')[0],
                         "title": f"{fund_code} Interest Available",
-                        "description": f"${monthly_interest:,.2f} interest can be redeemed",
+                        "description": f"${monthly_interest:,.2f} monthly interest can be redeemed",
                         "amount": monthly_interest,
                         "fund_code": fund_code,
                         "type": "interest_redemption"
                     })
                     
             else:
-                # Still in incubation period
+                # Still in incubation period (first 2 months) or past contract end
                 current_value = amount
                 accumulated_interest = 0.0
             
@@ -7845,7 +7859,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                 "principal": amount,
                 "current_value": round(current_value, 2),
                 "interest_earned": round(accumulated_interest, 2),
-                "in_incubation": projection_date < interest_start_date
+                "in_incubation": month < 2,  # First 2 months are incubation
+                "contract_ended": month >= 14  # Contract ends after 14 months
             })
         
         # Add key milestone events
@@ -7853,7 +7868,7 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
             {
                 "date": deposit_date.isoformat().split('T')[0],
                 "title": f"{fund_code} Investment Start",
-                "description": f"${amount:,.2f} invested in {fund_config.name}",
+                "description": f"${amount:,.2f} invested in {fund_config.name} (14-month contract)",
                 "amount": amount,
                 "fund_code": fund_code,
                 "type": "investment_start"
@@ -7861,23 +7876,22 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
             {
                 "date": incubation_end_date.isoformat().split('T')[0],
                 "title": f"{fund_code} Incubation Ends",
-                "description": f"Interest earnings begin ({fund_config.interest_rate}% monthly)",
+                "description": f"Interest earnings begin ({fund_config.interest_rate}% monthly simple interest)",
                 "amount": 0,
                 "fund_code": fund_code,
                 "type": "incubation_end"
             },
             {
-                "date": minimum_hold_end_date.isoformat().split('T')[0],
-                "title": f"{fund_code} Principal Redeemable",
-                "description": f"Principal of ${amount:,.2f} becomes available for redemption",
-                "amount": amount,
+                "date": contract_end_date.isoformat().split('T')[0],
+                "title": f"{fund_code} Contract Completion",
+                "description": f"14-month contract ends. Total ROI: {correct_roi_percentage:.1f}%",
+                "amount": final_value,
                 "fund_code": fund_code,
-                "type": "principal_redeemable"
+                "type": "contract_end"
             }
         ])
         
-        # Calculate final fund summary
-        final_projection = fund_projections[-1]
+        # Calculate final fund summary using CORRECT values
         fund_breakdown.append({
             "fund_code": fund_code,
             "fund_name": fund_config.name,
@@ -7885,12 +7899,14 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
             "minimum_investment": fund_config.minimum_investment,
             "interest_rate": fund_config.interest_rate,
             "redemption_frequency": fund_config.redemption_frequency,
-            "incubation_months": fund_config.incubation_months,
-            "minimum_hold_months": fund_config.minimum_hold_months,
-            "final_value": final_projection['current_value'],
-            "total_interest": final_projection['interest_earned'],
-            "roi_percentage": round((final_projection['interest_earned'] / amount) * 100, 2),
-            "projections": fund_projections
+            "incubation_months": 2,  # Always 2 months
+            "minimum_hold_months": 14,  # Always 14 months total
+            "final_value": final_value,
+            "total_interest": total_simple_interest,
+            "roi_percentage": correct_roi_percentage,  # CORRECT ROI: CORE=18%, BALANCE=30%, DYNAMIC=42%
+            "projections": fund_projections,
+            "contract_months": 14,  # Total contract length
+            "interest_months": 12  # Actual interest-earning months
         })
         
         fund_simulations.append({
