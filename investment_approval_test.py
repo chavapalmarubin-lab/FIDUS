@@ -87,7 +87,8 @@ class InvestmentApprovalTest:
             # Get Salvador's investments
             response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
             if response.status_code == 200:
-                investments = response.json()
+                data = response.json()
+                investments = data.get('investments', []) if isinstance(data, dict) else data
                 
                 balance_investment = None
                 core_investment = None
