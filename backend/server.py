@@ -7567,7 +7567,7 @@ async def get_admin_google_profile(request: Request):
         # Check if session is expired
         if session_doc['expires_at'] < datetime.now(timezone.utc):
             # Clean up expired session
-            await mongodb_manager.admin_sessions.delete_one({"session_token": session_token})
+            await mongodb_manager.db.admin_sessions.delete_one({"session_token": session_token})
             raise HTTPException(status_code=401, detail="Session expired")
         
         # Update last accessed time
