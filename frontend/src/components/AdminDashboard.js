@@ -406,8 +406,67 @@ const AdminDashboard = ({ user, onLogout }) => {
             <ClientManagement />
           </TabsContent>
 
-          <TabsContent value="gmail" className="mt-6">
-            <GmailSettings />
+          <TabsContent value="google" className="mt-6">
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Google Integration Settings</h2>
+                <p className="text-slate-300">
+                  Connect your Google account to enable email sending, calendar scheduling, and document sharing for FIDUS clients.
+                </p>
+              </div>
+              
+              <div className="max-w-2xl mx-auto">
+                <GoogleAdminAuth 
+                  onAuthSuccess={(profile) => {
+                    console.log('Google authentication successful:', profile);
+                  }}
+                  onAuthError={(error) => {
+                    console.error('Google authentication error:', error);
+                  }}
+                  showProfileCard={true}
+                />
+              </div>
+              
+              {/* Google Services Info */}
+              <div className="max-w-4xl mx-auto mt-8">
+                <Card className="bg-slate-800 border-slate-600">
+                  <CardHeader>
+                    <CardTitle className="text-white">Available Google Services</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-slate-700 rounded-lg">
+                        <h4 className="text-white font-medium mb-2">📧 Gmail Integration</h4>
+                        <p className="text-slate-300 text-sm">
+                          Send automated emails to clients including investment updates, document requests, and meeting confirmations.
+                        </p>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-700 rounded-lg">
+                        <h4 className="text-white font-medium mb-2">📅 Calendar Integration</h4>
+                        <p className="text-slate-300 text-sm">
+                          Schedule meetings with clients and prospects, send calendar invites, and manage appointment scheduling.
+                        </p>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-700 rounded-lg">
+                        <h4 className="text-white font-medium mb-2">📄 Drive Integration</h4>
+                        <p className="text-slate-300 text-sm">
+                          Share investment documents, contracts, and reports with clients for electronic signatures.
+                        </p>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-700 rounded-lg">
+                        <h4 className="text-white font-medium mb-2">🔒 Secure Access</h4>
+                        <p className="text-slate-300 text-sm">
+                          All Google integrations use OAuth 2.0 secure authentication with limited scopes for maximum security.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
