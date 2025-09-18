@@ -103,7 +103,7 @@ def insert_activities_to_database():
     """Insert activities directly to MongoDB via backend API"""
     
     # First, let's authenticate as admin
-    base_url = "https://aml-kyc-portal.preview.emergentagent.com"
+    base_url = "https://investsim-1.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

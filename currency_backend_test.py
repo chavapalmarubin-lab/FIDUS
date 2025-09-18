@@ -37,7 +37,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://aml-kyc-portal.preview.emergentagent.com/api"
+BACKEND_URL = "https://investsim-1.preview.emergentagent.com/api"
 
 class CurrencyConversionTest:
     def __init__(self):

@@ -1,101 +1,86 @@
 <analysis>
-The AI engineer's work evolved through several distinct phases. Initially, it involved summarizing prior enhancements to the FIDUS platform, including MT5 account mapping, crypto wallet system, and cash flow calculation refactoring. The first explicit user request in this trajectory was to update documentation, which was completed with version v2.0.0. This was followed by an immediate deployment request, which uncovered critical production data and configuration issues related to Salvador Palma's investments and MT5 accounts, leading to extensive debugging of database access, environment variables, and API integration. After resolving these, the focus shifted entirely to building a comprehensive client/prospect/lead onboarding system with AML/KYC checks and a pipeline. The trajectory concludes with debugging a persistent Convert button visibility issue for a prospect (Lilian Limon Leite), attributed to data inconsistency in the production database.
+The AI engineer's work began by addressing initial platform stabilization, including prior enhancements like MT5 account mapping and cash flow refactoring, alongside resolving critical production deployment issues for Salvador Palma's investments. A major focus was the comprehensive lead-to-client onboarding system, which involved fixing a Convert button visibility bug for Lilian Limon Leite due to data inconsistency. Following this, a significant feature, the Investment Simulator, was developed. This included backend APIs, public and admin frontend components, PDF export with FIDUS branding, and multi-currency support. Deployment readiness involved fixing hardcoded URLs and documenting environment variables. The most recent and complex task was integrating Google OAuth for admin users to manage emails, meetings, and documents. This integration faced multiple bugs: Failed to get auth URL (JWT token issue), a blank page after Google sign-in (callback routing), and a redirect_uri_mismatch (due to an old, conflicting Gmail OAuth flow). These were systematically resolved, leading to a unified Google integration. The trajectory concludes with the AI acknowledging a persistent authentication loop and the redundancy of the Gmail Settings tab.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is an investment management platform supporting client/admin roles, AML/KYC, CRM, fund allocation, automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
+The FIDUS financial portal is an investment management platform designed for client and admin roles, incorporating AML/KYC, CRM, fund allocation, automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
 
 **Implemented/Addressed Features:**
-1.  **Fund Performance vs MT5 Reality Management System:** Admin dashboard compares client fund commitments against real MT5 returns, accounting for incubation periods.
-2.  **Client Dashboard:** Displays individual fund balances and updated branding.
-3.  **MT5 Account Mapping in Investment Creation:** Allows input of MT5 login details during investment creation with secure storage.
-4.  **Comprehensive Crypto Wallet System:** Client Wallet tab for managing personal crypto/fiat payment instructions and viewing FIDUS official deposit addresses. Backend CRUD APIs for wallet management.
-5.  **Cash Flow Management:** Refactored calculations using actual MT5 trading profits and accurate client interest obligations after incubation, supporting manual lot-based rebate entry.
-6.  **CRM Dashboard:** Trading Monitor and Fund Management tabs display real client MT5 data and calculated metrics, resolving mock data and broker inconsistencies.
-7.  **Investment Validation Process:** Investments require MT5 mapping, historical data, and start date identification, progressing through PENDING statuses to VALIDATED, ACTIVE/INCUBATING with admin approval.
-8.  **Data Integrity Safeguards:** Implemented validation to prevent test data contamination.
-9.  **Lead/Client Onboarding (New Feature):** Comprehensive workflow including a public signup form, lead stages (Lead, Qualified, Proposal, Negotiation, Won, Lost), OFAC AML/KYC checks, document management, and conversion of 'Won' prospects to clients, visible in the admin CRM.
-10. **Client Detail View (New Feature):** Admin ability to view all client documents, history, and logs from the Client Management section.
+1.  **Lead/Client Onboarding:** A complete workflow from public signup to client conversion, including lead stages, OFAC AML/KYC checks, and document management. This involved debugging and resolving a Convert button visibility issue for prospects, specifically fixing data inconsistency for Lilian Limon Leite in the production database.
+2.  **Investment Simulation:** A new sales tool that allows leads and admins to simulate investment performance across various funds (CORE, BALANCE, DYNAMIC, UNLIMITED). It calculates projected interest based on incubation periods and fund rules, displaying a complete portfolio overview with charts, tables, and a calendar view.
+3.  **PDF Export:** The Investment Simulator now generates professional PDF reports with the FIDUS logo, an executive summary, fund breakdown, and investment timeline.
+4.  **Multi-Currency Support:** Implemented currency conversion for USD/MXN and USD/EUR, utilizing daily exchange rates, integrated into both the Investment Simulator and the Client Dashboard.
+5.  **Admin Google Integration:** A system for admin users to authenticate with their Google accounts to enable sending emails, scheduling meetings, and sending documents to clients directly from the application.
+6.  **Deployment Documentation:** Added a comprehensive section to the  detailing secrets, environment variables, and a pre-deployment checklist for easier management.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, components for dashboards, forms, and client views.
--   **FastAPI**: Python backend for API routes, business logic, and authentication.
--   **MongoDB**: Persistent NoSQL data storage for all application data.
--   **JWT Authentication**: Token-based security for backend API access.
--   **MetaTrader 5 (MT5)**: Integration for real-time trading data and account management.
--   **Pydantic**: Data validation and serialization in FastAPI models.
--   **Fernet**: Symmetric encryption for secure credential storage.
--   ****: For timezone-aware date/time handling.
--   **Axios**: HTTP client for frontend API calls.
+-   **React.js**: Frontend UI, components.
+-   **FastAPI**: Python backend API.
+-   **MongoDB**: NoSQL database.
+-   **JWT Authentication**: Token-based security.
+-   **MetaTrader 5 (MT5)**: Trading data integration.
+-   **Recharts**: React charting library.
+-   **jsPDF & html2canvas**: Frontend PDF generation.
+-   **Freecurrencyapi.com**: External API for exchange rates.
+-   **Google OAuth 2.0**: Admin authentication.
 </key_technical_concepts>
 
 <code_architecture>
 
-
 -   ****:
-    -   **Importance**: Central API routing, business logic, and data processing.
-    -   **Changes**: AML/KYC endpoints, enhanced prospect conversion (CRM endpoints to use MongoDB for persistence),  fixes for  calls, new endpoints for client details (documents, history, logs, investments). Database connection standardized to . Authentication middleware updated to exclude public CRM endpoints.
--   ****:
-    -   **Importance**: Manages interactions with MongoDB.
-    -   **Changes**: Date parsing fixes for . Updated to support  for consistent database access. Methods for , , .
--   ****:
-    -   **Importance**: MT5 account interactions.
-    -   **Changes**: Removed  from  as it's a synchronous function.
--   ** (NEW)**:
-    -   **Importance**: Provides AML/KYC compliance checks.
-    -   **Changes**: Created to encapsulate OFAC sanctions screening, document verification, risk assessment, and compliance note generation.
--   ****:
-    -   **Importance**: Stores environment variables for frontend.
-    -   **Changes**:  fixed to point to the actual production backend URL instead of the preview URL.
--   ****:
-    -   **Importance**: Frontend display for application documentation.
-    -   **Changes**: Updated to reflect v2.0.0, included links to updated documentation, and a new section for system documentation/version.
--   ****:
-    -   **Importance**: Entry point for user login/registration.
-    -   **Changes**: Modified to use  for First Time Users - Create Account instead of .
--   ** (NEW)**:
-    -   **Importance**: New public-facing multi-step form for prospect registration.
-    -   **Changes**: Created to capture personal information, document uploads, and investment interests, creating prospects in the CRM.
--   ****:
-    -   **Importance**: Admin interface for managing leads/prospects through a pipeline.
-    -   **Changes**: Enhanced  with AML/KYC integration, updated  to show AML/KYC status and action buttons, improved button styling and error handling for stage progression. Added Complete KYC Process button to document modal. Fixed styling of stage progression buttons.
--   ****:
-    -   **Importance**: Admin interface for managing existing clients.
-    -   **Changes**: Added a View Details button to each client entry, integrating with the new  component. Fixed tab styling.
--   ** (NEW)**:
-    -   **Importance**: New frontend component for displaying detailed client information.
-    -   **Changes**: Created to show client profile, documents, investment history, and logs.
--   ****:
-    -   **Importance**: Frontend display for MT5 account mappings.
-    -   **Changes**: UI enhancements to show more detailed MT5 account information.
--   ** (NEW)**:
-    -   **Importance**: Reusable UI component for tab navigation.
-    -   **Changes**: Created to provide standardized tab functionality.
--   **, , **:
-    -   **Importance**: Core documentation files.
-    -   **Changes**: Updated to reflect v2.0.0 with the latest features and fixes.
--   ** (NEW)**:
-    -   **Importance**: Comprehensive status reference document.
-    -   **Changes**: Created to summarize system status.
+    -   **Importance**: Central API routing and business logic.
+    -   **Changes**: Added/modified endpoints for investment simulation, currency conversion, and Google OAuth. Fixed  issues and MongoDB collection access (e.g., ). Authentication middleware adjusted to correctly handle Google OAuth endpoints for authenticated admins. Hardcoded URLs and JWT secret fixed for deployment.
 -   ****:
     -   **Importance**: Backend environment variables.
-    -   **Changes**:  set to  for consistency across services.
+    -   **Changes**: Added  and .
+-   ** (NEW)**:
+    -   **Importance**: Handles daily exchange rate fetching and conversion.
+    -   **Changes**: Created to integrate Freecurrencyapi.com, providing USD/MXN and USD/EUR conversion endpoints.
+-   ** (NEW)**:
+    -   **Importance**: Manages Google OAuth 2.0 for admin users.
+    -   **Changes**: Created for Google authentication, token, and session handling using Emergent OAuth, configuring API scopes for Gmail, Calendar, and Drive.
+-   ****:
+    -   **Importance**: Main application component, handles routing.
+    -   **Changes**: Modified to handle the  route for Google OAuth and integrate the  component.
+-   ****:
+    -   **Importance**: Displays application documentation.
+    -   **Changes**: Updated to include a comprehensive section on environment variables, deployment secrets, production variables, and a pre-deployment checklist.
+-   ****:
+    -   **Importance**: Public multi-step prospect registration form.
+    -   **Changes**: Integrated  as a new step (Step 4), shifting document upload.
+-   ****:
+    -   **Importance**: Admin interface for managing leads/prospects.
+    -   **Changes**: Integrated the  into a new Simulator tab.
+-   ****:
+    -   **Importance**: Client-facing dashboard.
+    -   **Changes**: Added currency conversion support, including a currency selector and updating fund balance displays.
+-   ****:
+    -   **Importance**: Old component for Gmail OAuth.
+    -   **Changes**: Modified to use the new  hook for unified Google OAuth, replacing its direct Google OAuth flow.
+-   ****:
+    -   **Importance**: Admin dashboard interface.
+    -   **Changes**: Replaced the Gmail Settings tab with a Google Integration tab, integrating the  component.
+-   ** (NEW)**:
+    -   **Importance**: Frontend component for investment simulations.
+    -   **Changes**: New file. Features multi-fund input, calculations, charts, PDF export with FIDUS logo (using , ), and currency conversion. Fixed Pie is not defined error.
+-   ** (NEW)**:
+    -   **Importance**: React hook for managing Google admin authentication.
+    -   **Changes**: New file. Handles auth URL, callback, tokens, and admin profile. Fixed JWT token retrieval from .
 </code_architecture>
 
 <pending_tasks>
-- Complete the integration of the  component with real data and visualizations.
-- Implement the actual MetaTrader5 package integration in .
-- Automate rebate tracking based on trading volume via an API.
-- Debug and fix the Convert button visibility for prospects in the CRM.
+-   Complete the integration of the  component with real data and visualizations.
+-   Implement the actual MetaTrader5 package integration in .
+-   Automate rebate tracking based on trading volume via an API.
+-   Fix the authentication loop and Failed to get admin profile error for Google Integration.
+-   Remove the duplicate Gmail Settings tab to consolidate Google functionality into a single tab.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was actively troubleshooting a persistent issue where the Convert button for a prospect in the Won stage was not visible in the CRM Dashboard's Pipeline tab. This was for Lilian Limon Leite, who had completed AML/KYC checks.
-
-The investigation revealed that Lilian's prospect data was in an inconsistent state in the production database: , , and critically, . The system requires , , and  for the Convert button to appear. The root cause was identified as Lilian being incorrectly marked as converted to a client, while the actual client record did not exist, leading to a logical mismatch preventing the button's display. The AI engineer was preparing to fix this data inconsistency directly in the production database.
+Immediately prior to this summary, the AI engineer was addressing a bug where the Google OAuth integration, despite previous fixes for  and token handling, was still exhibiting an authentication loop and failing to retrieve the admin profile. This issue was compounded by the presence of two separate but related Google-centric tabs in the admin interface: the new Google Integration tab and an older, now redundant Gmail Settings tab. The  component had recently been updated to use the new  hook for a unified OAuth flow, resolving a redirect_uri_mismatch error. However, the user reported that after signing in and completing OAuth, clicking on the authorization button within what appears to be the  tab led to an authentication loop. The AI has diagnosed this as a combination of a persistent authentication logic issue and the need to remove the confusing, redundant Gmail tab. The current task is to consolidate the Google functionality into a single, functional tab and resolve the authentication loop.
 </current_work>
 
 <optional_next_step>
-Fix the data inconsistency for Lilian Limon Leite in the production database to enable the Convert button.
+Consolidate Google integration into a single tab by removing the redundant Gmail Settings tab and debug/fix the authentication loop.
 </optional_next_step>

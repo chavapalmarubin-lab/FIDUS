@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://aml-kyc-portal.preview.emergentagent.com`
+`https://investsim-1.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
