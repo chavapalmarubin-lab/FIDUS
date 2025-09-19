@@ -62,6 +62,54 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
+      // Check if we have Google session token in localStorage
+      const googleSessionToken = localStorage.getItem('google_session_token');
+      const userData = localStorage.getItem('fidus_user');
+      
+      // If we have both tokens and user data, try to validate with backend
+      if (googleSessionToken && userData) {
+        try {
+          const user = JSON.parse(userData);
+          if (user && user.isGoogleAuth) {
+            console.log('Found Google session in localStorage:', user.email);
+            
+            // Try to validate with backend using the session token
+            const response = await fetch(`${API}/admin/google/profile`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${googleSessionToken}`
+              }
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.profile) {
+                setProfile(data.profile);
+                setIsAuthenticated(true);
+                console.log('✅ Existing Google session validated:', data.profile.email);
+                return;
+              }
+            }
+            
+            // If backend validation fails but we have local data, use local data
+            console.log('Using local Google session data');
+            setProfile({
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              picture: user.picture
+            });
+            setIsAuthenticated(true);
+            return;
+          }
+        } catch (parseError) {
+          console.error('Error parsing stored user data:', parseError);
+        }
+      }
+
+      // Fallback to cookie-based authentication
       const response = await fetch(`${API}/admin/google/profile`, {
         method: 'GET',
         credentials: 'include',
@@ -75,7 +123,7 @@ const useGoogleAdmin = () => {
         if (data.success && data.profile) {
           setProfile(data.profile);
           setIsAuthenticated(true);
-          console.log('✅ Existing Google session found:', data.profile.email);
+          console.log('✅ Existing Google session found via cookies:', data.profile.email);
         }
       } else if (response.status !== 401) {
         console.log('Session check failed:', response.status);
