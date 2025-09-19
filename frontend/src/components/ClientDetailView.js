@@ -462,7 +462,17 @@ const ClientDetailView = ({ client, onClose, onUpdate }) => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Client Documents</h3>
-                    <Badge variant="outline">{documents.length} Documents</Badge>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline">{documents.length} Documents</Badge>
+                      <Button
+                        onClick={() => setShowUploadModal(true)}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Document
+                      </Button>
+                    </div>
                   </div>
                   
                   {documents.length === 0 ? (
