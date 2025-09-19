@@ -104,7 +104,7 @@ async def get_admin_google_profile(request: Request):
         if not session_doc:
             raise HTTPException(status_code=401, detail="Invalid session")
         
-        # Check expiry with timezone-aware comparison
+        # Check expiry with timezone-aware comparison with timezone-aware comparison
         expires_at = session_doc['expires_at']
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
