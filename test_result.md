@@ -1559,9 +1559,9 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: 
-    - "Google Admin OAuth Integration Testing"
+  current_focus: 
+    - "Google Admin Profile Endpoint Fix Verification"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   redemption_system_testing: "completed"
