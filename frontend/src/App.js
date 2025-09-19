@@ -28,82 +28,96 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log('=== APP.JS USEEFFECT DEBUGGING ===');
-    console.log('Current URL:', window.location.href);
-    console.log('Current localStorage:', {
-      fidus_user: localStorage.getItem('fidus_user'),
-      google_session_token: localStorage.getItem('google_session_token')
-    });
-    
-    // Check for skip animation parameter (for production testing)
-    const urlParams = new URLSearchParams(window.location.search);
-    const skipAnimation = urlParams.get('skip_animation') === 'true';
-    console.log('Skip animation:', skipAnimation);
-    
-    // Handle Google OAuth callback
-    if (window.location.pathname === '/admin/google-callback') {
-      console.log('Setting view to google-callback');
-      setCurrentView('google-callback');
-      return;
-    }
-    
-    // Custom authentication check that handles Google auth properly
-    const checkGoogleAuth = () => {
-      try {
-        const userDataStr = localStorage.getItem('fidus_user');
-        const googleToken = localStorage.getItem('google_session_token');
-        
-        if (userDataStr && googleToken) {
-          const userData = JSON.parse(userDataStr);
-          if (userData && userData.isGoogleAuth && userData.type) {
-            console.log('✅ Google authentication detected:', userData);
-            return userData;
-          }
-        }
-      } catch (error) {
-        console.error('Google auth check error:', error);
-      }
-      return null;
-    };
-    
-    // Check for Google authentication first
-    const googleUser = checkGoogleAuth();
-    if (googleUser) {
-      console.log('Setting user from Google auth:', googleUser);
-      setUser(googleUser);
-      setCurrentView(googleUser.type === "admin" ? "admin" : "client");
-      return;
-    }
-    
-    // Fallback to regular JWT authentication
-    const authenticated = isAuthenticated();
-    console.log('Is authenticated (JWT):', authenticated);
-    
-    if (authenticated) {
-      const userData = getCurrentUser();
-      console.log('User data (JWT):', userData);
-      if (userData) {
-        console.log('Setting user and view to:', userData.type);
-        setUser(userData);
-        setCurrentView(userData.type === "admin" ? "admin" : "client");
+    const initializeAuth = () => {
+      console.log('=== APP.JS USEEFFECT DEBUGGING ===');
+      console.log('Current URL:', window.location.href);
+      console.log('Current localStorage:', {
+        fidus_user: localStorage.getItem('fidus_user'),
+        google_session_token: localStorage.getItem('google_session_token')
+      });
+      
+      // Check for skip animation parameter (for production testing)
+      const urlParams = new URLSearchParams(window.location.search);
+      const skipAnimation = urlParams.get('skip_animation') === 'true';
+      const googleAuthSuccess = urlParams.get('google_auth') === 'success';
+      console.log('Skip animation:', skipAnimation, 'Google auth success:', googleAuthSuccess);
+      
+      // Handle Google OAuth callback
+      if (window.location.pathname === '/admin/google-callback') {
+        console.log('Setting view to google-callback');
+        setCurrentView('google-callback');
         return;
       }
-    }
-    
-    if (skipAnimation) {
-      console.log('Setting view to login (skip animation)');
-      setCurrentView("login");
-    } else {
-      // Only clear localStorage if no authentication is found
-      if (!googleUser && !authenticated) {
-        console.log('Clearing localStorage (not authenticated)');
-        localStorage.removeItem("fidus_user");
-      } else {
-        console.log('NOT clearing localStorage (user is authenticated)');
+      
+      // Custom authentication check that handles Google auth properly
+      const checkGoogleAuth = () => {
+        try {
+          const userDataStr = localStorage.getItem('fidus_user');
+          const googleToken = localStorage.getItem('google_session_token');
+          
+          if (userDataStr && googleToken) {
+            const userData = JSON.parse(userDataStr);
+            if (userData && userData.isGoogleAuth && userData.type) {
+              console.log('✅ Google authentication detected:', userData);
+              return userData;
+            }
+          }
+        } catch (error) {
+          console.error('Google auth check error:', error);
+        }
+        return null;
+      };
+      
+      // Check for Google authentication first
+      const googleUser = checkGoogleAuth();
+      if (googleUser) {
+        console.log('Setting user from Google auth:', googleUser);
+        setUser(googleUser);
+        setCurrentView(googleUser.type === "admin" ? "admin" : "client");
+        return;
       }
       
-      console.log('Setting view to logo');
-      setCurrentView("logo");
+      // Fallback to regular JWT authentication
+      const authenticated = isAuthenticated();
+      console.log('Is authenticated (JWT):', authenticated);
+      
+      if (authenticated) {
+        const userData = getCurrentUser();
+        console.log('User data (JWT):', userData);
+        if (userData) {
+          console.log('Setting user and view to:', userData.type);
+          setUser(userData);
+          setCurrentView(userData.type === "admin" ? "admin" : "client");
+          return;
+        }
+      }
+      
+      if (skipAnimation) {
+        console.log('Setting view to login (skip animation)');
+        setCurrentView("login");
+      } else {
+        // Only clear localStorage if no authentication is found
+        if (!googleUser && !authenticated) {
+          console.log('Clearing localStorage (not authenticated)');
+          localStorage.removeItem("fidus_user");
+        } else {
+          console.log('NOT clearing localStorage (user is authenticated)');
+        }
+        
+        console.log('Setting view to logo');
+        setCurrentView("logo");
+      }
+    };
+
+    // If coming from Google auth, add a small delay to ensure localStorage is ready
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleAuthSuccess = urlParams.get('google_auth') === 'success';
+    
+    if (googleAuthSuccess) {
+      console.log('Detected Google auth success, adding delay for localStorage...');
+      setTimeout(initializeAuth, 100); // Small delay to ensure localStorage is available
+    } else {
+      initializeAuth();
     }
   }, []);
 
