@@ -7486,65 +7486,70 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
         raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.post("/admin/google/process-session")
-async def process_google_session(auth_request: GoogleAuthRequest):
-    """Process Google OAuth session ID and create admin session"""
+async def process_google_session(request: dict):
+    """Process Emergent OAuth session ID for Google authentication"""
     try:
-        # Process session ID with Emergent auth service
-        user_data = await google_admin_service.process_session_id(auth_request.session_id)
+        logging.info("Processing Emergent OAuth session for Google authentication")
         
-        # Validate admin email authorization
-        if not google_admin_service.validate_admin_email(user_data['email']):
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Email {user_data['email']} is not authorized for admin access"
-            )
+        session_id = request.get('session_id')
+        if not session_id:
+            raise HTTPException(status_code=400, detail="Missing session_id")
         
-        # Create admin session
-        session_data = google_admin_service.create_admin_session(user_data)
+        # Call Emergent OAuth service directly
+        import requests
+        emergent_url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+        headers = {"X-Session-ID": session_id}
         
-        # Store session in database (using MongoDB)
-        try:
-            session_doc = {
-                "session_token": session_data['session_token'],
-                "google_id": session_data['google_id'],
-                "email": session_data['email'],
-                "name": session_data['name'],
-                "picture": session_data.get('picture', ''),
-                "is_admin": True,
-                "login_type": "google_oauth",
-                "google_scopes": session_data['google_scopes'],
-                "created_at": session_data['created_at'],
-                "expires_at": session_data['expires_at'],
-                "last_accessed": datetime.now(timezone.utc)
-            }
-            
-            # Insert or update session
-            await mongodb_manager.db.admin_sessions.update_one(
-                {"google_id": session_data['google_id']},
-                {"$set": session_doc},
-                upsert=True
-            )
-            
-        except Exception as db_error:
-            logging.error(f"Database session storage error: {str(db_error)}")
-            # Continue anyway, session will work for this request
+        response = requests.get(emergent_url, headers=headers, timeout=10)
         
-        # Format profile for response
-        profile = google_admin_service.format_admin_profile(session_data)
+        if response.status_code != 200:
+            logging.error(f"Emergent OAuth error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=400, detail="Invalid session_id")
         
-        return {
-            "success": True,
-            "profile": profile,
-            "session_token": session_data['session_token'],
-            "expires_at": session_data['expires_at'].isoformat(),
-            "message": f"Successfully authenticated as admin: {user_data['email']}"
+        user_data = response.json()
+        logging.info(f"Received user data from Emergent: {user_data.get('email')}")
+        
+        # Create admin session using the session_token from Emergent
+        session_token = user_data.get('session_token')
+        
+        session_doc = {
+            "session_token": session_token,
+            "google_id": user_data.get('id'),
+            "email": user_data.get('email'),
+            "name": user_data.get('name'),
+            "picture": user_data.get('picture', ''),
+            "is_admin": True,
+            "login_type": "emergent_google",
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "last_accessed": datetime.now(timezone.utc)
         }
+        
+        # Store in MongoDB
+        result = await mongodb_manager.admin_sessions.insert_one(session_doc)
+        
+        if result.inserted_id:
+            logging.info(f"Created admin session for Emergent Google user: {user_data.get('email')}")
+            
+            return {
+                "success": True,
+                "profile": {
+                    "id": user_data.get('id'),
+                    "email": user_data.get('email'),
+                    "name": user_data.get('name'),
+                    "picture": user_data.get('picture', '')
+                },
+                "session_token": session_token,
+                "message": "Google authentication successful"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create session")
         
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Process Google session error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process Google authentication")
+        logging.error(f"Process Emergent session error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process session")
 
 @api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
