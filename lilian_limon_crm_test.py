@@ -339,16 +339,11 @@ class LilianLimonCRMTest:
         """Test all CRM-related endpoints are available"""
         crm_endpoints = [
             ("/crm/prospects", "Get Prospects"),
-            ("/crm/pipeline/stages", "Pipeline Stages"),
-            ("/crm/prospects", "Create Prospect (POST)"),
+            ("/crm/prospects/pipeline", "Pipeline Data"),
         ]
         
         for endpoint, name in crm_endpoints:
             try:
-                if "POST" in name:
-                    # Skip POST test for now, just check if endpoint exists
-                    continue
-                    
                 response = self.session.get(f"{BACKEND_URL}{endpoint}")
                 if response.status_code == 200:
                     self.log_result(f"CRM Endpoint - {name}", True, 
