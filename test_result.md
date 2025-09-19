@@ -1590,9 +1590,10 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Google Admin Profile Endpoint Fix Verification"
+    - "Google OAuth JWT Middleware Exception Testing - COMPLETED"
   stuck_tasks: []
   test_all: false
+  test_priority: "high_first"
   test_priority: "high_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
