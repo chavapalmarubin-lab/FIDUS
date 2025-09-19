@@ -41,8 +41,12 @@ from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
 from google_admin_service import GoogleAdminService
 
-# Initialize Google Admin Service
-google_admin_service = GoogleAdminService()
+# Initialize Google Admin Service (with error handling for missing env vars)
+try:
+    google_admin_service = GoogleAdminService()
+except ValueError as e:
+    logging.warning(f"Google Admin Service initialization failed: {e}")
+    google_admin_service = None
 
 # Gmail API imports
 import pickle
