@@ -13,11 +13,21 @@ const GoogleCallback = () => {
         setStatus('processing');
         setMessage('Processing Google authentication...');
 
+        // Debug: Log current state
+        console.log('=== GOOGLE CALLBACK DEBUG ===');
+        console.log('Current URL:', window.location.href);
+        console.log('Current localStorage before:', {
+          fidus_user: localStorage.getItem('fidus_user'),
+          google_session_token: localStorage.getItem('google_session_token')
+        });
+
         // Get URL parameters (Google OAuth sends code and state as URL params)
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         const error = urlParams.get('error');
+
+        console.log('OAuth params:', { code: code?.substring(0, 20), state, error });
 
         if (error) {
           throw new Error(`Google OAuth error: ${error}`);
@@ -27,7 +37,8 @@ const GoogleCallback = () => {
           throw new Error('No authorization code received from Google');
         }
 
-        console.log('Processing Google OAuth callback with code:', code.substring(0, 20) + '...');
+        setMessage('Exchanging authorization code...');
+        console.log('Sending request to backend...');
 
         try {
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`, {
@@ -42,7 +53,9 @@ const GoogleCallback = () => {
             })
           });
 
+          console.log('Backend response status:', response.status);
           const data = await response.json();
+          console.log('Backend response data:', data);
 
           if (response.ok && data.success) {
             setStatus('success');
@@ -50,6 +63,46 @@ const GoogleCallback = () => {
             setProfile(data.profile);
             
             console.log('✅ Google authentication successful:', data.profile);
+            
+            // Create admin user data
+            const adminUser = {
+              id: data.profile.id,
+              username: data.profile.email,
+              name: data.profile.name,
+              email: data.profile.email,
+              type: "admin",
+              picture: data.profile.picture,
+              isGoogleAuth: true
+            };
+            
+            console.log('Setting localStorage with:', adminUser);
+            
+            // Store user data in localStorage (for getCurrentUser())
+            localStorage.setItem('fidus_user', JSON.stringify(adminUser));
+            
+            // Store Google session token (for API calls)
+            localStorage.setItem('google_session_token', data.session_token);
+            
+            console.log('localStorage after setting:', {
+              fidus_user: localStorage.getItem('fidus_user'),
+              google_session_token: localStorage.getItem('google_session_token')
+            });
+            
+            // Test authentication functions
+            const testAuth = () => {
+              try {
+                const userData = JSON.parse(localStorage.getItem('fidus_user'));
+                const sessionToken = localStorage.getItem('google_session_token');
+                const isAuth = userData && userData.isGoogleAuth && sessionToken;
+                console.log('Auth test result:', { userData, sessionToken: !!sessionToken, isAuth });
+                return isAuth;
+              } catch (e) {
+                console.error('Auth test error:', e);
+                return false;
+              }
+            };
+            
+            console.log('Testing auth functions:', testAuth());
             
             // Clean URL parameters
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -59,28 +112,18 @@ const GoogleCallback = () => {
               detail: { profile: data.profile, sessionToken: data.session_token }
             }));
             
-            // Redirect to admin dashboard after successful authentication
+            setMessage('Redirecting to admin dashboard...');
+            
+            // Instead of redirecting immediately, show success for longer
             setTimeout(() => {
-              // Create admin user data
-              const adminUser = {
-                id: data.profile.id,
-                username: data.profile.email,
-                name: data.profile.name,
-                email: data.profile.email,
-                type: "admin",
-                picture: data.profile.picture,
-                isGoogleAuth: true
-              };
-              
-              // Store user data in localStorage (for getCurrentUser())
-              localStorage.setItem('fidus_user', JSON.stringify(adminUser));
-              
-              // Store Google session token (for API calls)
-              localStorage.setItem('google_session_token', data.session_token);
+              console.log('About to redirect. Final localStorage check:', {
+                fidus_user: localStorage.getItem('fidus_user'),
+                google_session_token: localStorage.getItem('google_session_token')
+              });
               
               // Redirect to main app - the useEffect will detect the authenticated user
               window.location.href = '/?skip_animation=true';
-            }, 1000);
+            }, 3000); // Longer delay to see the success state
           } else {
             throw new Error(data.detail || 'Authentication failed');
           }
