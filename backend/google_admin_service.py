@@ -14,13 +14,14 @@ class GoogleAdminService:
     
     def __init__(self):
         self.client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        self.client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
         self.redirect_uri = os.environ.get('GOOGLE_REDIRECT_URI')
         self.google_oauth_url = "https://accounts.google.com/o/oauth2/auth"
         self.google_token_url = "https://oauth2.googleapis.com/token"
         self.google_userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"
         
-        if not self.client_id or not self.redirect_uri:
-            raise ValueError("Missing GOOGLE_CLIENT_ID or GOOGLE_REDIRECT_URI environment variables")
+        if not self.client_id or not self.client_secret or not self.redirect_uri:
+            raise ValueError("Missing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET or GOOGLE_REDIRECT_URI environment variables")
         
     def get_google_login_url(self, state: str = None) -> str:
         """Generate direct Google OAuth login URL"""
