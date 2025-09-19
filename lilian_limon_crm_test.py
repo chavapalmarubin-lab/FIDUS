@@ -194,21 +194,22 @@ class LilianLimonCRMTest:
     def test_pipeline_stages(self):
         """Test simplified pipeline structure: Lead → Negotiation/Proposal → Won → Lost"""
         try:
-            # Get pipeline configuration or stages
-            response = self.session.get(f"{BACKEND_URL}/crm/pipeline/stages")
+            # Get pipeline data from the correct endpoint
+            response = self.session.get(f"{BACKEND_URL}/crm/prospects/pipeline")
             if response.status_code == 200:
-                stages = response.json()
-                expected_stages = ["lead", "negotiation", "proposal", "won", "lost"]
+                pipeline_data = response.json()
                 
-                if isinstance(stages, list):
-                    stage_names = [stage.get('name', '').lower() for stage in stages]
-                elif isinstance(stages, dict):
-                    stage_names = list(stages.keys())
+                # Extract stage names from pipeline structure
+                if isinstance(pipeline_data, dict) and 'pipeline' in pipeline_data:
+                    stage_names = list(pipeline_data['pipeline'].keys())
+                elif isinstance(pipeline_data, dict):
+                    # Look for stage keys in the response
+                    stage_names = [key for key in pipeline_data.keys() if key in ["lead", "qualified", "proposal", "negotiation", "won", "lost"]]
                 else:
                     stage_names = []
                 
                 # Check if simplified pipeline is implemented
-                has_qualified = any('qualified' in stage for stage in stage_names)
+                has_qualified = 'qualified' in stage_names
                 has_required_stages = all(stage in stage_names for stage in ["lead", "won", "lost"])
                 
                 if not has_qualified and has_required_stages:
@@ -225,10 +226,10 @@ class LilianLimonCRMTest:
                     
                     self.log_result("Simplified Pipeline", False, 
                                   f"Pipeline issues: {', '.join(issues)}",
-                                  {"stages": stage_names})
+                                  {"stages": stage_names, "pipeline_data": pipeline_data})
             else:
                 self.log_result("Simplified Pipeline", False, 
-                              f"Failed to get pipeline stages: HTTP {response.status_code}")
+                              f"Failed to get pipeline data: HTTP {response.status_code}")
                 
         except Exception as e:
             self.log_result("Simplified Pipeline", False, f"Exception: {str(e)}")
