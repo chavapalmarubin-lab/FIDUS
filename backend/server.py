@@ -7540,14 +7540,20 @@ async def process_google_callback(request: dict):
             "grant_type": "authorization_code"
         }
         
+        logging.info(f"Exchanging code for tokens. Redirect URI: {redirect_uri}")
         token_response = requests.post(token_url, data=token_data, timeout=10)
         
         if token_response.status_code != 200:
             logging.error(f"Token exchange error: {token_response.status_code} - {token_response.text}")
+            logging.error(f"Request data: client_id={client_id[:20]}..., redirect_uri={redirect_uri}")
             raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
         
         tokens = token_response.json()
         access_token = tokens.get('access_token')
+        
+        if not access_token:
+            logging.error(f"No access token in response: {tokens}")
+            raise HTTPException(status_code=400, detail="No access token received")
         
         # Get user info from Google
         userinfo_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
@@ -7578,7 +7584,7 @@ async def process_google_callback(request: dict):
             "last_accessed": datetime.now(timezone.utc)
         }
         
-        # Store in MongoDB
+        # Store in MongoDB (fix the await issue)
         result = await mongodb_manager.db.admin_sessions.insert_one(session_doc)
         
         if result.inserted_id:
