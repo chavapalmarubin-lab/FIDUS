@@ -13,7 +13,7 @@ class GoogleAdminService:
     
     def __init__(self):
         self.auth_base_url = "https://auth.emergentagent.com"
-        self.session_api_url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+        self.session_api_url = "https://auth.emergentagent.com/auth/v1/env/oauth/session-data"
         
     def get_google_login_url(self, redirect_url: str) -> str:
         """Generate Google OAuth login URL for admin users"""
