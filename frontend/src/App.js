@@ -38,22 +38,25 @@ function App() {
       return;
     }
     
-    // Check if user is already authenticated
+    // Check if user is already authenticated FIRST
     if (isAuthenticated()) {
       const userData = getCurrentUser();
       if (userData) {
         setUser(userData);
         setCurrentView(userData.type === "admin" ? "admin" : "client");
-        return;
+        return; // CRITICAL: Return here to prevent further processing
       }
     }
     
     if (skipAnimation) {
-      // Skip animation for testing/production
+      // Skip animation for testing/production - but only if not authenticated
       setCurrentView("login");
     } else {
       // Clear any existing user session to always show logo animation
-      localStorage.removeItem("fidus_user");
+      // BUT only if not authenticated (to prevent clearing Google auth)
+      if (!isAuthenticated()) {
+        localStorage.removeItem("fidus_user");
+      }
       
       // Always start with logo animation
       setCurrentView("logo");
