@@ -1559,8 +1559,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Google Workspace Integration Frontend Testing"
+  current_focus: []
   stuck_tasks: 
     - "Google Admin OAuth Integration Testing"
   test_all: false
