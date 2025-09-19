@@ -7689,8 +7689,8 @@ async def get_admin_google_profile(request: Request):
         raise HTTPException(status_code=500, detail="Failed to get admin profile")
 
 @api_router.get("/google/gmail/messages")
-async def get_gmail_messages(request: Request):
-    """Get Gmail messages for authenticated Google user"""
+async def get_gmail_messages(request: Request, user_email: str = None):
+    """Get real Gmail messages for authenticated Google user"""
     try:
         # Get session token from cookies or Authorization header
         session_token = None
@@ -7705,36 +7705,64 @@ async def get_gmail_messages(request: Request):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # For now, return mock Gmail data since we have mock authentication
-        # In production, this would use the Google Gmail API
+        # Import the real Gmail service
+        from real_gmail_service import gmail_service
+        
+        # Try to get the user's email from the session or request
+        if not user_email:
+            # Get user email from stored session
+            session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.find_one({"session_token": session_token})
+            if session_doc and session_doc.get('email'):
+                user_email = session_doc['email']
+            else:
+                user_email = "chavapalmarubin@gmail.com"  # Fallback to your email
+        
+        # Try to authenticate and get real Gmail messages
+        try:
+            # First try without delegation (if using your own service account)
+            if gmail_service.authenticate():
+                messages = gmail_service.get_messages(max_results=20)
+                logging.info(f"Successfully retrieved {len(messages)} real Gmail messages")
+                return {"success": True, "messages": messages, "source": "real_gmail"}
+        except Exception as service_error:
+            logging.warning(f"Service account method failed: {str(service_error)}")
+            
+            # Try with domain delegation
+            try:
+                if gmail_service.authenticate(user_email=user_email):
+                    messages = gmail_service.get_messages(max_results=20)
+                    logging.info(f"Successfully retrieved {len(messages)} real Gmail messages with delegation")
+                    return {"success": True, "messages": messages, "source": "real_gmail_delegated"}
+            except Exception as delegation_error:
+                logging.warning(f"Domain delegation method failed: {str(delegation_error)}")
+        
+        # If real Gmail fails, return informative error with fallback to mock data
+        logging.info("Real Gmail access failed, returning mock data with explanation")
         mock_emails = [
             {
-                "id": "msg_001",
-                "subject": "Welcome to FIDUS Investment Management",
-                "sender": "info@fidus-invest.com",
-                "preview": "Thank you for joining FIDUS. Here's your account overview...",
-                "date": "2025-09-19T14:30:00Z",
+                "id": "info_001",
+                "subject": "📧 Real Gmail Integration Status",
+                "sender": "FIDUS System <system@fidus.com>",
+                "preview": "Gmail API access requires additional setup. Service account needs domain-wide delegation for personal Gmail access.",
+                "date": datetime.now(timezone.utc).isoformat(),
                 "unread": True
             },
             {
-                "id": "msg_002", 
-                "subject": "Monthly Investment Report - September 2025",
-                "sender": "reports@fidus-invest.com",
-                "preview": "Your portfolio performance summary for September...",
-                "date": "2025-09-19T10:15:00Z",
-                "unread": False
-            },
-            {
-                "id": "msg_003",
-                "subject": "New Fund Opportunity - CORE Portfolio",
-                "sender": "opportunities@fidus-invest.com",
-                "preview": "We're excited to present a new investment opportunity...",
-                "date": "2025-09-18T16:45:00Z",
-                "unread": False
+                "id": "info_002",
+                "subject": "🔧 Next Steps for Gmail Integration",
+                "sender": "FIDUS System <system@fidus.com>",
+                "preview": "For personal Gmail: Enable domain-wide delegation OR use OAuth flow with user consent. For Google Workspace: Configure admin settings.",
+                "date": datetime.now(timezone.utc).isoformat(),
+                "unread": True
             }
         ]
         
-        return {"success": True, "messages": mock_emails}
+        return {
+            "success": True, 
+            "messages": mock_emails, 
+            "source": "mock_with_info",
+            "note": "Real Gmail access requires additional configuration - showing system info instead"
+        }
         
     except Exception as e:
         logging.error(f"Get Gmail messages error: {str(e)}")
