@@ -28,20 +28,34 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    console.log('=== APP.JS USEEFFECT DEBUGGING ===');
+    console.log('Current URL:', window.location.href);
+    console.log('Current localStorage:', {
+      fidus_user: localStorage.getItem('fidus_user'),
+      google_session_token: localStorage.getItem('google_session_token')
+    });
+    
     // Check for skip animation parameter (for production testing)
     const urlParams = new URLSearchParams(window.location.search);
     const skipAnimation = urlParams.get('skip_animation') === 'true';
+    console.log('Skip animation:', skipAnimation);
     
     // Handle Google OAuth callback
     if (window.location.pathname === '/admin/google-callback') {
+      console.log('Setting view to google-callback');
       setCurrentView('google-callback');
       return;
     }
     
     // Check if user is already authenticated FIRST
-    if (isAuthenticated()) {
+    const authenticated = isAuthenticated();
+    console.log('Is authenticated:', authenticated);
+    
+    if (authenticated) {
       const userData = getCurrentUser();
+      console.log('User data:', userData);
       if (userData) {
+        console.log('Setting user and view to:', userData.type);
         setUser(userData);
         setCurrentView(userData.type === "admin" ? "admin" : "client");
         return; // CRITICAL: Return here to prevent further processing
@@ -50,15 +64,20 @@ function App() {
     
     if (skipAnimation) {
       // Skip animation for testing/production - but only if not authenticated
+      console.log('Setting view to login (skip animation)');
       setCurrentView("login");
     } else {
       // Clear any existing user session to always show logo animation
       // BUT only if not authenticated (to prevent clearing Google auth)
-      if (!isAuthenticated()) {
+      if (!authenticated) {
+        console.log('Clearing localStorage (not authenticated)');
         localStorage.removeItem("fidus_user");
+      } else {
+        console.log('NOT clearing localStorage (user is authenticated)');
       }
       
       // Always start with logo animation
+      console.log('Setting view to logo');
       setCurrentView("logo");
     }
   }, []);
