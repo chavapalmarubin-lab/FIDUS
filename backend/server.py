@@ -7676,66 +7676,45 @@ async def get_google_auth_url():
         logging.error(f"Get Google auth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get auth URL")
 
-@api_router.post("/admin/google/process-session")
-async def process_google_session(auth_request: GoogleAuthRequest):
-    """Process Google OAuth session ID and create admin session"""
+@api_router.post("/admin/google/process-callback")
+async def process_google_callback(request: dict):
+    """Process Google OAuth callback with authorization code"""
     try:
-        # Process session ID with Emergent auth service
-        user_data = await google_admin_service.process_session_id(auth_request.session_id)
+        from google_admin_service import google_admin_service
         
-        # Validate admin email authorization
-        if not google_admin_service.validate_admin_email(user_data['email']):
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Email {user_data['email']} is not authorized for admin access"
-            )
+        code = request.get('code')
+        state = request.get('state')
+        
+        if not code:
+            raise HTTPException(status_code=400, detail="Missing authorization code")
+        
+        # Exchange code for tokens
+        tokens = await google_admin_service.exchange_code_for_tokens(code)
+        
+        # Get user info using access token
+        user_info = await google_admin_service.get_user_info(tokens['access_token'])
         
         # Create admin session
-        session_data = google_admin_service.create_admin_session(user_data)
+        session_data = await google_admin_service.create_admin_session(user_info, tokens)
         
-        # Store session in database (using MongoDB)
-        try:
-            session_doc = {
-                "session_token": session_data['session_token'],
-                "google_id": session_data['google_id'],
-                "email": session_data['email'],
-                "name": session_data['name'],
-                "picture": session_data.get('picture', ''),
-                "is_admin": True,
-                "login_type": "google_oauth",
-                "google_scopes": session_data['google_scopes'],
-                "created_at": session_data['created_at'],
-                "expires_at": session_data['expires_at'],
-                "last_accessed": datetime.now(timezone.utc)
-            }
-            
-            # Insert or update session
-            await mongodb_manager.db.admin_sessions.update_one(
-                {"google_id": session_data['google_id']},
-                {"$set": session_doc},
-                upsert=True
-            )
-            
-        except Exception as db_error:
-            logging.error(f"Database session storage error: {str(db_error)}")
-            # Continue anyway, session will work for this request
+        # Store session in MongoDB
+        session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_data)
         
-        # Format profile for response
-        profile = google_admin_service.format_admin_profile(session_data)
+        logging.info(f"Created admin session for Google user: {user_info['email']}")
         
         return {
             "success": True,
-            "profile": profile,
             "session_token": session_data['session_token'],
-            "expires_at": session_data['expires_at'].isoformat(),
-            "message": f"Successfully authenticated as admin: {user_data['email']}"
+            "user_info": {
+                "email": user_info['email'],
+                "name": user_info['name'],
+                "picture": user_info.get('picture')
+            }
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Process Google session error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process Google authentication")
+        logging.error(f"Process Google callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process callback")
 
 @api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
