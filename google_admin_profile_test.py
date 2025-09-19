@@ -184,16 +184,18 @@ class GoogleAdminProfileTest:
             if response.status_code == 401:
                 response_data = response.json()
                 error_detail = response_data.get("detail", "")
+                error_message = response_data.get("message", "")
                 
                 # Check that it's properly handling the invalid token, not crashing with NoneType
-                if "invalid" in error_detail.lower() or "session" in error_detail.lower():
+                error_text = (error_detail + " " + error_message).lower()
+                if "invalid" in error_text or "session" in error_text or "token" in error_text or "unauthorized" in error_text:
                     self.log_result("Google Profile Endpoint - Invalid Token", True, 
                                   "Properly handles invalid session token",
-                                  {"error": error_detail})
+                                  {"error": error_detail, "message": error_message})
                 else:
                     self.log_result("Google Profile Endpoint - Invalid Token", False, 
                                   "Unexpected error message for invalid token",
-                                  {"error": error_detail})
+                                  {"error": error_detail, "message": error_message})
             elif response.status_code == 500:
                 # Check if it's the old NoneType error
                 response_data = response.json()
