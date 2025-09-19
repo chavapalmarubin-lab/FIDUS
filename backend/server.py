@@ -7768,8 +7768,8 @@ async def get_admin_google_profile(request: Request):
             await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.delete_one({"session_token": session_token})
             raise HTTPException(status_code=401, detail="Session expired")
         
-        # Update last accessed time
-        update_result = await mongodb_manager.db.admin_sessions.update_one(
+        # Update last accessed time using async client
+        update_result = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.update_one(
             {"session_token": session_token},
             {"$set": {"last_accessed": datetime.now(timezone.utc)}}
         )
