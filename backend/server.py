@@ -7658,13 +7658,14 @@ class AdminGoogleProfile(BaseModel):
 async def get_google_auth_url():
     """Get Google OAuth authorization URL"""
     try:
-        from google_admin_service import google_admin_service
+        from google_admin_service import get_google_admin_service
         
         # Generate state parameter for CSRF protection
         state = str(uuid.uuid4())
         
         # Get direct Google OAuth URL
-        auth_url = google_admin_service.get_google_login_url(state=state)
+        google_service = get_google_admin_service()
+        auth_url = google_service.get_google_login_url(state=state)
         
         return {
             "success": True,
@@ -7680,7 +7681,7 @@ async def get_google_auth_url():
 async def process_google_callback(request: dict):
     """Process Google OAuth callback with authorization code"""
     try:
-        from google_admin_service import google_admin_service
+        from google_admin_service import get_google_admin_service
         
         code = request.get('code')
         state = request.get('state')
@@ -7688,14 +7689,16 @@ async def process_google_callback(request: dict):
         if not code:
             raise HTTPException(status_code=400, detail="Missing authorization code")
         
+        google_service = get_google_admin_service()
+        
         # Exchange code for tokens
-        tokens = await google_admin_service.exchange_code_for_tokens(code)
+        tokens = await google_service.exchange_code_for_tokens(code)
         
         # Get user info using access token
-        user_info = await google_admin_service.get_user_info(tokens['access_token'])
+        user_info = await google_service.get_user_info(tokens['access_token'])
         
         # Create admin session
-        session_data = await google_admin_service.create_admin_session(user_info, tokens)
+        session_data = await google_service.create_admin_session(user_info, tokens)
         
         # Store session in MongoDB
         session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_data)
