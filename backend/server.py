@@ -7489,9 +7489,9 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
 
 @api_router.post("/admin/google/process-callback")
 async def process_google_callback(request_data: dict, response: Response):
-    """Process Google OAuth authorization code"""
+    """Process Google OAuth authorization code for personal Gmail"""
     try:
-        logging.info("Processing Google OAuth callback")
+        logging.info("Processing Google OAuth callback for personal Gmail")
         
         code = request_data.get('code')
         state = request_data.get('state')
@@ -7499,52 +7499,31 @@ async def process_google_callback(request_data: dict, response: Response):
         if not code:
             raise HTTPException(status_code=400, detail="Missing authorization code")
         
-        # Exchange code for tokens
-        client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-        client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+        from personal_gmail_service import personal_gmail_service
+        
+        # Get redirect URI
         redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
         
-        if not client_secret:
-            raise HTTPException(status_code=500, detail="Google client secret not configured")
-        
-        # Exchange authorization code for tokens
-        import requests
-        token_url = "https://oauth2.googleapis.com/token"
-        token_data = {
-            "code": code,
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "redirect_uri": redirect_uri,
-            "grant_type": "authorization_code"
-        }
-        
-        logging.info(f"Exchanging code for tokens. Redirect URI: {redirect_uri}")
-        token_response = requests.post(token_url, data=token_data, timeout=10)
-        
-        if token_response.status_code != 200:
-            logging.error(f"Token exchange error: {token_response.status_code} - {token_response.text}")
-            logging.error(f"Request data: client_id={client_id[:20]}..., redirect_uri={redirect_uri}")
-            raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
-        
-        tokens = token_response.json()
+        # Exchange code for tokens
+        tokens = personal_gmail_service.exchange_code_for_tokens(code, redirect_uri)
         access_token = tokens.get('access_token')
+        refresh_token = tokens.get('refresh_token')
         
         if not access_token:
-            logging.error(f"No access token in response: {tokens}")
             raise HTTPException(status_code=400, detail="No access token received")
         
         # Get user info from Google
         userinfo_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
+        import requests
         userinfo_response = requests.get(userinfo_url, timeout=10)
         
         if userinfo_response.status_code != 200:
-            logging.error(f"User info error: {userinfo_response.status_code} - {userinfo_response.text}")
             raise HTTPException(status_code=400, detail="Failed to get user information")
         
         user_data = userinfo_response.json()
-        logging.info(f"Google OAuth successful for: {user_data.get('email')}")
+        logging.info(f"Personal Gmail OAuth successful for: {user_data.get('email')}")
         
-        # Create admin session
+        # Create admin session with Gmail tokens
         session_token = str(uuid.uuid4())
         
         session_doc = {
@@ -7554,9 +7533,9 @@ async def process_google_callback(request_data: dict, response: Response):
             "name": user_data.get('name'),
             "picture": user_data.get('picture', ''),
             "access_token": access_token,
-            "refresh_token": tokens.get('refresh_token'),
+            "refresh_token": refresh_token,
             "is_admin": True,
-            "login_type": "google_oauth",
+            "login_type": "google_oauth_personal",
             "created_at": datetime.now(timezone.utc),
             "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
             "last_accessed": datetime.now(timezone.utc)
@@ -7567,7 +7546,7 @@ async def process_google_callback(request_data: dict, response: Response):
             result = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_doc)
             
             if result.inserted_id:
-                logging.info(f"Created Google admin session for: {user_data.get('email')}")
+                logging.info(f"Created personal Gmail admin session for: {user_data.get('email')}")
                 
                 # Set httpOnly cookie for session persistence
                 response.set_cookie(
@@ -7589,7 +7568,7 @@ async def process_google_callback(request_data: dict, response: Response):
                         "picture": user_data.get('picture', '')
                     },
                     "session_token": session_token,
-                    "message": "Google authentication successful"
+                    "message": "Personal Gmail authentication successful"
                 }
             else:
                 raise HTTPException(status_code=500, detail="Failed to create session")
@@ -7600,8 +7579,8 @@ async def process_google_callback(request_data: dict, response: Response):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Process Google callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process Google callback")
+        logging.error(f"Process personal Gmail callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process Gmail callback")
 
 @api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
