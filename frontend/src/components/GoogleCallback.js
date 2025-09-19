@@ -10,61 +10,50 @@ const GoogleCallback = () => {
   useEffect(() => {
     const processCallback = async () => {
       try {
+        setStatus('processing');
         setMessage('Processing Google authentication...');
-        
-        // Check if we have a session_id in the URL hash or query params
-        const hash = window.location.hash;
-        const search = window.location.search;
-        
-        console.log('URL hash:', hash);
-        console.log('URL search:', search);
-        
-        let sessionId = null;
-        
-        // Try to extract session_id from hash first
-        if (hash) {
-          const sessionIdMatch = hash.match(/session_id=([^&]+)/);
-          if (sessionIdMatch) {
-            sessionId = sessionIdMatch[1];
-          }
-        }
-        
-        // Fallback to query parameters
-        if (!sessionId && search) {
-          const urlParams = new URLSearchParams(search);
-          sessionId = urlParams.get('session_id');
+
+        // Extract authorization code and state from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+
+        if (error) {
+          throw new Error(`Google OAuth error: ${error}`);
         }
 
-        if (!sessionId) {
-          setStatus('error');
-          setMessage('No authentication data received from Google. Please try again.');
-          return;
+        if (!code) {
+          throw new Error('No authorization code received from Google');
         }
 
-        console.log('Processing session ID:', sessionId);
-        setMessage('Validating authentication with Google...');
+        console.log('Processing Google OAuth callback with code:', code.substring(0, 20) + '...');
 
-        // Now process the session ID using the Google admin hook
+        // Send authorization code to backend for processing
         try {
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('fidus_user') ? JSON.parse(localStorage.getItem('fidus_user')).token : ''}`
+              'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({ 
+              code: code,
+              state: state 
+            })
           });
 
           const data = await response.json();
 
           if (response.ok && data.success) {
             setStatus('success');
-            setMessage(`Successfully authenticated as ${data.profile.name}`);
-            setProfile(data.profile);
+            setMessage(`Successfully authenticated as ${data.user_info.name}`);
+            setProfile(data.user_info);
             
-            // Store the Google profile info if needed
-            console.log('Google authentication successful:', data.profile);
+            // Store session token for future Google API calls if needed
+            localStorage.setItem('google_session_token', data.session_token);
+            
+            console.log('Google authentication successful:', data.user_info);
             
             // Redirect to admin dashboard after 3 seconds
             setTimeout(() => {
@@ -74,15 +63,15 @@ const GoogleCallback = () => {
             throw new Error(data.detail || 'Authentication failed');
           }
         } catch (processError) {
-          console.error('Session processing error:', processError);
+          console.error('Callback processing error:', processError);
           setStatus('error');
           setMessage(`Authentication failed: ${processError.message}`);
         }
 
       } catch (err) {
-        console.error('Callback processing error:', err);
+        console.error('OAuth callback processing error:', err);
         setStatus('error');
-        setMessage('Failed to process authentication');
+        setMessage(`Failed to process Google authentication: ${err.message}`);
       }
     };
 
