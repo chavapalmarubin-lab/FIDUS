@@ -95,22 +95,8 @@ const STAGE_CONFIG = {
     bgColor: "bg-blue-50",
     icon: Target 
   },
-  qualified: { 
-    label: "Qualified", 
-    color: "bg-green-500", 
-    textColor: "text-green-700", 
-    bgColor: "bg-green-50",
-    icon: CheckCircle 
-  },
-  proposal: { 
-    label: "Proposal", 
-    color: "bg-yellow-500", 
-    textColor: "text-yellow-700", 
-    bgColor: "bg-yellow-50",
-    icon: FileText 
-  },
   negotiation: { 
-    label: "Negotiation", 
+    label: "Negotiation/Proposal", 
     color: "bg-orange-500", 
     textColor: "text-orange-700", 
     bgColor: "bg-orange-50",
