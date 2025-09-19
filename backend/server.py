@@ -7681,29 +7681,43 @@ async def get_google_auth_url():
 async def process_google_callback(request: dict):
     """Process Google OAuth callback with authorization code"""
     try:
+        logging.info("Google callback endpoint called")
+        logging.info(f"Request data: {request}")
+        
         from google_admin_service import get_google_admin_service
         
         code = request.get('code')
         state = request.get('state')
         
+        logging.info(f"Extracted code: {code[:20] if code else 'None'}...")
+        logging.info(f"Extracted state: {state}")
+        
         if not code:
+            logging.error("No authorization code in request")
             raise HTTPException(status_code=400, detail="Missing authorization code")
         
         google_service = get_google_admin_service()
+        logging.info("Google service initialized")
         
         # Exchange code for tokens
+        logging.info("Exchanging code for tokens...")
         tokens = await google_service.exchange_code_for_tokens(code)
+        logging.info(f"Token exchange successful: {list(tokens.keys())}")
         
         # Get user info using access token
+        logging.info("Getting user info...")
         user_info = await google_service.get_user_info(tokens['access_token'])
+        logging.info(f"User info retrieved for: {user_info.get('email')}")
         
         # Create admin session
+        logging.info("Creating admin session...")
         session_data = await google_service.create_admin_session(user_info, tokens)
         
         # Store session in MongoDB
+        logging.info("Storing session in database...")
         session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_data)
         
-        logging.info(f"Created admin session for Google user: {user_info['email']}")
+        logging.info(f"Successfully created admin session for Google user: {user_info['email']}")
         
         return {
             "success": True,
