@@ -7863,7 +7863,13 @@ async def get_admin_google_profile(request: Request):
             raise HTTPException(status_code=401, detail="Invalid or expired session")
         
         # Check if session is expired
-        if session_doc['expires_at'] < datetime.now(timezone.utc):
+        expires_at = session_doc['expires_at']
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        elif expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+            
+        if expires_at < datetime.now(timezone.utc):
             # Clean up expired session using async client
             await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.delete_one({"session_token": session_token})
             raise HTTPException(status_code=401, detail="Session expired")
