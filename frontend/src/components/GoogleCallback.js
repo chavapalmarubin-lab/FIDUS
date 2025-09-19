@@ -13,18 +13,66 @@ const GoogleCallback = () => {
         setStatus('processing');
         setMessage('Processing Google authentication...');
 
-        // Extract authorization code and state from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        const error = urlParams.get('error');
-        const testMode = urlParams.get('test'); // Add test mode parameter
+        // Check for Emergent OAuth session_id in URL fragment first
+        const fragment = window.location.hash;
+        const sessionIdMatch = fragment.match(/session_id=([^&]+)/);
+        
+        if (sessionIdMatch) {
+          const sessionId = sessionIdMatch[1];
+          console.log('Found Emergent OAuth session_id:', sessionId.substring(0, 20) + '...');
+          console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
 
-        if (error) {
-          throw new Error(`Google OAuth error: ${error}`);
+          try {
+            console.log('Sending session request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`);
+            
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({ 
+                session_id: sessionId
+              })
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (response.ok && data.success) {
+              setStatus('success');
+              setMessage(`Successfully authenticated as ${data.profile.name}`);
+              setProfile(data.profile);
+              
+              // Store session token
+              localStorage.setItem('google_session_token', data.session_token);
+              
+              console.log('Emergent OAuth authentication successful:', data.profile);
+              
+              // Clean URL fragment
+              window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+              
+              // Redirect to admin dashboard after 3 seconds
+              setTimeout(() => {
+                window.location.href = '/?skip_animation=true';
+              }, 3000);
+            } else {
+              throw new Error(data.detail || 'Emergent OAuth authentication failed');
+            }
+          } catch (sessionError) {
+            console.error('Session processing error:', sessionError);
+            setStatus('error');
+            setMessage(`Authentication failed: ${sessionError.message}`);
+          }
+          
+          return; // Exit early for Emergent OAuth
         }
 
-        // Test mode - use mock endpoint
+        // Fallback: Check for test mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const testMode = urlParams.get('test');
+
         if (testMode === 'true') {
           console.log('Running in test mode...');
           console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
@@ -41,23 +89,15 @@ const GoogleCallback = () => {
               body: JSON.stringify({})
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
-            
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok && data.success) {
               setStatus('success');
               setMessage(`Successfully authenticated as ${data.user_info.name} (TEST MODE)`);
               setProfile(data.user_info);
               
-              // Store session token for future Google API calls if needed
               localStorage.setItem('google_session_token', data.session_token);
               
-              console.log('Google test authentication successful:', data.user_info);
-              
-              // Redirect to admin dashboard after 3 seconds
               setTimeout(() => {
                 window.location.href = '/?skip_animation=true';
               }, 3000);
@@ -65,7 +105,6 @@ const GoogleCallback = () => {
               throw new Error(data.detail || 'Test authentication failed');
             }
           } catch (testError) {
-            console.error('Test callback processing error:', testError);
             setStatus('error');
             setMessage(`Test authentication failed: ${testError.message}`);
           }
@@ -73,57 +112,8 @@ const GoogleCallback = () => {
           return; // Exit early for test mode
         }
 
-        if (!code) {
-          throw new Error('No authorization code received from Google');
-        }
-
-        console.log('Processing Google OAuth callback with code:', code.substring(0, 20) + '...');
-        console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
-
-        // Send authorization code to backend for processing
-        try {
-          console.log('Sending request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`);
-          
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-              code: code,
-              state: state 
-            })
-          });
-
-          console.log('Response status:', response.status);
-          console.log('Response headers:', [...response.headers.entries()]);
-          
-          const data = await response.json();
-          console.log('Response data:', data);
-
-          if (response.ok && data.success) {
-            setStatus('success');
-            setMessage(`Successfully authenticated as ${data.user_info.name}`);
-            setProfile(data.user_info);
-            
-            // Store session token for future Google API calls if needed
-            localStorage.setItem('google_session_token', data.session_token);
-            
-            console.log('Google authentication successful:', data.user_info);
-            
-            // Redirect to admin dashboard after 3 seconds
-            setTimeout(() => {
-              window.location.href = '/?skip_animation=true';
-            }, 3000);
-          } else {
-            throw new Error(data.detail || 'Authentication failed');
-          }
-        } catch (processError) {
-          console.error('Callback processing error:', processError);
-          setStatus('error');
-          setMessage(`Authentication failed: ${processError.message}`);
-        }
+        // If no session_id or test mode, show error
+        throw new Error('No authentication data received. Please try signing in again.');
 
       } catch (err) {
         console.error('OAuth callback processing error:', err);
