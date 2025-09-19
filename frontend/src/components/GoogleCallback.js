@@ -59,9 +59,9 @@ const GoogleCallback = () => {
               detail: { profile: data.profile, sessionToken: data.session_token }
             }));
             
-            // Redirect to admin dashboard
+            // Redirect to admin dashboard after successful authentication
             setTimeout(() => {
-              window.location.href = '/?skip_animation=true';
+              window.location.href = '/admin/dashboard';
             }, 2000);
           } else {
             throw new Error(data.detail || 'Authentication failed');
