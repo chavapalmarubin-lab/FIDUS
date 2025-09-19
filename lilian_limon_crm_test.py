@@ -249,7 +249,8 @@ class LilianLimonCRMTest:
             
             response = self.session.put(f"{BACKEND_URL}/crm/prospects/{self.lilian_id}", json=update_data)
             if response.status_code == 200:
-                updated_prospect = response.json()
+                updated_result = response.json()
+                updated_prospect = updated_result.get('prospect', {})
                 current_stage = updated_prospect.get('stage')
                 
                 if current_stage == 'won':
@@ -260,7 +261,7 @@ class LilianLimonCRMTest:
                 else:
                     self.log_result("Stage Progression", False, 
                                   f"Stage update failed - expected 'won', got '{current_stage}'",
-                                  {"updated_prospect": updated_prospect})
+                                  {"updated_result": updated_result})
                     return False
             else:
                 self.log_result("Stage Progression", False, 
