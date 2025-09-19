@@ -233,7 +233,7 @@ class Prospect(BaseModel):
     name: str
     email: str
     phone: str
-    stage: str = "lead"  # lead, qualified, proposal, negotiation, won, lost
+    stage: str = "lead"  # lead, negotiation, won, lost
     notes: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
