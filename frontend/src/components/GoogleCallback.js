@@ -61,22 +61,26 @@ const GoogleCallback = () => {
             
             // Redirect to admin dashboard after successful authentication
             setTimeout(() => {
-              // Simulate admin login by setting the proper state and redirecting
+              // Create admin user data
               const adminUser = {
                 id: data.profile.id,
                 username: data.profile.email,
                 name: data.profile.name,
                 email: data.profile.email,
                 type: "admin",
-                picture: data.profile.picture
+                picture: data.profile.picture,
+                isGoogleAuth: true
               };
               
-              // Store user data in localStorage for persistence
-              localStorage.setItem('user', JSON.stringify(adminUser));
+              // Store user data in localStorage (for getCurrentUser())
+              localStorage.setItem('fidus_user', JSON.stringify(adminUser));
               
-              // Redirect to main app with admin state
-              window.location.href = '/?admin=true';
-            }, 2000);
+              // Store Google session token (for API calls)
+              localStorage.setItem('google_session_token', data.session_token);
+              
+              // Redirect to main app - the useEffect will detect the authenticated user
+              window.location.href = '/?skip_animation=true';
+            }, 1000);
           } else {
             throw new Error(data.detail || 'Authentication failed');
           }
