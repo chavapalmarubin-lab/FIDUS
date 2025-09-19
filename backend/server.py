@@ -10,7 +10,7 @@ async def get_google_auth_url():
     """Get Emergent OAuth authorization URL for Google authentication"""
     try:
         # Use Emergent OAuth service - redirect to admin dashboard after auth
-        redirect_url = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/dashboard"
+        redirect_url = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
         auth_url = f"https://auth.emergentagent.com/?redirect={redirect_url}"
         
         logging.info(f"Generated Emergent OAuth URL: {auth_url}")
