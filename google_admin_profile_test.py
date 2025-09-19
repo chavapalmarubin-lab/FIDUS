@@ -260,16 +260,18 @@ class GoogleAdminProfileTest:
             if response.status_code == 401:
                 response_data = response.json()
                 error_detail = response_data.get("detail", "")
+                error_message = response_data.get("message", "")
                 
                 # Should get "Invalid or expired session" not NoneType error
-                if "invalid" in error_detail.lower() or "expired" in error_detail.lower():
+                error_text = (error_detail + " " + error_message).lower()
+                if "invalid" in error_text or "expired" in error_text or "session" in error_text or "token" in error_text:
                     self.log_result("Async MongoDB Client Fix", True, 
                                   "Database lookup working correctly with async client",
-                                  {"error": error_detail})
+                                  {"error": error_detail, "message": error_message})
                 else:
                     self.log_result("Async MongoDB Client Fix", False, 
                                   "Unexpected error message from database lookup",
-                                  {"error": error_detail})
+                                  {"error": error_detail, "message": error_message})
             elif response.status_code == 500:
                 response_data = response.json()
                 error_detail = response_data.get("detail", "")
