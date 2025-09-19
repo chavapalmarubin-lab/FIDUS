@@ -61,7 +61,21 @@ const GoogleCallback = () => {
             
             // Redirect to admin dashboard after successful authentication
             setTimeout(() => {
-              window.location.href = '/admin/dashboard';
+              // Simulate admin login by setting the proper state and redirecting
+              const adminUser = {
+                id: data.profile.id,
+                username: data.profile.email,
+                name: data.profile.name,
+                email: data.profile.email,
+                type: "admin",
+                picture: data.profile.picture
+              };
+              
+              // Store user data in localStorage for persistence
+              localStorage.setItem('user', JSON.stringify(adminUser));
+              
+              // Redirect to main app with admin state
+              window.location.href = '/?admin=true';
             }, 2000);
           } else {
             throw new Error(data.detail || 'Authentication failed');
