@@ -7675,7 +7675,71 @@ async def get_google_auth_url():
         logging.error(f"Get Emergent auth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get auth URL")
 
-@api_router.post("/admin/google/process-callback")
+@api_router.post("/admin/google/process-session")
+async def process_emergent_session(request: dict):
+    """Process Emergent OAuth session ID and create admin session"""
+    try:
+        logging.info("Emergent OAuth session processing endpoint called")
+        logging.info(f"Request data: {request}")
+        
+        session_id = request.get('session_id')
+        
+        if not session_id:
+            logging.error("No session_id in request")
+            raise HTTPException(status_code=400, detail="Missing session_id")
+        
+        logging.info(f"Processing session_id: {session_id[:20]}...")
+        
+        # Call Emergent OAuth service to get user data
+        import requests
+        emergent_url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+        
+        headers = {
+            "X-Session-ID": session_id,
+            "Content-Type": "application/json"
+        }
+        
+        logging.info(f"Calling Emergent OAuth service: {emergent_url}")
+        response = requests.get(emergent_url, headers=headers)
+        
+        if response.status_code != 200:
+            logging.error(f"Emergent OAuth service error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=500, detail="Failed to validate session with Emergent OAuth")
+        
+        user_data = response.json()
+        logging.info(f"Received user data from Emergent: {user_data.get('email')}")
+        
+        # Create admin session in our database
+        session_token = str(uuid.uuid4())
+        
+        session_data = {
+            "session_token": session_token,
+            "user_info": {
+                "id": user_data.get('id'),
+                "email": user_data.get('email'),
+                "name": user_data.get('name'),
+                "picture": user_data.get('picture')
+            },
+            "emergent_session_token": user_data.get('session_token'),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "created_at": datetime.now(timezone.utc),
+            "auth_type": "emergent_oauth"
+        }
+        
+        # Store session in MongoDB
+        session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_data)
+        logging.info(f"Created admin session for Emergent user: {user_data.get('email')}")
+        
+        return {
+            "success": True,
+            "profile": session_data["user_info"],
+            "session_token": session_token,
+            "message": "Emergent OAuth authentication successful"
+        }
+        
+    except Exception as e:
+        logging.error(f"Process Emergent session error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process Emergent session")
 async def process_google_callback(request: dict):
     """Process Google OAuth callback with authorization code"""
     try:
