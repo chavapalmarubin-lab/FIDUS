@@ -121,9 +121,9 @@ const GoogleCallback = () => {
                 google_session_token: localStorage.getItem('google_session_token')
               });
               
-              // Redirect to main app - the useEffect will detect the authenticated user
-              window.location.href = '/?skip_animation=true';
-            }, 3000); // Longer delay to see the success state
+              // Use window.location.replace to avoid back button issues and race conditions
+              window.location.replace('/?skip_animation=true&google_auth=success');
+            }, 2000); // Shorter delay but use replace instead of href
           } else {
             throw new Error(data.detail || 'Authentication failed');
           }
