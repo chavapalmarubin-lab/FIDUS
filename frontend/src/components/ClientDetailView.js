@@ -231,6 +231,48 @@ const ClientDetailView = ({ client, onClose, onUpdate }) => {
     }
   };
 
+  const handleDocumentUpload = async () => {
+    try {
+      if (!documentToUpload.type || !documentToUpload.file) {
+        setError("Please select document type and file");
+        return;
+      }
+      
+      setUploadingDocument(true);
+      setError("");
+      
+      const formData = new FormData();
+      formData.append('file', documentToUpload.file);
+      formData.append('document_type', documentToUpload.type);
+      formData.append('notes', documentToUpload.notes);
+      
+      const response = await apiAxios.post(
+        `/admin/clients/${client.id}/documents`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      if (response.data.success) {
+        setDocuments([...documents, response.data.document]);
+        setDocumentToUpload({ type: "", file: null, notes: "" });
+        setShowUploadModal(false);
+        // Refresh documents
+        const documentsResponse = await apiAxios.get(`/admin/clients/${client.id}/documents`);
+        if (documentsResponse.data.documents) {
+          setDocuments(documentsResponse.data.documents);
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to upload document");
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
   if (!client) return null;
 
   return (
