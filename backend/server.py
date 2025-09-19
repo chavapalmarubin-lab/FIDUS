@@ -7655,25 +7655,26 @@ class AdminGoogleProfile(BaseModel):
     connected_at: str
 
 @api_router.get("/admin/google/auth-url")
-async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
-    """Get Google OAuth URL for admin authentication (requires admin login)"""
+async def get_google_auth_url():
+    """Get Google OAuth authorization URL"""
     try:
-        # This endpoint is accessible to authenticated admin users
-        # Get the frontend URL for redirect after authentication
-        redirect_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host') + "/admin/google-callback"
+        from google_admin_service import google_admin_service
         
-        auth_url = google_admin_service.get_google_login_url(redirect_url)
+        # Generate state parameter for CSRF protection
+        state = str(uuid.uuid4())
+        
+        # Get direct Google OAuth URL
+        auth_url = google_admin_service.get_google_login_url(state=state)
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "redirect_url": redirect_url,
-            "scopes": google_admin_service.get_google_api_scopes()
+            "state": state
         }
         
     except Exception as e:
         logging.error(f"Get Google auth URL error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate Google auth URL")
+        raise HTTPException(status_code=500, detail="Failed to get auth URL")
 
 @api_router.post("/admin/google/process-session")
 async def process_google_session(auth_request: GoogleAuthRequest):
