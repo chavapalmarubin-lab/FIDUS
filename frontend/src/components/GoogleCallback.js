@@ -18,9 +18,59 @@ const GoogleCallback = () => {
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         const error = urlParams.get('error');
+        const testMode = urlParams.get('test'); // Add test mode parameter
 
         if (error) {
           throw new Error(`Google OAuth error: ${error}`);
+        }
+
+        // Test mode - use mock endpoint
+        if (testMode === 'true') {
+          console.log('Running in test mode...');
+          console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
+
+          try {
+            console.log('Sending test request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/test-callback`);
+            
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/test-callback`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({})
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response headers:', [...response.headers.entries()]);
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (response.ok && data.success) {
+              setStatus('success');
+              setMessage(`Successfully authenticated as ${data.user_info.name} (TEST MODE)`);
+              setProfile(data.user_info);
+              
+              // Store session token for future Google API calls if needed
+              localStorage.setItem('google_session_token', data.session_token);
+              
+              console.log('Google test authentication successful:', data.user_info);
+              
+              // Redirect to admin dashboard after 3 seconds
+              setTimeout(() => {
+                window.location.href = '/?skip_animation=true';
+              }, 3000);
+            } else {
+              throw new Error(data.detail || 'Test authentication failed');
+            }
+          } catch (testError) {
+            console.error('Test callback processing error:', testError);
+            setStatus('error');
+            setMessage(`Test authentication failed: ${testError.message}`);
+          }
+          
+          return; // Exit early for test mode
         }
 
         if (!code) {
