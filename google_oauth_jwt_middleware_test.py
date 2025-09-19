@@ -123,8 +123,9 @@ class GoogleOAuthJWTMiddlewareTest:
             # Create a new session without JWT token
             no_auth_session = requests.Session()
             
-            # POST request with minimal data
+            # POST request with correct session data format
             response = no_auth_session.post(f"{BACKEND_URL}/admin/google/process-session", json={
+                "session_id": "test_session_id",
                 "code": "test_code",
                 "state": "test_state"
             })
