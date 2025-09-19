@@ -28,9 +28,12 @@ const GoogleCallback = () => {
         }
 
         console.log('Processing Google OAuth callback with code:', code.substring(0, 20) + '...');
+        console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
 
         // Send authorization code to backend for processing
         try {
+          console.log('Sending request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`);
+          
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`, {
             method: 'POST',
             headers: {
@@ -43,7 +46,11 @@ const GoogleCallback = () => {
             })
           });
 
+          console.log('Response status:', response.status);
+          console.log('Response headers:', [...response.headers.entries()]);
+          
           const data = await response.json();
+          console.log('Response data:', data);
 
           if (response.ok && data.success) {
             setStatus('success');
