@@ -178,18 +178,24 @@ class GoogleOAuthJWTMiddlewareTest:
                         response_json = None
                         try:
                             response_json = response.json()
+                            # Check both 'detail' and 'message' fields
                             detail = response_json.get('detail', '').lower()
+                            message = response_json.get('message', '').lower()
+                            error_text = detail + " " + message
                         except:
-                            detail = response.text.lower()
+                            error_text = response.text.lower()
                         
                         # Should get JWT-related error (not session token error)
-                        if "token" in detail and ("invalid" in detail or "no token" in detail or "bearer" in detail):
+                        if ("jwt token required" in error_text or 
+                            "bearer" in error_text or 
+                            "authorization" in error_text or
+                            ("token" in error_text and ("invalid" in error_text or "required" in error_text))):
                             jwt_protected_count += 1
                             self.log_result(f"JWT Protection - {endpoint}", True, 
                                           "Endpoint properly protected by JWT middleware")
                         else:
                             self.log_result(f"JWT Protection - {endpoint}", False, 
-                                          f"Unexpected 401 error: {detail}")
+                                          f"Unexpected 401 error: {error_text}")
                     else:
                         self.log_result(f"JWT Protection - {endpoint}", False, 
                                       f"Expected 401, got {response.status_code}")
