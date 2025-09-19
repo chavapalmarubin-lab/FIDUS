@@ -21,6 +21,20 @@ const useGoogleAdmin = () => {
   // Check for existing session on mount
   useEffect(() => {
     checkExistingSession();
+    
+    // Listen for authentication success events
+    const handleAuthSuccess = (event) => {
+      console.log('✅ Google auth success event received:', event.detail);
+      setProfile(event.detail.profile);
+      setIsAuthenticated(true);
+      setLoading(false);
+    };
+    
+    window.addEventListener('googleAuthSuccess', handleAuthSuccess);
+    
+    return () => {
+      window.removeEventListener('googleAuthSuccess', handleAuthSuccess);
+    };
   }, []);
 
   // Check for session ID in URL fragment on mount
