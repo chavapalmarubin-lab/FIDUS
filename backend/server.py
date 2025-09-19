@@ -7499,12 +7499,11 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
 
 @api_router.get("/crm/prospects/pipeline")
 async def get_prospect_pipeline():
-    """Get prospect pipeline data organized by stages"""
+    """Get prospect pipeline data organized by stages - SIMPLIFIED PIPELINE ONLY"""
     try:
+        # Only include simplified pipeline stages
         pipeline = {
             "lead": [],
-            "qualified": [],
-            "proposal": [],
             "negotiation": [],
             "won": [],
             "lost": []
