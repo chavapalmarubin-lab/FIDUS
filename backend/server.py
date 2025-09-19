@@ -7509,32 +7509,59 @@ async def get_google_auth_url(request: Request, current_user: dict = Depends(get
         logging.error(f"Get Google OAuth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate Google OAuth URL")
 
-@api_router.post("/admin/google/process-session")
-async def process_google_session(request: dict):
-    """Process Emergent OAuth session ID for Google authentication"""
+@api_router.post("/admin/google/process-callback")
+async def process_google_callback(request: dict):
+    """Process Google OAuth authorization code"""
     try:
-        logging.info("Processing Emergent OAuth session for Google authentication")
+        logging.info("Processing Google OAuth callback")
         
-        session_id = request.get('session_id')
-        if not session_id:
-            raise HTTPException(status_code=400, detail="Missing session_id")
+        code = request.get('code')
+        state = request.get('state')
         
-        # Call Emergent OAuth service directly
+        if not code:
+            raise HTTPException(status_code=400, detail="Missing authorization code")
+        
+        # Exchange code for tokens
+        client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
+        client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
+        
+        if not client_secret:
+            raise HTTPException(status_code=500, detail="Google client secret not configured")
+        
+        # Exchange authorization code for tokens
         import requests
-        emergent_url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
-        headers = {"X-Session-ID": session_id}
+        token_url = "https://oauth2.googleapis.com/token"
+        token_data = {
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code"
+        }
         
-        response = requests.get(emergent_url, headers=headers, timeout=10)
+        token_response = requests.post(token_url, data=token_data, timeout=10)
         
-        if response.status_code != 200:
-            logging.error(f"Emergent OAuth error: {response.status_code} - {response.text}")
-            raise HTTPException(status_code=400, detail="Invalid session_id")
+        if token_response.status_code != 200:
+            logging.error(f"Token exchange error: {token_response.status_code} - {token_response.text}")
+            raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
         
-        user_data = response.json()
-        logging.info(f"Received user data from Emergent: {user_data.get('email')}")
+        tokens = token_response.json()
+        access_token = tokens.get('access_token')
         
-        # Create admin session using the session_token from Emergent
-        session_token = user_data.get('session_token')
+        # Get user info from Google
+        userinfo_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
+        userinfo_response = requests.get(userinfo_url, timeout=10)
+        
+        if userinfo_response.status_code != 200:
+            logging.error(f"User info error: {userinfo_response.status_code} - {userinfo_response.text}")
+            raise HTTPException(status_code=400, detail="Failed to get user information")
+        
+        user_data = userinfo_response.json()
+        logging.info(f"Google OAuth successful for: {user_data.get('email')}")
+        
+        # Create admin session
+        session_token = str(uuid.uuid4())
         
         session_doc = {
             "session_token": session_token,
@@ -7542,8 +7569,10 @@ async def process_google_session(request: dict):
             "email": user_data.get('email'),
             "name": user_data.get('name'),
             "picture": user_data.get('picture', ''),
+            "access_token": access_token,
+            "refresh_token": tokens.get('refresh_token'),
             "is_admin": True,
-            "login_type": "emergent_google",
+            "login_type": "google_oauth",
             "created_at": datetime.now(timezone.utc),
             "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
             "last_accessed": datetime.now(timezone.utc)
@@ -7553,7 +7582,7 @@ async def process_google_session(request: dict):
         result = await mongodb_manager.admin_sessions.insert_one(session_doc)
         
         if result.inserted_id:
-            logging.info(f"Created admin session for Emergent Google user: {user_data.get('email')}")
+            logging.info(f"Created Google admin session for: {user_data.get('email')}")
             
             return {
                 "success": True,
@@ -7572,8 +7601,8 @@ async def process_google_session(request: dict):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Process Emergent session error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process session")
+        logging.error(f"Process Google callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process Google callback")
 
 @api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
