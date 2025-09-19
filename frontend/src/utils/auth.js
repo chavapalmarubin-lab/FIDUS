@@ -24,8 +24,19 @@ export const getAuthToken = () => {
  * @returns {object} Headers object with Authorization header if token exists
  */
 export const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  // First try to get JWT token for regular admin authentication
+  const jwtToken = getAuthToken();
+  if (jwtToken) {
+    return { Authorization: `Bearer ${jwtToken}` };
+  }
+  
+  // Fallback to Google session token for Google OAuth authenticated requests
+  const googleSessionToken = localStorage.getItem('google_session_token');
+  if (googleSessionToken) {
+    return { Authorization: `Bearer ${googleSessionToken}` };
+  }
+  
+  return {};
 };
 
 /**
