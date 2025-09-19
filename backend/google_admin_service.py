@@ -92,20 +92,30 @@ class GoogleAdminService:
     async def get_user_info(self, access_token: str) -> Dict[str, any]:
         """Get user info from Google using access token"""
         try:
-            # Mock user info based on the email we know from the screenshots
-            # In production, you'd make actual API call to Google
-            logger.info(f"Mock user info retrieval for token: {access_token[:20]}...")
+            logger.info("Retrieving user info from Google API...")
             
-            return {
-                'id': '123456789012345678901',
-                'email': 'chavapalmarubin@gmail.com',
-                'verified_email': True,
-                'name': 'Salvador Palma',
-                'given_name': 'Salvador',
-                'family_name': 'Palma',
-                'picture': 'https://lh3.googleusercontent.com/a/default-user'
-            }
+            # Make request to Google userinfo endpoint
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(
+                self.google_userinfo_url,
+                headers=headers,
+                timeout=30
+            )
             
+            if response.status_code == 200:
+                user_info = response.json()
+                logger.info(f"Successfully retrieved user info for: {user_info.get('email')}")
+                return user_info
+            else:
+                logger.error(f"Failed to get user info: HTTP {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Failed to get user information: {response.text}"
+                )
+            
+        except requests.RequestException as e:
+            logger.error(f"Request error getting user info: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to get user information")
         except Exception as e:
             logger.error(f"Error getting user info: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to get user information")
