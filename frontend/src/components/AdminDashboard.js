@@ -337,38 +337,38 @@ const AdminDashboard = ({ user, onLogout }) => {
 
         <Tabs defaultValue="portfolio" className="w-full">
           <TabsList className="grid w-full grid-cols-10 bg-slate-800 border-slate-600">
-            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               📊 Fund vs MT5
             </TabsTrigger>
-            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <DollarSign size={16} className="mr-2" />
               Cash Flow
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
-            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               CRM Dashboard
             </TabsTrigger>
-            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               📧 Google Integration
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <FileText size={16} className="mr-2" />
               📄 App Documents
             </TabsTrigger>
