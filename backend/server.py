@@ -7688,13 +7688,12 @@ async def get_admin_google_profile(request: Request):
         logging.error(f"Get admin profile error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get admin profile")
 
-@api_router.post("/admin/google/logout")
-async def logout_admin_google(request: Request):
-    """Logout admin and clear Google session"""
+@api_router.get("/google/gmail/messages")
+async def get_gmail_messages(request: Request):
+    """Get Gmail messages for authenticated Google user"""
     try:
-        # Get session token
+        # Get session token from cookies or Authorization header
         session_token = None
-        
         if 'session_token' in request.cookies:
             session_token = request.cookies['session_token']
         
@@ -7703,18 +7702,253 @@ async def logout_admin_google(request: Request):
             if auth_header and auth_header.startswith('Bearer '):
                 session_token = auth_header.split(' ')[1]
         
-        if session_token:
-            # Remove session from database
-            delete_result = await mongodb_manager.db.admin_sessions.delete_one({"session_token": session_token})
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # For now, return mock Gmail data since we have mock authentication
+        # In production, this would use the Google Gmail API
+        mock_emails = [
+            {
+                "id": "msg_001",
+                "subject": "Welcome to FIDUS Investment Management",
+                "sender": "info@fidus-invest.com",
+                "preview": "Thank you for joining FIDUS. Here's your account overview...",
+                "date": "2025-09-19T14:30:00Z",
+                "unread": True
+            },
+            {
+                "id": "msg_002", 
+                "subject": "Monthly Investment Report - September 2025",
+                "sender": "reports@fidus-invest.com",
+                "preview": "Your portfolio performance summary for September...",
+                "date": "2025-09-19T10:15:00Z",
+                "unread": False
+            },
+            {
+                "id": "msg_003",
+                "subject": "New Fund Opportunity - CORE Portfolio",
+                "sender": "opportunities@fidus-invest.com",
+                "preview": "We're excited to present a new investment opportunity...",
+                "date": "2025-09-18T16:45:00Z",
+                "unread": False
+            }
+        ]
+        
+        return {"success": True, "messages": mock_emails}
+        
+    except Exception as e:
+        logging.error(f"Get Gmail messages error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Gmail messages")
+
+@api_router.post("/google/gmail/send")
+async def send_gmail_message(request: Request, email_data: dict):
+    """Send Gmail message"""
+    try:
+        # Get session token
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Mock email sending - in production would use Gmail API
+        logging.info(f"Mock email sent to: {email_data.get('to')} - Subject: {email_data.get('subject')}")
         
         return {
             "success": True,
-            "message": "Successfully logged out"
+            "message": "Email sent successfully",
+            "message_id": f"mock_msg_{int(time.time())}"
         }
         
     except Exception as e:
-        logging.error(f"Admin logout error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to logout")
+        logging.error(f"Send Gmail message error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
+
+@api_router.get("/google/calendar/events")
+async def get_calendar_events(request: Request):
+    """Get Google Calendar events"""
+    try:
+        # Get session token
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Mock calendar events
+        mock_events = [
+            {
+                "id": "event_001",
+                "summary": "Client Meeting - Investment Review",
+                "start": "2025-09-20T10:00:00Z",
+                "end": "2025-09-20T11:00:00Z",
+                "description": "Quarterly review with high-value client",
+                "attendees": ["client@example.com", "admin@fidus.com"]
+            },
+            {
+                "id": "event_002",
+                "summary": "Fund Performance Analysis",
+                "start": "2025-09-20T14:30:00Z", 
+                "end": "2025-09-20T15:30:00Z",
+                "description": "Monthly analysis of fund performance metrics",
+                "attendees": ["admin@fidus.com"]
+            },
+            {
+                "id": "event_003",
+                "summary": "New Prospect Presentation",
+                "start": "2025-09-21T09:00:00Z",
+                "end": "2025-09-21T10:30:00Z",
+                "description": "Present FIDUS investment opportunities to potential client",
+                "attendees": ["prospect@company.com", "admin@fidus.com"]
+            }
+        ]
+        
+        return {"success": True, "events": mock_events}
+        
+    except Exception as e:
+        logging.error(f"Get calendar events error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get calendar events")
+
+@api_router.post("/google/calendar/create-event")
+async def create_calendar_event(request: Request, event_data: dict):
+    """Create Google Calendar event"""
+    try:
+        # Get session token
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Mock event creation
+        event_id = f"mock_event_{int(time.time())}"
+        logging.info(f"Mock calendar event created: {event_data.get('summary')} - ID: {event_id}")
+        
+        return {
+            "success": True,
+            "message": "Event created successfully",
+            "event_id": event_id,
+            "event": event_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Create calendar event error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create calendar event")
+
+@api_router.get("/google/drive/files")  
+async def get_drive_files(request: Request):
+    """Get Google Drive files"""
+    try:
+        # Get session token
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Mock Drive files
+        mock_files = [
+            {
+                "id": "file_001",
+                "name": "Investment Portfolio Template.xlsx",
+                "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "size": 245760,
+                "modifiedTime": "2025-09-19T12:00:00Z",
+                "webViewLink": "#"
+            },
+            {
+                "id": "file_002",
+                "name": "Client Onboarding Checklist.pdf",
+                "mimeType": "application/pdf", 
+                "size": 512000,
+                "modifiedTime": "2025-09-18T15:30:00Z",
+                "webViewLink": "#"
+            },
+            {
+                "id": "file_003",
+                "name": "Fund Performance Report Q3 2025.docx",
+                "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "size": 1024000,
+                "modifiedTime": "2025-09-17T09:45:00Z", 
+                "webViewLink": "#"
+            }
+        ]
+        
+        return {"success": True, "files": mock_files}
+        
+    except Exception as e:
+        logging.error(f"Get Drive files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Drive files")
+
+@api_router.get("/google/sheets/list")
+async def get_sheets_list(request: Request):
+    """Get Google Sheets list"""
+    try:
+        # Get session token
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Mock Sheets
+        mock_sheets = [
+            {
+                "spreadsheetId": "sheet_001",
+                "name": "Client Portfolio Tracking",
+                "sheets": [
+                    {"title": "Active Clients", "sheetId": 0},
+                    {"title": "Pending Investments", "sheetId": 1}
+                ],
+                "modifiedTime": "2025-09-19T11:20:00Z"
+            },
+            {
+                "spreadsheetId": "sheet_002", 
+                "name": "Fund Performance Analysis",
+                "sheets": [
+                    {"title": "CORE Fund", "sheetId": 0},
+                    {"title": "BALANCE Fund", "sheetId": 1},
+                    {"title": "DYNAMIC Fund", "sheetId": 2}
+                ],
+                "modifiedTime": "2025-09-18T14:15:00Z"
+            }
+        ]
+        
+        return {"success": True, "spreadsheets": mock_sheets}
+        
+    except Exception as e:
+        logging.error(f"Get Sheets list error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Sheets list")
 
 @api_router.post("/admin/google/send-email")
 async def send_email_via_google(request: Request, email_data: dict):
