@@ -7579,7 +7579,7 @@ async def process_google_callback(request: dict):
         }
         
         # Store in MongoDB
-        result = await mongodb_manager.admin_sessions.insert_one(session_doc)
+        result = await mongodb_manager.db.admin_sessions.insert_one(session_doc)
         
         if result.inserted_id:
             logging.info(f"Created Google admin session for: {user_data.get('email')}")
