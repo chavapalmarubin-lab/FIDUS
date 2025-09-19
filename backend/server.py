@@ -7756,8 +7756,8 @@ async def get_admin_google_profile(request: Request):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # Find session in database
-        session_doc = await mongodb_manager.db.admin_sessions.find_one({"session_token": session_token})
+        # Find session in database using async client
+        session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.find_one({"session_token": session_token})
         
         if not session_doc:
             raise HTTPException(status_code=401, detail="Invalid or expired session")
