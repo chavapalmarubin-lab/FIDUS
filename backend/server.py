@@ -7464,50 +7464,28 @@ class AdminGoogleProfile(BaseModel):
     connected_at: str
 
 @api_router.get("/admin/google/auth-url")
-async def get_google_auth_url(request: Request, current_user: dict = Depends(get_current_admin_user)):
-    """Get Google OAuth 2.0 authorization URL"""
+async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google OAuth URL for personal Gmail authentication"""
     try:
-        # Direct Google OAuth parameters
-        client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
+        from personal_gmail_service import personal_gmail_service
+        
+        # Use the preview environment redirect URI
         redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
         
-        # Google OAuth scopes for Gmail, Calendar, Drive, Sheets
-        scopes = [
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/gmail.send",
-            "https://www.googleapis.com/auth/gmail.readonly",
-            "https://www.googleapis.com/auth/calendar",
-            "https://www.googleapis.com/auth/drive",
-            "https://www.googleapis.com/auth/spreadsheets"
-        ]
+        # Generate OAuth URL for personal Gmail access
+        auth_url = personal_gmail_service.get_oauth_url(redirect_uri)
         
-        # Generate state parameter for CSRF protection
-        state = str(uuid.uuid4())
-        
-        # Build Google OAuth URL
-        auth_url = "https://accounts.google.com/o/oauth2/auth?" + "&".join([
-            f"client_id={client_id}",
-            f"redirect_uri={redirect_uri}",
-            f"scope={'+'.join(scopes)}",
-            "response_type=code",
-            "access_type=offline",
-            "prompt=consent",
-            f"state={state}"
-        ])
-        
-        logging.info(f"Generated Google OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Generated personal Gmail OAuth URL for admin: {current_user.get('username')}")
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "redirect_uri": redirect_uri,
-            "state": state
+            "redirect_uri": redirect_uri
         }
         
     except Exception as e:
-        logging.error(f"Get Google OAuth URL error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate Google OAuth URL")
+        logging.error(f"Get personal Gmail OAuth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate Gmail OAuth URL")
 
 @api_router.post("/admin/google/process-callback")
 async def process_google_callback(request_data: dict, response: Response):
