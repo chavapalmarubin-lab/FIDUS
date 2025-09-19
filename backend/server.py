@@ -7656,25 +7656,23 @@ class AdminGoogleProfile(BaseModel):
 
 @api_router.get("/admin/google/auth-url")
 async def get_google_auth_url():
-    """Get Google OAuth authorization URL"""
+    """Get Emergent OAuth authorization URL for Google authentication"""
     try:
-        from google_admin_service import get_google_admin_service
+        # Use Emergent OAuth service instead of direct Google OAuth
+        redirect_url = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
+        auth_url = f"https://auth.emergentagent.com/?redirect={redirect_url}"
         
-        # Generate state parameter for CSRF protection
-        state = str(uuid.uuid4())
-        
-        # Get direct Google OAuth URL
-        google_service = get_google_admin_service()
-        auth_url = google_service.get_google_login_url(state=state)
+        logging.info(f"Generated Emergent OAuth URL: {auth_url}")
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "state": state
+            "state": "emergent_oauth",  # Placeholder state for compatibility
+            "redirect_url": redirect_url
         }
         
     except Exception as e:
-        logging.error(f"Get Google auth URL error: {str(e)}")
+        logging.error(f"Get Emergent auth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get auth URL")
 
 @api_router.post("/admin/google/process-callback")
