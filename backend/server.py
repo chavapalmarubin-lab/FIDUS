@@ -7464,26 +7464,50 @@ class AdminGoogleProfile(BaseModel):
     connected_at: str
 
 @api_router.get("/admin/google/auth-url")
-async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
-    """Get Emergent OAuth URL for Google authentication (requires admin login)"""
+async def get_google_auth_url(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Get Google OAuth 2.0 authorization URL"""
     try:
-        # Use Emergent OAuth service instead of direct Google OAuth
-        redirect_url = os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com') + "/admin/google-callback"
+        # Direct Google OAuth parameters
+        client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
+        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
         
-        # Emergent OAuth URL format
-        auth_url = f"https://auth.emergentagent.com/?redirect={redirect_url}"
+        # Google OAuth scopes for Gmail, Calendar, Drive, Sheets
+        scopes = [
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets"
+        ]
         
-        logging.info(f"Generated Emergent OAuth URL for admin: {current_user.get('username')}")
+        # Generate state parameter for CSRF protection
+        state = str(uuid.uuid4())
+        
+        # Build Google OAuth URL
+        auth_url = "https://accounts.google.com/o/oauth2/auth?" + "&".join([
+            f"client_id={client_id}",
+            f"redirect_uri={redirect_uri}",
+            f"scope={'+'.join(scopes)}",
+            "response_type=code",
+            "access_type=offline",
+            "prompt=consent",
+            f"state={state}"
+        ])
+        
+        logging.info(f"Generated Google OAuth URL for admin: {current_user.get('username')}")
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "redirect_url": redirect_url
+            "redirect_uri": redirect_uri,
+            "state": state
         }
         
     except Exception as e:
-        logging.error(f"Get Emergent OAuth URL error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+        logging.error(f"Get Google OAuth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate Google OAuth URL")
 
 @api_router.post("/admin/google/process-session")
 async def process_google_session(request: dict):
