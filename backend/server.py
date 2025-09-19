@@ -7799,6 +7799,356 @@ async def get_admin_google_profile(request: Request):
         logging.error(f"Get admin profile error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get admin profile")
 
+# ===============================================================================
+# GOOGLE WORKSPACE API ENDPOINTS
+# Gmail, Calendar, Drive, and Sheets integration
+# ===============================================================================
+
+@api_router.get("/google/gmail/messages")
+async def get_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages for the authenticated user"""
+    try:
+        # Mock Gmail messages for now - replace with actual Google API calls
+        mock_messages = [
+            {
+                "id": "msg_001",
+                "subject": "Investment Proposal Follow-up",
+                "sender": "client@example.com",
+                "snippet": "Thank you for the investment proposal. I have a few questions...",
+                "date": datetime.now(timezone.utc).isoformat(),
+                "unread": True,
+                "labels": ["INBOX", "IMPORTANT"]
+            },
+            {
+                "id": "msg_002", 
+                "subject": "Document Request",
+                "sender": "prospect@example.com",
+                "snippet": "Could you please send me the fund performance reports?",
+                "date": (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
+                "unread": False,
+                "labels": ["INBOX"]
+            },
+            {
+                "id": "msg_003",
+                "subject": "KYC Documentation",
+                "sender": "newclient@example.com", 
+                "snippet": "I've completed the KYC documentation as requested...",
+                "date": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat(),
+                "unread": True,
+                "labels": ["INBOX", "CATEGORY_UPDATES"]
+            }
+        ]
+        
+        return {
+            "success": True,
+            "messages": mock_messages,
+            "total_count": len(mock_messages)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Gmail messages error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Gmail messages")
+
+@api_router.post("/google/gmail/send")
+async def send_gmail_message(
+    request: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Send email through Gmail"""
+    try:
+        to_email = request.get('to')
+        subject = request.get('subject')
+        body = request.get('body')
+        client_id = request.get('client_id')
+        
+        if not to_email or not subject:
+            raise HTTPException(status_code=400, detail="To email and subject are required")
+        
+        # Mock email sending - replace with actual Google Gmail API
+        message_id = f"sent_{int(datetime.now(timezone.utc).timestamp())}"
+        
+        logging.info(f"Mock email sent to {to_email} with subject: {subject}")
+        
+        return {
+            "success": True,
+            "message_id": message_id,
+            "to": to_email,
+            "subject": subject,
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Send Gmail message error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
+
+@api_router.get("/google/calendar/events")
+async def get_calendar_events(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google Calendar events"""
+    try:
+        # Mock calendar events - replace with actual Google Calendar API
+        mock_events = [
+            {
+                "id": "event_001",
+                "summary": "Client Meeting - Salvador Palma",
+                "description": "Quarterly investment review meeting",
+                "start": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
+                "end": (datetime.now(timezone.utc) + timedelta(hours=3)).isoformat(),
+                "meetLink": "https://meet.google.com/abc-defg-hij",
+                "attendees": ["chava@alyarglobal.com"],
+                "status": "confirmed"
+            },
+            {
+                "id": "event_002",
+                "summary": "Prospect Call - New Investment",
+                "description": "Initial consultation for BALANCE fund investment",
+                "start": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+                "end": (datetime.now(timezone.utc) + timedelta(days=1, hours=1)).isoformat(),
+                "meetLink": "https://meet.google.com/xyz-uvwx-yz",
+                "attendees": ["prospect@example.com"],
+                "status": "tentative"
+            },
+            {
+                "id": "event_003",
+                "summary": "Investment Committee Meeting",
+                "description": "Monthly fund performance review",
+                "start": (datetime.now(timezone.utc) + timedelta(days=3)).isoformat(),
+                "end": (datetime.now(timezone.utc) + timedelta(days=3, hours=2)).isoformat(),
+                "attendees": ["team@fidus.com"],
+                "status": "confirmed"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "events": mock_events,
+            "total_count": len(mock_events)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get calendar events error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get calendar events")
+
+@api_router.post("/google/calendar/create-event")
+async def create_calendar_event(
+    request: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Create a Google Calendar event"""
+    try:
+        summary = request.get('summary')
+        description = request.get('description', '')
+        start_time = request.get('start_time')
+        duration_minutes = request.get('duration_minutes', 60)
+        attendees = request.get('attendees', [])
+        create_meet = request.get('create_meet', True)
+        
+        if not summary or not start_time:
+            raise HTTPException(status_code=400, detail="Summary and start time are required")
+        
+        # Mock event creation - replace with actual Google Calendar API
+        event_id = f"event_{int(datetime.now(timezone.utc).timestamp())}"
+        
+        event = {
+            "id": event_id,
+            "summary": summary,
+            "description": description,
+            "start": start_time,
+            "end": (datetime.fromisoformat(start_time.replace('Z', '+00:00')) + timedelta(minutes=duration_minutes)).isoformat(),
+            "meetLink": f"https://meet.google.com/{event_id[:3]}-{event_id[3:7]}-{event_id[7:10]}" if create_meet else None,
+            "attendees": attendees,
+            "status": "confirmed",
+            "created": datetime.now(timezone.utc).isoformat()
+        }
+        
+        logging.info(f"Mock calendar event created: {summary}")
+        
+        return {
+            "success": True,
+            "event": event,
+            "meet_link": event.get('meetLink')
+        }
+        
+    except Exception as e:
+        logging.error(f"Create calendar event error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create calendar event")
+
+@api_router.get("/google/drive/files")
+async def get_drive_files(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google Drive files"""
+    try:
+        # Mock drive files - replace with actual Google Drive API
+        mock_files = [
+            {
+                "id": "file_001",
+                "name": "Investment Agreement Template.docx",
+                "type": "application/vnd.google-apps.document",
+                "size": "45.2 KB",
+                "modifiedTime": datetime.now(timezone.utc).isoformat(),
+                "webViewLink": "https://docs.google.com/document/d/file_001/edit",
+                "permissions": ["view", "edit", "share"],
+                "folder": "Investment Documents"
+            },
+            {
+                "id": "file_002",
+                "name": "FIDUS Fund Performance Q3 2025.pdf",
+                "type": "application/pdf",
+                "size": "1.2 MB",
+                "modifiedTime": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat(),
+                "webViewLink": "https://drive.google.com/file/d/file_002/view",
+                "permissions": ["view", "share"],
+                "folder": "Reports"
+            },
+            {
+                "id": "file_003",
+                "name": "Client Presentation Template.pptx",
+                "type": "application/vnd.google-apps.presentation",
+                "size": "2.8 MB", 
+                "modifiedTime": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
+                "webViewLink": "https://docs.google.com/presentation/d/file_003/edit",
+                "permissions": ["view", "edit"],
+                "folder": "Presentations"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "files": mock_files,
+            "total_count": len(mock_files)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Drive files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Drive files")
+
+@api_router.post("/google/drive/share")
+async def share_drive_file(
+    request: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Share a Google Drive file with specified users"""
+    try:
+        file_id = request.get('file_id')
+        emails = request.get('emails', [])
+        permission_type = request.get('permission_type', 'reader')  # reader, writer, commenter
+        message = request.get('message', '')
+        
+        if not file_id or not emails:
+            raise HTTPException(status_code=400, detail="File ID and recipient emails are required")
+        
+        # Mock file sharing - replace with actual Google Drive API
+        share_id = f"share_{int(datetime.now(timezone.utc).timestamp())}"
+        
+        shared_link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+        
+        logging.info(f"Mock file shared: {file_id} with {len(emails)} recipients")
+        
+        return {
+            "success": True,
+            "share_id": share_id,
+            "file_id": file_id,
+            "shared_with": emails,
+            "permission_type": permission_type,
+            "shared_link": shared_link,
+            "shared_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Share Drive file error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to share file")
+
+@api_router.get("/google/sheets/spreadsheets")
+async def get_sheets_spreadsheets(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google Sheets spreadsheets"""
+    try:
+        # Mock spreadsheets - replace with actual Google Sheets API
+        mock_sheets = [
+            {
+                "id": "sheet_001",
+                "name": "Client Portfolio Report - September 2025",
+                "url": "https://docs.google.com/spreadsheets/d/sheet_001/edit",
+                "modifiedTime": datetime.now(timezone.utc).isoformat(),
+                "sheets": ["Summary", "Client Details", "Investment Breakdown"],
+                "permissions": ["view", "edit"],
+                "owner": "admin@fidus.com"
+            },
+            {
+                "id": "sheet_002",
+                "name": "MT5 Trading Performance Analysis",
+                "url": "https://docs.google.com/spreadsheets/d/sheet_002/edit",
+                "modifiedTime": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+                "sheets": ["DooTechnology", "VT Markets", "Combined Analysis"],
+                "permissions": ["view", "edit", "share"],
+                "owner": "admin@fidus.com"
+            },
+            {
+                "id": "sheet_003",
+                "name": "Fund Performance Tracking",
+                "url": "https://docs.google.com/spreadsheets/d/sheet_003/edit",
+                "modifiedTime": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat(),
+                "sheets": ["CORE", "BALANCE", "DYNAMIC", "UNLIMITED"],
+                "permissions": ["view"],
+                "owner": "admin@fidus.com"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "sheets": mock_sheets,
+            "total_count": len(mock_sheets)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Sheets spreadsheets error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get spreadsheets")
+
+@api_router.post("/google/sheets/create-report")
+async def create_sheets_report(
+    request: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Create a new Google Sheets report"""
+    try:
+        report_type = request.get('report_type')  # client_portfolio, mt5_trading, fund_performance
+        report_name = request.get('report_name')
+        include_data = request.get('include_data', True)
+        
+        if not report_type or not report_name:
+            raise HTTPException(status_code=400, detail="Report type and name are required")
+        
+        # Mock sheet creation - replace with actual Google Sheets API
+        sheet_id = f"sheet_{int(datetime.now(timezone.utc).timestamp())}"
+        
+        # Define sheet structure based on report type
+        sheet_structure = {
+            "client_portfolio": ["Client Name", "Investment Amount", "Current Value", "ROI %", "Fund Type"],
+            "mt5_trading": ["Account", "Broker", "Balance", "Equity", "Profit/Loss", "Trades"],
+            "fund_performance": ["Fund", "AUM", "NAV", "Monthly Return", "YTD Return", "Investors"]
+        }
+        
+        headers = sheet_structure.get(report_type, ["Column 1", "Column 2", "Column 3"])
+        
+        sheet = {
+            "id": sheet_id,
+            "name": report_name,
+            "url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+            "headers": headers,
+            "created": datetime.now(timezone.utc).isoformat(),
+            "report_type": report_type,
+            "status": "created"
+        }
+        
+        logging.info(f"Mock sheet created: {report_name} ({report_type})")
+        
+        return {
+            "success": True,
+            "sheet": sheet,
+            "edit_link": sheet["url"]
+        }
+        
+    except Exception as e:
+        logging.error(f"Create Sheets report error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create report")
+
 @api_router.post("/admin/google/logout")
 async def logout_admin_google(request: Request):
     """Logout admin and clear Google session"""
