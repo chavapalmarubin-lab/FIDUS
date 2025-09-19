@@ -220,7 +220,7 @@ class GoogleOAuthRealTest:
         """Test backend readiness for OAuth flow"""
         try:
             # Test token exchange endpoint exists (should return method not allowed for GET)
-            response = self.session.get(f"{BACKEND_URL}/admin/google/callback")
+            response = self.session.get(f"{BACKEND_URL}/admin/google/process-callback")
             
             # We expect 405 Method Not Allowed for GET request (POST expected)
             if response.status_code == 405:
