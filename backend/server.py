@@ -81,12 +81,11 @@ async def process_emergent_google_session(request: dict):
 
 @api_router.get("/admin/google/profile")  
 async def get_admin_google_profile(request: Request):
-    """Get current admin's Google profile using session token"""
+    """Get current admin's Google profile using session token from cookies"""
     try:
-        # Get session token from cookies or Authorization header
+        # Get session token from cookies first (preferred for Emergent OAuth)
         session_token = None
         
-        # Try cookie first (preferred for Emergent OAuth)
         if 'session_token' in request.cookies:
             session_token = request.cookies['session_token']
         
@@ -105,7 +104,7 @@ async def get_admin_google_profile(request: Request):
         if not session_doc:
             raise HTTPException(status_code=401, detail="Invalid session")
         
-        # Check expiry
+        # Check expiry with timezone-aware comparison
         expires_at = session_doc['expires_at']
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
@@ -136,7 +135,7 @@ async def get_admin_google_profile(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Get profile error: {str(e)}")
+        logging.error(f"Get Google profile error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get profile")
 
 @api_router.post("/admin/google/logout")
