@@ -50,29 +50,41 @@ class GoogleAdminService:
             raise HTTPException(status_code=500, detail="Failed to generate login URL")
     
     async def exchange_code_for_tokens(self, code: str) -> Dict[str, any]:
-        """Exchange authorization code for access tokens"""
+        """Exchange authorization code for access tokens using Google API"""
         try:
-            # Standard Google OAuth token exchange
+            # Real Google OAuth token exchange
             token_data = {
                 'client_id': self.client_id,
-                'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),  # We'll handle this
+                'client_secret': self.client_secret,
                 'code': code,
                 'grant_type': 'authorization_code',
                 'redirect_uri': self.redirect_uri
             }
             
-            # For now, return mock data since we don't have client secret
-            # In production, you'd make the actual token exchange request
-            logger.info(f"Mock token exchange for code: {code[:20]}...")
+            logger.info(f"Exchanging authorization code for tokens...")
             
-            return {
-                'access_token': f'mock_access_token_{uuid.uuid4().hex[:16]}',
-                'refresh_token': f'mock_refresh_token_{uuid.uuid4().hex[:16]}',
-                'expires_in': 3600,
-                'scope': 'openid email profile gmail calendar drive sheets',
-                'token_type': 'Bearer'
-            }
+            # Make request to Google token endpoint
+            response = requests.post(
+                self.google_token_url,
+                data=token_data,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=30
+            )
             
+            if response.status_code == 200:
+                tokens = response.json()
+                logger.info("Successfully exchanged code for tokens")
+                return tokens
+            else:
+                logger.error(f"Token exchange failed: HTTP {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Token exchange failed: {response.text}"
+                )
+            
+        except requests.RequestException as e:
+            logger.error(f"Request error during token exchange: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to exchange authorization code")
         except Exception as e:
             logger.error(f"Error exchanging code for tokens: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to exchange authorization code")
