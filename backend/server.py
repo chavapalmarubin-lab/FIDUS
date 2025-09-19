@@ -7548,6 +7548,9 @@ async def get_prospect_pipeline():
                     except:
                         return datetime.min.replace(tzinfo=timezone.utc)
                 elif isinstance(updated_at, datetime):
+                    # Ensure datetime is timezone-aware
+                    if updated_at.tzinfo is None:
+                        return updated_at.replace(tzinfo=timezone.utc)
                     return updated_at
                 else:
                     return datetime.min.replace(tzinfo=timezone.utc)
