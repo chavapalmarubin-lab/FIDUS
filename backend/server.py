@@ -7510,13 +7510,13 @@ async def get_google_auth_url(request: Request, current_user: dict = Depends(get
         raise HTTPException(status_code=500, detail="Failed to generate Google OAuth URL")
 
 @api_router.post("/admin/google/process-callback")
-async def process_google_callback(request: dict):
+async def process_google_callback(request_data: dict, response: Response):
     """Process Google OAuth authorization code"""
     try:
         logging.info("Processing Google OAuth callback")
         
-        code = request.get('code')
-        state = request.get('state')
+        code = request_data.get('code')
+        state = request_data.get('state')
         
         if not code:
             raise HTTPException(status_code=400, detail="Missing authorization code")
@@ -7590,6 +7590,17 @@ async def process_google_callback(request: dict):
             
             if result.inserted_id:
                 logging.info(f"Created Google admin session for: {user_data.get('email')}")
+                
+                # Set httpOnly cookie for session persistence
+                response.set_cookie(
+                    key="session_token",
+                    value=session_token,
+                    max_age=7 * 24 * 60 * 60,  # 7 days
+                    httponly=True,
+                    secure=True,
+                    samesite="none",
+                    path="/"
+                )
                 
                 return {
                     "success": True,
