@@ -10,24 +10,17 @@ const useGoogleAdmin = () => {
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Get auth headers using the utility function
-  const getRequestHeaders = () => {
-    return {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders()
-    };
-  };
-
   // Check for existing session on mount
   useEffect(() => {
     checkExistingSession();
     
-    // Listen for authentication success events
+    // Listen for authentication success events from callback
     const handleAuthSuccess = (event) => {
       console.log('✅ Google auth success event received:', event.detail);
       setProfile(event.detail.profile);
       setIsAuthenticated(true);
       setLoading(false);
+      setError(null);
     };
     
     window.addEventListener('googleAuthSuccess', handleAuthSuccess);
@@ -37,27 +30,31 @@ const useGoogleAdmin = () => {
     };
   }, []);
 
-  // Check for session ID in URL fragment on mount
+  // Check for session ID in URL fragment (Emergent OAuth callback)
   useEffect(() => {
-    const handleSessionFromURL = async () => {
+    const processSessionFromURL = async () => {
       const fragment = window.location.hash;
       const sessionIdMatch = fragment.match(/session_id=([^&]+)/);
       
       if (sessionIdMatch) {
         const sessionId = sessionIdMatch[1];
+        console.log('Found session_id in URL fragment:', sessionId.substring(0, 20) + '...');
+        
         setLoading(true);
+        setError(null);
         
         try {
           await processSessionId(sessionId);
-          // Clean URL fragment
+          // Clean URL fragment after processing
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
         } catch (err) {
+          console.error('Failed to process session from URL:', err);
           setError('Failed to process authentication');
         }
       }
     };
 
-    handleSessionFromURL();
+    processSessionFromURL();
   }, []);
 
   const checkExistingSession = async () => {
@@ -65,23 +62,12 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
-      // Check if we have a Google session token in localStorage
-      const googleSessionToken = localStorage.getItem('google_session_token');
-      
-      const headers = {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
-      };
-      
-      // If we have a Google session token, use it directly in Authorization header
-      if (googleSessionToken) {
-        headers.Authorization = `Bearer ${googleSessionToken}`;
-      }
-
       const response = await fetch(`${API}/admin/google/profile`, {
         method: 'GET',
         credentials: 'include',
-        headers
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
@@ -89,40 +75,15 @@ const useGoogleAdmin = () => {
         if (data.success && data.profile) {
           setProfile(data.profile);
           setIsAuthenticated(true);
-          console.log('✅ Google session found and validated:', data.profile.email);
+          console.log('✅ Existing Google session found:', data.profile.email);
         }
       } else if (response.status !== 401) {
-        // Only set error for non-401 responses (401 just means not authenticated)
-        const errorData = await response.json().catch(() => ({}));
-        setError(errorData.detail || 'Failed to check authentication status');
-      } else {
-        console.log('ℹ️ No valid Google session found (401)');
+        console.log('Session check failed:', response.status);
       }
     } catch (err) {
       console.error('Session check error:', err);
-      // Don't set error for network issues during session check
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getGoogleAuthUrl = async () => {
-    try {
-      const response = await fetch(`${API}/admin/google/auth-url`, {
-        method: 'GET',
-        headers: getRequestHeaders()
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        return data.auth_url;
-      } else {
-        throw new Error(data.detail || 'Failed to get auth URL');
-      }
-    } catch (err) {
-      setError(err.message);
-      throw err;
     }
   };
 
@@ -131,10 +92,28 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
       
-      const authUrl = await getGoogleAuthUrl();
+      // Get JWT token for admin authentication
+      const jwtToken = getAuthToken();
+      if (!jwtToken) {
+        throw new Error('Admin not authenticated. Please login first.');
+      }
       
-      // Redirect to Google OAuth
-      window.location.href = authUrl;
+      const response = await fetch(`${API}/admin/google/auth-url`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.auth_url) {
+        // Redirect to Emergent OAuth
+        window.location.href = data.auth_url;
+      } else {
+        throw new Error(data.detail || 'Failed to get auth URL');
+      }
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -148,7 +127,9 @@ const useGoogleAdmin = () => {
 
       const response = await fetch(`${API}/admin/google/process-session`, {
         method: 'POST',
-        headers: getRequestHeaders(),
+        headers: {
+          'Content-Type': 'application/json'
+        },
         credentials: 'include',
         body: JSON.stringify({ session_id: sessionId })
       });
@@ -159,8 +140,8 @@ const useGoogleAdmin = () => {
         setProfile(data.profile);
         setIsAuthenticated(true);
         
-        // Set session cookie (browser should handle this automatically)
-        // The backend sets httpOnly cookie, so we don't need to do anything here
+        // Set httpOnly cookie via response headers (backend handles this)
+        console.log('✅ Google authentication successful:', data.profile.email);
         
         return data.profile;
       } else {
@@ -182,45 +163,23 @@ const useGoogleAdmin = () => {
       const response = await fetch(`${API}/admin/google/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: getRequestHeaders()
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (response.ok) {
         setProfile(null);
         setIsAuthenticated(false);
-        
-        // Optionally redirect to login page
-        // window.location.href = '/admin/login';
+        console.log('✅ Google logout successful');
       } else {
+        const data = await response.json();
         throw new Error(data.detail || 'Logout failed');
       }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendEmail = async (emailData) => {
-    try {
-      const response = await fetch(`${API}/admin/google/send-email`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: getRequestHeaders(),
-        body: JSON.stringify(emailData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        return data;
-      } else {
-        throw new Error(data.detail || 'Failed to send email');
-      }
-    } catch (err) {
-      throw err;
     }
   };
 
@@ -235,7 +194,6 @@ const useGoogleAdmin = () => {
     isAuthenticated,
     loginWithGoogle,
     logout,
-    sendEmail,
     refreshProfile,
     clearError: () => setError(null)
   };

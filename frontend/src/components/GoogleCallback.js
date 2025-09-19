@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 const GoogleCallback = () => {
-  const [status, setStatus] = useState('processing'); // processing, success, error
+  const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Processing Google authentication...');
   const [profile, setProfile] = useState(null);
 
@@ -13,18 +13,15 @@ const GoogleCallback = () => {
         setStatus('processing');
         setMessage('Processing Google authentication...');
 
-        // Check for Emergent OAuth session_id in URL fragment first
+        // Check for Emergent OAuth session_id in URL fragment
         const fragment = window.location.hash;
         const sessionIdMatch = fragment.match(/session_id=([^&]+)/);
         
         if (sessionIdMatch) {
           const sessionId = sessionIdMatch[1];
-          console.log('Found Emergent OAuth session_id:', sessionId.substring(0, 20) + '...');
-          console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
+          console.log('Processing Emergent OAuth session_id:', sessionId.substring(0, 20) + '...');
 
           try {
-            console.log('Sending session request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`);
-            
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
               method: 'POST',
               headers: {
@@ -36,34 +33,29 @@ const GoogleCallback = () => {
               })
             });
 
-            console.log('Response status:', response.status);
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok && data.success) {
               setStatus('success');
               setMessage(`Successfully authenticated as ${data.profile.name}`);
               setProfile(data.profile);
               
-              // Store session token
-              localStorage.setItem('google_session_token', data.session_token);
-              
-              console.log('Emergent OAuth authentication successful:', data.profile);
+              console.log('✅ Emergent Google authentication successful:', data.profile);
               
               // Clean URL fragment
               window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
               
-              // Trigger a custom event to notify other components about the authentication
+              // Notify other components
               window.dispatchEvent(new CustomEvent('googleAuthSuccess', { 
                 detail: { profile: data.profile, sessionToken: data.session_token }
               }));
               
-              // Redirect to admin dashboard after 2 seconds
+              // Redirect to admin dashboard
               setTimeout(() => {
-                window.location.href = '/?skip_animation=true';
+                window.location.href = '/admin/dashboard';
               }, 2000);
             } else {
-              throw new Error(data.detail || 'Emergent OAuth authentication failed');
+              throw new Error(data.detail || 'Authentication failed');
             }
           } catch (sessionError) {
             console.error('Session processing error:', sessionError);
@@ -71,7 +63,7 @@ const GoogleCallback = () => {
             setMessage(`Authentication failed: ${sessionError.message}`);
           }
           
-          return; // Exit early for Emergent OAuth
+          return;
         }
 
         // Fallback: Check for test mode
@@ -79,12 +71,8 @@ const GoogleCallback = () => {
         const testMode = urlParams.get('test');
 
         if (testMode === 'true') {
-          console.log('Running in test mode...');
-          console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
-
+          // Test mode using mock endpoint
           try {
-            console.log('Sending test request to:', `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/test-callback`);
-            
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/test-callback`, {
               method: 'POST',
               headers: {
@@ -101,11 +89,9 @@ const GoogleCallback = () => {
               setMessage(`Successfully authenticated as ${data.user_info.name} (TEST MODE)`);
               setProfile(data.user_info);
               
-              localStorage.setItem('google_session_token', data.session_token);
-              
               setTimeout(() => {
-                window.location.href = '/?skip_animation=true';
-              }, 3000);
+                window.location.href = '/admin/dashboard';
+              }, 2000);
             } else {
               throw new Error(data.detail || 'Test authentication failed');
             }
@@ -114,10 +100,10 @@ const GoogleCallback = () => {
             setMessage(`Test authentication failed: ${testError.message}`);
           }
           
-          return; // Exit early for test mode
+          return;
         }
 
-        // If no session_id or test mode, show error
+        // No session_id or test mode found
         throw new Error('No authentication data received. Please try signing in again.');
 
       } catch (err) {
@@ -127,13 +113,12 @@ const GoogleCallback = () => {
       }
     };
 
-    // Wait a bit before processing to ensure the page is fully loaded
-    const timer = setTimeout(processCallback, 1000);
-    return () => clearTimeout(timer);
+    // Process callback immediately
+    processCallback();
   }, []);
 
   const handleReturnToDashboard = () => {
-    window.location.href = '/?skip_animation=true';
+    window.location.href = '/admin/dashboard';
   };
 
   return (
@@ -199,7 +184,7 @@ const GoogleCallback = () => {
             )}
           </div>
 
-          {/* Profile Preview (if available) */}
+          {/* Profile Preview */}
           {status === 'success' && profile && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
