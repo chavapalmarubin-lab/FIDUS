@@ -31,6 +31,19 @@ import {
 } from "lucide-react";
 import apiAxios from "../utils/apiAxios";
 
+// Document types for client uploads
+const CLIENT_DOCUMENT_TYPES = {
+  identity: "Government ID",
+  proof_of_address: "Proof of Address", 
+  proof_of_income: "Proof of Income",
+  bank_statement: "Bank Statement",
+  investment_agreement: "Investment Agreement",
+  risk_assessment: "Risk Assessment",
+  compliance_form: "Compliance Form",
+  tax_document: "Tax Document",
+  other: "Other Document"
+};
+
 const ClientDetailView = ({ client, onClose, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
