@@ -1555,11 +1555,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Workspace Integration Backend API Testing"
+    - "Google Workspace Integration Frontend Testing"
   stuck_tasks: 
     - "Google Admin OAuth Integration Testing"
   test_all: false
-  test_priority: "google_workspace_backend_completed"
+  test_priority: "high_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
   document_upload_testing: "critical_issue_found"
