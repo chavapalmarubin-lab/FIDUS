@@ -7125,6 +7125,12 @@ async def create_prospect(prospect_data: ProspectCreate):
         if prospect_dict.get('client_id') is None:
             prospect_dict['client_id'] = ""  # Convert None to empty string for MongoDB schema
         
+        # Convert datetime objects to ISO strings for MongoDB
+        if isinstance(prospect_dict.get('created_at'), datetime):
+            prospect_dict['created_at'] = prospect_dict['created_at'].isoformat()
+        if isinstance(prospect_dict.get('updated_at'), datetime):
+            prospect_dict['updated_at'] = prospect_dict['updated_at'].isoformat()
+        
         # Add to MongoDB
         await db.crm_prospects.insert_one(prospect_dict)
         
