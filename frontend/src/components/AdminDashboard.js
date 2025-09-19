@@ -366,7 +366,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               Redemptions
             </TabsTrigger>
             <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
-              📧 Google Integration
+              🌐 Google Workspace
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <FileText size={16} className="mr-2" />
