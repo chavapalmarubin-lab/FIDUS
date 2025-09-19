@@ -53,10 +53,15 @@ const GoogleCallback = () => {
               // Clean URL fragment
               window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
               
-              // Redirect to admin dashboard after 3 seconds
+              // Trigger a custom event to notify other components about the authentication
+              window.dispatchEvent(new CustomEvent('googleAuthSuccess', { 
+                detail: { profile: data.profile, sessionToken: data.session_token }
+              }));
+              
+              // Redirect to admin dashboard after 2 seconds
               setTimeout(() => {
                 window.location.href = '/?skip_animation=true';
-              }, 3000);
+              }, 2000);
             } else {
               throw new Error(data.detail || 'Emergent OAuth authentication failed');
             }
