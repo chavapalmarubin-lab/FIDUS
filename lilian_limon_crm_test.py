@@ -159,15 +159,14 @@ class LilianLimonCRMTest:
         try:
             # Create a test document
             test_document_content = b"This is a test document for Lilian Limon's AML/KYC verification."
-            test_file = io.BytesIO(test_document_content)
             
-            # Prepare multipart form data
+            # Prepare multipart form data properly
             files = {
-                'document': ('test_document.txt', test_file, 'text/plain')
+                'file': ('test_document.txt', test_document_content, 'text/plain')
             }
             data = {
                 'document_type': 'passport',
-                'description': 'Test document upload for Lilian Limon'
+                'notes': 'Test document upload for Lilian Limon'
             }
             
             response = self.session.post(
