@@ -7584,25 +7584,29 @@ async def process_google_callback(request: dict):
             "last_accessed": datetime.now(timezone.utc)
         }
         
-        # Store in MongoDB (fix the await issue)
-        result = await mongodb_manager.db.admin_sessions.insert_one(session_doc)
-        
-        if result.inserted_id:
-            logging.info(f"Created Google admin session for: {user_data.get('email')}")
+        # Store in MongoDB
+        try:
+            result = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_doc)
             
-            return {
-                "success": True,
-                "profile": {
-                    "id": user_data.get('id'),
-                    "email": user_data.get('email'),
-                    "name": user_data.get('name'),
-                    "picture": user_data.get('picture', '')
-                },
-                "session_token": session_token,
-                "message": "Google authentication successful"
-            }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to create session")
+            if result.inserted_id:
+                logging.info(f"Created Google admin session for: {user_data.get('email')}")
+                
+                return {
+                    "success": True,
+                    "profile": {
+                        "id": user_data.get('id'),
+                        "email": user_data.get('email'),
+                        "name": user_data.get('name'),
+                        "picture": user_data.get('picture', '')
+                    },
+                    "session_token": session_token,
+                    "message": "Google authentication successful"
+                }
+            else:
+                raise HTTPException(status_code=500, detail="Failed to create session")
+        except Exception as db_error:
+            logging.error(f"Database error: {str(db_error)}")
+            raise HTTPException(status_code=500, detail="Failed to store session")
         
     except HTTPException:
         raise
