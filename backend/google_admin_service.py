@@ -125,5 +125,12 @@ class GoogleAdminService:
             logger.error(f"Error creating admin session: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to create session")
 
-# Global service instance
-google_admin_service = GoogleAdminService()
+# Global service instance - lazy initialization to avoid environment variable issues
+_google_admin_service = None
+
+def get_google_admin_service():
+    """Get or create Google admin service instance"""
+    global _google_admin_service
+    if _google_admin_service is None:
+        _google_admin_service = GoogleAdminService()
+    return _google_admin_service
