@@ -7874,17 +7874,19 @@ async def get_admin_google_profile(request: Request):
             {"$set": {"last_accessed": datetime.now(timezone.utc)}}
         )
         
-        # Format profile response
+        # Format profile response - handle both old Google OAuth and new Emergent OAuth sessions
+        user_info = session_doc.get('user_info', {})
+        
         profile = {
-            "id": session_doc['google_id'],
-            "email": session_doc['email'],
-            "name": session_doc['name'],
-            "picture": session_doc.get('picture', ''),
+            "id": user_info.get('id') or session_doc.get('google_id', 'unknown'),
+            "email": user_info.get('email') or session_doc.get('email', ''),
+            "name": user_info.get('name') or session_doc.get('name', ''),
+            "picture": user_info.get('picture') or session_doc.get('picture', ''),
             "is_google_connected": True,
             "google_scopes": session_doc.get('google_scopes', []),
-            "login_type": session_doc.get('login_type', 'google_oauth'),
+            "login_type": session_doc.get('auth_type', 'emergent_oauth'),
             "connected_at": session_doc['created_at'].isoformat(),
-            "last_accessed": session_doc['last_accessed'].isoformat()
+            "last_accessed": session_doc.get('last_accessed', session_doc['created_at']).isoformat()
         }
         
         return {
