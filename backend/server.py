@@ -7646,8 +7646,8 @@ async def get_admin_google_profile(request: Request):
         raise HTTPException(status_code=500, detail="Failed to get admin profile")
 
 @api_router.get("/google/gmail/messages")
-async def get_gmail_messages(request: Request, user_email: str = None):
-    """Get real Gmail messages for authenticated Google user"""
+async def get_gmail_messages(request: Request):
+    """Get real personal Gmail messages"""
     try:
         # Get session token from cookies or Authorization header
         session_token = None
@@ -7662,64 +7662,66 @@ async def get_gmail_messages(request: Request, user_email: str = None):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # Import the real Gmail service
-        from real_gmail_service import gmail_service
+        # Get session from database to retrieve access tokens
+        session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.find_one({"session_token": session_token})
         
-        # Try to get the user's email from the session or request
-        if not user_email:
-            # Get user email from stored session
-            session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.find_one({"session_token": session_token})
-            if session_doc and session_doc.get('email'):
-                user_email = session_doc['email']
-            else:
-                user_email = "chavapalmarubin@gmail.com"  # Fallback to your email
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
         
-        # Try to authenticate and get real Gmail messages
-        try:
-            # First try without delegation (if using your own service account)
-            if gmail_service.authenticate():
-                messages = gmail_service.get_messages(max_results=20)
-                logging.info(f"Successfully retrieved {len(messages)} real Gmail messages")
-                return {"success": True, "messages": messages, "source": "real_gmail"}
-        except Exception as service_error:
-            logging.warning(f"Service account method failed: {str(service_error)}")
-            
-            # Try with domain delegation
-            try:
-                if gmail_service.authenticate(user_email=user_email):
-                    messages = gmail_service.get_messages(max_results=20)
-                    logging.info(f"Successfully retrieved {len(messages)} real Gmail messages with delegation")
-                    return {"success": True, "messages": messages, "source": "real_gmail_delegated"}
-            except Exception as delegation_error:
-                logging.warning(f"Domain delegation method failed: {str(delegation_error)}")
+        # Check if this is a Google OAuth session with access tokens
+        access_token = session_doc.get('access_token')
+        refresh_token = session_doc.get('refresh_token')
         
-        # If real Gmail fails, return informative error with fallback to mock data
-        logging.info("Real Gmail access failed, returning mock data with explanation")
-        mock_emails = [
-            {
-                "id": "info_001",
-                "subject": "📧 Real Gmail Integration Status",
-                "sender": "FIDUS System <system@fidus.com>",
-                "preview": "Gmail API access requires additional setup. Service account needs domain-wide delegation for personal Gmail access.",
-                "date": datetime.now(timezone.utc).isoformat(),
-                "unread": True
-            },
-            {
-                "id": "info_002",
-                "subject": "🔧 Next Steps for Gmail Integration",
-                "sender": "FIDUS System <system@fidus.com>",
-                "preview": "For personal Gmail: Enable domain-wide delegation OR use OAuth flow with user consent. For Google Workspace: Configure admin settings.",
-                "date": datetime.now(timezone.utc).isoformat(),
-                "unread": True
+        if not access_token:
+            # Return informative message if no Gmail access
+            return {
+                "success": True,
+                "messages": [{
+                    "id": "info_001",
+                    "subject": "📧 Gmail Integration Required",
+                    "sender": "FIDUS System <system@fidus.com>",
+                    "preview": "To view your Gmail messages, please complete Google OAuth authentication by clicking 'Connect Google Workspace'.",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "unread": True
+                }],
+                "source": "no_gmail_access"
             }
-        ]
         
-        return {
-            "success": True, 
-            "messages": mock_emails, 
-            "source": "mock_with_info",
-            "note": "Real Gmail access requires additional configuration - showing system info instead"
-        }
+        # Try to get real Gmail messages
+        try:
+            from personal_gmail_service import personal_gmail_service
+            
+            # Authenticate Gmail service with stored tokens
+            if personal_gmail_service.authenticate_with_tokens(access_token, refresh_token):
+                messages = personal_gmail_service.get_messages(max_results=20)
+                logging.info(f"Successfully retrieved {len(messages)} real Gmail messages")
+                
+                return {
+                    "success": True, 
+                    "messages": messages,
+                    "source": "real_personal_gmail",
+                    "user_email": session_doc.get('email')
+                }
+            else:
+                raise Exception("Failed to authenticate Gmail service")
+                
+        except Exception as gmail_error:
+            logging.error(f"Real Gmail access failed: {str(gmail_error)}")
+            
+            # Return error info
+            return {
+                "success": True,
+                "messages": [{
+                    "id": "error_001",
+                    "subject": "⚠️ Gmail Access Error",
+                    "sender": "FIDUS System <system@fidus.com>",
+                    "preview": f"Gmail API error: {str(gmail_error)}. Please try reconnecting your Google account.",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "unread": True
+                }],
+                "source": "gmail_error",
+                "error": str(gmail_error)
+            }
         
     except Exception as e:
         logging.error(f"Get Gmail messages error: {str(e)}")
