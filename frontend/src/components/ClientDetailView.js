@@ -39,6 +39,15 @@ const ClientDetailView = ({ client, onClose, onUpdate }) => {
   const [investments, setInvestments] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
   const [amlKycData, setAmlKycData] = useState(null);
+  
+  // Document upload state
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [documentToUpload, setDocumentToUpload] = useState({
+    type: "",
+    file: null,
+    notes: ""
+  });
 
   useEffect(() => {
     if (client) {
