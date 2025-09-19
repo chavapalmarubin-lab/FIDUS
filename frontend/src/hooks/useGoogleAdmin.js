@@ -139,41 +139,32 @@ const useGoogleAdmin = () => {
     try {
       setLoading(true);
       setError(null);
-
-      // For development: Create a mock Google session instead of OAuth
-      console.log('Creating mock Google session for development...');
       
-      const mockProfile = {
-        id: "mock_google_123",
-        email: "admin@fidus.com",
-        name: "Admin User (Google)",
-        picture: ""
-      };
-
-      // Store mock session data
-      const adminUser = {
-        id: mockProfile.id,
-        username: mockProfile.email,
-        name: mockProfile.name,
-        email: mockProfile.email,
-        type: "admin",
-        picture: mockProfile.picture,
-        isGoogleAuth: true
-      };
-
-      localStorage.setItem('fidus_user', JSON.stringify(adminUser));
-      localStorage.setItem('google_session_token', 'mock_session_' + Date.now());
-
-      // Update component state
-      setProfile(mockProfile);
-      setIsAuthenticated(true);
+      // Get JWT token for admin authentication
+      const jwtToken = getAuthToken();
+      if (!jwtToken) {
+        throw new Error('Admin not authenticated. Please login first.');
+      }
       
-      console.log('✅ Mock Google session created successfully');
+      const response = await fetch(`${API}/admin/google/auth-url`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
       
+      if (data.success && data.auth_url) {
+        // Redirect to Google OAuth for personal Gmail
+        console.log('Redirecting to Google OAuth for personal Gmail access...');
+        window.location.href = data.auth_url;
+      } else {
+        throw new Error(data.detail || 'Failed to get Gmail OAuth URL');
+      }
     } catch (err) {
-      console.error('Mock Google connection error:', err);
-      setError('Failed to connect to Google services');
-    } finally {
+      setError(err.message);
       setLoading(false);
     }
   };
