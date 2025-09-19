@@ -7125,24 +7125,28 @@ async def create_prospect(prospect_data: ProspectCreate):
         if prospect_dict.get('client_id') is None:
             prospect_dict['client_id'] = ""  # Convert None to empty string for MongoDB schema
         
-        # Convert datetime objects to ISO strings for MongoDB
-        if isinstance(prospect_dict.get('created_at'), datetime):
-            prospect_dict['created_at'] = prospect_dict['created_at'].isoformat()
-        if isinstance(prospect_dict.get('updated_at'), datetime):
-            prospect_dict['updated_at'] = prospect_dict['updated_at'].isoformat()
+        # Keep datetime objects as datetime for MongoDB (don't convert to strings)
+        # MongoDB expects date type, not string
         
         # Add to MongoDB
         await db.crm_prospects.insert_one(prospect_dict)
         
+        # For memory storage, convert to strings to avoid serialization issues
+        memory_dict = prospect_dict.copy()
+        if isinstance(memory_dict.get('created_at'), datetime):
+            memory_dict['created_at'] = memory_dict['created_at'].isoformat()
+        if isinstance(memory_dict.get('updated_at'), datetime):
+            memory_dict['updated_at'] = memory_dict['updated_at'].isoformat()
+        
         # Also store in memory for backwards compatibility
-        prospects_storage[prospect.id] = prospect_dict
+        prospects_storage[prospect.id] = memory_dict
         
         logging.info(f"Prospect created: {prospect.name} ({prospect.email})")
         
         return {
             "success": True,
             "prospect_id": prospect.id,
-            "prospect": prospect_dict,
+            "prospect": memory_dict,
             "message": "Prospect created successfully"
         }
         
