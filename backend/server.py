@@ -7458,24 +7458,25 @@ class AdminGoogleProfile(BaseModel):
 
 @api_router.get("/admin/google/auth-url")
 async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
-    """Get Google OAuth URL for admin authentication (requires admin login)"""
+    """Get Emergent OAuth URL for Google authentication (requires admin login)"""
     try:
-        # This endpoint is accessible to authenticated admin users
-        # Get the frontend URL for redirect after authentication
-        redirect_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host') + "/admin/google-callback"
+        # Use Emergent OAuth service instead of direct Google OAuth
+        redirect_url = os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com') + "/admin/google-callback"
         
-        auth_url = google_admin_service.get_google_login_url(redirect_url)
+        # Emergent OAuth URL format
+        auth_url = f"https://auth.emergentagent.com/?redirect={redirect_url}"
+        
+        logging.info(f"Generated Emergent OAuth URL for admin: {current_user.get('username')}")
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "redirect_url": redirect_url,
-            "scopes": google_admin_service.get_google_api_scopes()
+            "redirect_url": redirect_url
         }
         
     except Exception as e:
-        logging.error(f"Get Google auth URL error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate Google auth URL")
+        logging.error(f"Get Emergent OAuth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.post("/admin/google/process-session")
 async def process_google_session(auth_request: GoogleAuthRequest):
