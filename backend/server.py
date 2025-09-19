@@ -7733,6 +7733,47 @@ async def process_google_callback(request: dict):
         logging.error(f"Process Google callback error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process callback")
 
+@api_router.post("/admin/google/test-callback")
+async def test_google_callback():
+    """Test endpoint to simulate successful Google OAuth callback"""
+    try:
+        logging.info("Test Google callback endpoint called")
+        
+        # Simulate successful Google OAuth response
+        mock_user_info = {
+            "email": "test@example.com",
+            "name": "Test User",
+            "picture": "https://via.placeholder.com/150"
+        }
+        
+        # Create a mock session token
+        session_token = str(uuid.uuid4())
+        
+        # Create session data
+        session_data = {
+            "session_token": session_token,
+            "user_info": mock_user_info,
+            "access_token": "mock_access_token",
+            "refresh_token": "mock_refresh_token",
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        # Store session in MongoDB
+        session_doc = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_data)
+        
+        logging.info(f"Successfully created test admin session for: {mock_user_info['email']}")
+        
+        return {
+            "success": True,
+            "user_info": mock_user_info,
+            "session_token": session_token,
+            "message": "Test authentication successful"
+        }
+        
+    except Exception as e:
+        logging.error(f"Test Google callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process test callback")
 @api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
     """Get current admin's Google profile"""
