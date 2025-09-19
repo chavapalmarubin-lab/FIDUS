@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_readiness_discrepancy():
-    base_url = "https://investsim-1.preview.emergentagent.com"
+    base_url = "https://wealth-portal-17.preview.emergentagent.com"
     
     print("🔍 INVESTIGATING CLIENT READINESS DISCREPANCY")
     print("="*60)

@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class MT5BackendTester:
-    def __init__(self, base_url="https://investsim-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://wealth-portal-17.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

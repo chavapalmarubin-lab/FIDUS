@@ -10,7 +10,7 @@ This test investigates the critical database connection issue as requested in th
 - Verify environment configuration
 
 CRITICAL ISSUE IDENTIFIED:
-- Frontend .env: REACT_APP_BACKEND_URL=https://investsim-1.preview.emergentagent.com
+- Frontend .env: REACT_APP_BACKEND_URL=https://wealth-portal-17.preview.emergentagent.com
 - Backend .env: MONGO_URL="mongodb://localhost:27017" with DB_NAME="fidus_investment_db"
 
 INVESTIGATION REQUIRED:
@@ -27,7 +27,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use the EXACT URLs from the review request
-FRONTEND_BACKEND_URL = "https://investsim-1.preview.emergentagent.com/api"  # From frontend .env
+FRONTEND_BACKEND_URL = "https://wealth-portal-17.preview.emergentagent.com/api"  # From frontend .env
 LOCAL_BACKEND_URL = "http://localhost:8001/api"  # Local backend if running
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
