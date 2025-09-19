@@ -1818,6 +1818,60 @@ async def get_client_documents(client_id: str):
         logging.error(f"Get client documents error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client documents")
 
+@api_router.post("/admin/clients/{client_id}/documents")
+async def upload_client_document(
+    client_id: str,
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    notes: str = Form("")
+):
+    """Upload a document for a client"""
+    try:
+        # Check if client exists
+        client_exists = any(user.get('id') == client_id for user in MOCK_USERS.values())
+        if not client_exists:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file selected")
+        
+        # Check file size (max 10MB)
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size too large (max 10MB)")
+        
+        # Create document record
+        document_id = str(uuid.uuid4())
+        document_record = {
+            "document_id": document_id,
+            "client_id": client_id,
+            "file_name": file.filename,
+            "document_type": document_type,
+            "file_size": len(content),
+            "file_path": f"/documents/clients/{client_id}/{document_id}_{file.filename}",
+            "verification_status": "pending",
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "uploaded_by": "admin",
+            "notes": notes
+        }
+        
+        # In production, save file to storage and document record to database
+        # For now, we'll just return the mock document record
+        logging.info(f"Document uploaded for client {client_id}: {file.filename} ({document_type})")
+        
+        return {
+            "success": True,
+            "message": "Document uploaded successfully",
+            "document": document_record
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Upload client document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload document")
+
 @api_router.get("/admin/clients/{client_id}/activity")
 async def get_client_activity_log(client_id: str):
     """Get activity timeline for a specific client"""
