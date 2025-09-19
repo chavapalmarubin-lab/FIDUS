@@ -452,23 +452,23 @@ const CRMDashboard = ({ user }) => {
 
       <Tabs defaultValue="prospects" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-600">
-          <TabsTrigger value="prospects" className="data-[state=active]:bg-cyan-600">
+          <TabsTrigger value="prospects" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
             <Users className="h-4 w-4 mr-2" />
             Prospects
           </TabsTrigger>
-          <TabsTrigger value="funds" className="data-[state=active]:bg-cyan-600">
+          <TabsTrigger value="funds" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
             <PieChart className="h-4 w-4 mr-2" />
             Fund Management
           </TabsTrigger>
-          <TabsTrigger value="trading" className="data-[state=active]:bg-cyan-600">
+          <TabsTrigger value="trading" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
             <Activity className="h-4 w-4 mr-2" />
             Trading Monitor
           </TabsTrigger>
-          <TabsTrigger value="flows" className="data-[state=active]:bg-cyan-600">
+          <TabsTrigger value="flows" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
             <BarChart3 className="h-4 w-4 mr-2" />
             Capital Flows
           </TabsTrigger>
-          <TabsTrigger value="metaquotes" className="data-[state=active]:bg-cyan-600">
+          <TabsTrigger value="metaquotes" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
             <Database className="h-4 w-4 mr-2" />
             MetaQuotes Data
           </TabsTrigger>
