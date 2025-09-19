@@ -51,10 +51,23 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
+      // Check if we have a Google session token in localStorage
+      const googleSessionToken = localStorage.getItem('google_session_token');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      };
+      
+      // If we have a Google session token, use it directly in Authorization header
+      if (googleSessionToken) {
+        headers.Authorization = `Bearer ${googleSessionToken}`;
+      }
+
       const response = await fetch(`${API}/admin/google/profile`, {
         method: 'GET',
         credentials: 'include',
-        headers: getRequestHeaders()
+        headers
       });
 
       if (response.ok) {
@@ -62,11 +75,14 @@ const useGoogleAdmin = () => {
         if (data.success && data.profile) {
           setProfile(data.profile);
           setIsAuthenticated(true);
+          console.log('✅ Google session found and validated:', data.profile.email);
         }
       } else if (response.status !== 401) {
         // Only set error for non-401 responses (401 just means not authenticated)
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.detail || 'Failed to check authentication status');
+      } else {
+        console.log('ℹ️ No valid Google session found (401)');
       }
     } catch (err) {
       console.error('Session check error:', err);
