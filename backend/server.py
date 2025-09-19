@@ -12116,7 +12116,8 @@ PUBLIC_CRM_ENDPOINTS = [
 GOOGLE_OAUTH_ENDPOINTS = [
     "/api/admin/google/profile",
     "/api/admin/google/process-callback",
-    "/api/admin/google/test-callback"
+    "/api/admin/google/test-callback",
+    "/api/admin/google/process-session"
 ]
 
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
