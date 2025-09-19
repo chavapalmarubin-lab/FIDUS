@@ -11894,6 +11894,13 @@ async def api_authentication_middleware(request: Request, call_next):
     """Protect sensitive API endpoints with JWT token validation and role-based access control"""
     path = request.url.path
     
+    # Check if this is a Google OAuth endpoint (use session tokens, not JWT)
+    is_google_oauth = any(path.startswith(endpoint) for endpoint in GOOGLE_OAUTH_ENDPOINTS)
+    
+    # Skip JWT authentication for Google OAuth endpoints
+    if is_google_oauth:
+        return await call_next(request)
+    
     # Check if this is a public CRM endpoint (lead registration)
     is_public_crm = any(
         path.startswith(endpoint.replace("{prospect_id}", "")) or 
