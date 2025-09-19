@@ -11879,6 +11879,14 @@ PUBLIC_CRM_ENDPOINTS = [
     "/api/crm/prospects/{prospect_id}/aml-kyc"  # POST - run AML/KYC check (public)
 ]
 
+# Google OAuth endpoints that bypass JWT middleware (use session tokens instead)
+GOOGLE_OAUTH_ENDPOINTS = [
+    "/api/admin/google/profile",
+    "/api/admin/google/process-callback",
+    "/api/admin/google/test-callback",
+    "/api/admin/google/process-session"
+]
+
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
 # Now properly implemented with JWT tokens and role-based access control
 @app.middleware("http") 
