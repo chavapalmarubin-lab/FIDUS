@@ -47,36 +47,61 @@ function App() {
       return;
     }
     
-    // Check if user is already authenticated FIRST
+    // Custom authentication check that handles Google auth properly
+    const checkGoogleAuth = () => {
+      try {
+        const userDataStr = localStorage.getItem('fidus_user');
+        const googleToken = localStorage.getItem('google_session_token');
+        
+        if (userDataStr && googleToken) {
+          const userData = JSON.parse(userDataStr);
+          if (userData && userData.isGoogleAuth && userData.type) {
+            console.log('✅ Google authentication detected:', userData);
+            return userData;
+          }
+        }
+      } catch (error) {
+        console.error('Google auth check error:', error);
+      }
+      return null;
+    };
+    
+    // Check for Google authentication first
+    const googleUser = checkGoogleAuth();
+    if (googleUser) {
+      console.log('Setting user from Google auth:', googleUser);
+      setUser(googleUser);
+      setCurrentView(googleUser.type === "admin" ? "admin" : "client");
+      return;
+    }
+    
+    // Fallback to regular JWT authentication
     const authenticated = isAuthenticated();
-    console.log('Is authenticated:', authenticated);
+    console.log('Is authenticated (JWT):', authenticated);
     
     if (authenticated) {
       const userData = getCurrentUser();
-      console.log('User data:', userData);
+      console.log('User data (JWT):', userData);
       if (userData) {
         console.log('Setting user and view to:', userData.type);
         setUser(userData);
         setCurrentView(userData.type === "admin" ? "admin" : "client");
-        return; // CRITICAL: Return here to prevent further processing
+        return;
       }
     }
     
     if (skipAnimation) {
-      // Skip animation for testing/production - but only if not authenticated
       console.log('Setting view to login (skip animation)');
       setCurrentView("login");
     } else {
-      // Clear any existing user session to always show logo animation
-      // BUT only if not authenticated (to prevent clearing Google auth)
-      if (!authenticated) {
+      // Only clear localStorage if no authentication is found
+      if (!googleUser && !authenticated) {
         console.log('Clearing localStorage (not authenticated)');
         localStorage.removeItem("fidus_user");
       } else {
         console.log('NOT clearing localStorage (user is authenticated)');
       }
       
-      // Always start with logo animation
       console.log('Setting view to logo');
       setCurrentView("logo");
     }
