@@ -177,10 +177,10 @@ const useGoogleAdmin = () => {
       const response = await fetch(`${API}/admin/google/process-session`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Session-ID': sessionId  // Use X-Session-ID header as per Emergent OAuth spec
         },
-        credentials: 'include',
-        body: JSON.stringify({ session_id: sessionId })
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -189,8 +189,14 @@ const useGoogleAdmin = () => {
         setProfile(data.profile);
         setIsAuthenticated(true);
         
-        // Set httpOnly cookie via response headers (backend handles this)
-        console.log('✅ Google authentication successful:', data.profile.email);
+        // Store session data in localStorage for persistence
+        localStorage.setItem('google_session_token', data.session_token);
+        localStorage.setItem('fidus_user', JSON.stringify({
+          ...data.profile,
+          isGoogleAuth: true
+        }));
+        
+        console.log('✅ Emergent OAuth authentication successful:', data.profile.email);
         
         return data.profile;
       } else {
