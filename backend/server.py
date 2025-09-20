@@ -7580,6 +7580,7 @@ async def process_emergent_oauth_session(request: Request, response: Response):
     except Exception as e:
         logging.error(f"Process Emergent OAuth session error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process OAuth session")
+@api_router.post("/admin/google/process-callback")
 async def process_google_callback(request_data: dict, response: Response):
     """Process Google OAuth authorization code for personal Gmail"""
     try:
