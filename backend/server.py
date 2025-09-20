@@ -7615,7 +7615,7 @@ async def get_admin_google_profile(request: Request):
             raise HTTPException(status_code=401, detail="Session expired")
         
         # Update last accessed time
-        update_result = await mongodb_manager.db.admin_sessions.update_one(
+        update_result = await db.admin_sessions.update_one(
             {"session_token": session_token},
             {"$set": {"last_accessed": datetime.now(timezone.utc)}}
         )
