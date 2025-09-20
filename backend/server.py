@@ -30,6 +30,7 @@ import numpy as np
 import yfinance as yf
 import pandas as pd
 import jwt
+import requests
 from collections import defaultdict
 from time import time
 
