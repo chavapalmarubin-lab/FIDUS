@@ -7603,7 +7603,7 @@ async def get_admin_google_profile(request: Request):
             raise HTTPException(status_code=401, detail="No session token provided")
         
         # Find session in database
-        session_doc = await mongodb_manager.db.admin_sessions.find_one({"session_token": session_token})
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
         
         if not session_doc:
             raise HTTPException(status_code=401, detail="Invalid or expired session")
