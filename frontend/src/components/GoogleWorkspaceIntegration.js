@@ -202,19 +202,19 @@ const GoogleWorkspaceIntegration = () => {
         setTimeout(() => loadGoogleWorkspaceData(), 100);
       }}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-100">
-          <TabsTrigger value="gmail" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:font-semibold">
+          <TabsTrigger value="gmail" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:border-blue-200">
             <Mail className="h-4 w-4 mr-2" />
             Gmail
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:font-semibold">
+          <TabsTrigger value="calendar" className="data-[state=active]:bg-green-50 data-[state=active]:text-green-900 data-[state=active]:border-green-200">
             <Calendar className="h-4 w-4 mr-2" />
             Calendar
           </TabsTrigger>
-          <TabsTrigger value="drive" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:font-semibold">
+          <TabsTrigger value="drive" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-900 data-[state=active]:border-orange-200">
             <FolderOpen className="h-4 w-4 mr-2" />
             Drive
           </TabsTrigger>
-          <TabsTrigger value="sheets" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:font-semibold">
+          <TabsTrigger value="sheets" className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-900 data-[state=active]:border-emerald-200">
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             Sheets
           </TabsTrigger>
