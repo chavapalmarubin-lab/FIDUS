@@ -7543,7 +7543,7 @@ async def process_google_callback(request_data: dict, response: Response):
         
         # Store in MongoDB
         try:
-            result = await client[os.environ.get('DB_NAME', 'fidus_investment_db')].admin_sessions.insert_one(session_doc)
+            result = await db.admin_sessions.insert_one(session_doc)
             
             if result.inserted_id:
                 logging.info(f"Created personal Gmail admin session for: {user_data.get('email')}")
