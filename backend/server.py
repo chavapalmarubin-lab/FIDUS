@@ -7675,7 +7675,42 @@ async def process_google_callback(request_data: dict, response: Response):
         logging.error(f"Process personal Gmail callback error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process Gmail callback")
 
-@api_router.get("/admin/google/profile")
+@api_router.post("/admin/google/logout")
+async def logout_google_admin(request: Request, response: Response):
+    """Logout from Google admin session"""
+    try:
+        # Get session token from cookie or authorization header
+        session_token = None
+        
+        # Try cookie first
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        # Fallback to authorization header
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if session_token:
+            # Delete session from database
+            await db.admin_sessions.delete_one({"session_token": session_token})
+            logging.info(f"Deleted admin session: {session_token[:20]}...")
+        
+        # Clear session cookie
+        response.delete_cookie("session_token", path="/")
+        
+        return {
+            "success": True,
+            "message": "Google admin logout successful"
+        }
+        
+    except Exception as e:
+        logging.error(f"Google admin logout error: {str(e)}")
+        return {
+            "success": True,  # Return success even on error to ensure frontend can proceed
+            "message": "Logout completed"
+        }
 async def get_admin_google_profile(request: Request):
     """Get current admin's Google profile"""
     try:
