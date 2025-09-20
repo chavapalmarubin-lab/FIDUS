@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 """
-GOOGLE OAUTH INTEGRATION SYSTEM TESTING
-=======================================
+GOOGLE OAUTH INTEGRATION BACKEND TESTING
+========================================
 
-This test verifies the Google OAuth integration system including:
-1. Google Auth URL Generation: Test `/api/admin/google/auth-url` endpoint
-2. Google OAuth Callback Processing: Test both real and test callback endpoints
-3. Session Management: Verify proper admin sessions in MongoDB
-4. Google API Endpoints: Test Gmail, Calendar, Drive, Sheets endpoints
-5. Authentication Flow: Verify session tokens vs JWT tokens
-6. Error Handling: Test error scenarios
+This test verifies the Google OAuth integration backend endpoints that were just fixed:
+1. **Test Authentication System**: Login as admin (username: admin, password: password123) and verify JWT token creation works
+2. **Test Google OAuth Auth URL Endpoint**: Test /api/admin/google/auth-url endpoint with proper admin JWT authentication - should return success with auth_url
+3. **Test Google OAuth Profile Endpoint**: Test /api/admin/google/profile endpoint (may return 401 if no session exists, which is expected)
+4. **Verify the async/await syntax errors are fixed**: Ensure no "object dict can't be used in 'await' expression" errors occur
+5. **Test session storage**: Mock a basic session creation and retrieval to verify the database operations work correctly
 
-Expected Results:
-- Google OAuth auth URL generation working with JWT authentication
-- Callback processing creates proper admin sessions
-- Google Workspace API endpoints accessible with session tokens
-- Error handling for invalid codes, expired sessions, missing auth
+Key focus: Verify that the async/await syntax errors in the OAuth code (specifically the MongoDB session operations) are now resolved and the backend endpoints respond correctly without throwing coroutine-related errors.
 """
 
 import requests
