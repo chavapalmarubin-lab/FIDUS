@@ -7466,27 +7466,27 @@ class AdminGoogleProfile(BaseModel):
 
 @api_router.get("/admin/google/auth-url")
 async def get_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
-    """Get Google OAuth URL for personal Gmail authentication"""
+    """Get Emergent OAuth URL for Google authentication"""
     try:
-        from personal_gmail_service import personal_gmail_service
+        # Use Emergent OAuth for hassle-free Google authentication
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')
+        redirect_url = f"{frontend_url}/admin/dashboard"  # Redirect to main dashboard after auth
         
-        # Use the preview environment redirect URI
-        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')}/admin/google-callback"
+        # Generate Emergent OAuth URL
+        auth_url = f"https://auth.emergentagent.com/?redirect={requests.utils.quote(redirect_url, safe='')}"
         
-        # Generate OAuth URL for personal Gmail access
-        auth_url = personal_gmail_service.get_oauth_url(redirect_uri)
-        
-        logging.info(f"Generated personal Gmail OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Generated Emergent OAuth URL for admin: {current_user.get('username')}")
         
         return {
             "success": True,
             "auth_url": auth_url,
-            "redirect_uri": redirect_uri
+            "redirect_url": redirect_url,
+            "provider": "emergent_oauth"
         }
         
     except Exception as e:
-        logging.error(f"Get personal Gmail OAuth URL error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate Gmail OAuth URL")
+        logging.error(f"Get Emergent OAuth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.post("/admin/google/process-callback")
 async def process_google_callback(request_data: dict, response: Response):
