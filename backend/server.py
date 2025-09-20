@@ -7488,7 +7488,98 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
         logging.error(f"Get Emergent OAuth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
-@api_router.post("/admin/google/process-callback")
+@api_router.post("/admin/google/process-session")
+async def process_emergent_oauth_session(request: Request, response: Response):
+    """Process Emergent OAuth session ID and create admin session"""
+    try:
+        # Get session_id from header
+        session_id = request.headers.get('X-Session-ID')
+        
+        if not session_id:
+            raise HTTPException(status_code=400, detail="Missing session ID")
+        
+        logging.info(f"Processing Emergent OAuth session: {session_id}")
+        
+        # Call Emergent OAuth service to get session data
+        oauth_response = requests.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={'X-Session-ID': session_id},
+            timeout=10
+        )
+        
+        if oauth_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Invalid session ID")
+        
+        oauth_data = oauth_response.json()
+        
+        # Extract user information
+        user_email = oauth_data.get('email')
+        user_name = oauth_data.get('name')
+        user_picture = oauth_data.get('picture', '')
+        emergent_session_token = oauth_data.get('session_token')
+        
+        if not user_email or not emergent_session_token:
+            raise HTTPException(status_code=400, detail="Incomplete OAuth data")
+        
+        logging.info(f"Emergent OAuth successful for: {user_email}")
+        
+        # Create local admin session
+        local_session_token = str(uuid.uuid4())
+        
+        session_doc = {
+            "session_token": local_session_token,
+            "emergent_session_token": emergent_session_token,
+            "google_id": oauth_data.get('id'),
+            "email": user_email,
+            "name": user_name,
+            "picture": user_picture,
+            "is_admin": True,
+            "login_type": "emergent_oauth",
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "last_accessed": datetime.now(timezone.utc)
+        }
+        
+        # Store in MongoDB
+        try:
+            result = await db.admin_sessions.insert_one(session_doc)
+            
+            if result.inserted_id:
+                logging.info(f"Created Emergent OAuth admin session for: {user_email}")
+                
+                # Set httpOnly cookie for session persistence
+                response.set_cookie(
+                    key="session_token",
+                    value=local_session_token,
+                    max_age=7 * 24 * 60 * 60,  # 7 days
+                    httponly=True,
+                    secure=True,
+                    samesite="none",
+                    path="/"
+                )
+                
+                return {
+                    "success": True,
+                    "profile": {
+                        "id": oauth_data.get('id'),
+                        "email": user_email,
+                        "name": user_name,
+                        "picture": user_picture
+                    },
+                    "session_token": local_session_token,
+                    "message": "Emergent OAuth authentication successful"
+                }
+            else:
+                raise HTTPException(status_code=500, detail="Failed to create session")
+        except Exception as db_error:
+            logging.error(f"Database error: {str(db_error)}")
+            raise HTTPException(status_code=500, detail="Failed to store session")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Process Emergent OAuth session error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process OAuth session")
 async def process_google_callback(request_data: dict, response: Response):
     """Process Google OAuth authorization code for personal Gmail"""
     try:
