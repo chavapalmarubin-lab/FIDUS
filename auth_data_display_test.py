@@ -32,7 +32,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://wealth-portal-17.preview.emergentagent.com/api"
+BACKEND_URL = "https://auth-troubleshoot-14.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

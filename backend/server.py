@@ -7470,7 +7470,7 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
         from personal_gmail_service import personal_gmail_service
         
         # Use the preview environment redirect URI
-        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
+        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')}/admin/google-callback"
         
         # Generate OAuth URL for personal Gmail access
         auth_url = personal_gmail_service.get_oauth_url(redirect_uri)
@@ -7502,7 +7502,7 @@ async def process_google_callback(request_data: dict, response: Response):
         from personal_gmail_service import personal_gmail_service
         
         # Get redirect URI
-        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://wealth-portal-17.preview.emergentagent.com')}/admin/google-callback"
+        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')}/admin/google-callback"
         
         # Exchange code for tokens
         tokens = personal_gmail_service.exchange_code_for_tokens(code, redirect_uri)

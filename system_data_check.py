@@ -7,7 +7,7 @@ import requests
 import json
 
 def check_system_data():
-    base_url = "https://wealth-portal-17.preview.emergentagent.com"
+    base_url = "https://auth-troubleshoot-14.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={
