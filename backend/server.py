@@ -7711,6 +7711,7 @@ async def logout_google_admin(request: Request, response: Response):
             "success": True,  # Return success even on error to ensure frontend can proceed
             "message": "Logout completed"
         }
+@api_router.get("/admin/google/profile")
 async def get_admin_google_profile(request: Request):
     """Get current admin's Google profile"""
     try:
