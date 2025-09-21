@@ -7911,7 +7911,7 @@ async def send_gmail_message(request: Request, email_data: dict):
 
 @api_router.get("/google/calendar/events")
 async def get_calendar_events(request: Request):
-    """Get Google Calendar events"""
+    """Get Google Calendar events using real Calendar API"""
     try:
         # Get session token
         session_token = None
@@ -7926,35 +7926,40 @@ async def get_calendar_events(request: Request):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # Mock calendar events
-        mock_events = [
-            {
-                "id": "event_001",
-                "summary": "Client Meeting - Investment Review",
-                "start": "2025-09-20T10:00:00Z",
-                "end": "2025-09-20T11:00:00Z",
-                "description": "Quarterly review with high-value client",
-                "attendees": ["client@example.com", "admin@fidus.com"]
-            },
-            {
-                "id": "event_002",
-                "summary": "Fund Performance Analysis",
-                "start": "2025-09-20T14:30:00Z", 
-                "end": "2025-09-20T15:30:00Z",
-                "description": "Monthly analysis of fund performance metrics",
-                "attendees": ["admin@fidus.com"]
-            },
-            {
-                "id": "event_003",
-                "summary": "New Prospect Presentation",
-                "start": "2025-09-21T09:00:00Z",
-                "end": "2025-09-21T10:30:00Z",
-                "description": "Present FIDUS investment opportunities to potential client",
-                "attendees": ["prospect@company.com", "admin@fidus.com"]
-            }
-        ]
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
         
-        return {"success": True, "events": mock_events}
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        emergent_session_token = session_doc.get('emergent_session_token')
+        
+        if not emergent_session_token:
+            return {"success": True, "events": [], "message": "Google authentication required"}
+        
+        try:
+            from real_google_api_service import real_google_api_service
+            
+            events = await real_google_api_service.get_calendar_events(
+                emergent_session_token=emergent_session_token,
+                max_results=20
+            )
+            
+            return {
+                "success": True,
+                "events": events,
+                "source": "real_calendar_api",
+                "event_count": len(events)
+            }
+            
+        except Exception as calendar_error:
+            logging.error(f"Calendar API error: {str(calendar_error)}")
+            return {
+                "success": True, 
+                "events": [],
+                "error": str(calendar_error),
+                "source": "calendar_api_error"
+            }
         
     except Exception as e:
         logging.error(f"Get calendar events error: {str(e)}")
