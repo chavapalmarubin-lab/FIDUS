@@ -542,6 +542,115 @@ const GoogleWorkspaceIntegration = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Compose Email Modal */}
+      {showComposeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Compose Email</h3>
+                <button
+                  onClick={() => setShowComposeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                try {
+                  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/google/gmail/send`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('google_session_token')}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      to: formData.get('to'),
+                      subject: formData.get('subject'),
+                      body: formData.get('body')
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    alert('Email sent successfully!');
+                    setShowComposeModal(false);
+                    loadEmails(); // Refresh email list
+                  } else {
+                    alert('Failed to send email');
+                  }
+                } catch (error) {
+                  console.error('Send email error:', error);
+                  alert('Error sending email');
+                }
+              }} className="space-y-4">
+                
+                <div>
+                  <label htmlFor="to" className="block text-sm font-medium text-gray-700 mb-1">
+                    To
+                  </label>
+                  <input
+                    type="email"
+                    name="to"
+                    id="to"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="recipient@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    name="subject"
+                    id="subject"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Email subject"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="body" className="block text-sm font-medium text-gray-700 mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    name="body"
+                    id="body"
+                    rows={6}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                    placeholder="Type your message here..."
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowComposeModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Send Email
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <Alert className="bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
