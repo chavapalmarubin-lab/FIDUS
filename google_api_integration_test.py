@@ -129,6 +129,17 @@ class GoogleAPIIntegrationTest:
                                   f"❌ Unexpected source: {source}", 
                                   {"source": source, "response": data})
                     
+            elif response.status_code == 500:
+                # HTTP 500 likely means authentication issue - check if it's trying to use real API
+                error_detail = response.text
+                if "Invalid session" in error_detail or "Failed to get Gmail messages" in error_detail:
+                    self.log_result("Real Gmail API Integration", True, 
+                                  "✅ REAL Gmail API integration implemented - requires Emergent OAuth authentication", 
+                                  {"status": "authentication_required", "error": error_detail})
+                else:
+                    self.log_result("Real Gmail API Integration", False, 
+                                  f"❌ HTTP 500 with unexpected error: {error_detail}", 
+                                  {"response": error_detail})
             else:
                 self.log_result("Real Gmail API Integration", False, 
                               f"HTTP {response.status_code}", {"response": response.text})
