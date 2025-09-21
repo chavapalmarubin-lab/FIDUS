@@ -181,6 +181,48 @@ const LoginSelection = ({ onLogin }) => {
           <CardContent>
             {!selectedType ? (
               <div className="space-y-4">
+                {/* Google Social Login */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-600" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-3 bg-slate-900 text-slate-400">Quick Access</span>
+                    </div>
+                  </div>
+                  
+                  <div className="google-social-login-wrapper">
+                    <GoogleSocialLogin 
+                      onLoginSuccess={(user, token) => {
+                        console.log('Google login successful:', user);
+                        onLogin({ ...user, type: user.user_type || 'client', isGoogleAuth: true });
+                      }}
+                      redirectTo="/dashboard"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Divider */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative my-6"
+                >
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-600" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-3 bg-slate-900 text-slate-400">Or continue with FIDUS account</span>
+                  </div>
+                </motion.div>
+
                 <motion.button
                   className="login-option"
                   onClick={() => handleTypeSelect("client")}
