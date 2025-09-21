@@ -25,7 +25,8 @@ import {
   Edit3,
   Share2,
   Signature,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import useGoogleAdmin from '../hooks/useGoogleAdmin';
 import apiAxios from '../utils/apiAxios';
