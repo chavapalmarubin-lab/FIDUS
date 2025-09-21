@@ -355,3 +355,38 @@ body {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Google Social Login FIDUS Theme Integration */
+.google-social-login-wrapper .google-social-login {
+  /* Inherit FIDUS styling */
+}
+
+.google-social-login-wrapper button {
+  position: relative;
+  overflow: hidden;
+}
+
+.google-social-login-wrapper button:hover {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.google-social-login-wrapper button:active {
+  transform: translateY(0);
+}
+
+/* FIDUS Brand Colors Integration */
+.login-option {
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(16, 185, 129, 0.1) 100%);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.login-option:hover {
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.2) 0%, 
+    rgba(16, 185, 129, 0.2) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
