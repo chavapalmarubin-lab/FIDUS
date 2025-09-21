@@ -33,13 +33,30 @@ class RealGoogleAPIService:
     def _get_google_access_token(self, emergent_session_token: str) -> Optional[str]:
         """
         Get Google access token using Emergent session token
-        In a real implementation, this would involve token exchange with Emergent backend
-        For now, we'll use the session token directly for API calls
+        Make direct call to Emergent backend to get actual Google access token
         """
         try:
-            # This would be replaced with actual Emergent API call to get Google access token
-            # For now, return the emergent session token as it might contain the Google token
-            return emergent_session_token
+            # Call Emergent API to get Google access token
+            response = requests.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/google-token",
+                headers={'X-Session-ID': emergent_session_token},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                google_access_token = token_data.get('google_access_token')
+                
+                if google_access_token:
+                    logging.info("Successfully retrieved Google access token from Emergent")
+                    return google_access_token
+                else:
+                    logging.warning("No Google access token in Emergent response")
+                    return None
+            else:
+                logging.error(f"Failed to get Google token from Emergent: {response.status_code}")
+                return None
+                
         except Exception as e:
             logging.error(f"Failed to get Google access token: {str(e)}")
             return None
