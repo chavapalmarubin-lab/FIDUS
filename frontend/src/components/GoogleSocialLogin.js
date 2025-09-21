@@ -100,8 +100,8 @@ const GoogleSocialLogin = ({ onLoginSuccess, redirectTo = '/dashboard' }) => {
   return (
     <div className="google-social-login">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-          <div className="text-red-800 text-sm">
+        <div className="bg-red-900/20 border border-red-500/30 rounded-md p-3 mb-4">
+          <div className="text-red-300 text-sm">
             <strong>Authentication Error:</strong> {error}
           </div>
         </div>
