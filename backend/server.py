@@ -12497,7 +12497,11 @@ GOOGLE_OAUTH_ENDPOINTS = [
     "/api/admin/google/profile",
     "/api/admin/google/process-callback",
     "/api/admin/google/process-session",  # Emergent OAuth session processing
-    "/api/admin/google/test-callback"
+    "/api/admin/google/test-callback",
+    "/api/auth/google/login-url",  # Google Social Login endpoints
+    "/api/auth/google/process-session",
+    "/api/auth/google/logout",
+    "/api/auth/me"
 ]
 
 # AUTHENTICATION MIDDLEWARE - JWT TOKEN VALIDATION
