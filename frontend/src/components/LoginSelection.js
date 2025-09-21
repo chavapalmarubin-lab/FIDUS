@@ -9,6 +9,7 @@ import ClientOnboarding from "./ClientOnboarding";
 import LeadRegistrationForm from "./LeadRegistrationForm";
 import PasswordReset from "./PasswordReset";
 import PasswordChangeModal from "./PasswordChangeModal";
+import GoogleSocialLogin from "./GoogleSocialLogin";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
