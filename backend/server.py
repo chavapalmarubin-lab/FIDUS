@@ -7935,9 +7935,9 @@ async def send_gmail_message(request: Request, email_data: dict):
         
         # Use real Gmail API service to send email
         try:
-            from real_google_api_service import real_google_api_service
+            from google_social_auth import google_social_auth
             
-            result = await real_google_api_service.send_gmail_message(
+            result = await google_social_auth.send_gmail_message(
                 emergent_session_token=emergent_session_token,
                 to=email_data.get('to'),
                 subject=email_data.get('subject'),
