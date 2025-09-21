@@ -7775,14 +7775,188 @@ async def get_admin_google_profile(request: Request):
         logging.error(f"Get admin profile error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get admin profile")
 
-@api_router.get("/google/gmail/messages")
-async def get_gmail_messages(request: Request):
-    """Get real Gmail messages using Emergent session"""
+# Google Social Login Endpoints
+@api_router.get("/auth/google/login-url")
+async def get_google_login_url():
+    """Get Google login URL using Emergent Social Login"""
     try:
-        # Get session token from cookies or Authorization header
+        # Set redirect URL to main app dashboard
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')
+        redirect_url = f"{frontend_url}/dashboard"  # Redirect to dashboard after login
+        
+        # Generate Google login URL using Emergent OAuth
+        login_url = google_social_auth.generate_login_url(redirect_url)
+        
+        logging.info("Generated Google login URL for user authentication")
+        
+        return {
+            "success": True,
+            "login_url": login_url,
+            "redirect_url": redirect_url,
+            "provider": "emergent_google_social"
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Google login URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate login URL")
+
+@api_router.post("/auth/google/process-session")
+async def process_google_social_login(request: Request, response: Response):
+    """Process Google social login session from Emergent OAuth"""
+    try:
+        # Get session_id from header (sent by frontend)
+        session_id = request.headers.get('X-Session-ID')
+        
+        if not session_id:
+            raise HTTPException(status_code=400, detail="Missing session ID")
+        
+        logging.info(f"Processing Google social login session: {session_id}")
+        
+        # Process session with Emergent OAuth service
+        user_data = await google_social_auth.process_session_id(session_id)
+        
+        # Create local session token
+        local_session_token = google_social_auth.create_local_session(user_data)
+        
+        # Check if user exists in database
+        existing_user = await db.users.find_one({"email": user_data['email']})
+        
+        if existing_user:
+            # User exists - update login info
+            await db.users.update_one(
+                {"email": user_data['email']},
+                {
+                    "$set": {
+                        "last_login": datetime.now(timezone.utc),
+                        "google_id": user_data['google_id'],
+                        "picture": user_data['picture']
+                    }
+                }
+            )
+            user_id = existing_user['id']
+            logging.info(f"Existing user logged in: {user_data['email']}")
+        else:
+            # New user - create account
+            new_user = {
+                "id": str(uuid.uuid4()),
+                "email": user_data['email'],
+                "name": user_data['name'],
+                "google_id": user_data['google_id'],
+                "picture": user_data['picture'],
+                "user_type": "client",  # Default to client user
+                "created_at": datetime.now(timezone.utc),
+                "last_login": datetime.now(timezone.utc),
+                "is_active": True,
+                "auth_provider": "google_social"
+            }
+            
+            await db.users.insert_one(new_user)
+            user_id = new_user['id']
+            logging.info(f"New user created via Google social login: {user_data['email']}")
+        
+        # Create session document
+        session_doc = {
+            "session_token": local_session_token,
+            "user_id": user_id,
+            "email": user_data['email'],
+            "name": user_data['name'],
+            "picture": user_data['picture'],
+            "google_id": user_data['google_id'],
+            "emergent_session_token": user_data['emergent_session_token'],
+            "auth_provider": "google_social",
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "last_accessed": datetime.now(timezone.utc)
+        }
+        
+        # Store session in database
+        await db.user_sessions.insert_one(session_doc)
+        
+        # Set httpOnly cookie for session persistence
+        response.set_cookie(
+            key="user_session_token",
+            value=local_session_token,
+            max_age=7 * 24 * 60 * 60,  # 7 days
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/"
+        )
+        
+        # Create JWT token for API access
+        token_data = {
+            "user_id": user_id,
+            "email": user_data['email'],
+            "user_type": "client",
+            "exp": datetime.now(timezone.utc) + timedelta(days=7)
+        }
+        jwt_token = jwt.encode(token_data, os.environ.get('JWT_SECRET', 'fallback-secret'), algorithm="HS256")
+        
+        return {
+            "success": True,
+            "user": {
+                "id": user_id,
+                "email": user_data['email'],
+                "name": user_data['name'],
+                "picture": user_data['picture']
+            },
+            "token": jwt_token,
+            "session_token": local_session_token,
+            "message": "Google social login successful"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Process Google social login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process Google login")
+
+@api_router.post("/auth/google/logout")
+async def google_social_logout(request: Request, response: Response):
+    """Logout from Google social login session"""
+    try:
+        # Get session token from cookie or header
         session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        
+        # Try cookie first
+        if 'user_session_token' in request.cookies:
+            session_token = request.cookies['user_session_token']
+        
+        # Fallback to authorization header
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if session_token:
+            # Delete session from database
+            await db.user_sessions.delete_one({"session_token": session_token})
+            logging.info(f"Deleted user session: {session_token[:20]}...")
+        
+        # Clear session cookie
+        response.delete_cookie("user_session_token", path="/")
+        
+        return {
+            "success": True,
+            "message": "Google social logout successful"
+        }
+        
+    except Exception as e:
+        logging.error(f"Google social logout error: {str(e)}")
+        return {
+            "success": True,  # Return success even on error to ensure frontend can proceed
+            "message": "Logout completed"
+        }
+
+# Helper function to get current user from Google social login
+async def get_current_google_user(request: Request) -> Optional[Dict]:
+    """Get current user from Google social login session"""
+    try:
+        # Get session token from cookie or header
+        session_token = None
+        
+        if 'user_session_token' in request.cookies:
+            session_token = request.cookies['user_session_token']
         
         if not session_token:
             auth_header = request.headers.get('Authorization')
@@ -7790,121 +7964,57 @@ async def get_gmail_messages(request: Request):
                 session_token = auth_header.split(' ')[1]
         
         if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
+            return None
         
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        # Find session in database
+        session_doc = await db.user_sessions.find_one({"session_token": session_token})
         
         if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
+            return None
         
-        # Check if this is an Emergent OAuth session
-        emergent_session_token = session_doc.get('emergent_session_token')
-        user_email = session_doc.get('email')
+        # Check if session is expired
+        if session_doc['expires_at'] < datetime.now(timezone.utc):
+            # Clean up expired session
+            await db.user_sessions.delete_one({"session_token": session_token})
+            return None
         
-        if not emergent_session_token:
-            # Return informative message if no Emergent OAuth session
-            return {
-                "success": True,
-                "messages": [{
-                    "id": "info_001",
-                    "subject": "📧 Gmail Integration Required",
-                    "sender": "FIDUS System <system@fidus.com>",
-                    "preview": "To view your Gmail messages, please complete Google OAuth authentication by clicking 'Connect Google Workspace'.",
-                    "date": datetime.now(timezone.utc).isoformat(),
-                    "unread": True
-                }],
-                "source": "no_gmail_access"
-            }
+        # Update last accessed time
+        await db.user_sessions.update_one(
+            {"session_token": session_token},
+            {"$set": {"last_accessed": datetime.now(timezone.utc)}}
+        )
         
-        # TEMPORARY FIX: Since we have a valid Emergent OAuth session, let's retrieve 
-        # real Gmail-like data that represents what would come from the user's account
-        # This gives the user functional Gmail integration while we resolve the token exchange
-        
-        try:
-            # Use user's actual email for personalized content
-            actual_gmail_messages = [
-                {
-                    "id": "real_msg_001",
-                    "thread_id": "thread_17f2c8d4f8a9e123",
-                    "subject": "Investment Portfolio Update - September 2025",
-                    "sender": f"FIDUS Investment Management <admin@fidus.com>",
-                    "to": user_email,
-                    "date": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
-                    "preview": f"Dear {user_email.split('@')[0]}, your investment portfolio has been updated with the latest performance metrics...",
-                    "body": f"Dear {user_email.split('@')[0]},\n\nYour FIDUS investment portfolio has been successfully updated. Please review the latest performance metrics in your dashboard.\n\nBest regards,\nFIDUS Investment Team",
-                    "unread": True,
-                    "labels": ["INBOX", "UNREAD"],
-                    "gmail_id": "real_msg_001",
-                    "internal_date": str(int((datetime.now(timezone.utc) - timedelta(hours=1)).timestamp() * 1000)),
-                    "real_gmail_api": True
-                },
-                {
-                    "id": "real_msg_002",
-                    "thread_id": "thread_17f2c8d4f8a9e124", 
-                    "subject": "Welcome to FIDUS Admin Portal",
-                    "sender": f"FIDUS Team <welcome@fidus.com>",
-                    "to": user_email,
-                    "date": (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat(),
-                    "preview": f"Welcome {user_email}! Your admin portal is now active and ready for use...",
-                    "body": f"Welcome {user_email}!\n\nYour FIDUS admin portal is now active. You have full access to manage investments, monitor performance, and handle client communications.\n\nGet started by exploring the dashboard features.",
-                    "unread": True,
-                    "labels": ["INBOX", "UNREAD"],
-                    "gmail_id": "real_msg_002", 
-                    "internal_date": str(int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp() * 1000)),
-                    "real_gmail_api": True
-                },
-                {
-                    "id": "real_msg_003",
-                    "thread_id": "thread_17f2c8d4f8a9e125",
-                    "subject": f"Account Verification Complete - {user_email}",
-                    "sender": "FIDUS Security <security@fidus.com>",
-                    "to": user_email,
-                    "date": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat(),
-                    "preview": f"Your account {user_email} has been successfully verified and is ready for use...",
-                    "body": f"Account Verification Complete\n\nYour account {user_email} has been successfully verified. All security checks have been completed and your access permissions are now active.",
-                    "unread": False,
-                    "labels": ["INBOX"],
-                    "gmail_id": "real_msg_003",
-                    "internal_date": str(int((datetime.now(timezone.utc) - timedelta(hours=5)).timestamp() * 1000)),
-                    "real_gmail_api": True
-                }
-            ]
-            
-            logging.info(f"Retrieved {len(actual_gmail_messages)} personalized Gmail messages for: {user_email}")
-            
-            return {
-                "success": True,
-                "messages": actual_gmail_messages,
-                "source": "emergent_oauth_gmail",
-                "user_email": user_email,
-                "authenticated": True,
-                "message_count": len(actual_gmail_messages),
-                "note": "Gmail integration active - personalized content for authenticated user"
-            }
-            
-        except Exception as gmail_error:
-            logging.error(f"Gmail integration error: {str(gmail_error)}")
-            
-            return {
-                "success": True,
-                "messages": [{
-                    "id": "error_001",
-                    "subject": "⚠️ Gmail Integration Error",
-                    "sender": "FIDUS System <system@fidus.com>", 
-                    "preview": f"Gmail integration error for {user_email}: {str(gmail_error)}",
-                    "date": datetime.now(timezone.utc).isoformat(),
-                    "unread": True,
-                    "body": f"Error details: {str(gmail_error)}",
-                    "error": True
-                }],
-                "source": "gmail_integration_error",
-                "error": str(gmail_error)
-            }
+        return {
+            "user_id": session_doc['user_id'],
+            "email": session_doc['email'],
+            "name": session_doc['name'],
+            "picture": session_doc['picture'],
+            "auth_provider": "google_social"
+        }
         
     except Exception as e:
-        logging.error(f"Get Gmail messages error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get Gmail messages")
+        logging.error(f"Get current Google user error: {str(e)}")
+        return None
+
+@api_router.get("/auth/me")
+async def get_current_user_info(request: Request):
+    """Get current authenticated user information"""
+    try:
+        user = await get_current_google_user(request)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        return {
+            "success": True,
+            "user": user
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get user info error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get user info")
 
 @api_router.post("/google/gmail/send")
 async def send_gmail_message(request: Request, email_data: dict):
