@@ -41,6 +41,7 @@ from mongodb_integration import mongodb_manager
 from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
 from google_admin_service import GoogleAdminService
+from google_social_auth import google_social_auth
 
 # Initialize Google Admin Service (with error handling for missing env vars)
 try:
