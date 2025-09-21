@@ -7776,7 +7776,7 @@ async def get_admin_google_profile(request: Request):
 
 @api_router.get("/google/gmail/messages")
 async def get_gmail_messages(request: Request):
-    """Get Gmail messages with Emergent OAuth integration"""
+    """Get real Gmail messages using Google API with Emergent OAuth"""
     try:
         # Get session token from cookies or Authorization header
         session_token = None
@@ -7816,60 +7816,45 @@ async def get_gmail_messages(request: Request):
                 "source": "no_gmail_access"
             }
         
-        # For now, return mock Gmail data since we have a valid Emergent OAuth session
-        # In production, you would use the emergent_session_token to make actual Gmail API calls
-        mock_messages = [
-            {
-                "id": "msg_001",
-                "subject": "Welcome to FIDUS Investment Management",
-                "sender": "FIDUS Team <welcome@fidus.com>",
-                "preview": "Thank you for connecting your Gmail account to FIDUS. You can now access your emails directly from the admin dashboard.",
-                "date": (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
-                "unread": True
-            },
-            {
-                "id": "msg_002", 
-                "subject": "Client Investment Inquiry - Salvador Palma",
-                "sender": "Salvador Palma <chava@alyarglobal.com>",
-                "preview": "Hi, I wanted to discuss expanding my BALANCE fund investment. Could we schedule a call this week?",
-                "date": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat(),
-                "unread": True
-            },
-            {
-                "id": "msg_003",
-                "subject": "Monthly Portfolio Report - September 2025",
-                "sender": "FIDUS Reports <reports@fidus.com>",
-                "preview": "Your monthly portfolio performance report is ready. Total AUM: $5.06M, Performance: +15.2%",
-                "date": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
-                "unread": False
-            },
-            {
-                "id": "msg_004",
-                "subject": "Investment Agreement - New Client Onboarding",
-                "sender": "Legal Team <legal@fidus.com>",
-                "preview": "Please review the investment agreement for our new client. Documents require your signature by EOD.",
-                "date": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat(),
-                "unread": False
-            },
-            {
-                "id": "msg_005",
-                "subject": "MT5 Trading Alert - BALANCE Fund Performance",
-                "sender": "MT5 System <alerts@fidus.com>",
-                "preview": "BALANCE fund showing strong performance: +2.8% this week. Review trading activity in your dashboard.",
-                "date": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat(),
-                "unread": False
+        # Use real Google API service to get Gmail messages
+        try:
+            from real_google_api_service import real_google_api_service
+            
+            # Get real Gmail messages using the Emergent session token
+            real_messages = await real_google_api_service.get_gmail_messages(
+                emergent_session_token=emergent_session_token,
+                max_results=20
+            )
+            
+            logging.info(f"Successfully retrieved {len(real_messages)} Gmail messages for: {user_email}")
+            
+            return {
+                "success": True,
+                "messages": real_messages,
+                "source": "real_gmail_api",
+                "user_email": user_email,
+                "authenticated": True,
+                "message_count": len(real_messages)
             }
-        ]
-        
-        logging.info(f"Retrieved {len(mock_messages)} Gmail messages for: {user_email}")
-        
-        return {
-            "success": True,
-            "messages": mock_messages,
-            "source": "mock_gmail_data",
-            "user_email": user_email,
-            "authenticated": True
-        }
+            
+        except Exception as gmail_error:
+            logging.error(f"Real Gmail API error: {str(gmail_error)}")
+            
+            return {
+                "success": True,
+                "messages": [{
+                    "id": "error_001",
+                    "subject": "⚠️ Real Gmail API Error",
+                    "sender": "FIDUS System <system@fidus.com>", 
+                    "preview": f"Gmail API error: {str(gmail_error)}. The system is attempting to connect to your real Gmail account.",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "unread": True,
+                    "body": f"Error details: {str(gmail_error)}",
+                    "error": True
+                }],
+                "source": "gmail_api_error",
+                "error": str(gmail_error)
+            }
         
     except Exception as e:
         logging.error(f"Get Gmail messages error: {str(e)}")
