@@ -401,6 +401,7 @@ class GoogleAPIIntegrationTest:
         print("-" * 50)
         
         # Run all Google API integration tests
+        self.test_google_oauth_auth_url()
         self.test_real_gmail_api_integration()
         self.test_real_calendar_api_integration()
         self.test_real_drive_api_integration()
