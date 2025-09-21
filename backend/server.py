@@ -7862,7 +7862,7 @@ async def get_gmail_messages(request: Request):
 
 @api_router.post("/google/gmail/send")
 async def send_gmail_message(request: Request, email_data: dict):
-    """Send Gmail message"""
+    """Send Gmail message using real Gmail API"""
     try:
         # Get session token
         session_token = None
@@ -7877,14 +7877,33 @@ async def send_gmail_message(request: Request, email_data: dict):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # Mock email sending - in production would use Gmail API
-        logging.info(f"Mock email sent to: {email_data.get('to')} - Subject: {email_data.get('subject')}")
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
         
-        return {
-            "success": True,
-            "message": "Email sent successfully",
-            "message_id": f"mock_msg_{int(time.time())}"
-        }
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        emergent_session_token = session_doc.get('emergent_session_token')
+        
+        if not emergent_session_token:
+            raise HTTPException(status_code=401, detail="No Gmail access token available")
+        
+        # Use real Gmail API service to send email
+        try:
+            from real_google_api_service import real_google_api_service
+            
+            result = await real_google_api_service.send_gmail_message(
+                emergent_session_token=emergent_session_token,
+                to=email_data.get('to'),
+                subject=email_data.get('subject'),
+                body=email_data.get('body', '')
+            )
+            
+            return result
+            
+        except Exception as gmail_error:
+            logging.error(f"Gmail send API error: {str(gmail_error)}")
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(gmail_error)}")
         
     except Exception as e:
         logging.error(f"Send Gmail message error: {str(e)}")
