@@ -66,125 +66,119 @@ class RealGoogleAPIService:
         Get real Gmail messages using Google Gmail API
         """
         try:
-            # In production, get real Google access token from Emergent session
-            # For now, we'll make direct API calls using proper Gmail API structure
+            # Get real Google access token from Emergent
+            access_token = self._get_google_access_token(emergent_session_token)
             
-            # This is where we would use the real Google access token
-            # access_token = self._get_google_access_token(emergent_session_token)
+            if not access_token:
+                logging.warning("No Google access token available - returning fallback data")
+                # Return helpful message instead of mock data
+                return [{
+                    "id": "auth_required",
+                    "subject": "🔗 Complete Google Authentication",
+                    "sender": "FIDUS System <system@fidus.com>",
+                    "preview": "To access your real Gmail messages, please complete the full Google OAuth authentication process.",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "unread": True,
+                    "body": "Google OAuth authentication is required to access real Gmail data. Please complete the authentication flow.",
+                    "auth_required": True
+                }]
             
-            # Since we don't have direct Google tokens yet, return structured real-looking data
-            # that matches actual Gmail API response format
+            # Make real Gmail API call
+            headers = self._get_auth_headers(access_token)
             
-            real_messages = []
-            
-            # Make a request to Gmail API (this would work with real tokens)
-            # For now, simulate the exact Gmail API response structure
-            
-            messages_data = [
-                {
-                    "id": "17f2c8d4f8a9e123",
-                    "threadId": "17f2c8d4f8a9e123",
-                    "labelIds": ["INBOX", "UNREAD"],
-                    "snippet": "Thank you for choosing FIDUS Investment Management. Your account has been successfully set up...",
-                    "payload": {
-                        "headers": [
-                            {"name": "From", "value": "FIDUS Team <noreply@fidus.com>"},
-                            {"name": "To", "value": "chavarrubin@gmail.com"},
-                            {"name": "Subject", "value": "Welcome to FIDUS Investment Management"},
-                            {"name": "Date", "value": "Tue, 21 Sep 2025 14:30:00 -0700"}
-                        ],
-                        "body": {
-                            "data": base64.b64encode("Welcome to FIDUS Investment Management. Your secure admin portal is now active.".encode()).decode()
-                        }
-                    },
-                    "internalDate": str(int((datetime.now(timezone.utc) - timedelta(hours=1)).timestamp() * 1000))
+            # Call real Gmail API
+            gmail_response = requests.get(
+                f"{self.gmail_api_base}/users/me/messages",
+                headers=headers,
+                params={
+                    'maxResults': max_results,
+                    'labelIds': 'INBOX'
                 },
-                {
-                    "id": "17f2c8d4f8a9e124", 
-                    "threadId": "17f2c8d4f8a9e124",
-                    "labelIds": ["INBOX", "UNREAD"],
-                    "snippet": "Hi, I wanted to discuss expanding my investment in the BALANCE fund. Could we schedule a call?",
-                    "payload": {
-                        "headers": [
-                            {"name": "From", "value": "Salvador Palma <chava@alyarglobal.com>"},
-                            {"name": "To", "value": "chavarrubin@gmail.com"},
-                            {"name": "Subject", "value": "Investment Expansion Inquiry - BALANCE Fund"},
-                            {"name": "Date", "value": "Tue, 21 Sep 2025 12:45:00 -0700"}
-                        ],
-                        "body": {
-                            "data": base64.b64encode("Hi team, I've been very pleased with the BALANCE fund performance and would like to discuss expanding my investment.".encode()).decode()
-                        }
-                    },
-                    "internalDate": str(int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp() * 1000))
-                },
-                {
-                    "id": "17f2c8d4f8a9e125",
-                    "threadId": "17f2c8d4f8a9e125", 
-                    "labelIds": ["INBOX"],
-                    "snippet": "Your monthly portfolio report for September 2025 is ready for review. Total AUM: $5.06M...",
-                    "payload": {
-                        "headers": [
-                            {"name": "From", "value": "FIDUS Reports <reports@fidus.com>"},
-                            {"name": "To", "value": "chavarrubin@gmail.com"},
-                            {"name": "Subject", "value": "Monthly Portfolio Report - September 2025"},
-                            {"name": "Date", "value": "Mon, 20 Sep 2025 09:00:00 -0700"}
-                        ],
-                        "body": {
-                            "data": base64.b64encode("Monthly Performance Summary: Total AUM: $5.06M, Net Performance: +15.2%, Top Performer: BALANCE Fund (+18.5%)".encode()).decode()
-                        }
-                    },
-                    "internalDate": str(int((datetime.now(timezone.utc) - timedelta(days=1)).timestamp() * 1000))
-                }
-            ]
+                timeout=10
+            )
             
-            # Convert to our application format
-            for msg_data in messages_data:
-                # Extract headers
-                headers = {h["name"]: h["value"] for h in msg_data["payload"]["headers"]}
+            if gmail_response.status_code == 200:
+                gmail_data = gmail_response.json()
+                messages = gmail_data.get('messages', [])
                 
-                # Decode body if present
-                body_content = ""
-                if msg_data["payload"].get("body", {}).get("data"):
-                    try:
-                        body_content = base64.b64decode(msg_data["payload"]["body"]["data"]).decode('utf-8')
-                    except Exception:
-                        body_content = msg_data["snippet"]
+                # Get detailed message information
+                detailed_messages = []
+                for msg in messages[:max_results]:
+                    msg_detail_response = requests.get(
+                        f"{self.gmail_api_base}/users/me/messages/{msg['id']}",
+                        headers=headers,
+                        timeout=10
+                    )
+                    
+                    if msg_detail_response.status_code == 200:
+                        msg_detail = msg_detail_response.json()
+                        
+                        # Extract headers
+                        headers_list = msg_detail.get('payload', {}).get('headers', [])
+                        headers_dict = {h['name']: h['value'] for h in headers_list}
+                        
+                        # Get message body
+                        body_content = self._extract_message_body(msg_detail.get('payload', {}))
+                        
+                        # Convert to our format
+                        detailed_messages.append({
+                            "id": msg_detail['id'],
+                            "thread_id": msg_detail.get('threadId'),
+                            "subject": headers_dict.get('Subject', 'No Subject'),
+                            "sender": headers_dict.get('From', 'Unknown Sender'),
+                            "to": headers_dict.get('To', ''),
+                            "date": headers_dict.get('Date', ''),
+                            "preview": msg_detail.get('snippet', '')[:150],
+                            "body": body_content,
+                            "unread": 'UNREAD' in msg_detail.get('labelIds', []),
+                            "labels": msg_detail.get('labelIds', []),
+                            "gmail_id": msg_detail['id'],
+                            "internal_date": msg_detail.get('internalDate'),
+                            "real_gmail_api": True
+                        })
                 
-                # Convert timestamp
-                internal_date = int(msg_data["internalDate"]) / 1000
-                email_date = datetime.fromtimestamp(internal_date, tz=timezone.utc)
+                logging.info(f"Successfully retrieved {len(detailed_messages)} REAL Gmail messages from Google API")
+                return detailed_messages
                 
-                real_messages.append({
-                    "id": msg_data["id"],
-                    "thread_id": msg_data["threadId"],
-                    "subject": headers.get("Subject", "No Subject"),
-                    "sender": headers.get("From", "Unknown Sender"),
-                    "to": headers.get("To", ""),
-                    "date": email_date.isoformat(),
-                    "preview": msg_data["snippet"][:150],
-                    "body": body_content,
-                    "unread": "UNREAD" in msg_data.get("labelIds", []),
-                    "labels": msg_data.get("labelIds", []),
-                    "gmail_id": msg_data["id"]
-                })
-            
-            logging.info(f"Retrieved {len(real_messages)} real Gmail messages")
-            
-            return real_messages
+            else:
+                logging.error(f"Gmail API error: {gmail_response.status_code} - {gmail_response.text}")
+                raise Exception(f"Gmail API returned {gmail_response.status_code}")
             
         except Exception as e:
-            logging.error(f"Gmail API error: {str(e)}")
+            logging.error(f"Real Gmail API error: {str(e)}")
             # Return error message in proper format
             return [{
-                "id": "error_gmail",
-                "subject": "⚠️ Gmail API Error",
+                "id": "error_gmail_api",
+                "subject": "⚠️ Real Gmail API Error",
                 "sender": "FIDUS System <system@fidus.com>",
-                "preview": f"Gmail API error: {str(e)}. Please check your Google account connection.",
+                "preview": f"Error accessing your real Gmail account: {str(e)}",
                 "date": datetime.now(timezone.utc).isoformat(),
                 "unread": True,
-                "body": f"Error accessing Gmail API: {str(e)}",
-                "error": True
+                "body": f"Failed to connect to your Gmail account. Error: {str(e)}",
+                "error": True,
+                "api_error": str(e)
             }]
+    
+    def _extract_message_body(self, payload: Dict) -> str:
+        """Extract message body from Gmail payload"""
+        try:
+            # Try to get body from the main payload
+            if payload.get('body', {}).get('data'):
+                return base64.b64decode(payload['body']['data']).decode('utf-8')
+            
+            # Try to get from parts
+            parts = payload.get('parts', [])
+            for part in parts:
+                if part.get('mimeType') == 'text/plain' and part.get('body', {}).get('data'):
+                    return base64.b64decode(part['body']['data']).decode('utf-8')
+                elif part.get('mimeType') == 'text/html' and part.get('body', {}).get('data'):
+                    return base64.b64decode(part['body']['data']).decode('utf-8')
+            
+            return "Message body could not be decoded"
+            
+        except Exception as e:
+            logging.error(f"Failed to extract message body: {str(e)}")
+            return f"Error extracting message body: {str(e)}"
     
     async def send_gmail_message(self, emergent_session_token: str, to: str, subject: str, body: str) -> Dict:
         """
