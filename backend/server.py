@@ -8071,9 +8071,9 @@ async def get_drive_files(request: Request):
             return {"success": True, "files": [], "message": "Google authentication required"}
         
         try:
-            from real_google_api_service import real_google_api_service
+            from google_social_auth import google_social_auth
             
-            files = await real_google_api_service.get_drive_files(
+            files = await google_social_auth.get_drive_files(
                 emergent_session_token=emergent_session_token,
                 max_results=20
             )
