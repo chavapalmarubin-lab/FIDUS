@@ -26,201 +26,135 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Check authentication status on app load
   useEffect(() => {
-    const initializeAuth = () => {
-      console.log('=== APP.JS USEEFFECT DEBUGGING ===');
-      console.log('Current URL:', window.location.href);
-      console.log('Current localStorage:', {
-        fidus_user: localStorage.getItem('fidus_user'),
-        google_session_token: localStorage.getItem('google_session_token')
-      });
-      
-      // Check for skip animation parameter (for production testing)
-      const urlParams = new URLSearchParams(window.location.search);
-      const skipAnimation = urlParams.get('skip_animation') === 'true';
-      const googleAuthSuccess = urlParams.get('google_auth') === 'success';
-      console.log('Skip animation:', skipAnimation, 'Google auth success:', googleAuthSuccess);
-      
-      // Handle Google OAuth callback
-      if (window.location.pathname === '/admin/google-callback') {
-        console.log('Setting view to google-callback');
-        setCurrentView('google-callback');
-        return;
-      }
-      
-      // Custom authentication check that handles Google auth properly
-      const checkGoogleAuth = () => {
-        try {
-          const userDataStr = localStorage.getItem('fidus_user');
-          const googleToken = localStorage.getItem('google_session_token');
-          
-          if (userDataStr && googleToken) {
-            const userData = JSON.parse(userDataStr);
-            if (userData && userData.isGoogleAuth && userData.type) {
-              console.log('✅ Google authentication detected:', userData);
-              return userData;
-            }
+    const checkAuth = async () => {
+      try {
+        // Check for existing session
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/me`, {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.user) {
+            setUser(data.user);
           }
-        } catch (error) {
-          console.error('Google auth check error:', error);
         }
-        return null;
-      };
-      
-      // Check for Google authentication first
-      const googleUser = checkGoogleAuth();
-      if (googleUser) {
-        console.log('Setting user from Google auth:', googleUser);
-        setUser(googleUser);
-        setCurrentView(googleUser.type === "admin" ? "admin" : "client");
-        return;
-      }
-      
-      // Fallback to regular JWT authentication
-      const authenticated = isAuthenticated();
-      console.log('Is authenticated (JWT):', authenticated);
-      
-      if (authenticated) {
-        const userData = getCurrentUser();
-        console.log('User data (JWT):', userData);
-        if (userData) {
-          console.log('Setting user and view to:', userData.type);
-          setUser(userData);
-          setCurrentView(userData.type === "admin" ? "admin" : "client");
-          return;
-        }
-      }
-      
-      if (skipAnimation) {
-        console.log('Setting view to login (skip animation)');
-        setCurrentView("login");
-      } else {
-        // Only clear localStorage if no authentication is found
-        if (!googleUser && !authenticated) {
-          console.log('Clearing localStorage (not authenticated)');
-          localStorage.removeItem("fidus_user");
-        } else {
-          console.log('NOT clearing localStorage (user is authenticated)');
-        }
-        
-        console.log('Setting view to logo');
-        setCurrentView("logo");
+      } catch (error) {
+        console.log('No existing authentication found');
+      } finally {
+        setLoading(false);
       }
     };
 
-    // If coming from Google auth, add a small delay to ensure localStorage is ready
-    const urlParams = new URLSearchParams(window.location.search);
-    const googleAuthSuccess = urlParams.get('google_auth') === 'success';
-    
-    if (googleAuthSuccess) {
-      console.log('Detected Google auth success, adding delay for localStorage...');
-      setTimeout(initializeAuth, 100); // Small delay to ensure localStorage is available
-    } else {
-      initializeAuth();
-    }
+    checkAuth();
   }, []);
 
-  // Update document title based on current view
-  useEffect(() => {
-    const titles = {
-      logo: "FIDUS Investment Management | Loading...",
-      login: "FIDUS Investment Management | Secure Login",
-      "google-callback": "FIDUS Investment Management | Google Authentication",
-      client: `FIDUS Investment Management | Client Portal${user ? ` - ${user.username}` : ''}`,
-      admin: `FIDUS Investment Management | Admin Dashboard${user ? ` - ${user.username}` : ''}`
-    };
-    
-    document.title = titles[currentView] || "FIDUS Investment Management";
-  }, [currentView, user]);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem("fidus_user", JSON.stringify(userData));
-    setCurrentView(userData.type === "admin" ? "admin" : "client");
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local storage and state
+      localStorage.removeItem('fidus_user');
+      localStorage.removeItem('fidus_token');
+      localStorage.removeItem('google_session_token');
+      setUser(null);
+    }
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("fidus_user");
-    setCurrentView("login");
-  };
-
-  const handleAnimationComplete = () => {
-    setCurrentView("login");
-  };
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
-    <ToastProvider>
-      <div className="App">
-        <AnimatePresence mode="wait">
-        {currentView === "logo" && (
-          <motion.div
-            key="logo"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <LogoAnimation onComplete={handleAnimationComplete} />
-          </motion.div>
-        )}
-        
-        {currentView === "login" && (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <LoginSelection onLogin={handleLogin} />
-          </motion.div>
-        )}
-        
-        {currentView === "google-callback" && (
-          <motion.div
-            key="google-callback"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <GoogleCallback />
-          </motion.div>
-        )}
-        
-        {currentView === "client" && user && (
-          <motion.div
-            key="client"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<LoadingSpinner />}>
-              <ClientDashboard user={user} onLogout={handleLogout} />
-            </Suspense>
-          </motion.div>
-        )}
-        
-        {currentView === "admin" && user && (
-          <motion.div
-            key="admin"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<LoadingSpinner />}>
-              <AdminDashboard user={user} onLogout={handleLogout} />
-            </Suspense>
-          </motion.div>
-        )}
-        </AnimatePresence>
-      </div>
-    </ToastProvider>
+    <BrowserRouter>
+      <ToastProvider>
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/login" 
+              element={!user ? <LoginPage /> : <Navigate to="/dashboard" replace />} 
+            />
+            <Route 
+              path="/signup" 
+              element={!user ? <SignupPage /> : <Navigate to="/dashboard" replace />} 
+            />
+            
+            {/* Legacy Routes */}
+            <Route 
+              path="/admin/google-callback" 
+              element={<GoogleCallback onSuccess={(userData) => setUser(userData)} />} 
+            />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                user ? (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientDashboard user={user} onLogout={handleLogout} />
+                  </Suspense>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              } 
+            />
+            
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                user && user.user_type === 'admin' ? (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AdminDashboard user={user} onLogout={handleLogout} />
+                  </Suspense>
+                ) : user ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              } 
+            />
+            
+            {/* Legacy admin route - redirect to new login */}
+            <Route 
+              path="/admin" 
+              element={<Navigate to="/login" replace />} 
+            />
+            
+            {/* Default route */}
+            <Route 
+              path="/" 
+              element={
+                user ? (
+                  user.user_type === 'admin' ? 
+                    <Navigate to="/admin/dashboard" replace /> : 
+                    <Navigate to="/dashboard" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              } 
+            />
+            
+            {/* Catch all route */}
+            <Route 
+              path="*" 
+              element={<Navigate to="/" replace />} 
+            />
+          </Routes>
+        </div>
+      </ToastProvider>
+    </BrowserRouter>
   );
 }
 
