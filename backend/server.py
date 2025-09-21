@@ -7983,9 +7983,9 @@ async def get_calendar_events(request: Request):
             return {"success": True, "events": [], "message": "Google authentication required"}
         
         try:
-            from real_google_api_service import real_google_api_service
+            from google_social_auth import google_social_auth
             
-            events = await real_google_api_service.get_calendar_events(
+            events = await google_social_auth.get_calendar_events(
                 emergent_session_token=emergent_session_token,
                 max_results=20
             )
