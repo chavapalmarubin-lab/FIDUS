@@ -7997,9 +7997,9 @@ async def create_calendar_event(request: Request, event_data: dict):
         logging.error(f"Create calendar event error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create calendar event")
 
-@api_router.get("/google/drive/files")  
+@api_router.get("/google/drive/files")
 async def get_drive_files(request: Request):
-    """Get Google Drive files"""
+    """Get Google Drive files using real Drive API"""
     try:
         # Get session token
         session_token = None
@@ -8014,39 +8014,44 @@ async def get_drive_files(request: Request):
         if not session_token:
             raise HTTPException(status_code=401, detail="No session token provided")
         
-        # Mock Drive files
-        mock_files = [
-            {
-                "id": "file_001",
-                "name": "Investment Portfolio Template.xlsx",
-                "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "size": 245760,
-                "modifiedTime": "2025-09-19T12:00:00Z",
-                "webViewLink": "#"
-            },
-            {
-                "id": "file_002",
-                "name": "Client Onboarding Checklist.pdf",
-                "mimeType": "application/pdf", 
-                "size": 512000,
-                "modifiedTime": "2025-09-18T15:30:00Z",
-                "webViewLink": "#"
-            },
-            {
-                "id": "file_003",
-                "name": "Fund Performance Report Q3 2025.docx",
-                "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "size": 1024000,
-                "modifiedTime": "2025-09-17T09:45:00Z", 
-                "webViewLink": "#"
-            }
-        ]
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
         
-        return {"success": True, "files": mock_files}
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        emergent_session_token = session_doc.get('emergent_session_token')
+        
+        if not emergent_session_token:
+            return {"success": True, "files": [], "message": "Google authentication required"}
+        
+        try:
+            from real_google_api_service import real_google_api_service
+            
+            files = await real_google_api_service.get_drive_files(
+                emergent_session_token=emergent_session_token,
+                max_results=20
+            )
+            
+            return {
+                "success": True,
+                "files": files,
+                "source": "real_drive_api",
+                "file_count": len(files)
+            }
+            
+        except Exception as drive_error:
+            logging.error(f"Drive API error: {str(drive_error)}")
+            return {
+                "success": True,
+                "files": [],
+                "error": str(drive_error),
+                "source": "drive_api_error"
+            }
         
     except Exception as e:
-        logging.error(f"Get Drive files error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get Drive files")
+        logging.error(f"Get drive files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get drive files")
 
 @api_router.get("/google/sheets/list")
 async def get_sheets_list(request: Request):
