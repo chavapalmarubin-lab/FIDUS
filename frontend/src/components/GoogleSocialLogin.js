@@ -142,7 +142,7 @@ const GoogleSocialLogin = ({ onLoginSuccess, redirectTo = '/dashboard' }) => {
         )}
       </button>
 
-      <div className="mt-3 text-xs text-gray-500 text-center">
+      <div className="mt-3 text-xs text-slate-500 text-center">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div>
     </div>
