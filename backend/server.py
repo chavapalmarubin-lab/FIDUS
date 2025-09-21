@@ -8018,6 +8018,456 @@ async def get_current_user_info(request: Request):
         logging.error(f"Get user info error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get user info")
 
+# Real Google APIs Integration Endpoints
+@api_router.get("/admin/google/oauth-url")
+async def get_real_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
+    """Get real Google OAuth URL for comprehensive API access"""
+    try:
+        # Generate state parameter for security
+        state = str(uuid.uuid4())
+        
+        # Generate real Google OAuth URL
+        oauth_url = google_apis_service.generate_oauth_url(state)
+        
+        logging.info(f"Generated real Google OAuth URL for admin: {current_user.get('username')}")
+        
+        return {
+            "success": True,
+            "oauth_url": oauth_url,
+            "state": state,
+            "scopes": google_apis_service.scopes,
+            "provider": "real_google_apis"
+        }
+        
+    except Exception as e:
+        logging.error(f"Get real Google OAuth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+
+@api_router.post("/admin/google/oauth-callback")
+async def process_real_google_oauth_callback(request: Request, response: Response):
+    """Process real Google OAuth callback and exchange code for tokens"""
+    try:
+        # Get authorization code from request
+        body = await request.json()
+        authorization_code = body.get('code')
+        state = body.get('state')
+        
+        if not authorization_code:
+            raise HTTPException(status_code=400, detail="Missing authorization code")
+        
+        logging.info(f"Processing real Google OAuth callback with code")
+        
+        # Exchange code for tokens
+        token_data = google_apis_service.exchange_code_for_tokens(authorization_code)
+        
+        # Get current admin session
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if session_token:
+            # Update admin session with Google tokens
+            await db.admin_sessions.update_one(
+                {"session_token": session_token},
+                {
+                    "$set": {
+                        "google_tokens": token_data,
+                        "google_authenticated": True,
+                        "google_user_info": token_data.get('user_info', {}),
+                        "last_google_auth": datetime.now(timezone.utc)
+                    }
+                }
+            )
+        
+        logging.info(f"Successfully processed Google OAuth callback: {token_data.get('user_info', {}).get('email')}")
+        
+        return {
+            "success": True,
+            "message": "Google APIs authentication successful",
+            "user_info": token_data.get('user_info', {}),
+            "scopes": token_data.get('scopes', [])
+        }
+        
+    except Exception as e:
+        logging.error(f"Process Google OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process OAuth callback")
+
+@api_router.get("/google/gmail/real-messages")
+async def get_real_gmail_messages(request: Request):
+    """Get real Gmail messages using Google Gmail API"""
+    try:
+        # Get admin session with Google tokens
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        # Check if Google is authenticated
+        google_tokens = session_doc.get('google_tokens')
+        if not google_tokens:
+            return {
+                "success": True,
+                "messages": [{
+                    "id": "auth_required",
+                    "subject": "🔗 Google Authentication Required",
+                    "sender": "FIDUS System <system@fidus.com>",
+                    "preview": "To access your real Gmail messages, please authenticate with Google APIs by clicking 'Connect Google'.",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "unread": True,
+                    "body": "Google APIs authentication is required to access real Gmail data.",
+                    "auth_required": True
+                }],
+                "source": "no_google_auth"
+            }
+        
+        # Get real Gmail messages
+        messages = await google_apis_service.get_gmail_messages(google_tokens, max_results=20)
+        
+        logging.info(f"Retrieved {len(messages)} real Gmail messages")
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "source": "real_gmail_api",
+            "authenticated": True,
+            "message_count": len(messages)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get real Gmail messages error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Gmail messages")
+
+@api_router.post("/google/gmail/real-send")
+async def send_real_gmail_message(request: Request, email_data: dict):
+    """Send email via real Gmail API"""
+    try:
+        # Get admin session with Google tokens
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        # Check if Google is authenticated
+        google_tokens = session_doc.get('google_tokens')
+        if not google_tokens:
+            raise HTTPException(status_code=401, detail="Google authentication required")
+        
+        # Send email using real Gmail API
+        result = await google_apis_service.send_gmail_message(
+            token_data=google_tokens,
+            to=email_data.get('to'),
+            subject=email_data.get('subject'),
+            body=email_data.get('body', ''),
+            html_body=email_data.get('html_body')
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Send real Gmail message error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
+
+@api_router.get("/google/calendar/real-events")
+async def get_real_calendar_events(request: Request):
+    """Get real Calendar events using Google Calendar API"""
+    try:
+        # Get admin session with Google tokens
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        # Check if Google is authenticated
+        google_tokens = session_doc.get('google_tokens')
+        if not google_tokens:
+            return {
+                "success": True,
+                "events": [],
+                "message": "Google authentication required",
+                "source": "no_google_auth"
+            }
+        
+        # Get real calendar events
+        events = await google_apis_service.get_calendar_events(google_tokens, max_results=20)
+        
+        return {
+            "success": True,
+            "events": events,
+            "source": "real_calendar_api",
+            "event_count": len(events)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get real calendar events error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get calendar events")
+
+@api_router.post("/google/calendar/create-event")
+async def create_calendar_event(request: Request, event_data: dict):
+    """Create calendar event via real Google Calendar API"""
+    try:
+        # Get admin session with Google tokens
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        # Check if Google is authenticated
+        google_tokens = session_doc.get('google_tokens')
+        if not google_tokens:
+            raise HTTPException(status_code=401, detail="Google authentication required")
+        
+        # Create calendar event
+        result = await google_apis_service.create_calendar_event(google_tokens, event_data)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Create calendar event error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create calendar event")
+
+@api_router.get("/google/drive/real-files")
+async def get_real_drive_files(request: Request):
+    """Get real Drive files using Google Drive API"""
+    try:
+        # Get admin session with Google tokens
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No session token provided")
+        
+        # Get session from database
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        # Check if Google is authenticated
+        google_tokens = session_doc.get('google_tokens')
+        if not google_tokens:
+            return {
+                "success": True,
+                "files": [],
+                "message": "Google authentication required",
+                "source": "no_google_auth"
+            }
+        
+        # Get real drive files
+        files = await google_apis_service.get_drive_files(google_tokens, max_results=20)
+        
+        return {
+            "success": True,
+            "files": files,
+            "source": "real_drive_api",
+            "file_count": len(files)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get real drive files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get drive files")
+
+# Document Signing Endpoints
+@api_router.post("/documents/upload")
+async def upload_document(request: Request):
+    """Upload document for signing"""
+    try:
+        # Get current user
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        
+        # Get session to identify user
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        user_id = session_doc.get('user_id', 'unknown')
+        
+        # Parse multipart form data
+        form = await request.form()
+        uploaded_file = form.get('file')
+        
+        if not uploaded_file:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+        
+        # Read file data
+        file_data = await uploaded_file.read()
+        filename = uploaded_file.filename
+        mime_type = uploaded_file.content_type
+        
+        # Upload document
+        result = await document_signing_service.upload_document(
+            file_data=file_data,
+            filename=filename,
+            mime_type=mime_type,
+            user_id=user_id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Document upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload document")
+
+@api_router.get("/documents/{document_id}/pdf")
+async def get_document_pdf(document_id: str):
+    """Get document PDF data for viewing"""
+    try:
+        result = await document_signing_service.get_document_pdf_data(document_id)
+        return result
+        
+    except Exception as e:
+        logging.error(f"Get document PDF error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get document PDF")
+
+@api_router.post("/documents/{document_id}/sign")
+async def sign_document(document_id: str, request: Request, signature_data: dict):
+    """Add electronic signature to document"""
+    try:
+        # Get current user info
+        session_token = None
+        if 'session_token' in request.cookies:
+            session_token = request.cookies['session_token']
+        
+        if not session_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                session_token = auth_header.split(' ')[1]
+        
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        
+        # Get session to get user info
+        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        if not session_doc:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        user_info = {
+            'name': session_doc.get('name', 'Unknown User'),
+            'email': session_doc.get('email', 'unknown@example.com'),
+            'user_id': session_doc.get('user_id', 'unknown')
+        }
+        
+        # Add signature to document
+        result = await document_signing_service.add_signature(
+            document_id=document_id,
+            signature_data=signature_data,
+            user_info=user_info
+        )
+        
+        # If signing successful and we have Google tokens, send notification
+        if result['success']:
+            google_tokens = session_doc.get('google_tokens')
+            if google_tokens and signature_data.get('send_notification'):
+                recipient_email = signature_data.get('notification_email', user_info['email'])
+                
+                await document_signing_service.send_signed_document_notification(
+                    google_apis_service=google_apis_service,
+                    token_data=google_tokens,
+                    document_info=result['signature'],
+                    recipient_email=recipient_email
+                )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Sign document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to sign document")
+
+@api_router.get("/documents/signed/{filename}")
+async def get_signed_document(filename: str):
+    """Download signed document"""
+    try:
+        result = await document_signing_service.get_signed_document(filename)
+        
+        if result['success']:
+            from fastapi.responses import Response
+            
+            return Response(
+                content=result['document_data'],
+                media_type=result['mime_type'],
+                headers={
+                    "Content-Disposition": f"attachment; filename={result['filename']}"
+                }
+            )
+        else:
+            raise HTTPException(status_code=404, detail=result.get('error', 'Document not found'))
+        
+    except Exception as e:
+        logging.error(f"Get signed document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get signed document")
+
 @api_router.post("/google/gmail/send")
 async def send_gmail_message(request: Request, email_data: dict):
     """Send Gmail message using real Gmail API"""
