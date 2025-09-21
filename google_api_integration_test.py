@@ -84,6 +84,30 @@ class GoogleAPIIntegrationTest:
             self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
+    def test_google_oauth_auth_url(self):
+        """Test Google OAuth Authentication URL endpoint"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/google/auth-url")
+            
+            if response.status_code == 200:
+                data = response.json()
+                auth_url = data.get("auth_url", "")
+                provider = data.get("provider", "")
+                
+                if "auth.emergentagent.com" in auth_url and provider == "emergent_oauth":
+                    self.log_result("Google OAuth Auth URL", True, 
+                                  f"✅ Emergent OAuth authentication URL working: {provider}")
+                else:
+                    self.log_result("Google OAuth Auth URL", False, 
+                                  f"❌ Unexpected OAuth configuration", 
+                                  {"auth_url": auth_url, "provider": provider})
+            else:
+                self.log_result("Google OAuth Auth URL", False, 
+                              f"HTTP {response.status_code}", {"response": response.text})
+                
+        except Exception as e:
+            self.log_result("Google OAuth Auth URL", False, f"Exception: {str(e)}")
+    
     def test_real_gmail_api_integration(self):
         """Test Real Gmail API Integration"""
         try:
