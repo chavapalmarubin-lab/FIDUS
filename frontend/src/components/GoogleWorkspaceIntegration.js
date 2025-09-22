@@ -81,8 +81,8 @@ const GoogleWorkspaceIntegration = () => {
         apiAxios.get('/crm/prospects')
       ]);
       
-      setClients(clientsResponse.data.clients || []);
-      setProspects(prospectsResponse.data.prospects || []);
+      setCrmClients(clientsResponse.data.clients || []);
+      setCrmProspects(prospectsResponse.data.prospects || []);
     } catch (err) {
       console.error('Failed to fetch clients and prospects:', err);
     }
