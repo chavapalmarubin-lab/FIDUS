@@ -1,26 +1,13 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginSelection from "./components/LoginSelection";
+import ClientDashboard from "./components/ClientDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import GoogleCallback from "./components/GoogleCallback";
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
 import "./App.css";
-
-// Lazy load heavy components for better performance
-const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
-const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
-
-// Loading spinner component for Suspense fallback
-const LoadingSpinner = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-      <h2 className="text-xl text-white font-semibold">Loading FIDUS Dashboard...</h2>
-      <p className="text-slate-400 mt-2">Please wait while we prepare your workspace</p>
-    </div>
-  </div>
-);
 
 function App() {
   const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
