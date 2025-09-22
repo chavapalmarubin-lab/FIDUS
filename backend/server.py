@@ -8172,41 +8172,34 @@ async def get_real_calendar_events(request: Request):
         raise HTTPException(status_code=500, detail="Failed to get calendar events")
 
 @api_router.post("/google/calendar/create-event")
-async def create_calendar_event(request: Request, event_data: dict):
-    """Create calendar event via real Google Calendar API"""
+async def create_calendar_event(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Create Google Calendar event"""
     try:
-        # Get admin session with Google tokens
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        event_data = await request.json()
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
         
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        # Create calendar event using Google APIs service
+        result = await google_apis_service.create_calendar_event(token_data, event_data)
         
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        # Check if Google is authenticated
-        google_tokens = session_doc.get('google_tokens')
-        if not google_tokens:
-            raise HTTPException(status_code=401, detail="Google authentication required")
-        
-        # Create calendar event
-        result = await google_apis_service.create_calendar_event(google_tokens, event_data)
+        logging.info(f"Calendar event created by user: {current_user['username']}")
         
         return result
         
     except Exception as e:
         logging.error(f"Create calendar event error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to create calendar event")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 @api_router.get("/google/drive/real-files")
 async def get_real_drive_files(current_user: dict = Depends(get_current_admin_user)):
