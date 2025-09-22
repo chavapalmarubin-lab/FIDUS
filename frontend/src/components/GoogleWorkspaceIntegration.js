@@ -804,13 +804,27 @@ ${documentRequestType === 'aml_kyc' ? `
                 ) : emails.length > 0 ? (
                   <div className="space-y-3">
                     {emails.slice(0, 10).map((email, index) => (
-                      <div key={index} className="p-3 border rounded-lg hover:bg-slate-50">
+                      <div 
+                        key={index} 
+                        className="p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => handleEmailClick(email)}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <div className="font-medium">{email.subject || 'No Subject'}</div>
+                            <div className="font-medium text-slate-900 hover:text-blue-600">
+                              {email.subject || 'No Subject'}
+                            </div>
                             <div className="text-sm text-slate-600">{email.sender || 'Unknown Sender'}</div>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {email.date ? new Date(email.date).toLocaleDateString() : 'No Date'}
+                            </div>
                           </div>
-                          <Badge variant="outline">{email.unread ? 'Unread' : 'Read'}</Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge variant="outline" className={email.unread ? 'bg-blue-50 text-blue-700' : ''}>
+                              {email.unread ? 'Unread' : 'Read'}
+                            </Badge>
+                            <span className="text-xs text-slate-400">Click to read</span>
+                          </div>
                         </div>
                       </div>
                     ))}
