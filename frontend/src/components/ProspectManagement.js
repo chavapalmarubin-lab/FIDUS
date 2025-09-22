@@ -158,6 +158,310 @@ const ProspectManagement = () => {
     fetchPipeline();
   }, []);
 
+  // ===== GOOGLE API INTEGRATION FUNCTIONS =====
+  
+  // Email prospect via Gmail API
+  const emailProspect = async (prospect, emailType = 'general') => {
+    try {
+      let subject, body, htmlBody;
+      
+      switch (emailType) {
+        case 'document_request':
+          subject = 'Document Request - FIDUS Investment Management';
+          body = `Dear ${prospect.name},
+
+Thank you for your interest in FIDUS Investment Management. To proceed with your investment application, we need the following documents:
+
+Required Documents:
+- Government-issued photo ID (passport, driver's license, or national ID)
+- Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)
+- Bank statement (recent statement from your primary bank account)
+- Source of funds documentation (salary slip, business registration, or investment statements)
+
+You can upload these documents securely through our client portal or respond to this email with the attachments.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+FIDUS Investment Management Team`;
+          
+          htmlBody = `<html><body>
+<h2>Document Request - FIDUS Investment Management</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your interest in FIDUS Investment Management. To proceed with your investment application, we need the following documents:</p>
+<h3>Required Documents:</h3>
+<ul>
+<li>Government-issued photo ID (passport, driver's license, or national ID)</li>
+<li>Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)</li>
+<li>Bank statement (recent statement from your primary bank account)</li>
+<li>Source of funds documentation (salary slip, business registration, or investment statements)</li>
+</ul>
+<p>You can upload these documents securely through our client portal or respond to this email with the attachments.</p>
+<p>If you have any questions, please don't hesitate to contact us.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+          break;
+          
+        case 'meeting_followup':
+          subject = 'Follow-up - Investment Consultation';
+          body = `Dear ${prospect.name},
+
+Thank you for your time during our recent discussion about investment opportunities with FIDUS Investment Management.
+
+As discussed, we believe our investment solutions can help you achieve your financial goals. Here's a summary of what we can offer:
+
+- Personalized portfolio management
+- Risk assessment and mitigation strategies
+- Regular performance reviews and updates
+- Access to institutional-grade investment products
+
+Next steps:
+1. Review the investment proposal we'll send separately
+2. Complete the necessary documentation
+3. Schedule a follow-up meeting if you have questions
+
+We're here to support you every step of the way. Please don't hesitate to reach out with any questions.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+          htmlBody = `<html><body>
+<h2>Follow-up - Investment Consultation</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your time during our recent discussion about investment opportunities with FIDUS Investment Management.</p>
+<p>As discussed, we believe our investment solutions can help you achieve your financial goals. Here's what we can offer:</p>
+<ul>
+<li>Personalized portfolio management</li>
+<li>Risk assessment and mitigation strategies</li>
+<li>Regular performance reviews and updates</li>
+<li>Access to institutional-grade investment products</li>
+</ul>
+<h3>Next steps:</h3>
+<ol>
+<li>Review the investment proposal we'll send separately</li>
+<li>Complete the necessary documentation</li>
+<li>Schedule a follow-up meeting if you have questions</li>
+</ol>
+<p>We're here to support you every step of the way. Please don't hesitate to reach out with any questions.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+          break;
+          
+        default:
+          subject = 'Investment Opportunity - FIDUS Investment Management';
+          body = `Dear ${prospect.name},
+
+Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.
+
+Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer comprehensive portfolio management, risk assessment, and personalized investment strategies.
+
+Would you be available for a brief consultation this week? We can arrange a call at your convenience.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+          htmlBody = `<html><body>
+<h2>Investment Opportunity - FIDUS Investment Management</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.</p>
+<p>Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer:</p>
+<ul>
+<li>Comprehensive portfolio management</li>
+<li>Risk assessment and mitigation</li>
+<li>Personalized investment strategies</li>
+</ul>
+<p>Would you be available for a brief consultation this week? We can arrange a call at your convenience.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+      }
+
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: prospect.email,
+        subject: subject,
+        body: body,
+        html_body: htmlBody
+      });
+
+      if (response.data.success) {
+        setSuccess(`Email sent successfully to ${prospect.name}!`);
+      } else {
+        setError(`Failed to send email: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Email sending error:', error);
+      setError('Failed to send email. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Schedule meeting with prospect via Calendar API
+  const scheduleProspectMeeting = async (prospect, meetingType = 'consultation') => {
+    try {
+      let eventData;
+      
+      if (meetingType === 'consultation') {
+        eventData = {
+          summary: `Investment Consultation - ${prospect.name}`,
+          description: `Initial investment consultation with prospect ${prospect.name}. 
+          
+Contact: ${prospect.email}
+Phone: ${prospect.phone || 'N/A'}
+Investment Interest: ${prospect.initial_investment || 'To be discussed'}
+Risk Tolerance: ${prospect.risk_tolerance || 'To be assessed'}`,
+          start: {
+            dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+            timeZone: 'UTC'
+          },
+          end: {
+            dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
+            timeZone: 'UTC'
+          },
+          attendees: [{ email: prospect.email }],
+          conferenceData: {
+            createRequest: {
+              requestId: `prospect-consultation-${Date.now()}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' }
+            }
+          }
+        };
+      } else {
+        eventData = {
+          summary: `Follow-up Meeting - ${prospect.name}`,
+          description: `Follow-up investment meeting with prospect ${prospect.name}`,
+          start: {
+            dateTime: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 3 days from now
+            timeZone: 'UTC'
+          },
+          end: {
+            dateTime: new Date(Date.now() + 72 * 60 * 60 * 1000 + 45 * 60 * 1000).toISOString(), // 3 days + 45 min
+            timeZone: 'UTC'
+          },
+          attendees: [{ email: prospect.email }],
+          conferenceData: {
+            createRequest: {
+              requestId: `prospect-followup-${Date.now()}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' }
+            }
+          }
+        };
+      }
+
+      const response = await apiAxios.post('/google/calendar/create-event', eventData);
+      
+      if (response.data.success) {
+        setSuccess(`Meeting scheduled successfully with ${prospect.name}! Calendar invite sent.`);
+      } else {
+        setError(`Failed to schedule meeting: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Meeting scheduling error:', error);
+      setError('Failed to schedule meeting. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Share investment report with prospect
+  const shareInvestmentReport = async (prospect) => {
+    try {
+      // Generate personalized investment report data
+      const reportData = {
+        prospect_name: prospect.name,
+        initial_investment: prospect.initial_investment || 'To be determined',
+        risk_tolerance: prospect.risk_tolerance || 'Conservative',
+        investment_timeline: prospect.investment_timeline || '5+ years',
+        recommended_allocation: {
+          conservative: '60% Bonds, 40% Stocks',
+          moderate: '50% Bonds, 50% Stocks', 
+          aggressive: '30% Bonds, 70% Stocks'
+        }
+      };
+
+      // Send personalized investment report via email
+      const subject = `Personalized Investment Report - ${prospect.name}`;
+      const body = `Dear ${prospect.name},
+
+Based on our discussions, we've prepared a personalized investment report for your review.
+
+Investment Profile:
+- Initial Investment: ${reportData.initial_investment}
+- Risk Tolerance: ${reportData.risk_tolerance}
+- Investment Timeline: ${reportData.investment_timeline}
+
+Recommended Portfolio Allocation:
+${reportData.recommended_allocation[prospect.risk_tolerance?.toLowerCase()] || reportData.recommended_allocation.conservative}
+
+Key Benefits of Working with FIDUS:
+- Professional portfolio management
+- Regular performance monitoring
+- Risk management strategies
+- Transparent fee structure
+
+Next Steps:
+1. Review this personalized report
+2. Schedule a detailed consultation
+3. Begin your investment journey with FIDUS
+
+Please don't hesitate to contact us with any questions.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+      const htmlBody = `<html><body>
+<h2>Personalized Investment Report - ${prospect.name}</h2>
+<p>Dear ${prospect.name},</p>
+<p>Based on our discussions, we've prepared a personalized investment report for your review.</p>
+
+<h3>Investment Profile:</h3>
+<ul>
+<li><strong>Initial Investment:</strong> ${reportData.initial_investment}</li>
+<li><strong>Risk Tolerance:</strong> ${reportData.risk_tolerance}</li>
+<li><strong>Investment Timeline:</strong> ${reportData.investment_timeline}</li>
+</ul>
+
+<h3>Recommended Portfolio Allocation:</h3>
+<p><strong>${reportData.recommended_allocation[prospect.risk_tolerance?.toLowerCase()] || reportData.recommended_allocation.conservative}</strong></p>
+
+<h3>Key Benefits of Working with FIDUS:</h3>
+<ul>
+<li>Professional portfolio management</li>
+<li>Regular performance monitoring</li>
+<li>Risk management strategies</li>
+<li>Transparent fee structure</li>
+</ul>
+
+<h3>Next Steps:</h3>
+<ol>
+<li>Review this personalized report</li>
+<li>Schedule a detailed consultation</li>
+<li>Begin your investment journey with FIDUS</li>
+</ol>
+
+<p>Please don't hesitate to contact us with any questions.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: prospect.email,
+        subject: subject,
+        body: body,
+        html_body: htmlBody
+      });
+
+      if (response.data.success) {
+        setSuccess(`Investment report shared successfully with ${prospect.name}!`);
+      } else {
+        setError(`Failed to share report: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Report sharing error:', error);
+      setError('Failed to share report. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Show prospect detail modal with Google actions
+  const showProspectDetail = (prospect) => {
+    setSelectedProspect(prospect);
+    setShowDetailModal(true);
+  };
+
   const fetchProspects = async () => {
     try {
       setLoading(true);
