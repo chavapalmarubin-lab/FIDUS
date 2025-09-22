@@ -7,7 +7,7 @@ function App() {
 
   if (user) {
     return (
-      <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", backgroundColor: "white", minHeight: "100vh", color: "black" }}>
         <h1>FIDUS Investment Committee - Admin Dashboard</h1>
         <p>Welcome, {user.name}</p>
         <div style={{ marginTop: "20px" }}>
