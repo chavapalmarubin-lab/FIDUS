@@ -147,6 +147,172 @@ const GoogleWorkspaceIntegration = () => {
     }
   };
 
+  // Calendar Actions
+  const createGoogleMeet = async () => {
+    try {
+      const meetConfig = {
+        name: 'FIDUS Investment Meeting',
+        description: 'Investment consultation meeting',
+        start_time: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
+        end_time: new Date(Date.now() + 90 * 60 * 1000).toISOString(), // 1.5 hours from now
+        attendees: []
+      };
+
+      const response = await apiAxios.post('/google/meet/create-space', meetConfig);
+      
+      if (response.data.success) {
+        alert(`Google Meet created successfully! Join link: ${response.data.meet_link}`);
+        // Refresh calendar events to show the new meeting
+        await loadCalendarEvents();
+      } else {
+        alert(`Failed to create Google Meet: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating Google Meet:', error);
+      alert('Failed to create Google Meet. Please try again.');
+    }
+  };
+
+  const createClientMeeting = async () => {
+    try {
+      const eventData = {
+        summary: 'Client Meeting - FIDUS Investment',
+        description: 'Scheduled client consultation meeting',
+        start: {
+          dateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // 2 hours from now
+          timeZone: 'UTC'
+        },
+        conferenceData: {
+          createRequest: {
+            requestId: `client-meeting-${Date.now()}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' }
+          }
+        }
+      };
+
+      const response = await apiAxios.post('/google/calendar/create-event', eventData);
+      
+      if (response.data.success) {
+        alert('Client meeting scheduled successfully!');
+        await loadCalendarEvents();
+      } else {
+        alert(`Failed to schedule meeting: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating client meeting:', error);
+      alert('Failed to schedule meeting. Please try again.');
+    }
+  };
+
+  const createProspectMeeting = async () => {
+    try {
+      const eventData = {
+        summary: 'Prospect Meeting - FIDUS Investment',
+        description: 'Initial consultation with investment prospect',
+        start: {
+          dateTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // 2 hours from now
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: new Date(Date.now() + 180 * 60 * 1000).toISOString(), // 3 hours from now
+          timeZone: 'UTC'
+        },
+        conferenceData: {
+          createRequest: {
+            requestId: `prospect-meeting-${Date.now()}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' }
+          }
+        }
+      };
+
+      const response = await apiAxios.post('/google/calendar/create-event', eventData);
+      
+      if (response.data.success) {
+        alert('Prospect meeting scheduled successfully!');
+        await loadCalendarEvents();
+      } else {
+        alert(`Failed to schedule meeting: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating prospect meeting:', error);
+      alert('Failed to schedule meeting. Please try again.');
+    }
+  };
+
+  // Drive Actions
+  const handleDocumentUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/documents/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Document uploaded successfully!');
+        await loadDriveFiles();
+      } else {
+        alert(`Upload failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      alert('Failed to upload document. Please try again.');
+    }
+  };
+
+  const sendForSignature = async () => {
+    const recipientEmail = prompt('Enter recipient email for signature:');
+    const documentName = prompt('Enter document name:');
+    
+    if (!recipientEmail || !documentName) return;
+
+    try {
+      const response = await apiAxios.post('/documents/doc123/send-notification', {
+        recipient_email: recipientEmail,
+        recipient_name: 'Client',
+        document_name: documentName,
+        signing_url: 'https://fidus-workspace.preview.emergentagent.com/documents/sign'
+      });
+
+      if (response.data.success) {
+        alert('Signature request sent successfully!');
+      } else {
+        alert(`Failed to send request: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending signature request:', error);
+      alert('Failed to send signature request. Please try again.');
+    }
+  };
+
+  // Sheets Actions
+  const createPortfolioReport = async () => {
+    // For now, we'll create a simple alert. In production, this would generate a Google Sheet
+    alert('Portfolio report generation coming soon! This will create a comprehensive client portfolio report in Google Sheets.');
+  };
+
+  const createInvestmentSummary = async () => {
+    alert('Investment summary generation coming soon! This will create an investment performance summary in Google Sheets.');
+  };
+
+  const createMT5Report = async () => {
+    alert('MT5 trading report generation coming soon! This will pull MT5 data and create a trading performance report.');
+  };
+
   if (!isAuthenticated) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
