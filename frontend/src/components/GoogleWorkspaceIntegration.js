@@ -1326,6 +1326,96 @@ ${documentRequestType === 'aml_kyc' ? `
         </div>
       )}
 
+      {/* Email Reading Modal */}
+      {showEmailModal && selectedEmail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-xl font-semibold text-slate-900">
+                {selectedEmail.subject || 'No Subject'}
+              </h3>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Email Header Info */}
+              <div className="space-y-2 pb-4 border-b">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-900">From:</span>
+                  <span className="text-slate-700">{selectedEmail.sender || 'Unknown Sender'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-900">Date:</span>
+                  <span className="text-slate-700">
+                    {selectedEmail.date ? new Date(selectedEmail.date).toLocaleString() : 'No Date'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-900">Status:</span>
+                  <Badge variant="outline" className={selectedEmail.unread ? 'bg-blue-50 text-blue-700' : ''}>
+                    {selectedEmail.unread ? 'Unread' : 'Read'}
+                  </Badge>
+                </div>
+              </div>
+              
+              {/* Email Body */}
+              <div className="max-h-96 overflow-y-auto">
+                <h4 className="font-medium text-slate-900 mb-2">Message:</h4>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  {selectedEmail.body ? (
+                    <div 
+                      className="text-slate-700 whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{ 
+                        __html: selectedEmail.body.replace(/\n/g, '<br>') 
+                      }}
+                    />
+                  ) : selectedEmail.snippet ? (
+                    <p className="text-slate-700">{selectedEmail.snippet}</p>
+                  ) : (
+                    <p className="text-slate-500 italic">No message content available</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Email Actions */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  onClick={() => {
+                    // Reply functionality - would open compose modal
+                    alert('Reply functionality would open compose modal');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Reply className="h-4 w-4 mr-2" />
+                  Reply
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    // Forward functionality
+                    alert('Forward functionality would open compose modal');
+                  }}
+                >
+                  <Forward className="h-4 w-4 mr-2" />
+                  Forward
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowEmailModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <Alert className="bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
