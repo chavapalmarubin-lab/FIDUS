@@ -842,13 +842,67 @@ FIDUS Investment Management Team`;
         </div>
 
         <div className="flex gap-1 flex-wrap">
+          {/* Google API Action Buttons */}
+          <div className="w-full grid grid-cols-2 gap-2 mb-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => emailProspect(prospect, 'general')}
+              className="text-xs bg-blue-50 hover:bg-blue-100 border-blue-200"
+            >
+              <MessageSquare size={12} className="mr-1" />
+              Email
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => scheduleProspectMeeting(prospect, 'consultation')}
+              className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
+            >
+              <Video size={12} className="mr-1" />
+              Meet
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => emailProspect(prospect, 'document_request')}
+              className="text-xs bg-orange-50 hover:bg-orange-100 border-orange-200"
+            >
+              <FileText size={12} className="mr-1" />
+              Docs
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => shareInvestmentReport(prospect)}
+              className="text-xs bg-purple-50 hover:bg-purple-100 border-purple-200"
+            >
+              <Share2 size={12} className="mr-1" />
+              Report
+            </Button>
+          </div>
+          
+          {/* Regular Action Buttons */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => showProspectDetail(prospect)}
+            className="flex-1 min-w-0"
+          >
+            <Edit2 size={14} className="mr-1" />
+            Details
+          </Button>
+          
           <Button
             size="sm"
             variant="outline"
             onClick={() => openEditModal(prospect)}
             className="flex-1 min-w-0"
           >
-            <Edit2 size={14} className="mr-1" />
+            <Edit size={14} className="mr-1" />
             Edit
           </Button>
           
