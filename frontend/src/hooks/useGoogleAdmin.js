@@ -282,6 +282,7 @@ const useGoogleAdmin = () => {
     isAuthenticated,
     loginWithGoogle,
     logout,
+    logoutGoogle,
     refreshProfile,
     clearError: () => setError(null)
   };
