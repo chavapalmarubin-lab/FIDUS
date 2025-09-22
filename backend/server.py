@@ -7624,99 +7624,36 @@ async def process_emergent_oauth_session(request: Request, response: Response):
         logging.error(f"Process Emergent OAuth session error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process OAuth session")
 @api_router.post("/admin/google/process-callback")
-async def process_google_callback(request_data: dict, response: Response):
-    """Process Google OAuth authorization code for personal Gmail"""
+async def process_google_oauth_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Process Google OAuth callback with authorization code"""
     try:
-        logging.info("Processing Google OAuth callback for personal Gmail")
+        data = await request.json()
+        authorization_code = data.get('code')
         
-        code = request_data.get('code')
-        state = request_data.get('state')
+        if not authorization_code:
+            raise HTTPException(status_code=400, detail="Authorization code is required")
         
-        if not code:
-            raise HTTPException(status_code=400, detail="Missing authorization code")
+        # Exchange authorization code for tokens using Google APIs service
+        token_data = google_apis_service.exchange_code_for_tokens(authorization_code)
         
-        from personal_gmail_service import personal_gmail_service
+        # Store tokens in database for current admin user
+        stored = await store_google_session_token(current_user["user_id"], token_data)
         
-        # Get redirect URI
-        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://fidus-workspace.preview.emergentagent.com')}/admin/google-callback"
+        if not stored:
+            raise HTTPException(status_code=500, detail="Failed to store authentication tokens")
         
-        # Exchange code for tokens
-        tokens = personal_gmail_service.exchange_code_for_tokens(code, redirect_uri)
-        access_token = tokens.get('access_token')
-        refresh_token = tokens.get('refresh_token')
+        logging.info(f"Google OAuth tokens stored for admin user: {current_user['username']}")
         
-        if not access_token:
-            raise HTTPException(status_code=400, detail="No access token received")
-        
-        # Get user info from Google
-        userinfo_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
-        import requests
-        userinfo_response = requests.get(userinfo_url, timeout=10)
-        
-        if userinfo_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to get user information")
-        
-        user_data = userinfo_response.json()
-        logging.info(f"Personal Gmail OAuth successful for: {user_data.get('email')}")
-        
-        # Create admin session with Gmail tokens
-        session_token = str(uuid.uuid4())
-        
-        session_doc = {
-            "session_token": session_token,
-            "google_id": user_data.get('id'),
-            "email": user_data.get('email'),
-            "name": user_data.get('name'),
-            "picture": user_data.get('picture', ''),
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "is_admin": True,
-            "login_type": "google_oauth_personal",
-            "created_at": datetime.now(timezone.utc),
-            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
-            "last_accessed": datetime.now(timezone.utc)
+        return {
+            "success": True,
+            "message": "Google APIs authentication successful",
+            "user_info": token_data.get('user_info', {}),
+            "scopes": token_data.get('scopes', [])
         }
         
-        # Store in MongoDB
-        try:
-            result = await db.admin_sessions.insert_one(session_doc)
-            
-            if result.inserted_id:
-                logging.info(f"Created personal Gmail admin session for: {user_data.get('email')}")
-                
-                # Set httpOnly cookie for session persistence
-                response.set_cookie(
-                    key="session_token",
-                    value=session_token,
-                    max_age=7 * 24 * 60 * 60,  # 7 days
-                    httponly=True,
-                    secure=True,
-                    samesite="none",
-                    path="/"
-                )
-                
-                return {
-                    "success": True,
-                    "profile": {
-                        "id": user_data.get('id'),
-                        "email": user_data.get('email'),
-                        "name": user_data.get('name'),
-                        "picture": user_data.get('picture', '')
-                    },
-                    "session_token": session_token,
-                    "message": "Personal Gmail authentication successful"
-                }
-            else:
-                raise HTTPException(status_code=500, detail="Failed to create session")
-        except Exception as db_error:
-            logging.error(f"Database error: {str(db_error)}")
-            raise HTTPException(status_code=500, detail="Failed to store session")
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Process personal Gmail callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process Gmail callback")
+        logging.error(f"Process Google OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process OAuth callback")
 
 @api_router.post("/admin/google/logout")
 async def logout_google_admin(request: Request, response: Response):
