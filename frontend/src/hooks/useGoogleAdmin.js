@@ -139,31 +139,35 @@ const useGoogleAdmin = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Get JWT token for admin authentication
-      const jwtToken = getAuthToken();
-      if (!jwtToken) {
-        throw new Error('Admin not authenticated. Please login first.');
-      }
+      const jwtToken = localStorage.getItem('fidus_token');
       
-      const response = await fetch(`${API}/admin/google/auth-url`, {
+      if (!jwtToken) {
+        throw new Error('Admin authentication required');
+      }
+
+      // Call the new real Google OAuth URL endpoint
+      const response = await fetch(`${API}/admin/google/oauth-url`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${jwtToken}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       const data = await response.json();
       
-      if (data.success && data.auth_url) {
-        // Redirect to Google OAuth for personal Gmail
-        console.log('Redirecting to Google OAuth for personal Gmail access...');
-        window.location.href = data.auth_url;
+      if (data.success && data.oauth_url) {
+        // Redirect to real Google OAuth for comprehensive API access
+        console.log('Redirecting to real Google OAuth for comprehensive API access...');
+        window.location.href = data.oauth_url;
       } else {
-        throw new Error(data.detail || 'Failed to get Gmail OAuth URL');
+        throw new Error(data.detail || 'Failed to get Google OAuth URL');
       }
     } catch (err) {
+      console.error('Google OAuth error:', err);
       setError(err.message);
       setLoading(false);
     }
