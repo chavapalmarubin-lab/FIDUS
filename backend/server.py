@@ -52,6 +52,12 @@ except ValueError as e:
     logging.warning(f"Google Admin Service initialization failed: {e}")
     google_admin_service = None
 
+# Reinitialize Google APIs service with environment variables
+try:
+    google_apis_service.reinitialize_with_env()
+except Exception as e:
+    logging.error(f"Failed to reinitialize Google APIs service: {e}")
+
 # Gmail API imports
 import pickle
 from google.auth.transport.requests import Request as GoogleRequest
