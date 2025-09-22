@@ -135,7 +135,218 @@ const GoogleWorkspaceIntegration = () => {
     }
   };
 
-  const loadSheets = async () => {
+  // ===== NEW CRM INTEGRATION FUNCTIONS =====
+  
+  // Load clients and prospects from CRM
+  const [clients, setClients] = useState([]);
+  const [prospects, setProspects] = useState([]);
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [showRecipientModal, setShowRecipientModal] = useState(false);
+  const [emailAction, setEmailAction] = useState(''); // 'clients', 'prospects', 'documents'
+  const [documentRequestType, setDocumentRequestType] = useState('');
+  
+  // Load CRM data on component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCRMData();
+    }
+  }, [isAuthenticated]);
+
+  const loadCRMData = async () => {
+    try {
+      // Load clients
+      const clientsResponse = await apiAxios.get('/admin/clients');
+      setClients(clientsResponse.data.clients || []);
+      
+      // Load prospects
+      const prospectsResponse = await apiAxios.get('/crm/prospects');
+      setProspects(prospectsResponse.data.prospects || []);
+    } catch (error) {
+      console.error('Failed to load CRM data:', error);
+    }
+  };
+
+  // Email Clients Action
+  const handleEmailClients = () => {
+    setEmailAction('clients');
+    setSelectedRecipients([]);
+    setShowRecipientModal(true);
+  };
+
+  // Email Prospects Action
+  const handleEmailProspects = () => {
+    setEmailAction('prospects');
+    setSelectedRecipients([]);
+    setShowRecipientModal(true);
+  };
+
+  // Request Documents Action
+  const handleRequestDocuments = (documentType = 'general') => {
+    setEmailAction('documents');
+    setDocumentRequestType(documentType);
+    setSelectedRecipients([]);
+    setShowRecipientModal(true);
+  };
+
+  // Send bulk email with Gmail API
+  const sendBulkEmail = async (recipients, subject, body, htmlBody = null) => {
+    const results = [];
+    
+    for (const recipient of recipients) {
+      try {
+        const response = await apiAxios.post('/google/gmail/send', {
+          to: recipient.email,
+          subject: subject.replace('{name}', recipient.name),
+          body: body.replace('{name}', recipient.name),
+          html_body: htmlBody ? htmlBody.replace('{name}', recipient.name) : null
+        });
+        
+        if (response.data.success) {
+          results.push({ ...recipient, status: 'sent' });
+        } else {
+          results.push({ ...recipient, status: 'failed', error: response.data.error });
+        }
+      } catch (error) {
+        results.push({ ...recipient, status: 'failed', error: error.message });
+      }
+      
+      // Add delay between emails to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    return results;
+  };
+
+  // Process bulk email sending
+  const processBulkEmailSending = async () => {
+    if (selectedRecipients.length === 0) {
+      alert('Please select at least one recipient');
+      return;
+    }
+
+    let subject, body, htmlBody;
+
+    switch (emailAction) {
+      case 'clients':
+        subject = 'Important Update from FIDUS Investment Management';
+        body = `Dear {name},
+
+We hope this message finds you well. We wanted to reach out with an important update regarding your investment portfolio.
+
+Our team has been working diligently to optimize your investment strategy and we have some exciting developments to share with you.
+
+Please don't hesitate to reach out if you have any questions or would like to schedule a consultation.
+
+Best regards,
+FIDUS Investment Management Team`;
+        
+        htmlBody = `<html><body>
+<h2>Important Update from FIDUS Investment Management</h2>
+<p>Dear {name},</p>
+<p>We hope this message finds you well. We wanted to reach out with an important update regarding your investment portfolio.</p>
+<p>Our team has been working diligently to optimize your investment strategy and we have some exciting developments to share with you.</p>
+<p>Please don't hesitate to reach out if you have any questions or would like to schedule a consultation.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+        break;
+
+      case 'prospects':
+        subject = 'Investment Opportunity - FIDUS Investment Management';
+        body = `Dear {name},
+
+Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.
+
+Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer comprehensive portfolio management, risk assessment, and personalized investment strategies.
+
+Would you be available for a brief consultation this week? We can arrange a call at your convenience.
+
+Best regards,
+FIDUS Investment Management Team`;
+        
+        htmlBody = `<html><body>
+<h2>Investment Opportunity - FIDUS Investment Management</h2>
+<p>Dear {name},</p>
+<p>Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.</p>
+<p>Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer:</p>
+<ul>
+<li>Comprehensive portfolio management</li>
+<li>Risk assessment and mitigation</li>
+<li>Personalized investment strategies</li>
+</ul>
+<p>Would you be available for a brief consultation this week? We can arrange a call at your convenience.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+        break;
+
+      case 'documents':
+        const docTypeLabel = documentRequestType === 'aml_kyc' ? 'AML/KYC Documentation' : 'Required Documents';
+        subject = `Document Request - ${docTypeLabel}`;
+        body = `Dear {name},
+
+As part of our compliance and onboarding process, we need to collect some additional documentation from you.
+
+Required documents for ${docTypeLabel.toLowerCase()}:
+${documentRequestType === 'aml_kyc' ? `
+- Government-issued photo ID (passport, driver's license, or national ID)
+- Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)
+- Bank statement (recent statement from your primary bank account)
+- Source of funds documentation (salary slip, business registration, or investment statements)
+` : `
+- Please provide the requested documentation as discussed
+`}
+
+You can upload these documents securely through our client portal or respond to this email with the attachments.
+
+If you have any questions about the required documentation, please don't hesitate to contact us.
+
+Best regards,
+FIDUS Investment Management Team`;
+        
+        htmlBody = `<html><body>
+<h2>Document Request - ${docTypeLabel}</h2>
+<p>Dear {name},</p>
+<p>As part of our compliance and onboarding process, we need to collect some additional documentation from you.</p>
+<h3>Required documents for ${docTypeLabel.toLowerCase()}:</h3>
+${documentRequestType === 'aml_kyc' ? `
+<ul>
+<li>Government-issued photo ID (passport, driver's license, or national ID)</li>
+<li>Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)</li>
+<li>Bank statement (recent statement from your primary bank account)</li>
+<li>Source of funds documentation (salary slip, business registration, or investment statements)</li>
+</ul>
+` : `
+<p>Please provide the requested documentation as discussed.</p>
+`}
+<p>You can upload these documents securely through our client portal or respond to this email with the attachments.</p>
+<p>If you have any questions about the required documentation, please don't hesitate to contact us.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+        break;
+
+      default:
+        alert('Invalid email action');
+        return;
+    }
+
+    try {
+      const results = await sendBulkEmail(selectedRecipients, subject, body, htmlBody);
+      
+      const successCount = results.filter(r => r.status === 'sent').length;
+      const failCount = results.filter(r => r.status === 'failed').length;
+      
+      if (successCount > 0) {
+        alert(`Successfully sent ${successCount} email(s)${failCount > 0 ? `. ${failCount} failed.` : '!'}`);
+      } else {
+        alert(`Failed to send emails. Please check your Google authentication and try again.`);
+      }
+      
+      setShowRecipientModal(false);
+      setSelectedRecipients([]);
+    } catch (error) {
+      console.error('Bulk email error:', error);
+      alert('Failed to send emails. Please try again.');
+    }
+  };
     try {
       setSheetsLoading(true);
       const response = await apiAxios.get('/google/sheets/spreadsheets');
