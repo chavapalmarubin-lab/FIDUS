@@ -808,7 +808,7 @@ ${documentRequestType === 'aml_kyc' ? `
                   Connect Google Workspace
                 </>
               )}
-            </Button>
+            </button>
           </div>
         </CardContent>
       </Card>
