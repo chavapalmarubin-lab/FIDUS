@@ -176,8 +176,109 @@ const ProspectManagement = () => {
 
   // ===== GOOGLE API INTEGRATION FUNCTIONS =====
   
-  // Email prospect via Gmail API
-  const emailProspect = async (prospect, emailType = 'general') => {
+  // Email prospect via Gmail API with modal
+  const openEmailModal = (prospect, emailType = 'general') => {
+    setSelectedProspect(prospect);
+    setEmailData({
+      type: emailType,
+      subject: emailType === 'document_request' 
+        ? `Document Request - ${prospect.name}` 
+        : `Investment Opportunity - ${prospect.name}`,
+      body: emailType === 'document_request' 
+        ? `Dear ${prospect.name},\n\nWe need the following documents to proceed with your investment application:\n\n- Government-issued photo ID\n- Proof of residence\n- Bank statement\n- Source of funds documentation\n\nBest regards,\nFIDUS Investment Management Team`
+        : `Dear ${prospect.name},\n\nThank you for your interest in FIDUS Investment Management. We would like to discuss investment opportunities with you.\n\nBest regards,\nFIDUS Investment Management Team`,
+      recipient: prospect
+    });
+    setShowEmailModal(true);
+  };
+
+  // Schedule meeting via Calendar API with modal
+  const openMeetingModal = (prospect, meetingType = 'consultation') => {
+    setSelectedProspect(prospect);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    setMeetingData({
+      type: meetingType,
+      date: tomorrow.toISOString().split('T')[0],
+      time: '14:00',
+      duration: meetingType === 'consultation' ? 60 : 30,
+      notes: `${meetingType === 'consultation' ? 'Investment consultation' : 'Follow-up meeting'} with ${prospect.name}`
+    });
+    setShowMeetingModal(true);
+  };
+
+  // Send email function
+  const sendProspectEmail = async () => {
+    if (!emailData.recipient || !emailData.subject || !emailData.body) {
+      setError('Please fill in all email fields');
+      return;
+    }
+
+    try {
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: emailData.recipient.email,
+        subject: emailData.subject,
+        body: emailData.body,
+        html_body: emailData.body.replace(/\n/g, '<br>')
+      });
+
+      if (response.data.success) {
+        setSuccess(`Email sent successfully to ${emailData.recipient.name}!`);
+        setShowEmailModal(false);
+      } else {
+        setError(`Failed to send email: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Email sending error:', error);
+      setError('Failed to send email. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Schedule meeting function
+  const scheduleProspectMeeting = async () => {
+    if (!meetingData.date || !meetingData.time || !selectedProspect) {
+      setError('Please fill in all meeting details');
+      return;
+    }
+
+    try {
+      const startDateTime = new Date(`${meetingData.date}T${meetingData.time}:00`);
+      const endDateTime = new Date(startDateTime.getTime() + meetingData.duration * 60000);
+
+      const eventData = {
+        summary: `${meetingData.type === 'consultation' ? 'Investment Consultation' : 'Follow-up Meeting'} - ${selectedProspect.name}`,
+        description: `${meetingData.notes}\n\nContact: ${selectedProspect.email}\nPhone: ${selectedProspect.phone || 'N/A'}`,
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        attendees: [{ email: selectedProspect.email }],
+        conferenceData: {
+          createRequest: {
+            requestId: `prospect-meeting-${Date.now()}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' }
+          }
+        }
+      };
+
+      const response = await apiAxios.post('/google/calendar/create-event', eventData);
+      
+      if (response.data.success) {
+        setSuccess(`Meeting scheduled successfully with ${selectedProspect.name}! Calendar invite sent.`);
+        setShowMeetingModal(false);
+      } else {
+        setError(`Failed to schedule meeting: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Meeting scheduling error:', error);
+      setError('Failed to schedule meeting. Please ensure Google authentication is active.');
+    }
+  };
     try {
       let subject, body, htmlBody;
       
