@@ -4,7 +4,7 @@ import requests
 session = requests.Session()
 
 # Authenticate
-auth_response = session.post('https://fidussign.preview.emergentagent.com/api/auth/login', json={
+auth_response = session.post('https://finance-portal-60.preview.emergentagent.com/api/auth/login', json={
     'username': 'admin',
     'password': 'password123',
     'user_type': 'admin'
@@ -15,7 +15,7 @@ if auth_response.status_code == 200:
     session.headers.update({'Authorization': f'Bearer {token}'})
     
     # Check for existing investments
-    response = session.get('https://fidussign.preview.emergentagent.com/api/investments/client/client_003')
+    response = session.get('https://finance-portal-60.preview.emergentagent.com/api/investments/client/client_003')
     if response.status_code == 200:
         data = response.json()
         investments = data.get('investments', [])
@@ -27,7 +27,7 @@ if auth_response.status_code == 200:
             # Test projections for this investment
             inv_id = inv.get('investment_id')
             if inv_id:
-                proj_response = session.get(f'https://fidussign.preview.emergentagent.com/api/investments/{inv_id}/projections')
+                proj_response = session.get(f'https://finance-portal-60.preview.emergentagent.com/api/investments/{inv_id}/projections')
                 if proj_response.status_code == 200:
                     proj_data = proj_response.json()
                     payments = proj_data.get('projected_payments', [])

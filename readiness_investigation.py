@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_readiness_discrepancy():
-    base_url = "https://fidussign.preview.emergentagent.com"
+    base_url = "https://finance-portal-60.preview.emergentagent.com"
     
     print("🔍 INVESTIGATING CLIENT READINESS DISCREPANCY")
     print("="*60)

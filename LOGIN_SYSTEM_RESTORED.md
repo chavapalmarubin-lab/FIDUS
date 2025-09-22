@@ -92,7 +92,7 @@ Instead of spending more time debugging the complex component key conflicts, I i
 ## Production Readiness Status
 
 ### **Immediately Available for Demo**
-- **URL**: `https://fidussign.preview.emergentagent.com`
+- **URL**: `https://finance-portal-60.preview.emergentagent.com`
 - **Login Types**: Both Admin and Client working
 - **Authentication**: Secure MongoDB integration
 - **Session Management**: Persistent login state

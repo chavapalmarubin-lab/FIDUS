@@ -1,21 +1,24 @@
 <analysis>
-The AI engineer's work primarily focused on integrating Google OAuth and various Google APIs (Gmail, Calendar, Drive, Meet) into the FIDUS application, along with a document signing feature and CRM integration. The trajectory highlights an iterative debugging process, starting with persistent authentication issues like , , , and . Significant effort was spent on correctly loading environment variables and updating backend authentication from session-based to JWT. The engineer systematically implemented backend API endpoints and then integrated them into the frontend UI, including CRM components. Recurring themes were frontend authentication state management, which seemed resolved but kept re-emerging, and ensuring seamless integration with existing CRM workflows. The work concluded with fixes for CRM UI elements and preparing to address missing Send for Signature functionality and CRM pipeline stages.
+The previous AI engineer successfully integrated Google OAuth and various Google APIs (Gmail, Calendar, Drive, Meet) into the FIDUS application, alongside a document signing feature and initial CRM integration. This involved extensive debugging of authentication issues (sign-in loops, JWT handling, scope mismatches) and refactoring the backend to use JWT. Frontend components were updated to interact with these new APIs and manage authentication state. The engineer also fixed CRM UI elements and implemented modals for Google actions.
+
+The work was passed on with two pending critical issues: missing Send for Signature functionality on the Drive tab and incomplete CRM pipeline stages. The user explicitly prioritized the CRM pipeline implementation first, followed by user admin functions, and then document signing. The current AI engineer has started by analyzing the existing CRM codebase in  and  to understand its current structure and identify where to implement the missing pipeline stages.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is an investment management platform for clients and admins, providing AML/KYC, CRM, fund allocation, and real-time portfolio management. The core problem is enhancing its capabilities through robust Google Workspace integration and advanced document handling.
+The FIDUS financial portal is an investment management platform designed for clients and admins, featuring AML/KYC, CRM, fund allocation, and real-time portfolio management. The primary goal is to enhance its capabilities through robust Google Workspace integration and advanced document handling.
 
 **Explicit Requests & Implemented Features:**
-1.  **Google OAuth Integration**: Enable admin users to authenticate with Google using personal Gmail accounts for consolidated access to Gmail, Calendar, Drive, and Meet.
-2.  **Real Google API Integration**: Fetch and display real Gmail, Calendar, Drive, and Meet data.
-3.  **Gmail Integration**: Allow sending/receiving emails, scheduling meetings.
-4.  **Calendar Integration**: Create and manage calendar events, including Google Meet links.
-5.  **Drive Integration**: Manage documents, including upload and Send for Signature functionality.
-6.  **Document Signing Functionality**: Implement document upload, PDF viewing, electronic signature capture, and email notifications.
-7.  **Google Social Login/Signup**: Integrate Google login/signup, preserving FIDUS branding.
-8.  **Admin Login Routing**: Ensure admins redirect correctly post-login.
-9.  **CRM Integration**: Seamlessly integrate Google functionalities (email, meetings, document requests, reports) within the CRM workflow, including prospect pipeline stages and client detail pages.
-10. **Robust Authentication**: Fix login loops, , JWT token handling, and frontend authentication state persistence.
+1.  **Google OAuth Integration**: Admin users can authenticate with Google using personal Gmail accounts for consolidated access to Gmail, Calendar, Drive, and Meet.
+2.  **Real Google API Integration**: Fetches and displays real Gmail, Calendar, Drive, and Meet data.
+3.  **Gmail Integration**: Supports sending/receiving emails and scheduling meetings.
+4.  **Calendar Integration**: Enables creation and management of calendar events, including Google Meet links.
+5.  **Drive Integration**: Manages documents, including upload functionality.
+6.  **Document Signing Functionality**: Includes document upload, PDF viewing, electronic signature capture, and email notifications. The internal signee for FIDUS will always be Salvador Palma, with the client as the other signee.
+7.  **Google Social Login/Signup**: Google login/signup is integrated while preserving FIDUS branding.
+8.  **Admin Login Routing**: Admins redirect correctly post-login.
+9.  **CRM Integration**: Google functionalities (email, meetings, document requests, reports) are integrated within the CRM workflow, specifically with prospect cards. All CRM functionality should seamlessly integrate with Google APIs for consolidated documentation.
+10. **Robust Authentication**: Addressed login loops, , JWT token handling, and frontend authentication state persistence.
+11. **User Admin Functions**: New request to create user administration functions for creating and managing users.
 </product_requirements>
 
 <key_technical_concepts>
@@ -31,49 +34,60 @@ The FIDUS financial portal is an investment management platform for clients and 
 
 <code_architecture>
 
--   ****: Central FastAPI application for API routing.
-    -   **Changes**: Heavily modified to include new JWT-authenticated endpoints for Google OAuth callback, Gmail (read/send), Calendar (events/create), Drive (upload/files), and Meet (create spaces). Critical fixes involved ensuring  was called before  imports, and updating old session-based authentication to JWT for various Google and document signing endpoints. A Google Drive upload endpoint was added. Duplicate calendar event creation endpoints were consolidated.
--   ****: Stores environment variables for backend.
-    -   **Importance**: Critical for Google OAuth credentials (, , ) and MongoDB.
-    -   **Changes**: Verified and utilized existing variables, with focus on correct loading.
--   ****: Encapsulates all real Google API interactions.
-    -   **Changes**: Updated for lazy initialization of Google API clients to ensure environment variables are loaded. Modified  to handle flexible Google OAuth scopes (allowing ). Added Google Meet API methods.
--   ****: Logic for document signing.
-    -   **Changes**: No direct code changes were mentioned for this file, but its endpoints in  were updated for authentication.
--   ****: Main React application component.
-    -   **Changes**: Fixed to correctly store the backend-issued JWT token () into  as  during admin login. This was crucial for persistent authentication. Authentication detection logic was reviewed.
--   ****: Login UI.
-    -   **Changes**: Ensured  correctly passes data to  for JWT storage.
--   ****: Handles Google OAuth redirects.
-    -   **Changes**: Updated to correctly process authorization codes, store  and  in , and redirect after successful authentication. JWT token handling was reviewed to ensure frontend sends it properly in the Authorization header.
--   ****: Frontend UI for Google Workspace features.
-    -   **Changes**: Fixed frontend endpoint calls for Gmail (from  to ). Corrected email sending to use  instead of . Implemented handler functions for Calendar, Drive, and Sheets buttons. Added a modal for email reading functionality, including Reply/Forward. Corrected document upload to use the Google Drive upload endpoint.
--   ****: Manages CRM prospects pipeline.
-    -   **Changes**: Added Google action buttons (Email, Meet, Docs, Report) to prospect cards. Implemented a prospect detail modal with integrated Google actions. Added modals for meeting scheduling and email actions. Fixed a compilation error (missing closing brace) and missing ,  imports.
+-   ****: The central FastAPI application handling API routes.
+    -   **Importance**: Defines backend endpoints for Google OAuth, Gmail, Calendar, Drive, Meet, and document signing. Also manages CRM prospect endpoints.
+    -   **Changes**: Heavily modified for JWT-authenticated Google OAuth callback and API integrations. Fixed  issues and consolidated calendar event creation. Includes CRM-related endpoints like .
+-   ****: Stores backend environment variables.
+    -   **Importance**: Critical for Google OAuth credentials (, , ) and MongoDB connection ().
+    -   **Changes**: Used for proper configuration, no structural changes observed.
+-   ****: Manages all Google API interactions.
+    -   **Importance**: Centralizes logic for Google services like Gmail, Calendar, Drive, and Meet.
+    -   **Changes**: Updated for lazy initialization, flexible Google OAuth scopes, and Google Meet API methods.
+-   ****: Handles document signing logic.
+    -   **Importance**: Provides core functionality for electronic signatures.
+    -   **Changes**: No direct code changes detailed, but  endpoints related to it were updated for JWT authentication.
+-   ****: The main React application component.
+    -   **Importance**: Manages overall application state, including user authentication and routing.
+    -   **Changes**: Fixed JWT token storage () in  post-admin login, crucial for persistent authentication.
+-   ****: Provides the login user interface.
+    -   **Importance**: Entry point for user authentication.
+    -   **Changes**: Ensures login data, including JWT, is correctly passed to .
+-   ****: Handles the redirect after Google OAuth.
+    -   **Importance**: Processes authorization codes to complete Google authentication.
+    -   **Changes**: Updated to correctly process codes, store  and  in , and redirect.
+-   ****: UI for Google Workspace features.
+    -   **Importance**: Provides the user interface for interacting with Gmail, Calendar, and Drive.
+    -   **Changes**: Corrected frontend API calls for Gmail, email sending with , and implemented handlers for Calendar, Drive, and Sheets. Added email reading modal and fixed Google Drive uploads.
+-   ****: Manages CRM prospects.
+    -   **Importance**: Displays prospect cards and integrates Google actions within the CRM workflow.
+    -   **Changes**: Added Google action buttons (Email, Meet, Docs, Report) and a prospect detail modal with integrated Google actions. Implemented modals for meeting scheduling and email actions. Corrected compilation errors. This file is currently being examined to understand CRM pipeline.
 -   ****: Custom hook for Google admin authentication.
-    -   **Changes**: Reviewed for authentication state detection and improved handling post-OAuth callback.
--   ****: Authentication utility functions.
-    -   **Changes**: Updated to better handle Google authentication state and retrieve  correctly.
+    -   **Importance**: Simplifies Google admin authentication state management.
+    -   **Changes**: Reviewed for improved authentication state detection post-OAuth.
+-   ****: Utility functions for authentication.
+    -   **Importance**: Provides helper functions for managing authentication tokens and state.
+    -   **Changes**: Updated to better handle Google authentication state and retrieve .
 </code_architecture>
 
 <pending_tasks>
--   Complete the integration of the  component with real data and visualizations.
 -   Implement the actual MetaTrader5 package integration in .
 -   Automate rebate tracking based on trading volume via an API.
--   Implement the Send for Signature functionality on the Drive tab, including document selection and upload.
--   Restore and fully integrate the Leads pipeline stages in the CRM for managing prospects.
+-   Complete the integration of the  component with real data and visualizations.
+-   Implement the missing Leads pipeline stages in the CRM for managing prospects, fully integrating with Google APIs.
+-   Create user administration functions for creating and managing users.
+-   Implement the Send for Signature functionality on the Drive tab, including document selection, upload, and display in a sent tab, ensuring Salvador Palma is the default FIDUS signee.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer had just completed a series of high-priority fixes and feature implementations: Gmail email reading modal, Google Drive upload endpoint and frontend integration, meeting scheduling modals, and full CRM Google integration modals for prospect cards. The engineer claimed all 4 priorities were successfully implemented.
+Immediately prior to this summary, the AI engineer had completed significant fixes and features, including a Gmail email reading modal, Google Drive upload endpoint and frontend integration, meeting scheduling modals, and comprehensive CRM Google integration modals for prospect cards. The previous engineer stated that all four priorities were successfully implemented.
 
-However, the user reported new issues:
-1.  On the Drive tab, the Send for Signature functionality is missing the process to ask for a document to send/upload and display it in a sent tab.
+However, the user reported two new critical issues:
+1.  On the Drive tab, the Send for Signature functionality is missing, specifically the process to ask for a document to send/upload and display it in a sent tab.
 2.  The CRM Pipeline is missing its stages (the process to turn leads into clients), which should incorporate Google email, documents, signatures, and meetings.
 
-The AI engineer acknowledged these issues and stated they would start with Issue 1: Drive Send for Signature functionality. A persistent, recurring authentication persistence bug causing the app to get stuck in a logo animation or return to login screen was noted, but the engineer believed it didn't affect underlying functionality.
+The user then clarified priorities, requesting to implement the CRM pipeline first, then user admin functions, and finally the document signing feature, while ensuring all CRM functionality integrates with Google APIs. The current AI engineer has acknowledged this updated plan and has begun work by examining the existing CRM frontend component () and backend API () to understand the current structure and identify the necessary modifications for implementing the CRM pipeline stages. A persistent authentication persistence bug was noted but deemed not to affect underlying functionality at that point.
 </current_work>
 
 <optional_next_step>
-Address the missing Send for Signature functionality on the Drive tab, allowing users to select and upload documents for signing.
+Continue analyzing  and  to define the CRM pipeline stages and corresponding backend/frontend logic.
 </optional_next_step>

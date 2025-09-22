@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidussign.preview.emergentagent.com`
+`https://finance-portal-60.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

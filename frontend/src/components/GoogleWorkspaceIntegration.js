@@ -569,7 +569,7 @@ ${documentRequestType === 'aml_kyc' ? `
         recipient_email: recipientEmail,
         recipient_name: 'Client',
         document_name: documentName,
-        signing_url: 'https://fidussign.preview.emergentagent.com/documents/sign'
+        signing_url: 'https://finance-portal-60.preview.emergentagent.com/documents/sign'
       });
 
       if (response.data.success) {
