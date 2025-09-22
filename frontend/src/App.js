@@ -72,19 +72,9 @@ function App() {
         }
       } else {
         console.log('User is not authenticated');
-        if (skipAnimation || googleAuthSuccess) {
-          console.log('Skipping animation, going to login');
-          setCurrentView("login");
-        } else {
-          console.log('Starting with logo animation');
-          setCurrentView("logo");
-          
-          // Safety timeout - automatically skip to login after 3 seconds (reduced timeout)
-          setTimeout(() => {
-            console.log('Safety timeout triggered - going to login');
-            setCurrentView("login");
-          }, 3000);
-        }
+        // PERMANENT FIX: Always skip animation to prevent dark screen issue
+        console.log('Skipping animation for all users - going to login');
+        setCurrentView("login");
       }
     };
 
