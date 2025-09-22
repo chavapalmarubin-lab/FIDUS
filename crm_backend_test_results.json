@@ -14,32 +14,32 @@
       "test_name": "Admin Authentication",
       "success": true,
       "details": "JWT token obtained and set in headers. Token: eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...",
-      "timestamp": "2025-09-22T22:05:08.175950",
+      "timestamp": "2025-09-22T22:05:55.597065",
       "response_data": null
     },
     {
       "test_name": "GET /api/crm/prospects (fetch all prospects)",
       "success": true,
-      "details": "Retrieved 13 prospects. Total: 13. Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']",
-      "timestamp": "2025-09-22T22:05:08.195823",
+      "details": "Retrieved 14 prospects. Total: 14. Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']",
+      "timestamp": "2025-09-22T22:05:55.612134",
       "response_data": {
-        "prospect_count": 13,
+        "prospect_count": 14,
         "pipeline_stats": {
-          "lead": 12,
+          "lead": 13,
           "qualified": 0,
           "proposal": 0,
           "negotiation": 0,
           "won": 1,
           "lost": 0
         },
-        "total_prospects": 13
+        "total_prospects": 14
       }
     },
     {
       "test_name": "GET /api/crm/prospects/pipeline (pipeline data)",
       "success": true,
-      "details": "Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']. Stage counts: {'lead': 12, 'qualified': 0, 'proposal': 0, 'negotiation': 0, 'won': 1, 'lost': 0}",
-      "timestamp": "2025-09-22T22:05:08.209690",
+      "details": "Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']. Stage counts: {'lead': 13, 'qualified': 0, 'proposal': 0, 'negotiation': 0, 'won': 1, 'lost': 0}",
+      "timestamp": "2025-09-22T22:05:55.630869",
       "response_data": {
         "pipeline_stages": [
           "lead",
@@ -50,7 +50,7 @@
           "lost"
         ],
         "stage_counts": {
-          "lead": 12,
+          "lead": 13,
           "qualified": 0,
           "proposal": 0,
           "negotiation": 0,
@@ -63,16 +63,16 @@
       "test_name": "POST /api/crm/prospects (create prospect)",
       "success": false,
       "details": "HTTP 500",
-      "timestamp": "2025-09-22T22:05:08.224230",
+      "timestamp": "2025-09-22T22:05:55.644716",
       "response_data": "Internal Server Error"
     },
     {
       "test_name": "POST /api/admin/users/create (create new users with temporary passwords)",
       "success": true,
-      "details": "User created successfully. User ID: client_63ee2173. Message: User 'CRM Test User' created successfully. Temporary password set.",
-      "timestamp": "2025-09-22T22:05:08.233488",
+      "details": "User created successfully. User ID: client_26a8fbed. Message: User 'CRM Test User' created successfully. Temporary password set.",
+      "timestamp": "2025-09-22T22:05:55.665213",
       "response_data": {
-        "user_id": "client_63ee2173",
+        "user_id": "client_26a8fbed",
         "username": "crmtest_user",
         "message": "User 'CRM Test User' created successfully. Temporary password set."
       }
@@ -81,7 +81,7 @@
       "test_name": "Verify user creation workflow and password management",
       "success": true,
       "details": "Temporary password login successful. Must change password: True, User type: client, Token received: True",
-      "timestamp": "2025-09-22T22:05:08.286808",
+      "timestamp": "2025-09-22T22:05:55.716685",
       "response_data": {
         "must_change_password": true,
         "user_type": "client",
@@ -92,7 +92,7 @@
       "test_name": "GET /api/documents/categories (document categories)",
       "success": true,
       "details": "Retrieved document categories. Shared: 8 categories, Admin: 0 categories",
-      "timestamp": "2025-09-22T22:05:08.297979",
+      "timestamp": "2025-09-22T22:05:55.727218",
       "response_data": {
         "shared_categories": [
           "loan_agreements",
@@ -110,10 +110,10 @@
     {
       "test_name": "POST /api/documents/upload (document upload)",
       "success": true,
-      "details": "Document uploaded successfully. Document ID: bd8c728e-13ce-4a95-98da-bc1b0d509fe1, File: None, Category: None",
-      "timestamp": "2025-09-22T22:05:08.324146",
+      "details": "Document uploaded successfully. Document ID: acf3a350-3704-4ac8-a8ca-460ba9565e95, File: None, Category: None",
+      "timestamp": "2025-09-22T22:05:55.754503",
       "response_data": {
-        "document_id": "bd8c728e-13ce-4a95-98da-bc1b0d509fe1",
+        "document_id": "acf3a350-3704-4ac8-a8ca-460ba9565e95",
         "file_name": null,
         "category": null
       }
@@ -121,53 +121,53 @@
     {
       "test_name": "POST /api/documents/{id}/send-for-signature (enhanced signature workflow)",
       "success": false,
-      "details": "HTTP 422",
-      "timestamp": "2025-09-22T22:05:08.338237",
-      "response_data": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"recipients\"],\"msg\":\"Field required\",\"input\":{\"recipient_email\":\"chava@alyarglobal.com\",\"recipient_name\":\"Salvador Palma\",\"subject\":\"FIDUS Document Signature Request - CRM Backend Test\",\"message\":\"Dear Salvador,\\n\\nPlease review and sign this document as part of our CRM backend testing verification.\\n\\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\\n\\nBest regards,\\nFIDUS Investment Management\",\"signature_required\":true},\"url\":\"https://errors.pydantic.dev/2.11/v/missing\"},{\"type\":\"missing\",\"loc\":[\"body\",\"email_subject\"],\"msg\":\"Field required\",\"input\":{\"recipient_email\":\"chava@alyarglobal.com\",\"recipient_name\":\"Salvador Palma\",\"subject\":\"FIDUS Document Signature Request - CRM Backend Test\",\"message\":\"Dear Salvador,\\n\\nPlease review and sign this document as part of our CRM backend testing verification.\\n\\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\\n\\nBest regards,\\nFIDUS Investment Management\",\"signature_required\":true},\"url\":\"https://errors.pydantic.dev/2.11/v/missing\"},{\"type\":\"missing\",\"loc\":[\"body\",\"email_message\"],\"msg\":\"Field required\",\"input\":{\"recipient_email\":\"chava@alyarglobal.com\",\"recipient_name\":\"Salvador Palma\",\"subject\":\"FIDUS Document Signature Request - CRM Backend Test\",\"message\":\"Dear Salvador,\\n\\nPlease review and sign this document as part of our CRM backend testing verification.\\n\\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\\n\\nBest regards,\\nFIDUS Investment Management\",\"signature_required\":true},\"url\":\"https://errors.pydantic.dev/2.11/v/missing\"},{\"type\":\"missing\",\"loc\":[\"body\",\"sender_id\"],\"msg\":\"Field required\",\"input\":{\"recipient_email\":\"chava@alyarglobal.com\",\"recipient_name\":\"Salvador Palma\",\"subject\":\"FIDUS Document Signature Request - CRM Backend Test\",\"message\":\"Dear Salvador,\\n\\nPlease review and sign this document as part of our CRM backend testing verification.\\n\\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\\n\\nBest regards,\\nFIDUS Investment Management\",\"signature_required\":true},\"url\":\"https://errors.pydantic.dev/2.11/v/missing\"}]}"
+      "details": "HTTP 404",
+      "timestamp": "2025-09-22T22:05:55.765996",
+      "response_data": "{\"detail\":\"Document not found\"}"
     },
     {
       "test_name": "POST /api/documents/{id}/send-notification (email notifications)",
       "success": false,
       "details": "HTTP 404",
-      "timestamp": "2025-09-22T22:05:08.347728",
+      "timestamp": "2025-09-22T22:05:55.776121",
       "response_data": "{\"detail\":\"Not Found\"}"
     },
     {
       "test_name": "JWT Authentication - CRM prospects endpoint",
       "success": true,
       "details": "Endpoint /crm/prospects accessible with JWT token. HTTP 200 OK",
-      "timestamp": "2025-09-22T22:05:08.360314",
+      "timestamp": "2025-09-22T22:05:55.787782",
       "response_data": null
     },
     {
       "test_name": "JWT Authentication - CRM pipeline endpoint",
       "success": true,
       "details": "Endpoint /crm/prospects/pipeline accessible with JWT token. HTTP 200 OK",
-      "timestamp": "2025-09-22T22:05:08.371162",
+      "timestamp": "2025-09-22T22:05:55.798740",
       "response_data": null
     },
     {
       "test_name": "JWT Authentication - Document categories endpoint",
       "success": true,
       "details": "Endpoint /documents/categories accessible with JWT token. HTTP 200 OK",
-      "timestamp": "2025-09-22T22:05:08.379746",
+      "timestamp": "2025-09-22T22:05:55.811327",
       "response_data": null
     },
     {
       "test_name": "JWT Authentication - Admin documents endpoint",
       "success": true,
       "details": "Endpoint /admin/documents accessible with JWT token. HTTP 200 OK",
-      "timestamp": "2025-09-22T22:05:08.390273",
+      "timestamp": "2025-09-22T22:05:55.824046",
       "response_data": null
     },
     {
       "test_name": "Document signing workflow with Salvador Palma as default signee",
       "success": false,
       "details": "Failed to get document status. HTTP 404",
-      "timestamp": "2025-09-22T22:05:08.399540",
+      "timestamp": "2025-09-22T22:05:55.835182",
       "response_data": "{\"detail\":\"Document not found\"}"
     }
   ],
   "backend_url": "https://fidus-invest.emergent.host/api",
-  "completion_time": "2025-09-22T22:05:08.399808"
+  "completion_time": "2025-09-22T22:05:55.835432"
 }
