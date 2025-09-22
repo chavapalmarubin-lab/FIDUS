@@ -1041,8 +1041,8 @@ FIDUS Investment Management Team`;
   };
 
   const renderStageColumn = (stage, prospects) => {
-    const stageConfig = STAGE_CONFIG[stage];
-    const IconComponent = stageConfig.icon;
+    const stageConfig = STAGE_CONFIG[stage] || STAGE_CONFIG.lead; // Fallback to lead if stage not found
+    const IconComponent = stageConfig?.icon || Target; // Fallback to Target icon
 
     return (
       <div key={stage} className="min-w-80 bg-slate-50 rounded-lg p-4">
