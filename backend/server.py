@@ -8209,51 +8209,37 @@ async def create_calendar_event(request: Request, event_data: dict):
         raise HTTPException(status_code=500, detail="Failed to create calendar event")
 
 @api_router.get("/google/drive/real-files")
-async def get_real_drive_files(request: Request):
+async def get_real_drive_files(current_user: dict = Depends(get_current_admin_user)):
     """Get real Drive files using Google Drive API"""
     try:
-        # Get admin session with Google tokens
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
-        
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        # Check if Google is authenticated
-        google_tokens = session_doc.get('google_tokens')
-        if not google_tokens:
+        if not token_data:
             return {
-                "success": True,
-                "files": [],
-                "message": "Google authentication required",
-                "source": "no_google_auth"
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True,
+                "files": []
             }
         
-        # Get real drive files
-        files = await google_apis_service.get_drive_files(google_tokens, max_results=20)
+        # Get Drive files using Google APIs service
+        files = await google_apis_service.get_drive_files(token_data, max_results=20)
         
         return {
             "success": True,
             "files": files,
             "source": "real_drive_api",
-            "file_count": len(files)
+            "count": len(files)
         }
         
     except Exception as e:
-        logging.error(f"Get real drive files error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get drive files")
+        logging.error(f"Drive files error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "files": []
+        }
 
 # Document Signing Endpoints
 @api_router.post("/documents/upload")
