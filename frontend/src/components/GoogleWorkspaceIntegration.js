@@ -26,7 +26,8 @@ import {
   Share2,
   Signature,
   LogOut,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import useGoogleAdmin from '../hooks/useGoogleAdmin';
 import apiAxios from '../utils/apiAxios';
