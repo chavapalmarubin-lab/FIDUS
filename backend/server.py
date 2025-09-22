@@ -8112,47 +8112,53 @@ async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin
         }
 
 @api_router.post("/google/gmail/real-send")
-async def send_real_gmail_message(request: Request, email_data: dict):
+async def send_real_gmail_message(request: Request, current_user: dict = Depends(get_current_admin_user)):
     """Send email via real Gmail API"""
     try:
-        # Get admin session with Google tokens
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        data = await request.json()
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
+        # Validate required fields
+        to = data.get('to')
+        subject = data.get('subject')
+        body = data.get('body')
+        html_body = data.get('html_body')
         
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
+        if not all([to, subject, body]):
+            return {
+                "success": False,
+                "error": "Missing required fields: to, subject, body"
+            }
         
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required. Please connect your Google account first.",
+                "auth_required": True
+            }
         
-        # Check if Google is authenticated
-        google_tokens = session_doc.get('google_tokens')
-        if not google_tokens:
-            raise HTTPException(status_code=401, detail="Google authentication required")
-        
-        # Send email using real Gmail API
+        # Send email using Gmail API
         result = await google_apis_service.send_gmail_message(
-            token_data=google_tokens,
-            to=email_data.get('to'),
-            subject=email_data.get('subject'),
-            body=email_data.get('body', ''),
-            html_body=email_data.get('html_body')
+            token_data=token_data,
+            to=to,
+            subject=subject,
+            body=body,
+            html_body=html_body
         )
+        
+        logging.info(f"Gmail email sent by user: {current_user['username']} to: {to}")
         
         return result
         
     except Exception as e:
-        logging.error(f"Send real Gmail message error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send email")
+        logging.error(f"Real Gmail send error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "api_used": "gmail_api"
+        }
 
 @api_router.get("/google/calendar/real-events")
 async def get_real_calendar_events(request: Request):
