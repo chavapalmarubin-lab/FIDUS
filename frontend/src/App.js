@@ -124,10 +124,11 @@ function App() {
       console.error('Logout error:', error);
     }
     
-    // Clear all auth data
+    // Clear all auth data including JWT token
     localStorage.removeItem("fidus_user");
     localStorage.removeItem("fidus_token");
     localStorage.removeItem("google_session_token");
+    localStorage.removeItem("google_api_authenticated");
     setUser(null);
     setCurrentView("login");
   };
