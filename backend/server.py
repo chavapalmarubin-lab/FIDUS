@@ -1581,14 +1581,14 @@ async def readiness_check():
         # Test database connection
         await db.command('ping')
         
-        # Get rate limiter stats
-        rate_limiter_stats = rate_limiter.get_stats()
+        # Get rate limiter stats (commented out to avoid undefined variable error)
+        # rate_limiter_stats = rate_limiter.get_stats()
         
         return {
             "status": "ready",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "database": "connected",
-            "rate_limiter": rate_limiter_stats
+            "database": "connected"
+            # "rate_limiter": rate_limiter_stats
         }
     except Exception as e:
         return JSONResponse(
