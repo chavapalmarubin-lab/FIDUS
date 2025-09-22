@@ -123,6 +123,7 @@ class GoogleAPIsService:
             Dictionary containing tokens and user info
         """
         try:
+            # Create flow without fixed scopes to allow Google to return whatever scopes were granted
             flow = Flow.from_client_config(
                 {
                     "web": {
@@ -133,10 +134,12 @@ class GoogleAPIsService:
                         "redirect_uris": [self.redirect_uri]
                     }
                 },
-                scopes=self.scopes
+                scopes=None  # Don't enforce scopes during token exchange
             )
             
             flow.redirect_uri = self.redirect_uri
+            
+            # Fetch token without scope validation
             flow.fetch_token(code=authorization_code)
             
             credentials = flow.credentials
@@ -144,13 +147,17 @@ class GoogleAPIsService:
             # Get user info
             user_info = self._get_user_info(credentials)
             
+            # Log the actual scopes returned by Google
+            actual_scopes = credentials.scopes or []
+            logger.info(f"Google returned scopes: {actual_scopes}")
+            
             token_data = {
                 'access_token': credentials.token,
                 'refresh_token': credentials.refresh_token,
                 'token_uri': credentials.token_uri,
                 'client_id': credentials.client_id,
                 'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes,
+                'scopes': actual_scopes,  # Use actual scopes returned by Google
                 'expiry': credentials.expiry.isoformat() if credentials.expiry else None,
                 'user_info': user_info
             }
