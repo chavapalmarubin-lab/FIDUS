@@ -8,6 +8,13 @@
  */
 export const getAuthToken = () => {
   try {
+    // First try to get the JWT token directly from localStorage
+    const jwtToken = localStorage.getItem('fidus_token');
+    if (jwtToken) {
+      return jwtToken;
+    }
+    
+    // Fallback: try to get token from user data
     const userDataStr = localStorage.getItem('fidus_user');
     if (userDataStr) {
       const userData = JSON.parse(userDataStr);
