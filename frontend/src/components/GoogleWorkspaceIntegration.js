@@ -498,10 +498,16 @@ ${documentRequestType === 'aml_kyc' ? `
     if (!file) return;
 
     try {
+      // Show loading state
+      const originalText = event.target.previousElementSibling?.textContent;
+      if (event.target.previousElementSibling) {
+        event.target.previousElementSibling.textContent = 'Uploading...';
+      }
+
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/documents/upload`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/google/drive/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
@@ -512,15 +518,33 @@ ${documentRequestType === 'aml_kyc' ? `
       const result = await response.json();
       
       if (result.success) {
-        alert('Document uploaded successfully!');
-        await loadDriveFiles();
+        alert(`Document "${file.name}" uploaded successfully to Google Drive!`);
+        await loadDriveFiles(); // Refresh the Drive files list
       } else {
-        alert(`Upload failed: ${result.error}`);
+        if (result.auth_required) {
+          alert('Google authentication required. Please connect your Google account first.');
+        } else {
+          alert(`Upload failed: ${result.error}`);
+        }
       }
+
+      // Reset button text
+      if (event.target.previousElementSibling && originalText) {
+        event.target.previousElementSibling.textContent = originalText;
+      }
+
     } catch (error) {
-      console.error('Error uploading document:', error);
-      alert('Failed to upload document. Please try again.');
+      console.error('Error uploading document to Google Drive:', error);
+      alert('Failed to upload document to Google Drive. Please try again.');
+      
+      // Reset button text on error
+      if (event.target.previousElementSibling) {
+        event.target.previousElementSibling.textContent = 'Upload Document';
+      }
     }
+
+    // Clear the file input
+    event.target.value = '';
   };
 
   const sendForSignature = async () => {
