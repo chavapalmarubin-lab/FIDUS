@@ -879,7 +879,7 @@ FIDUS Investment Management Team`;
             <Button
               size="sm"
               variant="outline"
-              onClick={() => emailProspect(prospect, 'general')}
+              onClick={() => openEmailModal(prospect, 'general')}
               className="text-xs bg-blue-50 hover:bg-blue-100 border-blue-200"
             >
               <MessageSquare size={12} className="mr-1" />
@@ -889,7 +889,7 @@ FIDUS Investment Management Team`;
             <Button
               size="sm"
               variant="outline"
-              onClick={() => scheduleProspectMeeting(prospect, 'consultation')}
+              onClick={() => openMeetingModal(prospect, 'consultation')}
               className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
             >
               <Video size={12} className="mr-1" />
@@ -899,7 +899,7 @@ FIDUS Investment Management Team`;
             <Button
               size="sm"
               variant="outline"
-              onClick={() => emailProspect(prospect, 'document_request')}
+              onClick={() => openEmailModal(prospect, 'document_request')}
               className="text-xs bg-orange-50 hover:bg-orange-100 border-orange-200"
             >
               <FileText size={12} className="mr-1" />
