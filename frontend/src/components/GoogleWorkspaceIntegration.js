@@ -102,7 +102,7 @@ const GoogleWorkspaceIntegration = () => {
   const loadEmails = async () => {
     try {
       setEmailLoading(true);
-      const response = await apiAxios.get('/google/gmail/messages');
+      const response = await apiAxios.get('/google/gmail/real-messages');
       setEmails(response.data.messages || []);
     } catch (err) {
       console.error('Failed to load emails:', err);
@@ -126,7 +126,7 @@ const GoogleWorkspaceIntegration = () => {
   const loadDriveFiles = async () => {
     try {
       setDriveLoading(true);
-      const response = await apiAxios.get('/google/drive/files');
+      const response = await apiAxios.get('/google/drive/real-files');
       setDriveFiles(response.data.files || []);
     } catch (err) {
       console.error('Failed to load drive files:', err);
