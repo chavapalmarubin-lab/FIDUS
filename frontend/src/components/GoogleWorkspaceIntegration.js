@@ -164,6 +164,8 @@ const GoogleWorkspaceIntegration = () => {
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [emailAction, setEmailAction] = useState(''); // 'clients', 'prospects', 'documents'
   const [documentRequestType, setDocumentRequestType] = useState('');
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   
   // Email Clients Action
   const handleEmailClients = () => {
