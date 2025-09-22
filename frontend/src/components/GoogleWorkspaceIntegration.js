@@ -484,15 +484,27 @@ const GoogleWorkspaceIntegration = () => {
                   <Plus className="h-4 w-4 mr-2" />
                   Schedule Meeting
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createGoogleMeet}
+                >
                   <Video className="h-4 w-4 mr-2" />
                   Create Google Meet
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createClientMeeting}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Meeting with Client
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createProspectMeeting}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Meeting with Prospect
                 </Button>
