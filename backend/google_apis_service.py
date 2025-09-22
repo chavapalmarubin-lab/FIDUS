@@ -563,5 +563,15 @@ class GoogleAPIsService:
                 'error': str(e)
             }
 
-# Global instance
-google_apis_service = GoogleAPIsService()
+# Global instance - lazy initialization to avoid environment variable issues
+_google_apis_service = None
+
+def get_google_apis_service():
+    """Get or create Google APIs service instance"""
+    global _google_apis_service
+    if _google_apis_service is None:
+        _google_apis_service = GoogleAPIsService()
+    return _google_apis_service
+
+# For backward compatibility
+google_apis_service = get_google_apis_service()
