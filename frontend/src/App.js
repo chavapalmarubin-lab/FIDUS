@@ -118,7 +118,7 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <div className="App" style={{backgroundColor: 'white', minHeight: '100vh'}}>
+        <div className="App">
           <AnimatePresence mode="wait">
             {/* EMERGENCY: Only show login and dashboard - no logo animation */}
             {currentView === "login" && (
