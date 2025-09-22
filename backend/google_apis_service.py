@@ -593,6 +593,147 @@ class GoogleAPIsService:
                 'error': str(e)
             }
 
+    # ==================== GOOGLE MEET API METHODS ====================
+    
+    async def create_meet_space(self, token_data: Dict[str, str], space_config: Dict = None) -> Dict:
+        """
+        Create a Google Meet space
+        
+        Args:
+            token_data: OAuth token data
+            space_config: Optional space configuration
+            
+        Returns:
+            Meet space information
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            
+            # Note: Google Meet Spaces API is still in development
+            # For now, we'll create a calendar event with Meet link
+            calendar_service = build('calendar', 'v3', credentials=credentials)
+            
+            # Create an event with Google Meet integration
+            event_data = {
+                'summary': space_config.get('name', 'FIDUS Meeting'),
+                'description': space_config.get('description', 'Investment consultation meeting'),
+                'start': {
+                    'dateTime': space_config.get('start_time', (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()),
+                    'timeZone': 'UTC',
+                },
+                'end': {
+                    'dateTime': space_config.get('end_time', (datetime.now(timezone.utc) + timedelta(hours=1, minutes=30)).isoformat()),
+                    'timeZone': 'UTC',
+                },
+                'conferenceData': {
+                    'createRequest': {
+                        'requestId': f"fidus-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        'conferenceSolutionKey': {
+                            'type': 'hangoutsMeet'
+                        }
+                    }
+                },
+                'attendees': space_config.get('attendees', [])
+            }
+            
+            # Create event with conferencing
+            event = calendar_service.events().insert(
+                calendarId='primary',
+                body=event_data,
+                conferenceDataVersion=1
+            ).execute()
+            
+            # Extract Meet link from the created event
+            meet_link = None
+            if 'conferenceData' in event and 'entryPoints' in event['conferenceData']:
+                for entry_point in event['conferenceData']['entryPoints']:
+                    if entry_point['entryPointType'] == 'video':
+                        meet_link = entry_point['uri']
+                        break
+            
+            logger.info(f"Created Google Meet space: {meet_link}")
+            
+            return {
+                'success': True,
+                'space_id': event['id'],
+                'meet_link': meet_link,
+                'calendar_event_id': event['id'],
+                'html_link': event.get('htmlLink'),
+                'message': 'Google Meet space created successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Meet space creation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    async def get_meet_spaces(self, token_data: Dict[str, str]) -> List[Dict]:
+        """
+        Get Google Meet spaces (via Calendar events with Meet links)
+        
+        Args:
+            token_data: OAuth token data
+            
+        Returns:
+            List of Meet spaces
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            calendar_service = build('calendar', 'v3', credentials=credentials)
+            
+            # Get events with conference data (Meet links)
+            now = datetime.now(timezone.utc).isoformat()
+            future = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+            
+            events_result = calendar_service.events().list(
+                calendarId='primary',
+                timeMin=now,
+                timeMax=future,
+                maxResults=20,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            events = events_result.get('items', [])
+            meet_spaces = []
+            
+            for event in events:
+                if 'conferenceData' in event:
+                    meet_link = None
+                    if 'entryPoints' in event['conferenceData']:
+                        for entry_point in event['conferenceData']['entryPoints']:
+                            if entry_point['entryPointType'] == 'video':
+                                meet_link = entry_point['uri']
+                                break
+                    
+                    if meet_link:
+                        meet_spaces.append({
+                            'id': event['id'],
+                            'name': event.get('summary', 'Untitled Meeting'),
+                            'description': event.get('description', ''),
+                            'meet_link': meet_link,
+                            'start_time': event['start'].get('dateTime', event['start'].get('date')),
+                            'end_time': event['end'].get('dateTime', event['end'].get('date')),
+                            'attendees': [att.get('email') for att in event.get('attendees', [])],
+                            'creator': event.get('creator', {}).get('email'),
+                            'status': event.get('status', 'confirmed')
+                        })
+            
+            logger.info(f"Retrieved {len(meet_spaces)} Meet spaces")
+            return meet_spaces
+            
+        except Exception as e:
+            logger.error(f"Failed to get Meet spaces: {str(e)}")
+            return [{
+                'id': 'error',
+                'name': 'Error loading Meet spaces',
+                'meet_link': '',
+                'start_time': datetime.now(timezone.utc).isoformat(),
+                'error': True
+            }]
+
 # Global instance - lazy initialization to avoid environment variable issues
 _google_apis_service = None
 
