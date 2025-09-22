@@ -279,6 +279,9 @@ const ProspectManagement = () => {
       setError('Failed to schedule meeting. Please ensure Google authentication is active.');
     }
   };
+
+  // Email prospect with different types
+  const emailProspectWithType = async (prospect, emailType = 'general') => {
     try {
       let subject, body, htmlBody;
       
