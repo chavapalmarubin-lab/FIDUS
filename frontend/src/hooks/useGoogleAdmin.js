@@ -245,6 +245,36 @@ const useGoogleAdmin = () => {
     await checkExistingSession();
   }, []);
 
+  const logoutGoogle = () => {
+    setProfile(null);
+    setIsAuthenticated(false);
+    setError(null);
+    
+    // Clear Google API authentication data
+    localStorage.removeItem('google_api_authenticated');
+    localStorage.removeItem('google_session_token'); // Legacy cleanup
+    
+    // Keep the main fidus_user if it's not a Google-only login
+    const userData = localStorage.getItem('fidus_user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.isGoogleAuth) {
+          // If this was a Google-only login, clear everything
+          localStorage.removeItem('fidus_user');
+        } else {
+          // Otherwise, just remove Google-specific properties
+          delete user.isGoogleAuth;
+          delete user.googleApiAccess;
+          delete user.picture;
+          localStorage.setItem('fidus_user', JSON.stringify(user));
+        }
+      } catch (err) {
+        console.error('Error cleaning up user data:', err);
+      }
+    }
+  };
+
   return {
     profile,
     loading,
