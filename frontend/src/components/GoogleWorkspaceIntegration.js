@@ -603,7 +603,7 @@ ${documentRequestType === 'aml_kyc' ? `
                   onClick={handleEmailClients}
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Email Clients ({clients.length})
+                  Email Clients ({crmClients.length})
                 </Button>
                 <Button 
                   variant="outline" 
@@ -611,15 +611,15 @@ ${documentRequestType === 'aml_kyc' ? `
                   onClick={handleEmailProspects}
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Email Prospects ({prospects.length})
+                  Email Prospects ({crmProspects.length})
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleRequestDocuments('general')}
+                  onClick={() => handleRequestDocuments('aml_kyc')}
                 >
                   <FileText className="h-4 w-4 mr-2" />
-                  Request Documents
+                  Request AML/KYC Documents
                 </Button>
               </CardContent>
             </Card>
