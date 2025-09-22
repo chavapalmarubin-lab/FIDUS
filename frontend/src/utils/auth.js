@@ -60,7 +60,11 @@ export const getCurrentUser = () => {
  * @returns {boolean} True if user has valid token
  */
 export const isAuthenticated = () => {
-  // Check for JWT token first
+  // First check for user data in localStorage
+  const userData = getCurrentUser();
+  if (!userData) return false;
+  
+  // Check for JWT token first (regular admin authentication)
   const token = getAuthToken();
   if (token) {
     try {
@@ -78,12 +82,17 @@ export const isAuthenticated = () => {
     }
   }
   
-  // Check for Google session token
+  // Check for Google OAuth authentication
+  const googleApiAuth = localStorage.getItem('google_api_authenticated');
+  if (googleApiAuth === 'true' && userData.isGoogleAuth && userData.googleApiAccess) {
+    // If we have Google API authentication flag and proper user data, consider authenticated
+    return true;
+  }
+  
+  // Fallback: Check for Google session token (legacy)
   const googleSessionToken = localStorage.getItem('google_session_token');
-  if (googleSessionToken) {
-    // If we have a Google session token and user data, consider authenticated
-    const userData = getCurrentUser();
-    return userData && userData.isGoogleAuth;
+  if (googleSessionToken && userData.isGoogleAuth) {
+    return true;
   }
   
   return false;
