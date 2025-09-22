@@ -394,7 +394,7 @@ class GoogleAPIsIntegrationTest:
             
             if response.status_code == 200:
                 data = response.json()
-                auth_url = data.get('auth_url', '')
+                auth_url = data.get('oauth_url', '')
                 
                 # Check for comprehensive scopes in the OAuth URL
                 required_scopes = [
