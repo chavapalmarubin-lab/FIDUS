@@ -8023,7 +8023,7 @@ async def get_real_google_oauth_url(current_user: dict = Depends(get_current_adm
         raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.post("/admin/google/oauth-callback")
-async def process_real_google_oauth_callback(request: Request, response: Response):
+async def process_real_google_oauth_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
     """Process real Google OAuth callback and exchange code for tokens"""
     try:
         # Get authorization code from request
@@ -8034,36 +8034,19 @@ async def process_real_google_oauth_callback(request: Request, response: Respons
         if not authorization_code:
             raise HTTPException(status_code=400, detail="Missing authorization code")
         
-        logging.info(f"Processing real Google OAuth callback with code")
+        logging.info(f"Processing real Google OAuth callback for user: {current_user.get('username')}")
         
-        # Exchange code for tokens
+        # Exchange code for tokens using Google APIs service
         token_data = google_apis_service.exchange_code_for_tokens(authorization_code)
         
-        # Get current admin session
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        # Store Google tokens for current admin user
+        stored = await store_google_session_token(current_user["user_id"], token_data)
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
+        if not stored:
+            logging.error(f"Failed to store Google tokens for user: {current_user.get('username')}")
+            raise HTTPException(status_code=500, detail="Failed to store authentication tokens")
         
-        if session_token:
-            # Update admin session with Google tokens
-            await db.admin_sessions.update_one(
-                {"session_token": session_token},
-                {
-                    "$set": {
-                        "google_tokens": token_data,
-                        "google_authenticated": True,
-                        "google_user_info": token_data.get('user_info', {}),
-                        "last_google_auth": datetime.now(timezone.utc)
-                    }
-                }
-            )
-        
-        logging.info(f"Successfully processed Google OAuth callback: {token_data.get('user_info', {}).get('email')}")
+        logging.info(f"Successfully processed Google OAuth callback for: {current_user.get('username')} - {token_data.get('user_info', {}).get('email')}")
         
         return {
             "success": True,
@@ -8072,6 +8055,8 @@ async def process_real_google_oauth_callback(request: Request, response: Respons
             "scopes": token_data.get('scopes', [])
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Process Google OAuth callback error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process OAuth callback")
