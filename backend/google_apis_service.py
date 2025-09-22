@@ -33,6 +33,14 @@ class GoogleAPIsService:
         self.client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
         self.redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         
+        # Debug logging
+        logger.info(f"GoogleAPIsService init - client_id: {self.client_id is not None}")
+        logger.info(f"GoogleAPIsService init - client_secret: {self.client_secret is not None}")
+        logger.info(f"GoogleAPIsService init - redirect_uri: {self.redirect_uri}")
+        
+        if not all([self.client_id, self.client_secret, self.redirect_uri]):
+            logger.error(f"Missing Google OAuth credentials: client_id={self.client_id is not None}, client_secret={self.client_secret is not None}, redirect_uri={self.redirect_uri}")
+        
         # Required scopes for all Google services
         self.scopes = [
             'https://www.googleapis.com/auth/gmail.readonly',
