@@ -10,7 +10,7 @@ import { isAuthenticated, getCurrentUser } from "./utils/auth";
 import "./App.css";
 
 function App() {
-  const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
+  const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
 
   useEffect(() => {
