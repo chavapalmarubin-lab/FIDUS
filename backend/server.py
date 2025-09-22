@@ -8310,142 +8310,162 @@ async def get_meet_spaces(current_user: dict = Depends(get_current_admin_user)):
 
 # Document Signing Endpoints
 @api_router.post("/documents/upload")
-async def upload_document(request: Request):
+async def upload_document(file: UploadFile = File(...), current_user: dict = Depends(get_current_admin_user)):
     """Upload document for signing"""
     try:
-        # Get current user
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
-        
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Authentication required")
-        
-        # Get session to identify user
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        user_id = session_doc.get('user_id', 'unknown')
-        
-        # Parse multipart form data
-        form = await request.form()
-        uploaded_file = form.get('file')
-        
-        if not uploaded_file:
-            raise HTTPException(status_code=400, detail="No file uploaded")
-        
         # Read file data
-        file_data = await uploaded_file.read()
-        filename = uploaded_file.filename
-        mime_type = uploaded_file.content_type
+        file_data = await file.read()
         
-        # Upload document
+        # Upload document using document signing service
         result = await document_signing_service.upload_document(
             file_data=file_data,
-            filename=filename,
-            mime_type=mime_type,
-            user_id=user_id
+            filename=file.filename,
+            mime_type=file.content_type,
+            user_id=current_user["user_id"]
         )
+        
+        logging.info(f"Document uploaded by user: {current_user['username']}")
         
         return result
         
     except Exception as e:
-        logging.error(f"Document upload error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to upload document")
+        logging.error(f"Upload document error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 @api_router.get("/documents/{document_id}/pdf")
-async def get_document_pdf(document_id: str):
-    """Get document PDF data for viewing"""
+async def get_document_pdf(document_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Get document PDF for viewing"""
     try:
-        result = await document_signing_service.get_document_pdf_data(document_id)
-        return result
+        result = await document_signing_service.get_document_pdf(document_id)
+        
+        if result['success']:
+            return {
+                "success": True,
+                "pdf_data": result['pdf_data'],
+                "filename": result['filename']
+            }
+        else:
+            return result
         
     except Exception as e:
         logging.error(f"Get document PDF error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get document PDF")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 @api_router.post("/documents/{document_id}/sign")
-async def sign_document(document_id: str, request: Request, signature_data: dict):
+async def sign_document(document_id: str, request: Request, current_user: dict = Depends(get_current_admin_user)):
     """Add electronic signature to document"""
     try:
-        # Get current user info
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        data = await request.json()
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Authentication required")
-        
-        # Get session to get user info
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        user_info = {
-            'name': session_doc.get('name', 'Unknown User'),
-            'email': session_doc.get('email', 'unknown@example.com'),
-            'user_id': session_doc.get('user_id', 'unknown')
-        }
-        
-        # Add signature to document
+        # Add signature using document signing service
         result = await document_signing_service.add_signature(
             document_id=document_id,
-            signature_data=signature_data,
-            user_info=user_info
+            signature_data=data.get('signature_data'),
+            signer_info={
+                'user_id': current_user["user_id"],
+                'name': current_user.get('name', current_user['username']),
+                'email': current_user.get('email', ''),
+                'position': data.get('position', 'Signatory')
+            }
         )
         
-        # If signing successful and we have Google tokens, send notification
-        if result['success']:
-            google_tokens = session_doc.get('google_tokens')
-            if google_tokens and signature_data.get('send_notification'):
-                recipient_email = signature_data.get('notification_email', user_info['email'])
-                
-                await document_signing_service.send_signed_document_notification(
-                    google_apis_service=google_apis_service,
-                    token_data=google_tokens,
-                    document_info=result['signature'],
-                    recipient_email=recipient_email
-                )
+        logging.info(f"Document {document_id} signed by user: {current_user['username']}")
         
         return result
         
     except Exception as e:
         logging.error(f"Sign document error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to sign document")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 @api_router.get("/documents/signed/{filename}")
-async def get_signed_document(filename: str):
+async def get_signed_document(filename: str, current_user: dict = Depends(get_current_admin_user)):
     """Download signed document"""
     try:
         result = await document_signing_service.get_signed_document(filename)
         
         if result['success']:
-            from fastapi.responses import Response
-            
             return Response(
-                content=result['document_data'],
-                media_type=result['mime_type'],
-                headers={
-                    "Content-Disposition": f"attachment; filename={result['filename']}"
-                }
+                content=result['file_data'],
+                media_type='application/pdf',
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
             )
         else:
-            raise HTTPException(status_code=404, detail=result.get('error', 'Document not found'))
+            return result
         
     except Exception as e:
         logging.error(f"Get signed document error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get signed document")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/documents/{document_id}/send-notification")
+async def send_document_notification(document_id: str, request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Send email notification for document signing"""
+    try:
+        data = await request.json()
+        
+        # Get user's Google OAuth tokens for sending email
+        token_data = await get_google_session_token(current_user["user_id"])
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required for sending email notifications",
+                "auth_required": True
+            }
+        
+        # Send notification using Gmail API
+        result = await google_apis_service.send_gmail_message(
+            token_data=token_data,
+            to=data.get('recipient_email'),
+            subject=f"Document Signature Required - FIDUS Investment Management",
+            body=f"""
+            Dear {data.get('recipient_name', 'Valued Client')},
+            
+            You have a document that requires your electronic signature.
+            
+            Document: {data.get('document_name', 'Investment Document')}
+            
+            Please click the link below to review and sign the document:
+            {data.get('signing_url', 'https://fidus-workspace.preview.emergentagent.com/documents/sign')}
+            
+            Best regards,
+            FIDUS Investment Management Team
+            """,
+            html_body=f"""
+            <html>
+            <body>
+                <h2>Document Signature Required</h2>
+                <p>Dear {data.get('recipient_name', 'Valued Client')},</p>
+                <p>You have a document that requires your electronic signature.</p>
+                <p><strong>Document:</strong> {data.get('document_name', 'Investment Document')}</p>
+                <p><a href="{data.get('signing_url', 'https://fidus-workspace.preview.emergentagent.com/documents/sign')}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review and Sign Document</a></p>
+                <p>Best regards,<br>FIDUS Investment Management Team</p>
+            </body>
+            </html>
+            """
+        )
+        
+        logging.info(f"Document notification sent by user: {current_user['username']} to: {data.get('recipient_email')}")
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Send document notification error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 @api_router.post("/google/gmail/send")
 async def send_gmail_message(request: Request, current_user: dict = Depends(get_current_admin_user)):
