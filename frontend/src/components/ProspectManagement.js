@@ -1976,6 +1976,267 @@ FIDUS Investment Management Team`;
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Meeting Scheduling Modal */}
+      <AnimatePresence>
+        {showMeetingModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowMeetingModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-lg w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  Schedule Meeting - {selectedProspect.name}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMeetingModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Meeting Type */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Meeting Type
+                  </label>
+                  <select
+                    value={meetingData.type}
+                    onChange={(e) => setMeetingData({ ...meetingData, type: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="consultation">Initial Consultation</option>
+                    <option value="followup">Follow-up Meeting</option>
+                    <option value="review">Portfolio Review</option>
+                    <option value="onboarding">Client Onboarding</option>
+                  </select>
+                </div>
+
+                {/* Date and Time */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={meetingData.date}
+                      onChange={(e) => setMeetingData({ ...meetingData, date: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      value={meetingData.time}
+                      onChange={(e) => setMeetingData({ ...meetingData, time: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Duration (minutes)
+                  </label>
+                  <select
+                    value={meetingData.duration}
+                    onChange={(e) => setMeetingData({ ...meetingData, duration: parseInt(e.target.value) })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={30}>30 minutes</option>
+                    <option value={45}>45 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
+                    <option value={120}>2 hours</option>
+                  </select>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Meeting Notes
+                  </label>
+                  <textarea
+                    value={meetingData.notes}
+                    onChange={(e) => setMeetingData({ ...meetingData, notes: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows="3"
+                    placeholder="Add any specific agenda items or notes for this meeting..."
+                  />
+                </div>
+
+                {/* Prospect Info */}
+                <div className="bg-slate-50 p-3 rounded-md">
+                  <h4 className="font-medium text-slate-900 mb-2">Meeting with:</h4>
+                  <div className="text-sm text-slate-600 space-y-1">
+                    <div><strong>Name:</strong> {selectedProspect.name}</div>
+                    <div><strong>Email:</strong> {selectedProspect.email}</div>
+                    <div><strong>Phone:</strong> {selectedProspect.phone || 'N/A'}</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={scheduleProspectMeeting}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={!meetingData.date || !meetingData.time}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Meeting
+                  </Button>
+                  <Button
+                    onClick={() => setShowMeetingModal(false)}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Email Sending Modal */}
+      <AnimatePresence>
+        {showEmailModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowEmailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  Send Email - {selectedProspect.name}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEmailModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Email Type */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Email Type
+                  </label>
+                  <select
+                    value={emailData.type}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      setEmailData({ 
+                        ...emailData, 
+                        type: newType,
+                        subject: newType === 'document_request' 
+                          ? `Document Request - ${selectedProspect.name}` 
+                          : `Investment Opportunity - ${selectedProspect.name}`
+                      });
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="general">General Investment Inquiry</option>
+                    <option value="document_request">Document Request</option>
+                    <option value="meeting_followup">Meeting Follow-up</option>
+                    <option value="portfolio_update">Portfolio Update</option>
+                  </select>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={emailData.subject}
+                    onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter email subject"
+                  />
+                </div>
+
+                {/* Body */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    value={emailData.body}
+                    onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows="8"
+                    placeholder="Enter your message here..."
+                  />
+                </div>
+
+                {/* Recipient Info */}
+                <div className="bg-slate-50 p-3 rounded-md">
+                  <h4 className="font-medium text-slate-900 mb-2">Sending to:</h4>
+                  <div className="text-sm text-slate-600">
+                    <div><strong>Name:</strong> {selectedProspect.name}</div>
+                    <div><strong>Email:</strong> {selectedProspect.email}</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={sendProspectEmail}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    disabled={!emailData.subject || !emailData.body}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Email
+                  </Button>
+                  <Button
+                    onClick={() => setShowEmailModal(false)}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
