@@ -1909,7 +1909,7 @@ FIDUS Investment Management Team`;
                     </Button>
                     
                     <Button
-                      onClick={() => emailProspect(selectedProspect, 'document_request')}
+                      onClick={() => emailProspectWithType(selectedProspect, 'document_request')}
                       className="bg-orange-600 hover:bg-orange-700"
                     >
                       <FileText className="h-4 w-4 mr-2" />
