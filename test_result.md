@@ -1931,7 +1931,8 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Gmail Integration JWT + Google OAuth Authentication Testing"
+    - "CRM Edit Icon Import Fix Testing"
+    - "Google Drive Upload Endpoint Fix Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
