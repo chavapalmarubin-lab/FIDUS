@@ -762,8 +762,13 @@ ${documentRequestType === 'aml_kyc' ? `
               onClick={() => {
                 console.log('GOOGLE BUTTON CLICKED - DIRECT');
                 if (!loading) {
-                  loginWithGoogle();
+                  // EMERGENCY: Direct window redirect if button fails
+                  window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-url`;
                 }
+              }}
+              onDoubleClick={() => {
+                console.log('DOUBLE CLICK - EMERGENCY FALLBACK');
+                window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-url`;
               }}
               disabled={loading}
               style={{
