@@ -21,7 +21,7 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState("logo"); // logo, login, client, admin
+  const [currentView, setCurrentView] = useState("login"); // EMERGENCY FIX: Start directly at login
   const [user, setUser] = useState(null);
 
   useEffect(() => {
