@@ -27,7 +27,10 @@ import {
   Signature,
   LogOut,
   X,
-  AlertCircle
+  AlertCircle,
+  MessageSquare,
+  Reply,
+  Forward
 } from 'lucide-react';
 import useGoogleAdmin from '../hooks/useGoogleAdmin';
 import apiAxios from '../utils/apiAxios';
