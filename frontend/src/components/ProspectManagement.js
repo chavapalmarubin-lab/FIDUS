@@ -836,8 +836,8 @@ FIDUS Investment Management Team`;
   };
 
   const renderProspectCard = (prospect) => {
-    const stageConfig = STAGE_CONFIG[prospect.stage] || STAGE_CONFIG.lead;
-    const IconComponent = stageConfig.icon;
+    const stageConfig = STAGE_CONFIG[prospect.stage] || STAGE_CONFIG.lead; // Fallback to lead
+    const IconComponent = stageConfig?.icon || Target; // Fallback to Target icon
 
     return (
       <motion.div
