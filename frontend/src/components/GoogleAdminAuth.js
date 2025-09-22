@@ -83,7 +83,7 @@ const GoogleAdminAuth = ({ onAuthSuccess, onAuthError, showProfileCard = true })
       { name: 'Gmail Send', icon: Mail, description: 'Send emails to clients' },
       { name: 'Gmail Read', icon: Mail, description: 'Read email responses' },
       { name: 'Calendar', icon: Calendar, description: 'Schedule client meetings' },
-      { name: 'Drive', icon: Settings, description: 'Share documents for signature' }
+      { name: 'Drive', icon: FolderOpen, description: 'Share documents for signature' }
     ];
   };
 
