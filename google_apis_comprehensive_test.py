@@ -102,8 +102,8 @@ class GoogleAPIsIntegrationTest:
             response = self.session.get(f"{BACKEND_URL}/admin/google/oauth-url")
             if response.status_code == 200:
                 data = response.json()
-                if data.get('success') and data.get('auth_url'):
-                    auth_url = data['auth_url']
+                if data.get('success') and data.get('oauth_url'):
+                    auth_url = data['oauth_url']
                     
                     # Validate URL contains expected Google OAuth components
                     required_components = [
