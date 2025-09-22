@@ -59,7 +59,7 @@ function App() {
         // Ensure localStorage is available
         if (typeof window !== 'undefined' && window.localStorage) {
           // Determine view based on user type
-          if (currentUser?.isAdmin || currentUser?.user_type === 'admin') {
+          if (currentUser?.isAdmin || currentUser?.type === 'admin') {
             console.log('Setting view to admin');
             setCurrentView("admin");
           } else {
