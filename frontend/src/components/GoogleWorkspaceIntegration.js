@@ -759,16 +759,35 @@ ${documentRequestType === 'aml_kyc' ? `
               Please authenticate with Google to access Gmail, Calendar, Drive, and Sheets functionality.
             </div>
             <button 
-              onClick={() => {
-                console.log('GOOGLE BUTTON CLICKED - DIRECT');
+              onClick={async () => {
+                console.log('GOOGLE BUTTON CLICKED - EMERGENCY FIX');
                 if (!loading) {
-                  // EMERGENCY: Direct window redirect if button fails
-                  window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-url`;
+                  try {
+                    const jwtToken = localStorage.getItem('fidus_token');
+                    if (!jwtToken) {
+                      alert('Please login as admin first');
+                      return;
+                    }
+                    
+                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-url`, {
+                      method: 'GET',
+                      headers: {
+                        'Authorization': `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success && data.oauth_url) {
+                      window.location.href = data.oauth_url;
+                    } else {
+                      alert('Failed to get Google OAuth URL: ' + (data.detail || 'Unknown error'));
+                    }
+                  } catch (error) {
+                    console.error('OAuth error:', error);
+                    alert('Error connecting to Google: ' + error.message);
+                  }
                 }
-              }}
-              onDoubleClick={() => {
-                console.log('DOUBLE CLICK - EMERGENCY FALLBACK');
-                window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-url`;
               }}
               disabled={loading}
               style={{
