@@ -70,16 +70,15 @@ const useGoogleAdmin = () => {
       if (googleApiAuth === 'true' && userData) {
         try {
           const user = JSON.parse(userData);
-          if (user && user.isGoogleAuth) {
-            console.log('Found Google session in localStorage:', user.email);
+          if (user && user.isGoogleAuth && user.googleApiAccess) {
+            console.log('Found Google API session in localStorage:', user.email);
             
-            // Try to validate with backend using the session token
+            // Try to validate with backend using admin session cookies
             const response = await fetch(`${API}/admin/google/profile`, {
               method: 'GET',
               credentials: 'include',
               headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${googleSessionToken}`
+                'Content-Type': 'application/json'
               }
             });
 
@@ -88,13 +87,13 @@ const useGoogleAdmin = () => {
               if (data.success && data.profile) {
                 setProfile(data.profile);
                 setIsAuthenticated(true);
-                console.log('✅ Existing Google session validated:', data.profile.email);
+                console.log('✅ Existing Google API session validated:', data.profile.email);
                 return;
               }
             }
             
             // If backend validation fails but we have local data, use local data
-            console.log('Using local Google session data');
+            console.log('Using local Google API session data');
             setProfile({
               id: user.id,
               email: user.email,
