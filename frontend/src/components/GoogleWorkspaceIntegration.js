@@ -1020,92 +1020,159 @@ ${documentRequestType === 'aml_kyc' ? `
 
         {/* Drive Tab */}
         <TabsContent value="drive" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Drive Actions */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FolderOpen className="h-5 w-5 mr-2" />
-                  Drive Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <input
-                    type="file"
-                    id="document-upload"
-                    style={{ display: 'none' }}
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleDocumentUpload}
-                  />
-                  <Button 
-                    onClick={() => document.getElementById('document-upload').click()} 
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Upload Document
-                  </Button>
-                </div>
-                <Button variant="outline" className="w-full">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Investment Agreements
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={sendForSignature}
-                >
-                  <Signature className="h-4 w-4 mr-2" />
-                  Send for Signature
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share with Client
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 gap-6">
+            {/* Drive Sub-tabs */}
+            <Card>
+              <CardContent className="p-4">
+                <Tabs defaultValue="files" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="files">Files & Upload</TabsTrigger>
+                    <TabsTrigger value="sent">Sent for Signature</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="files" className="space-y-6 mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Drive Actions */}
+                      <Card className="lg:col-span-1">
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <FolderOpen className="h-5 w-5 mr-2" />
+                            Drive Actions
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <input
+                              type="file"
+                              id="document-upload"
+                              style={{ display: 'none' }}
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleDocumentUpload}
+                            />
+                            <Button 
+                              onClick={() => document.getElementById('document-upload').click()} 
+                              className="w-full bg-orange-600 hover:bg-orange-700"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Upload Document
+                            </Button>
+                          </div>
+                          <Button variant="outline" className="w-full">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Investment Agreements
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={sendForSignature}
+                          >
+                            <Signature className="h-4 w-4 mr-2" />
+                            Send for Signature
+                          </Button>
+                          <Button variant="outline" className="w-full">
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Share with Client
+                          </Button>
+                        </CardContent>
+                      </Card>
 
-            {/* Drive Files */}
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Recent Documents</CardTitle>
-                <Button variant="outline" size="sm" onClick={loadDriveFiles}>
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {driveLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                    Loading files...
-                  </div>
-                ) : driveFiles.length > 0 ? (
-                  <div className="space-y-3">
-                    {driveFiles.slice(0, 10).map((file, index) => (
-                      <div key={index} className="p-3 border rounded-lg hover:bg-slate-50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium">{file.name}</div>
-                            <div className="text-sm text-slate-600">{file.type} • {file.size}</div>
+                      {/* Drive Files */}
+                      <Card className="lg:col-span-2">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle>Recent Documents</CardTitle>
+                          <Button variant="outline" size="sm" onClick={loadDriveFiles}>
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          {driveLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                              Loading files...
+                            </div>
+                          ) : driveFiles.length > 0 ? (
+                            <div className="space-y-3">
+                              {driveFiles.slice(0, 10).map((file, index) => (
+                                <div key={index} className="p-3 border rounded-lg hover:bg-slate-50">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium">{file.name}</div>
+                                      <div className="text-sm text-slate-600">{file.type} • {file.size}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button size="sm" variant="outline">
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                      <Button size="sm" variant="outline">
+                                        <Share2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-slate-600">
+                              <FolderOpen className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+                              No documents found. Upload your first document.
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="sent" className="space-y-6 mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Signature className="h-5 w-5 mr-2" />
+                          Documents Sent for Signature
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {sentDocuments.length > 0 ? (
+                          <div className="space-y-3">
+                            {sentDocuments.map((doc, index) => (
+                              <div key={index} className="p-4 border rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium">{doc.name}</div>
+                                    <div className="text-sm text-slate-600">
+                                      Sent to: {doc.recipient} ({doc.email})
+                                    </div>
+                                    <div className="text-sm text-slate-600">
+                                      Sent: {new Date(doc.sentDate).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge className={
+                                      doc.status === 'signed' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : doc.status === 'viewed'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }>
+                                      {doc.status}
+                                    </Badge>
+                                    <Button size="sm" variant="outline">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Share2 className="h-4 w-4" />
-                            </Button>
+                        ) : (
+                          <div className="text-center py-8 text-slate-600">
+                            <Signature className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+                            No documents sent for signature yet.
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-slate-600">
-                    <FolderOpen className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-                    No documents found. Upload your first document.
-                  </div>
-                )}
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </div>
