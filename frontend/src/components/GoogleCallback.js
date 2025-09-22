@@ -50,6 +50,9 @@ const GoogleCallback = () => {
           setStatus('success');
           setMessage(`Welcome ${data.user_info?.name || 'User'}!`);
 
+          // Get the existing JWT token for the admin user
+          const existingJwtToken = localStorage.getItem('fidus_token');
+          
           // Store auth data with the new response format
           const adminUser = {
             id: data.user_info?.id,
@@ -57,16 +60,23 @@ const GoogleCallback = () => {
             name: data.user_info?.name,
             email: data.user_info?.email,
             type: "admin",
+            isAdmin: true, // Ensure admin flag is set
             picture: data.user_info?.picture,
             isGoogleAuth: true,
             googleApiAccess: true,
-            scopes: data.scopes || []
+            scopes: data.scopes || [],
+            token: existingJwtToken // Preserve the JWT token for API calls
           };
 
           localStorage.setItem('fidus_user', JSON.stringify(adminUser));
           
           // Set a flag to indicate Google API authentication is complete
           localStorage.setItem('google_api_authenticated', 'true');
+          
+          // Dispatch a custom event to notify other components
+          window.dispatchEvent(new CustomEvent('googleAuthSuccess', {
+            detail: { profile: adminUser }
+          }));
 
           // Simple redirect after success
           setTimeout(() => {
