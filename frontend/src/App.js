@@ -118,15 +118,16 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <div className="App">
+        <div className="App" style={{backgroundColor: 'white', minHeight: '100vh'}}>
           <AnimatePresence mode="wait">
+            {/* EMERGENCY: Only show login and dashboard - no logo animation */}
             {currentView === "login" && (
               <motion.div
                 key="login"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.3 }}
               >
                 <LoginSelection onLogin={handleLogin} />
               </motion.div>
@@ -152,7 +153,7 @@ function App() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Suspense fallback={<LoadingSpinner />}>
+                <Suspense fallback={<div>Loading...</div>}>
                   <ClientDashboard user={user} onLogout={handleLogout} />
                 </Suspense>
               </motion.div>
@@ -166,15 +167,15 @@ function App() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Suspense fallback={<LoadingSpinner />}>
+                <Suspense fallback={<div>Loading...</div>}>
                   <AdminDashboard user={user} onLogout={handleLogout} />
                 </Suspense>
               </motion.div>
             )}
-        </AnimatePresence>
-      </div>
-    </ToastProvider>
-  </BrowserRouter>
+          </AnimatePresence>
+        </div>
+      </ToastProvider>
+    </BrowserRouter>
   );
 }
 
