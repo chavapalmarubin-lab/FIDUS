@@ -137,9 +137,7 @@ const GoogleWorkspaceIntegration = () => {
 
   // ===== NEW CRM INTEGRATION FUNCTIONS =====
   
-  // Load clients and prospects from CRM
-  const [clients, setClients] = useState([]);
-  const [prospects, setProspects] = useState([]);
+  // Load clients and prospects from CRM (using existing state)
   const [selectedRecipients, setSelectedRecipients] = useState([]);
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [emailAction, setEmailAction] = useState(''); // 'clients', 'prospects', 'documents'
