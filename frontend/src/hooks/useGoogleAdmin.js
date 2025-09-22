@@ -62,12 +62,12 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
-      // Check if we have Google session token in localStorage
-      const googleSessionToken = localStorage.getItem('google_session_token');
+      // Check if we have Google API authentication in localStorage
+      const googleApiAuth = localStorage.getItem('google_api_authenticated');
       const userData = localStorage.getItem('fidus_user');
       
-      // If we have both tokens and user data, try to validate with backend
-      if (googleSessionToken && userData) {
+      // If we have authentication flag and user data, try to validate with backend
+      if (googleApiAuth === 'true' && userData) {
         try {
           const user = JSON.parse(userData);
           if (user && user.isGoogleAuth) {
