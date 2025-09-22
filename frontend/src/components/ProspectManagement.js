@@ -1893,7 +1893,7 @@ FIDUS Investment Management Team`;
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Button
-                      onClick={() => emailProspect(selectedProspect, 'general')}
+                      onClick={() => emailProspectWithType(selectedProspect, 'general')}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
