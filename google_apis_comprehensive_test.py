@@ -145,8 +145,8 @@ class GoogleAPIsIntegrationTest:
             if response.status_code == 200:
                 data = response.json()
                 
-                if data.get('success') and data.get('auth_url'):
-                    auth_url = data['auth_url']
+                if data.get('success') and data.get('oauth_url'):
+                    auth_url = data['oauth_url']
                     
                     # Validate comprehensive scopes are included
                     comprehensive_scopes = [
@@ -165,14 +165,27 @@ class GoogleAPIsIntegrationTest:
                         else:
                             scopes_missing.append(scope)
                     
-                    if len(scopes_found) >= 3:  # At least 3 out of 4 major scopes
+                    # Check if OAuth URL has basic required components
+                    required_components = [
+                        'accounts.google.com',
+                        'response_type=code',
+                        'scope=',
+                        'access_type=offline'
+                    ]
+                    
+                    components_found = []
+                    for component in required_components:
+                        if component in auth_url:
+                            components_found.append(component)
+                    
+                    if len(scopes_found) >= 3 and len(components_found) >= 3:  # At least 3 out of 4 major scopes and components
                         self.log_result("Google OAuth URL Generation", True, 
                                       f"OAuth URL generated with {len(scopes_found)}/4 comprehensive scopes",
-                                      {"scopes_found": scopes_found, "url_length": len(auth_url)})
+                                      {"scopes_found": scopes_found, "components_found": components_found})
                     else:
                         self.log_result("Google OAuth URL Generation", False, 
-                                      "OAuth URL missing comprehensive scopes", 
-                                      {"scopes_found": scopes_found, "scopes_missing": scopes_missing})
+                                      "OAuth URL missing comprehensive scopes or components", 
+                                      {"scopes_found": scopes_found, "scopes_missing": scopes_missing, "components_found": components_found})
                 else:
                     self.log_result("Google OAuth URL Generation", False, 
                                   "OAuth URL not generated", {"response": data})
