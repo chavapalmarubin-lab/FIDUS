@@ -7472,7 +7472,7 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
     """Get Emergent OAuth URL for Google authentication"""
     try:
         # Use Emergent OAuth for hassle-free Google authentication
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-workspace.preview.emergentagent.com')
         redirect_url = f"{frontend_url}/admin/dashboard"  # Redirect to main dashboard after auth
         
         # Generate Emergent OAuth URL
@@ -7598,7 +7598,7 @@ async def process_google_callback(request_data: dict, response: Response):
         from personal_gmail_service import personal_gmail_service
         
         # Get redirect URI
-        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')}/admin/google-callback"
+        redirect_uri = f"{os.environ.get('FRONTEND_URL', 'https://fidus-workspace.preview.emergentagent.com')}/admin/google-callback"
         
         # Exchange code for tokens
         tokens = personal_gmail_service.exchange_code_for_tokens(code, redirect_uri)
@@ -7783,7 +7783,7 @@ async def get_google_login_url():
     """Get Google login URL using Emergent Social Login"""
     try:
         # Set redirect URL to main app dashboard
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://auth-troubleshoot-14.preview.emergentagent.com')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-workspace.preview.emergentagent.com')
         redirect_url = f"{frontend_url}/dashboard"  # Redirect to dashboard after login
         
         # Generate Google login URL using Emergent OAuth

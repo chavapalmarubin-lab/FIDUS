@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 class FocusedScalabilityTester:
-    def __init__(self, base_url="https://auth-troubleshoot-14.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-workspace.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         

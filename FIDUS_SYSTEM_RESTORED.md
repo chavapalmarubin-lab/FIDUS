@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://auth-troubleshoot-14.preview.emergentagent.com`
+`https://fidus-workspace.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

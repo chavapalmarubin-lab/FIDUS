@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 class PortfolioSummaryTester:
-    def __init__(self, base_url="https://auth-troubleshoot-14.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-workspace.preview.emergentagent.com"):
         self.base_url = base_url
         
     def test_admin_portfolio_summary_detailed(self):

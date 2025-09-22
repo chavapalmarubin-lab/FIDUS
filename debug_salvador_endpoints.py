@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://auth-troubleshoot-14.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-workspace.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
