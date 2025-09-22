@@ -8241,6 +8241,73 @@ async def get_real_drive_files(current_user: dict = Depends(get_current_admin_us
             "files": []
         }
 
+# Google Meet API endpoints
+@api_router.post("/google/meet/create-space")
+async def create_meet_space(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Create Google Meet space"""
+    try:
+        data = await request.json()
+        
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        # Create Meet space using Google APIs service
+        result = await google_apis_service.create_meet_space(
+            token_data=token_data,
+            space_config=data
+        )
+        
+        logging.info(f"Meet space created by user: {current_user['username']}")
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Create Meet space error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/google/meet/spaces")
+async def get_meet_spaces(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google Meet spaces"""
+    try:
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True,
+                "spaces": []
+            }
+        
+        # Get Meet spaces using Google APIs service
+        spaces = await google_apis_service.get_meet_spaces(token_data)
+        
+        return {
+            "success": True,
+            "spaces": spaces,
+            "source": "google_meet_api",
+            "count": len(spaces)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get Meet spaces error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "spaces": []
+        }
+
 # Document Signing Endpoints
 @api_router.post("/documents/upload")
 async def upload_document(request: Request):
