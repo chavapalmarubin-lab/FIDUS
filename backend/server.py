@@ -42,7 +42,6 @@ from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
 from google_admin_service import GoogleAdminService
 from google_social_auth import google_social_auth
-from google_apis_service import google_apis_service
 from document_signing_service import document_signing_service
 
 # Initialize Google Admin Service (with error handling for missing env vars)
@@ -51,12 +50,6 @@ try:
 except ValueError as e:
     logging.warning(f"Google Admin Service initialization failed: {e}")
     google_admin_service = None
-
-# Reinitialize Google APIs service with environment variables
-try:
-    google_apis_service.reinitialize_with_env()
-except Exception as e:
-    logging.error(f"Failed to reinitialize Google APIs service: {e}")
 
 # Gmail API imports
 import pickle
