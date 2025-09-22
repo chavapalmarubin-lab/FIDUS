@@ -1546,9 +1546,9 @@ FIDUS Investment Management Team`;
               {/* Document Types Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {Object.entries(KYC_DOCUMENT_TYPES).map(([docType, config]) => {
-                  const IconComponent = config.icon;
+                  const IconComponent = config?.icon || FileText; // Fallback to FileText icon
                   const status = getDocumentStatus(selectedProspectForDocs.id, docType);
-                  const isRequired = config.required;
+                  const isRequired = config?.required || false;
                   
                   return (
                     <Card key={docType} className="relative">
