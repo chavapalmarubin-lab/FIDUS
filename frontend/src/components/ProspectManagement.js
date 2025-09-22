@@ -393,6 +393,27 @@ FIDUS Investment Management Team`;
 <p>Would you be available for a brief consultation this week? We can arrange a call at your convenience.</p>
 <p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
 </body></html>`;
+          break;
+      }
+
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: prospect.email,
+        subject: subject,
+        body: body,
+        html_body: htmlBody
+      });
+
+      if (response.data.success) {
+        setSuccess(`Email sent successfully to ${prospect.name}!`);
+      } else {
+        setError(`Failed to send email: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Email sending error:', error);
+      setError('Failed to send email. Please ensure Google authentication is active.');
+    }
+  };
+
   // Share investment report with prospect
   const shareInvestmentReport = async (prospect) => {
     try {
