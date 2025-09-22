@@ -1901,8 +1901,7 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Google Workspace Integration Button Fix Testing"
-    - "JWT Authentication Token Storage Fix"
+    - "Gmail Integration JWT + Google OAuth Authentication Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
