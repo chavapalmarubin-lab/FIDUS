@@ -8075,62 +8075,41 @@ async def process_real_google_oauth_callback(request: Request, response: Respons
         raise HTTPException(status_code=500, detail="Failed to process OAuth callback")
 
 @api_router.get("/google/gmail/real-messages")
-async def get_real_gmail_messages(request: Request):
+async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using Google Gmail API"""
     try:
-        # Get admin session with Google tokens
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
-        
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        # Check if Google is authenticated
-        google_tokens = session_doc.get('google_tokens')
-        if not google_tokens:
+        if not token_data:
             return {
-                "success": True,
-                "messages": [{
-                    "id": "auth_required",
-                    "subject": "🔗 Google Authentication Required",
-                    "sender": "FIDUS System <system@fidus.com>",
-                    "preview": "To access your real Gmail messages, please authenticate with Google APIs by clicking 'Connect Google'.",
-                    "date": datetime.now(timezone.utc).isoformat(),
-                    "unread": True,
-                    "body": "Google APIs authentication is required to access real Gmail data.",
-                    "auth_required": True
-                }],
+                "success": False,
+                "error": "Google authentication required. Please connect your Google account first.",
+                "auth_required": True,
+                "messages": [],
                 "source": "no_google_auth"
             }
         
-        # Get real Gmail messages
-        messages = await google_apis_service.get_gmail_messages(google_tokens, max_results=20)
+        # Get Gmail messages using Google APIs service
+        messages = await google_apis_service.get_gmail_messages(token_data, max_results=20)
         
-        logging.info(f"Retrieved {len(messages)} real Gmail messages")
+        logging.info(f"Retrieved {len(messages)} Gmail messages for user: {current_user['username']}")
         
         return {
             "success": True,
             "messages": messages,
             "source": "real_gmail_api",
-            "authenticated": True,
-            "message_count": len(messages)
+            "count": len(messages)
         }
         
     except Exception as e:
-        logging.error(f"Get real Gmail messages error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get Gmail messages")
+        logging.error(f"Real Gmail messages error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "messages": [],
+            "source": "error"
+        }
 
 @api_router.post("/google/gmail/real-send")
 async def send_real_gmail_message(request: Request, email_data: dict):
