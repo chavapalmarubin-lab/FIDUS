@@ -128,11 +128,6 @@ function App() {
     setCurrentView("login");
   };
 
-  const handleAnimationComplete = () => {
-    console.log('Animation complete, switching to login');
-    setCurrentView("login");
-  };
-
   return (
     <BrowserRouter>
       <ToastProvider>
