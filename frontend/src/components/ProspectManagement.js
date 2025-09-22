@@ -1932,7 +1932,7 @@ FIDUS Investment Management Team`;
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => emailProspect(selectedProspect, 'meeting_followup')}
+                        onClick={() => emailProspectWithType(selectedProspect, 'meeting_followup')}
                         className="text-xs"
                       >
                         Meeting Follow-up
