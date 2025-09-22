@@ -143,27 +143,6 @@ const GoogleWorkspaceIntegration = () => {
   const [emailAction, setEmailAction] = useState(''); // 'clients', 'prospects', 'documents'
   const [documentRequestType, setDocumentRequestType] = useState('');
   
-  // Load CRM data on component mount
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadCRMData();
-    }
-  }, [isAuthenticated]);
-
-  const loadCRMData = async () => {
-    try {
-      // Load clients
-      const clientsResponse = await apiAxios.get('/admin/clients');
-      setClients(clientsResponse.data.clients || []);
-      
-      // Load prospects
-      const prospectsResponse = await apiAxios.get('/crm/prospects');
-      setProspects(prospectsResponse.data.prospects || []);
-    } catch (error) {
-      console.error('Failed to load CRM data:', error);
-    }
-  };
-
   // Email Clients Action
   const handleEmailClients = () => {
     setEmailAction('clients');
