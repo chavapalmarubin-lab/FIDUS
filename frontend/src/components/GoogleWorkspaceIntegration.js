@@ -1568,6 +1568,141 @@ ${documentRequestType === 'aml_kyc' ? `
         </div>
       )}
 
+      {/* Send for Signature Modal */}
+      {showSignatureModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Send Document for Signature</h3>
+              <button
+                onClick={() => setShowSignatureModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Document Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Document Selection
+                </label>
+                <div className="space-y-2">
+                  <select
+                    value={signatureFormData.selectedDocument}
+                    onChange={(e) => setSignatureFormData({ ...signatureFormData, selectedDocument: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select existing document</option>
+                    {driveFiles.map((file, index) => (
+                      <option key={index} value={`drive_${index}`}>
+                        {file.name}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <div className="text-center text-gray-500">OR</div>
+                  
+                  <div>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => setSignatureFormData({ 
+                        ...signatureFormData, 
+                        documentToUpload: e.target.files[0],
+                        selectedDocument: '' 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-sm text-gray-600 mt-1">Upload a new document (PDF, DOC, DOCX)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recipient Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recipient Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={signatureFormData.recipientName}
+                    onChange={(e) => setSignatureFormData({ ...signatureFormData, recipientName: e.target.value })}
+                    placeholder="Enter recipient name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recipient Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={signatureFormData.recipientEmail}
+                    onChange={(e) => setSignatureFormData({ ...signatureFormData, recipientEmail: e.target.value })}
+                    placeholder="Enter recipient email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Email Subject */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Subject
+                </label>
+                <input
+                  type="text"
+                  value={signatureFormData.emailSubject}
+                  onChange={(e) => setSignatureFormData({ ...signatureFormData, emailSubject: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Email Message */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Message
+                </label>
+                <textarea
+                  value={signatureFormData.emailMessage}
+                  onChange={(e) => setSignatureFormData({ ...signatureFormData, emailMessage: e.target.value })}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your message to the recipient..."
+                />
+              </div>
+
+              {/* Default Signers Info */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Document Signers</h4>
+                <div className="space-y-1 text-sm text-blue-800">
+                  <div>• <strong>Client:</strong> {signatureFormData.recipientName || 'Recipient'} ({signatureFormData.recipientEmail || 'email'})</div>
+                  <div>• <strong>FIDUS Representative:</strong> Salvador Palma (salvador.palma@fidus.com)</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <Button onClick={handleSendForSignature} className="flex-1">
+                <Signature className="h-4 w-4 mr-2" />
+                Send for Signature
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowSignatureModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <Alert className="bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
