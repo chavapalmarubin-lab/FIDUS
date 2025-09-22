@@ -139,18 +139,6 @@ function App() {
       <ToastProvider>
         <div className="App">
           <AnimatePresence mode="wait">
-            {currentView === "logo" && (
-              <motion.div
-                key="logo"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <LogoAnimation onComplete={handleAnimationComplete} />
-              </motion.div>
-            )}
-            
             {currentView === "login" && (
               <motion.div
                 key="login"
