@@ -7694,67 +7694,44 @@ async def logout_google_admin(request: Request, response: Response):
             "message": "Logout completed"
         }
 @api_router.get("/admin/google/profile")
-async def get_admin_google_profile(request: Request):
-    """Get current admin's Google profile"""
+async def get_admin_google_profile(current_user: dict = Depends(get_current_admin_user)):
+    """Get current admin's Google profile and authentication status"""
     try:
-        # Get session token from cookie or authorization header
-        session_token = None
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        # Try cookie first
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "authenticated": False
+            }
         
-        # Fallback to authorization header
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
+        # Return Google profile information
+        user_info = token_data.get('user_info', {})
         
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
-        
-        # Find session in database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid or expired session")
-        
-        # Check if session is expired
-        if session_doc['expires_at'] < datetime.now(timezone.utc):
-            # Clean up expired session
-            await db.admin_sessions.delete_one({"session_token": session_token})
-            raise HTTPException(status_code=401, detail="Session expired")
-        
-        # Update last accessed time
-        update_result = await db.admin_sessions.update_one(
-            {"session_token": session_token},
-            {"$set": {"last_accessed": datetime.now(timezone.utc)}}
-        )
-        
-        # Format profile response
         profile = {
-            "id": session_doc['google_id'],
-            "email": session_doc['email'],
-            "name": session_doc['name'],
-            "picture": session_doc.get('picture', ''),
+            "id": user_info.get('id'),
+            "email": user_info.get('email'),
+            "name": user_info.get('name'),
+            "picture": user_info.get('picture', ''),
             "is_google_connected": True,
-            "google_scopes": session_doc.get('google_scopes', []),
-            "login_type": session_doc.get('login_type', 'google_oauth'),
-            "connected_at": session_doc['created_at'].isoformat(),
-            "last_accessed": session_doc['last_accessed'].isoformat()
+            "scopes": token_data.get('scopes', [])
         }
         
         return {
             "success": True,
             "profile": profile,
-            "is_authenticated": True
+            "authenticated": True
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Get admin profile error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get admin profile")
+        logging.error(f"Google profile error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "authenticated": False
+        }
 
 # Google Social Login Endpoints
 @api_router.get("/auth/google/login-url")
