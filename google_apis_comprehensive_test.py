@@ -33,7 +33,7 @@ import base64
 import tempfile
 
 # Configuration
-BACKEND_URL = "https://fidus-workspace.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidussign.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -26,7 +26,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-workspace.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidussign.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 TEST_CLIENT_ID = "client_003"  # Salvador Palma
