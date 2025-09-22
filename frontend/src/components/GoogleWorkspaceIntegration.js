@@ -797,18 +797,6 @@ ${documentRequestType === 'aml_kyc' ? `
                 </>
               )}
             </button>
-              {loading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Connect Google Workspace
-                </>
-              )}
-            </button>
           </div>
         </CardContent>
       </Card>
