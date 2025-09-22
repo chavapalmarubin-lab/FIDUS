@@ -95,6 +95,15 @@ function App() {
     console.log('App.js: handleLogin called with:', userData);
     setUser(userData);
     
+    // Store JWT token if present
+    if (userData?.token) {
+      localStorage.setItem('fidus_token', userData.token);
+      console.log('JWT token stored in localStorage');
+    }
+    
+    // Store user data
+    localStorage.setItem('fidus_user', JSON.stringify(userData));
+    
     if (userData?.isAdmin || userData?.type === 'admin') {
       setCurrentView("admin");
     } else {
