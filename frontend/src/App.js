@@ -58,8 +58,8 @@ function App() {
         }
       } else {
         console.log('User is not authenticated');
-        // PERMANENT FIX: Always skip animation to prevent dark screen issue
-        console.log('Skipping animation for all users - going to login');
+        // FIXED: Always go directly to login to prevent dark screen
+        console.log('Going directly to login');
         setCurrentView("login");
       }
     };
