@@ -1747,6 +1747,179 @@ FIDUS Investment Management Team`;
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Prospect Detail Modal with Google Integration */}
+      <AnimatePresence>
+        {showDetailModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowDetailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  {selectedProspect.name} - Prospect Details
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              {/* Prospect Information */}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.country}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Investment Profile</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Initial Investment:</span>
+                      <span className="text-sm ml-2">{selectedProspect.initial_investment || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Risk Tolerance:</span>
+                      <span className="text-sm ml-2">{selectedProspect.risk_tolerance || 'Not assessed'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Timeline:</span>
+                      <span className="text-sm ml-2">{selectedProspect.investment_timeline || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Stage:</span>
+                      <Badge className={`ml-2 ${STAGE_CONFIG[selectedProspect.stage]?.color || 'bg-slate-500'} text-white`}>
+                        {STAGE_CONFIG[selectedProspect.stage]?.label || selectedProspect.stage}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Google API Actions */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">Google API Actions</CardTitle>
+                  <p className="text-sm text-slate-600">Integrated Gmail, Calendar, and Drive actions for this prospect</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      onClick={() => emailProspect(selectedProspect, 'general')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Send Email
+                    </Button>
+                    
+                    <Button
+                      onClick={() => scheduleProspectMeeting(selectedProspect, 'consultation')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Schedule Meet
+                    </Button>
+                    
+                    <Button
+                      onClick={() => emailProspect(selectedProspect, 'document_request')}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Request Docs
+                    </Button>
+                    
+                    <Button
+                      onClick={() => shareInvestmentReport(selectedProspect)}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Report
+                    </Button>
+                  </div>
+
+                  {/* Email Templates */}
+                  <div className="mt-4 pt-4 border-t">
+                    <h4 className="font-medium text-slate-900 mb-3">Quick Email Templates</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => emailProspect(selectedProspect, 'meeting_followup')}
+                        className="text-xs"
+                      >
+                        Meeting Follow-up
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => scheduleProspectMeeting(selectedProspect, 'followup')}
+                        className="text-xs"
+                      >
+                        Schedule Follow-up
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notes Section */}
+              {selectedProspect.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-700">{selectedProspect.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Close Button */}
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setShowDetailModal(false)}
+                  variant="outline"
+                  className="px-6"
+                >
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
