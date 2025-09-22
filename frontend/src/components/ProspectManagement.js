@@ -11,6 +11,7 @@ import {
   Users, 
   Plus, 
   Edit2, 
+  Edit,
   Trash2, 
   UserCheck, 
   Send,
