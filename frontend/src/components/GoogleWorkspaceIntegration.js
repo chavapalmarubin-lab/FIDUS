@@ -43,8 +43,8 @@ const GoogleWorkspaceIntegration = () => {
   } = useGoogleAdmin();
 
   const [activeTab, setActiveTab] = useState('gmail');
-  const [clients, setClients] = useState([]);
-  const [prospects, setProspects] = useState([]);
+  const [crmClients, setCrmClients] = useState([]);
+  const [crmProspects, setCrmProspects] = useState([]);
   
   // Gmail State
   const [emails, setEmails] = useState([]);
