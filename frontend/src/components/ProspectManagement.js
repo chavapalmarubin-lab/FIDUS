@@ -39,7 +39,10 @@ import {
   CreditCard,
   Building,
   Briefcase,
-  Calculator
+  Calculator,
+  MessageSquare,
+  Video,
+  Share2
 } from "lucide-react";
 import axios from "axios";
 import apiAxios from "../utils/apiAxios";
