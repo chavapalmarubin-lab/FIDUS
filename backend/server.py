@@ -1607,8 +1607,8 @@ async def health_metrics():
         # Database stats
         db_stats = await db.command("dbStats")
         
-        # Rate limiter stats
-        rate_limiter_stats = rate_limiter.get_stats()
+        # Rate limiter stats (commented out to avoid undefined variable error)
+        # rate_limiter_stats = rate_limiter.get_stats()
         
         # System metrics
         import psutil
@@ -1627,7 +1627,7 @@ async def health_metrics():
                 "data_size": db_stats.get("dataSize", 0),
                 "index_size": db_stats.get("indexSize", 0)
             },
-            "rate_limiter": rate_limiter_stats,
+            # "rate_limiter": rate_limiter_stats,
             "system": system_metrics
         }
     except Exception as e:
