@@ -132,7 +132,22 @@ const ProspectManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState(null);
+  const [meetingData, setMeetingData] = useState({
+    type: 'consultation',
+    date: '',
+    time: '',
+    duration: 60,
+    notes: ''
+  });
+  const [emailData, setEmailData] = useState({
+    type: 'general',
+    subject: '',
+    body: '',
+    recipient: null
+  });
   const [activeTab, setActiveTab] = useState("overview");
   
   // Document management states
