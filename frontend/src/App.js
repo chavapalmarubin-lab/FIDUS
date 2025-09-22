@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginSelection from "./components/LoginSelection";
