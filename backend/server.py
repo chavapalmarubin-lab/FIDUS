@@ -8542,38 +8542,6 @@ async def get_calendar_events(current_user: dict = Depends(get_current_admin_use
             "events": []
         }
 
-@api_router.post("/google/calendar/create-event")
-async def create_calendar_event(request: Request, event_data: dict):
-    """Create Google Calendar event"""
-    try:
-        # Get session token
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
-        
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
-        
-        # Mock event creation
-        event_id = f"mock_event_{int(time.time())}"
-        logging.info(f"Mock calendar event created: {event_data.get('summary')} - ID: {event_id}")
-        
-        return {
-            "success": True,
-            "message": "Event created successfully",
-            "event_id": event_id,
-            "event": event_data
-        }
-        
-    except Exception as e:
-        logging.error(f"Create calendar event error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to create calendar event")
-
 @api_router.get("/google/drive/files")
 async def get_drive_files(request: Request):
     """Get Google Drive files using real Drive API"""
