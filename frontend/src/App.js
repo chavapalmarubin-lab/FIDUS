@@ -95,7 +95,7 @@ function App() {
     console.log('App.js: handleLogin called with:', userData);
     setUser(userData);
     
-    if (userData?.isAdmin || userData?.user_type === 'admin') {
+    if (userData?.isAdmin || userData?.type === 'admin') {
       setCurrentView("admin");
     } else {
       setCurrentView("client");
