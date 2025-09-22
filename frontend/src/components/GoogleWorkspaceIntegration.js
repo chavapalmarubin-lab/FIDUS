@@ -347,6 +347,8 @@ ${documentRequestType === 'aml_kyc' ? `
       alert('Failed to send emails. Please try again.');
     }
   };
+
+  const loadSheets = async () => {
     try {
       setSheetsLoading(true);
       const response = await apiAxios.get('/google/sheets/spreadsheets');
