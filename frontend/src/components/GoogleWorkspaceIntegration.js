@@ -1099,9 +1099,9 @@ ${documentRequestType === 'aml_kyc' ? `
 
                 {/* Recipient List */}
                 <div className="max-h-60 overflow-y-auto border rounded-lg">
-                  {(emailAction === 'clients' ? clients : 
-                    emailAction === 'prospects' ? prospects : 
-                    [...clients, ...prospects]).map((recipient, index) => (
+                  {(emailAction === 'clients' ? crmClients : 
+                    emailAction === 'prospects' ? crmProspects : 
+                    [...crmClients, ...crmProspects]).map((recipient, index) => (
                     <div key={index} className="p-3 border-b last:border-b-0 hover:bg-gray-50">
                       <label className="flex items-center cursor-pointer">
                         <input
