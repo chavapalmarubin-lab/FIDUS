@@ -573,5 +573,17 @@ def get_google_apis_service():
         _google_apis_service = GoogleAPIsService()
     return _google_apis_service
 
-# For backward compatibility
-google_apis_service = get_google_apis_service()
+# For backward compatibility - lazy initialization
+def get_google_apis_service_instance():
+    """Get Google APIs service instance for module-level access"""
+    return get_google_apis_service()
+
+# Use property-based access to ensure lazy initialization
+class GoogleAPIsServiceModule:
+    @property
+    def google_apis_service(self):
+        return get_google_apis_service()
+
+# Create module-level accessor
+_module = GoogleAPIsServiceModule()
+google_apis_service = _module.google_apis_service
