@@ -8444,60 +8444,37 @@ async def send_gmail_message(request: Request, current_user: dict = Depends(get_
         }
 
 @api_router.get("/google/calendar/events")
-async def get_calendar_events(request: Request):
+async def get_calendar_events(current_user: dict = Depends(get_current_admin_user)):
     """Get Google Calendar events using real Calendar API"""
     try:
-        # Get session token
-        session_token = None
-        if 'session_token' in request.cookies:
-            session_token = request.cookies['session_token']
+        # Get user's Google OAuth tokens
+        token_data = await get_google_session_token(current_user["user_id"])
         
-        if not session_token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                session_token = auth_header.split(' ')[1]
-        
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No session token provided")
-        
-        # Get session from database
-        session_doc = await db.admin_sessions.find_one({"session_token": session_token})
-        
-        if not session_doc:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        emergent_session_token = session_doc.get('emergent_session_token')
-        
-        if not emergent_session_token:
-            return {"success": True, "events": [], "message": "Google authentication required"}
-        
-        try:
-            from google_social_auth import google_social_auth
-            
-            events = await google_social_auth.get_calendar_events(
-                emergent_session_token=emergent_session_token,
-                max_results=20
-            )
-            
+        if not token_data:
             return {
-                "success": True,
-                "events": events,
-                "source": "real_calendar_api",
-                "event_count": len(events)
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True,
+                "events": []
             }
-            
-        except Exception as calendar_error:
-            logging.error(f"Calendar API error: {str(calendar_error)}")
-            return {
-                "success": True, 
-                "events": [],
-                "error": str(calendar_error),
-                "source": "calendar_api_error"
-            }
+        
+        # Get calendar events using Google APIs service
+        events = await google_apis_service.get_calendar_events(token_data, max_results=20)
+        
+        return {
+            "success": True,
+            "events": events,
+            "source": "real_calendar_api",
+            "count": len(events)
+        }
         
     except Exception as e:
-        logging.error(f"Get calendar events error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get calendar events")
+        logging.error(f"Calendar events error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "events": []
+        }
 
 @api_router.post("/google/calendar/create-event")
 async def create_calendar_event(request: Request, event_data: dict):
