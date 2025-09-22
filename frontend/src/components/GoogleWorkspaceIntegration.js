@@ -558,28 +558,110 @@ ${documentRequestType === 'aml_kyc' ? `
     event.target.value = '';
   };
 
-  const sendForSignature = async () => {
-    const recipientEmail = prompt('Enter recipient email for signature:');
-    const documentName = prompt('Enter document name:');
-    
-    if (!recipientEmail || !documentName) return;
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [signatureFormData, setSignatureFormData] = useState({
+    selectedDocument: '',
+    recipientEmail: '',
+    recipientName: '',
+    emailSubject: 'Document Signature Required - FIDUS Investment Management',
+    emailMessage: 'Please review and sign the attached document.',
+    documentToUpload: null
+  });
+  const [sentDocuments, setSentDocuments] = useState([]);
 
+  const sendForSignature = () => {
+    setShowSignatureModal(true);
+    setSignatureFormData({
+      selectedDocument: '',
+      recipientEmail: '',
+      recipientName: '',
+      emailSubject: 'Document Signature Required - FIDUS Investment Management',
+      emailMessage: 'Please review and sign the attached document.',
+      documentToUpload: null
+    });
+  };
+
+  const handleSendForSignature = async () => {
     try {
-      const response = await apiAxios.post('/documents/doc123/send-notification', {
-        recipient_email: recipientEmail,
-        recipient_name: 'Client',
-        document_name: documentName,
-        signing_url: 'https://finance-portal-60.preview.emergentagent.com/documents/sign'
+      if (!signatureFormData.recipientEmail || !signatureFormData.recipientName) {
+        alert('Please fill in recipient email and name');
+        return;
+      }
+
+      let documentId = signatureFormData.selectedDocument;
+      
+      // If uploading a new document, upload it first
+      if (signatureFormData.documentToUpload) {
+        const formData = new FormData();
+        formData.append('file', signatureFormData.documentToUpload);
+        formData.append('category', 'contracts');
+        formData.append('uploader_id', 'admin');
+        formData.append('uploader_type', 'admin');
+
+        const uploadResponse = await apiAxios.post('/documents/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (uploadResponse.data.success) {
+          documentId = uploadResponse.data.document_id;
+        } else {
+          alert('Failed to upload document');
+          return;
+        }
+      }
+
+      if (!documentId) {
+        alert('Please select a document or upload a new one');
+        return;
+      }
+
+      // Send document for signature
+      const signatureResponse = await apiAxios.post(`/documents/${documentId}/send-for-signature`, {
+        recipients: [
+          {
+            email: signatureFormData.recipientEmail,
+            name: signatureFormData.recipientName,
+            role: 'signer'
+          },
+          {
+            email: 'salvador.palma@fidus.com',
+            name: 'Salvador Palma',
+            role: 'signer'
+          }
+        ],
+        email_subject: signatureFormData.emailSubject,
+        email_message: signatureFormData.emailMessage,
+        sender_id: 'admin'
       });
 
-      if (response.data.success) {
-        alert('Signature request sent successfully!');
+      if (signatureResponse.data.success) {
+        alert('Document sent for signature successfully!');
+        
+        // Add to sent documents list
+        const newSentDoc = {
+          id: documentId,
+          name: signatureFormData.documentToUpload?.name || 'Selected Document',
+          recipient: signatureFormData.recipientName,
+          email: signatureFormData.recipientEmail,
+          status: 'sent',
+          sentDate: new Date().toISOString(),
+          envelope_id: signatureResponse.data.envelope_id
+        };
+        
+        setSentDocuments(prev => [newSentDoc, ...prev]);
+        setShowSignatureModal(false);
+        
+        // Refresh drive files
+        await loadDriveFiles();
       } else {
-        alert(`Failed to send request: ${response.data.error}`);
+        alert(`Failed to send for signature: ${signatureResponse.data.error}`);
       }
+
     } catch (error) {
-      console.error('Error sending signature request:', error);
-      alert('Failed to send signature request. Please try again.');
+      console.error('Error sending document for signature:', error);
+      alert('Failed to send document for signature. Please try again.');
     }
   };
 
