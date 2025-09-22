@@ -136,6 +136,27 @@ const GoogleWorkspaceIntegration = () => {
     }
   };
 
+  // Load CRM data on component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCRMData();
+    }
+  }, [isAuthenticated]);
+
+  const loadCRMData = async () => {
+    try {
+      // Load clients
+      const clientsResponse = await apiAxios.get('/admin/clients');
+      setCrmClients(clientsResponse.data.clients || []);
+      
+      // Load prospects  
+      const prospectsResponse = await apiAxios.get('/crm/prospects');
+      setCrmProspects(prospectsResponse.data.prospects || []);
+    } catch (error) {
+      console.error('Failed to load CRM data:', error);
+    }
+  };
+
   // ===== NEW CRM INTEGRATION FUNCTIONS =====
   
   // Load clients and prospects from CRM (using existing state)
