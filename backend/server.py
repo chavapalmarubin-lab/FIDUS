@@ -62,6 +62,46 @@ from googleapiclient.errors import HttpError
 from email.message import EmailMessage
 from email.mime.application import MIMEApplication
 
+# Helper function to get Google session token from database
+async def get_google_session_token(user_id: str) -> Optional[Dict]:
+    """Get Google OAuth tokens for user from database"""
+    try:
+        # Get user's Google OAuth tokens from admin sessions
+        session_doc = await db.admin_sessions.find_one(
+            {"user_id": user_id}, 
+            sort=[("created_at", -1)]  # Get the latest session
+        )
+        
+        if session_doc and session_doc.get('google_tokens'):
+            return session_doc['google_tokens']
+        return None
+        
+    except Exception as e:
+        logging.error(f"Error getting Google session token: {str(e)}")
+        return None
+
+async def store_google_session_token(user_id: str, token_data: Dict) -> bool:
+    """Store Google OAuth tokens for user in database"""
+    try:
+        # Update or create admin session with Google tokens
+        result = await db.admin_sessions.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "google_tokens": token_data,
+                    "google_authenticated": True,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+        
+        return result.acknowledged
+        
+    except Exception as e:
+        logging.error(f"Error storing Google session token: {str(e)}")
+        return False
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
