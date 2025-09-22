@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Loader2,
   ExternalLink,
-  Settings,
+  FolderOpen,
   Globe
 } from 'lucide-react';
 import useGoogleAdmin from '../hooks/useGoogleAdmin';
