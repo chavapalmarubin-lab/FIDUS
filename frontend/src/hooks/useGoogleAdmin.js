@@ -66,34 +66,14 @@ const useGoogleAdmin = () => {
       const googleApiAuth = localStorage.getItem('google_api_authenticated');
       const userData = localStorage.getItem('fidus_user');
       
-      // If we have authentication flag and user data, try to validate with backend
+      // If we have authentication flag and user data, use it and validate with backend
       if (googleApiAuth === 'true' && userData) {
         try {
           const user = JSON.parse(userData);
           if (user && user.isGoogleAuth && user.googleApiAccess) {
             console.log('Found Google API session in localStorage:', user.email);
             
-            // Try to validate with backend using admin session cookies
-            const response = await fetch(`${API}/admin/google/profile`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.profile) {
-                setProfile(data.profile);
-                setIsAuthenticated(true);
-                console.log('✅ Existing Google API session validated:', data.profile.email);
-                return;
-              }
-            }
-            
-            // If backend validation fails but we have local data, use local data
-            console.log('Using local Google API session data');
+            // Set the profile from local data first
             setProfile({
               id: user.id,
               email: user.email,
@@ -101,6 +81,33 @@ const useGoogleAdmin = () => {
               picture: user.picture
             });
             setIsAuthenticated(true);
+            
+            // Then validate with backend using JWT token
+            const jwtToken = localStorage.getItem('fidus_token');
+            if (jwtToken) {
+              try {
+                const response = await fetch(`${API}/admin/google/profile`, {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${jwtToken}`,
+                    'Content-Type': 'application/json'
+                  },
+                  credentials: 'include'
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.success && data.profile) {
+                    // Update profile with backend data
+                    setProfile(data.profile);
+                    console.log('✅ Google API session validated with backend:', data.profile.email);
+                  }
+                }
+              } catch (backendError) {
+                console.log('Backend validation failed, using local data:', backendError.message);
+              }
+            }
+            
             return;
           }
         } catch (parseError) {
@@ -108,27 +115,14 @@ const useGoogleAdmin = () => {
         }
       }
 
-      // Fallback to cookie-based authentication
-      const response = await fetch(`${API}/admin/google/profile`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.profile) {
-          setProfile(data.profile);
-          setIsAuthenticated(true);
-          console.log('✅ Existing Google session found via cookies:', data.profile.email);
-        }
-      } else if (response.status !== 401) {
-        console.log('Session check failed:', response.status);
-      }
+      // If no local authentication, set unauthenticated state
+      setIsAuthenticated(false);
+      setProfile(null);
+      
     } catch (err) {
       console.error('Session check error:', err);
+      setIsAuthenticated(false);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
