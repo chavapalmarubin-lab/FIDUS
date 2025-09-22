@@ -758,7 +758,25 @@ ${documentRequestType === 'aml_kyc' ? `
             <div className="text-slate-600">
               Please authenticate with Google to access Gmail, Calendar, Drive, and Sheets functionality.
             </div>
-            <Button onClick={loginWithGoogle} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              onClick={loginWithGoogle} 
+              disabled={loading} 
+              className="bg-blue-600 hover:bg-blue-700"
+              style={{
+                position: 'relative',
+                zIndex: 1000,
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
               {loading ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
