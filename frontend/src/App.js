@@ -72,21 +72,18 @@ function App() {
         }
       } else {
         console.log('User is not authenticated');
-        // PERMANENT FIX: Skip animation by default to prevent dark screen issue
-        const shouldSkipAnimation = skipAnimation || googleAuthSuccess || true; // Always skip for now
-        
-        if (shouldSkipAnimation) {
+        if (skipAnimation || googleAuthSuccess) {
           console.log('Skipping animation, going to login');
           setCurrentView("login");
         } else {
           console.log('Starting with logo animation');
           setCurrentView("logo");
           
-          // Safety timeout - automatically skip to login after 6 seconds
+          // Safety timeout - automatically skip to login after 3 seconds (reduced timeout)
           setTimeout(() => {
             console.log('Safety timeout triggered - going to login');
             setCurrentView("login");
-          }, 6000);
+          }, 3000);
         }
       }
     };
