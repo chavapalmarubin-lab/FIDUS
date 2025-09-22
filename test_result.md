@@ -1866,12 +1866,10 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Google Social Login Implementation Testing - COMPLETED"
-    - "Real Google OAuth Implementation Testing - COMPLETED"
-    - "Comprehensive Google APIs Integration Testing - COMPLETED"
+    - "Google Workspace Integration Button Fix Testing"
+    - "JWT Authentication Token Storage Fix"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
   test_priority: "high_first"
   redemption_system_testing: "completed"
   investment_readiness_testing: "completed"
