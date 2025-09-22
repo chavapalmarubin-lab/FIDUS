@@ -335,12 +335,18 @@ class FIDUSCRMBackendTester:
         # Test 3: POST /api/documents/{id}/send-for-signature (enhanced signature workflow)
         if self.test_document_id:
             # Test with Salvador Palma as default signee as specified in review
+            # Using correct API schema based on SendForSignatureRequest model
             signature_request = {
-                "recipient_email": "chava@alyarglobal.com",  # Salvador's actual email
-                "recipient_name": "Salvador Palma",
-                "subject": "FIDUS Document Signature Request - CRM Backend Test",
-                "message": "Dear Salvador,\n\nPlease review and sign this document as part of our CRM backend testing verification.\n\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\n\nBest regards,\nFIDUS Investment Management",
-                "signature_required": True
+                "recipients": [
+                    {
+                        "email": "chava@alyarglobal.com",  # Salvador's actual email
+                        "name": "Salvador Palma",
+                        "role": "signer"
+                    }
+                ],
+                "email_subject": "FIDUS Document Signature Request - CRM Backend Test",
+                "email_message": "Dear Salvador,\n\nPlease review and sign this document as part of our CRM backend testing verification.\n\nThis tests the enhanced signature workflow with you as the default FIDUS signee.\n\nBest regards,\nFIDUS Investment Management",
+                "sender_id": "admin_001"
             }
             
             try:
