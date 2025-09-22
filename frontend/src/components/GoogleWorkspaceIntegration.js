@@ -570,18 +570,31 @@ const GoogleWorkspaceIntegration = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  onClick={() => setShowUploadModal(true)} 
-                  className="w-full bg-orange-600 hover:bg-orange-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Upload Document
-                </Button>
+                <div>
+                  <input
+                    type="file"
+                    id="document-upload"
+                    style={{ display: 'none' }}
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleDocumentUpload}
+                  />
+                  <Button 
+                    onClick={() => document.getElementById('document-upload').click()} 
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upload Document
+                  </Button>
+                </div>
                 <Button variant="outline" className="w-full">
                   <FileText className="h-4 w-4 mr-2" />
                   Investment Agreements
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={sendForSignature}
+                >
                   <Signature className="h-4 w-4 mr-2" />
                   Send for Signature
                 </Button>
