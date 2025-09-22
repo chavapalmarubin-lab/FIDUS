@@ -8234,6 +8234,42 @@ async def get_real_drive_files(current_user: dict = Depends(get_current_admin_us
             "files": []
         }
 
+@api_router.post("/google/drive/upload")
+async def upload_drive_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_admin_user)):
+    """Upload file to Google Drive"""
+    try:
+        # Check if user has Google OAuth tokens stored
+        token_data = await get_google_session_token(current_user["user_id"])
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        # Read file data
+        file_data = await file.read()
+        
+        # Upload to Google Drive
+        result = await google_apis_service.upload_drive_file(
+            token_data=token_data,
+            file_data=file_data,
+            filename=file.filename,
+            mime_type=file.content_type
+        )
+        
+        logging.info(f"Drive file uploaded by user: {current_user['username']} - {file.filename}")
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Drive upload error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 # Google Meet API endpoints
 @api_router.post("/google/meet/create-space")
 async def create_meet_space(request: Request, current_user: dict = Depends(get_current_admin_user)):
