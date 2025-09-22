@@ -40,21 +40,25 @@ const GoogleCallback = () => {
 
         if (response.ok && data.success) {
           setStatus('success');
-          setMessage(`Welcome ${data.profile.name}!`);
+          setMessage(`Welcome ${data.user_info?.name || 'User'}!`);
 
-          // Store auth data
+          // Store auth data with the new response format
           const adminUser = {
-            id: data.profile.id,
-            username: data.profile.email,
-            name: data.profile.name,
-            email: data.profile.email,
+            id: data.user_info?.id,
+            username: data.user_info?.email,
+            name: data.user_info?.name,
+            email: data.user_info?.email,
             type: "admin",
-            picture: data.profile.picture,
-            isGoogleAuth: true
+            picture: data.user_info?.picture,
+            isGoogleAuth: true,
+            googleApiAccess: true,
+            scopes: data.scopes || []
           };
 
           localStorage.setItem('fidus_user', JSON.stringify(adminUser));
-          localStorage.setItem('google_session_token', data.session_token);
+          
+          // Set a flag to indicate Google API authentication is complete
+          localStorage.setItem('google_api_authenticated', 'true');
 
           // Simple redirect after success
           setTimeout(() => {
