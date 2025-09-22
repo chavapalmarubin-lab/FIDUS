@@ -28,8 +28,8 @@ const GoogleCallback = () => {
 
         setMessage('Exchanging authorization code...');
 
-        // Send to backend
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-callback`, {
+        // Send to backend for real Google OAuth processing
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-callback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
