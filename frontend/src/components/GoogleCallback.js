@@ -29,9 +29,17 @@ const GoogleCallback = () => {
         setMessage('Exchanging authorization code...');
 
         // Send to backend for real Google OAuth processing
+        // Get JWT token from localStorage for authentication
+        const fidusToken = localStorage.getItem('fidus_token');
+        
+        const headers = { 'Content-Type': 'application/json' };
+        if (fidusToken) {
+          headers['Authorization'] = `Bearer ${fidusToken}`;
+        }
+        
         const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/oauth-callback`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           credentials: 'include',
           body: JSON.stringify({ code, state: urlParams.get('state') })
         });
