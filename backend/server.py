@@ -13171,6 +13171,9 @@ async def rate_limiting_middleware(request: Request, call_next):
 # Add rate limiting middleware to the app
 app.middleware("http")(rate_limiting_middleware)
 
+# Include the API router in the main app
+app.include_router(api_router)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
