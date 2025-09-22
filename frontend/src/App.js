@@ -7,6 +7,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import GoogleCallback from "./components/GoogleCallback";
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
+import "./App.css";
 
 function App() {
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
