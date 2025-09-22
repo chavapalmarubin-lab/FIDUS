@@ -597,15 +597,27 @@ ${documentRequestType === 'aml_kyc' ? `
                   <Plus className="h-4 w-4 mr-2" />
                   Compose Email
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleEmailClients}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Email Clients ({clients.length})
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleEmailProspects}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Email Prospects ({prospects.length})
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleRequestDocuments('general')}
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   Request Documents
                 </Button>
