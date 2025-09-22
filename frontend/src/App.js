@@ -72,7 +72,10 @@ function App() {
         }
       } else {
         console.log('User is not authenticated');
-        if (skipAnimation || googleAuthSuccess) {
+        // PERMANENT FIX: Skip animation by default to prevent dark screen issue
+        const shouldSkipAnimation = skipAnimation || googleAuthSuccess || true; // Always skip for now
+        
+        if (shouldSkipAnimation) {
           console.log('Skipping animation, going to login');
           setCurrentView("login");
         } else {
