@@ -78,6 +78,12 @@ function App() {
         } else {
           console.log('Starting with logo animation');
           setCurrentView("logo");
+          
+          // Safety timeout - automatically skip to login after 6 seconds
+          setTimeout(() => {
+            console.log('Safety timeout triggered - going to login');
+            setCurrentView("login");
+          }, 6000);
         }
       }
     };
