@@ -1058,6 +1058,102 @@ ${documentRequestType === 'aml_kyc' ? `
         </div>
       )}
 
+      {/* Recipient Selection Modal */}
+      {showRecipientModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Select Recipients - {
+                    emailAction === 'clients' ? 'Email Clients' :
+                    emailAction === 'prospects' ? 'Email Prospects' :
+                    emailAction === 'documents' ? 'Request Documents' : 'Select Recipients'
+                  }
+                </h3>
+                <button
+                  onClick={() => setShowRecipientModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Document Type Selection for Document Requests */}
+                {emailAction === 'documents' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Document Request Type
+                    </label>
+                    <select
+                      value={documentRequestType}
+                      onChange={(e) => setDocumentRequestType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="general">General Documents</option>
+                      <option value="aml_kyc">AML/KYC Documentation</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Recipient List */}
+                <div className="max-h-60 overflow-y-auto border rounded-lg">
+                  {(emailAction === 'clients' ? clients : 
+                    emailAction === 'prospects' ? prospects : 
+                    [...clients, ...prospects]).map((recipient, index) => (
+                    <div key={index} className="p-3 border-b last:border-b-0 hover:bg-gray-50">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedRecipients.some(r => r.email === recipient.email)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedRecipients([...selectedRecipients, recipient]);
+                            } else {
+                              setSelectedRecipients(selectedRecipients.filter(r => r.email !== recipient.email));
+                            }
+                          }}
+                          className="mr-3"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{recipient.name}</div>
+                          <div className="text-sm text-gray-600">{recipient.email}</div>
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Count */}
+                <div className="text-sm text-gray-600">
+                  Selected: {selectedRecipients.length} recipient(s)
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowRecipientModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={processBulkEmailSending}
+                    disabled={selectedRecipients.length === 0}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {emailAction === 'documents' ? 'Send Document Requests' : 'Send Emails'} ({selectedRecipients.length})
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <Alert className="bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
