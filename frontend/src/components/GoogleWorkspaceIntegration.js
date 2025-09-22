@@ -762,6 +762,14 @@ ${documentRequestType === 'aml_kyc' ? `
               onClick={loginWithGoogle} 
               disabled={loading} 
               className="bg-blue-600 hover:bg-blue-700"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!loading) {
+                  console.log('Google button clicked - calling loginWithGoogle');
+                  loginWithGoogle();
+                }
+              }}
               style={{
                 position: 'relative',
                 zIndex: 1000,
