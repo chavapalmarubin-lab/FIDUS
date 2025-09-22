@@ -57,6 +57,21 @@ class GoogleAPIsService:
         
         logger.info("Google APIs Service initialized with comprehensive scopes")
     
+    def reinitialize_with_env(self):
+        """Reinitialize the service with environment variables after they are loaded"""
+        self.client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        self.client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+        self.redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
+        
+        logger.info(f"GoogleAPIsService reinit - client_id: {self.client_id is not None}")
+        logger.info(f"GoogleAPIsService reinit - client_secret: {self.client_secret is not None}")
+        logger.info(f"GoogleAPIsService reinit - redirect_uri: {self.redirect_uri}")
+        
+        if not all([self.client_id, self.client_secret, self.redirect_uri]):
+            logger.error(f"Missing Google OAuth credentials after reinit: client_id={self.client_id is not None}, client_secret={self.client_secret is not None}, redirect_uri={self.redirect_uri}")
+        else:
+            logger.info("Google APIs Service reinitialized successfully with environment variables")
+    
     def generate_oauth_url(self, state: str = None) -> str:
         """
         Generate Google OAuth URL for user authentication
