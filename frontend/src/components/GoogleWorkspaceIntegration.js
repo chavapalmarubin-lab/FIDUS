@@ -360,6 +360,7 @@ ${documentRequestType === 'aml_kyc' ? `
   };
 
   // Calendar Actions
+  // Calendar Actions with CRM Integration
   const createGoogleMeet = async () => {
     try {
       const meetConfig = {
@@ -386,10 +387,27 @@ ${documentRequestType === 'aml_kyc' ? `
   };
 
   const createClientMeeting = async () => {
+    if (crmClients.length === 0) {
+      alert('No clients found. Please add clients first.');
+      return;
+    }
+
+    // Show client selection modal
+    const clientNames = crmClients.map(c => c.name);
+    const selectedClient = prompt(`Select client for meeting:\n${clientNames.join('\n')}\n\nEnter client name:`);
+    
+    if (!selectedClient) return;
+    
+    const client = crmClients.find(c => c.name.toLowerCase().includes(selectedClient.toLowerCase()));
+    if (!client) {
+      alert('Client not found. Please enter a valid client name.');
+      return;
+    }
+
     try {
       const eventData = {
-        summary: 'Client Meeting - FIDUS Investment',
-        description: 'Scheduled client consultation meeting',
+        summary: `Client Meeting - ${client.name}`,
+        description: `Investment consultation meeting with ${client.name}`,
         start: {
           dateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
           timeZone: 'UTC'
@@ -398,6 +416,7 @@ ${documentRequestType === 'aml_kyc' ? `
           dateTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // 2 hours from now
           timeZone: 'UTC'
         },
+        attendees: [{ email: client.email }],
         conferenceData: {
           createRequest: {
             requestId: `client-meeting-${Date.now()}`,
@@ -409,7 +428,7 @@ ${documentRequestType === 'aml_kyc' ? `
       const response = await apiAxios.post('/google/calendar/create-event', eventData);
       
       if (response.data.success) {
-        alert('Client meeting scheduled successfully!');
+        alert(`Client meeting scheduled successfully with ${client.name}! Calendar invite sent.`);
         await loadCalendarEvents();
       } else {
         alert(`Failed to schedule meeting: ${response.data.error}`);
@@ -421,10 +440,27 @@ ${documentRequestType === 'aml_kyc' ? `
   };
 
   const createProspectMeeting = async () => {
+    if (crmProspects.length === 0) {
+      alert('No prospects found. Please add prospects first.');
+      return;
+    }
+
+    // Show prospect selection modal
+    const prospectNames = crmProspects.map(p => p.name);
+    const selectedProspect = prompt(`Select prospect for meeting:\n${prospectNames.join('\n')}\n\nEnter prospect name:`);
+    
+    if (!selectedProspect) return;
+    
+    const prospect = crmProspects.find(p => p.name.toLowerCase().includes(selectedProspect.toLowerCase()));
+    if (!prospect) {
+      alert('Prospect not found. Please enter a valid prospect name.');
+      return;
+    }
+
     try {
       const eventData = {
-        summary: 'Prospect Meeting - FIDUS Investment',
-        description: 'Initial consultation with investment prospect',
+        summary: `Prospect Meeting - ${prospect.name}`,
+        description: `Initial consultation with investment prospect ${prospect.name}`,
         start: {
           dateTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(), // 2 hours from now
           timeZone: 'UTC'
@@ -433,6 +469,7 @@ ${documentRequestType === 'aml_kyc' ? `
           dateTime: new Date(Date.now() + 180 * 60 * 1000).toISOString(), // 3 hours from now
           timeZone: 'UTC'
         },
+        attendees: [{ email: prospect.email }],
         conferenceData: {
           createRequest: {
             requestId: `prospect-meeting-${Date.now()}`,
@@ -444,7 +481,7 @@ ${documentRequestType === 'aml_kyc' ? `
       const response = await apiAxios.post('/google/calendar/create-event', eventData);
       
       if (response.data.success) {
-        alert('Prospect meeting scheduled successfully!');
+        alert(`Prospect meeting scheduled successfully with ${prospect.name}! Calendar invite sent.`);
         await loadCalendarEvents();
       } else {
         alert(`Failed to schedule meeting: ${response.data.error}`);
