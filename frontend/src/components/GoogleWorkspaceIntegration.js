@@ -758,32 +758,32 @@ ${documentRequestType === 'aml_kyc' ? `
             <div className="text-slate-600">
               Please authenticate with Google to access Gmail, Calendar, Drive, and Sheets functionality.
             </div>
-            <Button 
-              onClick={loginWithGoogle} 
-              disabled={loading} 
-              className="bg-blue-600 hover:bg-blue-700"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            <button 
+              onClick={() => {
+                console.log('GOOGLE BUTTON CLICKED - DIRECT');
                 if (!loading) {
-                  console.log('Google button clicked - calling loginWithGoogle');
                   loginWithGoogle();
                 }
               }}
+              disabled={loading}
               style={{
-                position: 'relative',
-                zIndex: 1000,
-                pointerEvents: 'auto',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                backgroundColor: '#2563eb',
+                color: 'white',
                 padding: '12px 24px',
                 border: 'none',
                 borderRadius: '6px',
                 fontSize: '14px',
-                fontWeight: '500'
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                zIndex: 9999,
+                position: 'relative'
               }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
             >
               {loading ? (
                 <>
