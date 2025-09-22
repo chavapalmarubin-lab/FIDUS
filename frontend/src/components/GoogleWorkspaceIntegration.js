@@ -218,6 +218,12 @@ const GoogleWorkspaceIntegration = () => {
     return results;
   };
 
+  // Handle email click to read full content
+  const handleEmailClick = (email) => {
+    setSelectedEmail(email);
+    setShowEmailModal(true);
+  };
+
   // Process bulk email sending
   const processBulkEmailSending = async () => {
     if (selectedRecipients.length === 0) {
