@@ -125,12 +125,16 @@ class GoogleOAuthAuthFlowTest:
             if response.status_code == 200:
                 data = response.json()
                 
-                if data.get("success") and data.get("auth_url"):
-                    self.oauth_url = data["auth_url"]
+                # Check if response has success flag and oauth_url
+                has_success = data.get("success") is True
+                has_oauth_url = data.get("oauth_url") is not None
+                
+                if has_success and has_oauth_url:
+                    self.oauth_url = data["oauth_url"]
                     
                     # Verify OAuth URL contains required components
                     required_components = [
-                        "accounts.google.com/oauth",
+                        "accounts.google.com/o/oauth2/auth",
                         "client_id=",
                         "redirect_uri=",
                         "scope=",
@@ -142,7 +146,7 @@ class GoogleOAuthAuthFlowTest:
                     if not missing_components:
                         self.log_result("Google OAuth URL Generation", True, 
                                       "OAuth URL generated successfully with all required components",
-                                      {"oauth_url": self.oauth_url[:100] + "..."})
+                                      {"oauth_url": self.oauth_url[:100] + "...", "full_response": data})
                         return True
                     else:
                         self.log_result("Google OAuth URL Generation", False, 
@@ -151,7 +155,8 @@ class GoogleOAuthAuthFlowTest:
                         return False
                 else:
                     self.log_result("Google OAuth URL Generation", False, 
-                                  "Response missing success flag or auth_url", {"response": data})
+                                  "Response missing success flag or auth_url", 
+                                  {"response": data, "has_success": has_success, "has_oauth_url": has_oauth_url})
                     return False
             elif response.status_code == 401:
                 self.log_result("Google OAuth URL Generation", False, 
