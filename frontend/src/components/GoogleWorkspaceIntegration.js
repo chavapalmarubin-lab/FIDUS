@@ -670,15 +670,27 @@ const GoogleWorkspaceIntegration = () => {
                   <Plus className="h-4 w-4 mr-2" />
                   Create Report
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createPortfolioReport}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Client Portfolio Report
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createInvestmentSummary}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Investment Summary
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={createMT5Report}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   MT5 Trading Report
                 </Button>
