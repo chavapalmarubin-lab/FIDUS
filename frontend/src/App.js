@@ -14,46 +14,69 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const initializeAuth = () => {
-      console.log('=== APP.JS USEEFFECT DEBUGGING ===');
-      console.log('Current URL:', window.location.href);
-      console.log('Current localStorage:', {
-        fidus_user: localStorage.getItem('fidus_user'),
-        google_session_token: localStorage.getItem('google_session_token')
-      });
-      
-      // Check for skip animation parameter (for production testing)
+    console.log('App useEffect running...');
+    
+    const initializeApp = async () => {
+      // Check URL parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const skipAnimation = urlParams.get('skip_animation') === 'true';
       const sessionId = urlParams.get('session_id');
       
-      console.log('Skip animation:', skipAnimation, 'Session ID:', sessionId);
+      console.log('Session ID from URL:', sessionId);
       
-      // Handle Emergent OAuth callback with session_id
+      // If we have a session_id, we need to process it immediately
       if (sessionId) {
-        console.log('Emergent OAuth callback detected - processing session_id');
-        // Don't change view, let the GoogleWorkspaceIntegration component handle it
-        // The session processing will be handled by the useGoogleAdmin hook
-        return;
-      }
-      
-      // Handle Google OAuth callback
-      if (window.location.pathname === '/admin/google-callback') {
-        console.log('Setting view to google-callback');
-        setCurrentView('google-callback');
-        return;
-      }
-      
-      // Custom authentication check that accounts for different token types
-      if (isAuthenticated()) {
-        console.log('User is authenticated');
-        const currentUser = getCurrentUser();
-        console.log('Current user:', currentUser);
-        setUser(currentUser);
+        console.log('🔄 Processing Emergent OAuth session_id:', sessionId);
         
-        // Ensure localStorage is available
-        if (typeof window !== 'undefined' && window.localStorage) {
-          // Determine view based on user type
+        try {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
+            method: 'POST',
+            headers: {
+              'X-Session-ID': sessionId,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+
+          const data = await response.json();
+          
+          if (data.success) {
+            console.log('✅ Session processed successfully');
+            
+            // Store authentication data
+            localStorage.setItem('google_session_token', data.session_token || sessionId);
+            localStorage.setItem('google_api_authenticated', 'true');
+            
+            // Clean up URL immediately
+            const url = new URL(window.location);
+            url.searchParams.delete('session_id');
+            window.history.replaceState({}, '', url);
+            
+            // Set user and redirect to admin
+            const storedUser = localStorage.getItem('fidus_user');
+            if (storedUser && storedUser !== 'null') {
+              const currentUser = JSON.parse(storedUser);
+              setUser(currentUser);
+              setCurrentView("admin");
+              return;
+            }
+          } else {
+            console.error('❌ Session processing failed:', data.detail);
+          }
+        } catch (error) {
+          console.error('❌ Session processing error:', error);
+        }
+      }
+      
+      // Regular authentication check
+      const storedUser = localStorage.getItem('fidus_user');
+      const isAuthenticated = localStorage.getItem('fidus_token');
+      
+      if (isAuthenticated && storedUser && storedUser !== 'null') {
+        try {
+          const currentUser = JSON.parse(storedUser);
+          console.log('Current user:', currentUser);
+          setUser(currentUser);
+          
           if (currentUser?.isAdmin || currentUser?.type === 'admin') {
             console.log('Setting view to admin');
             setCurrentView("admin");
@@ -61,25 +84,17 @@ function App() {
             console.log('Setting view to client');
             setCurrentView("client");
           }
-        } else {
-          console.log('Setting view to login (no localStorage)');
+        } catch {
+          console.log('Setting view to login (parse error)');
           setCurrentView("login");
         }
       } else {
-        console.log('User is not authenticated');
-        // PERMANENT FIX: Always skip animation to prevent dark screen issue
-        console.log('Skipping animation for all users - going to login');
+        console.log('User is not authenticated - going to login');
         setCurrentView("login");
       }
     };
 
-    // Only run if window is available (client-side)
-    if (typeof window !== 'undefined') {
-      // Small delay to ensure localStorage is available
-      setTimeout(initializeAuth, 100);
-    } else {
-      initializeAuth();
-    }
+    initializeApp();
   }, []);
 
   const handleLogin = (userData) => {
