@@ -8096,6 +8096,52 @@ async def process_real_google_oauth_callback(request: Request, current_user: dic
         logging.error(f"Process Google OAuth callback error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process OAuth callback")
 
+@api_router.post("/google/meet/create")
+async def create_google_meet(meeting_data: dict, current_user: dict = Depends(get_current_admin_user)):
+    """Create Google Meet meeting"""
+    try:
+        # Get user's Google OAuth tokens
+        google_tokens = await get_google_session_token(current_user["user_id"])
+        
+        if not google_tokens:
+            raise HTTPException(status_code=401, detail="Google authentication required")
+        
+        # Create calendar event with Google Meet
+        event_data = {
+            "summary": meeting_data.get("title", "FIDUS Meeting"),
+            "description": meeting_data.get("description", ""),
+            "start": {
+                "dateTime": meeting_data.get("start_time"),
+                "timeZone": "UTC"
+            },
+            "end": {
+                "dateTime": meeting_data.get("end_time"),
+                "timeZone": "UTC"
+            },
+            "conferenceData": {
+                "createRequest": {
+                    "requestId": str(uuid.uuid4()),
+                    "conferenceSolutionKey": {"type": "hangoutsMeet"}
+                }
+            }
+        }
+        
+        # Use Google APIs service to create the meeting
+        meet_result = google_apis_service.create_calendar_event_with_meet(
+            google_tokens["access_token"], 
+            event_data
+        )
+        
+        return {
+            "success": True,
+            "meeting": meet_result,
+            "meet_url": meet_result.get("hangoutLink")
+        }
+        
+    except Exception as e:
+        logging.error(f"Google Meet creation error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create Google Meet")
+
 @api_router.get("/google/gmail/real-messages")
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using Google Gmail API"""
