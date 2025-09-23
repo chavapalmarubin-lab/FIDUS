@@ -128,58 +128,6 @@ const useGoogleAdmin = () => {
     }
   };
 
-  const processSessionId = async (sessionId) => {
-    try {
-      console.log('Processing Emergent OAuth session...', sessionId);
-      
-      const API = process.env.REACT_APP_BACKEND_URL;
-      const response = await fetch(`${API}/api/admin/google/process-session`, {
-        method: 'POST',
-        headers: {
-          'X-Session-ID': sessionId,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('✅ Google session processed successfully');
-        
-        // Store authentication data
-        localStorage.setItem('google_session_token', data.session_token);
-        localStorage.setItem('google_api_authenticated', 'true');
-        
-        // Store user data
-        if (data.user) {
-          localStorage.setItem('fidus_user', JSON.stringify(data.user));
-          localStorage.setItem('fidus_token', data.jwt_token);
-        }
-        
-        setIsAuthenticated(true);
-        setUserProfile(data.user);
-        
-        // Clean up URL
-        const url = new URL(window.location);
-        url.searchParams.delete('session_id');
-        window.history.replaceState({}, '', url);
-        
-        // Redirect to admin dashboard
-        window.location.href = '/';
-        
-      } else {
-        throw new Error(data.detail || 'Session processing failed');
-      }
-      
-    } catch (err) {
-      console.error('Session processing error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loginWithGoogle = async () => {
     try {
       setLoading(true);
