@@ -14,87 +14,77 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log('App useEffect running...');
+    console.log('App initializing...');
     
-    const initializeApp = async () => {
-      // Check URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('session_id');
+    // Check for session_id immediately
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+      console.log('🔄 Found session_id, processing immediately...');
       
-      console.log('Session ID from URL:', sessionId);
-      
-      // If we have a session_id, we need to process it immediately
-      if (sessionId) {
-        console.log('🔄 Processing Emergent OAuth session_id:', sessionId);
-        
+      // Process Google OAuth session immediately
+      const processGoogleSession = async () => {
         try {
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
             method: 'POST',
             headers: {
               'X-Session-ID': sessionId,
               'Content-Type': 'application/json'
-            },
-            credentials: 'include'
+            }
           });
 
           const data = await response.json();
           
           if (data.success) {
-            console.log('✅ Session processed successfully');
+            console.log('✅ Google OAuth processed successfully');
             
-            // Store authentication data
-            localStorage.setItem('google_session_token', data.session_token || sessionId);
+            // Store Google authentication
+            localStorage.setItem('google_session_token', sessionId);
             localStorage.setItem('google_api_authenticated', 'true');
             
-            // Clean up URL immediately
-            const url = new URL(window.location);
-            url.searchParams.delete('session_id');
-            window.history.replaceState({}, '', url);
+            // Remove session_id from URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
             
-            // Set user and redirect to admin
-            const storedUser = localStorage.getItem('fidus_user');
-            if (storedUser && storedUser !== 'null') {
-              const currentUser = JSON.parse(storedUser);
-              setUser(currentUser);
-              setCurrentView("admin");
-              return;
-            }
-          } else {
-            console.error('❌ Session processing failed:', data.detail);
+            // Redirect to admin dashboard
+            setCurrentView("admin");
+            const adminUser = { username: 'admin', type: 'admin', isAdmin: true };
+            setUser(adminUser);
+            return;
           }
         } catch (error) {
-          console.error('❌ Session processing error:', error);
+          console.error('❌ Session processing failed:', error);
         }
-      }
+        
+        // Fallback to login
+        setCurrentView("login");
+      };
       
-      // Regular authentication check
-      const storedUser = localStorage.getItem('fidus_user');
-      const isAuthenticated = localStorage.getItem('fidus_token');
-      
-      if (isAuthenticated && storedUser && storedUser !== 'null') {
-        try {
-          const currentUser = JSON.parse(storedUser);
-          console.log('Current user:', currentUser);
-          setUser(currentUser);
-          
-          if (currentUser?.isAdmin || currentUser?.type === 'admin') {
-            console.log('Setting view to admin');
-            setCurrentView("admin");
-          } else {
-            console.log('Setting view to client');
-            setCurrentView("client");
-          }
-        } catch {
-          console.log('Setting view to login (parse error)');
-          setCurrentView("login");
+      processGoogleSession();
+      return;
+    }
+    
+    // Regular authentication check
+    const token = localStorage.getItem('fidus_token');
+    const storedUser = localStorage.getItem('fidus_user');
+    
+    if (token && storedUser && storedUser !== 'null') {
+      try {
+        const user = JSON.parse(storedUser);
+        setUser(user);
+        
+        if (user.isAdmin || user.type === 'admin') {
+          setCurrentView("admin");
+        } else {
+          setCurrentView("client");
         }
-      } else {
-        console.log('User is not authenticated - going to login');
+      } catch {
         setCurrentView("login");
       }
-    };
-
-    initializeApp();
+    } else {
+      setCurrentView("login");
+    }
   }, []);
 
   const handleLogin = (userData) => {
