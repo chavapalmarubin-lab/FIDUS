@@ -133,15 +133,6 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
-      // Check if we have a session ID in URL (from Emergent OAuth callback)
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('session_id');
-      
-      if (sessionId) {
-        await processSessionId(sessionId);
-        return;
-      }
-
       // Get JWT token for admin authentication
       const jwtToken = localStorage.getItem('fidus_token');
       
@@ -149,7 +140,8 @@ const useGoogleAdmin = () => {
         throw new Error('Admin authentication required');
       }
 
-      // Use the working auth-url endpoint from yesterday
+      console.log('🔗 Getting Emergent OAuth URL...');
+      
       const response = await fetch(`${API}/admin/google/auth-url`, {
         method: 'GET',
         headers: {
@@ -162,13 +154,13 @@ const useGoogleAdmin = () => {
       const data = await response.json();
       
       if (data.success && data.auth_url) {
-        console.log('Redirecting to Emergent OAuth...');
+        console.log('✅ Redirecting to Emergent OAuth:', data.auth_url);
         window.location.href = data.auth_url;
       } else {
         throw new Error(data.detail || 'Failed to get OAuth URL');
       }
     } catch (err) {
-      console.error('Google OAuth error:', err);
+      console.error('❌ Google OAuth error:', err);
       setError(err.message);
       setLoading(false);
     }
