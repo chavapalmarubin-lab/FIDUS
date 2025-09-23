@@ -228,7 +228,7 @@ class ProductionBackendTest:
                 "mt5_initial_balance": 10000.0
             }
             
-            response = self.session.post(f"{BACKEND_URL}/admin/investments", json=test_investment_data)
+            response = self.session.post(f"{BACKEND_URL}/investments/create", json=test_investment_data)
             if response.status_code == 200:
                 investment_data = response.json()
                 investment_id = investment_data.get("investment_id")
@@ -240,8 +240,8 @@ class ProductionBackendTest:
             else:
                 self.log_result("Investment Creation", False, f"Investment creation failed: HTTP {response.status_code}")
             
-            # Test investment listing
-            response = self.session.get(f"{BACKEND_URL}/admin/investments")
+            # Test investment listing for client
+            response = self.session.get(f"{BACKEND_URL}/investments/client/{client_id}")
             if response.status_code == 200:
                 investments = response.json()
                 if isinstance(investments, list) and len(investments) > 0:
