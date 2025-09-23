@@ -140,25 +140,17 @@ const useGoogleAdmin = () => {
         throw new Error('Admin authentication required');
       }
 
-      // Call the new real Google OAuth URL endpoint
-      const response = await fetch(`${API}/admin/google/oauth-url`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${jwtToken}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
+      // Use Emergent OAuth instead of broken Google OAuth
+      console.log('Using Emergent OAuth for Google integration...');
       
-      if (data.success && data.oauth_url) {
-        // Redirect to real Google OAuth for comprehensive API access
-        console.log('Redirecting to real Google OAuth for comprehensive API access...');
-        window.location.href = data.oauth_url;
-      } else {
-        throw new Error(data.detail || 'Failed to get Google OAuth URL');
-      }
+      // Redirect to Emergent OAuth with Google provider
+      const emergentOAuthUrl = `https://api.emergentagent.com/oauth/google?` +
+        `redirect_uri=${encodeURIComponent(window.location.origin + '/admin')}&` +
+        `state=${Math.random().toString(36).substring(7)}`;
+      
+      console.log('Redirecting to Emergent OAuth:', emergentOAuthUrl);
+      window.location.href = emergentOAuthUrl;
+      
     } catch (err) {
       console.error('Google OAuth error:', err);
       setError(err.message);
