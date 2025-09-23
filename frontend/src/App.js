@@ -25,18 +25,16 @@ function App() {
       // Check for skip animation parameter (for production testing)
       const urlParams = new URLSearchParams(window.location.search);
       const skipAnimation = urlParams.get('skip_animation') === 'true';
-      const googleAuthSuccess = urlParams.get('google_auth') === 'success';
-      const googleAuthCode = urlParams.get('code');
+      const sessionId = urlParams.get('session_id');
       
-      console.log('Skip animation:', skipAnimation, 'Google auth success:', googleAuthSuccess);
+      console.log('Skip animation:', skipAnimation, 'Session ID:', sessionId);
       
-      // Handle Google OAuth success
-      if (googleAuthSuccess && googleAuthCode) {
-        console.log('Google OAuth successful - storing authentication');
-        localStorage.setItem('google_api_authenticated', 'true');
-        localStorage.setItem('google_auth_code', googleAuthCode);
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+      // Handle Emergent OAuth callback with session_id
+      if (sessionId) {
+        console.log('Emergent OAuth callback detected - processing session_id');
+        // Don't change view, let the GoogleWorkspaceIntegration component handle it
+        // The session processing will be handled by the useGoogleAdmin hook
+        return;
       }
       
       // Handle Google OAuth callback
