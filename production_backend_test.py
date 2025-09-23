@@ -255,11 +255,14 @@ class ProductionBackendTest:
             # Test MT5 account mapping
             response = self.session.get(f"{BACKEND_URL}/mt5/admin/accounts")
             if response.status_code == 200:
-                mt5_accounts = response.json()
-                if isinstance(mt5_accounts, list):
-                    self.log_result("MT5 Account Mapping", True, f"MT5 accounts retrieved: {len(mt5_accounts)} accounts")
+                mt5_response = response.json()
+                if isinstance(mt5_response, dict) and mt5_response.get("success") and "accounts" in mt5_response:
+                    accounts = mt5_response["accounts"]
+                    self.log_result("MT5 Account Mapping", True, f"MT5 accounts retrieved: {len(accounts)} accounts")
+                elif isinstance(mt5_response, list):
+                    self.log_result("MT5 Account Mapping", True, f"MT5 accounts retrieved: {len(mt5_response)} accounts")
                 else:
-                    self.log_result("MT5 Account Mapping", False, "Invalid MT5 accounts format", {"response": mt5_accounts})
+                    self.log_result("MT5 Account Mapping", False, "Invalid MT5 accounts format", {"response": mt5_response})
             else:
                 self.log_result("MT5 Account Mapping", False, f"MT5 accounts retrieval failed: HTTP {response.status_code}")
                 
