@@ -339,42 +339,42 @@ const AdminDashboard = ({ user, onLogout }) => {
 
         <Tabs defaultValue="portfolio" className="w-full">
           <TabsList className="grid w-full grid-cols-11 bg-slate-800 border-slate-600">
-            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               📊 Fund vs MT5
             </TabsTrigger>
-            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <DollarSign size={16} className="mr-2" />
               Cash Flow
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
-            <TabsTrigger value="users" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="users" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <Users size={16} className="mr-2" />
               User Admin
             </TabsTrigger>
-            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               CRM Dashboard
             </TabsTrigger>
-            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               🌐 Google Workspace
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold hover:bg-slate-700">
               <FileText size={16} className="mr-2" />
               📄 App Documents
             </TabsTrigger>
