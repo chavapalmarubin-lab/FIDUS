@@ -176,40 +176,50 @@ const useGoogleAdmin = () => {
 
   const processSessionId = async (sessionId) => {
     try {
-      setLoading(true);
-      setError(null);
-
+      console.log('Processing Emergent OAuth session...', sessionId);
+      
       const response = await fetch(`${API}/admin/google/process-session`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': sessionId  // Use X-Session-ID header as per Emergent OAuth spec
+          'X-Session-ID': sessionId,
+          'Content-Type': 'application/json'
         },
         credentials: 'include'
       });
 
       const data = await response.json();
-
-      if (response.ok && data.success) {
-        setProfile(data.profile);
-        setIsAuthenticated(true);
+      
+      if (data.success) {
+        console.log('✅ Emergent OAuth session processed successfully');
         
-        // Store session data in localStorage for persistence
+        // Store authentication data
         localStorage.setItem('google_session_token', data.session_token);
-        localStorage.setItem('fidus_user', JSON.stringify({
-          ...data.profile,
-          isGoogleAuth: true
-        }));
+        localStorage.setItem('google_api_authenticated', 'true');
         
-        console.log('✅ Emergent OAuth authentication successful:', data.profile.email);
+        // Store user data if provided
+        if (data.user) {
+          localStorage.setItem('fidus_user', JSON.stringify(data.user));
+          localStorage.setItem('fidus_token', data.jwt_token);
+        }
         
-        return data.profile;
+        setIsAuthenticated(true);
+        setUserProfile(data.user);
+        
+        // Clean up URL and redirect to admin dashboard
+        const url = new URL(window.location);
+        url.searchParams.delete('session_id');
+        window.history.replaceState({}, '', url);
+        
+        // Force refresh to admin dashboard with Google authentication active
+        window.location.href = '/';
+        
       } else {
-        throw new Error(data.detail || 'Authentication failed');
+        throw new Error(data.detail || 'Emergent OAuth session processing failed');
       }
+      
     } catch (err) {
+      console.error('Emergent OAuth session processing error:', err);
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
