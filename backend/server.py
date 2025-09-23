@@ -7987,17 +7987,29 @@ async def get_real_google_oauth_url(current_user: dict = Depends(get_current_adm
         # Generate state parameter for security
         state = str(uuid.uuid4())
         
-        # Generate real Google OAuth URL
-        oauth_url = google_apis_service.generate_oauth_url(state)
+        # Build OAuth URL manually to avoid Flow issues
+        client_id = os.getenv('GOOGLE_CLIENT_ID')
+        redirect_uri = os.getenv('GOOGLE_OAUTH_REDIRECT_URI')
+        scopes = os.getenv('GOOGLE_SCOPES', 'https://www.googleapis.com/auth/gmail.readonly,https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive')
         
-        logging.info(f"Generated real Google OAuth URL for admin: {current_user.get('username')}")
+        oauth_url = (
+            f"https://accounts.google.com/o/oauth2/v2/auth?"
+            f"client_id={client_id}&"
+            f"redirect_uri={redirect_uri}&"
+            f"scope={scopes}&"
+            f"response_type=code&"
+            f"access_type=offline&"
+            f"prompt=consent&"
+            f"state={state}"
+        )
+        
+        logging.info(f"Generated manual Google OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Redirect URI: {redirect_uri}")
         
         return {
             "success": True,
             "oauth_url": oauth_url,
-            "state": state,
-            "scopes": google_apis_service.scopes,
-            "provider": "real_google_apis"
+            "state": state
         }
         
     except Exception as e:
