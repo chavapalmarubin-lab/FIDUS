@@ -759,17 +759,52 @@ FIDUS Investment Management Team`;
   
   const handleRequestDocument = async (prospectId, documentType) => {
     try {
-      const response = await apiAxios.post(`/crm/prospects/${prospectId}/documents/request`, {
-        document_type: documentType,
-        message: `Please upload your ${KYC_DOCUMENT_TYPES[documentType].label} to complete your KYC verification.`
+      const prospect = prospects.find(p => p.id === prospectId);
+      if (!prospect) {
+        setError("Prospect not found");
+        return;
+      }
+
+      const docTypeConfig = KYC_DOCUMENT_TYPES[documentType];
+      if (!docTypeConfig) {
+        setError("Invalid document type");
+        return;
+      }
+
+      // Open email modal with pre-filled content for document request
+      const emailSubject = `Document Request: ${docTypeConfig.label} - FIDUS Investment Management`;
+      const emailBody = `Dear ${prospect.name},
+
+I hope this message finds you well.
+
+As part of our onboarding process and to comply with regulatory requirements, we need you to provide the following document:
+
+Document Required: ${docTypeConfig.label}
+${docTypeConfig.description || ''}
+
+Please upload this document through our secure portal or email it to us at your earliest convenience. If you have any questions about the required documentation or need assistance with the upload process, please don't hesitate to contact me.
+
+Thank you for your cooperation and we look forward to working with you.
+
+Best regards,
+FIDUS Investment Committee
+${prospect.email ? `\nThis message was sent regarding your inquiry to: ${prospect.email}` : ''}`;
+
+      // Set email modal data and open it
+      setEmailData({
+        prospectId: prospectId,
+        recipientEmail: prospect.email,
+        recipientName: prospect.name,
+        subject: emailSubject,
+        body: emailBody,
+        emailType: 'document_request'
       });
       
-      if (response.data.success) {
-        setSuccess(`Document request sent to ${prospects.find(p => p.id === prospectId)?.name}`);
-        fetchProspectDocuments(prospectId);
-      }
+      setShowEmailModal(true);
+      
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to request document");
+      console.error('Document request error:', err);
+      setError("Failed to prepare document request email");
     }
   };
   
