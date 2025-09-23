@@ -294,7 +294,6 @@ class Prospect(BaseModel):
     client_id: Optional[str] = None
 
 class ProspectConversionRequest(BaseModel):
-    prospect_id: str
     send_agreement: bool = True
 
 # Redemption System Models
