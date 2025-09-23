@@ -282,7 +282,7 @@ class ProspectUpdate(BaseModel):
     notes: Optional[str] = None
 
 class Prospect(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     name: str
     email: str
     phone: str
@@ -292,6 +292,10 @@ class Prospect(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     converted_to_client: bool = False
     client_id: Optional[str] = None
+    
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
 
 class ProspectConversionRequest(BaseModel):
     send_agreement: bool = True
