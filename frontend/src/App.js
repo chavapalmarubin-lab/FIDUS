@@ -26,7 +26,18 @@ function App() {
       const urlParams = new URLSearchParams(window.location.search);
       const skipAnimation = urlParams.get('skip_animation') === 'true';
       const googleAuthSuccess = urlParams.get('google_auth') === 'success';
+      const googleAuthCode = urlParams.get('code');
+      
       console.log('Skip animation:', skipAnimation, 'Google auth success:', googleAuthSuccess);
+      
+      // Handle Google OAuth success
+      if (googleAuthSuccess && googleAuthCode) {
+        console.log('Google OAuth successful - storing authentication');
+        localStorage.setItem('google_api_authenticated', 'true');
+        localStorage.setItem('google_auth_code', googleAuthCode);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
       
       // Handle Google OAuth callback
       if (window.location.pathname === '/admin/google-callback') {
