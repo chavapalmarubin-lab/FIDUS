@@ -203,7 +203,7 @@ const useGoogleAdmin = () => {
         }
         
         setIsAuthenticated(true);
-        setUserProfile(data.user);
+        setProfile(data.user);
         
         // Clean up URL and redirect to admin dashboard
         const url = new URL(window.location);
