@@ -408,7 +408,7 @@ class ProductionBackendTest:
             response = self.session.post(f"{BACKEND_URL}/admin/users/create", json=test_user_data)
             if response.status_code == 200:
                 user_data = response.json()
-                user_id = user_data.get("id")
+                user_id = user_data.get("user_id") or user_data.get("id")
                 if user_id:
                     self.test_data["test_user_id"] = user_id
                     self.log_result("User Management - Creation", True, f"User created successfully: {user_id}")
