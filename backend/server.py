@@ -12830,9 +12830,6 @@ async def get_all_client_wallets(current_user: dict = Depends(get_current_admin_
         logging.error(f"Error fetching all client wallets: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client wallets")
 
-# Include the router in the main app
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
