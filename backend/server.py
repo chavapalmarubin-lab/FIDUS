@@ -1568,6 +1568,63 @@ async def get_system_info(current_user: dict = Depends(get_current_admin_user)):
         logging.error(f"Error getting system info: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get system information")
 
+@api_router.get("/documents/types")
+async def get_document_types():
+    """Get available document types"""
+    return {
+        "success": True,
+        "types": [
+            {"id": "contract", "name": "Investment Contracts", "category": "legal"},
+            {"id": "agreement", "name": "Client Agreements", "category": "legal"},
+            {"id": "kyc", "name": "KYC Documents", "category": "compliance"},
+            {"id": "aml", "name": "AML Documents", "category": "compliance"},
+            {"id": "financial", "name": "Financial Statements", "category": "reporting"},
+            {"id": "prospectus", "name": "Fund Prospectus", "category": "marketing"}
+        ]
+    }
+
+@api_router.get("/documents/templates")
+async def get_document_templates():
+    """Get available document templates"""
+    return {
+        "success": True,
+        "templates": [
+            {"id": "investment_agreement", "name": "Investment Agreement Template", "type": "contract"},
+            {"id": "kyc_form", "name": "KYC Collection Form", "type": "kyc"},
+            {"id": "accredited_investor", "name": "Accredited Investor Certification", "type": "compliance"}
+        ]
+    }
+
+@api_router.post("/documents/{document_id}/share-via-drive")
+async def share_document_via_google_drive(document_id: str, share_data: dict, current_user: dict = Depends(get_current_admin_user)):
+    """Share document via Google Drive"""
+    try:
+        # Get user's Google OAuth tokens
+        google_tokens = await get_google_session_token(current_user["user_id"])
+        
+        if not google_tokens:
+            raise HTTPException(status_code=401, detail="Google authentication required")
+        
+        # Use Google Drive API to share document
+        share_result = google_apis_service.share_drive_file(
+            google_tokens["access_token"],
+            document_id,
+            share_data.get("email"),
+            share_data.get("permission", "reader")
+        )
+        
+        return {
+            "success": True,
+            "share_result": share_result,
+            "message": f"Document shared with {share_data.get('email')}"
+        }
+        
+    except Exception as e:
+        logging.error(f"Google Drive share error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to share document via Google Drive")
+
+# Investment System Endpoints
+
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
