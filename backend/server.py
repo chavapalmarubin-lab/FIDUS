@@ -7975,6 +7975,11 @@ async def get_current_user_info(request: Request):
         raise HTTPException(status_code=500, detail="Failed to get user info")
 
 # Real Google APIs Integration Endpoints
+@api_router.get("/admin/google/test")
+async def test_google_endpoint():
+    """Test endpoint to verify routing works"""
+    return {"success": True, "message": "Google test endpoint working"}
+
 @api_router.get("/admin/google/oauth-url")
 async def get_real_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
     """Get real Google OAuth URL for comprehensive API access"""
