@@ -7574,13 +7574,16 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
     """Get Emergent OAuth URL for Google authentication"""
     try:
         # Use Emergent OAuth for hassle-free Google authentication
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://finance-portal-60.preview.emergentagent.com')
-        redirect_url = f"{frontend_url}/admin/dashboard"  # Redirect to main dashboard after auth
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
         
-        # Generate Emergent OAuth URL
+        # Redirect URL that includes session_id parameter for processing
+        redirect_url = f"{frontend_url}/?session_id={{session_id}}"
+        
+        # Generate Emergent OAuth URL (this was the working configuration yesterday)
         auth_url = f"https://auth.emergentagent.com/?redirect={requests.utils.quote(redirect_url, safe='')}"
         
         logging.info(f"Generated Emergent OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Redirect URL: {redirect_url}")
         
         return {
             "success": True,
