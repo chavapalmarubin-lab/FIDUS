@@ -7987,24 +7987,31 @@ async def get_real_google_oauth_url(current_user: dict = Depends(get_current_adm
         # Generate state parameter for security
         state = str(uuid.uuid4())
         
-        # Build OAuth URL manually to avoid Flow issues
+        # Build OAuth URL manually with proper encoding
         client_id = os.getenv('GOOGLE_CLIENT_ID')
         redirect_uri = os.getenv('GOOGLE_OAUTH_REDIRECT_URI')
-        scopes = os.getenv('GOOGLE_SCOPES', 'https://www.googleapis.com/auth/gmail.readonly,https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive')
+        scopes = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/drive'
+        
+        # URL encode parameters
+        import urllib.parse
+        encoded_redirect_uri = urllib.parse.quote(redirect_uri, safe='')
+        encoded_scopes = urllib.parse.quote(scopes, safe='')
         
         oauth_url = (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
             f"client_id={client_id}&"
-            f"redirect_uri={redirect_uri}&"
-            f"scope={scopes}&"
+            f"redirect_uri={encoded_redirect_uri}&"
+            f"scope={encoded_scopes}&"
             f"response_type=code&"
             f"access_type=offline&"
             f"prompt=consent&"
             f"state={state}"
         )
         
-        logging.info(f"Generated manual Google OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Generated Google OAuth URL for admin: {current_user.get('username')}")
+        logging.info(f"Client ID: {client_id}")
         logging.info(f"Redirect URI: {redirect_uri}")
+        logging.info(f"Full OAuth URL: {oauth_url}")
         
         return {
             "success": True,
