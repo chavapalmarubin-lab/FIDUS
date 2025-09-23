@@ -244,11 +244,14 @@ class ProductionBackendTest:
             # Test investment listing for client
             response = self.session.get(f"{BACKEND_URL}/investments/client/{client_id}")
             if response.status_code == 200:
-                investments = response.json()
-                if isinstance(investments, list) and len(investments) >= 0:
+                investment_response = response.json()
+                if isinstance(investment_response, dict) and investment_response.get("success") and "investments" in investment_response:
+                    investments = investment_response["investments"]
                     self.log_result("Investment Listing", True, f"Retrieved {len(investments)} investments for client")
+                elif isinstance(investment_response, list):
+                    self.log_result("Investment Listing", True, f"Retrieved {len(investment_response)} investments for client")
                 else:
-                    self.log_result("Investment Listing", False, "Invalid investments format", {"response": investments})
+                    self.log_result("Investment Listing", False, "Invalid investments format", {"response": investment_response})
             else:
                 self.log_result("Investment Listing", False, f"Investment listing failed: HTTP {response.status_code}")
             
