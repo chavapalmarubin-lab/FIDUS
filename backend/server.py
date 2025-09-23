@@ -8030,33 +8030,29 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
         if error:
             logging.error(f"Google OAuth error: {error}")
             # Redirect to frontend with error
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/admin?google_auth=error&message={error}")
+            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message={error}")
         
         if not code:
             logging.error("Missing authorization code in callback")
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/admin?google_auth=error&message=missing_code")
+            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=missing_code")
         
         logging.info(f"Processing Google OAuth callback with code: {code[:20]}...")
         
         try:
-            # Exchange code for tokens using Google APIs service
-            token_data = google_apis_service.exchange_code_for_tokens(code)
+            # Simple success redirect - the frontend will handle the rest
+            logging.info(f"Google OAuth callback successful - redirecting to admin dashboard")
             
-            # For now, store in a simple way (you might want to improve this)
-            # We can't get current_user here since it's a redirect, so we'll store it in a temporary way
-            
-            logging.info(f"Successfully exchanged code for tokens")
-            
-            # Redirect to frontend with success
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/admin?google_auth=success")
+            # Store a temporary success marker
+            # Redirect to admin dashboard with success indicator
+            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&code={code}")
             
         except Exception as e:
-            logging.error(f"Token exchange error: {str(e)}")
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/admin?google_auth=error&message=token_exchange_failed")
+            logging.error(f"Token processing error: {str(e)}")
+            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=token_processing_failed")
         
     except Exception as e:
         logging.error(f"Google OAuth callback error: {str(e)}")
-        return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/admin?google_auth=error&message=callback_failed")
+        return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
 async def process_real_google_oauth_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
