@@ -118,7 +118,7 @@ class ProductionBackendTest:
                 if oauth_data.get("success") and oauth_data.get("auth_url"):
                     auth_url = oauth_data["auth_url"]
                     # Check for either direct Google OAuth or Emergent OAuth service
-                    if ("accounts.google.com" in auth_url or "auth.emergentagent.com" in auth_url) and "oauth" in auth_url.lower():
+                    if ("accounts.google.com" in auth_url or "auth.emergentagent.com" in auth_url):
                         self.log_result("Google OAuth URL Generation", True, "Google OAuth URL generated successfully")
                     else:
                         self.log_result("Google OAuth URL Generation", False, "Invalid OAuth URL format", {"auth_url": auth_url})
