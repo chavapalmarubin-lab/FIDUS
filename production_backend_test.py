@@ -405,7 +405,7 @@ class ProductionBackendTest:
                 "notes": "Test user for production readiness"
             }
             
-            response = self.session.post(f"{BACKEND_URL}/admin/users", json=test_user_data)
+            response = self.session.post(f"{BACKEND_URL}/admin/users/create", json=test_user_data)
             if response.status_code == 200:
                 user_data = response.json()
                 user_id = user_data.get("id")
