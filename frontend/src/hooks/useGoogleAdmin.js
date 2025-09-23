@@ -133,35 +133,27 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
-      // Get JWT token for admin authentication
-      const jwtToken = localStorage.getItem('fidus_token');
+      // Get session ID from URL if present (from OAuth callback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session_id');
       
-      if (!jwtToken) {
-        throw new Error('Admin authentication required');
+      if (sessionId) {
+        console.log('Processing OAuth session from callback...');
+        await processSessionId(sessionId);
+        return;
       }
 
-      // Use the working Emergent OAuth integration that was functioning before
-      console.log('Using Emergent OAuth integration for Google...');
+      // Use the working Emergent OAuth approach
+      console.log('Initiating Emergent OAuth for Google integration...');
       
-      const response = await fetch(`${API}/admin/google/oauth-session-id`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${jwtToken}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
+      // Redirect to Emergent OAuth with proper callback URL
+      const emergentOAuthUrl = `https://api.emergentagent.com/oauth/google?` +
+        `redirect_uri=${encodeURIComponent(window.location.origin + '/?session_id={session_id}')}&` +
+        `state=google_workspace_integration`;
       
-      if (data.success && data.session_id) {
-        // Use Emergent OAuth session approach that was working
-        const sessionUrl = `https://api.emergentagent.com/oauth/google/initiate?session_id=${data.session_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/admin')}`;
-        console.log('Redirecting to working Emergent OAuth...');
-        window.location.href = sessionUrl;
-      } else {
-        throw new Error(data.detail || 'Failed to get OAuth session');
-      }
+      console.log('Redirecting to Emergent OAuth:', emergentOAuthUrl);
+      window.location.href = emergentOAuthUrl;
+      
     } catch (err) {
       console.error('Google OAuth error:', err);
       setError(err.message);
