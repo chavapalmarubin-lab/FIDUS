@@ -133,27 +133,34 @@ const useGoogleAdmin = () => {
       setLoading(true);
       setError(null);
 
-      // Get session ID from URL if present (from OAuth callback)
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('session_id');
+      // Get JWT token for admin authentication
+      const jwtToken = localStorage.getItem('fidus_token');
       
-      if (sessionId) {
-        console.log('Processing OAuth session from callback...');
-        await processSessionId(sessionId);
-        return;
+      if (!jwtToken) {
+        throw new Error('Admin authentication required');
       }
 
-      // Use the working Emergent OAuth approach
-      console.log('Initiating Emergent OAuth for Google integration...');
+      // Use the working Emergent OAuth integration that was functional yesterday
+      console.log('Using Emergent OAuth integration for Google...');
       
-      // Redirect to Emergent OAuth with proper callback URL
-      const emergentOAuthUrl = `https://api.emergentagent.com/oauth/google?` +
-        `redirect_uri=${encodeURIComponent(window.location.origin + '/?session_id={session_id}')}&` +
-        `state=google_workspace_integration`;
+      const response = await fetch(`${API}/admin/google/auth-url`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      const data = await response.json();
       
-      console.log('Redirecting to Emergent OAuth:', emergentOAuthUrl);
-      window.location.href = emergentOAuthUrl;
-      
+      if (data.success && data.auth_url) {
+        // Use the Emergent OAuth URL that was working yesterday
+        console.log('Redirecting to working Emergent OAuth...');
+        window.location.href = data.auth_url;
+      } else {
+        throw new Error(data.detail || 'Failed to get OAuth URL');
+      }
     } catch (err) {
       console.error('Google OAuth error:', err);
       setError(err.message);
