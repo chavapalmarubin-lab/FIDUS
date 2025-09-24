@@ -75,7 +75,7 @@ function App() {
             setUser(adminUser);
             setCurrentView("admin");
             
-            console.log('🎉 SESSION COMPLETE - Redirecting to admin dashboard');
+            console.log('SESSION COMPLETE - Redirecting to admin dashboard');
             return;
           } else {
             console.error('❌ Session processing failed:', data.detail);
