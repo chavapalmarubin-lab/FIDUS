@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class SalvadorMT5IntegrationTester:
-    def __init__(self, base_url="https://finance-portal-60.preview.emergentagent.com"):
+    def __init__(self, base_url="https://auth-flow-debug-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

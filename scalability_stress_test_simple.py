@@ -55,7 +55,7 @@ class PerformanceMetrics:
         return total_requests / duration if duration > 0 else 0
 
 class ScalabilityStressTester:
-    def __init__(self, base_url="https://finance-portal-60.preview.emergentagent.com"):
+    def __init__(self, base_url="https://auth-flow-debug-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.client_tokens = []
