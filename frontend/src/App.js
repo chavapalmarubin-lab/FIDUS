@@ -14,18 +14,23 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log('App initializing...');
+    console.log('🔍 App initializing - checking for OAuth callback...');
     
-    // Check for session_id immediately
+    // CRITICAL: Check for session_id from Google OAuth callback FIRST
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
     
+    console.log('URL params:', window.location.search);
+    console.log('Session ID detected:', sessionId);
+    
     if (sessionId) {
-      console.log('🔄 Found session_id, processing immediately...');
+      console.log('🔄 GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', sessionId);
       
-      // Process Google OAuth session immediately
-      const processGoogleSession = async () => {
+      // Process the Google OAuth session immediately
+      const processOAuthCallback = async () => {
         try {
+          console.log('📡 Calling process-session endpoint...');
+          
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
             method: 'POST',
             headers: {
@@ -34,44 +39,71 @@ function App() {
             }
           });
 
+          console.log('🔍 Process-session response status:', response.status);
           const data = await response.json();
+          console.log('🔍 Process-session response data:', data);
           
           if (data.success) {
-            console.log('✅ Google OAuth processed successfully');
+            console.log('✅ GOOGLE OAUTH SUCCESS - Session processed');
             
-            // Store Google authentication
-            localStorage.setItem('google_session_token', sessionId);
+            // Store all authentication data
+            localStorage.setItem('google_session_token', data.session_token);
             localStorage.setItem('google_api_authenticated', 'true');
+            localStorage.setItem('emergent_session_token', data.emergent_session_token);
             
-            // Remove session_id from URL
-            const newUrl = window.location.pathname;
+            // Store user data for admin session
+            const adminUser = {
+              email: data.email,
+              name: data.name,
+              picture: data.picture,
+              isAdmin: true,
+              type: 'admin',
+              loginType: 'emergent_oauth'
+            };
+            
+            localStorage.setItem('fidus_user', JSON.stringify(adminUser));
+            localStorage.setItem('fidus_token', data.session_token);
+            
+            // Clean URL immediately to prevent loops
+            const newUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
             window.history.replaceState({}, '', newUrl);
             
-            // Redirect to admin dashboard
-            setCurrentView("admin");
-            const adminUser = { username: 'admin', type: 'admin', isAdmin: true };
+            // Set user and admin view
             setUser(adminUser);
+            setCurrentView("admin");
+            
+            console.log('🎉 GOOGLE OAUTH COMPLETE - Redirecting to admin dashboard');
             return;
+          } else {
+            console.error('❌ Session processing failed:', data.detail);
+            alert('Google authentication failed: ' + (data.detail || 'Unknown error'));
           }
         } catch (error) {
-          console.error('❌ Session processing failed:', error);
+          console.error('❌ OAuth callback processing error:', error);
+          alert('Google authentication error: ' + error.message);
         }
         
-        // Fallback to login
+        // If we get here, something failed - go to login
         setCurrentView("login");
       };
       
-      processGoogleSession();
-      return;
+      processOAuthCallback();
+      return; // CRITICAL: Return here to prevent normal auth check
     }
     
-    // Regular authentication check
+    // Normal authentication check (no OAuth callback)
+    console.log('📋 No OAuth callback - checking normal authentication...');
+    
     const token = localStorage.getItem('fidus_token');
     const storedUser = localStorage.getItem('fidus_user');
+    const googleAuth = localStorage.getItem('google_api_authenticated');
+    
+    console.log('Auth check:', { token: !!token, user: !!storedUser, googleAuth });
     
     if (token && storedUser && storedUser !== 'null') {
       try {
         const user = JSON.parse(storedUser);
+        console.log('✅ User authenticated:', user.email || user.username);
         setUser(user);
         
         if (user.isAdmin || user.type === 'admin') {
@@ -79,10 +111,12 @@ function App() {
         } else {
           setCurrentView("client");
         }
-      } catch {
+      } catch (error) {
+        console.error('❌ Error parsing stored user:', error);
         setCurrentView("login");
       }
     } else {
+      console.log('👤 No authentication found - showing login');
       setCurrentView("login");
     }
   }, []);
