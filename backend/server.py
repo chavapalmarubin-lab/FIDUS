@@ -11095,6 +11095,58 @@ async def get_funds_overview():
         logging.error(f"Get funds overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch funds overview")
 
+@api_router.get("/fund-portfolio/overview")
+async def get_fund_portfolio_overview():
+    """Get fund portfolio overview for the dashboard (matches frontend API call)"""
+    try:
+        # Reuse the same logic as admin/funds-overview for consistency
+        funds_overview = {}
+        
+        # Get all clients and their investments from MongoDB
+        all_clients = mongodb_manager.get_all_clients()
+        
+        for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
+            # Calculate fund AUM from MongoDB investments
+            fund_aum = 0
+            total_investors = 0
+            client_interest_rate = fund_config.interest_rate
+            
+            # Sum all investments for this fund from MongoDB
+            for client in all_clients:
+                client_investments_list = mongodb_manager.get_client_investments(client['id'])
+                for investment in client_investments_list:
+                    if investment['fund_code'] == fund_code:
+                        current_value = investment['current_value']
+                        fund_aum += current_value
+                        total_investors += 1
+            
+            # Get fund configuration from FIDUS_FUNDS (fallback data)
+            fund_info = FIDUS_FUNDS.get(fund_code, {})
+            
+            funds_overview[fund_code] = {
+                "fund_code": fund_code,
+                "fund_name": fund_config.name,
+                "aum": round(fund_aum, 2),
+                "total_investors": total_investors,
+                "interest_rate": client_interest_rate,
+                "client_investments": round(fund_aum, 2),
+                "minimum_investment": fund_config.minimum_investment,
+                "management_fee": getattr(fund_info, 'management_fee', 0.0),
+                "performance_fee": getattr(fund_info, 'performance_fee', 0.0),
+                "total_rebates": 0.0  # Will be calculated from rebate system
+            }
+        
+        return {
+            "success": True,
+            "funds": funds_overview,
+            "total_aum": round(sum(fund["aum"] for fund in funds_overview.values()), 2),
+            "total_investors": sum(fund["total_investors"] for fund in funds_overview.values())
+        }
+        
+    except Exception as e:
+        logging.error(f"Get fund portfolio overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch fund portfolio overview")
+
 @api_router.put("/admin/funds/{fund_code}/realtime")
 async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
     """Update real-time data for a specific fund"""
