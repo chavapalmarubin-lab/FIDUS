@@ -53,12 +53,15 @@ function App() {
             
             // Store user data for admin session
             const adminUser = {
+              id: 'user_admin_001', // Add proper user ID
               email: data.email,
               name: data.name,
               picture: data.picture,
               isAdmin: true,
               type: 'admin',
-              loginType: 'emergent_oauth'
+              loginType: 'emergent_oauth',
+              isGoogleAuth: true, // Required for isAuthenticated() check
+              googleApiAccess: true // Required for isAuthenticated() check
             };
             
             localStorage.setItem('fidus_user', JSON.stringify(adminUser));
