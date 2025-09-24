@@ -117,25 +117,9 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [alloc, setAlloc] = useLocalStorage(LS_ALLOC_KEY, defaultAlloc);
   const [sim, setSim] = useState({ enabled: false, CORE: 0, BALANCE: 0, DYNAMIC: 0 });
   const [portfolioData, setPortfolioData] = useState(null);
-  const [activeTab, setActiveTab] = useState("portfolio"); // Add active tab state
   const fileInputRef = useRef(null);
 
   const fields = ["CORE", "BALANCE", "DYNAMIC"];
-
-  // Check for Google OAuth redirect to CRM
-  useEffect(() => {
-    const redirectToCrm = localStorage.getItem('redirect_to_crm');
-    const googleOauthCompleted = localStorage.getItem('google_oauth_completed');
-    
-    if (redirectToCrm === 'true' && googleOauthCompleted === 'true') {
-      console.log('🎯 Google OAuth completed - redirecting to CRM tab');
-      setActiveTab("crm");
-      
-      // Clear the redirect flags
-      localStorage.removeItem('redirect_to_crm');
-      localStorage.removeItem('google_oauth_completed');
-    }
-  }, []);
 
   useEffect(() => {
     fetchPortfolioData();
