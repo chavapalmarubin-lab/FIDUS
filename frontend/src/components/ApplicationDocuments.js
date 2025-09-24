@@ -444,7 +444,7 @@ Generated: ${new Date().toLocaleDateString()}
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Response Time:</span>
-                                        <span className="font-medium text-green-600">< 500ms</span>
+                                        <span className="font-medium text-green-600">&lt; 500ms</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Uptime:</span>
