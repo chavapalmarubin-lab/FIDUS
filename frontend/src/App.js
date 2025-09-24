@@ -67,20 +67,15 @@ function App() {
             localStorage.setItem('fidus_user', JSON.stringify(adminUser));
             localStorage.setItem('fidus_token', data.session_token);
             
-            // Clean URL immediately to prevent loops
+            # Clean URL immediately to prevent loops
             const newUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
             window.history.replaceState({}, '', newUrl);
             
-            // Set user and admin view with CRM tab active
+            // Set user and admin view
             setUser(adminUser);
             setCurrentView("admin");
             
-            // IMPORTANT: After Google OAuth success, redirect to CRM tab
-            // Set a flag to indicate Google OAuth completion for CRM navigation
-            localStorage.setItem('google_oauth_completed', 'true');
-            localStorage.setItem('redirect_to_crm', 'true');
-            
-            console.log('🎉 GOOGLE OAUTH COMPLETE - Redirecting to admin dashboard CRM tab');
+            console.log('🎉 SESSION COMPLETE - Redirecting to admin dashboard');
             return;
           } else {
             console.error('❌ Session processing failed:', data.detail);
