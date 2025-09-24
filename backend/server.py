@@ -11095,6 +11095,57 @@ async def get_funds_overview():
         logging.error(f"Get funds overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch funds overview")
 
+@api_router.get("/admin/google/verify-connection")
+async def verify_google_connection(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Verify that Google APIs are actually working by testing basic API calls
+    This endpoint certifies the Google OAuth connection is functional
+    """
+    try:
+        # Get Google API credentials for the current admin user
+        google_admin = GoogleAdminService()
+        
+        # Try to get Gmail profile to verify connection
+        gmail_test = await google_admin.test_gmail_connection()
+        
+        # Try to get basic Calendar access
+        calendar_test = await google_admin.test_calendar_connection()
+        
+        # Try to get basic Drive access  
+        drive_test = await google_admin.test_drive_connection()
+        
+        # Compile verification results
+        verification_results = {
+            "gmail_connected": gmail_test.get("success", False),
+            "calendar_connected": calendar_test.get("success", False),
+            "drive_connected": drive_test.get("success", False),
+            "overall_status": gmail_test.get("success", False) and calendar_test.get("success", False) and drive_test.get("success", False),
+            "user_email": gmail_test.get("email"),
+            "verified_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        logging.info(f"Google OAuth verification completed: {verification_results}")
+        
+        return {
+            "success": True,
+            "verification": verification_results,
+            "message": "Google APIs connection verified successfully" if verification_results["overall_status"] else "Google APIs connection failed verification"
+        }
+        
+    except Exception as e:
+        logging.error(f"Google OAuth verification failed: {str(e)}")
+        return {
+            "success": False,
+            "verification": {
+                "gmail_connected": False,
+                "calendar_connected": False,
+                "drive_connected": False,
+                "overall_status": False,
+                "error": str(e)
+            },
+            "message": f"Google OAuth verification failed: {str(e)}"
+        }
+
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
     """Get fund portfolio overview for the dashboard (matches frontend API call)"""
