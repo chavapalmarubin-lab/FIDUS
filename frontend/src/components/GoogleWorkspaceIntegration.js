@@ -49,6 +49,11 @@ const GoogleWorkspaceIntegration = () => {
   const [crmClients, setCrmClients] = useState([]);
   const [crmProspects, setCrmProspects] = useState([]);
   
+  // Google OAuth Verification State
+  const [googleConnectionStatus, setGoogleConnectionStatus] = useState(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [lastVerification, setLastVerification] = useState(null);
+  
   // Gmail State
   const [emails, setEmails] = useState([]);
   const [emailDrafts, setEmailDrafts] = useState([]);
@@ -73,9 +78,47 @@ const GoogleWorkspaceIntegration = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchClientsAndProspects();
-      loadGoogleWorkspaceData();
+      verifyGoogleConnection(); // Verify OAuth connection first
     }
   }, [isAuthenticated]);
+
+  // Google OAuth Connection Verification Function
+  const verifyGoogleConnection = async () => {
+    setVerificationLoading(true);
+    try {
+      console.log('🔍 Verifying Google OAuth connection...');
+      const response = await apiAxios.get('/admin/google/verify-connection');
+      
+      if (response.data.success) {
+        const verification = response.data.verification;
+        setGoogleConnectionStatus(verification);
+        setLastVerification(new Date().toISOString());
+        
+        console.log('✅ Google OAuth verification results:', verification);
+        
+        // Only load Google data if verification passes
+        if (verification.overall_status) {
+          loadGoogleWorkspaceData();
+        } else {
+          console.log('⚠️ Google OAuth verification failed - some APIs not connected');
+        }
+      } else {
+        console.error('❌ Google OAuth verification failed:', response.data.message);
+        setGoogleConnectionStatus({
+          overall_status: false,
+          error: response.data.message
+        });
+      }
+    } catch (err) {
+      console.error('❌ Google OAuth verification error:', err);
+      setGoogleConnectionStatus({
+        overall_status: false,
+        error: err.response?.data?.message || err.message
+      });
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
 
   const fetchClientsAndProspects = async () => {
     try {
