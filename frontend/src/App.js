@@ -67,7 +67,7 @@ function App() {
             localStorage.setItem('fidus_user', JSON.stringify(adminUser));
             localStorage.setItem('fidus_token', data.session_token);
             
-            # Clean URL immediately to prevent loops
+            // Clean URL immediately to prevent loops
             const newUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
             window.history.replaceState({}, '', newUrl);
             
