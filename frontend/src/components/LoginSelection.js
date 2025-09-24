@@ -197,6 +197,7 @@ const LoginSelection = ({ onLogin }) => {
                     </div>
                   </div>
                   
+                  {/* Social login disabled - focusing on regular login and Google API integration
                   <div className="google-social-login-wrapper">
                     <GoogleSocialLogin 
                       onLoginSuccess={(user, token) => {
@@ -206,6 +207,7 @@ const LoginSelection = ({ onLogin }) => {
                       redirectTo="/dashboard"
                     />
                   </div>
+                  */}
                 </motion.div>
 
                 {/* Divider */}
