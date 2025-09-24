@@ -47,7 +47,97 @@ class GoogleAdminService:
             
         except Exception as e:
             logger.error(f"Error generating Google login URL: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to generate login URL")
+    async def test_gmail_connection(self) -> Dict:
+        """Test Gmail API connectivity to verify OAuth is working"""
+        try:
+            # Use stored access token to test Gmail API
+            access_token = self.get_stored_access_token()
+            if not access_token:
+                return {"success": False, "error": "No access token available"}
+            
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = requests.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                profile_data = response.json()
+                return {
+                    "success": True,
+                    "email": profile_data.get("emailAddress"),
+                    "messages_total": profile_data.get("messagesTotal", 0)
+                }
+            else:
+                return {"success": False, "error": f"Gmail API error: {response.status_code}"}
+                
+        except Exception as e:
+            logger.error(f"Gmail connection test failed: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    async def test_calendar_connection(self) -> Dict:
+        """Test Calendar API connectivity to verify OAuth is working"""
+        try:
+            access_token = self.get_stored_access_token()
+            if not access_token:
+                return {"success": False, "error": "No access token available"}
+            
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = requests.get(
+                "https://www.googleapis.com/calendar/v3/calendars/primary",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                calendar_data = response.json()
+                return {
+                    "success": True,
+                    "calendar_id": calendar_data.get("id"),
+                    "summary": calendar_data.get("summary")
+                }
+            else:
+                return {"success": False, "error": f"Calendar API error: {response.status_code}"}
+                
+        except Exception as e:
+            logger.error(f"Calendar connection test failed: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    async def test_drive_connection(self) -> Dict:
+        """Test Drive API connectivity to verify OAuth is working"""
+        try:
+            access_token = self.get_stored_access_token()
+            if not access_token:
+                return {"success": False, "error": "No access token available"}
+            
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = requests.get(
+                "https://www.googleapis.com/drive/v3/about?fields=user",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                drive_data = response.json()
+                user_info = drive_data.get("user", {})
+                return {
+                    "success": True,
+                    "user_email": user_info.get("emailAddress"),
+                    "display_name": user_info.get("displayName")
+                }
+            else:
+                return {"success": False, "error": f"Drive API error: {response.status_code}"}
+                
+        except Exception as e:
+            logger.error(f"Drive connection test failed: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def get_stored_access_token(self) -> str:
+        """Get stored access token from session/database"""
+        # For now, return None - this needs to be implemented based on your token storage
+        # This is where you'd retrieve the actual Google access token for the current user
+        return None
     
     async def exchange_code_for_tokens(self, code: str) -> Dict[str, any]:
         """Exchange authorization code for access tokens using Google API"""
