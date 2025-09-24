@@ -55,6 +55,9 @@ class EmergentGoogleAuth:
             User data and session information
         """
         try:
+            logger.info(f"Processing session ID: {session_id}")
+            logger.info(f"Session data URL: {self.session_data_url}")
+            
             # Call Emergent backend to get session data
             response = requests.get(
                 self.session_data_url,
@@ -62,11 +65,15 @@ class EmergentGoogleAuth:
                 timeout=10
             )
             
+            logger.info(f"Emergent service response status: {response.status_code}")
+            logger.info(f"Emergent service response text: {response.text}")
+            
             if response.status_code != 200:
-                logger.error(f"Emergent session data request failed: {response.status_code}")
-                raise HTTPException(status_code=400, detail="Invalid session ID")
+                logger.error(f"Emergent session data request failed: {response.status_code}, Response: {response.text}")
+                raise HTTPException(status_code=400, detail=f"Invalid session ID - Service responded with {response.status_code}")
             
             session_data = response.json()
+            logger.info(f"Session data received: {session_data}")
             
             # Extract user information
             user_data = {
@@ -77,8 +84,11 @@ class EmergentGoogleAuth:
                 'emergent_session_token': session_data.get('session_token')
             }
             
+            logger.info(f"Extracted user data: {user_data}")
+            
             # Validate required fields
             if not user_data['email'] or not user_data['emergent_session_token']:
+                logger.error(f"Incomplete OAuth data - email: {user_data.get('email')}, token: {user_data.get('emergent_session_token')}")
                 raise HTTPException(status_code=400, detail="Incomplete OAuth data")
             
             logger.info(f"Successfully processed session for: {user_data['email']}")
