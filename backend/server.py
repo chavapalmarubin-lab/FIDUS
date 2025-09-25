@@ -11957,6 +11957,54 @@ async def create_prospect_drive_folder(prospect: dict):
         logging.error(f"Failed to create Drive folder for prospect: {str(e)}")
         raise
 
+async def auto_create_prospect_drive_folder(prospect: dict):
+    """
+    CRITICAL CRM FEATURE: Auto-create Google Drive folder for each prospect/client
+    This ensures complete document segregation and proper CRM tracking
+    """
+    try:
+        # Use admin's Google token for folder creation
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            logger.warning(f"No Google token available for Drive folder creation for {prospect['name']}")
+            return False
+        
+        folder_name = f"{prospect['name']} - FIDUS Documents"
+        
+        # Create folder via Google Drive API
+        result = await google_apis_service.create_drive_folder(token_data, folder_name)
+        
+        if result.get('success'):
+            # Update prospect record with folder information
+            folder_info = {
+                "folder_id": result.get('folder_id'),
+                "folder_name": folder_name,
+                "web_view_link": result.get('web_view_link'),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Add folder info to the prospect data
+            prospect["google_drive_folder"] = folder_info
+            
+            logger.info(f"✅ AUTO-CREATED Google Drive folder for {prospect['name']}: {folder_name}")
+            return True
+        else:
+            logger.error(f"❌ Failed to create Drive folder for {prospect['name']}: {result.get('error')}")
+            return False
+        
+    except Exception as e:
+        logger.error(f"❌ Exception creating Drive folder for {prospect['name']}: {str(e)}")
+        return False
+
+# Existing create_prospect_drive_folder function (keep for compatibility)
+async def create_prospect_drive_folder(prospect: dict):
+    """
+    Helper function to create a Google Drive folder for each prospect/client
+    """
+    return await auto_create_prospect_drive_folder(prospect)
+
 # ===============================================================================
 # ENHANCED CRM ENDPOINTS WITH GOOGLE INTEGRATION
 # ===============================================================================
