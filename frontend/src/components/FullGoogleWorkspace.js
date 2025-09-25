@@ -28,7 +28,10 @@ import {
   Clock,
   MapPin,
   Edit,
-  Trash2
+  Trash2,
+  Wifi,
+  WifiOff,
+  Activity
 } from 'lucide-react';
 import googleCRMIntegration from '../services/googleCRMIntegration';
 import apiAxios from '../utils/apiAxios';
