@@ -3867,6 +3867,56 @@ async def import_clients_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
+@api_router.get("/admin/users")
+async def get_all_users():
+    """Get all users for admin management"""
+    try:
+        users_list = []
+        
+        # Get users from MOCK_USERS (for backwards compatibility)
+        for username, user_data in MOCK_USERS.items():
+            users_list.append({
+                "id": user_data.get("id", ""),
+                "username": user_data.get("username", ""),
+                "name": user_data.get("name", ""),
+                "email": user_data.get("email", ""),
+                "phone": user_data.get("phone", ""),
+                "type": user_data.get("type", "client"),
+                "status": user_data.get("status", "active"),
+                "created_at": user_data.get("created_at", ""),
+                "last_login": user_data.get("last_login", ""),
+                "notes": user_data.get("notes", "")
+            })
+        
+        # Also get users from MongoDB to include converted clients
+        try:
+            mongodb_users = await db.users.find().to_list(length=None)
+            for user in mongodb_users:
+                # Check if user already exists in MOCK_USERS to avoid duplicates
+                user_exists = any(u["id"] == user.get("user_id") for u in users_list)
+                if not user_exists:
+                    users_list.append({
+                        "id": user.get("user_id", ""),
+                        "username": user.get("username", ""),
+                        "name": user.get("name", ""),
+                        "email": user.get("email", ""),
+                        "phone": user.get("phone", ""),
+                        "type": user.get("user_type", "client"),
+                        "status": user.get("status", "active"),
+                        "created_at": user.get("createdAt", ""),
+                        "last_login": "",
+                        "notes": user.get("notes", "")
+                    })
+        except Exception as mongo_error:
+            logging.error(f"Failed to fetch MongoDB users: {str(mongo_error)}")
+        
+        logging.info(f"Retrieved {len(users_list)} users for admin management")
+        return {"users": users_list}
+        
+    except Exception as e:
+        logging.error(f"Get users error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch users")
+
 @api_router.post("/admin/users/create")
 async def create_new_user(user_data: UserCreate):
     """Create a new user account with temporary password"""
