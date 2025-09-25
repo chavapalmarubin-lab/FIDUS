@@ -14,9 +14,9 @@ class RealGoogleOAuth:
     """Real Google OAuth 2.0 integration"""
     
     def __init__(self):
-        # Use your actual Google OAuth credentials
-        self.client_id = "103772401360773148975-your_client_id.apps.googleusercontent.com"  
-        self.client_secret = "YOUR_CLIENT_SECRET"  # You need to provide this
+        # Use your ACTUAL Google OAuth credentials
+        self.client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"  
+        self.client_secret = "GOCSPX-YOUR_CLIENT_SECRET_HERE"  # You need to get this from Google Console
         self.redirect_uri = "https://auth-flow-debug-2.preview.emergentagent.com/auth/google/callback"
         
         self.oauth_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
