@@ -593,6 +593,65 @@ class GoogleAPIsService:
                 'error': str(e)
             }
 
+    async def create_drive_folder(self, token_data: Dict[str, str], folder_name: str, parent_folder_id: str = None) -> Dict:
+        """
+        Create a folder in Google Drive
+        
+        Args:
+            token_data: OAuth token data
+            folder_name: Name of the folder to create
+            parent_folder_id: ID of parent folder (optional)
+            
+        Returns:
+            Folder creation result with folder ID and web view link
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # Create folder metadata
+            folder_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            
+            # Set parent folder if specified
+            if parent_folder_id:
+                folder_metadata['parents'] = [parent_folder_id]
+            
+            # Create the folder
+            folder = drive_service.files().create(
+                body=folder_metadata,
+                fields='id, name, webViewLink, createdTime'
+            ).execute()
+            
+            folder_id = folder.get('id')
+            web_view_link = folder.get('webViewLink', f'https://drive.google.com/drive/folders/{folder_id}')
+            
+            logger.info(f"Successfully created Drive folder: {folder_name} (ID: {folder_id})")
+            
+            return {
+                'success': True,
+                'folder_id': folder_id,
+                'name': folder_name,
+                'web_view_link': web_view_link,
+                'created_time': folder.get('createdTime'),
+                'parent_folder_id': parent_folder_id
+            }
+            
+        except HttpError as error:
+            logger.error(f"Drive folder creation HttpError: {error}")
+            return {
+                'success': False,
+                'error': f'Drive API error: {str(error)}'
+            }
+        except Exception as e:
+            logger.error(f"Drive folder creation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
     # ==================== GOOGLE MEET API METHODS ====================
     
     async def create_meet_space(self, token_data: Dict[str, str], space_config: Dict = None) -> Dict:
