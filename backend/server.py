@@ -1144,16 +1144,18 @@ async def ensure_default_users_in_mongodb():
     
     try:
         for user in default_users:
-            # Check if user already exists
-            existing = await db.users.find_one({"username": user["username"]})
-            if not existing:
-                await db.users.insert_one(user)
-                logging.info(f"✅ Seeded default user: {user['username']} to MongoDB")
+            # Use upsert to update existing or create new users 
+            await db.users.update_one(
+                {"username": user["username"]},
+                {"$set": user},
+                upsert=True
+            )
+            logging.info(f"✅ Upserted default user: {user['username']} to MongoDB")
         
         logging.info("🎯 PRODUCTION: All users managed via MongoDB (no MOCK data)")
         return True
     except Exception as e:
-        logging.error(f"❌ Failed to seed default users: {str(e)}")
+        logging.error(f"❌ Failed to upsert default users: {str(e)}")
         return False
 
 # Mock data for demo (DEPRECATED - will be removed in production)
