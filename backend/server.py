@@ -14687,7 +14687,8 @@ async def get_client_fidus_meetings(client_id: str, current_user: dict = Depends
 @api_router.get("/fidus/client-drive-folder/{client_id}")
 async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Depends(get_current_user)):
     """
-    Get documents in client's FIDUS Google Drive folder (pre-created by admin)
+    Get documents in client's SPECIFIC FIDUS Google Drive folder ONLY (PRIVACY CRITICAL)
+    This ensures clients see ONLY their own documents, not all Google Drive files
     """
     try:
         # Get client's folder information from database
@@ -14701,15 +14702,16 @@ async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Dep
             }
         
         folder_info = client.get("google_drive_folder", {})
-        if not folder_info:
+        if not folder_info or not folder_info.get("folder_id"):
             return {
                 "success": True,
                 "documents": [],
                 "message": "FIDUS folder will be created automatically",
-                "folder_ready": False
+                "folder_ready": False,
+                "client_name": client.get("name", "Client")
             }
         
-        # Get documents from Google Drive folder using admin's token
+        # Get documents from Google Drive using admin's token
         user_id = "user_admin_001"
         token_data = await get_google_session_token(user_id)
         
@@ -14721,42 +14723,41 @@ async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Dep
                 "folder_ready": False
             }
         
-        # Get files from the specific client folder
-        all_files = await google_apis_service.get_drive_files(token_data, max_results=100)
-        
-        # Filter files that belong to this client's folder
+        # CRITICAL FIX: Get files from SPECIFIC client folder ONLY (not all Drive files)
         folder_id = folder_info.get("folder_id")
-        client_documents = []
+        client_documents = await google_apis_service.get_drive_files_in_folder(
+            token_data, 
+            folder_id, 
+            max_results=100
+        )
         
-        if all_files and folder_id:
-            for file_item in all_files:
-                # Check if file is in client's folder (simplified check)
-                file_name = file_item.get('name', '')
-                if (client.get('name', '').lower() in file_name.lower() or 
-                    client_id in file_name or
-                    'fidus' in file_name.lower()):
-                    
-                    client_documents.append({
-                        "id": file_item.get('id'),
-                        "name": file_name,
-                        "mime_type": file_item.get('mimeType', ''),
-                        "size": file_item.get('size', ''),
-                        "created_time": file_item.get('createdTime', ''),
-                        "modified_time": file_item.get('modifiedTime', ''),
-                        "web_view_link": file_item.get('webViewLink', ''),
-                        "shared": bool(file_item.get('shared', False)),
-                        "is_folder": file_item.get('mimeType') == 'application/vnd.google-apps.folder',
-                        "uploaded_by": "client" if "uploaded" in file_name.lower() else "fidus"
-                    })
+        # Format documents for display
+        formatted_documents = []
+        for doc in client_documents:
+            formatted_documents.append({
+                "id": doc.get('id'),
+                "name": doc.get('name'),
+                "mime_type": doc.get('mimeType', ''),
+                "size": doc.get('size', ''),
+                "created_time": doc.get('createdTime', ''),
+                "modified_time": doc.get('modifiedTime', ''),
+                "web_view_link": doc.get('webViewLink', ''),
+                "is_folder": doc.get('mimeType') == 'application/vnd.google-apps.folder',
+                "uploaded_by": "client" if "CLIENT_UPLOAD" in doc.get('name', '') else "fidus",
+                "in_client_folder": True,
+                "folder_id": folder_id
+            })
         
-        logger.info(f"Retrieved {len(client_documents)} documents from client {client_id} FIDUS folder")
+        logger.info(f"PRIVACY SECURE: Retrieved {len(formatted_documents)} documents from client {client_id} folder ONLY (folder_id: {folder_id})")
         
         return {
             "success": True,
-            "documents": client_documents,
+            "documents": formatted_documents,
             "folder_info": folder_info,
-            "folder_ready": bool(folder_info),
-            "client_id": client_id
+            "folder_ready": True,
+            "client_id": client_id,
+            "client_name": client.get("name", "Client"),
+            "privacy_note": f"Showing documents from {client.get('name', 'Client')} folder ONLY"
         }
         
     except Exception as e:
