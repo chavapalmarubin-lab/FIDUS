@@ -159,7 +159,7 @@ class ClientDocumentUploadTester:
                     'client_name': 'Salvador Palma'
                 }
                 
-                # Make upload request
+                # Make upload request to the correct endpoint
                 response = self.session.post(
                     f"{BACKEND_URL}/fidus/client-document-upload",
                     files=files,
