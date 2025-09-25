@@ -593,20 +593,15 @@ const ClientManagement = () => {
         </div>
       )}
 
-      {/* Client Detail View Modal */}
+      {/* Enhanced Client Detail Modal with Google Integration */}
       {showDetailView && selectedClient && (
-        <ClientDetailView
+        <ClientDetailModal
           client={selectedClient}
+          isOpen={showDetailView}
           onClose={() => {
             setShowDetailView(false);
             setSelectedClient(null);
-          }}
-          onUpdate={(updatedClient) => {
-            // Update the client in the list
-            setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
-            setShowDetailView(false);
-            setSelectedClient(null);
-            fetchClients(); // Refresh the client list
+            fetchClients(); // Refresh the client list to show any updates
           }}
         />
       )}
