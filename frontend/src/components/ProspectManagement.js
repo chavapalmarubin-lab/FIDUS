@@ -2178,7 +2178,8 @@ FIDUS Investment Management Team`;
                       type="time"
                       value={meetingData.time}
                       onChange={(e) => setMeetingData({ ...meetingData, time: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                      style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
                     />
                   </div>
                 </div>
