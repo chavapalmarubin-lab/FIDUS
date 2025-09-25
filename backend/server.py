@@ -15610,8 +15610,16 @@ logger = logging.getLogger(__name__)
 async def startup_event():
     """Initialize application on startup"""
     try:
+        logging.info("🚀 Starting application initialization...")
+        
         # Seed default users into MongoDB if they don't exist
-        await ensure_default_users_in_mongodb()
+        seeding_success = await ensure_default_users_in_mongodb()
+        
+        if seeding_success:
+            logging.info("✅ User seeding completed successfully") 
+        else:
+            logging.warning("⚠️ User seeding had issues")
+            
         logging.info("🚀 Application startup completed successfully")
     except Exception as e:
         logging.error(f"❌ Application startup failed: {str(e)}")
