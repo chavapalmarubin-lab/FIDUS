@@ -70,6 +70,96 @@ const ClientDashboard = ({ user, onLogout }) => {
     }
   };
 
+  // Profile management functions
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setProfileLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await apiAxios.post('/client/profile/photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Update user profile picture in local state
+        user.profile_picture = response.data.photo_url;
+        alert('Profile photo updated successfully!');
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      alert('Failed to update profile photo: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    setProfileLoading(true);
+    try {
+      const response = await apiAxios.put('/client/profile', profileData);
+
+      if (response.data.success) {
+        // Update user data in local state
+        Object.assign(user, response.data.user);
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      alert('Failed to update profile: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.new !== passwordData.confirm) {
+      alert('New passwords do not match');
+      return;
+    }
+    
+    if (passwordData.new.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const response = await apiAxios.post('/auth/change-password', {
+        username: user.username,
+        current_password: passwordData.current,
+        new_password: passwordData.new
+      });
+
+      if (response.data.success) {
+        alert('Password changed successfully!');
+        setShowPasswordChange(false);
+        setPasswordData({ current: '', new: '', confirm: '' });
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      alert('Failed to change password: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  // Initialize profile data when user data loads
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
+
   const applyFilters = () => {
     if (!clientData) return;
 
