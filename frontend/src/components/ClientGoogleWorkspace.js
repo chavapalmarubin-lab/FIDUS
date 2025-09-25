@@ -163,28 +163,74 @@ const ClientGoogleWorkspace = ({ user }) => {
     }
   };
 
-  // Request client folder creation
-  const requestClientFolder = async () => {
+  // Request meeting with FIDUS team (sends to admin portal)
+  const requestMeetingWithFIDUS = async () => {
+    if (!composeData.subject || !composeData.body) {
+      alert('Please provide meeting subject and details');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await apiAxios.post('/google/drive/create-client-folder', {
+      const response = await apiAxios.post('/fidus/client-meeting-request', {
         client_id: user.id,
         client_name: user.name,
-        client_email: user.email
+        client_email: user.email,
+        meeting_subject: composeData.subject,
+        meeting_details: composeData.body,
+        requested_at: new Date().toISOString()
       });
 
       if (response.data.success) {
-        alert('✅ Your personal FIDUS folder has been created in Google Drive!');
+        alert('✅ Meeting request sent to FIDUS team! You will be contacted to schedule your meeting.');
+        setComposeOpen(false);
+        setComposeData({ to: 'admin@fidus.com', subject: '', body: '' });
+        
+        // Refresh meetings to show the request
+        setTimeout(() => {
+          loadClientGoogleData();
+        }, 1000);
+      } else {
+        throw new Error(response.data.error || 'Failed to send meeting request');
+      }
+    } catch (error) {
+      console.error('❌ Meeting request failed:', error);
+      alert(`❌ Failed to send meeting request: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Upload document to client's FIDUS folder
+  const uploadDocumentToFIDUS = async (file) => {
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('client_id', user.id);
+      formData.append('client_name', user.name);
+
+      const response = await apiAxios.post('/fidus/client-document-upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        alert('✅ Document uploaded successfully to your FIDUS folder!');
+        
         // Refresh documents
         setTimeout(() => {
           loadClientGoogleData();
         }, 1000);
       } else {
-        throw new Error(response.data.error || 'Failed to create folder');
+        throw new Error(response.data.error || 'Failed to upload document');
       }
     } catch (error) {
-      console.error('❌ Folder creation failed:', error);
-      alert(`Failed to create folder: ${error.message}`);
+      console.error('❌ Document upload failed:', error);
+      alert(`Failed to upload document: ${error.message}`);
     } finally {
       setLoading(false);
     }
