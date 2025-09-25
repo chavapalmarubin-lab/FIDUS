@@ -2192,7 +2192,8 @@ FIDUS Investment Management Team`;
                   <select
                     value={meetingData.duration}
                     onChange={(e) => setMeetingData({ ...meetingData, duration: parseInt(e.target.value) })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
                   >
                     <option value={30}>30 minutes</option>
                     <option value={45}>45 minutes</option>
