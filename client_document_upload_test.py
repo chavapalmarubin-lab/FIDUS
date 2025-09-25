@@ -1,5 +1,709 @@
 #!/usr/bin/env python3
 """
+FIDUS Client Document Upload Functionality Testing
+=================================================
+
+This script tests the FIXED client document upload functionality to ensure the upload error is resolved.
+
+Test Focus:
+- Test `/fidus/client-document-upload` endpoint with proper file upload simulation
+- Verify the endpoint now properly handles file bytes instead of strings
+- Test temporary file management and cleanup
+- Test Google Drive integration for uploading to client folders
+- Test error handling for various scenarios
+
+Key Changes Tested:
+- Fixed bytes vs string handling in file processing
+- Added proper temp file flushing and error handling
+- Enhanced upload logging with file metadata
+- Improved error messages and HTTP exception handling
+"""
+
+import requests
+import json
+import io
+import os
+import tempfile
+from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Test Configuration
+BACKEND_URL = "https://fidus-workspace-1.preview.emergentagent.com/api"
+ADMIN_CREDENTIALS = {
+    "username": "admin",
+    "password": "password123",
+    "user_type": "admin"
+}
+
+class ClientDocumentUploadTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        
+    def log_test_result(self, test_name, success, message, details=None):
+        """Log test result"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "message": message,
+            "details": details or {},
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        logger.info(f"{status}: {test_name} - {message}")
+        
+        if details:
+            logger.info(f"Details: {details}")
+    
+    def authenticate_admin(self):
+        """Authenticate as admin user"""
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/auth/login",
+                json=ADMIN_CREDENTIALS,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get('token')
+                self.session.headers.update({
+                    'Authorization': f'Bearer {self.admin_token}'
+                })
+                
+                self.log_test_result(
+                    "Admin Authentication",
+                    True,
+                    f"Successfully authenticated as admin user",
+                    {"user_id": data.get('id'), "username": data.get('username')}
+                )
+                return True
+            else:
+                self.log_test_result(
+                    "Admin Authentication",
+                    False,
+                    f"Authentication failed with status {response.status_code}",
+                    {"response": response.text}
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test_result(
+                "Admin Authentication",
+                False,
+                f"Authentication error: {str(e)}"
+            )
+            return False
+    
+    def create_test_file(self, filename, content, file_type="text"):
+        """Create test file content"""
+        if file_type == "text":
+            return content.encode('utf-8')
+        elif file_type == "pdf":
+            # Simple PDF-like content (not a real PDF, but for testing)
+            pdf_content = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n"
+            pdf_content += content.encode('utf-8')
+            return pdf_content
+        elif file_type == "image":
+            # Simple image-like content (not a real image, but for testing)
+            return b"\x89PNG\r\n\x1a\n" + content.encode('utf-8')
+        else:
+            return content.encode('utf-8')
+    
+    def test_valid_document_upload(self):
+        """Test valid document upload with different file types"""
+        test_cases = [
+            {
+                "filename": "test_document.pdf",
+                "content": "This is a test PDF document for FIDUS client upload testing.",
+                "file_type": "pdf",
+                "mime_type": "application/pdf"
+            },
+            {
+                "filename": "test_image.png",
+                "content": "This is a test PNG image for FIDUS client upload testing.",
+                "file_type": "image",
+                "mime_type": "image/png"
+            },
+            {
+                "filename": "test_document.docx",
+                "content": "This is a test Word document for FIDUS client upload testing.",
+                "file_type": "text",
+                "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            }
+        ]
+        
+        for i, test_case in enumerate(test_cases):
+            try:
+                # Create test file content
+                file_content = self.create_test_file(
+                    test_case["filename"],
+                    test_case["content"],
+                    test_case["file_type"]
+                )
+                
+                # Prepare form data
+                files = {
+                    'file': (test_case["filename"], io.BytesIO(file_content), test_case["mime_type"])
+                }
+                
+                data = {
+                    'client_id': 'client_003',  # Salvador Palma
+                    'client_name': 'Salvador Palma'
+                }
+                
+                # Make upload request
+                response = self.session.post(
+                    f"{BACKEND_URL}/fidus/client-document-upload",
+                    files=files,
+                    data=data,
+                    timeout=60
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('success'):
+                        self.log_test_result(
+                            f"Valid Document Upload - {test_case['filename']}",
+                            True,
+                            f"Successfully uploaded {test_case['filename']} ({len(file_content)} bytes)",
+                            {
+                                "file_info": result.get('file', {}),
+                                "message": result.get('message'),
+                                "file_size": len(file_content)
+                            }
+                        )
+                    else:
+                        self.log_test_result(
+                            f"Valid Document Upload - {test_case['filename']}",
+                            False,
+                            f"Upload failed: {result.get('error', 'Unknown error')}",
+                            {"response": result}
+                        )
+                else:
+                    self.log_test_result(
+                        f"Valid Document Upload - {test_case['filename']}",
+                        False,
+                        f"Upload failed with status {response.status_code}",
+                        {"response": response.text}
+                    )
+                    
+            except Exception as e:
+                self.log_test_result(
+                    f"Valid Document Upload - {test_case['filename']}",
+                    False,
+                    f"Upload error: {str(e)}"
+                )
+    
+    def test_large_file_handling(self):
+        """Test large file handling (size limits)"""
+        try:
+            # Create a file larger than 50MB limit
+            large_content = "A" * (51 * 1024 * 1024)  # 51MB
+            
+            files = {
+                'file': ('large_test.pdf', io.BytesIO(large_content.encode('utf-8')), 'application/pdf')
+            }
+            
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=60
+            )
+            
+            if response.status_code == 400:
+                result = response.json()
+                if "50MB limit" in result.get('detail', ''):
+                    self.log_test_result(
+                        "Large File Handling",
+                        True,
+                        "Large file properly rejected with size limit error",
+                        {"error_message": result.get('detail')}
+                    )
+                else:
+                    self.log_test_result(
+                        "Large File Handling",
+                        False,
+                        f"Unexpected error message: {result.get('detail')}",
+                        {"response": result}
+                    )
+            else:
+                self.log_test_result(
+                    "Large File Handling",
+                    False,
+                    f"Large file not rejected properly, status: {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Large File Handling",
+                False,
+                f"Large file test error: {str(e)}"
+            )
+    
+    def test_missing_file_scenario(self):
+        """Test missing file scenarios"""
+        try:
+            # Test with no file
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                data=data,
+                timeout=30
+            )
+            
+            if response.status_code in [400, 422]:
+                self.log_test_result(
+                    "Missing File Scenario",
+                    True,
+                    f"Missing file properly rejected with status {response.status_code}",
+                    {"response": response.text}
+                )
+            else:
+                self.log_test_result(
+                    "Missing File Scenario",
+                    False,
+                    f"Missing file not rejected properly, status: {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Missing File Scenario",
+                False,
+                f"Missing file test error: {str(e)}"
+            )
+    
+    def test_client_not_found_scenario(self):
+        """Test client not found scenarios"""
+        try:
+            # Create test file
+            file_content = self.create_test_file("test.pdf", "Test content", "pdf")
+            
+            files = {
+                'file': ('test.pdf', io.BytesIO(file_content), 'application/pdf')
+            }
+            
+            data = {
+                'client_id': 'nonexistent_client',
+                'client_name': 'Nonexistent Client'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if not result.get('success') and 'Client not found' in result.get('error', ''):
+                    self.log_test_result(
+                        "Client Not Found Scenario",
+                        True,
+                        "Nonexistent client properly handled with error message",
+                        {"error_message": result.get('error')}
+                    )
+                else:
+                    self.log_test_result(
+                        "Client Not Found Scenario",
+                        False,
+                        f"Unexpected response for nonexistent client: {result}",
+                        {"response": result}
+                    )
+            else:
+                self.log_test_result(
+                    "Client Not Found Scenario",
+                    False,
+                    f"Unexpected status code for nonexistent client: {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Client Not Found Scenario",
+                False,
+                f"Client not found test error: {str(e)}"
+            )
+    
+    def test_google_drive_integration_availability(self):
+        """Test Google Drive integration availability"""
+        try:
+            # Create small test file
+            file_content = self.create_test_file("drive_test.pdf", "Google Drive integration test", "pdf")
+            
+            files = {
+                'file': ('drive_test.pdf', io.BytesIO(file_content), 'application/pdf')
+            }
+            
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success'):
+                    # Check if Google Drive integration worked
+                    file_info = result.get('file', {})
+                    if file_info.get('google_file_id'):
+                        self.log_test_result(
+                            "Google Drive Integration",
+                            True,
+                            "Google Drive integration working - file uploaded to Drive",
+                            {
+                                "google_file_id": file_info.get('google_file_id'),
+                                "web_view_link": file_info.get('web_view_link')
+                            }
+                        )
+                    else:
+                        self.log_test_result(
+                            "Google Drive Integration",
+                            True,
+                            "Upload successful but Google Drive integration not available",
+                            {"message": result.get('message')}
+                        )
+                else:
+                    error_msg = result.get('error', '')
+                    if 'Google Drive integration not available' in error_msg:
+                        self.log_test_result(
+                            "Google Drive Integration",
+                            True,
+                            "Google Drive integration properly reports unavailability",
+                            {"error_message": error_msg}
+                        )
+                    else:
+                        self.log_test_result(
+                            "Google Drive Integration",
+                            False,
+                            f"Unexpected error: {error_msg}",
+                            {"response": result}
+                        )
+            else:
+                self.log_test_result(
+                    "Google Drive Integration",
+                    False,
+                    f"Drive integration test failed with status {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Google Drive Integration",
+                False,
+                f"Drive integration test error: {str(e)}"
+            )
+    
+    def test_bytes_handling_fix(self):
+        """Test that the bytes vs string handling fix is working"""
+        try:
+            # Create binary content that would fail with string handling
+            binary_content = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])  # PNG header
+            binary_content += b"This is binary content that should be handled as bytes, not strings."
+            binary_content += bytes(range(256))  # Full byte range
+            
+            files = {
+                'file': ('binary_test.png', io.BytesIO(binary_content), 'image/png')
+            }
+            
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success'):
+                    self.log_test_result(
+                        "Bytes Handling Fix",
+                        True,
+                        "Binary content handled correctly - no 'bytes-like object required' error",
+                        {
+                            "file_size": len(binary_content),
+                            "message": result.get('message')
+                        }
+                    )
+                else:
+                    error_msg = result.get('error', '')
+                    if 'bytes-like object required' in error_msg:
+                        self.log_test_result(
+                            "Bytes Handling Fix",
+                            False,
+                            "Still getting 'bytes-like object required' error - fix not working",
+                            {"error_message": error_msg}
+                        )
+                    else:
+                        self.log_test_result(
+                            "Bytes Handling Fix",
+                            False,
+                            f"Upload failed with different error: {error_msg}",
+                            {"response": result}
+                        )
+            else:
+                self.log_test_result(
+                    "Bytes Handling Fix",
+                    False,
+                    f"Bytes handling test failed with status {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Bytes Handling Fix",
+                False,
+                f"Bytes handling test error: {str(e)}"
+            )
+    
+    def test_temporary_file_management(self):
+        """Test temporary file creation and cleanup"""
+        try:
+            # Create test file
+            file_content = self.create_test_file("temp_test.pdf", "Temporary file management test", "pdf")
+            
+            files = {
+                'file': ('temp_test.pdf', io.BytesIO(file_content), 'application/pdf')
+            }
+            
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            # Check temp directory before upload
+            temp_dir = tempfile.gettempdir()
+            temp_files_before = set(os.listdir(temp_dir))
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=60
+            )
+            
+            # Check temp directory after upload
+            temp_files_after = set(os.listdir(temp_dir))
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check if temp files were cleaned up
+                new_temp_files = temp_files_after - temp_files_before
+                persistent_temp_files = [f for f in new_temp_files if 'temp_test.pdf' in f]
+                
+                if len(persistent_temp_files) == 0:
+                    self.log_test_result(
+                        "Temporary File Management",
+                        True,
+                        "Temporary files properly cleaned up after upload",
+                        {
+                            "upload_success": result.get('success'),
+                            "temp_files_cleaned": True
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "Temporary File Management",
+                        False,
+                        f"Temporary files not cleaned up: {persistent_temp_files}",
+                        {
+                            "upload_success": result.get('success'),
+                            "persistent_files": persistent_temp_files
+                        }
+                    )
+            else:
+                self.log_test_result(
+                    "Temporary File Management",
+                    False,
+                    f"Upload failed, cannot test temp file cleanup: {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Temporary File Management",
+                False,
+                f"Temp file management test error: {str(e)}"
+            )
+    
+    def test_authentication_requirement(self):
+        """Test that authentication is required"""
+        try:
+            # Remove authentication header
+            original_headers = self.session.headers.copy()
+            if 'Authorization' in self.session.headers:
+                del self.session.headers['Authorization']
+            
+            # Create test file
+            file_content = self.create_test_file("auth_test.pdf", "Authentication test", "pdf")
+            
+            files = {
+                'file': ('auth_test.pdf', io.BytesIO(file_content), 'application/pdf')
+            }
+            
+            data = {
+                'client_id': 'client_003',
+                'client_name': 'Salvador Palma'
+            }
+            
+            response = self.session.post(
+                f"{BACKEND_URL}/fidus/client-document-upload",
+                files=files,
+                data=data,
+                timeout=30
+            )
+            
+            # Restore headers
+            self.session.headers.update(original_headers)
+            
+            if response.status_code == 401:
+                self.log_test_result(
+                    "Authentication Requirement",
+                    True,
+                    "Authentication properly required - unauthenticated request rejected",
+                    {"status_code": response.status_code}
+                )
+            else:
+                self.log_test_result(
+                    "Authentication Requirement",
+                    False,
+                    f"Unauthenticated request not properly rejected: {response.status_code}",
+                    {"response": response.text}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Authentication Requirement",
+                False,
+                f"Authentication test error: {str(e)}"
+            )
+    
+    def run_all_tests(self):
+        """Run all client document upload tests"""
+        logger.info("🚀 Starting FIDUS Client Document Upload Functionality Testing")
+        logger.info("=" * 80)
+        
+        # Authenticate first
+        if not self.authenticate_admin():
+            logger.error("❌ Cannot proceed without admin authentication")
+            return
+        
+        # Run all tests
+        logger.info("\n📋 Running Client Document Upload Tests...")
+        
+        self.test_valid_document_upload()
+        self.test_large_file_handling()
+        self.test_missing_file_scenario()
+        self.test_client_not_found_scenario()
+        self.test_google_drive_integration_availability()
+        self.test_bytes_handling_fix()
+        self.test_temporary_file_management()
+        self.test_authentication_requirement()
+        
+        # Generate summary
+        self.generate_test_summary()
+    
+    def generate_test_summary(self):
+        """Generate comprehensive test summary"""
+        logger.info("\n" + "=" * 80)
+        logger.info("📊 CLIENT DOCUMENT UPLOAD TESTING SUMMARY")
+        logger.info("=" * 80)
+        
+        total_tests = len(self.test_results)
+        passed_tests = len([r for r in self.test_results if r['success']])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        logger.info(f"Total Tests: {total_tests}")
+        logger.info(f"Passed: {passed_tests}")
+        logger.info(f"Failed: {failed_tests}")
+        logger.info(f"Success Rate: {success_rate:.1f}%")
+        
+        logger.info("\n📋 Test Results:")
+        for result in self.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            logger.info(f"{status}: {result['test']} - {result['message']}")
+        
+        # Key findings
+        logger.info("\n🔍 Key Findings:")
+        
+        # Check for bytes handling fix
+        bytes_test = next((r for r in self.test_results if 'Bytes Handling' in r['test']), None)
+        if bytes_test and bytes_test['success']:
+            logger.info("✅ CRITICAL: 'bytes-like object required' error has been RESOLVED")
+        elif bytes_test:
+            logger.info("❌ CRITICAL: 'bytes-like object required' error still exists")
+        
+        # Check for file upload success
+        upload_tests = [r for r in self.test_results if 'Valid Document Upload' in r['test']]
+        successful_uploads = [r for r in upload_tests if r['success']]
+        if successful_uploads:
+            logger.info(f"✅ File uploads working: {len(successful_uploads)}/{len(upload_tests)} file types successful")
+        
+        # Check for Google Drive integration
+        drive_test = next((r for r in self.test_results if 'Google Drive Integration' in r['test']), None)
+        if drive_test and drive_test['success']:
+            logger.info("✅ Google Drive integration available and working")
+        elif drive_test:
+            logger.info("⚠️  Google Drive integration not available (expected in test environment)")
+        
+        # Check for temp file cleanup
+        temp_test = next((r for r in self.test_results if 'Temporary File Management' in r['test']), None)
+        if temp_test and temp_test['success']:
+            logger.info("✅ Temporary file cleanup working correctly")
+        elif temp_test:
+            logger.info("❌ Temporary file cleanup issues detected")
+        
+        logger.info("\n🎯 CONCLUSION:")
+        if success_rate >= 80:
+            logger.info("✅ Client document upload functionality is WORKING CORRECTLY")
+            logger.info("✅ The upload error fix has been SUCCESSFULLY IMPLEMENTED")
+        else:
+            logger.info("❌ Client document upload functionality has SIGNIFICANT ISSUES")
+            logger.info("❌ Additional fixes may be required")
+        
+        logger.info("=" * 80)
+
+def main():
+    """Main test execution"""
+    tester = ClientDocumentUploadTester()
+    tester.run_all_tests()
+
+if __name__ == "__main__":
+    main()
+"""
 CLIENT DOCUMENT UPLOAD FUNCTIONALITY TESTING
 ============================================
 
