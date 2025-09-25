@@ -312,10 +312,14 @@ class GoogleConnectionMonitorTester:
             error_tests_passed = 0
             total_error_tests = 2
             
-            # Test 1: Invalid service name (already tested above, but included for completeness)
+            # Test 1: Invalid service name (structured error response)
             response = self.session.get(f"{API_BASE}/google/connection/test/nonexistent")
-            if response.status_code == 400:
-                error_tests_passed += 1
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get('success') == False and 
+                    'Invalid service' in data.get('message', '') and
+                    data.get('status') == 'test_failed'):
+                    error_tests_passed += 1
             
             # Test 2: Test endpoints handle missing authentication gracefully
             temp_session = requests.Session()
