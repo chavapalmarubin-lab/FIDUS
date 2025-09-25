@@ -2301,7 +2301,8 @@ FIDUS Investment Management Team`;
                           : `Investment Opportunity - ${selectedProspect.name}`
                       });
                     }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
                   >
                     <option value="general">General Investment Inquiry</option>
                     <option value="document_request">Document Request</option>
