@@ -519,10 +519,14 @@ FIDUS Investment Management Team`;
     }
   };
 
-  // Show prospect detail modal with Google actions
+  // Open client detail modal
+  const openClientDetail = (client) => {
+    setSelectedClient(client);
+    setClientDetailOpen(true);
+  };
+
   const showProspectDetail = (prospect) => {
-    setSelectedProspect(prospect);
-    setShowDetailModal(true);
+    openClientDetail(prospect);
   };
 
   const fetchProspects = async () => {
