@@ -7271,14 +7271,18 @@ async def create_prospect(prospect_data: ProspectCreate):
         # Store in MongoDB for consistency with other endpoints
         prospect_dict = prospect.dict()
         
+        # Ensure datetime fields are properly formatted for MongoDB
+        if 'created_at' in prospect_dict and isinstance(prospect_dict['created_at'], datetime):
+            prospect_dict['created_at'] = prospect_dict['created_at']
+        if 'updated_at' in prospect_dict and isinstance(prospect_dict['updated_at'], datetime):
+            prospect_dict['updated_at'] = prospect_dict['updated_at']
+        
         # CRITICAL: AUTO-CREATE GOOGLE DRIVE FOLDER FOR NEW PROSPECT
         try:
             folder_created = await auto_create_prospect_drive_folder(prospect_dict)
             if folder_created:
                 logging.info(f"✅ Google Drive folder auto-created for new prospect: {prospect.name}")
-                # Get folder ID and update prospect dict
-                if 'google_drive_folder' in folder_created:
-                    prospect_dict['google_drive_folder'] = folder_created['google_drive_folder']
+                # The folder info is already added to prospect_dict by the function
             else:
                 logging.warning(f"⚠️ Failed to auto-create Drive folder for prospect: {prospect.name}")
         except Exception as folder_error:
