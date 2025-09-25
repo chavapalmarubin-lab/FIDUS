@@ -21,7 +21,7 @@ import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import UserAdministration from "./UserAdministration";
 import GoogleAdminAuth from './GoogleAdminAuth';
-import GoogleWorkspaceIntegration from './GoogleWorkspaceIntegration';
+import CleanGoogleWorkspace from './CleanGoogleWorkspace';
 import {
   LineChart,
   Line,
