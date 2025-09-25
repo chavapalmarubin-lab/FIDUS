@@ -11530,7 +11530,334 @@ async def get_connection_history(current_user: dict = Depends(get_current_admin_
         }
 
 # ===============================================================================
-# GOOGLE API ENDPOINTS - COMPREHENSIVE INTEGRATION  
+# ENHANCED CRM ENDPOINTS WITH GOOGLE INTEGRATION
+# ===============================================================================
+
+@api_router.get("/google/gmail/client-emails/{client_email}")
+async def get_client_specific_emails(client_email: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get all emails related to a specific client from Gmail API
+    This creates a comprehensive client communication history
+    """
+    try:
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        # Get all Gmail messages and filter by client email
+        all_messages = await google_apis_service.get_gmail_messages(token_data, max_results=100)
+        
+        if not all_messages or (len(all_messages) > 0 and all_messages[0].get('error')):
+            return {
+                "success": False,
+                "error": "Failed to retrieve Gmail messages",
+                "emails": []
+            }
+        
+        # Filter messages related to this client
+        client_emails = []
+        for message in all_messages:
+            sender_email = message.get('sender', message.get('from', ''))
+            recipient_email = message.get('to', message.get('recipient', ''))
+            
+            if (client_email.lower() in sender_email.lower() or 
+                client_email.lower() in recipient_email.lower()):
+                client_emails.append({
+                    "id": message.get('gmail_id', message.get('id')),
+                    "subject": message.get('subject', 'No Subject'),
+                    "from": sender_email,
+                    "to": recipient_email,
+                    "date": message.get('date', message.get('internal_date')),
+                    "snippet": message.get('snippet', ''),
+                    "body": message.get('body', ''),
+                    "labels": message.get('labels', []),
+                    "thread_id": message.get('thread_id'),
+                    "real_gmail": True
+                })
+        
+        # Sort by date (newest first)
+        client_emails.sort(key=lambda x: x.get('date', ''), reverse=True)
+        
+        logger.info(f"Found {len(client_emails)} emails for client: {client_email}")
+        
+        return {
+            "success": True,
+            "emails": client_emails,
+            "client_email": client_email,
+            "total_count": len(client_emails)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client emails: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "emails": []
+        }
+
+@api_router.get("/google/calendar/client-meetings/{client_email}")
+async def get_client_specific_meetings(client_email: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get all calendar meetings related to a specific client
+    """
+    try:
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        # Get calendar events and filter by client email
+        all_events = await google_apis_service.get_calendar_events(token_data, max_results=100)
+        
+        if not all_events or (len(all_events) > 0 and all_events[0].get('error')):
+            return {
+                "success": False,
+                "error": "Failed to retrieve calendar events",
+                "meetings": []
+            }
+        
+        # Filter meetings related to this client
+        client_meetings = []
+        for event in all_events:
+            attendees = event.get('attendees', [])
+            attendee_emails = [attendee.get('email', '') for attendee in attendees if isinstance(attendee, dict)]
+            
+            # Check if client email is in attendees
+            if any(client_email.lower() in email.lower() for email in attendee_emails):
+                # Determine if meeting is upcoming or past
+                event_start = event.get('start', {}).get('dateTime', event.get('start', {}).get('date', ''))
+                event_status = 'past'
+                if event_start:
+                    try:
+                        event_time = datetime.fromisoformat(event_start.replace('Z', '+00:00'))
+                        if event_time > datetime.now(timezone.utc):
+                            event_status = 'upcoming'
+                    except:
+                        pass
+                
+                client_meetings.append({
+                    "id": event.get('id'),
+                    "title": event.get('summary', 'Untitled Meeting'),
+                    "description": event.get('description', ''),
+                    "start_time": event.get('start', {}).get('dateTime', event.get('start', {}).get('date', '')),
+                    "end_time": event.get('end', {}).get('dateTime', event.get('end', {}).get('date', '')),
+                    "attendees": attendee_emails,
+                    "meet_link": event.get('hangoutLink', ''),
+                    "status": event_status,
+                    "location": event.get('location', ''),
+                    "created": event.get('created', '')
+                })
+        
+        # Sort by start time (newest first)
+        client_meetings.sort(key=lambda x: x.get('start_time', ''), reverse=True)
+        
+        logger.info(f"Found {len(client_meetings)} meetings for client: {client_email}")
+        
+        return {
+            "success": True,
+            "meetings": client_meetings,
+            "client_email": client_email,
+            "total_count": len(client_meetings)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client meetings: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "meetings": []
+        }
+
+@api_router.get("/google/drive/client-documents/{client_id}")
+async def get_client_specific_documents(client_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get all Google Drive documents related to a specific client
+    """
+    try:
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        # Get Drive files and filter by client ID or name pattern
+        all_files = await google_apis_service.get_drive_files(token_data, max_results=100)
+        
+        if not all_files or (len(all_files) > 0 and all_files[0].get('error')):
+            return {
+                "success": False,
+                "error": "Failed to retrieve Drive files",
+                "documents": []
+            }
+        
+        # Filter documents related to this client (by folder name or file name pattern)
+        client_documents = []
+        for file_item in all_files:
+            file_name = file_item.get('name', '')
+            # Look for client ID or client-related patterns in file/folder names
+            if (client_id in file_name or 
+                'FIDUS' in file_name or
+                any(keyword in file_name.lower() for keyword in ['client', 'document', 'agreement', 'kyc', 'aml'])):
+                
+                client_documents.append({
+                    "id": file_item.get('id'),
+                    "name": file_name,
+                    "mime_type": file_item.get('mimeType', ''),
+                    "size": file_item.get('size', ''),
+                    "created_time": file_item.get('createdTime', ''),
+                    "modified_time": file_item.get('modifiedTime', ''),
+                    "web_view_link": file_item.get('webViewLink', ''),
+                    "shared": bool(file_item.get('shared', False)),
+                    "is_folder": file_item.get('mimeType') == 'application/vnd.google-apps.folder'
+                })
+        
+        # Sort by modified time (newest first)
+        client_documents.sort(key=lambda x: x.get('modified_time', ''), reverse=True)
+        
+        logger.info(f"Found {len(client_documents)} documents for client: {client_id}")
+        
+        return {
+            "success": True,
+            "documents": client_documents,
+            "client_id": client_id,
+            "total_count": len(client_documents)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client documents: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "documents": []
+        }
+
+@api_router.post("/google/drive/create-client-folder")
+async def create_client_drive_folder(folder_data: dict, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Create a dedicated Google Drive folder for a client
+    """
+    try:
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google authentication required",
+                "auth_required": True
+            }
+        
+        client_id = folder_data.get('client_id')
+        client_name = folder_data.get('client_name', f'Client-{client_id}')
+        folder_name = folder_data.get('folder_name', f'{client_name} - FIDUS Documents')
+        
+        # Create folder via Google Drive API
+        result = await google_apis_service.create_drive_folder(token_data, folder_name)
+        
+        if result.get('success'):
+            logger.info(f"Created Drive folder for client {client_name}: {folder_name}")
+            
+            return {
+                "success": True,
+                "folder": {
+                    "id": result.get('folder_id'),
+                    "name": folder_name,
+                    "web_view_link": result.get('web_view_link', ''),
+                    "created_time": datetime.now(timezone.utc).isoformat()
+                },
+                "client_id": client_id,
+                "message": f"Drive folder created successfully for {client_name}"
+            }
+        else:
+            raise Exception(result.get('error', 'Failed to create Drive folder'))
+        
+    except Exception as e:
+        logger.error(f"Failed to create client Drive folder: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/crm/pipeline-stats")
+async def get_pipeline_statistics(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get comprehensive pipeline statistics for the CRM dashboard
+    """
+    try:
+        # Get all prospects from database
+        prospects_collection = mongodb_manager.get_collection("prospects")
+        prospects = await prospects_collection.find().to_list(length=None)
+        
+        # Calculate statistics
+        total_prospects = len(prospects)
+        
+        # Count by stages
+        stage_counts = {}
+        stage_values = {}
+        
+        for prospect in prospects:
+            stage = prospect.get('stage', 'lead')
+            stage_counts[stage] = stage_counts.get(stage, 0) + 1
+            
+            # Estimate value (you can modify this logic based on your business model)
+            estimated_value = prospect.get('estimated_value', 10000)  # Default $10k per prospect
+            stage_values[stage] = stage_values.get(stage, 0) + estimated_value
+        
+        # Calculate conversion rate
+        won_count = stage_counts.get('won', 0)
+        conversion_rate = (won_count / total_prospects * 100) if total_prospects > 0 else 0
+        
+        # Calculate total pipeline value
+        total_pipeline_value = sum(stage_values.values())
+        
+        stats = {
+            "total_prospects": total_prospects,
+            "stage_counts": stage_counts,
+            "stage_values": stage_values,
+            "conversion_rate": round(conversion_rate, 1),
+            "total_pipeline_value": total_pipeline_value,
+            "lead_count": stage_counts.get('lead', 0),
+            "negotiation_count": stage_counts.get('negotiation', 0),
+            "won_count": stage_counts.get('won', 0),
+            "lost_count": stage_counts.get('lost', 0),
+            "lead_value": stage_values.get('lead', 0),
+            "negotiation_value": stage_values.get('negotiation', 0),
+            "won_value": stage_values.get('won', 0),
+            "lost_value": stage_values.get('lost', 0)
+        }
+        
+        logger.info(f"Pipeline statistics calculated: {total_prospects} total prospects, {conversion_rate}% conversion rate")
+        
+        return {
+            "success": True,
+            "stats": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to calculate pipeline statistics: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "stats": {}
+        }
+
+# ===============================================================================
+# EXISTING GOOGLE API ENDPOINTS CONTINUE BELOW
 # ===============================================================================
 
 # Import Hybrid Google Service
