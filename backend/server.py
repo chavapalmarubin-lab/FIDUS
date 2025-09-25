@@ -1755,6 +1755,101 @@ async def change_password(change_request: dict):
         logging.error(f"Password change error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to change password")
 
+@api_router.put("/client/profile")
+async def update_client_profile(profile_update: dict, current_user: dict = Depends(get_current_user)):
+    """Update client profile information"""
+    try:
+        user_id = current_user.get("user_id")
+        username = current_user.get("username") 
+        
+        if not user_id or not username:
+            raise HTTPException(status_code=401, detail="Invalid user session")
+        
+        # Find user in MOCK_USERS
+        if username not in MOCK_USERS:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_data = MOCK_USERS[username]
+        
+        # Update allowed fields
+        allowed_fields = ["name", "email", "phone"]
+        updated_fields = {}
+        
+        for field in allowed_fields:
+            if field in profile_update and profile_update[field]:
+                user_data[field] = profile_update[field]
+                updated_fields[field] = profile_update[field]
+        
+        # Update last modified timestamp
+        user_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        logging.info(f"Profile updated for user: {username}, fields: {list(updated_fields.keys())}")
+        
+        return {
+            "success": True,
+            "message": "Profile updated successfully",
+            "updated_fields": updated_fields,
+            "user": {
+                "id": user_data["id"],
+                "username": user_data["username"],
+                "name": user_data["name"], 
+                "email": user_data["email"],
+                "phone": user_data.get("phone", ""),
+                "profile_picture": user_data.get("profile_picture", "")
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Profile update error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+
+@api_router.post("/client/profile/photo")
+async def update_client_photo(
+    photo: UploadFile = File(...), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Update client profile photo"""
+    try:
+        user_id = current_user.get("user_id")
+        username = current_user.get("username")
+        
+        if not user_id or not username:
+            raise HTTPException(status_code=401, detail="Invalid user session")
+        
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if photo.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Please upload JPEG, PNG, or WEBP image")
+        
+        # Validate file size (max 5MB)
+        if photo.size > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB")
+        
+        # For demo purposes, we'll use a placeholder URL
+        # In production, you would upload to cloud storage or save locally
+        photo_url = f"https://images.unsplash.com/photo-{user_id[-8:]}-profile?w=150&h=150&fit=crop&crop=face"
+        
+        # Update user profile picture
+        if username in MOCK_USERS:
+            MOCK_USERS[username]["profile_picture"] = photo_url
+            MOCK_USERS[username]["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        logging.info(f"Profile photo updated for user: {username}")
+        
+        return {
+            "success": True,
+            "message": "Profile photo updated successfully",
+            "photo_url": photo_url
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Photo upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update profile photo")
+
 # Client endpoints
 @api_router.get("/client/{client_id}/data", response_model=ClientData)
 async def get_client_data(client_id: str):
