@@ -625,6 +625,15 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                         <RefreshCw className={`w-4 h-4 ${googleLoading ? 'animate-spin' : ''}`} />
                       </Button>
                       <Button
+                        onClick={() => document.getElementById('document-upload').click()}
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        disabled={googleLoading}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Document
+                      </Button>
+                      <Button
                         onClick={createClientDriveFolder}
                         size="sm"
                         className="bg-green-500 hover:bg-green-600"
@@ -634,6 +643,16 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                       </Button>
                     </div>
                   </div>
+                  
+                  {/* Hidden file input */}
+                  <input
+                    id="document-upload"
+                    type="file"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleDocumentUpload}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                  />
 
                   {googleLoading ? (
                     <div className="flex items-center justify-center py-8">
