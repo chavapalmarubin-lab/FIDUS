@@ -33,6 +33,21 @@ const ClientDashboard = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
+  // Profile editing state
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || ''
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   // Currency conversion hook
   const { 
     convertAmount: convertCurrencyAmount, 
