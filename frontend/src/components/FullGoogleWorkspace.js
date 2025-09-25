@@ -220,79 +220,74 @@ const FullGoogleWorkspace = () => {
   // ==================== GMAIL FUNCTIONS ====================
   
   const loadEmails = async () => {
+    setLoading(true);
     try {
-      const result = await googleCRMIntegration.getEmails(50);
-      if (result.success) {
-        // Simulate real email data structure
-        const mockEmails = [
-          {
-            id: '1',
-            subject: 'Welcome to FIDUS Investment Platform',
-            sender: 'admin@fidus.com',
-            recipient: 'client@example.com',
-            date: new Date().toISOString(),
-            snippet: 'Thank you for joining FIDUS Investment Management...',
-            read: false,
-            starred: false,
-            body: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #2563eb;">Welcome to FIDUS Investment Management</h2>
-                <p>Dear Valued Client,</p>
-                <p>Thank you for choosing FIDUS Investment Management for your investment needs. We are excited to help you achieve your financial goals.</p>
-                <p>Our team of experts is ready to provide you with personalized investment strategies and exceptional service.</p>
-                <p>Next steps:</p>
-                <ul>
-                  <li>Complete your investor profile</li>
-                  <li>Review our investment options</li>
-                  <li>Schedule a consultation call</li>
-                </ul>
-                <p>Best regards,<br>The FIDUS Team</p>
-              </div>
-            `
-          },
-          {
-            id: '2',
-            subject: 'Investment Portfolio Update - September 2025',
-            sender: 'portfolio@fidus.com',
-            recipient: 'client@example.com',
-            date: new Date(Date.now() - 86400000).toISOString(),
-            snippet: 'Your portfolio has shown strong performance this month...',
-            read: true,
-            starred: true,
-            body: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #16a34a;">Portfolio Performance Update</h2>
-                <p>Portfolio Value: <strong>$125,000</strong> (+8.5%)</p>
-                <p>Monthly Return: <strong>+2.3%</strong></p>
-                <p>YTD Return: <strong>+15.7%</strong></p>
-                <p>Your diversified portfolio continues to outperform market benchmarks.</p>
-              </div>
-            `
-          },
-          {
-            id: '3',
-            subject: 'Meeting Scheduled: Investment Strategy Review',
-            sender: 'calendar@fidus.com',
-            recipient: 'client@example.com',
-            date: new Date(Date.now() - 172800000).toISOString(),
-            snippet: 'Your meeting has been scheduled for tomorrow at 2:00 PM...',
-            read: true,
-            starred: false,
-            body: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #7c3aed;">Meeting Confirmation</h2>
-                <p><strong>Date:</strong> Tomorrow, 2:00 PM EST</p>
-                <p><strong>Duration:</strong> 60 minutes</p>
-                <p><strong>Location:</strong> Google Meet (link will be provided)</p>
-                <p>We'll review your current portfolio performance and discuss upcoming opportunities.</p>
-              </div>
-            `
-          }
-        ];
-        setEmails(mockEmails);
+      console.log('📧 Loading REAL Gmail messages from API...');
+      
+      // Call the REAL Gmail API endpoint
+      const response = await apiAxios.get('/google/gmail/real-messages');
+      
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`✅ Loaded ${response.data.length} real Gmail messages`);
+        
+        // Transform real Gmail data to our format
+        const transformedEmails = response.data.map(email => ({
+          id: email.gmail_id || email.id,
+          subject: email.subject || 'No Subject',
+          sender: email.sender || email.from || 'Unknown Sender',
+          recipient: email.to || email.recipient || '',
+          date: email.date || email.internal_date || new Date().toISOString(),
+          snippet: email.snippet || email.body?.substring(0, 150) + '...' || 'No preview available',
+          read: !email.labels?.includes('UNREAD'),
+          starred: email.labels?.includes('STARRED') || false,
+          body: email.body || '<p>Message content not available</p>',
+          real_gmail_api: true
+        }));
+        
+        setEmails(transformedEmails);
+        console.log(`✅ Successfully loaded ${transformedEmails.length} emails from your Gmail`);
+      } else {
+        console.warn('⚠️ No emails returned from Gmail API, using fallback');
+        // Fallback message for when no emails are returned
+        setEmails([{
+          id: 'no-emails',
+          subject: '📧 Connect to Gmail to see your emails',
+          sender: 'FIDUS System',
+          snippet: 'Complete Google OAuth authentication to load your real Gmail messages',
+          date: new Date().toISOString(),
+          read: true,
+          starred: false,
+          body: '<div style="padding: 20px; text-align: center;"><h3>Gmail Integration Ready</h3><p>Complete Google OAuth to see your real emails here.</p></div>'
+        }]);
       }
     } catch (error) {
-      console.error('Failed to load emails:', error);
+      console.error('❌ Failed to load real Gmail messages:', error);
+      
+      // Show error message instead of mock data
+      setEmails([{
+        id: 'error-gmail',
+        subject: '⚠️ Gmail API Connection Error',
+        sender: 'FIDUS System',
+        snippet: `Error loading Gmail: ${error.message}. Please check your Google OAuth connection.`,
+        date: new Date().toISOString(),
+        read: false,
+        starred: false,
+        body: `
+          <div style="padding: 20px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;">
+            <h3 style="color: #dc2626;">Gmail Connection Error</h3>
+            <p><strong>Error:</strong> ${error.message}</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+              <li>Click "Connect Google Workspace" button</li>
+              <li>Complete Google OAuth authentication</li>
+              <li>Grant Gmail permissions to FIDUS</li>
+              <li>Refresh this page</li>
+            </ol>
+          </div>
+        `
+      }]);
+    } finally {
+      setLoading(false);
     }
   };
 
