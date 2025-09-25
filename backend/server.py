@@ -7154,6 +7154,34 @@ async def get_all_prospects():
                     "estimated_value": 30000,
                     "source": "linkedin",
                     "converted_to_client": False
+                },
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_005",
+                    "name": "Michael Chen",
+                    "email": "michael.chen@example.com",
+                    "phone": "+1-555-0105", 
+                    "stage": "won",
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "Ready for AML/KYC process - interested in UNLIMITED fund",
+                    "estimated_value": 250000,
+                    "source": "referral",
+                    "converted_to_client": False,
+                    "aml_kyc_status": None  # Needs AML/KYC
+                },
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_006",
+                    "name": "Emma Thompson", 
+                    "email": "emma.thompson@example.com",
+                    "phone": "+1-555-0106",
+                    "stage": "won",
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "AML/KYC completed - ready for client conversion",
+                    "estimated_value": 125000,
+                    "source": "website",
+                    "converted_to_client": False,
+                    "aml_kyc_status": "approved"  # Ready for conversion
                 }
             ]
             
