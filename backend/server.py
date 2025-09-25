@@ -7344,7 +7344,7 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
         
         # Update in MongoDB
         result = await db.crm_prospects.update_one(
-            {"id": prospect_id},
+            {"prospect_id": prospect_id},
             {"$set": update_fields}
         )
         
