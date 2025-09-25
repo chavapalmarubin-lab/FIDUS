@@ -425,6 +425,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <FullGoogleWorkspace />
           </TabsContent>
 
+          <TabsContent value="google-monitor" className="mt-6">
+            <GoogleConnectionMonitor />
+          </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
             <ApplicationDocuments />
