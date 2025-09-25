@@ -7363,7 +7363,7 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
         return {
             "success": True,
             "prospect": {
-                "id": updated_prospect["id"],
+                "prospect_id": updated_prospect["prospect_id"],
                 "name": updated_prospect["name"],
                 "email": updated_prospect["email"],
                 "phone": updated_prospect.get("phone", ""),
