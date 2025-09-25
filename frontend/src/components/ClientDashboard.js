@@ -536,11 +536,7 @@ const ClientDashboard = ({ user, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
-            <InvestmentCalendar user={user} />
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-6">
-            <DocumentPortal user={user} userType="client" />
+            <InvestmentCalendar user={user} userType="client" />
           </TabsContent>
 
           <TabsContent value="google-workspace" className="mt-6">
