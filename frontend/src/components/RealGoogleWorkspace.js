@@ -299,9 +299,9 @@ const RealGoogleWorkspace = () => {
       console.log('📁 Loading real Drive files...');
       const response = await apiAxios.get('/google/drive/real-files');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} Drive files`);
-        setDriveFiles(response.data);
+      if (response.data?.success && Array.isArray(response.data.files)) {
+        console.log(`✅ Loaded ${response.data.files.length} Drive files`);
+        setDriveFiles(response.data.files);
       }
     } catch (error) {
       console.error('❌ Failed to load Drive files:', error);
