@@ -547,6 +547,173 @@ const ClientDashboard = ({ user, onLogout }) => {
           <TabsContent value="google-workspace" className="mt-6">
             <ClientGoogleWorkspace user={user} />
           </TabsContent>
+
+          <TabsContent value="profile" className="mt-6">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <img src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"} 
+                         alt="Profile" className="w-8 h-8 rounded-full" />
+                    My Profile Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  
+                  {/* Profile Photo Section */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full object-cover border-4 border-cyan-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Profile Photo</h3>
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handlePhotoUpload}
+                      />
+                      <Button 
+                        onClick={() => document.getElementById('photo-upload').click()}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Change Photo
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Profile Information Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={profileData.name}
+                        onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        value={user.username}
+                        disabled
+                        className="bg-gray-100"
+                        placeholder="Username (cannot be changed)"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      onClick={handleProfileUpdate}
+                      className="bg-cyan-600 hover:bg-cyan-700"
+                      disabled={profileLoading}
+                    >
+                      {profileLoading ? "Updating..." : "Update Profile"}
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => setShowPasswordChange(true)}
+                      variant="outline"
+                    >
+                      Change Password
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Password Change Modal */}
+              {showPasswordChange && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change Password</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={passwordData.current}
+                        onChange={(e) => setPasswordData({...passwordData, current: e.target.value})}
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={passwordData.new}
+                        onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={passwordData.confirm}
+                        onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-4 pt-4">
+                      <Button 
+                        onClick={handlePasswordChange}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                        disabled={passwordLoading}
+                      >
+                        {passwordLoading ? "Changing..." : "Change Password"}
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => setShowPasswordChange(false)}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
