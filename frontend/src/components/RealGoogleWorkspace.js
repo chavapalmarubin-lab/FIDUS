@@ -606,23 +606,87 @@ const RealGoogleWorkspace = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-blue-600" />
-                Google Calendar Integration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Calendar interface coming in next update</p>
+                Google Calendar Events ({events.length})
                 <Button 
                   onClick={loadRealCalendarEvents}
                   variant="outline" 
-                  className="mt-4"
+                  size="sm"
+                  className="ml-auto"
                   disabled={connectionStatus?.services?.calendar?.status !== 'connected'}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Load Calendar Events
+                  Refresh
                 </Button>
-              </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {events.length > 0 ? (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {events.map((event, index) => (
+                    <div key={event.id || index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-800 mb-2">{event.summary || 'No Title'}</h3>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              <span>{new Date(event.start).toLocaleString()}</span>
+                              {event.end && <span>→ {new Date(event.end).toLocaleString()}</span>}
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center gap-2">
+                                <span>📍 {event.location}</span>
+                              </div>
+                            )}
+                            {event.attendees && event.attendees.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <span>👥 {event.attendees.map(a => a.email).join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
+                          {event.description && (
+                            <div className="mt-2 text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                              {event.description.substring(0, 200)}
+                              {event.description.length > 200 && '...'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-4 flex flex-col items-end gap-2">
+                          <span className={`px-2 py-1 text-xs rounded ${
+                            event.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {event.status || 'Unknown'}
+                          </span>
+                          {event.html_link && (
+                            <a 
+                              href={event.html_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-500 text-xs hover:underline"
+                            >
+                              View in Calendar
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No calendar events found</p>
+                  <Button 
+                    onClick={loadRealCalendarEvents}
+                    variant="outline" 
+                    className="mt-4"
+                    disabled={connectionStatus?.services?.calendar?.status !== 'connected'}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Load Calendar Events
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
