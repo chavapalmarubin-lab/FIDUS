@@ -131,11 +131,11 @@ const RealGoogleWorkspace = () => {
       console.log('📧 Fetching REAL Gmail messages...');
       const response = await apiAxios.get('/google/gmail/real-messages');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} real Gmail messages from your account`);
+      if (response.data?.success && Array.isArray(response.data.messages)) {
+        console.log(`✅ Loaded ${response.data.messages.length} real Gmail messages from your account`);
         
         // Transform Gmail API response to our format
-        const transformedEmails = response.data.map(email => ({
+        const transformedEmails = response.data.messages.map(email => ({
           id: email.gmail_id || email.id || Math.random().toString(),
           subject: email.subject || 'No Subject',
           sender: email.sender || email.from || 'Unknown Sender',
