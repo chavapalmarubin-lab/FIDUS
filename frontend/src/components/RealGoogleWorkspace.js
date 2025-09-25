@@ -73,8 +73,37 @@ const RealGoogleWorkspace = () => {
 
   const initializeWorkspace = async () => {
     await testConnectionStatus();
-    if (activeTab === 'gmail') {
-      loadRealGmailMessages();
+    
+    // Auto-load data for all tabs if connected
+    const status = connectionStatus || await getConnectionStatus();
+    if (status?.overall_status === 'fully_connected' || 
+        status?.overall_status === 'partially_connected') {
+      console.log('🔄 Auto-loading Google Workspace data...');
+      
+      // Load Gmail data
+      if (status.services?.gmail?.status === 'connected') {
+        await loadRealGmailMessages();
+      }
+      
+      // Load Calendar data
+      if (status.services?.calendar?.status === 'connected') {
+        await loadRealCalendarEvents();
+      }
+      
+      // Load Drive data  
+      if (status.services?.drive?.status === 'connected') {
+        await loadRealDriveFiles();
+      }
+    }
+  };
+
+  // Helper to get current connection status
+  const getConnectionStatus = async () => {
+    try {
+      const response = await apiAxios.get('/google/connection/test-all');
+      return response.data;
+    } catch (error) {
+      return null;
     }
   };
 
