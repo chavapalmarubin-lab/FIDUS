@@ -487,6 +487,9 @@ const FullGoogleWorkspace = () => {
         </CardHeader>
       </Card>
 
+      {/* Connection Status Banner */}
+      <ConnectionStatusBanner />
+
       {/* Connection Status */}
       {connectionStatus && (
         <Card>
