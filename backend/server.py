@@ -4006,6 +4006,34 @@ async def get_all_users():
             logging.error(f"Failed to fetch MongoDB users: {str(mongo_error)}")
         
         logging.info(f"Retrieved {len(users_list)} users for admin management")
+        
+        # CRITICAL: Restore MOCK_USERS from MongoDB if it's empty (after restart)
+        if len(MOCK_USERS) <= 4:  # Only default users (admin, client1, client2, client3)
+            try:
+                mongodb_users = await db.users.find().to_list(length=None)
+                restored_count = 0
+                for user in mongodb_users:
+                    username = user.get("username")
+                    if username and username not in MOCK_USERS:
+                        MOCK_USERS[username] = {
+                            "id": user.get("user_id", ""),
+                            "username": username,
+                            "name": user.get("name", ""),
+                            "email": user.get("email", ""),
+                            "type": user.get("user_type", "client"),
+                            "status": user.get("status", "active"),
+                            "phone": user.get("phone", ""),
+                            "profile_picture": user.get("profile_picture", "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"),
+                            "created_at": user.get("createdAt", ""),
+                            "notes": user.get("notes", "")
+                        }
+                        restored_count += 1
+                
+                if restored_count > 0:
+                    logging.info(f"✅ Restored {restored_count} users to MOCK_USERS from MongoDB (data persistence)")
+            except Exception as restore_error:
+                logging.error(f"Failed to restore MOCK_USERS from MongoDB: {str(restore_error)}")
+        
         return {"users": users_list}
         
     except Exception as e:
