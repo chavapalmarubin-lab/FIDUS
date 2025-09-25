@@ -7401,7 +7401,7 @@ async def run_aml_kyc_check(prospect_id: str):
     """Run AML/KYC compliance check for a prospect"""
     try:
         # Find prospect in MongoDB (consistent with GET endpoint)
-        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        prospect_doc = await db.crm_prospects.find_one({"prospect_id": prospect_id})
         
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
