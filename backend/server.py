@@ -45,7 +45,7 @@ from google_social_auth import google_social_auth
 from document_signing_service import document_signing_service
 
 # Import Google API service
-from google_api_service import google_api
+from real_google_api_service import real_google_api
 
 # Initialize Google Admin Service (with error handling for missing env vars)
 try:
@@ -11106,7 +11106,7 @@ async def get_funds_overview():
 async def test_google_connection():
     """Test Google API connectivity"""
     try:
-        result = google_api.test_connection()
+        result = real_google_api.test_connection()
         return result
     except Exception as e:
         logging.error(f"Google connection test failed: {str(e)}")
@@ -11124,7 +11124,7 @@ async def send_google_email(request: dict):
             if field not in request:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
         
-        result = google_api.send_email(
+        result = real_google_api.send_email(
             to_email=request['to_email'],
             subject=request['subject'],
             body=request['body'],
@@ -11144,7 +11144,7 @@ async def send_google_email(request: dict):
 async def get_google_emails(max_results: int = 10):
     """Get emails from Gmail API"""
     try:
-        result = google_api.get_emails(max_results=max_results)
+        result = real_google_api.get_emails(max_results=max_results)
         return result
     except Exception as e:
         logging.error(f"Get emails failed: {str(e)}")
@@ -11162,7 +11162,7 @@ async def upload_google_file(request: dict):
             if field not in request:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
         
-        result = google_api.upload_file(
+        result = real_google_api.upload_file(
             file_name=request['file_name'],
             file_content=request['file_content'],
             mime_type=request.get('mime_type', 'application/pdf')
@@ -11181,7 +11181,7 @@ async def upload_google_file(request: dict):
 async def get_google_drive_files(max_results: int = 10):
     """Get files from Google Drive"""
     try:
-        result = google_api.list_files(max_results=max_results)
+        result = real_google_api.list_files(max_results=max_results)
         return result
     except Exception as e:
         logging.error(f"Get drive files failed: {str(e)}")
@@ -11199,7 +11199,7 @@ async def create_google_meeting(request: dict):
             if field not in request:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
         
-        result = google_api.create_meeting(
+        result = real_google_api.create_meeting(
             title=request['title'],
             description=request['description'],
             attendee_emails=request['attendee_emails'],
@@ -11220,7 +11220,7 @@ async def create_google_meeting(request: dict):
 async def get_google_calendar_events(max_results: int = 10):
     """Get calendar events from Google Calendar"""
     try:
-        result = google_api.get_calendar_events(max_results=max_results)
+        result = real_google_api.get_calendar_events(max_results=max_results)
         return result
     except Exception as e:
         logging.error(f"Get calendar events failed: {str(e)}")
