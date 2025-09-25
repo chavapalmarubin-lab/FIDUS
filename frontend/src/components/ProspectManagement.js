@@ -2145,7 +2145,8 @@ FIDUS Investment Management Team`;
                   <select
                     value={meetingData.type}
                     onChange={(e) => setMeetingData({ ...meetingData, type: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
                   >
                     <option value="consultation">Initial Consultation</option>
                     <option value="followup">Follow-up Meeting</option>
