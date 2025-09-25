@@ -1426,13 +1426,7 @@ FIDUS Investment Management Team`;
         </TabsContent>
 
         <TabsContent value="pipeline" className="space-y-4">
-          <div className="overflow-x-auto">
-            <div className="flex gap-4 pb-4" style={{ minWidth: 'fit-content' }}>
-              {Object.entries(pipeline).map(([stage, prospects]) => 
-                renderStageColumn(stage, prospects)
-              )}
-            </div>
-          </div>
+          <EnhancedPipelineView />
         </TabsContent>
 
         <TabsContent value="simulator" className="space-y-4">
