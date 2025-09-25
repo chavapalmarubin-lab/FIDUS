@@ -423,9 +423,9 @@ const ClientGoogleWorkspace = ({ user }) => {
         <TabsContent value="meetings" className="mt-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Scheduled Meetings with FIDUS</h3>
+              <h3 className="text-lg font-semibold">My Meetings with FIDUS</h3>
               <Button
-                onClick={() => setComposeOpen(true)}
+                onClick={() => setMeetingModalOpen(true)}
                 className="bg-blue-500 hover:bg-blue-600 text-white"
               >
                 <Calendar className="w-4 h-4 mr-2" />
