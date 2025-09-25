@@ -116,24 +116,24 @@ class GoogleCRMIntegration {
   
   async getEmails(maxResults = 10) {
     try {
-      console.log(`📬 Fetching ${maxResults} recent emails...`);
+      console.log(`📬 Fetching ${maxResults} REAL emails from Gmail API...`);
       const response = await apiAxios.get(`/google/emails?max_results=${maxResults}`);
-      console.log('✅ Emails fetched successfully:', response.data);
+      console.log('✅ REAL emails fetched successfully:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Failed to fetch emails:', error);
+      console.error('❌ Failed to fetch REAL emails:', error);
       return { success: false, error: error.message };
     }
   }
 
   async getDriveFiles(maxResults = 10) {
     try {
-      console.log(`📂 Fetching ${maxResults} Drive files...`);
+      console.log(`📂 Fetching ${maxResults} REAL Drive files from Google API...`);
       const response = await apiAxios.get(`/google/drive-files?max_results=${maxResults}`);
-      console.log('✅ Drive files fetched successfully:', response.data);
+      console.log('✅ REAL Drive files fetched successfully:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Failed to fetch Drive files:', error);
+      console.error('❌ Failed to fetch REAL Drive files:', error);
       return { success: false, error: error.message };
     }
   }
