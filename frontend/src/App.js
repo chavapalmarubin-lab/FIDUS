@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
 import AdminDashboard from "./components/AdminDashboard";
-import GoogleCallback from "./components/GoogleCallback";
+// Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
 import "./App.css";
