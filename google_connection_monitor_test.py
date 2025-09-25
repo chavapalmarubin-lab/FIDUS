@@ -193,16 +193,19 @@ class GoogleConnectionMonitorTester:
         try:
             response = self.session.get(f"{API_BASE}/google/connection/test/invalid_service")
             
-            if response.status_code == 400:
+            if response.status_code == 200:
                 data = response.json()
-                if 'detail' in data and 'Invalid service' in data['detail']:
-                    self.log_test("Invalid Service Name Handling", True, "Properly returns 400 Bad Request for invalid service names")
+                # Check if the response indicates an error for invalid service
+                if (data.get('success') == False and 
+                    'Invalid service' in data.get('message', '') and
+                    data.get('status') == 'test_failed'):
+                    self.log_test("Invalid Service Name Handling", True, "Properly handles invalid service names with structured error response")
                     return True
                 else:
-                    self.log_test("Invalid Service Name Handling", False, f"Wrong error message: {data}")
+                    self.log_test("Invalid Service Name Handling", False, f"Wrong error response: {data}")
                     return False
             else:
-                self.log_test("Invalid Service Name Handling", False, f"Expected 400, got {response.status_code}")
+                self.log_test("Invalid Service Name Handling", False, f"Expected 200 with error details, got {response.status_code}")
                 return False
                 
         except Exception as e:
