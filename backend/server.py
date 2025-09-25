@@ -7262,6 +7262,16 @@ async def create_prospect(prospect_data: ProspectCreate):
         # Store in MongoDB for consistency with other endpoints
         prospect_dict = prospect.dict()
         
+        # CRITICAL: AUTO-CREATE GOOGLE DRIVE FOLDER FOR NEW PROSPECT
+        try:
+            folder_created = await auto_create_prospect_drive_folder(prospect_dict)
+            if folder_created:
+                logger.info(f"✅ Google Drive folder auto-created for new prospect: {prospect.name}")
+            else:
+                logger.warning(f"⚠️ Failed to auto-create Drive folder for prospect: {prospect.name}")
+        except Exception as folder_error:
+            logger.error(f"❌ Error auto-creating Drive folder for {prospect.name}: {str(folder_error)}")
+        
         # Add to MongoDB
         await db.crm_prospects.insert_one(prospect_dict)
         
@@ -7274,7 +7284,7 @@ async def create_prospect(prospect_data: ProspectCreate):
             "success": True,
             "prospect_id": prospect.id,
             "prospect": prospect_dict,
-            "message": "Prospect created successfully"
+            "message": f"Prospect created successfully! Google Drive folder: '{prospect.name} - FIDUS Documents'"
         }
         
     except Exception as e:
