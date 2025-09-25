@@ -9,12 +9,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";  
-import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, ArrowDownCircle, Wallet } from "lucide-react";
+import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, ArrowDownCircle, Wallet, Globe, Mail } from "lucide-react";
 import { format } from "date-fns";
 import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
 import CurrencySelector from "./CurrencySelector";
 import useCurrency from "../hooks/useCurrency";
+import ClientGoogleWorkspace from "./ClientGoogleWorkspace";
 
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
