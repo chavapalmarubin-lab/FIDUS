@@ -7099,9 +7099,73 @@ async def get_all_prospects():
             if '_id' in prospect:
                 del prospect['_id']
         
-        # Fallback to in-memory storage if MongoDB is empty
+        # If MongoDB is empty, create some sample prospects for demo
         if not prospects:
-            prospects = list(prospects_storage.values())
+            sample_prospects = [
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_001",
+                    "name": "John Smith",
+                    "email": "john.smith@example.com",
+                    "phone": "+1-555-0101",
+                    "stage": "lead",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "Interested in balanced portfolio",
+                    "estimated_value": 50000,
+                    "source": "website",
+                    "converted_to_client": False
+                },
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_002",
+                    "name": "Maria Garcia",
+                    "email": "maria.garcia@example.com", 
+                    "phone": "+1-555-0102",
+                    "stage": "negotiation",
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "High net worth individual, interested in DYNAMIC fund",
+                    "estimated_value": 100000,
+                    "source": "referral",
+                    "converted_to_client": False
+                },
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_003",
+                    "name": "Robert Johnson",
+                    "email": "robert.j@example.com",
+                    "phone": "+1-555-0103",
+                    "stage": "won",
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "Successfully converted to client",
+                    "estimated_value": 75000,
+                    "source": "cold_call",
+                    "converted_to_client": True,
+                    "aml_kyc_status": "approved"
+                },
+                {
+                    "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d')}_004",
+                    "name": "Sarah Wilson",
+                    "email": "sarah.wilson@example.com",
+                    "phone": "+1-555-0104", 
+                    "stage": "lead",
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "notes": "Inquired about conservative investment options",
+                    "estimated_value": 30000,
+                    "source": "linkedin",
+                    "converted_to_client": False
+                }
+            ]
+            
+            # Insert sample prospects into database
+            try:
+                await db.crm_prospects.insert_many(sample_prospects)
+                prospects = sample_prospects
+                logger.info(f"Created {len(sample_prospects)} sample prospects for demo")
+            except Exception as insert_error:
+                logger.warning(f"Failed to insert sample prospects: {str(insert_error)}")
+                # Fallback to in-memory storage
+                prospects = list(prospects_storage.values())
         
         # Sort by created_at descending (newest first)
         def get_sort_key(x):
