@@ -47,6 +47,16 @@ class GoogleAPIService:
         try:
             logger.info("🔐 Authenticating with Google APIs...")
             
+            # Check if credentials file exists
+            if not os.path.exists(self.credentials_path):
+                logger.warning(f"⚠️ Google credentials file not found: {self.credentials_path}")
+                logger.info("🔄 Running in mock mode without real Google API authentication")
+                self.credentials = None
+                self.gmail_service = None
+                self.drive_service = None
+                self.calendar_service = None
+                return
+            
             # Load service account credentials
             self.credentials = Credentials.from_service_account_file(
                 self.credentials_path,
@@ -62,7 +72,11 @@ class GoogleAPIService:
             
         except Exception as e:
             logger.error(f"❌ Google API authentication failed: {str(e)}")
-            raise Exception(f"Failed to authenticate with Google APIs: {str(e)}")
+            logger.info("🔄 Running in mock mode without real Google API authentication")
+            self.credentials = None
+            self.gmail_service = None
+            self.drive_service = None
+            self.calendar_service = None
     
     # ==================== GMAIL API METHODS ====================
     
