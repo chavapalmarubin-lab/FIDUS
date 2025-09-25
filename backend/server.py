@@ -11124,7 +11124,7 @@ async def send_google_email(request: dict):
             if field not in request:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
         
-        result = real_google_api.send_email(
+        result = real_google_api.send_real_email(
             to_email=request['to_email'],
             subject=request['subject'],
             body=request['body'],
