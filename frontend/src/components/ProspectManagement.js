@@ -2377,6 +2377,15 @@ FIDUS Investment Management Team`;
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Client Detail Modal */}
+      <ClientDetailModal
+        client={selectedClient}
+        isOpen={clientDetailOpen}
+        onClose={() => {
+          setClientDetailOpen(false);
+          setSelectedClient(null);
+        }}
+      />
     </div>
   );
 };
