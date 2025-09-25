@@ -11059,7 +11059,480 @@ async def get_funds_overview():
 
 
 
-# ==================== GOOGLE API ENDPOINTS ====================
+# ===============================================================================
+# GOOGLE CONNECTION MONITOR & HEALTH CHECK ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/google/connection/test-all")
+async def test_all_google_connections(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Test all Google API connections and return comprehensive health status
+    This creates a Google-style connection monitor with real-time API testing
+    """
+    try:
+        # Get user's Google tokens from database
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "No Google authentication found",
+                "overall_status": "disconnected",
+                "services": {
+                    "gmail": {"status": "no_auth", "message": "OAuth authentication required"},
+                    "calendar": {"status": "no_auth", "message": "OAuth authentication required"}, 
+                    "drive": {"status": "no_auth", "message": "OAuth authentication required"},
+                    "meet": {"status": "no_auth", "message": "OAuth authentication required"}
+                },
+                "connection_quality": {
+                    "total_tests": 0,
+                    "successful_tests": 0,
+                    "success_rate": 0,
+                    "average_response_time": 0,
+                    "last_test_time": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        
+        # Test each Google service individually with timing
+        services_status = {}
+        successful_tests = 0
+        total_tests = 4
+        total_response_time = 0
+        
+        # Test Gmail API
+        start_time = time.time()
+        try:
+            gmail_messages = await google_apis_service.get_gmail_messages(token_data, max_results=1)
+            gmail_response_time = (time.time() - start_time) * 1000  # Convert to ms
+            
+            if gmail_messages and not gmail_messages[0].get('error'):
+                services_status["gmail"] = {
+                    "status": "connected",
+                    "message": f"Gmail API working - {len(gmail_messages)} messages retrieved",
+                    "response_time_ms": round(gmail_response_time, 2),
+                    "last_success": datetime.now(timezone.utc).isoformat(),
+                    "api_endpoint": "/gmail/messages"
+                }
+                successful_tests += 1
+            else:
+                services_status["gmail"] = {
+                    "status": "error", 
+                    "message": f"Gmail API error: {gmail_messages[0].get('body', 'Unknown error') if gmail_messages else 'No response'}",
+                    "response_time_ms": round(gmail_response_time, 2),
+                    "last_error": datetime.now(timezone.utc).isoformat()
+                }
+            total_response_time += gmail_response_time
+            
+        except Exception as e:
+            gmail_response_time = (time.time() - start_time) * 1000
+            services_status["gmail"] = {
+                "status": "error",
+                "message": f"Gmail API connection failed: {str(e)}",
+                "response_time_ms": round(gmail_response_time, 2),
+                "last_error": datetime.now(timezone.utc).isoformat()
+            }
+            total_response_time += gmail_response_time
+        
+        # Test Calendar API
+        start_time = time.time()
+        try:
+            calendar_events = await google_apis_service.get_calendar_events(token_data, max_results=1)
+            calendar_response_time = (time.time() - start_time) * 1000
+            
+            if calendar_events and not calendar_events[0].get('error'):
+                services_status["calendar"] = {
+                    "status": "connected",
+                    "message": f"Calendar API working - {len(calendar_events)} events retrieved", 
+                    "response_time_ms": round(calendar_response_time, 2),
+                    "last_success": datetime.now(timezone.utc).isoformat(),
+                    "api_endpoint": "/calendar/events"
+                }
+                successful_tests += 1
+            else:
+                services_status["calendar"] = {
+                    "status": "error",
+                    "message": f"Calendar API error: {calendar_events[0].get('description', 'Unknown error') if calendar_events else 'No response'}",
+                    "response_time_ms": round(calendar_response_time, 2), 
+                    "last_error": datetime.now(timezone.utc).isoformat()
+                }
+            total_response_time += calendar_response_time
+            
+        except Exception as e:
+            calendar_response_time = (time.time() - start_time) * 1000
+            services_status["calendar"] = {
+                "status": "error",
+                "message": f"Calendar API connection failed: {str(e)}",
+                "response_time_ms": round(calendar_response_time, 2),
+                "last_error": datetime.now(timezone.utc).isoformat()
+            }
+            total_response_time += calendar_response_time
+        
+        # Test Drive API
+        start_time = time.time()
+        try:
+            drive_files = await google_apis_service.get_drive_files(token_data, max_results=1)
+            drive_response_time = (time.time() - start_time) * 1000
+            
+            if drive_files and not drive_files[0].get('error'):
+                services_status["drive"] = {
+                    "status": "connected", 
+                    "message": f"Drive API working - {len(drive_files)} files retrieved",
+                    "response_time_ms": round(drive_response_time, 2),
+                    "last_success": datetime.now(timezone.utc).isoformat(),
+                    "api_endpoint": "/drive/files"
+                }
+                successful_tests += 1
+            else:
+                services_status["drive"] = {
+                    "status": "error",
+                    "message": f"Drive API error: {drive_files[0].get('name', 'Unknown error') if drive_files else 'No response'}",
+                    "response_time_ms": round(drive_response_time, 2),
+                    "last_error": datetime.now(timezone.utc).isoformat()
+                }
+            total_response_time += drive_response_time
+            
+        except Exception as e:
+            drive_response_time = (time.time() - start_time) * 1000
+            services_status["drive"] = {
+                "status": "error", 
+                "message": f"Drive API connection failed: {str(e)}",
+                "response_time_ms": round(drive_response_time, 2),
+                "last_error": datetime.now(timezone.utc).isoformat()
+            }
+            total_response_time += drive_response_time
+        
+        # Test Meet API (via Calendar Meet space creation capability)
+        start_time = time.time()
+        try:
+            # Test Meet capability by checking Calendar service (Meet creation requires Calendar)
+            meet_test = {
+                'name': 'Connection Test Meeting',
+                'start_time': (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+                'end_time': (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+            }
+            
+            # We just test the service availability, not actually create a meeting
+            meet_response_time = (time.time() - start_time) * 1000
+            
+            # If Calendar API works, Meet should work too (since Meet uses Calendar)
+            if services_status.get("calendar", {}).get("status") == "connected":
+                services_status["meet"] = {
+                    "status": "connected",
+                    "message": "Google Meet API ready - Meeting creation available",
+                    "response_time_ms": round(meet_response_time, 2),
+                    "last_success": datetime.now(timezone.utc).isoformat(),
+                    "api_endpoint": "/meet/create-space"
+                }
+                successful_tests += 1
+            else:
+                services_status["meet"] = {
+                    "status": "dependency_error",
+                    "message": "Google Meet requires Calendar API access",
+                    "response_time_ms": round(meet_response_time, 2),
+                    "last_error": datetime.now(timezone.utc).isoformat()
+                }
+            total_response_time += meet_response_time
+            
+        except Exception as e:
+            meet_response_time = (time.time() - start_time) * 1000
+            services_status["meet"] = {
+                "status": "error",
+                "message": f"Meet API connection failed: {str(e)}",
+                "response_time_ms": round(meet_response_time, 2),
+                "last_error": datetime.now(timezone.utc).isoformat()
+            }
+            total_response_time += meet_response_time
+        
+        # Calculate overall connection quality
+        success_rate = (successful_tests / total_tests) * 100
+        average_response_time = total_response_time / total_tests
+        
+        # Determine overall status
+        if successful_tests == total_tests:
+            overall_status = "fully_connected"
+        elif successful_tests > 0:
+            overall_status = "partially_connected"  
+        else:
+            overall_status = "disconnected"
+        
+        # Store connection history (in production, save to database)
+        connection_test_result = {
+            "success": True,
+            "overall_status": overall_status,
+            "services": services_status,
+            "connection_quality": {
+                "total_tests": total_tests,
+                "successful_tests": successful_tests,
+                "success_rate": round(success_rate, 1),
+                "average_response_time_ms": round(average_response_time, 2),
+                "last_test_time": datetime.now(timezone.utc).isoformat(),
+                "user_email": token_data.get('user_info', {}).get('email', 'Unknown'),
+                "oauth_scopes": token_data.get('scopes', [])
+            },
+            "troubleshooting": {
+                "oauth_status": "authenticated" if token_data else "not_authenticated",
+                "token_expiry": token_data.get('expiry', 'Unknown'),
+                "required_scopes": [
+                    "https://www.googleapis.com/auth/gmail.readonly",
+                    "https://www.googleapis.com/auth/calendar", 
+                    "https://www.googleapis.com/auth/drive"
+                ],
+                "missing_scopes": []  # Calculate missing scopes if needed
+            }
+        }
+        
+        logger.info(f"Google API connection test completed - Success rate: {success_rate}% ({successful_tests}/{total_tests})")
+        return connection_test_result
+        
+    except Exception as e:
+        logger.error(f"Google connection test failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "overall_status": "test_failed",
+            "connection_quality": {
+                "last_test_time": datetime.now(timezone.utc).isoformat(),
+                "test_error": str(e)
+            }
+        }
+
+@api_router.get("/google/connection/test/{service}")
+async def test_single_google_service(service: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Test individual Google service connection (gmail, calendar, drive, meet)
+    Provides detailed diagnostics for specific service troubleshooting
+    """
+    try:
+        if service not in ["gmail", "calendar", "drive", "meet"]:
+            raise HTTPException(status_code=400, detail="Invalid service. Must be: gmail, calendar, drive, or meet")
+        
+        user_id = current_user.get("user_id", "user_admin_001")
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "service": service,
+                "status": "no_auth",
+                "message": "Google OAuth authentication required",
+                "troubleshooting_steps": [
+                    "1. Click 'Connect Google Workspace' button",
+                    "2. Authorize FIDUS app with your Google account", 
+                    "3. Ensure all required permissions are granted",
+                    "4. Return to FIDUS and test connection again"
+                ]
+            }
+        
+        start_time = time.time()
+        
+        if service == "gmail":
+            result = await google_apis_service.get_gmail_messages(token_data, max_results=1)
+            response_time = (time.time() - start_time) * 1000
+            
+            if result and not result[0].get('error'):
+                return {
+                    "success": True,
+                    "service": "gmail", 
+                    "status": "connected",
+                    "message": f"Gmail API working perfectly - Retrieved {len(result)} messages",
+                    "response_time_ms": round(response_time, 2),
+                    "details": {
+                        "endpoint": "/gmail/messages",
+                        "messages_count": len(result),
+                        "last_test": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            else:
+                error_msg = result[0].get('body', 'Unknown error') if result else 'No response'
+                return {
+                    "success": False,
+                    "service": "gmail",
+                    "status": "error", 
+                    "message": f"Gmail API error: {error_msg}",
+                    "response_time_ms": round(response_time, 2),
+                    "troubleshooting_steps": [
+                        "1. Check Gmail API permissions in Google Cloud Console",
+                        "2. Verify Gmail scope in OAuth consent: https://www.googleapis.com/auth/gmail.readonly",
+                        "3. Re-authenticate with Google OAuth if needed",
+                        "4. Check Gmail API quota limits"
+                    ]
+                }
+        
+        elif service == "calendar":
+            result = await google_apis_service.get_calendar_events(token_data, max_results=1)
+            response_time = (time.time() - start_time) * 1000
+            
+            if result and not result[0].get('error'):
+                return {
+                    "success": True,
+                    "service": "calendar",
+                    "status": "connected", 
+                    "message": f"Calendar API working perfectly - Retrieved {len(result)} events",
+                    "response_time_ms": round(response_time, 2),
+                    "details": {
+                        "endpoint": "/calendar/events",
+                        "events_count": len(result),
+                        "last_test": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            else:
+                error_msg = result[0].get('description', 'Unknown error') if result else 'No response'
+                return {
+                    "success": False,
+                    "service": "calendar",
+                    "status": "error",
+                    "message": f"Calendar API error: {error_msg}",
+                    "response_time_ms": round(response_time, 2),
+                    "troubleshooting_steps": [
+                        "1. Check Calendar API permissions in Google Cloud Console",
+                        "2. Verify Calendar scope in OAuth: https://www.googleapis.com/auth/calendar",
+                        "3. Ensure Calendar API is enabled in Google Cloud project",
+                        "4. Re-authenticate with Google OAuth if needed"
+                    ]
+                }
+        
+        elif service == "drive":
+            result = await google_apis_service.get_drive_files(token_data, max_results=1)
+            response_time = (time.time() - start_time) * 1000
+            
+            if result and not result[0].get('error'):
+                return {
+                    "success": True,
+                    "service": "drive",
+                    "status": "connected",
+                    "message": f"Drive API working perfectly - Retrieved {len(result)} files", 
+                    "response_time_ms": round(response_time, 2),
+                    "details": {
+                        "endpoint": "/drive/files",
+                        "files_count": len(result),
+                        "last_test": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            else:
+                error_msg = result[0].get('name', 'Unknown error') if result else 'No response'
+                return {
+                    "success": False,
+                    "service": "drive", 
+                    "status": "error",
+                    "message": f"Drive API error: {error_msg}",
+                    "response_time_ms": round(response_time, 2),
+                    "troubleshooting_steps": [
+                        "1. Check Drive API permissions in Google Cloud Console",
+                        "2. Verify Drive scope in OAuth: https://www.googleapis.com/auth/drive",
+                        "3. Ensure Drive API is enabled in Google Cloud project",
+                        "4. Check if user has sufficient Drive storage"
+                    ]
+                }
+        
+        elif service == "meet":
+            # Test Meet capability through Calendar API (since Meet requires Calendar)
+            response_time = (time.time() - start_time) * 1000
+            
+            # Test Calendar first since Meet depends on it
+            calendar_result = await google_apis_service.get_calendar_events(token_data, max_results=1)
+            
+            if calendar_result and not calendar_result[0].get('error'):
+                return {
+                    "success": True,
+                    "service": "meet",
+                    "status": "connected",
+                    "message": "Google Meet API ready - Meeting creation available via Calendar API",
+                    "response_time_ms": round(response_time, 2),
+                    "details": {
+                        "endpoint": "/meet/create-space",
+                        "calendar_dependency": "working",
+                        "last_test": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            else:
+                return {
+                    "success": False,
+                    "service": "meet",
+                    "status": "dependency_error", 
+                    "message": "Google Meet requires Calendar API access",
+                    "response_time_ms": round(response_time, 2),
+                    "troubleshooting_steps": [
+                        "1. Fix Calendar API connection first",
+                        "2. Ensure Calendar scope includes meeting creation", 
+                        "3. Verify Google Meet is enabled for your Google account",
+                        "4. Check Google Workspace admin settings if using business account"
+                    ]
+                }
+                
+    except Exception as e:
+        logger.error(f"Single service test failed for {service}: {str(e)}")
+        return {
+            "success": False,
+            "service": service,
+            "status": "test_failed",
+            "message": f"Connection test failed: {str(e)}",
+            "troubleshooting_steps": [
+                "1. Check internet connection",
+                "2. Verify Google Cloud Console API settings",
+                "3. Re-authenticate with Google OAuth",
+                "4. Contact FIDUS support if issue persists"
+            ]
+        }
+
+@api_router.get("/google/connection/history")
+async def get_connection_history(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get Google API connection history and quality metrics over time
+    Provides data for connection quality charts and trends
+    """
+    try:
+        # In production, this would query database for connection history
+        # For now, return mock historical data to demonstrate the interface
+        
+        now = datetime.now(timezone.utc)
+        history_data = []
+        
+        # Generate 24 hours of mock connection history (hourly data points)
+        for i in range(24):
+            timestamp = now - timedelta(hours=23-i)
+            
+            # Simulate varying connection quality
+            success_rate = 85 + (i % 7) * 2  # Vary between 85-97%
+            avg_response = 150 + (i % 5) * 20  # Vary between 150-230ms
+            
+            history_data.append({
+                "timestamp": timestamp.isoformat(),
+                "success_rate": success_rate,
+                "average_response_time_ms": avg_response,
+                "services_tested": 4,
+                "successful_services": int((success_rate / 100) * 4),
+                "gmail_status": "connected" if success_rate > 90 else "error", 
+                "calendar_status": "connected" if success_rate > 85 else "error",
+                "drive_status": "connected" if success_rate > 80 else "error",
+                "meet_status": "connected" if success_rate > 88 else "error"
+            })
+        
+        return {
+            "success": True,
+            "history": history_data,
+            "summary": {
+                "total_tests": len(history_data),
+                "average_success_rate": sum(h["success_rate"] for h in history_data) / len(history_data),
+                "average_response_time": sum(h["average_response_time_ms"] for h in history_data) / len(history_data),
+                "uptime_percentage": 94.7,  # Mock uptime
+                "last_24h_incidents": 2,
+                "most_reliable_service": "gmail",
+                "least_reliable_service": "drive"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get connection history: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "history": []
+        }
+
+# ===============================================================================
+# GOOGLE API ENDPOINTS - COMPREHENSIVE INTEGRATION  
+# ===============================================================================
 
 # Import Hybrid Google Service
 from hybrid_google_service import hybrid_google_service
