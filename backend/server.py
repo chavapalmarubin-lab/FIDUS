@@ -11100,6 +11100,135 @@ async def get_funds_overview():
 
 
 
+# ==================== GOOGLE API ENDPOINTS ====================
+
+@api_router.get("/google/test-connection")
+async def test_google_connection():
+    """Test Google API connectivity"""
+    try:
+        result = google_api.test_connection()
+        return result
+    except Exception as e:
+        logging.error(f"Google connection test failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/google/send-email")
+async def send_google_email(request: dict):
+    """Send email via Gmail API"""
+    try:
+        required_fields = ['to_email', 'subject', 'body']
+        for field in required_fields:
+            if field not in request:
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        result = google_api.send_email(
+            to_email=request['to_email'],
+            subject=request['subject'],
+            body=request['body'],
+            from_email=request.get('from_email')
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Send email failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/google/emails")
+async def get_google_emails(max_results: int = 10):
+    """Get emails from Gmail API"""
+    try:
+        result = google_api.get_emails(max_results=max_results)
+        return result
+    except Exception as e:
+        logging.error(f"Get emails failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/google/upload-file")
+async def upload_google_file(request: dict):
+    """Upload file to Google Drive"""
+    try:
+        required_fields = ['file_name', 'file_content']
+        for field in required_fields:
+            if field not in request:
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        result = google_api.upload_file(
+            file_name=request['file_name'],
+            file_content=request['file_content'],
+            mime_type=request.get('mime_type', 'application/pdf')
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Upload file failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/google/drive-files")
+async def get_google_drive_files(max_results: int = 10):
+    """Get files from Google Drive"""
+    try:
+        result = google_api.list_files(max_results=max_results)
+        return result
+    except Exception as e:
+        logging.error(f"Get drive files failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/google/create-meeting")
+async def create_google_meeting(request: dict):
+    """Create Google Calendar meeting with Meet link"""
+    try:
+        required_fields = ['title', 'description', 'attendee_emails', 'start_time', 'end_time']
+        for field in required_fields:
+            if field not in request:
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        result = google_api.create_meeting(
+            title=request['title'],
+            description=request['description'],
+            attendee_emails=request['attendee_emails'],
+            start_time=request['start_time'],
+            end_time=request['end_time']
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Create meeting failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/google/calendar-events")
+async def get_google_calendar_events(max_results: int = 10):
+    """Get calendar events from Google Calendar"""
+    try:
+        result = google_api.get_calendar_events(max_results=max_results)
+        return result
+    except Exception as e:
+        logging.error(f"Get calendar events failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
     """Get fund portfolio overview for the dashboard (matches frontend API call)"""
