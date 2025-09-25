@@ -7344,7 +7344,7 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             raise HTTPException(status_code=400, detail="No changes made to prospect")
         
         # Get updated prospect data
-        updated_prospect = await db.crm_prospects.find_one({"id": prospect_id})
+        updated_prospect = await db.crm_prospects.find_one({"prospect_id": prospect_id})
         
         # Also update memory storage if it exists (for backwards compatibility)
         if prospect_id in prospects_storage:
