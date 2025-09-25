@@ -31,6 +31,7 @@ import {
   Trash2
 } from 'lucide-react';
 import googleCRMIntegration from '../services/googleCRMIntegration';
+import apiAxios from '../utils/apiAxios';
 
 const FullGoogleWorkspace = () => {
   const [connectionStatus, setConnectionStatus] = useState(null);
