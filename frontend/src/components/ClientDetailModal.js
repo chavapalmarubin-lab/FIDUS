@@ -244,6 +244,50 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     }
   };
 
+  const handleDocumentUpload = async (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setGoogleLoading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('client_id', client.id);
+        formData.append('client_name', client.name);
+        formData.append('folder_name', `${client.name} - FIDUS Documents`);
+
+        // Upload to client's specific Google Drive folder
+        const response = await apiAxios.post('/google/drive/upload-to-client-folder', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        if (!response.data.success) {
+          throw new Error(response.data.error || `Failed to upload ${file.name}`);
+        }
+      }
+
+      alert(`✅ Successfully uploaded ${files.length} document(s) to ${client.name}'s Drive folder!`);
+      
+      // Refresh documents list
+      setTimeout(() => {
+        loadGoogleIntegratedData();
+      }, 1000);
+      
+      // Clear the file input
+      event.target.value = '';
+      
+    } catch (error) {
+      console.error('❌ Document upload failed:', error);
+      alert(`Failed to upload documents: ${error.message}`);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   if (!isOpen || !client) return null;
 
   return (
