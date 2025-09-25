@@ -14921,7 +14921,7 @@ async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Dep
     """
     try:
         # Get client's folder information from database
-        client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"id": client_id})
+        client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"prospect_id": client_id})
         
         if not client:
             return {
