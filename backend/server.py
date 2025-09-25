@@ -13830,7 +13830,7 @@ class RateLimiter:
     def __init__(self):
         self.requests = defaultdict(list)
         self.cleanup_interval = 3600  # Clean up old entries every hour
-        self.last_cleanup = time()
+        self.last_cleanup = time.time()
         self.total_requests = 0  # For debugging
         self.blocked_requests = 0  # For debugging
     
