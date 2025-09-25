@@ -179,6 +179,10 @@ const ClientDashboard = ({ user, onLogout }) => {
               <FileText size={16} className="mr-2" />
               Documents
             </TabsTrigger>
+            <TabsTrigger value="google-workspace" className="text-white data-[state=active]:bg-cyan-600">
+              <Globe size={16} className="mr-2" />
+              My FIDUS Workspace
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
