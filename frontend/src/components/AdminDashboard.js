@@ -418,7 +418,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="google" className="mt-6">
-            <GoogleWorkspaceIntegration />
+            <CleanGoogleWorkspace />
           </TabsContent>
 
 
