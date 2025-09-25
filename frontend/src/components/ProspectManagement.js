@@ -48,6 +48,7 @@ import {
 import axios from "axios";
 import apiAxios from "../utils/apiAxios";
 import InvestmentSimulator from './InvestmentSimulator';
+import googleCRMIntegration from '../services/googleCRMIntegration';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
