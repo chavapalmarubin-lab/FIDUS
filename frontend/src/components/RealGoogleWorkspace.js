@@ -696,23 +696,105 @@ const RealGoogleWorkspace = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FolderOpen className="h-5 w-5 text-green-600" />
-                Google Drive Integration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <FolderOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Drive interface coming in next update</p>
+                Google Drive Files ({driveFiles.length})
                 <Button 
                   onClick={loadRealDriveFiles}
                   variant="outline" 
-                  className="mt-4"
+                  size="sm"
+                  className="ml-auto"
                   disabled={connectionStatus?.services?.drive?.status !== 'connected'}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Load Drive Files
+                  Refresh
                 </Button>
-              </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {driveFiles.length > 0 ? (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {driveFiles.map((file, index) => (
+                    <div key={file.id || index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="flex-shrink-0">
+                            {file.mimeType === 'application/vnd.google-apps.folder' ? (
+                              <FolderOpen className="h-6 w-6 text-blue-500" />
+                            ) : file.mimeType?.includes('document') ? (
+                              <div className="h-6 w-6 bg-blue-100 rounded flex items-center justify-center">📄</div>
+                            ) : file.mimeType?.includes('spreadsheet') ? (
+                              <div className="h-6 w-6 bg-green-100 rounded flex items-center justify-center">📊</div>
+                            ) : file.mimeType?.includes('presentation') ? (
+                              <div className="h-6 w-6 bg-orange-100 rounded flex items-center justify-center">📽️</div>
+                            ) : file.mimeType?.includes('image') ? (
+                              <div className="h-6 w-6 bg-purple-100 rounded flex items-center justify-center">🖼️</div>
+                            ) : (
+                              <div className="h-6 w-6 bg-gray-100 rounded flex items-center justify-center">📎</div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-800 truncate mb-1">{file.name}</h3>
+                            <div className="text-sm text-gray-600 space-y-1">
+                              <div>
+                                <span className="inline-block bg-gray-100 px-2 py-1 rounded text-xs mr-2">
+                                  {file.mimeType === 'application/vnd.google-apps.folder' ? 'Folder' :
+                                   file.mimeType?.includes('document') ? 'Google Doc' :
+                                   file.mimeType?.includes('spreadsheet') ? 'Google Sheet' :
+                                   file.mimeType?.includes('presentation') ? 'Google Slides' :
+                                   file.mimeType?.split('/').pop() || 'File'}
+                                </span>
+                                {file.size && (
+                                  <span className="text-xs text-gray-500">
+                                    {(parseInt(file.size) / 1024).toFixed(1)} KB
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Modified: {new Date(file.modifiedTime).toLocaleDateString()}
+                              </div>
+                              {file.owners && file.owners[0] && (
+                                <div className="text-xs text-gray-500">
+                                  Owner: {file.owners[0].displayName || file.owners[0].emailAddress}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="ml-4 flex flex-col items-end gap-2">
+                          {file.name.includes('FIDUS') && (
+                            <span className="px-2 py-1 text-xs bg-cyan-100 text-cyan-800 rounded">
+                              FIDUS Client
+                            </span>
+                          )}
+                          {file.webViewLink && (
+                            <a 
+                              href={file.webViewLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-500 text-xs hover:underline"
+                            >
+                              Open in Drive
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FolderOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No Drive files found</p>
+                  <Button 
+                    onClick={loadRealDriveFiles}
+                    variant="outline" 
+                    className="mt-4"
+                    disabled={connectionStatus?.services?.drive?.status !== 'connected'}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Load Drive Files
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
