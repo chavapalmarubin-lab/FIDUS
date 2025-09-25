@@ -14997,6 +14997,93 @@ async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Dep
             "documents": []
         }
 
+@api_router.post("/google/drive/upload-to-client-folder")
+async def upload_document_to_client_folder(
+    file: UploadFile = File(...),
+    client_id: str = Form(...),
+    client_name: str = Form(...),
+    folder_name: str = Form(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload document to a specific client's Google Drive folder (PRIVACY SECURE)
+    """
+    try:
+        # Get admin's Google token for Drive operations
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google Drive authentication required",
+                "auth_required": True
+            }
+        
+        # Get client's folder information from database
+        client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"prospect_id": client_id})
+        
+        if not client:
+            return {
+                "success": False,
+                "error": "Client not found"
+            }
+            
+        folder_info = client.get("google_drive_folder", {})
+        folder_id = folder_info.get("folder_id")
+        
+        if not folder_id:
+            # Try to create the folder if it doesn't exist
+            try:
+                folder_created = await auto_create_prospect_drive_folder(client)
+                if folder_created and folder_created.get("google_drive_folder"):
+                    folder_id = folder_created["google_drive_folder"]["folder_id"]
+                else:
+                    return {
+                        "success": False,
+                        "error": "Client Drive folder not found and could not be created"
+                    }
+            except Exception as create_error:
+                logging.error(f"Failed to create client folder: {str(create_error)}")
+                return {
+                    "success": False,
+                    "error": "Failed to create client Drive folder"
+                }
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Upload file to client's specific folder
+        upload_result = await google_apis_service.upload_file_to_folder(
+            token_data,
+            folder_id,
+            file.filename,
+            file_content,
+            file.content_type
+        )
+        
+        if upload_result and upload_result.get('id'):
+            logging.info(f"✅ PRIVACY SECURE: Uploaded '{file.filename}' to {client_name}'s folder (folder_id: {folder_id})")
+            return {
+                "success": True,
+                "file_id": upload_result['id'],
+                "file_name": file.filename,
+                "folder_id": folder_id,
+                "message": f"Document '{file.filename}' uploaded to {client_name}'s Drive folder"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Failed to upload file to Drive"
+            }
+            
+    except Exception as e:
+        logging.error(f"❌ Document upload failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @api_router.post("/fidus/client-meeting-request")
 async def create_client_meeting_request(request_data: dict, current_user: dict = Depends(get_current_user)):
     """
