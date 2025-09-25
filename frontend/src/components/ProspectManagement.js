@@ -151,7 +151,7 @@ const ProspectManagement = () => {
     body: '',
     recipient: null
   });
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("pipeline"); // Changed default to pipeline
   
   // Document management states
   const [showDocumentModal, setShowDocumentModal] = useState(false);
