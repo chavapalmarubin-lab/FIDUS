@@ -545,6 +545,56 @@ class GoogleAPIsService:
                 'modifiedTime': datetime.now(timezone.utc).isoformat(),
                 'error': True
             }]
+
+    async def get_drive_files_in_folder(self, token_data: Dict[str, str], folder_id: str, max_results: int = 50) -> List[Dict]:
+        """
+        Get Drive files from a SPECIFIC folder only
+        
+        Args:
+            token_data: OAuth token data
+            folder_id: Google Drive folder ID to search in
+            max_results: Maximum number of files to retrieve
+            
+        Returns:
+            List of Drive files in the specified folder ONLY
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # Query for files in specific folder only
+            query = f"'{folder_id}' in parents and trashed=false"
+            
+            # Get files from the specific folder
+            results = drive_service.files().list(
+                q=query,
+                pageSize=max_results,
+                fields="nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, parents)"
+            ).execute()
+            
+            files = results.get('files', [])
+            
+            formatted_files = []
+            for file in files:
+                formatted_files.append({
+                    'id': file['id'],
+                    'name': file['name'],
+                    'mimeType': file.get('mimeType'),
+                    'size': file.get('size'),
+                    'modifiedTime': file.get('modifiedTime'),
+                    'createdTime': file.get('createdTime'),
+                    'webViewLink': file.get('webViewLink'),
+                    'parents': file.get('parents', []),
+                    'folder_id': folder_id,
+                    'in_client_folder': True
+                })
+            
+            logger.info(f"Retrieved {len(formatted_files)} files from folder {folder_id}")
+            return formatted_files
+            
+        except Exception as e:
+            logger.error(f"Drive folder API error: {str(e)}")
+            return []
     
     async def upload_drive_file(self, token_data: Dict[str, str], file_data: bytes, filename: str, mime_type: str) -> Dict:
         """
