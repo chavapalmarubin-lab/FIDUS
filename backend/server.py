@@ -4080,7 +4080,7 @@ async def create_new_user(user_data: UserCreate):
                 "user_type": "client",
                 "status": "active",
                 "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-                "createdAt": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),  # Fixed: use created_at not createdAt
                 "notes": user_data.notes,
                 "temp_password": user_data.temporary_password,
                 "must_change_password": True
