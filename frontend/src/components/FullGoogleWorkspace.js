@@ -355,19 +355,84 @@ const FullGoogleWorkspace = () => {
       {connectionStatus && (
         <Card>
           <CardContent className="pt-6">
-            <div className={`flex items-center gap-2 p-3 rounded-lg ${
+            <div className={`flex items-center justify-between p-3 rounded-lg ${
               connectionStatus.success 
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
-              {connectionStatus.success ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <XCircle className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                {connectionStatus.success ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  <XCircle className="h-5 w-5" />
+                )}
+                <span className="font-medium">
+                  {connectionStatus.success ? '✅ Google APIs Connected' : '❌ Connection Failed'}
+                </span>
+              </div>
+              
+              {/* Connect to Google Button */}
+              {!connectionStatus.success && (
+                <Button 
+                  onClick={handleConnectToGoogle}
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Connect Google Workspace
+                    </>
+                  )}
+                </Button>
               )}
-              <span className="font-medium">
-                {connectionStatus.success ? '✅ Google APIs Connected' : '❌ Connection Failed'}
-              </span>
+            </div>
+            
+            {/* Error Details */}
+            {!connectionStatus.success && connectionStatus.error && (
+              <div className="mt-3 text-sm text-red-700 bg-red-50 p-2 rounded">
+                <strong>Error:</strong> {connectionStatus.error}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Initial Connection Prompt */}
+      {!connectionStatus && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <Mail className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Connect Google Workspace
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Connect your Google account to access Gmail, Calendar, and Drive functionality
+              </p>
+              <Button 
+                onClick={handleConnectToGoogle}
+                disabled={loading}
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Connect Google Workspace
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
