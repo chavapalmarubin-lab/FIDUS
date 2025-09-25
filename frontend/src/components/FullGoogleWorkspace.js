@@ -65,9 +65,24 @@ const FullGoogleWorkspace = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
-    // Don't auto-test connection, let user click "Connect Google Workspace" first
-    // testConnection();
+    // Load initial connection status
+    testConnectionQuick();
   }, []);
+
+  // Quick connection test for status display
+  const testConnectionQuick = async () => {
+    try {
+      const response = await apiAxios.get('/google/connection/test-all');
+      setConnectionStatus(response.data);
+    } catch (error) {
+      console.error('Failed to test connection:', error);
+      setConnectionStatus({
+        success: false,
+        overall_status: 'test_failed',
+        services: {}
+      });
+    }
+  };
 
   const testConnection = async () => {
     setLoading(true);
@@ -84,6 +99,93 @@ const FullGoogleWorkspace = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Connection Status Component
+  const ConnectionStatusBanner = () => {
+    if (!connectionStatus) return null;
+
+    const getStatusColor = () => {
+      switch (connectionStatus.overall_status) {
+        case 'fully_connected':
+          return 'bg-green-50 text-green-800 border-green-200';
+        case 'partially_connected':
+          return 'bg-yellow-50 text-yellow-800 border-yellow-200';
+        case 'disconnected':
+        case 'test_failed':
+          return 'bg-red-50 text-red-800 border-red-200';
+        default:
+          return 'bg-gray-50 text-gray-800 border-gray-200';
+      }
+    };
+
+    const getStatusIcon = () => {
+      switch (connectionStatus.overall_status) {
+        case 'fully_connected':
+          return <Wifi className="h-5 w-5 text-green-600" />;
+        case 'partially_connected':
+          return <Activity className="h-5 w-5 text-yellow-600" />;
+        default:
+          return <WifiOff className="h-5 w-5 text-red-600" />;
+      }
+    };
+
+    const getStatusMessage = () => {
+      if (connectionStatus.overall_status === 'fully_connected') {
+        return `All Google services connected • ${connectionStatus.connection_quality?.success_rate || 0}% success rate`;
+      } else if (connectionStatus.overall_status === 'partially_connected') {
+        return `${connectionStatus.connection_quality?.successful_tests || 0}/${connectionStatus.connection_quality?.total_tests || 4} services connected`;
+      } else {
+        return connectionStatus.error || 'Google services disconnected';
+      }
+    };
+
+    return (
+      <div className={`flex items-center justify-between p-4 rounded-lg border ${getStatusColor()} mb-6`}>
+        <div className="flex items-center gap-3">
+          {getStatusIcon()}
+          <div>
+            <span className="font-medium">Google Workspace Status</span>
+            <p className="text-sm mt-1">{getStatusMessage()}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Service Status Indicators */}
+          {connectionStatus.services && (
+            <div className="flex items-center gap-1 mr-4">
+              {Object.entries(connectionStatus.services).map(([service, status]) => (
+                <div
+                  key={service}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/50"
+                  title={`${service}: ${status.status}`}
+                >
+                  {service === 'gmail' && <Mail className="h-3 w-3" />}
+                  {service === 'calendar' && <Calendar className="h-3 w-3" />}
+                  {service === 'drive' && <FolderOpen className="h-3 w-3" />}
+                  {service === 'meet' && <Video className="h-3 w-3" />}
+                  {status.status === 'connected' ? (
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <XCircle className="h-3 w-3 text-red-600" />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <Button 
+            onClick={testConnectionQuick}
+            variant="outline" 
+            size="sm"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   // Handle REAL Google OAuth connection
