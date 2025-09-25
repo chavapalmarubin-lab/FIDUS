@@ -7289,7 +7289,11 @@ async def create_prospect(prospect_data: ProspectCreate):
             logging.error(f"❌ Error auto-creating Drive folder for {prospect.name}: {str(folder_error)}")
         
         # Add to MongoDB
-        await db.crm_prospects.insert_one(prospect_dict)
+        result = await db.crm_prospects.insert_one(prospect_dict)
+        
+        # Remove the MongoDB _id from the dict for clean response
+        if '_id' in prospect_dict:
+            del prospect_dict['_id']
         
         # Also store in memory for backwards compatibility
         prospects_storage[prospect.prospect_id] = prospect_dict
