@@ -798,14 +798,106 @@ FIDUS Investment Management Team`;
       setError(`Failed to send document request: ${error.message}`);
     }
   };
-        emailType: 'document_request'
-      });
+
+  // 🔥 GOOGLE INTEGRATION: Send welcome email via Gmail API
+  const handleSendWelcomeEmail = async (prospect) => {
+    try {
+      console.log('📧 Sending welcome email via Google Gmail API...');
       
-      setShowEmailModal(true);
+      const result = await googleCRMIntegration.sendWelcomeEmailToProspect(prospect);
       
-    } catch (err) {
-      console.error('Document request error:', err);
-      setError("Failed to prepare document request email");
+      if (result.success) {
+        alert(`✅ Welcome email sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect with last contact info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Welcome email sent via Gmail` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to send welcome email: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Welcome email error:', error);
+      setError(`Failed to send welcome email: ${error.message}`);
+    }
+  };
+
+  // 🔥 GOOGLE INTEGRATION: Schedule meeting via Google Calendar
+  const handleScheduleMeeting = async (prospect) => {
+    try {
+      console.log('📅 Scheduling meeting via Google Calendar API...');
+      
+      // Create meeting for tomorrow at 2 PM
+      const startTime = new Date();
+      startTime.setDate(startTime.getDate() + 1);
+      startTime.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(startTime);
+      endTime.setHours(15, 0, 0, 0);
+      
+      const meetingData = {
+        title: `Investment Consultation - ${prospect.name}`,
+        description: `Initial investment consultation meeting with ${prospect.name} to discuss portfolio options and investment strategy.`,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString()
+      };
+      
+      const result = await googleCRMIntegration.scheduleProspectMeeting(prospect, meetingData);
+      
+      if (result.success) {
+        alert(`✅ Meeting scheduled successfully with ${prospect.name}!\nGoogle Meet link: ${result.meeting_details?.meet_link || 'Link will be provided'}`);
+        
+        // Update prospect with meeting info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Meeting scheduled via Google Calendar` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to schedule meeting: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Meeting scheduling error:', error);
+      setError(`Failed to schedule meeting: ${error.message}`);
+    }
+  };
+
+  // 🔥 GOOGLE INTEGRATION: Send investment report via Gmail
+  const handleSendInvestmentReport = async (prospect) => {
+    try {
+      console.log('📊 Sending investment report via Google Gmail API...');
+      
+      const reportData = {
+        portfolio: 'Diversified Growth Portfolio',
+        riskLevel: 'Moderate',
+        expectedReturns: '8-12% annually'
+      };
+      
+      const result = await googleCRMIntegration.sendInvestmentReportToProspect(prospect, reportData);
+      
+      if (result.success) {
+        alert(`✅ Investment report sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect with report sent info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Investment report sent via Gmail` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to send investment report: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Investment report error:', error);
+      setError(`Failed to send investment report: ${error.message}`);
     }
   };
   
