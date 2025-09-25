@@ -7,6 +7,8 @@ import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import EnhancedPipelineView from "./EnhancedPipelineView";
+import ClientDetailModal from "./ClientDetailModal";
 import { 
   Users, 
   Plus, 
