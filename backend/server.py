@@ -14841,7 +14841,7 @@ async def upload_client_document_to_fidus(
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
         
-        # Check file size (limit to 50MB)
+        # Read file content as bytes (not string)
         file_content = await file.read()
         if len(file_content) > 50 * 1024 * 1024:  # 50MB limit
             raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
@@ -14899,17 +14899,20 @@ async def upload_client_document_to_fidus(
         # Upload file with client prefix
         upload_filename = f"CLIENT_UPLOAD_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{file.filename}"
         
-        # Create a temporary file for upload
+        # Create a temporary file for upload (FIXED: proper bytes handling)
         import tempfile
         import os
         
         temp_file_path = None
         try:
+            # Create temporary file with proper suffix
             with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as temp_file:
+                # Write bytes content directly (not string)
                 temp_file.write(file_content)
                 temp_file_path = temp_file.name
+                temp_file.flush()  # Ensure all data is written
             
-            # Upload to Google Drive
+            # Upload to Google Drive using the temp file path
             result = await google_apis_service.upload_drive_file(
                 token_data,
                 temp_file_path,
@@ -14923,9 +14926,10 @@ async def upload_client_document_to_fidus(
                     "id": f"upload_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                     "client_id": client_id,
                     "client_name": client_name,
-                    "filename": file.filename,
+                    "original_filename": file.filename,
                     "uploaded_filename": upload_filename,
                     "file_size": len(file_content),
+                    "mime_type": file.content_type or "application/octet-stream",
                     "google_file_id": result.get('file_id'),
                     "uploaded_at": datetime.now(timezone.utc).isoformat(),
                     "status": "uploaded"
@@ -14933,31 +14937,38 @@ async def upload_client_document_to_fidus(
                 
                 await db.client_document_uploads.insert_one(upload_log)
                 
-                logger.info(f"Document uploaded successfully: {client_name} uploaded {file.filename}")
+                logger.info(f"Document uploaded successfully: {client_name} uploaded {file.filename} ({len(file_content)} bytes)")
                 
                 return {
                     "success": True,
                     "file": {
                         "name": upload_filename,
+                        "original_name": file.filename,
                         "google_file_id": result.get('file_id'),
                         "web_view_link": result.get('web_view_link', ''),
+                        "file_size": len(file_content),
                         "uploaded_at": datetime.now(timezone.utc).isoformat()
                     },
-                    "message": "Document uploaded successfully to your FIDUS folder"
+                    "message": f"'{file.filename}' uploaded successfully to your FIDUS folder!"
                 }
             else:
-                raise Exception(result.get('error', 'Upload failed'))
+                raise Exception(result.get('error', 'Google Drive upload failed'))
                 
         finally:
             # Clean up temporary file
             if temp_file_path and os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+                try:
+                    os.unlink(temp_file_path)
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to cleanup temp file: {str(cleanup_error)}")
         
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
-        logger.error(f"Document upload failed: {str(e)}")
+        logger.error(f"Document upload failed for client {client_id}: {str(e)}")
         return {
             "success": False,
-            "error": str(e)
+            "error": f"Upload failed: {str(e)}"
         }
 
 # ===============================================================================
