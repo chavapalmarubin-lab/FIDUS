@@ -179,6 +179,11 @@ const ClientDashboard = ({ user, onLogout }) => {
               <Globe size={16} className="mr-2" />
               My FIDUS Workspace
             </TabsTrigger>
+            <TabsTrigger value="profile" className="text-white data-[state=active]:bg-cyan-600">
+              <img src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"} 
+                   alt="Profile" className="w-4 h-4 rounded-full mr-2" />
+              My Profile
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
