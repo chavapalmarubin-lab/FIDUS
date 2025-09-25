@@ -295,7 +295,7 @@ class ProspectUpdate(BaseModel):
     notes: Optional[str] = None
 
 class Prospect(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    prospect_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     email: str
     phone: str
@@ -304,7 +304,8 @@ class Prospect(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     converted_to_client: bool = False
-    client_id: Optional[str] = None
+    client_id: str = ""  # Empty string instead of None to satisfy schema validation
+    google_drive_folder: Optional[str] = ""  # Add field for Google Drive folder ID
     
     class Config:
         populate_by_name = True
