@@ -11144,7 +11144,7 @@ async def send_google_email(request: dict):
 async def get_google_emails(max_results: int = 10):
     """Get emails from Gmail API"""
     try:
-        result = real_google_api.get_emails(max_results=max_results)
+        result = real_google_api.get_real_emails(max_results=max_results)
         return result
     except Exception as e:
         logging.error(f"Get emails failed: {str(e)}")
