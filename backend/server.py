@@ -3988,7 +3988,7 @@ async def upload_prospect_document(
     """Upload a document for a prospect - FIXED to use MongoDB for persistence"""
     try:
         # Check if prospect exists in MongoDB
-        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        prospect_doc = await db.crm_prospects.find_one({"prospect_id": prospect_id})
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
         
