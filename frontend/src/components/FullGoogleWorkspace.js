@@ -65,9 +65,28 @@ const FullGoogleWorkspace = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
-    // Load initial connection status
-    testConnectionQuick();
+    // Load initial connection status and try to load emails if connected
+    const initializeGoogleWorkspace = async () => {
+      await testConnectionQuick();
+      
+      // If connection is successful, automatically load emails
+      if (connectionStatus?.overall_status === 'fully_connected' || 
+          connectionStatus?.services?.gmail?.status === 'connected') {
+        console.log('🔄 Auto-loading emails since Gmail is connected...');
+        loadEmails();
+      }
+    };
+    
+    initializeGoogleWorkspace();
   }, []);
+
+  // Auto-load emails when connection status changes to connected
+  useEffect(() => {
+    if (connectionStatus?.services?.gmail?.status === 'connected' && activeTab === 'gmail') {
+      console.log('🔄 Gmail connected, loading emails...');
+      loadEmails();
+    }
+  }, [connectionStatus, activeTab]);
 
   // Quick connection test for status display
   const testConnectionQuick = async () => {
