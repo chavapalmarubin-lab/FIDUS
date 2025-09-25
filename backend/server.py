@@ -1314,10 +1314,6 @@ async def login(login_data: LoginRequest):
             logging.warning(f"❌ Login failed: User '{username}' not found or inactive")
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        # DEBUG: Log the user document structure
-        logging.info(f"🔍 DEBUG: User doc keys: {list(user_doc.keys())}")
-        logging.info(f"🔍 DEBUG: User doc name field: {user_doc.get('name', 'MISSING')}")
-        
         # Check password (temporary or default)
         password_valid = False
         must_change_password = False
