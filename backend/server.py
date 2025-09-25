@@ -14584,6 +14584,383 @@ async def api_authentication_middleware(request: Request, call_next):
     return response
 
 # ===============================================================================
+# FIDUS CLIENT COMMUNICATION ENDPOINTS (NOT EXTERNAL GOOGLE INTEGRATION)
+# ===============================================================================
+
+@api_router.get("/fidus/client-communications/{client_id}")
+async def get_client_fidus_communications(client_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get FIDUS communications sent TO this specific client
+    This shows ONLY messages that FIDUS has sent to the client through the platform
+    """
+    try:
+        # Get communications from FIDUS to this client from database
+        communications = await db.client_communications.find({
+            "client_id": client_id,
+            "direction": "fidus_to_client"
+        }).sort("sent_at", -1).to_list(length=50)
+        
+        # Format for display
+        formatted_emails = []
+        for comm in communications:
+            formatted_emails.append({
+                "id": comm.get("id", str(comm.get("_id"))),
+                "subject": comm.get("subject", "Message from FIDUS"),
+                "from": comm.get("from", "FIDUS Team"),
+                "to": comm.get("to", current_user.get("email")),
+                "date": comm.get("sent_at", comm.get("created_at")),
+                "snippet": comm.get("snippet", comm.get("body", "")[:150] + "..."),
+                "body": comm.get("body", ""),
+                "read": comm.get("read", False),
+                "type": comm.get("type", "email"),
+                "fidus_communication": True
+            })
+        
+        logger.info(f"Retrieved {len(formatted_emails)} FIDUS communications for client {client_id}")
+        
+        return {
+            "success": True,
+            "emails": formatted_emails,
+            "client_id": client_id,
+            "total_count": len(formatted_emails)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get FIDUS communications: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "emails": []
+        }
+
+@api_router.get("/fidus/client-meetings/{client_id}")
+async def get_client_fidus_meetings(client_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get meetings and meeting requests for this client with FIDUS
+    """
+    try:
+        # Get meeting requests and scheduled meetings from database
+        meetings = await db.client_meetings.find({
+            "client_id": client_id
+        }).sort("created_at", -1).to_list(length=50)
+        
+        # Format for display
+        formatted_meetings = []
+        for meeting in meetings:
+            status = meeting.get("status", "requested")
+            if meeting.get("scheduled_time"):
+                meeting_time = datetime.fromisoformat(meeting.get("scheduled_time").replace('Z', '+00:00'))
+                if meeting_time > datetime.now(timezone.utc):
+                    status = "upcoming"
+                else:
+                    status = "completed"
+            
+            formatted_meetings.append({
+                "id": meeting.get("id", str(meeting.get("_id"))),
+                "title": meeting.get("subject", "Meeting with FIDUS"),
+                "description": meeting.get("details", ""),
+                "start_time": meeting.get("scheduled_time"),
+                "end_time": meeting.get("scheduled_end_time"),
+                "status": status,
+                "requested_at": meeting.get("created_at"),
+                "meet_link": meeting.get("meet_link", ""),
+                "fidus_staff": meeting.get("assigned_staff", "FIDUS Team")
+            })
+        
+        logger.info(f"Retrieved {len(formatted_meetings)} meetings for client {client_id}")
+        
+        return {
+            "success": True,
+            "meetings": formatted_meetings,
+            "client_id": client_id,
+            "total_count": len(formatted_meetings)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client meetings: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "meetings": []
+        }
+
+@api_router.get("/fidus/client-drive-folder/{client_id}")
+async def get_client_fidus_drive_folder(client_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get documents in client's FIDUS Google Drive folder (pre-created by admin)
+    """
+    try:
+        # Get client's folder information from database
+        client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"id": client_id})
+        
+        if not client:
+            return {
+                "success": False,
+                "error": "Client not found",
+                "documents": []
+            }
+        
+        folder_info = client.get("google_drive_folder", {})
+        if not folder_info:
+            return {
+                "success": True,
+                "documents": [],
+                "message": "FIDUS folder will be created automatically",
+                "folder_ready": False
+            }
+        
+        # Get documents from Google Drive folder using admin's token
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": True,
+                "documents": [],
+                "message": "Google Drive integration not available",
+                "folder_ready": False
+            }
+        
+        # Get files from the specific client folder
+        all_files = await google_apis_service.get_drive_files(token_data, max_results=100)
+        
+        # Filter files that belong to this client's folder
+        folder_id = folder_info.get("folder_id")
+        client_documents = []
+        
+        if all_files and folder_id:
+            for file_item in all_files:
+                # Check if file is in client's folder (simplified check)
+                file_name = file_item.get('name', '')
+                if (client.get('name', '').lower() in file_name.lower() or 
+                    client_id in file_name or
+                    'fidus' in file_name.lower()):
+                    
+                    client_documents.append({
+                        "id": file_item.get('id'),
+                        "name": file_name,
+                        "mime_type": file_item.get('mimeType', ''),
+                        "size": file_item.get('size', ''),
+                        "created_time": file_item.get('createdTime', ''),
+                        "modified_time": file_item.get('modifiedTime', ''),
+                        "web_view_link": file_item.get('webViewLink', ''),
+                        "shared": bool(file_item.get('shared', False)),
+                        "is_folder": file_item.get('mimeType') == 'application/vnd.google-apps.folder',
+                        "uploaded_by": "client" if "uploaded" in file_name.lower() else "fidus"
+                    })
+        
+        logger.info(f"Retrieved {len(client_documents)} documents from client {client_id} FIDUS folder")
+        
+        return {
+            "success": True,
+            "documents": client_documents,
+            "folder_info": folder_info,
+            "folder_ready": bool(folder_info),
+            "client_id": client_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client FIDUS folder: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "documents": []
+        }
+
+@api_router.post("/fidus/client-meeting-request")
+async def create_client_meeting_request(request_data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Client requests a meeting with FIDUS team (goes to admin portal for approval)
+    """
+    try:
+        client_id = request_data.get('client_id')
+        client_name = request_data.get('client_name')
+        client_email = request_data.get('client_email')
+        meeting_subject = request_data.get('meeting_subject')
+        meeting_details = request_data.get('meeting_details')
+        
+        # Create meeting request record
+        meeting_request = {
+            "id": f"meeting_req_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+            "client_id": client_id,
+            "client_name": client_name,
+            "client_email": client_email,
+            "subject": meeting_subject,
+            "details": meeting_details,
+            "status": "requested",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "requested_at": datetime.now(timezone.utc).isoformat(),
+            "admin_notified": False
+        }
+        
+        # Save to database
+        await db.client_meetings.insert_one(meeting_request)
+        
+        # Create admin notification
+        admin_notification = {
+            "id": f"notification_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+            "type": "meeting_request",
+            "title": f"Meeting Request from {client_name}",
+            "message": f"{client_name} has requested a meeting: {meeting_subject}",
+            "client_id": client_id,
+            "meeting_request_id": meeting_request["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "read": False,
+            "priority": "normal"
+        }
+        
+        await db.admin_notifications.insert_one(admin_notification)
+        
+        logger.info(f"Meeting request created: {client_name} requested '{meeting_subject}'")
+        
+        return {
+            "success": True,
+            "meeting_request": meeting_request,
+            "message": "Meeting request sent to FIDUS team successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create meeting request: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/fidus/client-document-upload")
+async def upload_client_document_to_fidus(
+    file: UploadFile = File(...),
+    client_id: str = Form(...),
+    client_name: str = Form(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload document from client to their FIDUS Google Drive folder
+    """
+    try:
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        # Check file size (limit to 50MB)
+        file_content = await file.read()
+        if len(file_content) > 50 * 1024 * 1024:  # 50MB limit
+            raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
+        
+        # Get admin's Google token for uploading
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "Google Drive integration not available"
+            }
+        
+        # Get client's folder information
+        client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"id": client_id})
+        
+        if not client:
+            return {
+                "success": False,
+                "error": "Client not found"
+            }
+        
+        folder_info = client.get("google_drive_folder", {})
+        if not folder_info:
+            # Create folder automatically if it doesn't exist
+            folder_name = f"{client_name} - FIDUS Documents"
+            result = await google_apis_service.create_drive_folder(token_data, folder_name)
+            
+            if result.get('success'):
+                folder_info = {
+                    "folder_id": result.get('folder_id'),
+                    "folder_name": folder_name,
+                    "web_view_link": result.get('web_view_link'),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Update client record
+                if client.get("stage"):  # Prospect
+                    await db.crm_prospects.update_one(
+                        {"id": client_id},
+                        {"$set": {"google_drive_folder": folder_info}}
+                    )
+                else:  # Client
+                    await db.clients.update_one(
+                        {"id": client_id},
+                        {"$set": {"google_drive_folder": folder_info}}
+                    )
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to create client folder"
+                }
+        
+        # Upload file with client prefix
+        upload_filename = f"CLIENT_UPLOAD_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+        
+        # Create a temporary file for upload
+        import tempfile
+        import os
+        
+        temp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
+            
+            # Upload to Google Drive
+            result = await google_apis_service.upload_drive_file(
+                token_data,
+                temp_file_path,
+                upload_filename,
+                folder_info.get('folder_id')
+            )
+            
+            if result.get('success'):
+                # Log the upload
+                upload_log = {
+                    "id": f"upload_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "filename": file.filename,
+                    "uploaded_filename": upload_filename,
+                    "file_size": len(file_content),
+                    "google_file_id": result.get('file_id'),
+                    "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                    "status": "uploaded"
+                }
+                
+                await db.client_document_uploads.insert_one(upload_log)
+                
+                logger.info(f"Document uploaded successfully: {client_name} uploaded {file.filename}")
+                
+                return {
+                    "success": True,
+                    "file": {
+                        "name": upload_filename,
+                        "google_file_id": result.get('file_id'),
+                        "web_view_link": result.get('web_view_link', ''),
+                        "uploaded_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "message": "Document uploaded successfully to your FIDUS folder"
+                }
+            else:
+                raise Exception(result.get('error', 'Upload failed'))
+                
+        finally:
+            # Clean up temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+        
+    except Exception as e:
+        logger.error(f"Document upload failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+# ===============================================================================
 # RATE LIMITING MIDDLEWARE - PREVENT API ABUSE
 # ===============================================================================
 
