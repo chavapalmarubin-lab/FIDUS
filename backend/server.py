@@ -1339,12 +1339,12 @@ async def login(login_data: LoginRequest):
             "username": user_doc["username"], 
             "name": user_doc["name"],
             "email": user_doc["email"],
-            "type": user_doc["user_type"],
+            "type": user_doc["user_type"],  # JWT expects "type" not "user_type"
             "profile_picture": user_doc.get("profile_picture", ""),
             "must_change_password": must_change_password
         }
         
-        # Generate JWT token
+        # Generate JWT token (expects id and type fields)
         jwt_token = create_jwt_token(user_response_dict)
         user_response_dict["token"] = jwt_token
         
