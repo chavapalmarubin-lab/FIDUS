@@ -1064,7 +1064,99 @@ def create_activity_log(client_id: str, activity_type: str, amount: float, descr
     logging.info(f"Activity logged: {activity_type} for client {client_id}, amount ${amount}")
     return activity
 
-# Mock data for demo
+# PRODUCTION: MongoDB User Seeding Function
+async def ensure_default_users_in_mongodb():
+    """Seed default users into MongoDB if they don't exist (PRODUCTION SETUP)"""
+    default_users = [
+        {
+            "user_id": "client_001",
+            "username": "client1", 
+            "name": "Gerardo Briones",
+            "email": "g.b@fidus.com",
+            "phone": "+1-555-0100",
+            "user_type": "client",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default seeded client"
+        },
+        {
+            "user_id": "client_002",
+            "username": "client2",
+            "name": "Maria Rodriguez", 
+            "email": "m.rodriguez@fidus.com",
+            "phone": "+1-555-0200",
+            "user_type": "client",
+            "status": "active", 
+            "profile_picture": "https://images.unsplash.com/photo-1494790108755-2616b812358f?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default seeded client"
+        },
+        {
+            "user_id": "client_003", 
+            "username": "client3",
+            "name": "SALVADOR PALMA",
+            "email": "chava@alyarglobal.com",
+            "phone": "+1-555-0300",
+            "user_type": "client", 
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default seeded client - VIP"
+        },
+        {
+            "user_id": "client_004",
+            "username": "client4", 
+            "name": "Javier Gonzalez",
+            "email": "javier.gonzalez@fidus.com", 
+            "phone": "+1-555-0400",
+            "user_type": "client",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default seeded client"
+        },
+        {
+            "user_id": "client_005",
+            "username": "client5",
+            "name": "Jorge Gonzalez",
+            "email": "jorge.gonzalez@fidus.com",
+            "phone": "+1-555-0500", 
+            "user_type": "client",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default seeded client"
+        },
+        {
+            "user_id": "admin_001",
+            "username": "admin",
+            "name": "Investment Committee", 
+            "email": "ic@fidus.com",
+            "phone": "+1-555-0001",
+            "user_type": "admin",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Default admin account"
+        }
+    ]
+    
+    try:
+        for user in default_users:
+            # Check if user already exists
+            existing = await db.users.find_one({"username": user["username"]})
+            if not existing:
+                await db.users.insert_one(user)
+                logging.info(f"✅ Seeded default user: {user['username']} to MongoDB")
+        
+        logging.info("🎯 PRODUCTION: All users managed via MongoDB (no MOCK data)")
+        return True
+    except Exception as e:
+        logging.error(f"❌ Failed to seed default users: {str(e)}")
+        return False
+
+# Mock data for demo (DEPRECATED - will be removed in production)
 MOCK_USERS = {
     "client1": {
         "id": "client_001",
