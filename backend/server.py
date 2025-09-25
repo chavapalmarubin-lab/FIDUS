@@ -7134,6 +7134,7 @@ async def get_all_prospects():
                 pipeline_stats[stage] += 1
         
         return {
+            "success": True,  # Add success field for frontend
             "prospects": prospects,
             "total_prospects": len(prospects),
             "pipeline_stats": pipeline_stats,
