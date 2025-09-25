@@ -11855,6 +11855,114 @@ async def get_pipeline_statistics(current_user: dict = Depends(get_current_admin
             "stats": {}
         }
 
+@api_router.get("/clients/{client_id}/portfolio")
+async def get_client_portfolio(client_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get client portfolio information
+    """
+    try:
+        # Get client portfolio data from database
+        portfolios_collection = db.client_portfolios
+        portfolio = await portfolios_collection.find_one({"client_id": client_id})
+        
+        if not portfolio:
+            # Return default portfolio structure if none exists
+            portfolio = {
+                "client_id": client_id,
+                "total_value": 0,
+                "return_percentage": 0,
+                "risk_level": "Moderate",
+                "investments": [],
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        
+        return {
+            "success": True,
+            "portfolio": portfolio
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client portfolio: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "portfolio": None
+        }
+
+@api_router.get("/clients/{client_id}/kyc-status")
+async def get_client_kyc_status(client_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get client KYC/AML status information
+    """
+    try:
+        # Get client from database
+        clients_collection = db.clients
+        client = await clients_collection.find_one({"id": client_id})
+        
+        if not client:
+            return {
+                "success": False,
+                "error": "Client not found",
+                "kyc_status": None
+            }
+        
+        kyc_status = {
+            "status": client.get("aml_kyc_status", "not_started"),
+            "description": client.get("kyc_description", "KYC process not started"),
+            "documents_submitted": client.get("documents_submitted", 0),
+            "documents_approved": client.get("documents_approved", 0),
+            "last_updated": client.get("kyc_updated_at", client.get("updated_at")),
+            "compliance_officer": client.get("compliance_officer", "FIDUS Compliance Team")
+        }
+        
+        return {
+            "success": True,
+            "kyc_status": kyc_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get KYC status: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "kyc_status": None
+        }
+
+@api_router.get("/clients/{client_id}/interactions")
+async def get_client_interactions(client_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get client interaction history
+    """
+    try:
+        # Get interactions from database
+        interactions_collection = db.client_interactions
+        interactions = await interactions_collection.find({"client_id": client_id}).sort("date", -1).to_list(length=50)
+        
+        # Format interactions for display
+        formatted_interactions = []
+        for interaction in interactions:
+            formatted_interactions.append({
+                "id": interaction.get("id", str(interaction.get("_id"))),
+                "type": interaction.get("type", "Contact"),
+                "description": interaction.get("description", "Client interaction"),
+                "date": interaction.get("date", interaction.get("created_at")),
+                "details": interaction.get("details", {}),
+                "staff_member": interaction.get("staff_member", "FIDUS Team")
+            })
+        
+        return {
+            "success": True,
+            "interactions": formatted_interactions
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get client interactions: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "interactions": []
+        }
+
 # ===============================================================================
 # EXISTING GOOGLE API ENDPOINTS CONTINUE BELOW
 # ===============================================================================
