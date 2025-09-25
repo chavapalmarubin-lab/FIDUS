@@ -20,7 +20,7 @@ import MT5Management from "./MT5Management";
 import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import UserAdministration from "./UserAdministration";
-import GoogleAdminAuth from './GoogleAdminAuth';
+// Clean imports - removed unused Google components
 import CleanGoogleWorkspace from './CleanGoogleWorkspace';
 import {
   LineChart,
