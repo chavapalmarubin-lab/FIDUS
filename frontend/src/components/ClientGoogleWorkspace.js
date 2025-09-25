@@ -405,7 +405,7 @@ const ClientGoogleWorkspace = ({ user }) => {
               <Card>
                 <CardContent className="p-8 text-center">
                   <Mail className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 mb-4">No email communications with FIDUS yet</p>
+                  <p className="text-gray-500 mb-4">No communications from FIDUS yet</p>
                   <Button
                     onClick={() => setComposeOpen(true)}
                     className="bg-red-500 hover:bg-red-600"
