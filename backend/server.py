@@ -11541,6 +11541,322 @@ async def get_connection_history(current_user: dict = Depends(get_current_admin_
         }
 
 # ===============================================================================
+# CLIENT-SPECIFIC GOOGLE WORKSPACE ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/google/client-connection/test-all")
+async def test_client_google_connection(request: Request, current_user: dict = Depends(get_current_user)):
+    """
+    Test Google connection specifically for client users
+    This allows clients to see their Google integration status
+    """
+    try:
+        # For clients, we test the admin's Google connection since clients access through FIDUS
+        user_id = "user_admin_001"  # Admin user manages Google integration
+        token_data = await get_google_session_token(user_id)
+        
+        client_email = request.headers.get('X-Client-Email', current_user.get('email'))
+        client_id = request.headers.get('X-Client-ID', current_user.get('user_id'))
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "FIDUS Google integration not configured",
+                "overall_status": "disconnected",
+                "services": {
+                    "gmail": {"status": "no_auth", "message": "FIDUS team needs to configure Google integration"},
+                    "calendar": {"status": "no_auth", "message": "FIDUS team needs to configure Google integration"}, 
+                    "drive": {"status": "no_auth", "message": "FIDUS team needs to configure Google integration"},
+                    "meet": {"status": "no_auth", "message": "FIDUS team needs to configure Google integration"}
+                },
+                "connection_quality": {
+                    "total_tests": 0,
+                    "successful_tests": 0,
+                    "success_rate": 0,
+                    "last_test_time": datetime.now(timezone.utc).isoformat(),
+                    "client_email": client_email
+                }
+            }
+        
+        # Test Gmail API (same as admin but from client perspective)
+        services_status = {}
+        successful_tests = 0
+        total_tests = 4
+        
+        try:
+            gmail_messages = await google_apis_service.get_gmail_messages(token_data, max_results=1)
+            if gmail_messages and not gmail_messages[0].get('error'):
+                services_status["gmail"] = {
+                    "status": "connected",
+                    "message": f"FIDUS Gmail integration active - Communication ready",
+                    "last_success": datetime.now(timezone.utc).isoformat()
+                }
+                successful_tests += 1
+            else:
+                services_status["gmail"] = {
+                    "status": "error", 
+                    "message": "FIDUS Gmail integration needs attention"
+                }
+        except Exception:
+            services_status["gmail"] = {
+                "status": "error",
+                "message": "FIDUS Gmail integration unavailable"
+            }
+        
+        # Test other services similarly
+        for service in ["calendar", "drive", "meet"]:
+            try:
+                if service == "calendar":
+                    result = await google_apis_service.get_calendar_events(token_data, max_results=1)
+                elif service == "drive":
+                    result = await google_apis_service.get_drive_files(token_data, max_results=1)
+                else:  # meet
+                    result = True  # Meet depends on calendar
+                
+                if result:
+                    services_status[service] = {
+                        "status": "connected",
+                        "message": f"FIDUS {service.title()} integration active"
+                    }
+                    successful_tests += 1
+                else:
+                    services_status[service] = {
+                        "status": "error",
+                        "message": f"FIDUS {service.title()} integration needs attention"
+                    }
+            except Exception:
+                services_status[service] = {
+                    "status": "error",
+                    "message": f"FIDUS {service.title()} integration unavailable"
+                }
+        
+        success_rate = (successful_tests / total_tests) * 100
+        
+        overall_status = "fully_connected" if successful_tests == total_tests else \
+                        "partially_connected" if successful_tests > 0 else "disconnected"
+        
+        logging.info(f"Client Google connection test for {client_email}: {success_rate}% success rate")
+        
+        return {
+            "success": True,
+            "overall_status": overall_status,
+            "services": services_status,
+            "connection_quality": {
+                "total_tests": total_tests,
+                "successful_tests": successful_tests,
+                "success_rate": round(success_rate, 1),
+                "last_test_time": datetime.now(timezone.utc).isoformat(),
+                "client_email": client_email,
+                "client_id": client_id
+            },
+            "message": "Connection status from FIDUS Google Workspace integration"
+        }
+        
+    except Exception as e:
+        logging.error(f"Client Google connection test failed: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "overall_status": "test_failed",
+            "services": {}
+        }
+
+@api_router.post("/google/gmail/client-send")
+async def send_email_from_client(email_data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Send email from client to FIDUS team via Gmail API
+    This allows clients to communicate with FIDUS through the platform
+    """
+    try:
+        # Use admin's Google token to send emails on behalf of FIDUS
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            return {
+                "success": False,
+                "error": "FIDUS Google integration not available",
+                "auth_required": True
+            }
+        
+        from_client = email_data.get('from_client')
+        client_name = email_data.get('client_name', 'FIDUS Client')
+        to_email = email_data.get('to', 'admin@fidus.com')
+        subject = email_data.get('subject', 'Message from FIDUS Client')
+        body = email_data.get('body', '')
+        client_id = email_data.get('client_id')
+        
+        # Format email body to show it's from a client
+        formatted_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px;">
+            <div style="background: linear-gradient(135deg, #00bcd4 0%, #0288d1 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="margin: 0; font-size: 24px;">Message from FIDUS Client</h2>
+            </div>
+            <div style="border: 1px solid #ddd; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+                <p><strong>From:</strong> {client_name}</p>
+                <p><strong>Client Email:</strong> {from_client}</p>
+                <p><strong>Client ID:</strong> {client_id or 'N/A'}</p>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                <div style="margin: 20px 0;">
+                    {body.replace(chr(10), '<br>')}
+                </div>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 12px;">
+                    This message was sent through the FIDUS Client Portal on {datetime.now(timezone.utc).strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+        
+        # Send email via Gmail API
+        result = await google_apis_service.send_gmail_message(
+            token_data,
+            to_email,
+            f"[FIDUS Client] {subject}",
+            formatted_body,
+            html=True
+        )
+        
+        if result.get('success'):
+            # Log client interaction
+            try:
+                interaction = {
+                    "id": f"interaction_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+                    "client_id": client_id,
+                    "type": "Email Sent",
+                    "description": f"Client sent message to {to_email}: {subject}",
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "details": {
+                        "to": to_email,
+                        "subject": subject,
+                        "method": "FIDUS Portal Gmail Integration"
+                    },
+                    "staff_member": "Client Portal"
+                }
+                
+                await db.client_interactions.insert_one(interaction)
+                
+            except Exception as log_error:
+                logging.warning(f"Failed to log client interaction: {str(log_error)}")
+            
+            logging.info(f"Email sent from client {client_name} ({from_client}) to {to_email}")
+            
+            return {
+                "success": True,
+                "message_id": result.get('message_id'),
+                "message": "Your message has been sent to the FIDUS team successfully!",
+                "sent_to": to_email,
+                "sent_at": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            raise Exception(result.get('error', 'Failed to send email via Gmail'))
+        
+    except Exception as e:
+        logging.error(f"Failed to send client email: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/prospects/create-from-registration")
+async def create_prospect_from_user_registration(user_data: dict):
+    """
+    Automatically create a prospect when a new user registers
+    This implements the two-way lead creation system
+    """
+    try:
+        # Extract user registration data
+        name = user_data.get('name', user_data.get('full_name', ''))
+        email = user_data.get('email', '')
+        phone = user_data.get('phone', '')
+        
+        if not name or not email:
+            return {
+                "success": False,
+                "error": "Name and email are required"
+            }
+        
+        # Create prospect record
+        prospect = {
+            "id": f"prospect_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "stage": "lead",  # Start in lead stage
+            "source": "user_registration",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "stage_changed_at": datetime.now(timezone.utc).isoformat(),
+            "notes": f"Auto-created from user registration on {datetime.now(timezone.utc).strftime('%B %d, %Y')}",
+            "estimated_value": 10000,  # Default estimated value
+            "converted_to_client": False,
+            "registration_data": user_data
+        }
+        
+        # Insert into database
+        await db.crm_prospects.insert_one(prospect)
+        
+        # Auto-create Google Drive folder for this prospect
+        try:
+            await create_prospect_drive_folder(prospect)
+        except Exception as folder_error:
+            logging.warning(f"Failed to create Drive folder for prospect {name}: {str(folder_error)}")
+        
+        logging.info(f"Created prospect from registration: {name} ({email})")
+        
+        return {
+            "success": True,
+            "prospect": prospect,
+            "message": f"Welcome {name}! Your profile has been created and you've been added to our pipeline."
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to create prospect from registration: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+async def create_prospect_drive_folder(prospect: dict):
+    """
+    Helper function to create a Google Drive folder for each prospect/client
+    """
+    try:
+        # Use admin's Google token
+        user_id = "user_admin_001"
+        token_data = await get_google_session_token(user_id)
+        
+        if not token_data:
+            logging.warning("No Google token available for Drive folder creation")
+            return
+        
+        folder_name = f"{prospect['name']} - FIDUS Client Documents"
+        
+        # Create folder via Google Drive API
+        result = await google_apis_service.create_drive_folder(token_data, folder_name)
+        
+        if result.get('success'):
+            # Update prospect record with folder information
+            await db.crm_prospects.update_one(
+                {"id": prospect["id"]},
+                {"$set": {
+                    "google_drive_folder": {
+                        "folder_id": result.get('folder_id'),
+                        "folder_name": folder_name,
+                        "web_view_link": result.get('web_view_link'),
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            logging.info(f"Created Google Drive folder for {prospect['name']}: {folder_name}")
+        
+    except Exception as e:
+        logging.error(f"Failed to create Drive folder for prospect: {str(e)}")
+        raise
+
+# ===============================================================================
 # ENHANCED CRM ENDPOINTS WITH GOOGLE INTEGRATION
 # ===============================================================================
 
