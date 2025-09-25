@@ -54,6 +54,9 @@ const ClientGoogleWorkspace = ({ user }) => {
   // Compose states
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeData, setComposeData] = useState({ to: 'admin@fidus.com', subject: '', body: '' });
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     initializeClientGoogleWorkspace();
