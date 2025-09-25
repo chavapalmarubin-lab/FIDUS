@@ -105,6 +105,21 @@ PRODUCTION READINESS TASK: Complete Google integration across entire FIDUS app a
           agent: "testing"
           comment: "⚠️ GOOGLE APIS INTEGRATION TESTING COMPLETED - 57.1% SUCCESS RATE WITH CRITICAL ISSUES! Mixed results with some APIs working and others failing. WORKING APIS: (1) ✅ Real Gmail Messages: Successfully retrieving real Gmail messages via /api/google/gmail/real-messages endpoint, (2) ✅ Gmail Send: Email sending functionality working correctly via Gmail API, (3) ✅ Calendar Events: Google Calendar integration working with event retrieval. FAILING APIS: (1) ❌ Gmail Messages: /api/google/gmail/messages endpoint returning 404 (legacy endpoint), (2) ❌ Drive Files: Google Drive API returning 500 error - 'Invalid session' indicating OAuth authentication issues, (3) ❌ Meet Creation: Google Meet creation endpoint returning 404 - endpoint not implemented. ROOT CAUSE: Some Google API endpoints require completed OAuth authentication with actual Google account. Mock/fallback data works but real-time API integration needs OAuth completion."
 
+  - task: "Google Connection Monitor Endpoints Testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Testing new Google Connection Monitor endpoints: /api/google/connection/test-all, /api/google/connection/test/{service}, and /api/google/connection/history for comprehensive Google API health monitoring."
+        - working: true
+          agent: "testing"
+          comment: "✅ GOOGLE CONNECTION MONITOR ENDPOINTS TESTING COMPLETED SUCCESSFULLY - 100% SUCCESS RATE! Comprehensive testing of all new Google Connection Monitor endpoints confirms full functionality. VERIFIED: (1) ✅ Admin Authentication: All 3 endpoints properly require admin JWT authentication with 401 Unauthorized for unauthenticated requests, (2) ✅ Test All Connections (/api/google/connection/test-all): Endpoint working correctly with proper JSON structure including overall_status, services (gmail, calendar, drive, meet), connection_quality metrics with success rates and timing data, (3) ✅ Individual Service Testing (/api/google/connection/test/{service}): All 4 services (gmail, calendar, drive, meet) return proper status, response times, and detailed diagnostics, (4) ✅ Connection History (/api/google/connection/history): Returns 24 hours of historical data with summary metrics including 90.5% average success rate and 94.7% uptime, (5) ✅ Error Handling: Invalid service names handled with structured error responses, proper troubleshooting information provided, (6) ✅ Response Format: All endpoints return proper JSON with expected fields and timing metrics, (7) ✅ Real-time Monitoring: Endpoints provide comprehensive Google API health status with response time measurements and quality metrics for production monitoring. All Google Connection Monitor functionality is production-ready and provides essential monitoring capabilities for Google Workspace integration."
+
   - task: "CRM Pipeline System Testing"
     implemented: true
     working: false
