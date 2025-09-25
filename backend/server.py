@@ -7275,23 +7275,26 @@ async def create_prospect(prospect_data: ProspectCreate):
         try:
             folder_created = await auto_create_prospect_drive_folder(prospect_dict)
             if folder_created:
-                logger.info(f"✅ Google Drive folder auto-created for new prospect: {prospect.name}")
+                logging.info(f"✅ Google Drive folder auto-created for new prospect: {prospect.name}")
+                # Get folder ID and update prospect dict
+                if 'google_drive_folder' in folder_created:
+                    prospect_dict['google_drive_folder'] = folder_created['google_drive_folder']
             else:
-                logger.warning(f"⚠️ Failed to auto-create Drive folder for prospect: {prospect.name}")
+                logging.warning(f"⚠️ Failed to auto-create Drive folder for prospect: {prospect.name}")
         except Exception as folder_error:
-            logger.error(f"❌ Error auto-creating Drive folder for {prospect.name}: {str(folder_error)}")
+            logging.error(f"❌ Error auto-creating Drive folder for {prospect.name}: {str(folder_error)}")
         
         # Add to MongoDB
         await db.crm_prospects.insert_one(prospect_dict)
         
         # Also store in memory for backwards compatibility
-        prospects_storage[prospect.id] = prospect_dict
+        prospects_storage[prospect.prospect_id] = prospect_dict
         
         logging.info(f"Prospect created: {prospect.name} ({prospect.email})")
         
         return {
             "success": True,
-            "prospect_id": prospect.id,
+            "prospect_id": prospect.prospect_id,
             "prospect": prospect_dict,
             "message": f"Prospect created successfully! Google Drive folder: '{prospect.name} - FIDUS Documents'"
         }
