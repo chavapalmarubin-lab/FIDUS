@@ -82,36 +82,24 @@ const FullGoogleWorkspace = () => {
     }
   };
 
-  // Handle Google OAuth connection
+  // Handle REAL Google OAuth connection
   const handleConnectToGoogle = async () => {
     setLoading(true);
     try {
-      console.log('🔗 Initiating Google OAuth connection...');
+      console.log('🔗 Starting REAL Google OAuth flow...');
       
-      // For now, redirect to Google OAuth
-      // In a real implementation, this would use your actual Google OAuth flow
-      // Using the credentials you provided: shaped-canyon-470822-b3
+      // Get the REAL Google OAuth URL from backend
+      const response = await apiAxios.get('/auth/google/url');
       
-      // Simulate OAuth process - in real implementation, this would redirect to Google
-      alert('🚀 Redirecting to Google OAuth...\n\nIn a real implementation, this would:\n1. Redirect to Google OAuth consent\n2. User authorizes FIDUS app\n3. Return with access tokens\n4. Connect all Google services');
-      
-      // For demo purposes, simulate successful connection after "OAuth"
-      setTimeout(async () => {
-        const mockSuccessResult = {
-          success: true,
-          services: {
-            gmail: { status: 'connected' },
-            drive: { status: 'connected' },
-            calendar: { status: 'connected' }
-          },
-          message: 'Google APIs connected successfully'
-        };
+      if (response.data.success) {
+        const authUrl = response.data.auth_url;
+        console.log('🚀 Redirecting to REAL Google OAuth:', authUrl);
         
-        setConnectionStatus(mockSuccessResult);
-        loadEmails();
-        loadDriveFiles();
-        setLoading(false);
-      }, 2000);
+        // Redirect to ACTUAL Google OAuth (accounts.google.com)
+        window.location.href = authUrl;
+      } else {
+        throw new Error(response.data.error || 'Failed to get Google OAuth URL');
+      }
       
     } catch (error) {
       console.error('❌ Google OAuth connection failed:', error);
