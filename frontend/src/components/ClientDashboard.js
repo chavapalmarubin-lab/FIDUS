@@ -175,10 +175,6 @@ const ClientDashboard = ({ user, onLogout }) => {
               <CalendarIcon size={16} className="mr-2" />
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
-              <FileText size={16} className="mr-2" />
-              Documents
-            </TabsTrigger>
             <TabsTrigger value="google-workspace" className="text-white data-[state=active]:bg-cyan-600">
               <Globe size={16} className="mr-2" />
               My FIDUS Workspace
