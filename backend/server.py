@@ -15686,6 +15686,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application on startup"""
+    try:
+        # Seed default users into MongoDB if they don't exist
+        await ensure_default_users_in_mongodb()
+        logging.info("🚀 Application startup completed successfully")
+    except Exception as e:
+        logging.error(f"❌ Application startup failed: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
