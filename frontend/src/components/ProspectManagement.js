@@ -2328,9 +2328,10 @@ FIDUS Investment Management Team`;
                   <textarea
                     value={emailData.body}
                     onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
                     rows="8"
                     placeholder="Enter your message here..."
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
                   />
                 </div>
 
