@@ -340,7 +340,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-11 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-12 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               Fund Portfolio
             </TabsTrigger>
@@ -375,6 +375,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             </TabsTrigger>
             <TabsTrigger value="google" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               🌐 Google Workspace
+            </TabsTrigger>
+            <TabsTrigger value="google-monitor" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+              📡 Connection Monitor
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               <FileText size={16} className="mr-2" />
