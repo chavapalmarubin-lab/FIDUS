@@ -7203,15 +7203,23 @@ async def get_all_prospects():
                 # Fallback to in-memory storage
                 prospects = list(prospects_storage.values())
         
-        # Sort by created_at descending (newest first)
+        # Sort by created_at descending (newest first) - FIXED timezone issue
         def get_sort_key(x):
             created_at = x.get('created_at')
             if isinstance(created_at, str):
                 try:
-                    return datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    # Parse ISO string and make timezone-aware
+                    dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    # Ensure it's timezone-aware
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt
                 except:
                     return datetime.min.replace(tzinfo=timezone.utc)
             elif isinstance(created_at, datetime):
+                # Make timezone-aware if naive
+                if created_at.tzinfo is None:
+                    return created_at.replace(tzinfo=timezone.utc)
                 return created_at
             else:
                 return datetime.min.replace(tzinfo=timezone.utc)
