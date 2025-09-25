@@ -7483,7 +7483,7 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
     """Convert a won prospect to a client after AML/KYC approval"""
     try:
         # Find prospect in MongoDB (consistent with GET endpoint)
-        prospect_doc = await db.crm_prospects.find_one({"id": prospect_id})
+        prospect_doc = await db.crm_prospects.find_one({"prospect_id": prospect_id})
         
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
