@@ -7185,6 +7185,14 @@ async def get_all_prospects():
                 }
             ]
             
+            # AUTO-CREATE GOOGLE DRIVE FOLDERS FOR ALL PROSPECTS (CRITICAL CRM FEATURE)
+            try:
+                for prospect in sample_prospects:
+                    await create_prospect_drive_folder(prospect)
+                logger.info(f"Auto-created Google Drive folders for {len(sample_prospects)} prospects")
+            except Exception as folder_error:
+                logger.warning(f"Failed to auto-create Drive folders: {str(folder_error)}")
+            
             # Insert sample prospects into database
             try:
                 await db.crm_prospects.insert_many(sample_prospects)
