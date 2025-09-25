@@ -546,6 +546,10 @@ const ClientDashboard = ({ user, onLogout }) => {
           <TabsContent value="documents" className="mt-6">
             <DocumentPortal user={user} userType="client" />
           </TabsContent>
+
+          <TabsContent value="google-workspace" className="mt-6">
+            <ClientGoogleWorkspace user={user} />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
