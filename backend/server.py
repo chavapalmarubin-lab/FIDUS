@@ -4038,8 +4038,28 @@ async def create_new_user(user_data: UserCreate):
             "notes": user_data.notes
         }
         
-        # Add to MOCK_USERS with username as key
+        # Add to MOCK_USERS with username as key (for backwards compatibility)
         MOCK_USERS[user_data.username] = new_user
+        
+        # CRITICAL: Also store in MongoDB for persistence across restarts
+        try:
+            await db.users.insert_one({
+                "user_id": user_id,
+                "username": user_data.username,
+                "name": user_data.name,
+                "email": user_data.email,
+                "phone": user_data.phone,
+                "user_type": "client",
+                "status": "active",
+                "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+                "createdAt": datetime.now(timezone.utc).isoformat(),
+                "notes": user_data.notes,
+                "temp_password": user_data.temporary_password,
+                "must_change_password": True
+            })
+            logging.info(f"✅ User stored in MongoDB for persistence: {user_data.username}")
+        except Exception as mongo_error:
+            logging.error(f"⚠️ Failed to store user in MongoDB: {str(mongo_error)} (but stored in memory)")
         
         # Store temporary password info
         user_temp_passwords[user_id] = {
