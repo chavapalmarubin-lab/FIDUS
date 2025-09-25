@@ -3998,7 +3998,7 @@ async def get_all_users():
                         "phone": user.get("phone", ""),
                         "type": user.get("user_type", "client"),
                         "status": user.get("status", "active"),
-                        "created_at": user.get("created_at", ""),  # Fixed: use created_at not createdAt
+                        "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",  # Handle datetime conversion
                         "last_login": "",
                         "notes": user.get("notes", "")
                     })
