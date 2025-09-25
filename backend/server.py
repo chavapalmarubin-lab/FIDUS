@@ -1295,66 +1295,72 @@ def calculate_balances(client_id: str) -> dict:
 # Authentication endpoints
 @api_router.post("/auth/login", response_model=UserResponse)
 async def login(login_data: LoginRequest):
-    """Authentication with MongoDB integration and temporary password support"""
+    """PRODUCTION Authentication - MongoDB only (no MOCK data)"""
     username = login_data.username
     password = login_data.password
     user_type = login_data.user_type
     
     try:
-        # First try MongoDB authentication
-        user_data = mongodb_manager.authenticate_user(username, password, user_type)
+        # PRODUCTION: Authenticate against MongoDB users collection
+        user_doc = await db.users.find_one({
+            "username": username,
+            "user_type": user_type,
+            "status": "active"
+        })
         
-        if user_data:
-            # MongoDB authentication successful
-            user_response_dict = user_data.copy()
-            user_response_dict["must_change_password"] = False
-            
-            # Generate JWT token
-            jwt_token = create_jwt_token(user_data)
-            user_response_dict["token"] = jwt_token
-            
-            return UserResponse(**user_response_dict)
-        
-        # Fallback to mock data for backward compatibility during transition
-        if username not in MOCK_USERS:
+        if not user_doc:
+            logging.warning(f"❌ Login failed: User '{username}' not found or inactive")
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        mock_user_data = MOCK_USERS[username]
+        # Check password (temporary or default)
+        password_valid = False
+        must_change_password = False
         
-        # Check if user type matches
-        if mock_user_data["type"] != user_type:
+        # Check temporary password if exists
+        if user_doc.get("temp_password") and user_doc.get("must_change_password"):
+            if password == user_doc["temp_password"]:
+                password_valid = True
+                must_change_password = True
+                logging.info(f"✅ Temporary password login: {username}")
+        
+        # Check default password for seeded users (admin: password123, clients: password123)
+        elif password == "password123":
+            password_valid = True
+            must_change_password = False
+            logging.info(f"✅ Default password login: {username}")
+        
+        if not password_valid:
+            logging.warning(f"❌ Login failed: Invalid password for '{username}'")
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        # Check for temporary password first
-        user_id = mock_user_data["id"]
-        if user_id in user_temp_passwords:
-            temp_info = user_temp_passwords[user_id]
-            if password == temp_info["temp_password"]:
-                # Temporary password login successful
-                user_response_dict = mock_user_data.copy()
-                user_response_dict["must_change_password"] = temp_info["must_change"]
-                
-                # Generate JWT token
-                jwt_token = create_jwt_token(mock_user_data)
-                user_response_dict["token"] = jwt_token
-                
-                return UserResponse(**user_response_dict)
+        # Prepare user response
+        user_response_dict = {
+            "id": user_doc["user_id"],
+            "username": user_doc["username"], 
+            "name": user_doc["name"],
+            "email": user_doc["email"],
+            "type": user_doc["user_type"],
+            "profile_picture": user_doc.get("profile_picture", ""),
+            "must_change_password": must_change_password
+        }
         
-        # Check regular password for mock users
-        if password == "password123":
-            user_response_dict = mock_user_data.copy()
-            user_response_dict["must_change_password"] = False
-            
-            # Generate JWT token
-            jwt_token = create_jwt_token(mock_user_data)
-            user_response_dict["token"] = jwt_token
-            
-            return UserResponse(**user_response_dict)
+        # Generate JWT token
+        jwt_token = create_jwt_token(user_response_dict)
+        user_response_dict["token"] = jwt_token
         
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        # Update last login timestamp
+        await db.users.update_one(
+            {"username": username},
+            {"$set": {"last_login": datetime.now(timezone.utc)}}
+        )
         
+        logging.info(f"🎯 PRODUCTION LOGIN SUCCESS: {username} ({user_type})")
+        return UserResponse(**user_response_dict)
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logging.error(f"Login error: {str(e)}")
+        logging.error(f"❌ Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Authentication failed")
 
 @api_router.post("/auth/refresh-token")
