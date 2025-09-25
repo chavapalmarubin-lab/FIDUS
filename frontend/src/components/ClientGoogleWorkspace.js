@@ -546,17 +546,17 @@ const ClientGoogleWorkspace = ({ user }) => {
               <Card>
                 <CardContent className="p-8 text-center">
                   <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 mb-4">No documents found yet</p>
+                  <p className="text-gray-500 mb-4">Your FIDUS document folder is ready</p>
                   <p className="text-sm text-gray-400 mb-4">
-                    Your personal FIDUS documents folder will appear here once created
+                    Upload documents to share with the FIDUS team securely
                   </p>
                   <Button
-                    onClick={requestClientFolder}
+                    onClick={() => setUploadModalOpen(true)}
                     className="bg-green-500 hover:bg-green-600"
                     disabled={loading}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    {loading ? 'Creating Folder...' : 'Create My Document Folder'}
+                    Upload First Document
                   </Button>
                 </CardContent>
               </Card>
