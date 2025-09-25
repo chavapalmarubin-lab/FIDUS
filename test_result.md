@@ -215,9 +215,9 @@ PRODUCTION READINESS TASK: Complete Google integration across entire FIDUS app a
 
   - task: "Critical Privacy Fix for Client Document Filtering Testing"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py, /app/backend/google_apis_service.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -227,6 +227,9 @@ PRODUCTION READINESS TASK: Complete Google integration across entire FIDUS app a
         - working: true
           agent: "testing"
           comment: "🎉 CRITICAL PRIVACY FIX TESTING COMPLETED SUCCESSFULLY - 100% SUCCESS RATE! Comprehensive testing confirms the privacy fix is working perfectly and clients can ONLY see their own documents. VERIFIED: (1) ✅ FOLDER-SPECIFIC FILTERING: /api/fidus/client-drive-folder/client_003 (Salvador Palma) returns ONLY documents from his specific folder (folder_id: 1X_xGlX78OlELGyfWGrybgHDAh8qyS_6v), showing exactly 1 document as expected. (2) ✅ GOOGLE DRIVE API INTEGRATION: get_drive_files_in_folder() method working correctly with proper folder-specific query using 'folder_id in parents and trashed=false' - no cross-client contamination detected. (3) ✅ PRIVACY VALIDATION: Confirmed that documents from other clients' folders are NOT included in results - each client sees only their own folder documents with proper folder_id isolation. (4) ✅ DOCUMENT COUNT ACCURACY: Salvador Palma sees exactly 1 document (FIDUS INVOICE 2.pdf) matching expected count, NOT the previous 12+ documents bug. (5) ✅ PRIVACY LOGGING: Backend logs confirm 'PRIVACY SECURE: Retrieved 1 documents from client client_003 folder ONLY (folder_id: 1X_xGlX78OlELGyfWGrybgHDAh8qyS_6v)' - proper audit trail implemented. (6) ✅ CROSS-CLIENT ISOLATION: Other clients (client_001, client_002, client_004) properly return 'Client not found' when no folder configured, preventing unauthorized access. CONCLUSION: The critical privacy fix is FULLY OPERATIONAL and production-ready. Clients can only access documents in their specific Google Drive folders, eliminating the privacy breach where clients could see other clients' documents. The folder_id-based filtering ensures complete document isolation between clients."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL PRIVACY VULNERABILITY CONFIRMED - DOCUMENT PRIVACY FIX FAILED! Comprehensive end-to-end testing of Alejandro Mariscal Romero's document access reveals CRITICAL SECURITY ISSUES: (1) ❌ PRIVACY BREACH: Found 5 documents instead of expected 0-3, indicating potential cross-client contamination. (2) ❌ UNAUTHORIZED ACCESS: Detected references to 'salvador' and 'gerardo' in document content, confirming other clients' documents are visible to Alejandro. (3) ❌ MISSING PRIVACY MESSAGE: No security message displayed indicating 'Alejandro Mariscal Romero folder ONLY' as expected. (4) ✅ UPLOAD FUNCTIONALITY: Upload Document button is present and functional. (5) ✅ CREATE FOLDER BUTTON: Create Drive Folder button is available. (6) ❌ MISSING REFRESH BUTTON: Refresh button not found in Documents tab. ROOT CAUSE: The privacy fix using /api/fidus/client-drive-folder/{client_id} endpoint is NOT working correctly in the frontend implementation. The system is still showing documents from multiple clients instead of isolating to Alejandro's folder only. URGENT ACTION REQUIRED: (1) Verify the frontend ClientDetailModal.js is correctly calling the privacy-secure endpoint, (2) Ensure proper client_id mapping for Alejandro Mariscal Romero, (3) Add privacy security message display, (4) Implement proper document filtering validation. SECURITY IMPACT: HIGH - Client document privacy is compromised, allowing unauthorized access to other clients' sensitive documents."
 
 ## frontend:
   - task: "Investment Simulator PDF Export with FIDUS Logo Integration Testing"
