@@ -14912,12 +14912,15 @@ async def upload_client_document_to_fidus(
                 temp_file_path = temp_file.name
                 temp_file.flush()  # Ensure all data is written
             
-            # Upload to Google Drive using the temp file path
+            # Upload to Google Drive using file bytes (FIXED: read file content as bytes)
+            with open(temp_file_path, 'rb') as temp_file:
+                file_bytes = temp_file.read()
+            
             result = await google_apis_service.upload_drive_file(
                 token_data,
-                temp_file_path,
+                file_bytes,
                 upload_filename,
-                folder_info.get('folder_id')
+                file.content_type or "application/octet-stream"
             )
             
             if result.get('success'):
