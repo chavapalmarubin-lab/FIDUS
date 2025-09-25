@@ -13836,7 +13836,7 @@ class RateLimiter:
     
     def is_allowed(self, key: str, limit: int = 100, window: int = 60) -> bool:
         """Check if request is allowed under rate limit"""
-        current_time = time()
+        current_time = time.time()
         self.total_requests += 1
         
         # Clean up old entries periodically
