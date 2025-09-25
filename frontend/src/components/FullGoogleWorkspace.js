@@ -61,7 +61,8 @@ const FullGoogleWorkspace = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
-    testConnection();
+    // Don't auto-test connection, let user click "Connect Google Workspace" first
+    // testConnection();
   }, []);
 
   const testConnection = async () => {
