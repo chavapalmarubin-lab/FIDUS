@@ -86,35 +86,35 @@ const ClientGoogleWorkspace = ({ user }) => {
     }
   };
 
-  // Load client-specific Google data
+  // Load client-specific FIDUS data (not personal Google data)
   const loadClientGoogleData = async () => {
     setGoogleLoading(true);
     try {
-      console.log('🔍 Loading Google data for client:', user.email);
+      console.log('🔍 Loading FIDUS data for client:', user.email);
 
-      // Load emails related to this client
-      const emailResponse = await apiAxios.get(`/google/gmail/client-emails/${user.email}`);
+      // Load emails that FIDUS has sent TO this client (not from client's Gmail)
+      const emailResponse = await apiAxios.get(`/fidus/client-communications/${user.id}`);
       if (emailResponse.data.success) {
         setClientEmails(emailResponse.data.emails);
-        console.log(`📧 Loaded ${emailResponse.data.emails.length} emails for ${user.name}`);
+        console.log(`📧 Loaded ${emailResponse.data.emails.length} FIDUS communications for ${user.name}`);
       }
 
-      // Load meetings for this client
-      const meetingsResponse = await apiAxios.get(`/google/calendar/client-meetings/${user.email}`);
+      // Load meeting requests and scheduled meetings for this client
+      const meetingsResponse = await apiAxios.get(`/fidus/client-meetings/${user.id}`);
       if (meetingsResponse.data.success) {
         setClientMeetings(meetingsResponse.data.meetings);
-        console.log(`📅 Loaded ${meetingsResponse.data.meetings.length} meetings for ${user.name}`);
+        console.log(`📅 Loaded ${meetingsResponse.data.meetings.length} FIDUS meetings for ${user.name}`);
       }
 
-      // Load documents for this client
-      const documentsResponse = await apiAxios.get(`/google/drive/client-documents/${user.id}`);
+      // Load client's FIDUS document folder (pre-created by admin)
+      const documentsResponse = await apiAxios.get(`/fidus/client-drive-folder/${user.id}`);
       if (documentsResponse.data.success) {
         setClientDocuments(documentsResponse.data.documents);
-        console.log(`📁 Loaded ${documentsResponse.data.documents.length} documents for ${user.name}`);
+        console.log(`📁 Loaded ${documentsResponse.data.documents.length} documents from client FIDUS folder`);
       }
 
     } catch (error) {
-      console.error('❌ Failed to load client Google data:', error);
+      console.error('❌ Failed to load client FIDUS data:', error);
       // Set empty arrays on error
       setClientEmails([]);
       setClientMeetings([]);
