@@ -11102,6 +11102,72 @@ async def get_funds_overview():
 
 # ==================== GOOGLE API ENDPOINTS ====================
 
+# Import REAL Google OAuth
+from real_google_oauth import real_google_oauth
+
+# ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
+
+@api_router.get("/auth/google/url")
+async def get_google_oauth_url():
+    """Get the REAL Google OAuth URL for authentication"""
+    try:
+        auth_url = real_google_oauth.get_authorization_url()
+        return {
+            "success": True,
+            "auth_url": auth_url,
+            "message": "Redirect user to this URL for Google OAuth"
+        }
+    except Exception as e:
+        logging.error(f"Failed to generate Google OAuth URL: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/auth/google/callback")
+async def google_oauth_callback(code: str, state: str = None):
+    """Handle Google OAuth callback with authorization code"""
+    try:
+        if not code:
+            raise HTTPException(status_code=400, detail="Authorization code is required")
+        
+        # Exchange code for tokens
+        token_result = real_google_oauth.exchange_code_for_tokens(code)
+        
+        if not token_result['success']:
+            raise HTTPException(status_code=400, detail=token_result['error'])
+        
+        # Get user info
+        user_result = real_google_oauth.get_user_info(token_result['access_token'])
+        
+        if not user_result['success']:
+            raise HTTPException(status_code=400, detail=user_result['error'])
+        
+        # Store tokens securely (in a real app, you'd store these in database)
+        user_data = user_result['user']
+        
+        return {
+            "success": True,
+            "message": "Google OAuth authentication successful",
+            "user": {
+                "email": user_data.get('email'),
+                "name": user_data.get('name'),
+                "picture": user_data.get('picture'),
+                "verified_email": user_data.get('verified_email')
+            },
+            "tokens": {
+                "access_token": token_result['access_token'],
+                "refresh_token": token_result['refresh_token'],
+                "expires_in": token_result['expires_in']
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Google OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/google/test-connection")
 async def test_google_connection():
     """Test Google API connectivity"""
