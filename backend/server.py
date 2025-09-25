@@ -7456,7 +7456,7 @@ async def run_aml_kyc_check(prospect_id: str):
         }
         
         await db.crm_prospects.update_one(
-            {"id": prospect_id},
+            {"prospect_id": prospect_id},
             {"$set": update_fields}
         )
         
