@@ -21,7 +21,7 @@ import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import UserAdministration from "./UserAdministration";
 // Clean imports - removed unused Google components
-import CleanGoogleWorkspace from './CleanGoogleWorkspace';
+import FullGoogleWorkspace from './FullGoogleWorkspace';
 import {
   LineChart,
   Line,
