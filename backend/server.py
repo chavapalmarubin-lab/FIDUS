@@ -4094,73 +4094,33 @@ async def get_all_users():
 
 @api_router.post("/admin/users/create")
 async def create_new_user(user_data: UserCreate):
-    """Create a new user account with temporary password"""
+    """PRODUCTION: Create new user in MongoDB (no MOCK data)"""
     try:
-        # Check if username already exists
-        for existing_user in MOCK_USERS.values():
-            if existing_user["username"] == user_data.username:
-                raise HTTPException(status_code=400, detail="Username already exists")
+        # Check if username already exists in MongoDB
+        existing_user = await db.users.find_one({"username": user_data.username})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
         
         # Generate unique user ID
         user_id = f"client_{str(uuid.uuid4())[:8]}"  
         
-        # Create user entry
-        new_user = {
-            "id": user_id,
+        # PRODUCTION: Store directly in MongoDB
+        await db.users.insert_one({
+            "user_id": user_id,
             "username": user_data.username,
             "name": user_data.name,
             "email": user_data.email,
-            "type": "client",
-            "status": "active",
             "phone": user_data.phone,
+            "user_type": "client",
+            "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "notes": user_data.notes
-        }
-        
-        # Add to MOCK_USERS with username as key (for backwards compatibility)
-        MOCK_USERS[user_data.username] = new_user
-        
-        # CRITICAL: Also store in MongoDB for persistence across restarts
-        try:
-            await db.users.insert_one({
-                "user_id": user_id,
-                "username": user_data.username,
-                "name": user_data.name,
-                "email": user_data.email,
-                "phone": user_data.phone,
-                "user_type": "client",
-                "status": "active",
-                "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-                "created_at": datetime.now(timezone.utc),  # Fixed: use datetime object not string
-                "notes": user_data.notes,
-                "temp_password": user_data.temporary_password,
-                "must_change_password": True
-            })
-            logging.info(f"✅ User stored in MongoDB for persistence: {user_data.username}")
-        except Exception as mongo_error:
-            logging.error(f"⚠️ Failed to store user in MongoDB: {str(mongo_error)} (but stored in memory)")
-        
-        # Store temporary password info
-        user_temp_passwords[user_id] = {
+            "created_at": datetime.now(timezone.utc),
+            "notes": user_data.notes,
             "temp_password": user_data.temporary_password,
-            "must_change": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
+            "must_change_password": True
+        })
         
-        # Initialize client readiness (not ready initially)
-        client_readiness[user_id] = {
-            "client_id": user_id,
-            "aml_kyc_completed": False,
-            "agreement_signed": False,
-            "deposit_date": None,
-            "investment_ready": False,
-            "notes": f"Created by admin - {user_data.notes}",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-            "updated_by": "admin"
-        }
-        
-        logging.info(f"New user created: {user_data.username} (ID: {user_id})")
+        logging.info(f"🎯 PRODUCTION: User created in MongoDB: {user_data.username} ({user_id})")
         
         return {
             "success": True,
