@@ -11800,8 +11800,7 @@ async def get_pipeline_statistics(current_user: dict = Depends(get_current_admin
     """
     try:
         # Get all prospects from database
-        prospects_collection = mongodb_manager.get_collection("prospects")
-        prospects = await prospects_collection.find().to_list(length=None)
+        prospects = await db.crm_prospects.find().to_list(length=None)
         
         # Calculate statistics
         total_prospects = len(prospects)
