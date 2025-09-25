@@ -11181,7 +11181,7 @@ async def upload_google_file(request: dict):
 async def get_google_drive_files(max_results: int = 10):
     """Get files from Google Drive"""
     try:
-        result = real_google_api.list_files(max_results=max_results)
+        result = real_google_api.get_real_drive_files(max_results=max_results)
         return result
     except Exception as e:
         logging.error(f"Get drive files failed: {str(e)}")
