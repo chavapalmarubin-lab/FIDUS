@@ -772,32 +772,32 @@ FIDUS Investment Management Team`;
         return;
       }
 
-      // Open email modal with pre-filled content for document request
-      const emailSubject = `Document Request: ${docTypeConfig.label} - FIDUS Investment Management`;
-      const emailBody = `Dear ${prospect.name},
-
-I hope this message finds you well.
-
-As part of our onboarding process and to comply with regulatory requirements, we need you to provide the following document:
-
-Document Required: ${docTypeConfig.label}
-${docTypeConfig.description || ''}
-
-Please upload this document through our secure portal or email it to us at your earliest convenience. If you have any questions about the required documentation or need assistance with the upload process, please don't hesitate to contact me.
-
-Thank you for your cooperation and we look forward to working with you.
-
-Best regards,
-FIDUS Investment Committee
-${prospect.email ? `\nThis message was sent regarding your inquiry to: ${prospect.email}` : ''}`;
-
-      // Set email modal data and open it
-      setEmailData({
-        prospectId: prospectId,
-        recipientEmail: prospect.email,
-        recipientName: prospect.name,
-        subject: emailSubject,
-        body: emailBody,
+      // 🔥 GOOGLE INTEGRATION: Send document request email via Google Gmail API
+      console.log('📧 Sending document request via Google Gmail API...');
+      
+      const result = await googleCRMIntegration.sendDocumentRequestToProspect(prospect, documentType);
+      
+      if (result.success) {
+        alert(`✅ Document request sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect status to indicate document requested
+        const updatedProspects = prospects.map(p => 
+          p.id === prospectId 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Document request sent via Gmail: ${docTypeConfig.label}` }
+            : p
+        );
+        setProspects(updatedProspects);
+        
+        setSelectedProspectForDocs(null);
+      } else {
+        setError(`❌ Failed to send document request: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Document request error:', error);
+      setError(`Failed to send document request: ${error.message}`);
+    }
+  };
         emailType: 'document_request'
       });
       
