@@ -643,6 +643,64 @@ class GoogleAPIsService:
                 'error': str(e)
             }
 
+    async def upload_file_to_folder(self, token_data: Dict[str, str], folder_id: str, filename: str, file_data: bytes, mime_type: str) -> Dict:
+        """
+        Upload file to a specific Google Drive folder (PRIVACY SECURE)
+        
+        Args:
+            token_data: OAuth token data
+            folder_id: Specific Google Drive folder ID to upload to
+            filename: Name of the file
+            file_data: File content as bytes
+            mime_type: MIME type of the file
+            
+        Returns:
+            Upload result with file ID and metadata
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # File metadata with parent folder specified
+            file_metadata = {
+                'name': filename,
+                'parents': [folder_id]  # CRITICAL: Upload to specific client folder ONLY
+            }
+            
+            from googleapiclient.http import MediaIoBaseUpload
+            import io
+            
+            file_io = io.BytesIO(file_data)
+            media = MediaIoBaseUpload(file_io, mimetype=mime_type)
+            
+            file_result = drive_service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id, name, webViewLink, mimeType, size, createdTime, modifiedTime'
+            ).execute()
+            
+            logger.info(f"✅ PRIVACY SECURE: Uploaded '{filename}' to folder {folder_id} (file_id: {file_result['id']})")
+            
+            return {
+                'success': True,
+                'id': file_result['id'],
+                'name': file_result.get('name'),
+                'web_view_link': file_result.get('webViewLink'),
+                'mimeType': file_result.get('mimeType'),
+                'size': file_result.get('size'),
+                'createdTime': file_result.get('createdTime'),
+                'modifiedTime': file_result.get('modifiedTime'),
+                'folder_id': folder_id,
+                'message': f'File uploaded successfully to client folder'
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Drive folder upload error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
     async def create_drive_folder(self, token_data: Dict[str, str], folder_name: str, parent_folder_id: str = None) -> Dict:
         """
         Create a folder in Google Drive
