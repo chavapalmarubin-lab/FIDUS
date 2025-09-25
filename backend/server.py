@@ -1157,6 +1157,8 @@ async def ensure_default_users_in_mongodb():
         return False
 
 # Mock data for demo (DEPRECATED - will be removed in production)
+# NOTE: This is kept temporarily for backward compatibility during MongoDB transition
+# All new authentication should use MongoDB via ensure_default_users_in_mongodb()
 MOCK_USERS = {
     "client1": {
         "id": "client_001",
