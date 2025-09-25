@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://auth-flow-debug-2.preview.emergentagent.com"
+        self.base_url = "https://fidus-workspace-1.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

@@ -33,7 +33,7 @@ class HybridGoogleService:
         
         # OAuth credentials for user consent
         self.oauth_client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-        self.oauth_redirect_uri = "https://auth-flow-debug-2.preview.emergentagent.com/auth/google/callback"
+        self.oauth_redirect_uri = "https://fidus-workspace-1.preview.emergentagent.com/auth/google/callback"
         
         self._initialize_service_account()
     

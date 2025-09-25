@@ -17,7 +17,7 @@ class RealGoogleOAuth:
         # Use your ACTUAL Google OAuth credentials
         self.client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"  
         self.client_secret = "GOCSPX-YOUR_CLIENT_SECRET_HERE"  # You need to get this from Google Console
-        self.redirect_uri = "https://auth-flow-debug-2.preview.emergentagent.com/auth/google/callback"
+        self.redirect_uri = "https://fidus-workspace-1.preview.emergentagent.com/auth/google/callback"
         
         self.oauth_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
         self.token_url = "https://oauth2.googleapis.com/token"
