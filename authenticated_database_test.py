@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 class AuthenticatedDatabaseTester:
-    def __init__(self, base_url="https://fidus-workspace-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-invest-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

@@ -1,100 +1,105 @@
 <analysis>
-The AI engineer's work primarily focused on integrating Google OAuth and various Google APIs (Gmail, Calendar, Drive, Meet) into the FIDUS application. This involved extensive debugging of persistent login loops, frontend loading issues, and UI styling. Initial attempts involved fixing  syntax errors and resolving a  error for  that caused session breaks. A major turning point was the user's extreme frustration leading to a complete overhaul: all existing Google OAuth code was deleted. The subsequent effort was dedicated to implementing a REAL Google OAuth flow from scratch, handling service account credentials, and later shifting to standard OAuth 2.0 with client ID/secret. The trajectory concluded with the successful establishment of a functional Google API integration for Gmail, Calendar, and Drive, along with CRM integration, and the user requesting a Google-style connection monitor. Session persistence issues were a recurring challenge throughout.
+The AI engineer's trajectory involved a comprehensive effort to build and refine the FIDUS investment platform, primarily focusing on robust Google Workspace integration and a state-of-the-art CRM. The work began with a complete overhaul of Google OAuth after initial issues, transitioning to a REAL Google OAuth flow. Subsequent development included implementing a Google-style connection monitor, comprehensive Google API integrations for Gmail, Calendar, and Drive, both for admin and client dashboards. A significant portion of the work addressed user-reported bugs, including data loading inconsistencies, UI/UX flaws (e.g., white-on-white text), and critical privacy issues related to Google Drive document segregation. Towards the end, the focus shifted to refining the CRM pipeline, automating Google Drive folder creation for leads/clients, and resolving persistent backend issues like MongoDB schema validation errors, datetime timezone errors, and Google API authentication failures. The engineer systematically debugged and implemented features, often iterating based on user feedback and screenshots.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is an investment management platform for clients and admins, focusing on AML/KYC, CRM, fund allocation, and real-time portfolio management. The core objective is to integrate robust Google Workspace functionality and advanced document handling.
-
-**Explicit Requests & Implemented Features:**
-1.  **Google OAuth Integration**: Admin users authenticate with Google using personal Gmail accounts for access to Gmail, Calendar, Drive, and Meet.
-2.  **Real Google API Integration**: Fetches and displays real Gmail, Calendar, Drive, and Meet data.
-3.  **Gmail Integration**: Supports sending/receiving emails and scheduling meetings.
-4.  **Calendar Integration**: Enables creation and management of calendar events, including Google Meet links.
-5.  **Drive Integration**: Manages documents, including upload functionality.
+The FIDUS financial portal aims to be a comprehensive investment management platform for clients and admins, integrating robust Google Workspace functionality and advanced document handling. Key requirements include:
+1.  **Google OAuth Integration**: Admin users authenticate with personal Gmail accounts for Gmail, Calendar, Drive, and Meet access.
+2.  **Real Google API Integration**: Fetches and displays real Gmail, Calendar, Drive, and Meet data for both admin and client portals.
+3.  **Gmail Integration**: Supports sending/receiving FIDUS-to-client emails for clients; full Gmail access for admins.
+4.  **Calendar Integration**: Enables creation and management of events, including Google Meet links. Client meeting requests should go to the admin portal.
+5.  **Drive Integration**: Manages documents with a segregated Google Drive folder per lead/client. Clients can upload documents to their pre-created FIDUS folder.
 6.  **Document Signing Functionality**: Document upload, PDF viewing, electronic signature capture, and email notifications (Salvador Palma default signee).
-7.  **Google Social Login/Signup**: Initially implemented, then disabled to resolve conflicts.
-8.  **Admin Login Routing**: Admins redirect correctly post-login.
-9.  **CRM Integration**: Google functionalities (email, meetings, document requests) integrated within CRM prospect cards.
+7.  **Google Social Login/Signup**: Initially implemented, then disabled.
+8.  **Admin Login Routing**: Admins redirect correctly post-login, with Google-style connection monitor.
+9.  **CRM Integration**: Google functionalities (email, meetings, document requests) integrated within CRM prospect/client details.
 10. **Robust Authentication**: Addressed login loops, , JWT token handling, and frontend authentication state persistence.
-11. **CRM Pipeline**: Implement stages (Lead to Negotiation to Won/Lost) with a convert to client button, requiring AML/KYC for clients.
-12. **User Admin Functions**: Create standard user administration functions for managing users.
-13. **Google Connection Certification**: Implement a procedure to certify Google API connection status (Gmail, Calendar, Drive) post-OAuth.
-14. **Full Google Workspace Experience**: Comprehensive Google integration with real Gmail inbox, calendar management, and file uploads, mimicking a direct Google login experience.
+11. **CRM Pipeline**: Stages (Lead to Negotiation to Won/Lost) with ability to move leads, a convert to client button, and required AML/KYC for clients.
+12. **User Admin Functions**: Standard user administration for managing users.
+13. **Google Connection Certification**: Procedure to certify Google API connection status (Gmail, Calendar, Drive).
+14. **Full Google Workspace Experience**: Comprehensive, Google-like integration within the application's UI, tailored for admin and client roles.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI development.
--   **FastAPI**: Python backend API development.
--   **MongoDB**: NoSQL database for data storage.
--   **JWT Authentication**: Token-based security.
--   **Google OAuth 2.0**: Protocol for secure authentication to Google APIs.
--   **Axios**: HTTP client.
--   **Pydantic**: Data validation for Python.
+-   **React.js**: Frontend UI development with a component-based architecture.
+-   **FastAPI**: Python backend API development, handling routing and business logic.
+-   **MongoDB**: NoSQL database for data storage, utilizing UUIDs for IDs.
+-   **JWT Authentication**: Token-based security for user sessions.
+-   **Google OAuth 2.0**: Protocol for secure authentication and authorization to Google APIs.
+-   **Axios**: HTTP client for frontend API calls.
+-   **Pydantic**: Data validation and serialization for Python models.
+-   **Datetime/Timezone Handling**: Consistent use of timezone-aware datetimes in backend.
 </key_technical_concepts>
 
 <code_architecture>
 
 -   ****: Central FastAPI application.
-    -   **Importance**: Defines backend endpoints, handles Google OAuth callback, CRM prospects, and user administration.
-    -   **Changes**: Initially fixed for JWT, CRM pipelines, Pydantic V2 compatibility, and Google OAuth issues. Later, major cleanup involved removing all old Google OAuth related code. The  endpoint was added. Subsequently, real Google OAuth endpoints (, ) and comprehensive Google API endpoints (for Gmail, Calendar, Drive) were re-integrated.
+    -   **Importance**: Defines backend endpoints, handles Google OAuth callback, CRM, user administration, and API logic.
+    -   **Changes**: Extensive modifications for Google OAuth, CRM pipelines, Pydantic V2 compatibility, and Google API interactions. Added , , and various Google API endpoints. Modified for file uploads (). Updated CRM prospects and pipeline stats endpoints to align with frontend expectations ( field). Fixed datetime timezone comparison errors and integrated automatic Google Drive folder creation for leads/clients. Enhanced for client-specific Google data.
 -   ****: Stores backend environment variables.
     -   **Importance**: Critical for Google OAuth credentials (, , ) and MongoDB connection.
-    -   **Changes**:  and  were updated. Initial Google OAuth credentials were removed, then re-added for the REAL OAuth flow.
--   ****: Handled initial Google social login.
-    -   **Importance**: Processed session IDs from Emergent OAuth.
-    -   **Changes**: This file's logic was largely removed/disabled due to user feedback on separating social login from API integration.
--   ****: Manages real Google API interactions using service accounts.
-    -   **Importance**: Centralizes logic for Google services like Gmail, Calendar, Drive.
-    -   **Changes**: Was initially intended to use service account, but later shifted to standard OAuth flow.
--   ****: New file for handling real Google OAuth 2.0 flow.
-    -   **Importance**: Generates the Google OAuth URL and processes the callback.
-    -   **Changes**: Created from scratch to implement the classic Google OAuth steps with user's client ID and secret.
--   ****: New file for a hybrid approach to Google integration.
-    -   **Importance**: Attempted to combine service account and OAuth 2.0 logic.
-    -   **Changes**: Created to handle both service account testing and OAuth URL generation.
+    -   **Changes**: Updated  and . Google OAuth credentials were cycled and re-added for the REAL OAuth flow.
+-   ****: Manages Google API interactions.
+    -   **Importance**: Centralizes logic for Gmail, Calendar, Drive services.
+    -   **Changes**: Added  for automatic folder creation and  to filter by specific folder IDs, addressing a critical privacy bug.
 -   ****: Main React application component.
     -   **Importance**: Manages overall application state, routing, and user authentication.
-    -   **Changes**: Modified to fix dark screen/logo animation, JWT token storage, and session processing. Later, all Google OAuth callback logic was removed during the overhaul, and then re-implemented to handle the REAL Google OAuth callback and CRM redirection.
+    -   **Changes**: Modified for JWT token handling, session processing, and removed/re-implemented Google OAuth callback logic for the REAL flow.
 -   ****: Admin UI.
     -   **Importance**: Provides navigation and overall layout for admin features.
-    -   **Changes**: Modified to incorporate , fixed tab styling. Updated to conditionally redirect to CRM tab after Google OAuth. Replaced  with .
--   ****: Initial login screen.
-    -   **Importance**: Provides options for client/admin login and social login.
-    -   **Changes**: Google Social Login button was commented out/disabled as per user request to separate OAuth flows.
--   ****: Application documentation component.
-    -   **Importance**: To display relevant application documentation.
-    -   **Changes**: Fixed a syntax error that was causing a critical frontend build error.
--   ****: New, comprehensive Google Workspace integration component.
-    -   **Importance**: Provides the complete Google Workspace experience (Gmail, Calendar, Drive interfaces, connection status).
-    -   **Changes**: Created from scratch to deliver the full Google workspace experience with real API calls, replacing previous mock and simplified versions. Includes a Connect Google Workspace button and connection monitoring.
+    -   **Changes**: Updated to incorporate , fixed tab styling, conditionally redirects to CRM tab after Google OAuth. Replaced  with , and then later with . Integrated .
 -   ****: Manages CRM prospects.
     -   **Importance**: Displays prospect cards and integrates Google actions.
-    -   **Changes**: Google API integration functions (, ) were added to use real Google services instead of mock or direct API calls.
+    -   **Changes**: Initially added Google API integration functions. Later updated to use  and . Explicitly set text colors for CRM modals.
+-   ****: Comprehensive Google Workspace integration component (initial version).
+    -   **Importance**: Provided the initial comprehensive Google Workspace experience.
+    -   **Changes**: Created from scratch, then largely superseded by .
+-   ** (New)**: Displays Google service connection status.
+    -   **Importance**: Provides a Google-style visual monitor for Gmail, Calendar, Drive, and Meet connection status.
+    -   **Changes**: Created from scratch; integrated into .
+-   ** (New)**: Enhanced Google Workspace integration component.
+    -   **Importance**: Replaced  to deliver a more robust and Google-like experience.
+    -   **Changes**: Created to handle real Gmail inbox, calendar management, and file uploads. Updated to automatically load data upon connection.
+-   ** (New)**: Comprehensive client detail view with Google integration.
+    -   **Importance**: Provides a detailed view for clients, including client-specific Google Workspace data (emails, meetings, Drive documents).
+    -   **Changes**: Created to replace  in  and .
+-   ** (New)**: Displays CRM pipeline.
+    -   **Importance**: Provides a visual pipeline for leads with stages (Lead, Negotiation, Won, Lost), and Convert to Client / AML/KYC buttons.
+    -   **Changes**: Created to implement the full CRM pipeline functionality.
+-   ** (New)**: Client-specific Google Workspace integration.
+    -   **Importance**: Provides a FIDUS-centric Google Workspace experience for clients, filtered to their specific data.
+    -   **Changes**: Created and integrated into . Refined to show only FIDUS-sent emails, allow meeting requests to admin, and show/upload documents to client's pre-created Drive folder.
+-   ****: Manages client directory.
+    -   **Importance**: Lists and allows management of clients.
+    -   **Changes**: Modified to open  instead of  when viewing client details.
+-   ****: Client-side dashboard.
+    -   **Importance**: Displays client-specific financial and document information.
+    -   **Changes**: Integrated  to provide a dedicated tab for client-specific Google integrations, replacing the old Documents tab.
 -   ****: Frontend authentication utilities.
     -   **Importance**: Handles token management and authentication state.
-    -   **Changes**: Modified  to correctly check  and  flags, improving session persistence.
--   ****: New file for CRM-Google integration services.
-    -   **Importance**: Provides helper functions to connect CRM actions to Google APIs.
-    -   **Changes**: Created to abstract Google API calls for CRM features.
--   ****: New document for CTO summary.
-    -   **Importance**: Technical summary for the CTO.
-    -   **Changes**: Created, but content still pending/being worked on.
+    -   **Changes**: Modified  to correctly check  and  flags.
 </code_architecture>
 
 <pending_tasks>
--   Finalize the  document with all requested details on hosting, database, and technologies.
+-   Finalize the  document.
 -   Implement the actual MetaTrader5 package integration in .
 -   Automate rebate tracking based on trading volume via an API.
 -   Complete the integration of the  component with real data and visualizations.
--   Enhance the CRM pipeline stages further, especially the convert to client and AML/KYC workflow.
 -   Implement the Send for Signature functionality on the Drive tab, including document selection, upload, and display in a sent tab, ensuring Salvador Palma is the default FIDUS signee.
--   Implement a Google-style connection monitor/interface for FIDUS.
+-   Resolve MongoDB schema validation errors preventing prospect/client creation.
+-   Ensure Google Drive folder data persists correctly in prospect responses.
+-   Fix Calendar API authentication failures.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer completed a major overhaul of the Google integration after the user expressed extreme dissatisfaction with previous attempts. All prior Google OAuth-related code was removed. A REAL Google OAuth flow was then implemented from scratch, requiring the user's Google Cloud Client ID and Client Secret. This new setup successfully generates a real Google OAuth URL, redirecting users to  for authentication. The frontend component  was created to provide a comprehensive Google Workspace experience, including Gmail, Calendar, and Drive interfaces, which were then integrated into the Admin Dashboard. Additionally, Google API integration was added to  to link CRM actions to Google services. The latest user feedback indicates that the Google integration is now WORKING for sending emails and accessing real Google services, and the UI is clean and beautiful. The final explicit request was to create a Google-style connection monitor and clean interface for FIDUS matching Google's design.
+Immediately prior to this summary, the AI engineer was addressing critical bugs in the admin portal and CRM system, specifically after a comprehensive test revealed mixed results. The user reported an error when creating a client. The AI identified that the primary issues are:
+1.  **MongoDB schema validation errors** that prevent new prospects/clients from being created or updated in the database.
+2.  **Google Drive folder data not persisting** in prospect responses, implying that even if folders are created, their IDs or associated data are not correctly stored or retrieved.
+3.  **Calendar API authentication failures**, causing server errors and preventing calendar events from loading despite the connection monitor showing as connected.
+
+The AI engineer has acknowledged the user's report of an error when creating a client and is now focused on fixing the MongoDB schema validation issue.
 </current_work>
 
 <optional_next_step>
-Create a Google-style connection monitor and clean interface for FIDUS.
+Fix the MongoDB schema validation error preventing client creation.
 </optional_next_step>
