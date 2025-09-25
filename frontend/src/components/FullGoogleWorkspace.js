@@ -81,6 +81,47 @@ const FullGoogleWorkspace = () => {
     }
   };
 
+  // Handle Google OAuth connection
+  const handleConnectToGoogle = async () => {
+    setLoading(true);
+    try {
+      console.log('🔗 Initiating Google OAuth connection...');
+      
+      // For now, redirect to Google OAuth
+      // In a real implementation, this would use your actual Google OAuth flow
+      // Using the credentials you provided: shaped-canyon-470822-b3
+      
+      // Simulate OAuth process - in real implementation, this would redirect to Google
+      alert('🚀 Redirecting to Google OAuth...\n\nIn a real implementation, this would:\n1. Redirect to Google OAuth consent\n2. User authorizes FIDUS app\n3. Return with access tokens\n4. Connect all Google services');
+      
+      // For demo purposes, simulate successful connection after "OAuth"
+      setTimeout(async () => {
+        const mockSuccessResult = {
+          success: true,
+          services: {
+            gmail: { status: 'connected' },
+            drive: { status: 'connected' },
+            calendar: { status: 'connected' }
+          },
+          message: 'Google APIs connected successfully'
+        };
+        
+        setConnectionStatus(mockSuccessResult);
+        loadEmails();
+        loadDriveFiles();
+        setLoading(false);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ Google OAuth connection failed:', error);
+      setConnectionStatus({ 
+        success: false, 
+        error: 'Failed to connect to Google OAuth. Please try again.' 
+      });
+      setLoading(false);
+    }
+  };
+
   // ==================== GMAIL FUNCTIONS ====================
   
   const loadEmails = async () => {
