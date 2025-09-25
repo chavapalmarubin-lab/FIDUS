@@ -282,11 +282,11 @@ const RealGoogleWorkspace = () => {
   const loadRealCalendarEvents = async () => {
     try {
       console.log('📅 Loading real calendar events...');
-      const response = await apiAxios.get('/google/calendar/real-events');
+      const response = await apiAxios.get('/google/calendar/events');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} calendar events`);
-        setEvents(response.data);
+      if (response.data?.success && Array.isArray(response.data.events)) {
+        console.log(`✅ Loaded ${response.data.events.length} calendar events`);
+        setEvents(response.data.events);
       }
     } catch (error) {
       console.error('❌ Failed to load calendar events:', error);
