@@ -83,63 +83,20 @@ const UserAdministration = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // Mock user data - in production this would be a real API call
-      const mockUsers = [
-        {
-          id: 'admin_001',
-          username: 'admin',
-          name: 'Investment Committee',
-          email: 'ic@fidus.com',
-          phone: '+1-555-0100',
-          type: 'admin',
-          status: 'active',
-          created_at: '2024-01-15T10:00:00Z',
-          last_login: '2024-09-22T08:30:00Z',
-          notes: 'Main admin account'
-        },
-        {
-          id: 'client_003',
-          username: 'client3',
-          name: 'SALVADOR PALMA',
-          email: 'chava@alyarglobal.com',
-          phone: '+1-555-0200',
-          type: 'client',
-          status: 'active',
-          created_at: '2024-02-01T14:30:00Z',
-          last_login: '2024-09-21T16:45:00Z',
-          notes: 'VIP client - BALANCE fund investor'
-        },
-        {
-          id: 'client_001',
-          username: 'client1',
-          name: 'Gerardo Briones',
-          email: 'g.b@fidus.com',
-          phone: '+1-555-0300',
-          type: 'client',
-          status: 'active',
-          created_at: '2024-03-15T09:20:00Z',
-          last_login: '2024-09-20T11:15:00Z',
-          notes: 'Regular client'
-        },
-        {
-          id: 'client_002',
-          username: 'client2',
-          name: 'Maria Rodriguez',
-          email: 'm.rodriguez@fidus.com',
-          phone: '+1-555-0400',
-          type: 'client',
-          status: 'inactive',
-          created_at: '2024-04-10T13:45:00Z',
-          last_login: '2024-08-15T10:30:00Z',
-          notes: 'Account suspended pending verification'
-        }
-      ];
+      // Fetch users from the backend API
+      const response = await apiAxios.get('/admin/users');
       
-      setUsers(mockUsers);
-      setError('');
+      if (response.data && response.data.users) {
+        setUsers(response.data.users);
+        setError('');
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (err) {
-      setError('Failed to fetch users');
       console.error('Error fetching users:', err);
+      setError(err.response?.data?.detail || 'Failed to fetch users');
+      // Fallback to empty array on error
+      setUsers([]);
     } finally {
       setLoading(false);
     }
