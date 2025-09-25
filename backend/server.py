@@ -4024,7 +4024,7 @@ async def get_all_users():
                             "status": user.get("status", "active"),
                             "phone": user.get("phone", ""),
                             "profile_picture": user.get("profile_picture", "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"),
-                            "created_at": user.get("created_at", ""),  # Fixed: use created_at not createdAt
+                            "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",  # Handle datetime conversion
                             "notes": user.get("notes", "")
                         }
                         restored_count += 1
