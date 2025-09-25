@@ -4064,76 +4064,28 @@ async def import_clients_excel(file: UploadFile = File(...)):
 
 @api_router.get("/admin/users")
 async def get_all_users():
-    """Get all users for admin management"""
+    """PRODUCTION: Get all users from MongoDB (no MOCK data)"""
     try:
         users_list = []
         
-        # Get users from MOCK_USERS (for backwards compatibility)
-        for username, user_data in MOCK_USERS.items():
+        # PRODUCTION: Get all users from MongoDB only
+        mongodb_users = await db.users.find().to_list(length=None)
+        
+        for user in mongodb_users:
             users_list.append({
-                "id": user_data.get("id", ""),
-                "username": user_data.get("username", ""),
-                "name": user_data.get("name", ""),
-                "email": user_data.get("email", ""),
-                "phone": user_data.get("phone", ""),
-                "type": user_data.get("type", "client"),
-                "status": user_data.get("status", "active"),
-                "created_at": user_data.get("created_at", ""),
-                "last_login": user_data.get("last_login", ""),
-                "notes": user_data.get("notes", "")
+                "id": user.get("user_id", ""),
+                "username": user.get("username", ""),
+                "name": user.get("name", ""),
+                "email": user.get("email", ""),
+                "phone": user.get("phone", ""),
+                "type": user.get("user_type", "client"),
+                "status": user.get("status", "active"),
+                "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",
+                "last_login": user.get("last_login", "").isoformat() if user.get("last_login") else "",
+                "notes": user.get("notes", "")
             })
         
-        # Also get users from MongoDB to include converted clients
-        try:
-            mongodb_users = await db.users.find().to_list(length=None)
-            for user in mongodb_users:
-                # Check if user already exists in MOCK_USERS to avoid duplicates
-                user_exists = any(u["id"] == user.get("user_id") for u in users_list)
-                if not user_exists:
-                    users_list.append({
-                        "id": user.get("user_id", ""),
-                        "username": user.get("username", ""),
-                        "name": user.get("name", ""),
-                        "email": user.get("email", ""),
-                        "phone": user.get("phone", ""),
-                        "type": user.get("user_type", "client"),
-                        "status": user.get("status", "active"),
-                        "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",  # Handle datetime conversion
-                        "last_login": "",
-                        "notes": user.get("notes", "")
-                    })
-        except Exception as mongo_error:
-            logging.error(f"Failed to fetch MongoDB users: {str(mongo_error)}")
-        
-        logging.info(f"Retrieved {len(users_list)} users for admin management")
-        
-        # CRITICAL: Restore MOCK_USERS from MongoDB if it's empty (after restart)
-        if len(MOCK_USERS) <= 4:  # Only default users (admin, client1, client2, client3)
-            try:
-                mongodb_users = await db.users.find().to_list(length=None)
-                restored_count = 0
-                for user in mongodb_users:
-                    username = user.get("username")
-                    if username and username not in MOCK_USERS:
-                        MOCK_USERS[username] = {
-                            "id": user.get("user_id", ""),
-                            "username": username,
-                            "name": user.get("name", ""),
-                            "email": user.get("email", ""),
-                            "type": user.get("user_type", "client"),
-                            "status": user.get("status", "active"),
-                            "phone": user.get("phone", ""),
-                            "profile_picture": user.get("profile_picture", "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"),
-                            "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",  # Handle datetime conversion
-                            "notes": user.get("notes", "")
-                        }
-                        restored_count += 1
-                
-                if restored_count > 0:
-                    logging.info(f"✅ Restored {restored_count} users to MOCK_USERS from MongoDB (data persistence)")
-            except Exception as restore_error:
-                logging.error(f"Failed to restore MOCK_USERS from MongoDB: {str(restore_error)}")
-        
+        logging.info(f"🎯 PRODUCTION: Retrieved {len(users_list)} users from MongoDB")
         return {"users": users_list}
         
     except Exception as e:
