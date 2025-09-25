@@ -360,7 +360,7 @@ const ClientGoogleWorkspace = ({ user }) => {
         <TabsContent value="emails" className="mt-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Email Communications with FIDUS</h3>
+              <h3 className="text-lg font-semibold">Communications from FIDUS</h3>
               <Button
                 onClick={() => setComposeOpen(true)}
                 className="bg-red-500 hover:bg-red-600 text-white"
