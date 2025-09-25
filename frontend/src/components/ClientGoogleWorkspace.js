@@ -496,14 +496,14 @@ const ClientGoogleWorkspace = ({ user }) => {
         <TabsContent value="documents" className="mt-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">My FIDUS Documents</h3>
+              <h3 className="text-lg font-semibold">My FIDUS Document Folder</h3>
               <Button
-                onClick={requestClientFolder}
+                onClick={() => setUploadModalOpen(true)}
                 className="bg-green-500 hover:bg-green-600 text-white"
                 disabled={loading}
               >
-                <FolderOpen className="w-4 h-4 mr-2" />
-                {loading ? 'Creating...' : 'Create My Folder'}
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Document
               </Button>
             </div>
 
