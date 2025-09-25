@@ -423,7 +423,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="google" className="mt-6">
-            <FullGoogleWorkspace />
+            <RealGoogleWorkspace />
           </TabsContent>
 
           <TabsContent value="google-monitor" className="mt-6">
