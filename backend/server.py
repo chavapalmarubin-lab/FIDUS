@@ -13876,7 +13876,7 @@ class RateLimiter:
     
     def cleanup_old_entries(self):
         """Clean up old request entries to prevent memory leaks"""
-        current_time = time()
+        current_time = time.time()
         keys_to_remove = []
         
         for key, timestamps in self.requests.items():
