@@ -2093,50 +2093,60 @@ async def update_client_photo(
 # Client endpoints
 @api_router.get("/client/{client_id}/data", response_model=ClientData)
 async def get_client_data(client_id: str):
-    """Get complete client data including balance, transactions, and monthly statement"""
-    if client_id not in [user["id"] for user in MOCK_USERS.values() if user["type"] == "client"]:
-        raise HTTPException(status_code=404, detail="Client not found")
-    
-    # For clean start, return empty transactions - will be populated with real activity
-    transactions = []
-    balances = calculate_balances(client_id)
-    
-    # Create balance object
-    client_balance = ClientBalance(
-        client_id=client_id,
-        **balances
-    )
-    
-    # Generate monthly statement with actual investment data
-    from datetime import datetime
-    current_month = datetime.now().strftime("%B %Y")
-    
-    # Get investment data to calculate monthly statement
+    """Get complete client data including balance, transactions, and monthly statement - MONGODB ONLY"""
     try:
-        investments = mongodb_manager.get_client_investments(client_id)
-        total_invested = sum(inv['principal_amount'] for inv in investments)
-        total_current = sum(inv['current_value'] for inv in investments)
-        total_profit = total_current - total_invested
-        profit_percentage = (total_profit / total_invested * 100) if total_invested > 0 else 0
-    except:
-        total_invested = 0
-        total_current = 0
-        total_profit = 0
-        profit_percentage = 0
-    
-    monthly_statement = MonthlyStatement(
-        month=current_month,
-        initial_balance=total_invested,
-        profit=total_profit,
-        profit_percentage=profit_percentage,
-        final_balance=total_current
-    )
-    
-    return ClientData(
-        balance=client_balance,
-        transactions=[Transaction(**trans) for trans in transactions],
-        monthly_statement=monthly_statement
-    )
+        # Check if client exists in MongoDB (NO MOCK_USERS)
+        client_doc = await db.users.find_one({"id": client_id, "type": "client", "status": "active"})
+        
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # For clean start, return empty transactions - will be populated with real activity
+        transactions = []
+        balances = calculate_balances(client_id)
+        
+        # Create balance object
+        client_balance = ClientBalance(
+            client_id=client_id,
+            **balances
+        )
+        
+        # Generate monthly statement with actual investment data
+        from datetime import datetime
+        current_month = datetime.now().strftime("%B %Y")
+        
+        # Get investment data to calculate monthly statement
+        try:
+            investments = mongodb_manager.get_client_investments(client_id)
+            total_invested = sum(inv['principal_amount'] for inv in investments)
+            total_current = sum(inv['current_value'] for inv in investments)
+            total_profit = total_current - total_invested
+            profit_percentage = (total_profit / total_invested * 100) if total_invested > 0 else 0
+        except:
+            total_invested = 0
+            total_current = 0
+            total_profit = 0
+            profit_percentage = 0
+        
+        monthly_statement = MonthlyStatement(
+            month=current_month,
+            initial_balance=total_invested,
+            profit=total_profit,
+            profit_percentage=profit_percentage,
+            final_balance=total_current
+        )
+        
+        return ClientData(
+            balance=client_balance,
+            transactions=[Transaction(**trans) for trans in transactions],
+            monthly_statement=monthly_statement
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Failed to get client data for {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve client data")
 
 @api_router.get("/client/{client_id}/transactions")
 async def get_client_transactions(
