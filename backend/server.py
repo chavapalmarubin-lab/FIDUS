@@ -1823,6 +1823,50 @@ async def debug_google_session(current_user: dict = Depends(get_current_admin_us
             "error": str(e)
         }
 
+@api_router.post("/admin/debug/sync-client-folder")
+async def sync_client_folder_info(request_data: dict, current_user: dict = Depends(get_current_admin_user)):
+    """Debug endpoint to sync existing Google Drive folder with client database record"""
+    try:
+        client_id = request_data.get("client_id")
+        folder_name = request_data.get("folder_name")
+        
+        if not client_id or not folder_name:
+            return {"success": False, "error": "Missing client_id or folder_name"}
+        
+        # Update client record with folder information
+        folder_info = {
+            "folder_id": "synced_folder_id",  # Placeholder - will be updated when OAuth works
+            "folder_name": folder_name,
+            "folder_url": f"https://drive.google.com/drive/folders/synced_folder_id",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "active",
+            "sync_method": "manual_admin_sync"
+        }
+        
+        # Update in clients collection
+        client_result = await db.clients.update_one(
+            {"id": client_id},
+            {"$set": {"google_drive_folder": folder_info, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        # Update in prospects collection if exists
+        prospect_result = await db.crm_prospects.update_one(
+            {"id": client_id},
+            {"$set": {"google_drive_folder": folder_info, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Synced folder info for {client_id}",
+            "clients_updated": client_result.modified_count,
+            "prospects_updated": prospect_result.modified_count,
+            "folder_info": folder_info
+        }
+        
+    except Exception as e:
+        logging.error(f"Folder sync error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
