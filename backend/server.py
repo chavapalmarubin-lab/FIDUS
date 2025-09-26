@@ -1139,6 +1139,20 @@ async def ensure_default_users_in_mongodb():
             "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default admin account"
+        },
+        {
+            "user_id": "client_alejandro",
+            "username": "alejandro_mariscal",
+            "name": "Alejandro Mariscal Romero",
+            "email": "alejandro.mariscal@email.com",
+            "phone": "+525551058520",
+            "user_type": "client",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Corrected user data - production ready",
+            "temp_password": "TempPass123!",
+            "must_change_password": True
         }
     ]
     
