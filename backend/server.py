@@ -8482,12 +8482,12 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
             
         except Exception as e:
             logging.error(f"❌ Token exchange/storage error: {str(e)}")
-            frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+            frontend_base = "https://fidus-invest.emergent.host"
             return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=token_processing_failed")
         
     except Exception as e:
         logging.error(f"❌ Google OAuth callback error: {str(e)}")
-        frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+        frontend_base = "https://fidus-invest.emergent.host"
         return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
