@@ -1158,9 +1158,7 @@ async def ensure_default_users_in_mongodb():
         logging.error(f"❌ Failed to upsert default users: {str(e)}")
         return False
 
-# Mock data for demo (DEPRECATED - will be removed in production)
-# NOTE: This is kept temporarily for backward compatibility during MongoDB transition
-# All new authentication should use MongoDB via ensure_default_users_in_mongodb()
+# RESTORED: Working MOCK data systems (DO NOT REMOVE - PRODUCTION DEPENDENCY)
 MOCK_USERS = {
     "client1": {
         "id": "client_001",
