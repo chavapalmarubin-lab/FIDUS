@@ -11317,15 +11317,18 @@ async def get_pending_redemptions():
         
         for redemption_id, redemption in redemption_requests.items():
             if redemption.status == "pending":
-                # Get client info
+                # Get client info from MongoDB (NO MOCK_USERS)
                 client_info = None
-                for user_data in MOCK_USERS.values():
-                    if user_data["id"] == redemption.client_id:
+                try:
+                    client_doc = await db.users.find_one({"id": redemption.client_id, "type": "client"})
+                    if client_doc:
                         client_info = {
-                            "name": user_data["name"],
-                            "email": user_data["email"]
+                            "name": client_doc["name"],
+                            "email": client_doc["email"]
                         }
-                        break
+                except Exception as e:
+                    logging.warning(f"Could not find client {redemption.client_id}: {str(e)}")
+                    client_info = {"name": "Unknown", "email": "unknown@example.com"}
                 
                 redemption_data = redemption.dict()
                 redemption_data["client_info"] = client_info or {"name": "Unknown", "email": "Unknown"}
