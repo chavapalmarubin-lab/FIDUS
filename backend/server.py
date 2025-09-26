@@ -12423,7 +12423,7 @@ async def get_client_specific_emails(client_email: str, current_user: dict = Dep
     This creates a comprehensive client communication history
     """
     try:
-        user_id = current_user.get("user_id", "user_admin_001")
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))  # Fixed: use correct admin ID
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
