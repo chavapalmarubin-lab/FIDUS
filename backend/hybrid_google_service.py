@@ -32,8 +32,10 @@ class HybridGoogleService:
         self.authenticated = False
         
         # OAuth credentials for user consent
-        self.oauth_client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-        self.oauth_redirect_uri = "https://fidus-invest.emergent.host/admin/google-callback"
+        # Use environment variables for OAuth configuration (PRODUCTION)
+        self.oauth_client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        self.oauth_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+        self.oauth_redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         
         self._initialize_service_account()
     
