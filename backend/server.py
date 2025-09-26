@@ -7160,7 +7160,10 @@ async def get_client_detailed_profile(client_id: str):
     try:
         # Get client info
         client_info = None
-        for user in MOCK_USERS.values():
+        # Get detailed client info from MongoDB (NO MOCK_USERS)
+        client_docs = await db.users.find({"type": "client", "status": "active"}).to_list(length=None)
+        
+        for user in client_docs:
             if user["id"] == client_id:
                 client_info = user
                 break
