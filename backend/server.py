@@ -657,8 +657,8 @@ client_investments = {}
 # In-memory client investment readiness tracking (in production, use proper database)
 client_readiness = {}
 
-# In-memory user management for temporary passwords and first-time logins
-user_temp_passwords = {}  # {user_id: {"temp_password": "...", "must_change": True}}
+# RESTORED: Working temporary password storage
+user_temp_passwords = {}
 user_accounts = {}  # Additional user data beyond MOCK_USERS
 
 # In-memory redemption system storage
