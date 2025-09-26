@@ -1069,7 +1069,7 @@ async def ensure_default_users_in_mongodb():
     """Seed default users into MongoDB if they don't exist (PRODUCTION SETUP)"""
     default_users = [
         {
-            "user_id": "client_001",
+            "id": "client_001",  # Fixed: use "id" not "user_id"
             "username": "client1", 
             "name": "Gerardo Briones",
             "email": "g.b@fidus.com",
