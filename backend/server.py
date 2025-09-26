@@ -8416,8 +8416,8 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
             logging.info(f"Google OAuth callback successful - redirecting to admin dashboard")
             
             # Store a temporary success marker
-            # Redirect to admin dashboard with success indicator
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&code={code}")
+            # Redirect to admin dashboard with success indicator AND Connection Monitor tab
+            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&code={code}&tab=google-monitor")
             
         except Exception as e:
             logging.error(f"Token processing error: {str(e)}")
