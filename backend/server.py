@@ -3705,12 +3705,14 @@ async def forgot_password(request: ForgotPasswordRequest):
         if not email or '@' not in email:
             raise HTTPException(status_code=400, detail="Invalid email address")
         
-        # Check if user exists (in production, check against database)
+        # Check if user exists in MongoDB (NO MOCK_USERS)
         user_exists = False
-        for username, user_data in MOCK_USERS.items():
-            if user_data.get("email", "").lower() == email and user_data.get("type") == user_type:
+        try:
+            user_doc = await db.users.find_one({"email": email, "type": user_type})
+            if user_doc:
                 user_exists = True
-                break
+        except Exception as e:
+            logging.error(f"Error checking user existence: {str(e)}")
         
         if not user_exists:
             # For security, don't reveal if email exists or not
