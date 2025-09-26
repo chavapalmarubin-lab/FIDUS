@@ -4210,14 +4210,16 @@ async def create_new_user(user_data: UserCreate):
         # Generate unique user ID
         user_id = f"client_{str(uuid.uuid4())[:8]}"  
         
-        # Create user document for MongoDB
+        # Create user document for MongoDB with proper schema fields
         new_user = {
-            "id": user_id,
+            "id": user_id,                    # Keep for API compatibility
+            "user_id": user_id,              # Schema requirement
             "username": user_data.username,
             "name": user_data.name,
             "email": user_data.email,
             "phone": user_data.phone,
-            "type": "client",
+            "type": "client",                # Keep for API compatibility  
+            "user_type": "client",           # Schema requirement
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
