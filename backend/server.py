@@ -3588,14 +3588,15 @@ async def finalize_application(request: ApplicationFinalizationRequest):
             "createdAt": datetime.now(timezone.utc).isoformat()
         }
         
-        # In production, save user to database
-        # await db.users.insert_one(new_user)
+        # Save user to MongoDB (NO MOCK_USERS)
+        try:
+            await db.users.insert_one(new_user)
+        except Exception as e:
+            logging.error(f"Error saving user to MongoDB: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to create user account")
         
         # Send credentials email (mock)
         send_credentials_email("demo@fidus.com", username, password)
-        
-        # Update MOCK_USERS for demo purposes
-        MOCK_USERS[username] = new_user
         
         return {
             "success": True,
