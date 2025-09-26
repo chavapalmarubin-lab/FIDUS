@@ -1134,7 +1134,7 @@ async def ensure_default_users_in_mongodb():
             "name": "Investment Committee", 
             "email": "ic@fidus.com",
             "phone": "+1-555-0001",
-            "user_type": "admin",
+            "type": "admin",  # Fixed: use "type" not "user_type"
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
