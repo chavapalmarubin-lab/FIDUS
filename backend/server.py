@@ -13678,17 +13678,20 @@ async def get_all_activity_logs():
         for log in activity_logs:
             log_data = log.dict()
             
-            # Add client info
+            # Add client info from MongoDB (NO MOCK_USERS)
             client_info = None
-            for user_data in MOCK_USERS.values():
-                if user_data["id"] == log.client_id:
+            try:
+                client_doc = await db.users.find_one({"id": log.client_id, "type": "client"})
+                if client_doc:
                     client_info = {
-                        "name": user_data["name"],
-                        "email": user_data["email"]
+                        "name": client_doc["name"],
+                        "email": client_doc["email"]
                     }
-                    break
+            except Exception as e:
+                logging.warning(f"Could not find client {log.client_id}: {str(e)}")
+                client_info = {"name": "Unknown", "email": "unknown@example.com"}
             
-            log_data["client_info"] = client_info or {"name": "Unknown", "email": "Unknown"}
+            log_data["client_info"] = client_info or {"name": "Unknown", "email": "unknown@example.com"}
             all_logs.append(log_data)
         
         # Sort by timestamp (most recent first)
