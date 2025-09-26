@@ -188,18 +188,35 @@ class GoogleOAuthDocumentTest:
             
             if response.status_code == 200:
                 data = response.json()
-                if isinstance(data, list):
-                    document_count = len(data)
+                # Check for proper response structure (should be dict with documents array)
+                if isinstance(data, dict) and 'documents' in data:
+                    documents = data['documents']
+                    document_count = len(documents)
+                    privacy_note = data.get('privacy_note', '')
+                    
                     self.log_result("Salvador Document Access", True, 
                                   f"Salvador documents accessible: {document_count} documents found")
                     
-                    # Check for privacy security message in logs or response
-                    if document_count <= 5:  # Reasonable number for one client
+                    # Check for privacy security message
+                    if 'SALVADOR PALMA folder ONLY' in privacy_note:
                         self.log_result("Salvador Document Privacy", True, 
-                                      f"Document count reasonable ({document_count}), privacy likely secure")
+                                      f"Privacy security confirmed: {privacy_note}")
                     else:
                         self.log_result("Salvador Document Privacy", False, 
+                                      f"Privacy security message missing or incorrect")
+                    
+                    # Check document count is reasonable for one client
+                    if document_count <= 5:  # Reasonable number for one client
+                        self.log_result("Salvador Document Count", True, 
+                                      f"Document count reasonable ({document_count})")
+                    else:
+                        self.log_result("Salvador Document Count", False, 
                                       f"Too many documents ({document_count}), possible privacy breach")
+                elif isinstance(data, list):
+                    # Legacy format - still acceptable
+                    document_count = len(data)
+                    self.log_result("Salvador Document Access", True, 
+                                  f"Salvador documents accessible: {document_count} documents found (legacy format)")
                 else:
                     self.log_result("Salvador Document Access", False, 
                                   "Invalid response format", {"response": data})
