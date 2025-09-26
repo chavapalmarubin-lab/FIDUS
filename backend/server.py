@@ -1158,57 +1158,8 @@ async def ensure_default_users_in_mongodb():
         logging.error(f"❌ Failed to upsert default users: {str(e)}")
         return False
 
-# RESTORED: Working MOCK data systems (DO NOT REMOVE - PRODUCTION DEPENDENCY)
-MOCK_USERS = {
-    "client1": {
-        "id": "client_001",
-        "username": "client1",
-        "name": "Gerardo Briones",
-        "email": "g.b@fidus.com",
-        "type": "client",
-        "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    "client2": {
-        "id": "client_002", 
-        "username": "client2",
-        "name": "Maria Rodriguez",
-        "email": "m.rodriguez@fidus.com",
-        "type": "client",
-        "profile_picture": "https://images.unsplash.com/photo-1494790108755-2616b812358f?w=150&h=150&fit=crop&crop=face"
-    },
-    "client3": {
-        "id": "client_003",
-        "username": "client3", 
-        "name": "SALVADOR PALMA",
-        "email": "chava@alyarglobal.com",
-        "type": "client",
-        "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-    },
-    "client4": {
-        "id": "client_004",
-        "username": "client4",
-        "name": "Javier Gonzalez",
-        "email": "javier.gonzalez@fidus.com",
-        "type": "client",
-        "profile_picture": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
-    },
-    "client5": {
-        "id": "client_005",
-        "username": "client5",
-        "name": "Jorge Gonzalez", 
-        "email": "jorge.gonzalez@fidus.com",
-        "type": "client",
-        "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    "admin": {
-        "id": "admin_001",
-        "username": "admin",
-        "name": "Investment Committee",
-        "email": "ic@fidus.com", 
-        "type": "admin",
-        "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face"
-    }
-}
+# Production mode - MongoDB seeded at startup with default users
+MOCK_USERS = {}  # Deprecated - All user data now managed via MongoDB
 
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     """Generate mock transaction data"""
