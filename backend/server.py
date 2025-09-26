@@ -8480,11 +8480,13 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
             
         except Exception as e:
             logging.error(f"❌ Token exchange/storage error: {str(e)}")
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=token_processing_failed")
+            frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+            return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=token_processing_failed")
         
     except Exception as e:
         logging.error(f"❌ Google OAuth callback error: {str(e)}")
-        return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=callback_failed")
+        frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+        return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
 async def process_real_google_oauth_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
