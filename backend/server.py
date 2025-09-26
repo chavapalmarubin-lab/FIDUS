@@ -15025,12 +15025,19 @@ async def get_all_client_wallets(current_user: dict = Depends(get_current_admin_
         all_wallets = []
         
         for client_id, wallets in client_wallets.items():
-            # Get client info
+            # Get client info from MongoDB (NO MOCK_USERS)
             client_info = None
-            for user in MOCK_USERS.values():
-                if user.get('id') == client_id:
-                    client_info = user
-                    break
+            try:
+                client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+                if client_doc:
+                    client_info = {
+                        "id": client_doc["id"],
+                        "name": client_doc["name"],
+                        "email": client_doc["email"]
+                    }
+            except Exception as e:
+                logging.warning(f"Could not find client {client_id}: {str(e)}")
+                client_info = {"id": client_id, "name": "Unknown", "email": "unknown@example.com"}
             
             for wallet in wallets:
                 wallet_dict = wallet.dict() if hasattr(wallet, 'dict') else wallet
