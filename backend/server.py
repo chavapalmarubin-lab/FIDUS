@@ -2207,37 +2207,51 @@ async def get_all_clients():
 
 @api_router.get("/admin/clients/{client_id}/details")
 async def get_client_details(client_id: str):
-    """Get comprehensive client details including profile and metadata"""
+    """Get comprehensive client details including profile and metadata - MONGODB ONLY"""
     try:
-        # Find client in MOCK_USERS
-        client_data = None
-        for username, user in MOCK_USERS.items():
-            if user.get('id') == client_id:
-                client_data = user
-                break
+        # Find client in MongoDB (NO MOCK_USERS)
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
         
-        if not client_data:
+        if not client_doc:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        # Enhance with additional details
-        enhanced_client = {
-            **client_data,
-            "registration_method": "prospect_conversion" if client_data.get('created_from_prospect') else "direct",
-            "last_activity": client_data.get('updatedAt', client_data.get('createdAt')),
-            "compliance_status": client_data.get('aml_kyc_status', 'pending'),
-            "account_age_days": (datetime.now(timezone.utc) - datetime.fromisoformat(client_data.get('createdAt', '2025-01-01T00:00:00Z').replace('Z', '+00:00'))).days
+        # Get client investments from MongoDB
+        investments = []
+        try:
+            investments = mongodb_manager.get_client_investments(client_id)
+        except Exception as e:
+            logging.warning(f"⚠️ Could not load investments for client {client_id}: {str(e)}")
+        
+        # Calculate totals
+        total_invested = sum(inv.get('principal_amount', 0) for inv in investments)
+        total_current = sum(inv.get('current_value', 0) for inv in investments)
+        
+        # Build client details response
+        client_details = {
+            "id": client_doc["id"],
+            "username": client_doc["username"],
+            "name": client_doc["name"],
+            "email": client_doc["email"],
+            "phone": client_doc.get("phone", ""),
+            "status": client_doc.get("status", "active"),
+            "profile_picture": client_doc.get("profile_picture", ""),
+            "created_at": client_doc.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(client_doc.get("created_at"), datetime) else client_doc.get("created_at", datetime.now(timezone.utc).isoformat()),
+            "notes": client_doc.get("notes", ""),
+            "total_invested": total_invested,
+            "current_balance": total_current,
+            "total_profit": total_current - total_invested,
+            "investment_count": len(investments),
+            "investments": investments
         }
         
-        return {
-            "success": True,
-            "client": enhanced_client
-        }
+        logging.info(f"✅ MongoDB: Retrieved client details for {client_id}")
+        return {"success": True, "client": client_details}
         
     except HTTPException:
-        raise
+        raise  
     except Exception as e:
-        logging.error(f"Get client details error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch client details")
+        logging.error(f"❌ Failed to get client details for {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve client details")
 
 @api_router.get("/admin/clients/{client_id}/documents")
 async def get_client_documents(client_id: str):
