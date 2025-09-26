@@ -168,7 +168,10 @@ const EnhancedPipelineView = () => {
   const convertToClient = async (prospectId) => {
     setLoading(true);
     try {
-      const response = await apiAxios.post(`/crm/prospects/${prospectId}/convert-to-client`);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/convert`, {
+        prospect_id: prospectId,
+        send_agreement: true
+      });
       
       if (response.data.success) {
         alert('🎉 Prospect successfully converted to client! They will now go through the AML/KYC process.');
