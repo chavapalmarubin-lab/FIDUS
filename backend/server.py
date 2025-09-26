@@ -4634,10 +4634,10 @@ async def register_new_client(registration_data: dict):
         if not all([full_name, email, password]):
             raise HTTPException(status_code=400, detail="Name, email, and password are required")
         
-        # Check if email already exists
-        for existing_user in MOCK_USERS.values():
-            if existing_user.get("email") == email:
-                raise HTTPException(status_code=400, detail="Email already registered")
+        # Check if email already exists in MongoDB (NO MOCK_USERS)
+        existing_user = await db.users.find_one({"email": email})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
         
         # Generate unique user ID and username
         user_id = f"client_{str(uuid.uuid4())[:8]}"
