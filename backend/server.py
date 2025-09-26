@@ -11800,7 +11800,7 @@ async def test_single_google_service(service: str, current_user: dict = Depends(
         if service not in ["gmail", "calendar", "drive", "meet"]:
             raise HTTPException(status_code=400, detail="Invalid service. Must be: gmail, calendar, drive, or meet")
         
-        user_id = current_user.get("user_id", "user_admin_001")
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))  # Fixed: use correct admin ID
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
