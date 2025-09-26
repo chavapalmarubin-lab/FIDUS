@@ -311,7 +311,7 @@ class GoogleOAuthDocumentTest:
             api_endpoints = [
                 ("/google/gmail/real-messages", "Gmail Real Messages"),
                 ("/google/calendar/events", "Calendar Events"),
-                ("/google/drive/files", "Drive Files"),
+                ("/google/drive/real-files", "Drive Files"),  # Use real-files instead of files
                 ("/google/gmail/real-send", "Gmail Send", "POST")
             ]
             
