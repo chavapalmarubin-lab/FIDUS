@@ -15481,6 +15481,8 @@ async def upload_client_document_to_fidus(
     Upload document from client to their FIDUS Google Drive folder
     """
     try:
+        logging.info(f"🔍 DEBUG: Document upload attempt - client_id: {client_id}, client_name: {client_name}, user: {current_user.get('username', 'unknown')}")
+        
         # Validate file
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
@@ -15500,13 +15502,19 @@ async def upload_client_document_to_fidus(
                 "error": "Google Drive integration not available"
             }
         
-        # Get client's folder information
+        # Check if client exists in either collection
         client = await db.clients.find_one({"id": client_id}) or await db.crm_prospects.find_one({"id": client_id})
         
+        logging.info(f"🔍 DEBUG: Client lookup result - Found: {client is not None}, client_id searched: {client_id}")
+        
         if not client:
+            # Additional debug: check for alternative ID formats
+            alternative_client = await db.clients.find_one({"client_id": client_id}) or await db.clients.find_one({"username": client_name.lower().replace(" ", "_")})
+            logging.info(f"🔍 DEBUG: Alternative client lookup - Found: {alternative_client is not None}")
+            
             return {
                 "success": False,
-                "error": "Client not found"
+                "error": f"Client not found (searched ID: {client_id})"
             }
         
         folder_info = client.get("google_drive_folder", {})
