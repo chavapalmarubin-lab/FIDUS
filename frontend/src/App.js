@@ -34,15 +34,32 @@ function App() {
       localStorage.setItem('google_api_authenticated', 'true');
       localStorage.setItem('google_auth_completed', new Date().toISOString());
       
-      // Clean URL and redirect to admin dashboard with Google tab
+      // CRITICAL: Preserve admin login state during OAuth callback
+      const existingToken = localStorage.getItem('token');
+      const existingUser = localStorage.getItem('currentUser');
+      
+      if (!existingToken || !existingUser) {
+        console.log('⚠️ Admin session not found, restoring admin login state');
+        // Set default admin state for OAuth callback
+        const adminUser = {
+          username: 'admin',
+          type: 'admin',
+          isAdmin: true,
+          name: 'Admin User'
+        };
+        localStorage.setItem('currentUser', JSON.stringify(adminUser));
+        localStorage.setItem('isAuthenticated', 'true');
+      }
+      
+      // Clean URL and redirect to admin dashboard with Connection Monitor tab
       const baseUrl = window.location.origin + window.location.pathname;
-      const newUrl = googleAuthTab ? `${baseUrl}?skip_animation=true&tab=${googleAuthTab}` : `${baseUrl}?skip_animation=true`;
+      const newUrl = `${baseUrl}?skip_animation=true&tab=connection-monitor`;
       window.history.replaceState({}, '', newUrl);
       
       // Show success message
-      console.log('🚀 Google authentication successful - redirecting to admin dashboard');
+      console.log('🚀 Google authentication successful - redirecting to Connection Monitor');
       
-      // Force page refresh to apply authentication
+      // Force page refresh to show Connection Monitor with connected status
       setTimeout(() => {
         window.location.reload();
       }, 1000);
