@@ -4267,59 +4267,48 @@ async def get_all_users():
 
 @api_router.post("/admin/users/create")
 async def create_new_user(user_data: UserCreate):
-    """RESTORED: Working user creation with MOCK_USERS and MongoDB"""
+    """Create new user in MongoDB - MONGODB ONLY"""
     try:
-        # Check if username already exists in MOCK_USERS
-        if user_data.username in MOCK_USERS:
+        # Check if username already exists in MongoDB (NO MOCK_USERS)
+        existing_user = await db.users.find_one({"username": user_data.username})
+        if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists")
+        
+        # Check if email already exists
+        existing_email = await db.users.find_one({"email": user_data.email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
         
         # Generate unique user ID
         user_id = f"client_{str(uuid.uuid4())[:8]}"  
         
-        # Create user entry for MOCK_USERS (RESTORED working system)
+        # Create user document for MongoDB
         new_user = {
             "id": user_id,
             "username": user_data.username,
             "name": user_data.name,
             "email": user_data.email,
+            "phone": user_data.phone,
             "type": "client",
             "status": "active",
-            "phone": user_data.phone,
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "notes": user_data.notes
+            "created_at": datetime.now(timezone.utc),
+            "notes": user_data.notes,
+            "temp_password": user_data.temporary_password,
+            "must_change_password": True
         }
         
-        # Add to MOCK_USERS (CRITICAL - working system)
-        MOCK_USERS[user_data.username] = new_user
+        # Insert into MongoDB only
+        await db.users.insert_one(new_user)
         
-        # Also store in MongoDB for backup
-        try:
-            await db.users.insert_one({
-                "user_id": user_id,
-                "username": user_data.username,
-                "name": user_data.name,
-                "email": user_data.email,
-                "phone": user_data.phone,
-                "type": "client",  # Fixed: use "type" not "user_type"
-                "status": "active",
-                "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-                "created_at": datetime.now(timezone.utc),
-                "notes": user_data.notes,
-                "temp_password": user_data.temporary_password,
-                "must_change_password": True
-            })
-        except Exception:
-            pass  # Don't fail if MongoDB fails - MOCK_USERS is primary
-        
-        # Store temporary password (RESTORED working system)
+        # Store temporary password
         user_temp_passwords[user_id] = {
             "temp_password": user_data.temporary_password,
             "must_change": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
-        # Initialize client readiness (RESTORED working system)
+        # Initialize client readiness
         client_readiness[user_id] = {
             "client_id": user_id,
             "aml_kyc_completed": False,
@@ -4331,7 +4320,7 @@ async def create_new_user(user_data: UserCreate):
             "updated_by": "admin"
         }
         
-        logging.info(f"✅ RESTORED: User created in MOCK_USERS: {user_data.username} (ID: {user_id})")
+        logging.info(f"✅ MongoDB: User created: {user_data.username} (ID: {user_id})")
         
         return {
             "success": True,
@@ -4343,7 +4332,7 @@ async def create_new_user(user_data: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"User creation error: {str(e)}")
+        logging.error(f"❌ Failed to create user: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
 # Document Management Endpoints for CRM Prospects
