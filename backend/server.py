@@ -7997,10 +7997,7 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
         }
         
-        # Add to MOCK_USERS
-        MOCK_USERS[username] = new_client
-        
-        # Also add to MongoDB users collection for persistence
+        # Save to MongoDB users collection (NO MOCK_USERS)
         try:
             mongodb_client_data = new_client.copy()
             mongodb_client_data['user_id'] = client_id
