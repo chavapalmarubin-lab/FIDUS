@@ -8345,7 +8345,7 @@ async def process_google_social_login(request: Request, response: Response):
                 "name": user_data['name'],
                 "google_id": user_data['google_id'],
                 "picture": user_data['picture'],
-                "user_type": "client",  # Default to client user
+                "type": "client",  # Fixed: use "type" not "user_type" - Default to client user
                 "created_at": datetime.now(timezone.utc),
                 "last_login": datetime.now(timezone.utc),
                 "is_active": True,
