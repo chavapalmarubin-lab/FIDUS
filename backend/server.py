@@ -3841,20 +3841,25 @@ async def reset_password(request: ResetPasswordRequest):
                 detail="Password must contain at least 3 of: uppercase letter, lowercase letter, number, special character"
             )
         
-        # Update password in MOCK_USERS (in production, hash and store in database)
+        # Update password in MongoDB (NO MOCK_USERS)
         user_updated = False
-        for username, user_data in MOCK_USERS.items():
-            if user_data.get("email", "").lower() == email and user_data.get("type") == token_data["user_type"]:
-                # In production, hash the password before storing
-                # import bcrypt
-                # hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-                # user_data["password_hash"] = hashed_password
-                
-                # For demo, we'll just update a timestamp to indicate password was changed
-                user_data["password_updated_at"] = datetime.now(timezone.utc).isoformat()
+        try:
+            result = await db.users.update_one(
+                {"email": email, "type": token_data["user_type"]},
+                {
+                    "$set": {
+                        "temp_password": new_password,
+                        "must_change_password": False,
+                        "updated_at": datetime.now(timezone.utc)
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
                 user_updated = True
                 logging.info(f"Password updated for user: {email} ({token_data['user_type']})")
-                break
+        except Exception as e:
+            logging.error(f"Error updating password in MongoDB: {str(e)}")
         
         if not user_updated:
             logging.warning(f"User not found for password reset: {email}")
