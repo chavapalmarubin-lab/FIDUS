@@ -1838,8 +1838,9 @@ async def update_client_profile(profile_update: dict, current_user: dict = Depen
         if not user_id or not username:
             raise HTTPException(status_code=401, detail="Invalid user session")
         
-        # Find user in MOCK_USERS
-        if username not in MOCK_USERS:
+        # MongoDB-only user validation - NO MOCK DATA
+        user_doc = await db.users.find_one({"username": username})
+        if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         
         user_data = MOCK_USERS[username]
