@@ -8446,33 +8446,42 @@ async def test_google_endpoint():
 
 @api_router.get("/admin/google-callback")
 async def handle_real_google_oauth_callback_get(request: Request, code: str = None, state: str = None, error: str = None):
-    """Handle Google OAuth callback via GET redirect"""
+    """Handle Google OAuth callback via GET redirect and complete token exchange"""
     try:
         if error:
             logging.error(f"Google OAuth error: {error}")
-            # Redirect to frontend with error
             return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message={error}")
         
         if not code:
             logging.error("Missing authorization code in callback")
             return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=missing_code")
         
-        logging.info(f"Processing Google OAuth callback with code: {code[:20]}...")
+        logging.info(f"🔄 Processing Google OAuth callback with code: {code[:20]}...")
         
         try:
-            # Simple success redirect - the frontend will handle the rest
-            logging.info(f"Google OAuth callback successful - redirecting to admin dashboard")
+            # Exchange authorization code for access tokens using Google APIs service
+            logging.info("📧 Exchanging authorization code for access tokens...")
+            token_data = google_apis_service.exchange_code_for_tokens(code)
             
-            # Store a temporary success marker
-            # Redirect to admin dashboard with success indicator
-            return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&code={code}")
+            # Store Google tokens for default admin user (since callback doesn't have session context)
+            # Use a default admin user ID for OAuth tokens
+            admin_user_id = "admin_001"  # Default admin user for Google OAuth
+            stored = await store_google_session_token(admin_user_id, token_data)
+            
+            if stored:
+                logging.info(f"✅ Google OAuth tokens stored successfully for admin user")
+                # Redirect to admin dashboard with success indicator
+                return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&tab=google-workspace")
+            else:
+                logging.error(f"❌ Failed to store Google OAuth tokens")
+                return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=token_storage_failed")
             
         except Exception as e:
-            logging.error(f"Token processing error: {str(e)}")
+            logging.error(f"❌ Token exchange/storage error: {str(e)}")
             return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=token_processing_failed")
         
     except Exception as e:
-        logging.error(f"Google OAuth callback error: {str(e)}")
+        logging.error(f"❌ Google OAuth callback error: {str(e)}")
         return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
