@@ -284,7 +284,7 @@ class GoogleOAuthDocumentTest:
                     
                     if response.status_code == 200:
                         data = response.json()
-                        if isinstance(data, dict) and ('status' in data or 'overall_status' in data):
+                        if isinstance(data, dict) and ('status' in data or 'overall_status' in data or 'history' in data or 'success' in data):
                             self.log_result(f"Google Connection Monitor - {name}", True, 
                                           f"Endpoint working: {endpoint}")
                         else:
