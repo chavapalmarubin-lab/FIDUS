@@ -8466,8 +8466,8 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
             token_data = google_apis_service.exchange_code_for_tokens(code)
             
             # Store Google tokens for default admin user (since callback doesn't have session context)
-            # Use a default admin user ID for OAuth tokens
-            admin_user_id = "admin_001"  # Default admin user for Google OAuth
+            # Use consistent admin user ID that matches Google API calls
+            admin_user_id = "user_admin_001"  # Matches the user_id used in Google API calls
             stored = await store_google_session_token(admin_user_id, token_data)
             
             if stored:
