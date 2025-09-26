@@ -1093,7 +1093,7 @@ async def ensure_default_users_in_mongodb():
             "notes": "Default seeded client"
         },
         {
-            "user_id": "client_003", 
+            "id": "client_003",  # Fixed: use "id" not "user_id" 
             "username": "client3",
             "name": "SALVADOR PALMA",
             "email": "chava@alyarglobal.com",
