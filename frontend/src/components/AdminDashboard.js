@@ -355,7 +355,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           </div>
         </motion.div>
 
-        <Tabs defaultValue="portfolio" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-12 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               Fund Portfolio
