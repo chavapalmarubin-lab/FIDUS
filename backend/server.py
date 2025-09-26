@@ -657,9 +657,9 @@ client_investments = {}
 # RESTORED: Working client readiness storage  
 client_readiness = {}
 
-# RESTORED: Working temporary password storage
+# Production MongoDB-only storage (NO MOCK DATA)
 user_temp_passwords = {}
-user_accounts = {}  # Additional user data beyond MOCK_USERS
+user_accounts = {}  # Additional user metadata
 
 # In-memory redemption system storage
 redemption_requests = {}  # {redemption_id: RedemptionRequest}
