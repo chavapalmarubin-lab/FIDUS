@@ -4898,23 +4898,41 @@ async def delete_client(client_id: str):
 
 @api_router.put("/admin/clients/{client_id}/status")
 async def update_client_status(client_id: str, status_data: dict):
-    """Update client status (active/inactive/suspended)"""
+    """Update client status (active/inactive/suspended) - MONGODB ONLY"""
     try:
         new_status = status_data.get("status", "active").lower()
         
         if new_status not in ["active", "inactive", "suspended"]:
             raise HTTPException(status_code=400, detail="Invalid status. Must be active, inactive, or suspended")
         
-        # Find and update client
-        for username, user in MOCK_USERS.items():
-            if user.get("id") == client_id and user.get("type") == "client":
-                user["status"] = new_status
-                user["updatedAt"] = datetime.now(timezone.utc).isoformat()
-                return {"success": True, "message": f"Client status updated to {new_status}"}
+        # Find and update client in MongoDB (NO MOCK_USERS)
+        result = await db.users.update_one(
+            {"id": client_id, "type": "client"},
+            {
+                "$set": {
+                    "status": new_status,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
         
-        raise HTTPException(status_code=404, detail="Client not found")
+        if result.modified_count == 0:
+            # Check if client exists
+            client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+            if not client_doc:
+                raise HTTPException(status_code=404, detail="Client not found")
+            else:
+                # Client exists but status wasn't changed (maybe same status)
+                logging.info(f"✅ MongoDB: Client {client_id} status already set to {new_status}")
+        else:
+            logging.info(f"✅ MongoDB: Updated client {client_id} status to {new_status}")
         
+        return {"success": True, "message": f"Client status updated to {new_status}"}
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        logging.error(f"❌ Failed to update client status for {client_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update client status: {str(e)}")
 
 @api_router.get("/admin/portfolio-summary")
