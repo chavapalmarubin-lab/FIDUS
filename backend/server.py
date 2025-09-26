@@ -12635,7 +12635,7 @@ async def create_client_drive_folder(folder_data: dict, current_user: dict = Dep
     Create a dedicated Google Drive folder for a client
     """
     try:
-        user_id = current_user.get("user_id", "user_admin_001")
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))  # Fixed: use correct admin ID
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
