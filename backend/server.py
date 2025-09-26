@@ -1806,7 +1806,7 @@ async def debug_google_session(current_user: dict = Depends(get_current_admin_us
             sessions_info.append(session_info)
         
         # Check current user's tokens
-        user_id = current_user.get("user_id", "user_admin_001")
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))  # Fixed: use correct admin ID
         user_tokens = await get_google_session_token(user_id)
         
         return {
