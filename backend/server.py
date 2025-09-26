@@ -1796,7 +1796,9 @@ async def change_password(change_request: dict):
         if not username or not current_password or not new_password:
             raise HTTPException(status_code=400, detail="All fields are required")
         
-        if username not in MOCK_USERS:
+        # MongoDB-only user validation - NO MOCK DATA
+        user_doc = await db.users.find_one({"username": username})
+        if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         
         user_data = MOCK_USERS[username]
