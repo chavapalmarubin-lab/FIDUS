@@ -4237,12 +4237,14 @@ async def import_clients_excel(file: UploadFile = File(...)):
 
 @api_router.get("/admin/users")
 async def get_all_users():
-    """RESTORED: Working user management with MOCK_USERS primary"""
+    """Get all users from MongoDB - MONGODB ONLY"""
     try:
         users_list = []
         
-        # RESTORED: Get users from MOCK_USERS (primary working system)
-        for username, user_data in MOCK_USERS.items():
+        # Get users from MongoDB (NO MOCK_USERS)
+        user_docs = await db.users.find({}).to_list(length=None)
+        
+        for user_data in user_docs:
             users_list.append({
                 "id": user_data.get("id", ""),
                 "username": user_data.get("username", ""),
@@ -4251,16 +4253,16 @@ async def get_all_users():
                 "phone": user_data.get("phone", ""),
                 "type": user_data.get("type", "client"),
                 "status": user_data.get("status", "active"),
-                "created_at": user_data.get("created_at", ""),
+                "created_at": user_data.get("created_at", "").isoformat() if isinstance(user_data.get("created_at"), datetime) else user_data.get("created_at", ""),
                 "last_login": user_data.get("last_login", ""),
                 "notes": user_data.get("notes", "")
             })
         
-        logging.info(f"✅ RESTORED: Retrieved {len(users_list)} users from MOCK_USERS")
+        logging.info(f"✅ MongoDB: Retrieved {len(users_list)} users")
         return {"users": users_list}
         
     except Exception as e:
-        logging.error(f"Get users error: {str(e)}")
+        logging.error(f"❌ Get users error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch users")
 
 @api_router.post("/admin/users/create")
