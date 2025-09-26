@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://invest-portal-31.preview.emergentagent.com`
+`https://mockdb-cleanup.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

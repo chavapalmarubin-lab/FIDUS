@@ -1,94 +1,57 @@
 <analysis>
-The AI engineer's work primarily involved stabilizing and enhancing the FIDUS investment platform, focusing on Google Workspace integration and CRM functionality. Initial efforts addressed critical bugs like MongoDB schema validation, Google Drive document segregation, and UI/UX issues. A significant challenge was the persistence and consistency of user/client data, leading to repeated losses of client records (e.g., Alejandro Mariscal) due to a dual storage system (MongoDB and in-memory MOCK_USERS). The AI iterated on fixing authentication, data serialization, and frontend UI discrepancies for Google APIs. Recurring regressions, particularly with Google OAuth and the Connection Monitor, led to user frustration and required multiple rollbacks and re-implementations. The latest focus is on migrating entirely to MongoDB, ensuring Google APIs show real data, and stabilizing core features to meet a production-ready standard after a comprehensive assessment.
+The AI engineer's work involved an iterative, often regressive, attempt to stabilize the FIDUS investment platform, primarily focusing on Google Workspace integration and eliminating the  database. Initial efforts fixed critical bugs (MongoDB schema, Google Drive segregation, UI/UX). A recurring challenge was data persistence due to the dual  and MongoDB system, leading to repeated client data loss and inconsistent Google API authentication. The AI repeatedly fixed and broke Google OAuth, facing ,  errors, and token storage failures, often due to inconsistent environment variable usage and hardcoded URLs. Despite several attempts to remove , the system repeatedly reverted to hybrid operation, causing user frustration. The latest phase involves a renewed, systematic effort to fully migrate to MongoDB, analyzing all  dependencies to prevent further regressions.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal aims to be a comprehensive investment management platform.
-**Core Features:**
-1.  **Google OAuth Integration**: Admin users authenticate with personal Gmail accounts for Gmail, Calendar, Drive, and Meet access.
-2.  **Real Google API Integration**: Fetches and displays real Gmail, Calendar, Drive, and Meet data for both admin and client portals.
-3.  **Gmail Integration**: Supports sending/receiving FIDUS-to-client emails for clients; full Gmail access for admins.
-4.  **Calendar Integration**: Enables creation and management of events, including Google Meet links. Client meeting requests should go to the admin portal.
-5.  **Drive Integration**: Manages documents with a segregated Google Drive folder per lead/client. Clients can upload documents to their pre-created FIDUS folder.
-6.  **Document Signing Functionality**: Document upload, PDF viewing, electronic signature capture, and email notifications (Salvador Palma default signee).
-7.  **Admin Login Routing**: Admins redirect correctly post-login, with Google-style connection monitor.
-8.  **CRM Integration**: Google functionalities (email, meetings, document requests) integrated within CRM prospect/client details. Pipeline stages (Lead, Negotiation, Won/Lost) with AML/KYC for client conversion.
-9.  **Robust Authentication**: Addressing login loops, JWT token handling, and frontend authentication state persistence.
-10. **User Admin Functions**: Standard user administration for managing users and ensuring data persistence.
-11. **Google Connection Certification**: Procedure to certify Google API connection status (Gmail, Calendar, Drive) via a Google-style monitor showing real-time status.
-12. **Client Profile Management**: Clients should be able to edit their profile (photo, email, password) and upload documents.
-
-**Implementation Status:**
-*   MongoDB schema validation for prospects/clients fixed.
-*   Google Drive folder creation and persistence for prospects implemented.
-*   CRM pipeline movement and AML/KYC checks are functional.
-*   User administration now connects to a backend endpoint (though persistence issues with  arose).
-*   Client-specific document filtering and upload button functionality added (frontend endpoint corrected, backend upload logic added).
-*   Client profile update endpoints and UI components added (without full data persistence for users).
-*   Admin Google Workspace (Gmail, Calendar, Drive) interfaces now display real data (after fixing frontend data parsing and placeholder UI).
-*   Google OAuth redirect URI mismatch resolved with user input.
-*   Data persistence issues with MOCK_USERS vs. MongoDB were a recurring problem, with a temporary rollback to  in the latest phase to restore basic functionality.
+The FIDUS financial portal is a comprehensive investment management platform. It requires robust Google OAuth for admin authentication, real Google API integration (Gmail, Calendar, Drive, Meet) for both admin and client portals, and segregated Google Drive folders for each client/lead with document upload capabilities. Core CRM functionalities, including prospect pipelines and AML/KYC checks, must be integrated with Google services. The application needs reliable JWT authentication, user administration, and a Google-style connection monitor to display real-time API status. Clients should also manage their profiles and upload documents. Implementation so far has addressed MongoDB schema validation, Google Drive folder creation for prospects, functional CRM pipelines, and client/user administration. Admin Google Workspace interfaces now display real data. However, persistent issues with  vs. MongoDB have led to temporary rollbacks.
 </product_requirements>
 
 <key_technical_concepts>
 -   **React.js**: Frontend UI development.
 -   **FastAPI**: Python backend API development.
--   **MongoDB**: NoSQL database for data storage, using UUIDs for IDs.
+-   **MongoDB**: NoSQL database, UUIDs for IDs.
 -   **JWT Authentication**: Token-based security.
 -   **Google OAuth 2.0**: Protocol for Google API authorization.
 -   **Pydantic**: Data validation for Python models.
--   **Datetime/Timezone Handling**: Consistent timezone-aware datetimes.
--   **Supervisor**: Process control for frontend/backend services.
+-   **Supervisor**: Process control.
 </key_technical_concepts>
 
 <code_architecture>
 
 
-
 -   ****: Central FastAPI application.
-    -   **Importance**: Defines backend endpoints, handles Google OAuth callback, CRM logic, user administration, and API interactions.
-    -   **Changes**:
-        -   Modified  model to use  and added  for MongoDB compatibility (Pydantic models and MongoDB schema alignment).
-        -   Updated  fields to use  for MongoDB storage to prevent serialization errors.
-        -   Ensured  field is popped from MongoDB responses.
-        -   Fixed multiple instances of  to  or  for prospect/client management.
-        -   Added  and  endpoints for client profile management.
-        -   Implemented  for client document uploads.
-        -   Re-aligned Google OAuth redirect URIs and callback endpoints (e.g., ) for consistency.
-        -   Implemented, then rolled back, and then re-attempted (partially) the migration of  to MongoDB, involving updates to login, user creation, and user retrieval endpoints to solely use MongoDB, or temporarily reverted to MOCK_USERS for stability.
-        -   Fixed MongoDB schema validation errors for user creation ( field type and name).
-        -   Modified connection history endpoint () to return real API status instead of mock data.
+    -   **Importance**: Defines backend endpoints, handles Google OAuth, CRM logic, and user management.
+    -   **Changes**:  references were intermittently added/removed, causing data inconsistencies. Google OAuth callback logic was modified multiple times for token exchange, user ID consistency ( vs ), and redirect URL configuration ( vs hardcoded preview URLs). Client/prospect creation and update logic were adjusted for MongoDB compatibility, including ID field handling and AML/KYC endpoint corrections. Debug endpoints were added. The  function was updated to include Alejandro and use consistent field names.
 -   ****: Stores backend environment variables.
-    -   **Importance**: Critical for Google OAuth credentials (, , ) and MongoDB connection ().
-    -   **Changes**:  updated for consistency. Google OAuth credentials were temporarily missing or hardcoded elsewhere, causing issues.
+    -   **Importance**: Critical for Google OAuth credentials and MongoDB connection.
+    -   **Changes**: , ,  were frequently modified, leading to  and  errors.  was added.  was updated for deployment.
 -   ****: Manages Google API interactions.
-    -   **Importance**: Centralizes logic for Gmail, Calendar, Drive services.
-    -   **Changes**: Added  function for specific Google Drive folder uploads.
--   ****: Used for Google OAuth.
+    -   **Importance**: Centralizes logic for Gmail, Calendar, Drive.
+    -   **Changes**:  function added. Initialized with environment variables instead of hardcoded values.
+-   ****: Used for Google OAuth URL generation.
     -   **Importance**: Responsible for generating Google OAuth URLs.
-    -   **Changes**: Updated redirect URI for consistency with  and Google Console requirements. Previously hardcoded credentials were a source of issues.
--   ****: Contains MongoDB schema definitions.
-    -   **Importance**: Defines the expected schema for MongoDB collections, which led to schema validation errors when not matched by Pydantic models.
+    -   **Changes**: Hardcoded  and  were replaced with environment variables to ensure consistency.
+-   ****: Specific Google OAuth service.
+    -   **Importance**: Handles the direct Google OAuth flow.
+    -   **Changes**: Hardcoded preview URLs were replaced with environment variables to ensure correct redirect URIs for deployment.
+-   ****: Stores frontend environment variables.
+    -   **Importance**: Connects frontend to backend via .
+    -   **Changes**:  updated to  for production deployment.
 -   ****: Main React application component.
     -   **Importance**: Manages overall application state and routing.
+    -   **Changes**: Logic for handling OAuth success parameters () was added, and admin login state preservation post-OAuth was implemented.
 -   ****: Admin UI.
     -   **Importance**: Provides navigation and overall layout for admin features.
-    -   **Changes**: Integrated . Implemented, then reverted, logic for controlled tab state and reading URL parameters (e.g., ) for post-OAuth redirect.
--   ****: Manages user directory.
-    -   **Importance**: Displays and allows management of users.
-    -   **Changes**: Replaced mock/hardcoded user data with API calls to .
--   ** (New)**: Comprehensive client detail view with Google integration.
-    -   **Importance**: Provides a detailed view for clients, including client-specific Google Workspace data.
-    -   **Changes**: Corrected API call for documents from insecure  to secure . Added an upload button and integrated  function.
--   ****: Client-side dashboard.
-    -   **Importance**: Displays client-specific financial and document information.
-    -   **Changes**: Added a Profile tab with UI for editing client name, email, password, and uploading a profile photo. Added corresponding state and handler functions (, ).
--   ** (New)**: Displays Google service connection status.
-    -   **Importance**: Provides a visual monitor for Google service connection status.
-    -   **Changes**: Updated to fetch and display **real** connection status and history from backend APIs instead of hardcoded mock data.
--   ** (New)**: Enhanced Google Workspace integration component for admin.
-    -   **Importance**: Delivers a robust and Google-like experience.
-    -   **Changes**: Corrected data parsing for Gmail and Drive (expected  instead of ). Fixed Calendar API endpoint call. Replaced coming in next update placeholder UIs for Calendar and Drive tabs with actual data rendering logic.
+    -   **Changes**: Tab management was updated to read URL parameters () for post-OAuth redirects to the Connection Monitor.
+-   ****: Manages CRM pipeline.
+    -   **Importance**: Displays and allows moving prospects through pipeline stages.
+    -   **Changes**: The API call for pipeline movement was corrected from PATCH to PUT and the endpoint for AML/KYC ( to ) and conversion ( to ) were fixed.
+-   ****: Client detail view.
+    -   **Importance**: Detailed client view with Google Workspace data.
+    -   **Changes**: Corrected API call for documents to  and added document upload functionality.
+-   ****: (New) Hook for Google authentication state.
+    -   **Importance**: Manages the authentication status for Google services on the frontend.
+    -   **Changes**: Created this new file to centralize Google authentication state.
 </code_architecture>
 
 <pending_tasks>
@@ -96,27 +59,27 @@ The FIDUS financial portal aims to be a comprehensive investment management plat
 -   Implement the actual MetaTrader5 package integration in .
 -   Automate rebate tracking based on trading volume via an API.
 -   Complete the integration of the  component with real data and visualizations.
--   Implement the Send for Signature functionality on the Drive tab, including document selection, upload, and display in a sent tab, ensuring Salvador Palma is the default FIDUS signee.
--   Address remaining data persistence and synchronization issues for users/clients, specifically completing the full migration from  to MongoDB as the single source of truth, without regressions.
--   Resolve potential outstanding Google API authentication failures (specifically for Calendar and Drive, as they were initially reported as failing authentication despite being fixed for UI display).
--   Ensure the Google Connection Monitor redirects correctly after OAuth without looping or disappearing (the changes were reverted due to this).
+-   Implement the Send for Signature functionality on the Drive tab.
+-   Address remaining data persistence and synchronization issues by completely migrating from  to MongoDB.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was engaged in a critical recovery and stabilization effort. The user expressed extreme frustration due to repeated functionality regressions, particularly concerning Google Workspace integration and client/user data persistence.
+Immediately prior to this summary, the AI engineer was engaged in a critical effort to resolve persistent issues related to Google OAuth connectivity and data consistency, specifically focusing on the  vs. MongoDB conflict.
 
-The AI engineer performed a comprehensive system assessment, identifying:
-1.  Working authentication but  status for Google APIs.
-2.  Multiple duplicate entries for Alejandro Mariscal in client and user lists (10 entries).
-3.  Email sending failures due to Google authentication issues.
+The user reported:
+1.  Inability to upload documents from both client and admin logins, receiving Client not found errors.
+2.  The Create Drive Folder button persisted even when the Google Drive folder already existed, indicating a database synchronization issue.
+3.  Continued frustration with the system's instability due to the dual database architecture ( and MongoDB).
 
-The immediate actions taken were:
-*   **Cleaning up duplicate Alejandro entries**: The latest working Alejandro client () was confirmed to be functional after a previous rollback.
-*   **Verifying Google OAuth flow**: The OAuth URL generation was successfully re-tested and confirmed to be properly formatted.
+The AI engineer's actions involved:
+1.  Debugging Google OAuth token storage, identifying that tokens were not persisting in the database despite the Connection Monitor showing Connected. This was traced to inconsistent  usage between OAuth callback and Google API calls, and hardcoded redirect URIs in . These were addressed by updating environment variables and standardizing user IDs.
+2.  Investigating Alejandro's client and prospect records, confirming their existence but noting missing Google Drive folder metadata in his database record.
+3.  Attempting to manually update Alejandro's database record with folder information and programmatically triggering folder creation, which failed due to underlying OAuth token issues.
+4.  Acknowledging the user's severe frustration regarding the dual database system and committing to a systematic and complete migration away from  to MongoDB.
 
-The system is currently in a state where core backend functionalities for client conversion and Google OAuth URL generation are verified post-rollback. However, the user's explicit request to eliminate  data and ensure a fully persistent, production-ready system with all Google APIs, CRM, client login, and a real connection monitor is the overriding goal. The AI has completed backend testing with an 87.5% success rate and frontend verification with a 95% success rate on the current, mostly-rolled-back-to-MOCK-data state.
+The system is currently in a state where Google OAuth configuration inconsistencies have been addressed (client ID, secret, redirect URIs), and attempts have been made to fix token persistence. However, the fundamental problem of  co-existing with MongoDB is being recognized as the root cause of many recurring issues. The AI has just completed a detailed analysis of  dependencies, preparing for a complete migration.
 </current_work>
 
 <optional_next_step>
-Systematically re-implement MongoDB-only user/client persistence, ensuring Google API functionality and Connection Monitor stability, and removing all MOCK data.
+Continue with Phase 3: Complete Dependency Analysis of  to create a systematic migration plan.
 </optional_next_step>
