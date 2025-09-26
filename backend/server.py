@@ -1843,33 +1843,38 @@ async def update_client_profile(profile_update: dict, current_user: dict = Depen
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         
-        user_data = MOCK_USERS[username]
-        
-        # Update allowed fields
+        # Update allowed fields in MongoDB
         allowed_fields = ["name", "email", "phone"]
-        updated_fields = {}
+        update_data = {}
         
         for field in allowed_fields:
             if field in profile_update and profile_update[field]:
-                user_data[field] = profile_update[field]
-                updated_fields[field] = profile_update[field]
+                update_data[field] = profile_update[field]
         
-        # Update last modified timestamp
-        user_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        if update_data:
+            # Update MongoDB document
+            update_data["updated_at"] = datetime.now(timezone.utc)
+            await db.users.update_one(
+                {"username": username},
+                {"$set": update_data}
+            )
         
-        logging.info(f"Profile updated for user: {username}, fields: {list(updated_fields.keys())}")
+        logging.info(f"Profile updated for user: {username}, fields: {list(update_data.keys())}")
+        
+        # Get updated user document
+        updated_user_doc = await db.users.find_one({"username": username})
         
         return {
             "success": True,
             "message": "Profile updated successfully",
-            "updated_fields": updated_fields,
+            "updated_fields": update_data,
             "user": {
-                "id": user_data["id"],
-                "username": user_data["username"],
-                "name": user_data["name"], 
-                "email": user_data["email"],
-                "phone": user_data.get("phone", ""),
-                "profile_picture": user_data.get("profile_picture", "")
+                "id": updated_user_doc["user_id"],
+                "username": updated_user_doc["username"],
+                "name": updated_user_doc["name"], 
+                "email": updated_user_doc["email"],
+                "phone": updated_user_doc.get("phone", ""),
+                "profile_picture": updated_user_doc.get("profile_picture", "")
             }
         }
         
