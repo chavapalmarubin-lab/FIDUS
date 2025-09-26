@@ -12330,8 +12330,8 @@ async def create_prospect_drive_folder(prospect: dict):
     Helper function to create a Google Drive folder for each prospect/client
     """
     try:
-        # Use admin's Google token
-        user_id = "user_admin_001"
+        # Use admin's Google token (fixed user_id to match OAuth storage)
+        user_id = "admin_001"  # Fixed: matches OAuth token storage user_id
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
