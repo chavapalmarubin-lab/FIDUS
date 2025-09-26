@@ -1110,7 +1110,7 @@ async def ensure_default_users_in_mongodb():
             "name": "Javier Gonzalez",
             "email": "javier.gonzalez@fidus.com", 
             "phone": "+1-555-0400",
-            "user_type": "client",
+            "type": "client",  # Fixed: use "type" not "user_type"
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
