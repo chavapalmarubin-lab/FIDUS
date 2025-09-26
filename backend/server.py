@@ -654,7 +654,7 @@ FIDUS_FUND_CONFIG = {
 # In-memory investment storage (in production, use proper database)
 client_investments = {}
 
-# In-memory client investment readiness tracking (in production, use proper database)
+# RESTORED: Working client readiness storage  
 client_readiness = {}
 
 # RESTORED: Working temporary password storage
