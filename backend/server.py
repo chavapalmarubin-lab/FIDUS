@@ -2255,11 +2255,11 @@ async def get_client_details(client_id: str):
 
 @api_router.get("/admin/clients/{client_id}/documents")
 async def get_client_documents(client_id: str):
-    """Get all documents for a specific client"""
+    """Get all documents for a specific client - MONGODB ONLY"""
     try:
-        # Check if client exists
-        client_exists = any(user.get('id') == client_id for user in MOCK_USERS.values())
-        if not client_exists:
+        # Check if client exists in MongoDB (NO MOCK_USERS)
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+        if not client_doc:
             raise HTTPException(status_code=404, detail="Client not found")
         
         # For now, return mock documents - in production this would query actual document storage
