@@ -188,7 +188,7 @@ const EnhancedPipelineView = () => {
   const initiateAMLKYC = async (prospectId) => {
     setLoading(true);
     try {
-      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-kyc-check`);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-kyc`);
       
       if (response.data.success) {
         alert('✅ AML/KYC check initiated successfully!');
