@@ -13783,8 +13783,12 @@ async def create_new_client(client_data: ClientCreate):
             "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
         }
         
-        # Add to MOCK_USERS
-        MOCK_USERS[client_data.username] = new_client
+        # Save to MongoDB (NO MOCK_USERS)
+        try:
+            await db.users.insert_one(new_client)
+        except Exception as e:
+            logging.error(f"Error saving client to MongoDB: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to create client account")
         
         # Initialize investment readiness
         client_readiness[client_id] = {
