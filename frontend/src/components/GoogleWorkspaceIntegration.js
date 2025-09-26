@@ -821,8 +821,8 @@ ${documentRequestType === 'aml_kyc' ? `
                     });
                     
                     const data = await response.json();
-                    if (data.success && data.oauth_url) {
-                      window.location.href = data.oauth_url;
+                    if (data.success && data.auth_url) {
+                      window.location.href = data.auth_url;
                     } else {
                       alert('Failed to get Google OAuth URL: ' + (data.detail || 'Unknown error'));
                     }
