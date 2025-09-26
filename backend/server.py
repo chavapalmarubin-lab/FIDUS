@@ -1141,7 +1141,7 @@ async def ensure_default_users_in_mongodb():
             "notes": "Default admin account"
         },
         {
-            "user_id": "client_alejandro",
+            "id": "client_alejandro",  # Fixed: use "id" not "user_id"
             "username": "alejandro_mariscal",
             "name": "Alejandro Mariscal Romero",
             "email": "alejandro.mariscal@email.com",
