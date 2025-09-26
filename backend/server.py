@@ -4901,18 +4901,17 @@ async def get_detailed_clients():
 async def delete_client(client_id: str):
     """Delete a client (admin only)"""
     try:
-        # Find and remove client
-        username_to_remove = None
-        for username, user in MOCK_USERS.items():
-            if user.get("id") == client_id and user.get("type") == "client":
-                username_to_remove = username
-                break
-        
-        if username_to_remove:
-            del MOCK_USERS[username_to_remove]
-            return {"success": True, "message": "Client deleted successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="Client not found")
+        # Delete from MongoDB (NO MOCK_USERS)
+        try:
+            result = await db.users.delete_one({"id": client_id, "type": "client"})
+            
+            if result.deleted_count > 0:
+                return {"success": True, "message": "Client deleted successfully"}
+            else:
+                raise HTTPException(status_code=404, detail="Client not found")
+        except Exception as e:
+            logging.error(f"Error deleting client from MongoDB: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to delete client")
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete client: {str(e)}")
