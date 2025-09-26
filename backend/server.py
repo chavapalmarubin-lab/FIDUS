@@ -4138,18 +4138,26 @@ async def import_clients_excel(file: UploadFile = File(...)):
         # Parse and validate client data
         clients = parse_clients_excel_data(excel_data)
         
-        # Update MOCK_USERS with imported clients
+        # Save imported clients to MongoDB (NO MOCK_USERS)
         imported_count = 0
         updated_count = 0
         
         for client in clients:
-            username = client["username"]
-            if username in MOCK_USERS:
-                MOCK_USERS[username].update(client)
-                updated_count += 1
-            else:
-                MOCK_USERS[username] = client
-                imported_count += 1
+            try:
+                # Try to update existing client or insert new one
+                result = await db.users.update_one(
+                    {"username": client["username"]},
+                    {"$set": client},
+                    upsert=True
+                )
+                
+                if result.upserted_id:
+                    imported_count += 1
+                elif result.modified_count > 0:
+                    updated_count += 1
+                    
+            except Exception as e:
+                logging.warning(f"Failed to import client {client.get('username', 'unknown')}: {str(e)}")
         
         return {
             "success": True,
