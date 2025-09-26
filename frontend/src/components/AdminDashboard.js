@@ -121,6 +121,18 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [portfolioData, setPortfolioData] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Detect tab parameter from URL for OAuth callback
+  const [activeTab, setActiveTab] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam === 'connection-monitor') {
+      console.log('🎯 OAuth callback detected - setting Connection Monitor as active tab');
+      return 'google-monitor';
+    }
+    return 'portfolio';
+  });
+
   const fields = ["CORE", "BALANCE", "DYNAMIC"];
 
   useEffect(() => {
