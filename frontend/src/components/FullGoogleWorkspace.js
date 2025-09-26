@@ -218,7 +218,7 @@ const FullGoogleWorkspace = () => {
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
-        console.log('🚀 Redirecting to REAL Google OAuth:', authUrl);
+        console.log('🚀 Redirecting to Google OAuth via Emergent:', authUrl);
         
         // Redirect to ACTUAL Google OAuth (accounts.google.com)
         window.location.href = authUrl;
