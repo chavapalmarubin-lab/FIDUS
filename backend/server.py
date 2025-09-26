@@ -1295,81 +1295,49 @@ def calculate_balances(client_id: str) -> dict:
 # Authentication endpoints
 @api_router.post("/auth/login", response_model=UserResponse)
 async def login(login_data: LoginRequest):
-    """RESTORED: Working authentication with MOCK_USERS fallback"""
+    """Production MongoDB-only authentication"""
     username = login_data.username
     password = login_data.password
     user_type = login_data.user_type
     
     try:
-        # RESTORED: Check MOCK_USERS first (working system)
-        if username in MOCK_USERS:
-            mock_user_data = MOCK_USERS[username]
-            
-            # Check if user type matches
-            if mock_user_data["type"] != user_type:
-                raise HTTPException(status_code=401, detail="Invalid credentials")
-            
-            # Check for temporary password first
-            user_id = mock_user_data["id"]
-            if user_id in user_temp_passwords:
-                temp_info = user_temp_passwords[user_id]
-                if password == temp_info["temp_password"]:
-                    # Temporary password login successful
-                    user_response_dict = mock_user_data.copy()
-                    user_response_dict["must_change_password"] = temp_info["must_change"]
-                    
-                    # Generate JWT token
-                    jwt_token = create_jwt_token(mock_user_data)
-                    user_response_dict["token"] = jwt_token
-                    
-                    return UserResponse(**user_response_dict)
-            
-            # Check regular password for mock users
-            if password == "password123":
-                user_response_dict = mock_user_data.copy()
-                user_response_dict["must_change_password"] = False
-                
-                # Generate JWT token
-                jwt_token = create_jwt_token(mock_user_data)
-                user_response_dict["token"] = jwt_token
-                
-                return UserResponse(**user_response_dict)
-        
-        # Fallback: Try MongoDB for newer users
+        # MongoDB-only authentication - NO MOCK DATA
         user_doc = await db.users.find_one({
             "username": username,
             "user_type": user_type,
             "status": "active"
         })
         
-        if user_doc:
-            # Check MongoDB user password
-            password_valid = False
-            must_change_password = False
-            
-            if user_doc.get("temp_password") and password == user_doc["temp_password"]:
-                password_valid = True
-                must_change_password = True
-            elif password == "password123":
-                password_valid = True
-                
-            if password_valid:
-                user_response_dict = {
-                    "id": user_doc["user_id"],
-                    "username": user_doc["username"], 
-                    "name": user_doc["name"],
-                    "email": user_doc["email"],
-                    "type": user_doc["user_type"],
-                    "profile_picture": user_doc.get("profile_picture", ""),
-                    "must_change_password": must_change_password
-                }
-                
-                jwt_token = create_jwt_token(user_response_dict)
-                user_response_dict["token"] = jwt_token
-                
-                return UserResponse(**user_response_dict)
+        if not user_doc:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        # Check MongoDB user password
+        password_valid = False
+        must_change_password = False
+        
+        if user_doc.get("temp_password") and password == user_doc["temp_password"]:
+            password_valid = True
+            must_change_password = True
+        elif password == "password123":
+            password_valid = True
+            
+        if not password_valid:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        user_response_dict = {
+            "id": user_doc["user_id"],
+            "username": user_doc["username"], 
+            "name": user_doc["name"],
+            "email": user_doc["email"],
+            "type": user_doc["user_type"],
+            "profile_picture": user_doc.get("profile_picture", ""),
+            "must_change_password": must_change_password
+        }
+        
+        jwt_token = create_jwt_token(user_response_dict)
+        user_response_dict["token"] = jwt_token
+        
+        return UserResponse(**user_response_dict)
         
     except HTTPException:
         raise
