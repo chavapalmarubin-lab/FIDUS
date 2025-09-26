@@ -1753,6 +1753,44 @@ async def share_document_via_google_drive(document_id: str, share_data: dict, cu
 
 # Investment System Endpoints
 
+@api_router.get("/admin/debug/google-session")
+async def debug_google_session(current_user: dict = Depends(get_current_admin_user)):
+    """Debug Google session tokens in database"""
+    try:
+        # Check admin sessions collection
+        all_sessions = await db.admin_sessions.find({}).to_list(length=None)
+        
+        sessions_info = []
+        for session in all_sessions:
+            session_info = {
+                "user_id": session.get("user_id"),
+                "has_google_tokens": bool(session.get("google_tokens")),
+                "google_authenticated": session.get("google_authenticated", False),
+                "created_at": session.get("created_at", "Not set"),
+                "updated_at": session.get("updated_at", "Not set")
+            }
+            if session.get("google_tokens"):
+                session_info["token_keys"] = list(session["google_tokens"].keys())
+            sessions_info.append(session_info)
+        
+        # Check current user's tokens
+        user_id = current_user.get("user_id", "user_admin_001")
+        user_tokens = await get_google_session_token(user_id)
+        
+        return {
+            "success": True,
+            "current_user_id": user_id,
+            "current_user_tokens_found": bool(user_tokens),
+            "total_sessions": len(all_sessions),
+            "sessions": sessions_info
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
