@@ -4752,8 +4752,10 @@ async def get_detailed_clients():
     try:
         clients_data = []
         
-        for user in MOCK_USERS.values():
-            if user["type"] == "client":
+        # Get detailed client info from MongoDB (NO MOCK_USERS)
+        client_docs = await db.users.find({"type": "client", "status": "active"}).to_list(length=None)
+        
+        for user in client_docs:
                 transactions = generate_mock_transactions(user["id"], 30)
                 balances = calculate_balances(user["id"])
                 
