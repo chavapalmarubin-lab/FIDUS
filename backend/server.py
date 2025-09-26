@@ -2165,10 +2165,14 @@ async def get_client_transactions(
 # Admin endpoints
 @api_router.get("/admin/clients")
 async def get_all_clients():
-    """Get all client summaries for admin"""
-    clients = []
-    for user in MOCK_USERS.values():
-        if user["type"] == "client":
+    """Get all client summaries for admin - MONGODB ONLY"""
+    try:
+        clients = []
+        
+        # Get all clients from MongoDB (NO MOCK_USERS)
+        client_docs = await db.users.find({"type": "client", "status": "active"}).to_list(length=None)
+        
+        for user in client_docs:
             transactions = generate_mock_transactions(user["id"], 20)
             balances = calculate_balances(user["id"])
             clients.append({
@@ -2178,10 +2182,15 @@ async def get_all_clients():
                 "total_balance": balances["total_balance"],
                 "last_activity": transactions[0]["date"] if transactions else datetime.now(timezone.utc),
                 "status": user.get("status", "active"),
-                "created_at": user.get("createdAt", datetime.now(timezone.utc).isoformat())
+                "created_at": user.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(user.get("created_at"), datetime) else user.get("created_at", datetime.now(timezone.utc).isoformat())
             })
-    
-    return {"clients": clients}
+        
+        logging.info(f"✅ MongoDB: Retrieved {len(clients)} clients")
+        return {"clients": clients}
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to get clients from MongoDB: {str(e)}")
+        return {"clients": []}
 # ============================================
 # ADMIN CLIENT MANAGEMENT ENDPOINTS
 # ============================================
