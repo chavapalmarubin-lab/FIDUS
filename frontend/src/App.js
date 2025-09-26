@@ -16,13 +16,41 @@ function App() {
   useEffect(() => {
     console.log('🔍 App initializing - checking for OAuth callback...');
     
-    // CRITICAL: Check for session_id from Google OAuth callback FIRST
+    // Check for OAuth callback parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
+    const sessionId = urlParams.get('session_id');  // Emergent OAuth
+    const googleAuthSuccess = urlParams.get('google_auth') === 'success';  // Direct Google OAuth
+    const googleAuthTab = urlParams.get('tab');
     
     console.log('URL params:', window.location.search);
     console.log('Session ID detected:', sessionId);
+    console.log('Google Auth Success:', googleAuthSuccess);
     
+    // Handle Direct Google OAuth success
+    if (googleAuthSuccess) {
+      console.log('✅ DIRECT GOOGLE OAUTH SUCCESS - Authentication completed');
+      
+      // Store authentication success
+      localStorage.setItem('google_api_authenticated', 'true');
+      localStorage.setItem('google_auth_completed', new Date().toISOString());
+      
+      // Clean URL and redirect to admin dashboard with Google tab
+      const baseUrl = window.location.origin + window.location.pathname;
+      const newUrl = googleAuthTab ? `${baseUrl}?skip_animation=true&tab=${googleAuthTab}` : `${baseUrl}?skip_animation=true`;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Show success message
+      console.log('🚀 Google authentication successful - redirecting to admin dashboard');
+      
+      // Force page refresh to apply authentication
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      return;
+    }
+    
+    // Handle Emergent OAuth (existing logic)
     if (sessionId) {
       console.log('🔄 GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', sessionId);
       
