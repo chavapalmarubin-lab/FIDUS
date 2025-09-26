@@ -119,12 +119,27 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [alloc, setAlloc] = useLocalStorage(LS_ALLOC_KEY, defaultAlloc);
   const [sim, setSim] = useState({ enabled: false, CORE: 0, BALANCE: 0, DYNAMIC: 0 });
   const [portfolioData, setPortfolioData] = useState(null);
+  const [activeTab, setActiveTab] = useState("portfolio");
   const fileInputRef = useRef(null);
 
   const fields = ["CORE", "BALANCE", "DYNAMIC"];
 
   useEffect(() => {
     fetchPortfolioData();
+    
+    // Check URL parameters for OAuth success and tab switching
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleAuth = urlParams.get('google_auth');
+    const requestedTab = urlParams.get('tab');
+    
+    if (googleAuth === 'success' && requestedTab === 'google-monitor') {
+      // Switch to Connection Monitor tab after OAuth success
+      setActiveTab('google-monitor');
+      
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
   }, []);
 
   const fetchPortfolioData = async () => {
