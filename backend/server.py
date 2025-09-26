@@ -8389,7 +8389,7 @@ async def process_google_social_login(request: Request, response: Response):
         token_data = {
             "user_id": user_id,
             "email": user_data['email'],
-            "user_type": "client",
+            "type": "client",  # Fixed: use "type" not "user_type"
             "exp": datetime.now(timezone.utc) + timedelta(days=7)
         }
         jwt_token = jwt.encode(token_data, os.environ.get('JWT_SECRET', 'fallback-secret'), algorithm="HS256")
