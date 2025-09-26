@@ -4078,28 +4078,26 @@ async def import_clients_excel(file: UploadFile = File(...)):
 
 @api_router.get("/admin/users")
 async def get_all_users():
-    """PRODUCTION: Get all users from MongoDB (no MOCK data)"""
+    """RESTORED: Working user management with MOCK_USERS primary"""
     try:
         users_list = []
         
-        # PRODUCTION: Get all users from MongoDB only
-        mongodb_users = await db.users.find().to_list(length=None)
-        
-        for user in mongodb_users:
+        # RESTORED: Get users from MOCK_USERS (primary working system)
+        for username, user_data in MOCK_USERS.items():
             users_list.append({
-                "id": user.get("user_id", ""),
-                "username": user.get("username", ""),
-                "name": user.get("name", ""),
-                "email": user.get("email", ""),
-                "phone": user.get("phone", ""),
-                "type": user.get("user_type", "client"),
-                "status": user.get("status", "active"),
-                "created_at": user.get("created_at", "").isoformat() if user.get("created_at") else "",
-                "last_login": user.get("last_login", "").isoformat() if user.get("last_login") else "",
-                "notes": user.get("notes", "")
+                "id": user_data.get("id", ""),
+                "username": user_data.get("username", ""),
+                "name": user_data.get("name", ""),
+                "email": user_data.get("email", ""),
+                "phone": user_data.get("phone", ""),
+                "type": user_data.get("type", "client"),
+                "status": user_data.get("status", "active"),
+                "created_at": user_data.get("created_at", ""),
+                "last_login": user_data.get("last_login", ""),
+                "notes": user_data.get("notes", "")
             })
         
-        logging.info(f"🎯 PRODUCTION: Retrieved {len(users_list)} users from MongoDB")
+        logging.info(f"✅ RESTORED: Retrieved {len(users_list)} users from MOCK_USERS")
         return {"users": users_list}
         
     except Exception as e:
