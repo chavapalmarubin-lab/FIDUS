@@ -1801,8 +1801,8 @@ async def change_password(change_request: dict):
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         
-        user_data = MOCK_USERS[username]
-        user_id = user_data["id"]
+        # Use MongoDB user data
+        user_id = user_doc.get("user_id", user_doc.get("id"))
         
         # Verify current password (temporary)
         if user_id in user_temp_passwords:
