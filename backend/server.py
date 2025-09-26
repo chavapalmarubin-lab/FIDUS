@@ -12370,8 +12370,8 @@ async def auto_create_prospect_drive_folder(prospect: dict):
     This ensures complete document segregation and proper CRM tracking
     """
     try:
-        # Use admin's Google token for folder creation
-        user_id = "user_admin_001"
+        # Use admin's Google token for folder creation (fixed user_id)
+        user_id = "admin_001"  # Fixed: matches OAuth token storage user_id
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
