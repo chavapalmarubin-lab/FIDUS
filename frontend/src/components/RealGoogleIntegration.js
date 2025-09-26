@@ -63,7 +63,7 @@ const RealGoogleIntegration = () => {
       setError('');
 
       // Get OAuth URL from backend
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/auth-url`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/url`, {
         credentials: 'include'
       });
 
