@@ -11564,7 +11564,7 @@ async def test_all_google_connections(current_user: dict = Depends(get_current_a
     """
     try:
         # Get user's Google tokens from database
-        user_id = current_user.get("user_id", "user_admin_001")
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))  # Fixed: use correct admin ID
         token_data = await get_google_session_token(user_id)
         
         if not token_data:
