@@ -8470,11 +8470,13 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
             
             if stored:
                 logging.info(f"✅ Google OAuth tokens stored successfully for admin user")
-                # Redirect to admin dashboard with success indicator
-                return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=success&tab=google-workspace")
+                # Redirect to the CORRECT frontend URL with success indicator
+                frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+                return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=success&tab=google-workspace")
             else:
                 logging.error(f"❌ Failed to store Google OAuth tokens")
-                return RedirectResponse(url=f"{os.getenv('FRONTEND_URL')}/?google_auth=error&message=token_storage_failed")
+                frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+                return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=token_storage_failed")
             
         except Exception as e:
             logging.error(f"❌ Token exchange/storage error: {str(e)}")
