@@ -1910,10 +1910,14 @@ async def update_client_photo(
         # In production, you would upload to cloud storage or save locally
         photo_url = f"https://images.unsplash.com/photo-{user_id[-8:]}-profile?w=150&h=150&fit=crop&crop=face"
         
-        # Update user profile picture
-        if username in MOCK_USERS:
-            MOCK_USERS[username]["profile_picture"] = photo_url
-            MOCK_USERS[username]["updated_at"] = datetime.now(timezone.utc).isoformat()
+        # Update user profile picture in MongoDB
+        await db.users.update_one(
+            {"username": username},
+            {"$set": {
+                "profile_picture": photo_url,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
         
         logging.info(f"Profile photo updated for user: {username}")
         
