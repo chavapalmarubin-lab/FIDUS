@@ -137,7 +137,7 @@ const EnhancedPipelineView = () => {
   const moveProspectToStage = async (prospectId, newStage) => {
     setLoading(true);
     try {
-      const response = await apiAxios.patch(`/crm/prospects/${prospectId}/stage`, {
+      const response = await apiAxios.put(`/crm/prospects/${prospectId}`, {
         stage: newStage,
         stage_changed_at: new Date().toISOString()
       });
