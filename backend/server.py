@@ -5536,7 +5536,10 @@ async def send_document_for_signature(
         # Get sender info
         sender_id = request.sender_id
         sender_name = "System Admin"
-        for user in MOCK_USERS.values():
+        # Get detailed client info from MongoDB (NO MOCK_USERS)
+        client_docs = await db.users.find({"type": "client", "status": "active"}).to_list(length=None)
+        
+        for user in client_docs:
             if user["id"] == sender_id:
                 sender_name = user["name"]
                 break
