@@ -4050,56 +4050,74 @@ async def test_aml_kyc_service(test_person: dict):
 
 # Excel Client Management Functions
 def generate_clients_excel_data():
-    """Generate comprehensive client data for Excel export"""
-    clients_data = []
+    """Generate comprehensive client data for Excel export - MONGODB ONLY"""
+    import asyncio
     
-    # Add existing clients from MOCK_USERS
-    for user in MOCK_USERS.values():
-        if user["type"] == "client":
-            transactions = generate_mock_transactions(user["id"], 50)
-            balances = calculate_balances(user["id"])
+    async def fetch_client_data():
+        clients_data = []
+        
+        # Get clients from MongoDB (NO MOCK_USERS)
+        try:
+            client_docs = await db.users.find({"type": "client", "status": "active"}).to_list(length=None)
             
-            # Calculate additional metrics
-            total_transactions = len(transactions)
-            avg_transaction_amount = sum(t["amount"] for t in transactions) / total_transactions if total_transactions > 0 else 0
-            last_transaction_date = transactions[0]["date"] if transactions else datetime.now(timezone.utc)
-            
-            client_data = {
-                "Client_ID": user["id"],
-                "Username": user["username"],
-                "Full_Name": user["name"],
-                "Email": user["email"],
-                "Status": user.get("status", "active"),
-                "Registration_Date": user.get("createdAt", datetime.now(timezone.utc).isoformat())[:10],
-                "Total_Balance": round(balances["total_balance"], 2),
-                "FIDUS_Funds": round(balances["fidus_funds"], 2),
-                "Core_Balance": round(balances["core_balance"], 2),
-                "Dynamic_Balance": round(balances["dynamic_balance"], 2),
-                "Total_Transactions": total_transactions,
-                "Avg_Transaction_Amount": round(avg_transaction_amount, 2),
-                "Last_Activity": last_transaction_date.isoformat()[:10] if hasattr(last_transaction_date, 'isoformat') else str(last_transaction_date)[:10],
-                "Risk_Level": random.choice(["Low", "Medium", "Low", "Low"]),  # Mostly low risk
-                "KYC_Status": "Verified",
-                "AML_Status": "Clear",
-                "Account_Type": "Individual",
-                "Phone": "+1-555-" + str(random.randint(1000000, 9999999)),
-                "Address": f"{random.randint(100, 9999)} {random.choice(['Main', 'Oak', 'Pine', 'Cedar', 'Maple'])} {random.choice(['St', 'Ave', 'Blvd', 'Dr'])}",
-                "City": random.choice(["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"]),
-                "State": random.choice(["NY", "CA", "IL", "TX", "AZ", "PA"]),
-                "Zip_Code": str(random.randint(10000, 99999)),
-                "Country": "United States",
-                "Date_of_Birth": f"{random.randint(1970, 2000)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
-                "Nationality": "US",
-                "Occupation": random.choice(["Engineer", "Doctor", "Lawyer", "Teacher", "Manager", "Consultant"]),
-                "Annual_Income": random.randint(75000, 500000),
-                "Net_Worth": random.randint(200000, 2000000),
-                "Investment_Experience": random.choice(["Beginner", "Intermediate", "Advanced"]),
-                "Risk_Tolerance": random.choice(["Conservative", "Moderate", "Aggressive"]),
-                "Investment_Goals": random.choice(["Retirement", "Wealth Building", "Income Generation", "Capital Preservation"])
-            }
-            clients_data.append(client_data)
+            for user in client_docs:
+                transactions = generate_mock_transactions(user["id"], 50)
+                balances = calculate_balances(user["id"])
+                
+                # Calculate additional metrics
+                total_transactions = len(transactions)
+                avg_transaction_amount = sum(t["amount"] for t in transactions) / total_transactions if total_transactions > 0 else 0
+                last_transaction_date = transactions[0]["date"] if transactions else datetime.now(timezone.utc)
+                
+                client_data = {
+                    "Client_ID": user["id"],
+                    "Username": user["username"],
+                    "Full_Name": user["name"],
+                    "Email": user["email"],
+                    "Status": user.get("status", "active"),
+                    "Registration_Date": user.get("created_at", datetime.now(timezone.utc)).isoformat()[:10] if hasattr(user.get("created_at"), 'isoformat') else str(user.get("created_at", datetime.now(timezone.utc)))[:10],
+                    "Total_Balance": round(balances["total_balance"], 2),
+                    "FIDUS_Funds": round(balances["fidus_funds"], 2),
+                    "Core_Balance": round(balances["core_balance"], 2),
+                    "Dynamic_Balance": round(balances["dynamic_balance"], 2),
+                    "Total_Transactions": total_transactions,
+                    "Avg_Transaction_Amount": round(avg_transaction_amount, 2),
+                    "Last_Activity": last_transaction_date.isoformat()[:10] if hasattr(last_transaction_date, 'isoformat') else str(last_transaction_date)[:10],
+                    "Risk_Level": random.choice(["Low", "Medium", "Low", "Low"]),  # Mostly low risk
+                    "KYC_Status": "Verified",
+                    "AML_Status": "Clear",
+                    "Account_Type": "Individual",
+                    "Phone": user.get("phone", "+1-555-" + str(random.randint(1000000, 9999999))),
+                    "Address": f"{random.randint(100, 9999)} {random.choice(['Main', 'Oak', 'Pine', 'Cedar', 'Maple'])} {random.choice(['St', 'Ave', 'Blvd', 'Dr'])}",
+                    "City": random.choice(["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"]),
+                    "State": random.choice(["NY", "CA", "IL", "TX", "AZ", "PA"]),
+                    "Zip_Code": str(random.randint(10000, 99999)),
+                    "Country": "United States",
+                    "Date_of_Birth": f"{random.randint(1970, 2000)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
+                    "Nationality": "US",
+                    "Occupation": random.choice(["Engineer", "Doctor", "Lawyer", "Teacher", "Manager", "Consultant"]),
+                    "Annual_Income": random.randint(75000, 500000),
+                    "Net_Worth": random.randint(200000, 2000000),
+                    "Investment_Experience": random.choice(["Beginner", "Intermediate", "Advanced"]),
+                    "Risk_Tolerance": random.choice(["Conservative", "Moderate", "Aggressive"]),
+                    "Investment_Goals": random.choice(["Retirement", "Wealth Building", "Income Generation", "Capital Preservation"])
+                }
+                clients_data.append(client_data)
+                
+        except Exception as e:
+            logging.error(f"Error fetching clients from MongoDB: {str(e)}")
+            # Return empty list if MongoDB fails
+            return []
+        
+        return clients_data
     
-    return clients_data
+    # Run the async function and return results
+    try:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(fetch_client_data())
+    except RuntimeError:
+        # If no event loop is running, create a new one
+        return asyncio.run(fetch_client_data())
 
 def parse_clients_excel_data(excel_data):
     """Parse uploaded Excel data and validate client information"""
