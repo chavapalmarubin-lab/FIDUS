@@ -4222,7 +4222,7 @@ async def create_new_user(user_data: UserCreate):
                 "name": user_data.name,
                 "email": user_data.email,
                 "phone": user_data.phone,
-                "user_type": "client",
+                "type": "client",  # Fixed: use "type" not "user_type"
                 "status": "active",
                 "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
                 "created_at": datetime.now(timezone.utc),
