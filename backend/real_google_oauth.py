@@ -14,10 +14,10 @@ class RealGoogleOAuth:
     """Real Google OAuth 2.0 integration"""
     
     def __init__(self):
-        # Use your ACTUAL Google OAuth credentials
-        self.client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"  
-        self.client_secret = "GOCSPX-YOUR_CLIENT_SECRET_HERE"  # You need to get this from Google Console
-        self.redirect_uri = "https://invest-portal-31.preview.emergentagent.com/api/admin/google-callback"
+        # Use environment variables for Google OAuth credentials
+        self.client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        self.client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')  
+        self.redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         
         self.oauth_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
         self.token_url = "https://oauth2.googleapis.com/token"
