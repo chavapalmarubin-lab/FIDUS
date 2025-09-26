@@ -4749,8 +4749,12 @@ async def register_new_client(registration_data: dict):
             "onboarding_method": "document_upload_kyc"
         }
         
-        # Add to MOCK_USERS
-        MOCK_USERS[username] = new_user
+        # Save to MongoDB (NO MOCK_USERS)
+        try:
+            await db.users.insert_one(new_user)
+        except Exception as e:
+            logging.error(f"Error saving client to MongoDB: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to create client account")
         
         # Store password
         user_temp_passwords[user_id] = {
