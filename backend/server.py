@@ -1117,7 +1117,7 @@ async def ensure_default_users_in_mongodb():
             "notes": "Default seeded client"
         },
         {
-            "user_id": "client_005",
+            "id": "client_005",  # Fixed: use "id" not "user_id"
             "username": "client5",
             "name": "Jorge Gonzalez",
             "email": "jorge.gonzalez@fidus.com",
