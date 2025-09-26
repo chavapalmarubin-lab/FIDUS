@@ -812,7 +812,7 @@ ${documentRequestType === 'aml_kyc' ? `
                       return;
                     }
                     
-                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/auth-url`, {
+                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/url`, {
                       method: 'GET',
                       headers: {
                         'Authorization': `Bearer ${jwtToken}`,
