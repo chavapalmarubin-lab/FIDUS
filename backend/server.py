@@ -15492,9 +15492,11 @@ async def upload_client_document_to_fidus(
         if len(file_content) > 50 * 1024 * 1024:  # 50MB limit
             raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
         
-        # Get admin's Google token for uploading
-        user_id = "user_admin_001"
+        # Get admin's Google token for uploading (use current user's ID)
+        user_id = current_user.get("user_id", current_user.get("id", "admin_001"))
         token_data = await get_google_session_token(user_id)
+        
+        logging.info(f"🔍 DEBUG: Looking for Google tokens with user_id: {user_id}, found: {token_data is not None}")
         
         if not token_data:
             return {
