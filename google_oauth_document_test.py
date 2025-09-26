@@ -239,13 +239,14 @@ class GoogleOAuthDocumentTest:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get('success') and data.get('folder_id'):
+                if data.get('success') and (data.get('folder_id') or data.get('folder', {}).get('id')):
+                    folder_id = data.get('folder_id') or data.get('folder', {}).get('id')
                     self.log_result("Google Drive Folder Creation", True, 
                                   "Drive folder creation successful", 
-                                  {"folder_id": data.get('folder_id')})
+                                  {"folder_id": folder_id})
                 else:
                     self.log_result("Google Drive Folder Creation", False, 
-                                  "Folder creation failed", {"response": data})
+                                  "Folder creation response missing required fields", {"response": data})
             elif response.status_code == 401:
                 self.log_result("Google Drive Folder Creation", True, 
                               "Endpoint properly requires authentication")
