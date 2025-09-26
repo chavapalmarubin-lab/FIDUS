@@ -8450,12 +8450,12 @@ async def handle_real_google_oauth_callback_get(request: Request, code: str = No
     try:
         if error:
             logging.error(f"Google OAuth error: {error}")
-            frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+            frontend_base = "https://fidus-invest.emergent.host"
             return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message={error}")
         
         if not code:
             logging.error("Missing authorization code in callback")
-            frontend_base = "https://invest-portal-31.preview.emergentagent.com"
+            frontend_base = "https://fidus-invest.emergent.host"
             return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=missing_code")
         
         logging.info(f"🔄 Processing Google OAuth callback with code: {code[:20]}...")
