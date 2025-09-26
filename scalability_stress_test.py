@@ -58,7 +58,7 @@ class PerformanceMetrics:
         return total_requests / duration if duration > 0 else 0
 
 class ScalabilityStressTester:
-    def __init__(self, base_url="https://fidus-invest-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://invest-portal-31.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.client_tokens = []

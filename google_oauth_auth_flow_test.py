@@ -31,7 +31,7 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://fidus-invest-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://invest-portal-31.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -8201,7 +8201,7 @@ async def get_google_login_url():
     """Get Google login URL using Emergent Social Login"""
     try:
         # Set redirect URL to main app dashboard
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest-1.preview.emergentagent.com')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://invest-portal-31.preview.emergentagent.com')
         redirect_url = f"{frontend_url}/dashboard"  # Redirect to dashboard after login
         
         # Generate Google login URL using Emergent OAuth
@@ -8988,7 +8988,7 @@ async def send_document_notification(document_id: str, request: Request, current
             Document: {data.get('document_name', 'Investment Document')}
             
             Please click the link below to review and sign the document:
-            {data.get('signing_url', 'https://fidus-invest-1.preview.emergentagent.com/documents/sign')}
+            {data.get('signing_url', 'https://invest-portal-31.preview.emergentagent.com/documents/sign')}
             
             Best regards,
             FIDUS Investment Management Team
@@ -9000,7 +9000,7 @@ async def send_document_notification(document_id: str, request: Request, current
                 <p>Dear {data.get('recipient_name', 'Valued Client')},</p>
                 <p>You have a document that requires your electronic signature.</p>
                 <p><strong>Document:</strong> {data.get('document_name', 'Investment Document')}</p>
-                <p><a href="{data.get('signing_url', 'https://fidus-invest-1.preview.emergentagent.com/documents/sign')}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review and Sign Document</a></p>
+                <p><a href="{data.get('signing_url', 'https://invest-portal-31.preview.emergentagent.com/documents/sign')}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review and Sign Document</a></p>
                 <p>Best regards,<br>FIDUS Investment Management Team</p>
             </body>
             </html>

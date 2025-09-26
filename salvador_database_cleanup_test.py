@@ -27,7 +27,7 @@ import os
 from dotenv import load_dotenv
 
 class SalvadorDatabaseCleanupTester:
-    def __init__(self, base_url="https://fidus-invest-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://invest-portal-31.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
