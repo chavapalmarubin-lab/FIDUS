@@ -10608,15 +10608,18 @@ async def get_pending_validation_investments(current_user: dict = Depends(get_cu
             # Convert ObjectId to string
             investment['_id'] = str(investment['_id'])
             
-            # Get client info
+            # Get client info from MongoDB (NO MOCK_USERS)
             client_info = None
-            for user in MOCK_USERS.values():
-                if user.get('id') == investment['client_id']:
+            try:
+                client_doc = await db.users.find_one({"id": investment['client_id'], "type": "client"})
+                if client_doc:
                     client_info = {
-                        'name': user.get('name', 'Unknown'),
-                        'username': [k for k, v in MOCK_USERS.items() if v == user][0]
+                        'name': client_doc.get('name', 'Unknown'),
+                        'username': client_doc.get('username', 'unknown')
                     }
-                    break
+            except Exception as e:
+                logging.warning(f"Could not find client {investment['client_id']}: {str(e)}")
+                client_info = {'name': 'Unknown', 'username': 'unknown'}
             
             investment['client_info'] = client_info
             pending_investments.append(investment)
