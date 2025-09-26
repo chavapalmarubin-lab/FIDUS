@@ -68,7 +68,7 @@ const GoogleStyleWorkspace = () => {
     setLoading(true);
     try {
       console.log('🔗 Starting Google OAuth connection...');
-      const response = await apiAxios.get('/auth/google/url');
+      const response = await apiAxios.get('/admin/google/auth-url');
       
       if (response.data.success) {
         console.log('🚀 Redirecting to Google OAuth...');
