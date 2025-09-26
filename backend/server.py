@@ -6590,12 +6590,14 @@ class MockMT5Service:
             positions_count = len(self.positions.get(account_id, []))
             total_positions += positions_count
             
-            # Get client info
+            # Get client info from MongoDB (NO MOCK_USERS)
             client_info = None
-            for user in MOCK_USERS.values():
-                if user["id"] == account["client_id"]:
-                    client_info = user
-                    break
+            try:
+                client_doc = await db.users.find_one({"id": account["client_id"], "type": "client"})
+                if client_doc:
+                    client_info = client_doc
+            except Exception as e:
+                logging.warning(f"Could not find client {account['client_id']}: {str(e)}")
             
             if client_info:
                 client_summaries.append({
