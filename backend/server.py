@@ -15685,11 +15685,20 @@ async def upload_documents_to_client_drive(client_id: str, documents: dict):
                 doc_response = requests.get(doc_url)
                 if doc_response.status_code == 200:
                     
+                    # Get admin's Google token for upload
+                    user_id = "admin_001"
+                    token_data = await get_google_session_token(user_id)
+                    
+                    if not token_data:
+                        logging.error(f"❌ No Google token available for uploading {doc_name}")
+                        continue
+                    
                     # Upload to Google Drive folder
                     upload_result = await google_apis_service.upload_file_to_folder(
+                        token_data=token_data,
                         folder_id=folder_id,
-                        file_name=doc_name,
-                        file_content=doc_response.content,
+                        filename=doc_name,
+                        file_data=doc_response.content,
                         mime_type=doc_response.headers.get('content-type', 'application/octet-stream')
                     )
                     
