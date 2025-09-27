@@ -13753,7 +13753,7 @@ async def create_new_client(client_data: ClientCreate):
 
 @api_router.put("/clients/{client_id}/readiness")
 async def update_client_readiness(client_id: str, readiness_data: ClientInvestmentReadinessUpdate):
-    """Update client investment readiness status"""
+    """Update client investment readiness status - FIXED: SYNC TO MONGODB"""
     try:
         # Get existing readiness or create new
         current_readiness = client_readiness.get(client_id, {
