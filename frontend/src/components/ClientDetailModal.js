@@ -218,32 +218,6 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     }
   };
 
-  const createClientDriveFolder = async () => {
-    setLoading(true);
-    try {
-      const response = await apiAxios.post('/google/drive/create-client-folder', {
-        client_id: client.id,
-        client_name: client.name,
-        folder_name: `${client.name} - FIDUS Documents`
-      });
-
-      if (response.data.success) {
-        alert('✅ Client folder created in Google Drive!');
-        // Refresh documents
-        setTimeout(() => {
-          loadGoogleIntegratedData();
-        }, 1000);
-      } else {
-        throw new Error(response.data.error || 'Failed to create folder');
-      }
-    } catch (error) {
-      console.error('❌ Folder creation failed:', error);
-      alert(`Failed to create Drive folder: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDocumentUpload = async (event) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
