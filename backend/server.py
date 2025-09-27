@@ -15331,8 +15331,16 @@ async def get_client_drive_folder(client_id: str):
         if folder_id:
             try:
                 # Get documents from Google Drive
-                from google_apis_service import google_apis_service  
-                drive_files = await google_apis_service.list_files_in_folder(folder_id)
+                from google_apis_service import google_apis_service
+                
+                # Get admin's Google token for accessing Drive
+                user_id = "admin_001"
+                token_data = await get_google_session_token(user_id)
+                
+                if token_data:
+                    drive_files = await google_apis_service.get_drive_files_in_folder(token_data, folder_id)
+                else:
+                    drive_files = []
                 
                 for file_info in drive_files:
                     documents.append({
