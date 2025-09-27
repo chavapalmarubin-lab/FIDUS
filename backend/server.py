@@ -13736,6 +13736,14 @@ async def create_new_client(client_data: ClientCreate):
             'updated_by': 'admin'
         }
         
+        # CRITICAL FIX: Sync initial readiness to MongoDB
+        try:
+            await mongodb_manager.update_client_readiness(client_id, client_readiness[client_id])
+            logging.info(f"✅ FIXED: Initial client readiness synced to MongoDB for {client_id}")
+        except Exception as e:
+            logging.error(f"❌ Failed to sync initial client readiness to MongoDB: {str(e)}")
+            # Don't fail the entire request, but log the issue
+        
         logging.info(f"New client created: {client_data.name} ({client_data.username})")
         
         return {
