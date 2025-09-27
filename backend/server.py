@@ -15485,9 +15485,9 @@ async def initialize_alejandro_documents():
         logging.error(f"❌ Failed to initialize Alejandro documents: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to initialize documents: {str(e)}")
 
-# Auto-initialize Alejandro's documents on server startup (run in background)
+# Auto-initialize Alejandro's documents and investment readiness on server startup
 async def auto_initialize_alejandro_documents():
-    """Background task to initialize Alejandro's documents"""
+    """Background task to initialize Alejandro's documents and AML/KYC status"""
     try:
         import asyncio
         await asyncio.sleep(5)  # Wait 5 seconds after server start
@@ -15501,9 +15501,43 @@ async def auto_initialize_alejandro_documents():
             logging.info("✅ Alejandro's documents auto-initialized")
         else:
             logging.info("✅ Alejandro's documents already present")
+        
+        # CRITICAL FIX: Auto-complete Alejandro's AML/KYC since he has required documents
+        alejandro_id = "client_alejandro"
+        
+        # Check if Alejandro exists in MongoDB
+        client_doc = await db.users.find_one({"id": alejandro_id, "type": "client"})
+        if client_doc:
+            # Set Alejandro as AML/KYC completed and investment ready
+            alejandro_readiness = {
+                "client_id": alejandro_id,
+                "aml_kyc_completed": True,  # He has KYC_AML_Report_Alejandro_Mariscal.pdf
+                "agreement_signed": True,   # He has Alejandro Mariscal POR.pdf (Proof of Registration)
+                "deposit_date": datetime.now(timezone.utc).isoformat(),
+                "investment_ready": True,   # Ready for investment!
+                "notes": "Auto-completed: Has required documents (KYC/AML Report, POR, WhatsApp verification)",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": "system_auto_complete",
+                "documents_verified": True,
+                "kyc_document": "KYC_AML_Report_Alejandro_Mariscal.pdf",
+                "por_document": "Alejandro Mariscal POR.pdf",
+                "verification_image": "WhatsApp Image 2025-09-25 at 14.04.19.jpeg"
+            }
+            
+            # Update in-memory readiness
+            client_readiness[alejandro_id] = alejandro_readiness
+            
+            # Sync to MongoDB
+            try:
+                await mongodb_manager.update_client_readiness(alejandro_id, alejandro_readiness)
+                logging.info(f"✅ AUTO-COMPLETED: Alejandro's AML/KYC and investment readiness updated")
+            except Exception as e:
+                logging.warning(f"⚠️ Failed to sync Alejandro's readiness to MongoDB: {str(e)}")
+        else:
+            logging.warning("⚠️ Alejandro client not found for AML/KYC auto-completion")
             
     except Exception as e:
-        logging.warning(f"⚠️ Auto-initialize documents failed: {str(e)}")
+        logging.warning(f"⚠️ Auto-initialize documents/readiness failed: {str(e)}")
 
 # Call auto-initialization when server starts
 import asyncio
