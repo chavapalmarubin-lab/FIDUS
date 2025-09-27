@@ -112,6 +112,7 @@ curl https://your-domain/api/health
 
 ## 📖 Documentation
 
+- **Environment Setup**: `/app/ENVIRONMENT_VARIABLES.md` - Complete environment configuration guide
 - **Production Guide**: `/app/PRODUCTION_READINESS_REPORT.md`
 - **Change History**: `/app/CHANGELOG.md`
 - **API Documentation**: Auto-generated from FastAPI schemas
