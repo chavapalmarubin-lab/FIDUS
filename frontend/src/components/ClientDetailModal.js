@@ -124,11 +124,11 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
         console.log(`📅 Loaded ${meetingsResponse.data.meetings.length} meetings for ${client.name}`);
       }
 
-      // Load client documents from Google Drive (PRIVACY SECURE: client-specific folder only)
+      // Load client documents from Google Drive (AUTO-CREATE folder if needed)
       const documentsResponse = await apiAxios.get(`/fidus/client-drive-folder/${client.id}`);
-      if (documentsResponse.data.success) {
-        setClientDocuments(documentsResponse.data.documents);
-        console.log(`📁 PRIVACY SECURE: Loaded ${documentsResponse.data.documents.length} documents from ${client.name}'s folder ONLY`);
+      if (documentsResponse.data) {
+        setClientDocuments(documentsResponse.data.documents || []);
+        console.log(`📁 AUTO-MANAGED: Loaded ${(documentsResponse.data.documents || []).length} documents from ${client.name}'s folder (auto-created if needed)`);
       }
 
     } catch (error) {
