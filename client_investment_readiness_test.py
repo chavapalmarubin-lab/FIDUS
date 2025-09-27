@@ -165,26 +165,38 @@ class ClientInvestmentReadinessTest:
             self.log_result("Alejandro Client Data", False, f"Exception: {str(e)}")
     
     def test_investment_ready_clients_endpoint(self):
-        """Test 3: Check GET /api/investments/ready-clients endpoint"""
+        """Test 3: Check GET /api/clients/ready-for-investment endpoint (correct endpoint)"""
         try:
-            response = self.session.get(f"{BACKEND_URL}/investments/ready-clients")
+            response = self.session.get(f"{BACKEND_URL}/clients/ready-for-investment")
             if response.status_code == 200:
-                ready_clients = response.json()
+                ready_data = response.json()
                 
-                if isinstance(ready_clients, list):
-                    ready_count = len(ready_clients)
-                else:
-                    ready_count = ready_clients.get('count', 0)
-                    ready_clients = ready_clients.get('clients', [])
+                ready_clients = ready_data.get('ready_clients', [])
+                ready_count = ready_data.get('total_ready', len(ready_clients))
+                
+                # Check if Alejandro is in the list
+                alejandro_in_ready = False
+                for client in ready_clients:
+                    if 'alejandro' in client.get('name', '').lower() or \
+                       'alejandro' in client.get('client_id', '').lower():
+                        alejandro_in_ready = True
+                        break
                 
                 if ready_count == 0:
                     self.log_result("Investment Ready Clients Endpoint", False, 
-                                  "Confirmed: 0 clients ready for investment as reported",
-                                  {"endpoint_response": ready_clients})
+                                  "CONFIRMED: 0 clients ready for investment as reported",
+                                  {"endpoint_response": ready_data})
                 else:
                     self.log_result("Investment Ready Clients Endpoint", True, 
                                   f"Found {ready_count} ready clients",
                                   {"ready_clients": ready_clients})
+                
+                if not alejandro_in_ready:
+                    self.log_result("Alejandro in Ready Clients", False, 
+                                  "Alejandro NOT in ready clients list")
+                else:
+                    self.log_result("Alejandro in Ready Clients", True, 
+                                  "Alejandro found in ready clients list")
                     
             else:
                 self.log_result("Investment Ready Clients Endpoint", False, 
@@ -194,50 +206,36 @@ class ClientInvestmentReadinessTest:
         except Exception as e:
             self.log_result("Investment Ready Clients Endpoint", False, f"Exception: {str(e)}")
     
-    def test_admin_investment_management_ready_clients(self):
-        """Test 4: Check GET /api/admin/investment-management/ready-clients endpoint"""
+    def test_client_readiness_in_memory_structure(self):
+        """Test 4: Check the in-memory client_readiness data structure"""
         try:
-            response = self.session.get(f"{BACKEND_URL}/admin/investment-management/ready-clients")
+            # Try to access client readiness debug endpoint if it exists
+            response = self.session.get(f"{BACKEND_URL}/debug/client-readiness")
             if response.status_code == 200:
-                ready_clients = response.json()
+                readiness_data = response.json()
+                self.log_result("In-Memory Client Readiness", True, 
+                              f"Client readiness data found: {len(readiness_data)} entries",
+                              {"readiness_data": readiness_data})
                 
-                if isinstance(ready_clients, list):
-                    ready_count = len(ready_clients)
-                else:
-                    ready_count = ready_clients.get('count', 0)
-                    ready_clients = ready_clients.get('clients', [])
-                
-                # Check if Alejandro is in the list
-                alejandro_in_dropdown = False
-                for client in ready_clients if isinstance(ready_clients, list) else []:
-                    if 'alejandro' in client.get('name', '').lower() or \
-                       'alejandro' in client.get('id', '').lower():
-                        alejandro_in_dropdown = True
+                # Check if Alejandro is in the readiness data
+                alejandro_readiness = None
+                for client_id, readiness in readiness_data.items():
+                    if 'alejandro' in client_id.lower():
+                        alejandro_readiness = readiness
                         break
                 
-                if ready_count == 0:
-                    self.log_result("Admin Investment Dropdown", False, 
-                                  "Investment dropdown shows 0 ready clients - this is the problem!",
-                                  {"dropdown_response": ready_clients})
+                if alejandro_readiness:
+                    self.log_result("Alejandro in Readiness Data", True, 
+                                  f"Alejandro readiness found: {alejandro_readiness}")
                 else:
-                    self.log_result("Admin Investment Dropdown", True, 
-                                  f"Investment dropdown shows {ready_count} ready clients",
-                                  {"ready_clients": ready_clients})
-                
-                if not alejandro_in_dropdown:
-                    self.log_result("Alejandro in Investment Dropdown", False, 
-                                  "Alejandro NOT in investment dropdown as reported")
-                else:
-                    self.log_result("Alejandro in Investment Dropdown", True, 
-                                  "Alejandro found in investment dropdown")
-                    
+                    self.log_result("Alejandro in Readiness Data", False, 
+                                  "Alejandro NOT found in client_readiness data structure")
             else:
-                self.log_result("Admin Investment Dropdown", False, 
-                              f"Investment dropdown endpoint failed: HTTP {response.status_code}",
-                              {"response": response.text})
+                self.log_result("In-Memory Client Readiness", False, 
+                              f"Debug endpoint not accessible: HTTP {response.status_code}")
                 
         except Exception as e:
-            self.log_result("Admin Investment Dropdown", False, f"Exception: {str(e)}")
+            self.log_result("In-Memory Client Readiness", False, f"Exception: {str(e)}")
     
     def test_client_aml_kyc_status(self):
         """Test 5: Check AML/KYC completion status for all clients"""
