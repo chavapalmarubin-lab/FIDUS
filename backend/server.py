@@ -13819,8 +13819,18 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
         
         # CRITICAL FIX: Sync to MongoDB using mongodb_manager
         try:
-            await mongodb_manager.update_client_readiness(client_id, current_readiness)
-            logging.info(f"✅ FIXED: Client readiness synced to MongoDB for {client_id}")
+            # Ensure account_creation_date is a datetime object for MongoDB schema
+            if current_readiness.get('account_creation_date') is None:
+                current_readiness['account_creation_date'] = datetime.now(timezone.utc)
+            elif isinstance(current_readiness['account_creation_date'], str):
+                current_readiness['account_creation_date'] = datetime.fromisoformat(current_readiness['account_creation_date'].replace('Z', '+00:00'))
+            
+            # Call sync method (not async)
+            sync_success = mongodb_manager.update_client_readiness(client_id, current_readiness)
+            if sync_success:
+                logging.info(f"✅ FIXED: Client readiness synced to MongoDB for {client_id}")
+            else:
+                logging.error(f"❌ Failed to sync client readiness to MongoDB: sync returned False")
         except Exception as e:
             logging.error(f"❌ Failed to sync client readiness to MongoDB: {str(e)}")
             # Don't fail the entire request, but log the issue
