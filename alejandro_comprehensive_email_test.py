@@ -383,7 +383,17 @@ class AlejandroEmailUpdateComprehensiveTest:
                 
                 response = self.session.get(f"{BACKEND_URL}/admin/clients")
                 if response.status_code == 200:
-                    clients = response.json()
+                    data = response.json()
+                    
+                    # Handle both list and dict response formats
+                    if isinstance(data, dict) and 'clients' in data:
+                        clients = data['clients']
+                    elif isinstance(data, list):
+                        clients = data
+                    else:
+                        self.log_result("Data Persistence", False, 
+                                      f"Unexpected response format: {type(data)}")
+                        return False
                     
                     # Find Alejandro in updated clients list
                     alejandro_updated = None
