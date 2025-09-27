@@ -677,14 +677,6 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                         <Upload className="w-4 h-4 mr-2" />
                         Upload Document
                       </Button>
-                      <Button
-                        onClick={createClientDriveFolder}
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                      >
-                        <FolderOpen className="w-4 h-4 mr-2" />
-                        Create Drive Folder
-                      </Button>
                     </div>
                   </div>
                   
