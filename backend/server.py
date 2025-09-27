@@ -15626,6 +15626,9 @@ async def create_client_meeting_request(request_data: dict, current_user: dict =
 async def upload_documents_to_client_drive(client_id: str, documents: dict):
     """Upload multiple documents to client's Google Drive folder (auto-create if needed)"""
     try:
+        # Import Google APIs service at function level
+        from google_apis_service import google_apis_service
+        
         # Find client in MongoDB
         client_doc = await db.users.find_one({"id": client_id, "type": "client"})
         if not client_doc:
@@ -15648,7 +15651,6 @@ async def upload_documents_to_client_drive(client_id: str, documents: dict):
                     raise Exception("No Google token available for Drive folder creation")
                 
                 # Use Google APIs service to create folder
-                from google_apis_service import google_apis_service
                 folder_result = await google_apis_service.create_drive_folder(token_data, folder_name)
                 
                 if folder_result and 'folder_id' in folder_result:
