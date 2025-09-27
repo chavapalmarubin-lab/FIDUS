@@ -293,22 +293,11 @@ class ClientInvestmentReadinessTest:
     def test_client_readiness_data_structure(self):
         """Test 6: Investigate the client_readiness data structure"""
         try:
-            # Try to access client readiness endpoint if it exists
-            response = self.session.get(f"{BACKEND_URL}/admin/client-readiness")
-            if response.status_code == 200:
-                readiness_data = response.json()
-                self.log_result("Client Readiness Data Structure", True, 
-                              "Client readiness data accessible",
-                              {"readiness_data": readiness_data})
-            else:
-                self.log_result("Client Readiness Data Structure", False, 
-                              f"Client readiness endpoint not accessible: HTTP {response.status_code}")
-            
-            # Check individual client readiness
+            # Check individual client readiness using the correct endpoint
             if self.alejandro_data:
                 client_id = self.alejandro_data.get('id')
                 try:
-                    response = self.session.get(f"{BACKEND_URL}/admin/clients/{client_id}/investment-readiness")
+                    response = self.session.get(f"{BACKEND_URL}/clients/{client_id}/readiness")
                     if response.status_code == 200:
                         readiness = response.json()
                         
@@ -334,6 +323,20 @@ class ClientInvestmentReadinessTest:
                                       f"Cannot get Alejandro's readiness: HTTP {response.status_code}")
                 except Exception as e:
                     self.log_result("Alejandro Investment Readiness", False, f"Exception: {str(e)}")
+            
+            # Try to get all client readiness data
+            try:
+                response = self.session.get(f"{BACKEND_URL}/admin/client-readiness-summary")
+                if response.status_code == 200:
+                    summary = response.json()
+                    self.log_result("Client Readiness Summary", True, 
+                                  "Got client readiness summary",
+                                  {"summary": summary})
+                else:
+                    self.log_result("Client Readiness Summary", False, 
+                                  f"Cannot get readiness summary: HTTP {response.status_code}")
+            except Exception as e:
+                self.log_result("Client Readiness Summary", False, f"Exception: {str(e)}")
                 
         except Exception as e:
             self.log_result("Client Readiness Data Structure", False, f"Exception: {str(e)}")
@@ -347,7 +350,7 @@ class ClientInvestmentReadinessTest:
         try:
             client_id = self.alejandro_data.get('id')
             
-            # Try to update Alejandro's investment readiness
+            # Try to update Alejandro's investment readiness using correct endpoint
             readiness_update = {
                 "aml_kyc_completed": True,
                 "agreement_signed": True,
@@ -355,31 +358,36 @@ class ClientInvestmentReadinessTest:
                 "updated_by": "testing_agent"
             }
             
-            response = self.session.put(f"{BACKEND_URL}/admin/clients/{client_id}/investment-readiness", 
+            response = self.session.put(f"{BACKEND_URL}/clients/{client_id}/readiness", 
                                       json=readiness_update)
             
             if response.status_code == 200:
+                update_result = response.json()
                 self.log_result("Fix Alejandro Readiness", True, 
-                              "Successfully updated Alejandro's investment readiness")
+                              "Successfully updated Alejandro's investment readiness",
+                              {"update_result": update_result})
                 
-                # Verify the fix worked
+                # Verify the fix worked by checking ready clients endpoint
                 time.sleep(1)  # Give it a moment
-                response = self.session.get(f"{BACKEND_URL}/admin/investment-management/ready-clients")
+                response = self.session.get(f"{BACKEND_URL}/clients/ready-for-investment")
                 if response.status_code == 200:
-                    ready_clients = response.json()
+                    ready_data = response.json()
+                    ready_clients = ready_data.get('ready_clients', [])
                     alejandro_now_ready = False
                     
-                    for client in ready_clients if isinstance(ready_clients, list) else []:
+                    for client in ready_clients:
                         if 'alejandro' in client.get('name', '').lower():
                             alejandro_now_ready = True
                             break
                     
                     if alejandro_now_ready:
                         self.log_result("Alejandro Fix Verification", True, 
-                                      "SUCCESS: Alejandro now appears in investment dropdown!")
+                                      "SUCCESS: Alejandro now appears in investment dropdown!",
+                                      {"ready_clients_count": len(ready_clients)})
                     else:
                         self.log_result("Alejandro Fix Verification", False, 
-                                      "Alejandro still not in investment dropdown after fix")
+                                      "Alejandro still not in investment dropdown after fix",
+                                      {"ready_clients": ready_clients})
             else:
                 self.log_result("Fix Alejandro Readiness", False, 
                               f"Failed to update readiness: HTTP {response.status_code}",
