@@ -15408,7 +15408,66 @@ async def get_client_drive_folder(client_id: str):
         logging.error(f"❌ Failed to get client drive folder: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to access client documents")
 
-@api_router.post("/google/drive/upload-to-client-folder")
+# Initialize Alejandro Mariscal Documents - Called automatically on server start
+@api_router.post("/fidus/initialize-alejandro-documents")
+async def initialize_alejandro_documents():
+    """Initialize Alejandro Mariscal's required documents (auto-upload if missing)"""
+    try:
+        alejandro_id = "client_alejandro"
+        
+        # Check if Alejandro exists
+        client_doc = await db.users.find_one({"id": alejandro_id, "type": "client"})
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Alejandro Mariscal not found")
+        
+        # Alejandro's required documents  
+        alejandro_docs = {
+            "WhatsApp Image 2025-09-25 at 14.04.19.jpeg": "https://customer-assets.emergentagent.com/job_ecafd6dc-7533-4d8c-a9ea-629b26deefac/artifacts/amzabjn8_WhatsApp%20Image%202025-09-25%20at%2014.04.19.jpeg",
+            "KYC_AML_Report_Alejandro_Mariscal.pdf": "https://customer-assets.emergentagent.com/job_ecafd6dc-7533-4d8c-a9ea-629b26deefac/artifacts/dt46o7nn_KYC_AML_Report_Alejandro_Mariscal.pdf", 
+            "Alejandro Mariscal POR.pdf": "https://customer-assets.emergentagent.com/job_ecafd6dc-7533-4d8c-a9ea-629b26deefac/artifacts/jysdo7ve_Alejandro%20Mariscal%20POR.pdf"
+        }
+        
+        # Upload documents using the enhanced upload system
+        upload_result = await upload_documents_to_client_drive(
+            alejandro_id, {"documents": alejandro_docs}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Initialized {len(alejandro_docs)} documents for Alejandro Mariscal",
+            "documents": alejandro_docs,
+            "upload_result": upload_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Failed to initialize Alejandro documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to initialize documents: {str(e)}")
+
+# Auto-initialize Alejandro's documents on server startup (run in background)
+async def auto_initialize_alejandro_documents():
+    """Background task to initialize Alejandro's documents"""
+    try:
+        import asyncio
+        await asyncio.sleep(5)  # Wait 5 seconds after server start
+        
+        # Check if documents are already present
+        response = await get_client_drive_folder("client_alejandro") 
+        
+        if response and response.get("document_count", 0) < 3:
+            logging.info("🔄 Auto-initializing Alejandro's documents...")
+            await initialize_alejandro_documents()
+            logging.info("✅ Alejandro's documents auto-initialized")
+        else:
+            logging.info("✅ Alejandro's documents already present")
+            
+    except Exception as e:
+        logging.warning(f"⚠️ Auto-initialize documents failed: {str(e)}")
+
+# Call auto-initialization when server starts
+import asyncio
+asyncio.create_task(auto_initialize_alejandro_documents())
 async def upload_document_to_client_folder(
     file: UploadFile = File(...),
     client_id: str = Form(...),
