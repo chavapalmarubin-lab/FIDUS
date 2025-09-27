@@ -13790,8 +13790,16 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
         )
         current_readiness['investment_ready'] = investment_ready
         
-        # Save updated readiness
+        # Save updated readiness to in-memory storage
         client_readiness[client_id] = current_readiness
+        
+        # CRITICAL FIX: Sync to MongoDB using mongodb_manager
+        try:
+            await mongodb_manager.update_client_readiness(client_id, current_readiness)
+            logging.info(f"✅ FIXED: Client readiness synced to MongoDB for {client_id}")
+        except Exception as e:
+            logging.error(f"❌ Failed to sync client readiness to MongoDB: {str(e)}")
+            # Don't fail the entire request, but log the issue
         
         logging.info(f"Client readiness updated: {client_id} - Ready: {investment_ready}")
         
@@ -13799,7 +13807,7 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
             "success": True,
             "client_id": client_id,
             "readiness": current_readiness,
-            "message": f"Client readiness updated - {'Ready for investment' if investment_ready else 'Not ready for investment'}"
+            "message": f"Client readiness updated and synced to MongoDB - {'Ready for investment' if investment_ready else 'Not ready for investment'}"
         }
         
     except Exception as e:
