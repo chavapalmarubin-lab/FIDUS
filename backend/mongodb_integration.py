@@ -360,21 +360,31 @@ class MongoDBManager:
     def update_client_readiness(self, client_id: str, readiness_data: Dict[str, Any]) -> bool:
         """Update client readiness status"""
         try:
-            # Calculate investment_ready status
+            # Calculate investment_ready status - only require AML/KYC and agreement
             investment_ready = (
                 readiness_data.get('aml_kyc_completed', False) and
-                readiness_data.get('agreement_signed', False) and
-                readiness_data.get('account_creation_date') is not None
+                readiness_data.get('agreement_signed', False)
             )
+            
+            # Ensure account_creation_date is a proper datetime for MongoDB schema
+            account_creation_date = readiness_data.get('account_creation_date')
+            if account_creation_date is None:
+                account_creation_date = datetime.now(timezone.utc)
+            elif isinstance(account_creation_date, str):
+                try:
+                    account_creation_date = datetime.fromisoformat(account_creation_date.replace('Z', '+00:00'))
+                except:
+                    account_creation_date = datetime.now(timezone.utc)
             
             update_data = {
                 'client_id': client_id,
                 'aml_kyc_completed': readiness_data.get('aml_kyc_completed', False),
                 'agreement_signed': readiness_data.get('agreement_signed', False),
-                'account_creation_date': readiness_data.get('account_creation_date'),
+                'account_creation_date': account_creation_date,
                 'investment_ready': investment_ready,
                 'notes': readiness_data.get('notes', ''),
-                'updated_at': datetime.now(timezone.utc)
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': readiness_data.get('updated_by', 'system')
             }
             
             # Use upsert to create or update
