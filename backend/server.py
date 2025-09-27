@@ -15538,6 +15538,94 @@ async def create_client_meeting_request(request_data: dict, current_user: dict =
             "error": str(e)
         }
 
+# Enhanced Document Management - Automatic Drive Folder & Document Upload
+@api_router.post("/fidus/client/{client_id}/upload-documents")
+async def upload_documents_to_client_drive(client_id: str, documents: dict):
+    """Upload multiple documents to client's Google Drive folder (auto-create if needed)"""
+    try:
+        # Find client in MongoDB
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Get or create Google Drive folder
+        folder_id = None
+        if client_doc.get('google_drive_folder_id'):
+            folder_id = client_doc['google_drive_folder_id']
+        else:
+            # Auto-create folder for client
+            try:
+                folder_name = f"FIDUS - {client_doc['name']} Documents"
+                
+                # Use Google APIs service to create folder
+                from google_apis_service import google_apis_service
+                folder_result = await google_apis_service.create_drive_folder(folder_name)
+                
+                if folder_result and 'folder_id' in folder_result:
+                    folder_id = folder_result['folder_id']
+                    
+                    # Update client record with folder info
+                    await db.users.update_one(
+                        {"id": client_id},
+                        {
+                            "$set": {
+                                "google_drive_folder_id": folder_id,
+                                "google_drive_folder": folder_result,
+                                "updated_at": datetime.now(timezone.utc)
+                            }
+                        }
+                    )
+                    
+                    logging.info(f"✅ Auto-created Google Drive folder for {client_id}: {folder_id}")
+                else:
+                    raise Exception("Failed to create Google Drive folder")
+                    
+            except Exception as e:
+                logging.error(f"❌ Failed to create Google Drive folder for {client_id}: {str(e)}")
+                raise HTTPException(status_code=500, detail="Failed to create Google Drive folder")
+        
+        # Upload documents to folder
+        uploaded_documents = []
+        for doc_name, doc_url in documents.get('documents', {}).items():
+            try:
+                # Download document from URL
+                import requests
+                doc_response = requests.get(doc_url)
+                if doc_response.status_code == 200:
+                    
+                    # Upload to Google Drive folder
+                    upload_result = await google_apis_service.upload_file_to_folder(
+                        folder_id=folder_id,
+                        file_name=doc_name,
+                        file_content=doc_response.content,
+                        mime_type=doc_response.headers.get('content-type', 'application/octet-stream')
+                    )
+                    
+                    if upload_result:
+                        uploaded_documents.append({
+                            "name": doc_name,
+                            "file_id": upload_result.get('file_id'),
+                            "url": doc_url,
+                            "uploaded_at": datetime.now(timezone.utc).isoformat()
+                        })
+                        logging.info(f"✅ Uploaded {doc_name} to {client_id} folder")
+                    
+            except Exception as e:
+                logging.error(f"❌ Failed to upload {doc_name}: {str(e)}")
+        
+        return {
+            "success": True,
+            "message": f"Uploaded {len(uploaded_documents)} documents to {client_doc['name']}'s folder",
+            "folder_id": folder_id,
+            "uploaded_documents": uploaded_documents
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Document upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Document upload failed: {str(e)}")
+
 @api_router.post("/fidus/client-document-upload")
 async def upload_client_document_to_fidus(
     file: UploadFile = File(...),
