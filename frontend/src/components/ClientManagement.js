@@ -79,9 +79,9 @@ const ClientManagement = () => {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(client =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.phone.includes(searchTerm)
+        (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.phone || '').includes(searchTerm)
       );
     }
 
