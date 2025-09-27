@@ -726,13 +726,13 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                     <Card>
                       <CardContent className="p-8 text-center">
                         <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                        <p className="text-gray-500 mb-4">No documents found for this client</p>
+                        <p className="text-gray-500 mb-4">Google Drive folder will be created automatically when you upload documents</p>
                         <Button
-                          onClick={createClientDriveFolder}
-                          className="bg-green-500 hover:bg-green-600"
+                          onClick={() => document.getElementById('document-upload').click()}
+                          className="bg-blue-500 hover:bg-blue-600"
                         >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create Client Folder
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload First Document
                         </Button>
                       </CardContent>
                     </Card>
