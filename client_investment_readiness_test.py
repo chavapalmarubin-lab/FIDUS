@@ -408,7 +408,7 @@ class ClientInvestmentReadinessTest:
         self.test_client_count_verification()
         self.test_alejandro_client_data()
         self.test_investment_ready_clients_endpoint()
-        self.test_admin_investment_management_ready_clients()
+        self.test_client_readiness_in_memory_structure()
         self.test_client_aml_kyc_status()
         self.test_client_readiness_data_structure()
         self.test_fix_alejandro_investment_readiness()
