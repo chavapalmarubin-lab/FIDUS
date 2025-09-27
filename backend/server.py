@@ -8028,21 +8028,32 @@ async def get_prospect_pipeline():
             if stage in pipeline:
                 pipeline[stage].append(prospect_data)
         
-        # Sort each stage by updated_at descending
+        # Sort each stage by updated_at descending (FIXED datetime handling)
         for stage in pipeline:
             def get_sort_key(x):
                 updated_at = x.get('updated_at')
                 if isinstance(updated_at, str):
                     try:
-                        return datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        # Handle various date formats
+                        if updated_at.endswith('Z'):
+                            return datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        else:
+                            return datetime.fromisoformat(updated_at)
                     except:
-                        return datetime.min.replace(tzinfo=timezone.utc)
+                        return datetime.now(timezone.utc)
                 elif isinstance(updated_at, datetime):
+                    # Ensure timezone awareness
+                    if updated_at.tzinfo is None:
+                        return updated_at.replace(tzinfo=timezone.utc)
                     return updated_at
                 else:
-                    return datetime.min.replace(tzinfo=timezone.utc)
+                    return datetime.now(timezone.utc)
             
-            pipeline[stage].sort(key=get_sort_key, reverse=True)
+            try:
+                pipeline[stage].sort(key=get_sort_key, reverse=True)
+            except Exception as e:
+                logging.warning(f"Error sorting pipeline stage {stage}: {str(e)}")
+                # Continue without sorting if there's an error
         
         # Calculate statistics
         total_prospects = len(prospects_list)
