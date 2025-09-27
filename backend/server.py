@@ -4698,6 +4698,14 @@ async def register_new_client(registration_data: dict):
             "ofac_cleared": kyc_status.get("ofac_cleared", False)
         }
         
+        # CRITICAL FIX: Sync initial readiness to MongoDB
+        try:
+            await mongodb_manager.update_client_readiness(user_id, client_readiness[user_id])
+            logging.info(f"✅ FIXED: Initial client readiness synced to MongoDB for {user_id}")
+        except Exception as e:
+            logging.error(f"❌ Failed to sync initial client readiness to MongoDB: {str(e)}")
+            # Don't fail the entire request, but log the issue
+        
         # ✅ CRITICAL: AUTOMATICALLY ADD TO CRM LEADS/PROSPECTS
         prospect_id = str(uuid.uuid4())
         new_prospect = {
