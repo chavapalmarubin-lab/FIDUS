@@ -15632,9 +15632,16 @@ async def upload_documents_to_client_drive(client_id: str, documents: dict):
             try:
                 folder_name = f"FIDUS - {client_doc['name']} Documents"
                 
+                # Get admin's Google token for folder creation
+                user_id = "admin_001"  # Fixed: matches OAuth token storage user_id
+                token_data = await get_google_session_token(user_id)
+                
+                if not token_data:
+                    raise Exception("No Google token available for Drive folder creation")
+                
                 # Use Google APIs service to create folder
                 from google_apis_service import google_apis_service
-                folder_result = await google_apis_service.create_drive_folder(folder_name)
+                folder_result = await google_apis_service.create_drive_folder(token_data, folder_name)
                 
                 if folder_result and 'folder_id' in folder_result:
                     folder_id = folder_result['folder_id']
