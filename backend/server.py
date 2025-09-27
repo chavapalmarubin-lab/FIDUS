@@ -4899,7 +4899,7 @@ async def get_detailed_clients():
         raise HTTPException(status_code=500, detail=f"Failed to fetch detailed clients: {str(e)}")
 
 @api_router.delete("/admin/clients/{client_id}")
-async def delete_client(client_id: str):
+async def delete_client(client_id: str, current_user: dict = Depends(get_current_admin_user)):
     """Delete a client (admin only)"""
     try:
         # Delete from MongoDB (NO MOCK_USERS)
