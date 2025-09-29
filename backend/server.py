@@ -12302,7 +12302,7 @@ async def get_connection_history(current_user: dict = Depends(get_current_admin_
     """
     try:
         # Get current real connection status
-        current_status = await test_all_google_connections(current_user)
+        current_status = await test_google_connections_automatic(current_user)
         
         # Count actually connected services
         connected_services = 0
