@@ -1422,10 +1422,17 @@ async def login(login_data: LoginRequest):
     try:
         # MongoDB-only authentication - NO MOCK DATA
         user_doc = await db.users.find_one({
-            "username": username,
-            "user_type": user_type,  # Use user_type field for MongoDB schema
+            "email": username,  # Allow login by email for chavapalmarubin@gmail.com
             "status": "active"
         })
+        
+        # If not found by email, try by username
+        if not user_doc:
+            user_doc = await db.users.find_one({
+                "username": username,
+                "user_type": user_type,
+                "status": "active"
+            })
         
         if not user_doc:
             raise HTTPException(status_code=401, detail="Invalid credentials")
