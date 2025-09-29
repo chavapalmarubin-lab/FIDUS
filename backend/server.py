@@ -1457,11 +1457,11 @@ async def login(login_data: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         user_response_dict = {
-            "id": user_doc["user_id"],  # Use user_id field for MongoDB schema
-            "username": user_doc["username"], 
+            "id": user_doc.get("user_id", user_doc.get("id")),  # Handle both schemas
+            "username": user_doc["username"] or user_doc.get("email", username), 
             "name": user_doc["name"],
             "email": user_doc["email"],
-            "type": user_doc["user_type"],  # Use user_type field for MongoDB schema
+            "type": "admin" if user_doc.get("email") == "chavapalmarubin@gmail.com" else user_doc.get("user_type", user_doc.get("type")),  # Make chavapalmarubin@gmail.com admin
             "profile_picture": user_doc.get("profile_picture", ""),
             "must_change_password": must_change_password
         }
