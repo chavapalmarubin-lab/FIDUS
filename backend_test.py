@@ -179,55 +179,57 @@ class IndividualGoogleOAuthTest:
         except Exception as e:
             self.log_result("Individual Google Auth URL", False, f"Exception: {str(e)}")
     
-    def test_salvador_investments(self):
-        """Test Salvador's 2 investments with correct amounts"""
+    def test_all_admin_google_connections_endpoint(self):
+        """Test GET /admin/google/all-connections endpoint"""
         try:
-            # Get Salvador's investments
-            response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
+            response = self.session.get(f"{BACKEND_URL}/admin/google/all-connections")
+            
             if response.status_code == 200:
-                investments = response.json()
+                data = response.json()
                 
-                if len(investments) == 2:
-                    # Check for BALANCE and CORE investments
-                    balance_found = False
-                    core_found = False
+                # Verify response structure
+                if data.get('success') and 'total_connections' in data and 'connections' in data:
+                    total_connections = data.get('total_connections', 0)
+                    connections = data.get('connections', [])
                     
-                    for investment in investments:
-                        fund_code = investment.get('fund_code')
-                        principal_amount = investment.get('principal_amount')
+                    # Should return empty list initially (no connections yet)
+                    if total_connections == 0 and len(connections) == 0:
+                        self.log_result("All Admin Google Connections - Empty", True, 
+                                      "Correctly returns empty list initially (no connections)",
+                                      {"total_connections": total_connections})
+                    elif total_connections > 0:
+                        # If there are connections, verify structure
+                        connection_valid = True
+                        for conn in connections:
+                            required_fields = ['admin_user_id', 'admin_name', 'admin_email', 'connection_status']
+                            for field in required_fields:
+                                if field not in conn:
+                                    connection_valid = False
+                                    break
                         
-                        if fund_code == 'BALANCE' and principal_amount == 1263485.40:
-                            balance_found = True
-                            self.log_result("Salvador BALANCE Investment", True, 
-                                          f"BALANCE investment found: ${principal_amount:,.2f}")
-                        elif fund_code == 'CORE' and principal_amount == 4000.00:
-                            core_found = True
-                            self.log_result("Salvador CORE Investment", True, 
-                                          f"CORE investment found: ${principal_amount:,.2f}")
-                    
-                    if balance_found and core_found:
-                        total_amount = 1263485.40 + 4000.00
-                        self.log_result("Salvador Total Investments", True, 
-                                      f"Both investments verified. Total: ${total_amount:,.2f}")
+                        if connection_valid:
+                            self.log_result("All Admin Google Connections - Valid", True, 
+                                          f"Found {total_connections} valid admin connections",
+                                          {"connections_preview": connections[:2]})  # Show first 2
+                        else:
+                            self.log_result("All Admin Google Connections - Invalid Structure", False, 
+                                          "Connection objects missing required fields", 
+                                          {"connections": connections})
                     else:
-                        missing = []
-                        if not balance_found:
-                            missing.append("BALANCE ($1,263,485.40)")
-                        if not core_found:
-                            missing.append("CORE ($4,000.00)")
-                        self.log_result("Salvador Investment Verification", False, 
-                                      f"Missing investments: {', '.join(missing)}", 
-                                      {"found_investments": investments})
+                        self.log_result("All Admin Google Connections - Mismatch", False, 
+                                      f"Total connections mismatch: {total_connections} vs {len(connections)}")
                 else:
-                    self.log_result("Salvador Investment Count", False, 
-                                  f"Expected 2 investments, found {len(investments)}", 
-                                  {"investments": investments})
+                    self.log_result("All Admin Google Connections - Invalid Response", False, 
+                                  "Response missing required fields", {"response": data})
+            elif response.status_code == 401:
+                self.log_result("All Admin Google Connections - Authentication", False, 
+                              "Endpoint requires admin authentication (expected behavior)")
             else:
-                self.log_result("Salvador Investments", False, 
-                              f"Failed to get Salvador's investments: HTTP {response.status_code}")
+                self.log_result("All Admin Google Connections - HTTP Error", False, 
+                              f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_result("Salvador Investments", False, f"Exception: {str(e)}")
+            self.log_result("All Admin Google Connections", False, f"Exception: {str(e)}")
     
     def test_salvador_mt5_accounts(self):
         """Test Salvador's 2 MT5 accounts are properly created and linked"""
