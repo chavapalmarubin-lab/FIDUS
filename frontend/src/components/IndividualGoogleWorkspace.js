@@ -62,6 +62,26 @@ const IndividualGoogleWorkspace = () => {
   useEffect(() => {
     checkGoogleConnectionStatus();
     loadCRMData();
+    
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthError = urlParams.get('oauth_error');
+    const tabParam = urlParams.get('tab');
+    
+    // Handle OAuth error from URL
+    if (oauthError) {
+      setError(`OAuth Error: ${decodeURIComponent(oauthError)}`);
+      
+      // Clean URL
+      const baseUrl = window.location.origin + window.location.pathname;
+      const newUrl = `${baseUrl}?skip_animation=true`;
+      window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Handle tab parameter
+    if (tabParam === 'google-workspace') {
+      setActiveTab('connection');
+    }
   }, []);
 
   const checkGoogleConnectionStatus = async () => {
