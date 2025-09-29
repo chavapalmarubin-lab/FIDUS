@@ -1177,6 +1177,161 @@ async def ensure_default_users_in_mongodb():
 
 import asyncio
 from typing import Optional
+
+class IndividualGoogleOAuth:
+    """Individual Google OAuth manager for per-admin authentication"""
+    
+    def __init__(self):
+        self.google_client_id = os.environ.get('GOOGLE_CLIENT_ID')
+        self.google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+        self.google_redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
+        
+    async def get_admin_google_tokens(self, admin_user_id: str) -> Optional[Dict]:
+        """Get Google OAuth tokens for specific admin user"""
+        try:
+            # Get admin-specific Google OAuth tokens from database
+            session_doc = await db.admin_google_sessions.find_one(
+                {"admin_user_id": admin_user_id}, 
+                sort=[("created_at", -1)]  # Get the latest session
+            )
+            
+            if session_doc and session_doc.get('google_tokens'):
+                # Check if tokens are still valid
+                expires_at = session_doc['google_tokens'].get('expires_at')
+                if expires_at and datetime.fromisoformat(expires_at) > datetime.now(timezone.utc):
+                    return session_doc['google_tokens']
+                else:
+                    # Try to refresh expired tokens
+                    return await self.refresh_admin_tokens(admin_user_id, session_doc['google_tokens'])
+            return None
+            
+        except Exception as e:
+            logging.error(f"Error getting Google tokens for admin {admin_user_id}: {str(e)}")
+            return None
+
+    async def store_admin_google_tokens(self, admin_user_id: str, token_data: Dict, admin_email: str) -> bool:
+        """Store Google OAuth tokens for specific admin user"""
+        try:
+            # Store admin-specific Google tokens in dedicated collection
+            result = await db.admin_google_sessions.update_one(
+                {"admin_user_id": admin_user_id},
+                {
+                    "$set": {
+                        "admin_user_id": admin_user_id,
+                        "admin_email": admin_email,
+                        "google_tokens": token_data,
+                        "google_authenticated": True,
+                        "connected_at": datetime.now(timezone.utc),
+                        "updated_at": datetime.now(timezone.utc),
+                        "last_used": datetime.now(timezone.utc),
+                        "connection_status": "active"
+                    }
+                },
+                upsert=True
+            )
+            
+            logging.info(f"✅ Google tokens stored for admin {admin_user_id} ({admin_email})")
+            return result.acknowledged
+            
+        except Exception as e:
+            logging.error(f"Error storing Google tokens for admin {admin_user_id}: {str(e)}")
+            return False
+
+    async def refresh_admin_tokens(self, admin_user_id: str, current_tokens: Dict) -> Optional[Dict]:
+        """Refresh expired Google tokens for specific admin"""
+        try:
+            refresh_token = current_tokens.get('refresh_token')
+            if not refresh_token:
+                logging.warning(f"No refresh token available for admin {admin_user_id}")
+                return None
+
+            # Make refresh token request to Google
+            refresh_data = {
+                'client_id': self.google_client_id,
+                'client_secret': self.google_client_secret,
+                'refresh_token': refresh_token,
+                'grant_type': 'refresh_token'
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post('https://oauth2.googleapis.com/token', data=refresh_data) as response:
+                    if response.status == 200:
+                        token_response = await response.json()
+                        
+                        # Update tokens with new data
+                        updated_tokens = {
+                            **current_tokens,
+                            'access_token': token_response['access_token'],
+                            'expires_at': (datetime.now(timezone.utc) + timedelta(seconds=token_response.get('expires_in', 3600))).isoformat(),
+                            'token_type': token_response.get('token_type', 'Bearer'),
+                            'refreshed_at': datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        # Store refreshed tokens
+                        admin_doc = await db.users.find_one({"id": admin_user_id})
+                        admin_email = admin_doc.get('email', 'unknown') if admin_doc else 'unknown'
+                        
+                        await self.store_admin_google_tokens(admin_user_id, updated_tokens, admin_email)
+                        
+                        logging.info(f"✅ Refreshed Google tokens for admin {admin_user_id}")
+                        return updated_tokens
+                    else:
+                        logging.error(f"Failed to refresh tokens for admin {admin_user_id}: {response.status}")
+                        return None
+
+        except Exception as e:
+            logging.error(f"Error refreshing tokens for admin {admin_user_id}: {str(e)}")
+            return None
+
+    async def get_all_admin_connections(self) -> List[Dict]:
+        """Get all admin Google connections (for master admin view)"""
+        try:
+            # Get all admin Google connections with user details
+            connections = []
+            
+            async for session in db.admin_google_sessions.find().sort("connected_at", -1):
+                # Get admin user details
+                admin_doc = await db.users.find_one({"id": session['admin_user_id']})
+                
+                if admin_doc:
+                    connection_info = {
+                        "admin_user_id": session['admin_user_id'],
+                        "admin_name": admin_doc.get('name', 'Unknown'),
+                        "admin_email": admin_doc.get('email', session.get('admin_email', 'Unknown')),
+                        "google_email": session['google_tokens'].get('user_email', 'Unknown'),
+                        "connected_at": session.get('connected_at'),
+                        "last_used": session.get('last_used'),
+                        "connection_status": session.get('connection_status', 'unknown'),
+                        "token_expires_at": session['google_tokens'].get('expires_at'),
+                        "scopes": session['google_tokens'].get('scope', '').split(' ') if session['google_tokens'].get('scope') else []
+                    }
+                    connections.append(connection_info)
+            
+            return connections
+            
+        except Exception as e:
+            logging.error(f"Error getting all admin connections: {str(e)}")
+            return []
+
+    async def disconnect_admin_google(self, admin_user_id: str) -> bool:
+        """Disconnect Google account for specific admin"""
+        try:
+            # Remove admin's Google connection
+            result = await db.admin_google_sessions.delete_one({"admin_user_id": admin_user_id})
+            
+            if result.deleted_count > 0:
+                logging.info(f"✅ Disconnected Google account for admin {admin_user_id}")
+                return True
+            else:
+                logging.warning(f"No Google connection found for admin {admin_user_id}")
+                return False
+                
+        except Exception as e:
+            logging.error(f"Error disconnecting Google for admin {admin_user_id}: {str(e)}")
+            return False
+
+# Initialize individual Google OAuth manager
+individual_google_oauth = IndividualGoogleOAuth()
 MOCK_USERS = {}  # DEPRECATED: MongoDB is the single source of truth
 
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
