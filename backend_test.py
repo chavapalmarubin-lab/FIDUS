@@ -231,61 +231,41 @@ class IndividualGoogleOAuthTest:
         except Exception as e:
             self.log_result("All Admin Google Connections", False, f"Exception: {str(e)}")
     
-    def test_salvador_mt5_accounts(self):
-        """Test Salvador's 2 MT5 accounts are properly created and linked"""
+    def test_individual_google_disconnect_endpoint(self):
+        """Test POST /admin/google/individual-disconnect endpoint"""
         try:
-            # Get all MT5 accounts for Salvador
-            response = self.session.get(f"{BACKEND_URL}/mt5/admin/accounts")
+            response = self.session.post(f"{BACKEND_URL}/admin/google/individual-disconnect")
+            
             if response.status_code == 200:
-                all_mt5_accounts = response.json()
-                salvador_mt5_accounts = []
+                data = response.json()
                 
-                # Filter for Salvador's accounts
-                if isinstance(all_mt5_accounts, list):
-                    for account in all_mt5_accounts:
-                        if account.get('client_id') == 'client_003':
-                            salvador_mt5_accounts.append(account)
-                
-                if len(salvador_mt5_accounts) == 2:
-                    # Check for DooTechnology and VT Markets accounts
-                    doo_found = False
-                    vt_found = False
-                    
-                    for account in salvador_mt5_accounts:
-                        login = account.get('login')
-                        broker = account.get('broker')
-                        
-                        if login == '9928326' and 'DooTechnology' in str(broker):
-                            doo_found = True
-                            self.log_result("Salvador DooTechnology MT5", True, 
-                                          f"DooTechnology account found: Login {login}")
-                        elif login == '15759667' and 'VT Markets' in str(broker):
-                            vt_found = True
-                            self.log_result("Salvador VT Markets MT5", True, 
-                                          f"VT Markets account found: Login {login}")
-                    
-                    if doo_found and vt_found:
-                        self.log_result("Salvador MT5 Accounts Complete", True, 
-                                      "Both MT5 accounts verified and properly linked")
+                # Verify response structure
+                if 'success' in data and 'message' in data and 'admin_info' in data:
+                    # Should return proper error message when no connection exists
+                    if not data.get('success') and "No Google connection found" in data.get('message', ''):
+                        self.log_result("Individual Google Disconnect - No Connection", True, 
+                                      "Correctly returns error when no connection exists",
+                                      {"message": data.get('message')})
+                    elif data.get('success') and "disconnected" in data.get('message', '').lower():
+                        self.log_result("Individual Google Disconnect - Success", True, 
+                                      "Successfully disconnected Google account",
+                                      {"message": data.get('message')})
                     else:
-                        missing = []
-                        if not doo_found:
-                            missing.append("DooTechnology (Login: 9928326)")
-                        if not vt_found:
-                            missing.append("VT Markets (Login: 15759667)")
-                        self.log_result("Salvador MT5 Account Verification", False, 
-                                      f"Missing MT5 accounts: {', '.join(missing)}", 
-                                      {"found_accounts": salvador_mt5_accounts})
+                        self.log_result("Individual Google Disconnect - Unexpected Response", False, 
+                                      f"Unexpected response: {data.get('message')}", 
+                                      {"response": data})
                 else:
-                    self.log_result("Salvador MT5 Account Count", False, 
-                                  f"Expected 2 MT5 accounts, found {len(salvador_mt5_accounts)}", 
-                                  {"accounts": salvador_mt5_accounts})
+                    self.log_result("Individual Google Disconnect - Invalid Response", False, 
+                                  "Response missing required fields", {"response": data})
+            elif response.status_code == 401:
+                self.log_result("Individual Google Disconnect - Authentication", False, 
+                              "Endpoint requires admin authentication (expected behavior)")
             else:
-                self.log_result("Salvador MT5 Accounts", False, 
-                              f"Failed to get MT5 accounts: HTTP {response.status_code}")
+                self.log_result("Individual Google Disconnect - HTTP Error", False, 
+                              f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_result("Salvador MT5 Accounts", False, f"Exception: {str(e)}")
+            self.log_result("Individual Google Disconnect", False, f"Exception: {str(e)}")
     
     def test_total_aum_calculation(self):
         """Test that total AUM shows correct amount ($1,267,485.40)"""
