@@ -13002,6 +13002,11 @@ async def get_client_interactions(client_id: str, current_user: dict = Depends(g
 # PRODUCTION GOOGLE CONNECTION MONITORING ENDPOINTS (AUTOMATED)
 # ===============================================================================
 
+@api_router.get("/admin/google/test-endpoint")
+async def test_google_endpoint():
+    """Test endpoint to verify registration"""
+    return {"success": True, "message": "Test endpoint working"}
+
 @api_router.get("/admin/google/connection-status")
 async def get_google_connection_status():
     """Get real-time Google connection status - PRODUCTION AUTOMATED"""
