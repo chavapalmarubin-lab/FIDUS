@@ -16742,8 +16742,8 @@ async def startup_event():
     # Initialize default users in MongoDB
     await ensure_default_users_in_mongodb()
     
-    # Start automatic Google connection system
-    await startup_automatic_google_connection()
+    # Individual Google OAuth - no automatic startup needed
+    logging.info("💡 Individual Google OAuth system ready")
     
     logging.info("✅ FIDUS Server startup completed successfully")
 
