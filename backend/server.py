@@ -8563,6 +8563,259 @@ async def get_admin_google_profile(current_user: dict = Depends(get_current_admi
             "authenticated": False
         }
 
+# ===============================================================================
+# INDIVIDUAL ADMIN GOOGLE OAUTH ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/google/individual-auth-url")
+async def get_individual_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
+    """Get Google OAuth URL for individual admin authentication"""
+    try:
+        admin_user_id = current_user["user_id"]
+        admin_username = current_user["username"]
+        
+        # Generate state parameter for security
+        state = f"{admin_user_id}:{str(uuid.uuid4())}"
+        
+        # Build Google OAuth URL with specific scopes for admin functionality
+        google_oauth_url = (
+            f"https://accounts.google.com/o/oauth2/v2/auth?"
+            f"client_id={individual_google_oauth.google_client_id}&"
+            f"redirect_uri={individual_google_oauth.google_redirect_uri}&"
+            f"response_type=code&"
+            f"scope=openid%20email%20profile%20"
+            f"https://www.googleapis.com/auth/gmail.readonly%20"
+            f"https://www.googleapis.com/auth/gmail.send%20"
+            f"https://www.googleapis.com/auth/calendar%20"
+            f"https://www.googleapis.com/auth/drive%20"
+            f"https://www.googleapis.com/auth/spreadsheets&"
+            f"access_type=offline&"
+            f"prompt=consent&"
+            f"state={state}"
+        )
+        
+        logging.info(f"✅ Generated individual Google OAuth URL for admin {admin_username} ({admin_user_id})")
+        
+        return {
+            "success": True,
+            "auth_url": google_oauth_url,
+            "admin_user_id": admin_user_id,
+            "admin_username": admin_username,
+            "provider": "google_oauth_individual"
+        }
+        
+    except Exception as e:
+        logging.error(f"Individual Google auth URL error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate individual OAuth URL")
+
+@api_router.post("/admin/google/individual-callback")
+async def process_individual_google_callback(request: Request):
+    """Process individual Google OAuth callback and store admin-specific tokens"""
+    try:
+        data = await request.json()
+        authorization_code = data.get('code')
+        state = data.get('state')
+        
+        if not authorization_code or not state:
+            raise HTTPException(status_code=400, detail="Authorization code and state are required")
+        
+        # Extract admin_user_id from state
+        try:
+            admin_user_id = state.split(':')[0]
+        except:
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
+        
+        # Verify admin user exists
+        admin_doc = await db.users.find_one({"id": admin_user_id, "type": "admin"})
+        if not admin_doc:
+            raise HTTPException(status_code=400, detail="Invalid admin user")
+        
+        # Exchange authorization code for tokens
+        token_exchange_data = {
+            'client_id': individual_google_oauth.google_client_id,
+            'client_secret': individual_google_oauth.google_client_secret,
+            'code': authorization_code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': individual_google_oauth.google_redirect_uri
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post('https://oauth2.googleapis.com/token', data=token_exchange_data) as response:
+                if response.status != 200:
+                    error_data = await response.text()
+                    logging.error(f"Token exchange failed: {error_data}")
+                    raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
+                
+                token_response = await response.json()
+        
+        # Get user info from Google
+        access_token = token_response['access_token']
+        user_info_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(user_info_url) as response:
+                if response.status == 200:
+                    user_info = await response.json()
+                else:
+                    user_info = {}
+        
+        # Prepare token data for storage
+        token_data = {
+            'access_token': token_response['access_token'],
+            'refresh_token': token_response.get('refresh_token'),
+            'expires_at': (datetime.now(timezone.utc) + timedelta(seconds=token_response.get('expires_in', 3600))).isoformat(),
+            'token_type': token_response.get('token_type', 'Bearer'),
+            'scope': token_response.get('scope', ''),
+            'user_email': user_info.get('email', ''),
+            'user_name': user_info.get('name', ''),
+            'user_picture': user_info.get('picture', ''),
+            'user_id': user_info.get('id', ''),
+            'granted_scopes': token_response.get('scope', '').split(' ') if token_response.get('scope') else []
+        }
+        
+        # Store tokens for this specific admin
+        admin_email = admin_doc.get('email', token_data['user_email'])
+        stored = await individual_google_oauth.store_admin_google_tokens(admin_user_id, token_data, admin_email)
+        
+        if not stored:
+            raise HTTPException(status_code=500, detail="Failed to store authentication tokens")
+        
+        logging.info(f"✅ Individual Google OAuth completed for admin {admin_doc.get('username')} ({admin_user_id})")
+        logging.info(f"✅ Connected Google account: {token_data['user_email']}")
+        
+        return {
+            "success": True,
+            "message": "Individual Google authentication successful",
+            "admin_info": {
+                "admin_user_id": admin_user_id,
+                "admin_name": admin_doc.get('name'),
+                "admin_username": admin_doc.get('username'),
+                "admin_email": admin_email
+            },
+            "google_info": {
+                "email": token_data['user_email'],
+                "name": token_data['user_name'],
+                "picture": token_data['user_picture']
+            },
+            "scopes": token_data['granted_scopes']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Process individual Google callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process individual OAuth callback")
+
+@api_router.get("/admin/google/individual-status")
+async def get_individual_google_status(current_user: dict = Depends(get_current_admin_user)):
+    """Get individual Google connection status for current admin"""
+    try:
+        admin_user_id = current_user["user_id"]
+        
+        # Get admin's Google tokens
+        tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
+        
+        if not tokens:
+            return {
+                "success": True,
+                "connected": False,
+                "message": "No Google account connected",
+                "admin_info": {
+                    "admin_user_id": admin_user_id,
+                    "admin_username": current_user["username"]
+                }
+            }
+        
+        # Check token expiration
+        expires_at = tokens.get('expires_at')
+        is_expired = False
+        if expires_at:
+            try:
+                expiry_time = datetime.fromisoformat(expires_at)
+                is_expired = expiry_time <= datetime.now(timezone.utc)
+            except:
+                is_expired = True
+        
+        return {
+            "success": True,
+            "connected": True,
+            "is_expired": is_expired,
+            "admin_info": {
+                "admin_user_id": admin_user_id,
+                "admin_username": current_user["username"]
+            },
+            "google_info": {
+                "email": tokens.get('user_email', ''),
+                "name": tokens.get('user_name', ''),
+                "picture": tokens.get('user_picture', ''),
+                "connected_at": tokens.get('connected_at', ''),
+                "last_used": tokens.get('last_used', '')
+            },
+            "scopes": tokens.get('granted_scopes', []),
+            "token_expires_at": expires_at
+        }
+        
+    except Exception as e:
+        logging.error(f"Get individual Google status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get Google connection status")
+
+@api_router.post("/admin/google/individual-disconnect")
+async def disconnect_individual_google(current_user: dict = Depends(get_current_admin_user)):
+    """Disconnect Google account for current admin"""
+    try:
+        admin_user_id = current_user["user_id"]
+        admin_username = current_user["username"]
+        
+        # Disconnect admin's Google account
+        disconnected = await individual_google_oauth.disconnect_admin_google(admin_user_id)
+        
+        if disconnected:
+            logging.info(f"✅ Disconnected Google account for admin {admin_username} ({admin_user_id})")
+            return {
+                "success": True,
+                "message": f"Google account disconnected for {admin_username}",
+                "admin_info": {
+                    "admin_user_id": admin_user_id,
+                    "admin_username": admin_username
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No Google connection found to disconnect",
+                "admin_info": {
+                    "admin_user_id": admin_user_id,
+                    "admin_username": admin_username
+                }
+            }
+        
+    except Exception as e:
+        logging.error(f"Disconnect individual Google error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to disconnect Google account")
+
+@api_router.get("/admin/google/all-connections")
+async def get_all_admin_google_connections(current_user: dict = Depends(get_current_admin_user)):
+    """Get all admin Google connections (Master Admin view)"""
+    try:
+        # For now, any admin can see all connections
+        # In production, you might want to restrict this to master admin
+        
+        connections = await individual_google_oauth.get_all_admin_connections()
+        
+        return {
+            "success": True,
+            "total_connections": len(connections),
+            "connections": connections,
+            "requested_by": {
+                "admin_user_id": current_user["user_id"],
+                "admin_username": current_user["username"]
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all admin Google connections error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get admin connections")
+
 # Google Social Login Endpoints
 @api_router.get("/auth/google/login-url")
 async def get_google_login_url():
