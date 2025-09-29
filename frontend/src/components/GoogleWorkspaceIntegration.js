@@ -870,7 +870,7 @@ ${documentRequestType === 'aml_kyc' ? `
 
   return (
     <div className="w-full space-y-6">
-      {/* Header with Automatic Connection Status */}
+      {/* Header */}
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
@@ -880,7 +880,7 @@ ${documentRequestType === 'aml_kyc' ? `
                 Google Workspace Integration
               </CardTitle>
               <p className="text-sm text-slate-600 mt-1">
-                Automatically connected via service account • Full access to Gmail, Calendar, Drive, and Meet
+                Connected via personal Google credentials • Access to Gmail, Calendar, Drive, and Meet
               </p>
             </div>
             <div className="flex items-center gap-2">
