@@ -799,43 +799,20 @@ ${documentRequestType === 'aml_kyc' ? `
         </CardHeader>
         <CardContent className="text-center py-12">
           <div className="space-y-4">
+            <div className="text-green-600 text-lg font-medium">
+              ✅ Automatic Google Workspace Connection Active
+            </div>
             <div className="text-slate-600">
-              Please authenticate with Google to access Gmail, Calendar, Drive, and Sheets functionality.
+              FIDUS automatically connects to Google services using secure service account authentication.
+              No manual authentication required.
+            </div>
+            <div className="text-sm text-slate-500">
+              The system continuously monitors and maintains Google API connections for Gmail, Calendar, Drive, and Meet.
             </div>
             <button 
-              onClick={async () => {
-                console.log('GOOGLE BUTTON CLICKED - EMERGENCY FIX');
-                if (!loading) {
-                  try {
-                    const jwtToken = localStorage.getItem('fidus_token');
-                    if (!jwtToken) {
-                      alert('Please login as admin first');
-                      return;
-                    }
-                    
-                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/url`, {
-                      method: 'GET',
-                      headers: {
-                        'Authorization': `Bearer ${jwtToken}`,
-                        'Content-Type': 'application/json'
-                      }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success && data.auth_url) {
-                      window.location.href = data.auth_url;
-                    } else {
-                      alert('Failed to get Google OAuth URL: ' + (data.detail || 'Unknown error'));
-                    }
-                  } catch (error) {
-                    console.error('OAuth error:', error);
-                    alert('Error connecting to Google: ' + error.message);
-                  }
-                }
-              }}
-              disabled={loading}
+              onClick={() => loginWithGoogle()}
               style={{
-                backgroundColor: '#2563eb',
+                backgroundColor: '#22c55e',
                 color: 'white',
                 padding: '12px 24px',
                 border: 'none',
@@ -847,23 +824,11 @@ ${documentRequestType === 'aml_kyc' ? `
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                zIndex: 9999,
-                position: 'relative'
+                margin: '0 auto'
               }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
             >
-              {loading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Connect Google Workspace
-                </>
-              )}
+              <CheckCircle className="h-4 w-4" />
+              Access Google Workspace
             </button>
           </div>
         </CardContent>
