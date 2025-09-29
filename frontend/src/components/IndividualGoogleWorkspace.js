@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Badge } from './ui/badge';
-import { Alert, AlertDescription } from './ui/alert';
 import {
   Mail,
   Calendar,
