@@ -795,9 +795,23 @@ ${documentRequestType === 'aml_kyc' ? `
     }
   };
 
-  // Auto-check connection status on component mount
+  // Get current user info on component mount
   useEffect(() => {
-    checkAutoConnectionStatus();
+    const token = localStorage.getItem('fidus_token');
+    const userInfo = localStorage.getItem('user_info');
+    
+    if (token && userInfo) {
+      try {
+        const user = JSON.parse(userInfo);
+        setCurrentUser(user);
+        setAuthenticated(true);
+        
+        // Check if Google credentials are set up
+        checkGoogleSetup();
+      } catch (err) {
+        console.error('Failed to parse user info:', err);
+      }
+    }
   }, []);
 
   const [autoConnectionStatus, setAutoConnectionStatus] = useState(null);
