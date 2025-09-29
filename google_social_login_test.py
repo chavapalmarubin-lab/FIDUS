@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mockdb-cleanup.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fidus-google-sync.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class GoogleSocialLoginTester:

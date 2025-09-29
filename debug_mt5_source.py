@@ -18,7 +18,7 @@ def check_api_response():
     print("=" * 30)
     
     # Authenticate first
-    base_url = "https://mockdb-cleanup.preview.emergentagent.com"
+    base_url = "https://fidus-google-sync.preview.emergentagent.com"
     
     # Login
     login_response = requests.post(f"{base_url}/api/auth/login", json={

@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 import time
 
 # Configuration
-BACKEND_URL = "https://mockdb-cleanup.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-google-sync.preview.emergentagent.com/api"
 
 class InvestmentSimulationTest:
     def __init__(self):

@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 import traceback
 
 class SalvadorDataRestorationTester:
-    def __init__(self, base_url="https://mockdb-cleanup.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-google-sync.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
@@ -466,7 +466,7 @@ def main():
     try:
         # Use the production URL from the review request
         production_url = "https://fidus-invest.emergent.host"
-        preview_url = "https://mockdb-cleanup.preview.emergentagent.com"
+        preview_url = "https://fidus-google-sync.preview.emergentagent.com"
         
         print("🎯 SALVADOR PALMA DATA RESTORATION TEST")
         print("=" * 50)
