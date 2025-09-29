@@ -836,6 +836,10 @@ ${documentRequestType === 'aml_kyc' ? `
     checkGoogleSetup();
   };
 
+  // Temporary variables for compatibility
+  const autoConnected = authenticated && googleSetupComplete;
+  const autoConnectionStatus = { success: true };
+
   // Show automatic connection status instead of manual OAuth
   if (!autoConnected) {
     if (autoConnectionStatus === null) {
