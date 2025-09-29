@@ -807,6 +807,7 @@ ${documentRequestType === 'aml_kyc' ? `
 
   const getCurrentUser = async () => {
     try {
+      console.log('Getting current user info...');
       // For now, assume admin login since we know they're authenticated
       const userInfo = {
         id: "admin_001",
@@ -816,10 +817,12 @@ ${documentRequestType === 'aml_kyc' ? `
         type: "admin"
       };
       
+      console.log('Setting current user:', userInfo);
       setCurrentUser(userInfo);
       setAuthenticated(true);
       
       // Always check Google setup for admin users
+      console.log('Triggering Google setup check...');
       checkGoogleSetup();
     } catch (err) {
       console.error('Failed to get current user:', err);
