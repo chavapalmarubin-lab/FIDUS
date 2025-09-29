@@ -21,7 +21,7 @@ Document Content:
     return io.BytesIO(content.encode('utf-8'))
 
 def test_gmail_endpoints():
-    base_url = "https://mockdb-cleanup.preview.emergentagent.com"
+    base_url = "https://fidus-workspace-2.preview.emergentagent.com"
     
     print("🚀 Testing Gmail Integration Endpoints...")
     print("=" * 60)

@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "https://mockdb-cleanup.preview.emergentagent.com"
+    base_url = "https://fidus-workspace-2.preview.emergentagent.com"
     
     print("🔍 DETAILED ENDPOINT ANALYSIS")
     print("=" * 60)

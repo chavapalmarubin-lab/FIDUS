@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://mockdb-cleanup.preview.emergentagent.com`
+`https://fidus-workspace-2.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

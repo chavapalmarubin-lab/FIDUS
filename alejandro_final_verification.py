@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://mockdb-cleanup.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-workspace-2.preview.emergentagent.com/api"
 
 def get_admin_token():
     """Get admin JWT token"""

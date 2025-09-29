@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 
 # Configuration
-BACKEND_URL = "https://mockdb-cleanup.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-workspace-2.preview.emergentagent.com/api"
 
 # Test data
 TEST_CLIENT_ID = "client_001"  # Gerardo Briones
