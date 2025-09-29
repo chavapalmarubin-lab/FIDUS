@@ -814,41 +814,32 @@ ${documentRequestType === 'aml_kyc' ? `
     }
   }, []);
 
-  const [autoConnectionStatus, setAutoConnectionStatus] = useState(null);
-  const [autoConnected, setAutoConnected] = useState(false);
 
-  const checkAutoConnectionStatus = async () => {
+  const checkGoogleSetup = async () => {
     try {
-      const response = await apiAxios.get('/admin/google/connection-status');
-      setAutoConnectionStatus(response.data);
-      
-      if (response.data.success && response.data.connection_status?.auto_managed) {
-        setAutoConnected(true);
-        // Auto-load data if connected
+      const response = await apiAxios.get('/admin/google/user-connection-status');
+      if (response.data.success && response.data.google_email) {
+        setGoogleSetupComplete(true);
+        // Load user's personal Google data
         loadEmails();
-        loadCalendarEvents(); 
+        loadCalendarEvents();
         loadDriveFiles();
       }
     } catch (err) {
-      console.error('Auto connection check failed:', err);
-      setAutoConnected(false);
+      console.error('Google setup check failed:', err);
+      setGoogleSetupComplete(false);
     }
   };
 
-  const forceReconnect = async () => {
-    try {
-      setLoading(true);
-      await apiAxios.post('/admin/google/force-reconnect');
-      
-      // Recheck status after reconnect
-      setTimeout(() => {
-        checkAutoConnectionStatus();
-        setLoading(false);
-      }, 2000);
-    } catch (err) {
-      console.error('Force reconnect failed:', err);
-      setLoading(false);
-    }
+  const handleGoogleCredentialsSet = () => {
+    setGoogleSetupComplete(true);
+    checkGoogleSetup();
+  };
+
+  const logout = () => {
+    localStorage.removeItem('fidus_token');
+    localStorage.removeItem('user_info');
+    window.location.href = '/';
   };
 
   // Show automatic connection status instead of manual OAuth
