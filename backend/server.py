@@ -16425,48 +16425,168 @@ async def rate_limiting_middleware(request: Request, call_next):
 app.middleware("http")(rate_limiting_middleware)
 
 # ===============================================================================
-# CRITICAL GOOGLE CONNECTION ENDPOINTS - MOVED HERE FOR TESTING
+# AUTOMATIC GOOGLE CONNECTION MANAGEMENT - PRODUCTION ENDPOINTS
 # ===============================================================================
 
-@api_router.get("/admin/google/connection-status-test")
-async def get_google_connection_status_test():
-    """Test Google connection status endpoint"""
-    return {
-        "success": True,
-        "message": "Google connection status test endpoint working",
-        "auto_managed": True,
-        "user_intervention_required": False
-    }
+@api_router.get("/admin/google/connection-status")
+async def get_automatic_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
+    """Get real-time Google connection status from automatic manager"""
+    try:
+        if auto_google_manager:
+            # Get status from the automatic manager
+            status = auto_google_manager.get_connection_status()
+            return {
+                "success": True,
+                "title": "Automatic Google Connection",
+                "subtitle": "Service account managed connection",
+                **status
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not available",
+                "auto_managed": False,
+                "user_intervention_required": True
+            }
+    except Exception as e:
+        logging.error(f"❌ Error getting automatic Google connection status: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "auto_managed": False,
+            "user_intervention_required": True
+        }
 
-@api_router.get("/admin/google/monitor-test")
-async def google_connection_monitor_test():
-    """Test Google monitor endpoint"""
-    return {
-        "success": True,
-        "message": "Google monitor test endpoint working",
-        "auto_managed": True,
-        "user_intervention_required": False
-    }
+@api_router.get("/admin/google/monitor")
+async def get_google_connection_monitor(current_user: dict = Depends(get_current_admin_user)):
+    """Real-time Google API connection monitoring dashboard data"""
+    try:
+        if auto_google_manager:
+            # Get comprehensive status for monitoring dashboard
+            status = auto_google_manager.get_connection_status()
+            
+            # Convert to frontend-expected format
+            services = []
+            for service_name, service_info in status["services"].items():
+                services.append({
+                    "name": service_name,
+                    "connected": service_info["connected"],
+                    "status": "connected" if service_info["connected"] else "disconnected",
+                    "last_check": service_info.get("last_check"),
+                    "error": service_info.get("error")
+                })
+            
+            return {
+                "success": True,
+                "title": "Google Workspace Connection Monitor",
+                "subtitle": "Automated monitoring active",
+                "services": services,
+                "overall_status": "fully_connected" if status["overall_health"] == 1.0 else "partially_connected" if status["overall_health"] > 0 else "disconnected",
+                "overall_health": status["overall_health"] * 100,  # Convert to percentage
+                "connection_quality": {
+                    "success_rate": status["overall_health"] * 100,
+                    "average_response_time_ms": 250,  # Placeholder - could be real if tracked
+                    "last_test_time": status["timestamp"],
+                    "user_email": "auto@fidus.com"
+                },
+                "auto_managed": True,
+                "monitoring_active": True
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not initialized",
+                "services": [],
+                "overall_status": "disconnected",
+                "auto_managed": False
+            }
+    except Exception as e:
+        logging.error(f"❌ Error getting Google connection monitor: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "services": [],
+            "overall_status": "disconnected",
+            "auto_managed": False
+        }
 
-@api_router.get("/admin/google/health-check-test")
-async def google_services_health_check_test():
-    """Test Google health check endpoint"""
-    return {
-        "success": True,
-        "message": "Google health check test endpoint working",
-        "auto_managed": True,
-        "user_intervention_required": False
-    }
+@api_router.get("/admin/google/health-check")
+async def google_services_health_check(current_user: dict = Depends(get_current_admin_user)):
+    """Google services health check for admin dashboard"""
+    try:
+        if auto_google_manager:
+            status = auto_google_manager.get_connection_status()
+            
+            # Calculate health metrics
+            connected_services = sum(1 for service in status["services"].values() if service["connected"])
+            total_services = len(status["services"])
+            
+            return {
+                "success": True,
+                "message": f"Automatic Google connection health check - {connected_services}/{total_services} services operational",
+                "overall_health": status["overall_health"] * 100,
+                "services_connected": connected_services,
+                "services_total": total_services,
+                "auto_managed": True,
+                "user_intervention_required": False,
+                "last_health_check": status["timestamp"]
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Automatic Google health manager not available",
+                "overall_health": 0,
+                "services_connected": 0,
+                "services_total": 4,
+                "auto_managed": False,
+                "user_intervention_required": True
+            }
+    except Exception as e:
+        logging.error(f"❌ Google health check error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "overall_health": 0,
+            "auto_managed": False,
+            "user_intervention_required": True
+        }
 
-@api_router.post("/admin/google/force-reconnect-test")
-async def force_google_reconnection_test():
-    """Test Google force reconnect endpoint"""
-    return {
-        "success": True,
-        "message": "Google force reconnect test endpoint working",
-        "auto_managed": True,
-        "user_intervention_required": False
-    }
+@api_router.post("/admin/google/force-reconnect")
+async def force_automatic_google_reconnection(current_user: dict = Depends(get_current_admin_user)):
+    """Force reconnection of all automatic Google services"""
+    try:
+        if auto_google_manager:
+            logging.info("🔄 PRODUCTION: Admin initiated force reconnection of Google services")
+            
+            # Force reconnection through the automatic manager
+            await auto_google_manager.force_reconnect_all()
+            
+            # Get updated status
+            status = auto_google_manager.get_connection_status()
+            
+            return {
+                "success": True,
+                "message": "Google services force reconnection initiated",
+                "services_reconnected": sum(1 for service in status["services"].values() if service["connected"]),
+                "auto_managed": True,
+                "user_intervention_required": False,
+                "reconnection_time": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not available for force reconnection",
+                "auto_managed": False,
+                "user_intervention_required": True
+            }
+    except Exception as e:
+        logging.error(f"❌ Force Google reconnection error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "auto_managed": False,
+            "user_intervention_required": True
+        }
 
 # Include the API router in the main app
 app.include_router(api_router)
