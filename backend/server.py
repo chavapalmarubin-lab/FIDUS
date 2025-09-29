@@ -65,39 +65,25 @@ from email.mime.application import MIMEApplication
 
 # Helper function to get Google session token from database
 async def get_google_session_token(user_id: str) -> Optional[Dict]:
-    """Get Google OAuth tokens for user from database"""
+    """Get Google OAuth tokens for specific admin user from database"""
     try:
-        # Get user's Google OAuth tokens from admin sessions
-        session_doc = await db.admin_sessions.find_one(
-            {"user_id": user_id}, 
-            sort=[("created_at", -1)]  # Get the latest session
-        )
-        
-        if session_doc and session_doc.get('google_tokens'):
-            return session_doc['google_tokens']
-        return None
+        # Use individual Google OAuth manager to get admin-specific tokens
+        return await individual_google_oauth.get_admin_google_tokens(user_id)
         
     except Exception as e:
         logging.error(f"Error getting Google session token: {str(e)}")
         return None
 
-async def store_google_session_token(user_id: str, token_data: Dict) -> bool:
-    """Store Google OAuth tokens for user in database"""
+async def store_google_session_token(user_id: str, token_data: Dict, admin_email: str = None) -> bool:
+    """Store Google OAuth tokens for specific admin user in database"""
     try:
-        # Update or create admin session with Google tokens
-        result = await db.admin_sessions.update_one(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "google_tokens": token_data,
-                    "google_authenticated": True,
-                    "updated_at": datetime.now(timezone.utc)
-                }
-            },
-            upsert=True
-        )
+        # Get admin email if not provided
+        if not admin_email:
+            admin_doc = await db.users.find_one({"id": user_id})
+            admin_email = admin_doc.get('email', 'unknown') if admin_doc else 'unknown'
         
-        return result.acknowledged
+        # Use individual Google OAuth manager to store admin-specific tokens
+        return await individual_google_oauth.store_admin_google_tokens(user_id, token_data, admin_email)
         
     except Exception as e:
         logging.error(f"Error storing Google session token: {str(e)}")
