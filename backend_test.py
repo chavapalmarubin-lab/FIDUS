@@ -387,7 +387,7 @@ class IndividualGoogleOAuthTest:
     def generate_test_summary(self):
         """Generate comprehensive test summary"""
         print("\n" + "=" * 60)
-        print("🎯 SALVADOR DATA RESTORATION TEST SUMMARY")
+        print("🎯 INDIVIDUAL GOOGLE OAUTH ENDPOINTS TEST SUMMARY")
         print("=" * 60)
         
         total_tests = len(self.test_results)
@@ -417,13 +417,13 @@ class IndividualGoogleOAuthTest:
                     print(f"   • {result['test']}: {result['message']}")
             print()
         
-        # Critical assessment
+        # Critical assessment for Individual Google OAuth endpoints
         critical_tests = [
-            "Salvador Client Profile",
-            "Salvador BALANCE Investment", 
-            "Salvador CORE Investment",
-            "Salvador DooTechnology MT5",
-            "Salvador VT Markets MT5"
+            "Individual Google Status",
+            "Individual Google Auth URL", 
+            "All Admin Google Connections",
+            "Individual Google Disconnect",
+            "Authentication Requirements"
         ]
         
         critical_passed = sum(1 for result in self.test_results 
@@ -431,13 +431,14 @@ class IndividualGoogleOAuthTest:
         
         print("🚨 CRITICAL ASSESSMENT:")
         if critical_passed >= 4:  # At least 4 out of 5 critical tests
-            print("✅ SALVADOR DATA RESTORATION: SUCCESSFUL")
-            print("   Salvador's client profile and investments are properly restored.")
-            print("   System ready for production deployment verification.")
+            print("✅ INDIVIDUAL GOOGLE OAUTH SYSTEM: OPERATIONAL")
+            print("   All Individual Google OAuth endpoints are working properly.")
+            print("   System ready for individual admin Google account connections.")
+            print("   Replacing old automatic service account approach successfully.")
         else:
-            print("❌ SALVADOR DATA RESTORATION: INCOMPLETE")
-            print("   Critical data restoration issues found.")
-            print("   Main agent action required before deployment.")
+            print("❌ INDIVIDUAL GOOGLE OAUTH SYSTEM: ISSUES DETECTED")
+            print("   Critical Individual Google OAuth endpoint issues found.")
+            print("   Main agent action required to fix OAuth implementation.")
         
         print("\n" + "=" * 60)
 
