@@ -38,6 +38,9 @@ import apiAxios from '../utils/apiAxios';
 import GoogleCredentialSetup from './GoogleCredentialSetup';
 
 const GoogleWorkspaceIntegration = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [googleSetupComplete, setGoogleSetupComplete] = useState(false);
   const {
     profile,
     loading,
