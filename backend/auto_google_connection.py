@@ -278,16 +278,32 @@ class AutoGoogleConnectionManager:
     
     def get_connection_status(self) -> Dict[str, Any]:
         """Get current connection status for API endpoints"""
+        # Initialize if not already done
+        if not self._initialized:
+            try:
+                # Create an event loop if none exists
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Initialize synchronously for now
+            loop.run_until_complete(self.initialize_auto_connection())
+        
+        # Get last check times safely
+        last_checks = [
+            status.get("last_check", "")
+            for status in self.connection_status.values()
+            if status.get("last_check")
+        ]
+        last_monitoring_check = max(last_checks) if last_checks else None
+        
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "services": self.connection_status.copy(),
-            "overall_health": sum(1 for status in self.connection_status.values() if status["connected"]) / len(self.connection_status),
+            "overall_health": sum(1 for status in self.connection_status.values() if status["connected"]) / max(len(self.connection_status), 1),
             "auto_managed": True,
-            "last_monitoring_check": max(
-                status.get("last_check", "")
-                for status in self.connection_status.values()
-                if status.get("last_check")
-            ) or None
+            "last_monitoring_check": last_monitoring_check
         }
     
     async def force_reconnect_all(self):
