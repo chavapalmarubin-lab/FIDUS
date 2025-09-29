@@ -16596,23 +16596,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize startup tasks
 @app.on_event("startup")
 async def startup_event():
-    """Initialize application on startup"""
-    try:
-        logging.info("🚀 Starting application initialization...")
-        
-        # Seed default users into MongoDB if they don't exist
-        seeding_success = await ensure_default_users_in_mongodb()
-        
-        if seeding_success:
-            logging.info("✅ User seeding completed successfully") 
-        else:
-            logging.warning("⚠️ User seeding had issues")
-            
-        logging.info("🚀 Application startup completed successfully")
-    except Exception as e:
-        logging.error(f"❌ Application startup failed: {str(e)}")
+    """Application startup tasks"""
+    logging.info("🚀 FIDUS Server starting up...")
+    
+    # Initialize default users in MongoDB
+    await ensure_default_users_in_mongodb()
+    
+    # Start automatic Google connection system
+    await startup_automatic_google_connection()
+    
+    logging.info("✅ FIDUS Server startup completed successfully")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
