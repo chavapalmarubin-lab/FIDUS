@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import useGoogleAdmin from '../hooks/useGoogleAdmin';
 import apiAxios from '../utils/apiAxios';
+import GoogleCredentialSetup from './GoogleCredentialSetup';
 
 const GoogleWorkspaceIntegration = () => {
   const {
