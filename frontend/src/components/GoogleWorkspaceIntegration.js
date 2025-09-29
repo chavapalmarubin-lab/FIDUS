@@ -836,12 +836,6 @@ ${documentRequestType === 'aml_kyc' ? `
     checkGoogleSetup();
   };
 
-  const logout = () => {
-    localStorage.removeItem('fidus_token');
-    localStorage.removeItem('user_info');
-    window.location.href = '/';
-  };
-
   // Show automatic connection status instead of manual OAuth
   if (!autoConnected) {
     if (autoConnectionStatus === null) {
