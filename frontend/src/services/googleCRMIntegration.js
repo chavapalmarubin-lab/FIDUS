@@ -4,10 +4,11 @@
  */
 
 import apiAxios from '../utils/apiAxios';
+import { BACKEND_URL } from '../config/config';
 
 class GoogleCRMIntegration {
   constructor() {
-    this.baseUrl = process.env.REACT_APP_BACKEND_URL;
+    this.baseUrl = BACKEND_URL;
   }
 
   // ==================== CONNECTION TEST ====================
