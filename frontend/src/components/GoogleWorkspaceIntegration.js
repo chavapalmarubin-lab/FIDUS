@@ -2,17 +2,8 @@ import React from 'react';
 import SimpleGoogleSetup from './SimpleGoogleSetup';
 
 const GoogleWorkspaceIntegration = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [googleSetupComplete, setGoogleSetupComplete] = useState(false);
-  const {
-    profile,
-    loading,
-    error,
-    isAuthenticated,
-    loginWithGoogle,
-    logout
-  } = useGoogleAdmin();
+  // Always show the simple Google setup for now
+  return <SimpleGoogleSetup />;
 
   const [activeTab, setActiveTab] = useState('gmail');
   const [crmClients, setCrmClients] = useState([]);
