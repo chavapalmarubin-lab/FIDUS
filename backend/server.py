@@ -1290,69 +1290,6 @@ async def startup_automatic_google_connection():
         logging.error(f"❌ Startup connection error: {str(e)}")
 
 # Override the existing Google connection status endpoint to show automatic status
-@api_router.get("/google/connection/test-all")
-async def test_google_connections_automatic(current_user: dict = Depends(get_current_admin_user)):
-    """Test all Google connections - AUTOMATIC SYSTEM"""
-    try:
-        # Always return connected status for automatic system
-        services = {
-            "gmail": {
-                "connected": True,
-                "status": "Connected",
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "automatic_service_account",
-                "auto_managed": True
-            },
-            "calendar": {
-                "connected": True,
-                "status": "Connected", 
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "automatic_service_account",
-                "auto_managed": True
-            },
-            "drive": {
-                "connected": True,
-                "status": "Connected",
-                "last_checked": datetime.now(timezone.utc).isoformat(), 
-                "method": "automatic_service_account",
-                "auto_managed": True
-            },
-            "meet": {
-                "connected": True,
-                "status": "Connected",
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "automatic_service_account", 
-                "auto_managed": True
-            }
-        }
-        
-        # Ensure automatic connection is active
-        if not auto_google.connection_active:
-            await auto_google.initialize_automatic_connection()
-        
-        return {
-            "success": True,
-            "message": "All Google services automatically connected",
-            "services": services,
-            "overall_health": 100.0,
-            "auto_managed": True,
-            "user_intervention_required": False,
-            "connection_method": "automatic_service_account",
-            "monitoring_active": True
-        }
-        
-    except Exception as e:
-        logging.error(f"❌ Automatic connection test failed: {str(e)}")
-        # Even on error, try to reconnect automatically
-        await auto_google.initialize_automatic_connection()
-        
-        return {
-            "success": True,
-            "message": "Google services auto-reconnecting",
-            "services": services,
-            "auto_managed": True,
-            "reconnecting": True
-        }
 MOCK_USERS = {}  # DEPRECATED: MongoDB is the single source of truth
 
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
