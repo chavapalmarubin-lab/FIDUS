@@ -444,7 +444,7 @@ class IndividualGoogleOAuthTest:
 
 def main():
     """Main test execution"""
-    test_runner = SalvadorDataRestorationTest()
+    test_runner = IndividualGoogleOAuthTest()
     success = test_runner.run_all_tests()
     
     if not success:
