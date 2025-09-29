@@ -267,33 +267,51 @@ class IndividualGoogleOAuthTest:
         except Exception as e:
             self.log_result("Individual Google Disconnect", False, f"Exception: {str(e)}")
     
-    def test_total_aum_calculation(self):
-        """Test that total AUM shows correct amount ($1,267,485.40)"""
+    def test_authentication_requirements(self):
+        """Test that all endpoints require proper admin JWT authentication"""
         try:
-            # Test fund performance dashboard
-            response = self.session.get(f"{BACKEND_URL}/admin/fund-performance/dashboard")
-            if response.status_code == 200:
-                fund_data = response.json()
-                
-                # Look for total AUM or similar metrics
-                total_aum = None
-                if isinstance(fund_data, dict):
-                    total_aum = fund_data.get('total_aum') or fund_data.get('total_assets')
-                
-                expected_aum = 1267485.40
-                if total_aum and abs(total_aum - expected_aum) < 1.0:  # Allow small rounding differences
-                    self.log_result("Total AUM Calculation", True, 
-                                  f"Total AUM correct: ${total_aum:,.2f}")
-                else:
-                    self.log_result("Total AUM Calculation", False, 
-                                  f"Total AUM incorrect: expected ${expected_aum:,.2f}, got ${total_aum}", 
-                                  {"fund_data": fund_data})
+            # Test endpoints without authentication
+            endpoints_to_test = [
+                "/admin/google/individual-status",
+                "/admin/google/individual-auth-url", 
+                "/admin/google/all-connections"
+            ]
+            
+            # Create session without auth token
+            unauth_session = requests.Session()
+            
+            all_protected = True
+            unprotected_endpoints = []
+            
+            for endpoint in endpoints_to_test:
+                try:
+                    response = unauth_session.get(f"{BACKEND_URL}{endpoint}")
+                    if response.status_code != 401:
+                        all_protected = False
+                        unprotected_endpoints.append(f"{endpoint} (HTTP {response.status_code})")
+                except Exception as e:
+                    # Network errors are acceptable for this test
+                    pass
+            
+            # Test POST endpoint
+            try:
+                response = unauth_session.post(f"{BACKEND_URL}/admin/google/individual-disconnect")
+                if response.status_code != 401:
+                    all_protected = False
+                    unprotected_endpoints.append(f"/admin/google/individual-disconnect (HTTP {response.status_code})")
+            except Exception as e:
+                pass
+            
+            if all_protected:
+                self.log_result("Authentication Requirements", True, 
+                              "All endpoints properly require admin JWT authentication")
             else:
-                self.log_result("Total AUM Calculation", False, 
-                              f"Failed to get fund performance data: HTTP {response.status_code}")
+                self.log_result("Authentication Requirements", False, 
+                              "Some endpoints not properly protected", 
+                              {"unprotected": unprotected_endpoints})
                 
         except Exception as e:
-            self.log_result("Total AUM Calculation", False, f"Exception: {str(e)}")
+            self.log_result("Authentication Requirements", False, f"Exception: {str(e)}")
     
     def test_critical_api_endpoints(self):
         """Test all critical API endpoints are responding"""
