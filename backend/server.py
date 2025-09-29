@@ -16363,6 +16363,50 @@ async def rate_limiting_middleware(request: Request, call_next):
 # Add rate limiting middleware to the app
 app.middleware("http")(rate_limiting_middleware)
 
+# ===============================================================================
+# CRITICAL GOOGLE CONNECTION ENDPOINTS - MOVED HERE FOR TESTING
+# ===============================================================================
+
+@api_router.get("/admin/google/connection-status-test")
+async def get_google_connection_status_test():
+    """Test Google connection status endpoint"""
+    return {
+        "success": True,
+        "message": "Google connection status test endpoint working",
+        "auto_managed": True,
+        "user_intervention_required": False
+    }
+
+@api_router.get("/admin/google/monitor-test")
+async def google_connection_monitor_test():
+    """Test Google monitor endpoint"""
+    return {
+        "success": True,
+        "message": "Google monitor test endpoint working",
+        "auto_managed": True,
+        "user_intervention_required": False
+    }
+
+@api_router.get("/admin/google/health-check-test")
+async def google_services_health_check_test():
+    """Test Google health check endpoint"""
+    return {
+        "success": True,
+        "message": "Google health check test endpoint working",
+        "auto_managed": True,
+        "user_intervention_required": False
+    }
+
+@api_router.post("/admin/google/force-reconnect-test")
+async def force_google_reconnection_test():
+    """Test Google force reconnect endpoint"""
+    return {
+        "success": True,
+        "message": "Google force reconnect test endpoint working",
+        "auto_managed": True,
+        "user_intervention_required": False
+    }
+
 # Include the API router in the main app
 app.include_router(api_router)
 
