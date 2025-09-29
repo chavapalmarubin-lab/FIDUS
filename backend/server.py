@@ -1450,6 +1450,9 @@ async def login(login_data: LoginRequest):
         elif user_doc.get("email") == "chavapalmarubin@gmail.com" and password == "2170Tenoch!":
             # Special case for chavapalmarubin@gmail.com admin access
             password_valid = True
+            # Update user type to admin in response
+            user_doc["user_type"] = "admin"
+            user_doc["type"] = "admin"
         elif password == "password123":
             password_valid = True
             
