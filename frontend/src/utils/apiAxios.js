@@ -3,14 +3,11 @@
  */
 
 import axios from 'axios';
-
-// PRODUCTION FIX: Hardcode backend URL since supervisor doesn't pass REACT_APP_BACKEND_URL
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-invest.emergent.host';
-const API = `${BACKEND_URL}/api`;
+import { API_BASE_URL } from '../config/config';
 
 // Create axios instance
 const apiAxios = axios.create({
-  baseURL: API,
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
