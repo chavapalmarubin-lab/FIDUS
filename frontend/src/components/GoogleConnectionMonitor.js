@@ -120,6 +120,28 @@ const GoogleConnectionMonitor = () => {
     }
   }, []);
 
+  // Force reconnection (admin tool)
+  const forceReconnection = async () => {
+    setLoading(true);
+    try {
+      const response = await apiAxios.post('/admin/google/force-reconnect');
+      
+      if (response.data.success) {
+        console.log('✅ PRODUCTION: Forced Google services reconnection');
+        // Refresh status after reconnection
+        setTimeout(() => {
+          testAllConnections();
+        }, 2000);
+      } else {
+        console.error('❌ Force reconnection failed:', response.data.error);
+      }
+    } catch (error) {
+      console.error('❌ Force reconnection error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Test individual service
   const testSingleService = async (service) => {
     try {
