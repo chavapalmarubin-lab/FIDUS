@@ -9066,50 +9066,32 @@ async def test_google_endpoint():
 # Removed duplicate OAuth URL endpoint - using /auth/google/url instead
 
 @api_router.get("/admin/google-callback")
-async def handle_real_google_oauth_callback_get(request: Request, code: str = None, state: str = None, error: str = None):
-    """Handle Google OAuth callback via GET redirect and complete token exchange"""
+async def handle_individual_google_oauth_callback_redirect(request: Request, code: str = None, state: str = None, error: str = None):
+    """Handle individual Google OAuth callback via GET redirect from Google"""
     try:
+        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        
         if error:
-            logging.error(f"Google OAuth error: {error}")
-            frontend_base = "https://fidus-invest.emergent.host"
-            return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message={error}")
+            logging.error(f"❌ Individual Google OAuth error: {error}")
+            return RedirectResponse(url=f"{frontend_base_url}/?skip_animation=true&error={error}")
         
-        if not code:
-            logging.error("Missing authorization code in callback")
-            frontend_base = "https://fidus-invest.emergent.host"
-            return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=missing_code")
+        if not code or not state:
+            logging.error("❌ Missing authorization code or state in callback")
+            return RedirectResponse(url=f"{frontend_base_url}/?skip_animation=true&error=missing_parameters")
         
-        logging.info(f"🔄 Processing Google OAuth callback with code: {code[:20]}...")
+        logging.info(f"🔄 Processing individual Google OAuth callback with code: {code[:20]}... and state: {state}")
         
-        try:
-            # Exchange authorization code for access tokens using Google APIs service
-            logging.info("📧 Exchanging authorization code for access tokens...")
-            token_data = google_apis_service.exchange_code_for_tokens(code)
-            
-            # Store Google tokens for default admin user (since callback doesn't have session context)
-            # Use the actual admin user ID that matches login system
-            admin_user_id = "admin_001"  # Matches the actual admin user ID from login/users collection
-            stored = await store_google_session_token(admin_user_id, token_data)
-            
-            if stored:
-                logging.info(f"✅ Google OAuth tokens stored successfully for admin user")
-                # Redirect to the DEPLOYED frontend URL with success indicator
-                frontend_base = "https://fidus-invest.emergent.host"
-                return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=success&tab=google-workspace")
-            else:
-                logging.error(f"❌ Failed to store Google OAuth tokens")
-                frontend_base = "https://fidus-invest.emergent.host"
-                return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=token_storage_failed")
-            
-        except Exception as e:
-            logging.error(f"❌ Token exchange/storage error: {str(e)}")
-            frontend_base = "https://fidus-invest.emergent.host"
-            return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=token_processing_failed")
+        # Redirect to frontend with OAuth parameters for processing
+        # The frontend will handle the token exchange via the /admin/google/individual-callback endpoint
+        redirect_url = f"{frontend_base_url}/?skip_animation=true&code={code}&state={state}"
+        
+        logging.info(f"✅ Redirecting to frontend for individual OAuth processing: {redirect_url}")
+        return RedirectResponse(url=redirect_url)
         
     except Exception as e:
-        logging.error(f"❌ Google OAuth callback error: {str(e)}")
-        frontend_base = "https://fidus-invest.emergent.host"
-        return RedirectResponse(url=f"{frontend_base}/?skip_animation=true&google_auth=error&message=callback_failed")
+        logging.error(f"❌ Individual Google OAuth callback redirect error: {str(e)}")
+        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        return RedirectResponse(url=f"{frontend_base_url}/?skip_animation=true&error=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
 async def process_real_google_oauth_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
