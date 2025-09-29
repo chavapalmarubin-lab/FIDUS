@@ -115,55 +115,69 @@ class IndividualGoogleOAuthTest:
         except Exception as e:
             self.log_result("Individual Google Status", False, f"Exception: {str(e)}")
     
-    def test_salvador_client_profile(self):
-        """Test Salvador's client profile exists with correct data"""
+    def test_individual_google_auth_url_endpoint(self):
+        """Test GET /admin/google/individual-auth-url endpoint"""
         try:
-            # Get all clients and find Salvador
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
+            response = self.session.get(f"{BACKEND_URL}/admin/google/individual-auth-url")
+            
             if response.status_code == 200:
-                clients = response.json()
-                salvador_found = False
+                data = response.json()
                 
-                if isinstance(clients, list):
-                    for client in clients:
-                        if client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper():
-                            salvador_found = True
-                            expected_data = {
-                                'id': 'client_003',
-                                'name': 'SALVADOR PALMA',
-                                'email': 'chava@alyarglobal.com'
-                            }
-                            
-                            # Verify client data
-                            data_correct = True
-                            issues = []
-                            
-                            for key, expected_value in expected_data.items():
-                                actual_value = client.get(key)
-                                if actual_value != expected_value:
-                                    data_correct = False
-                                    issues.append(f"{key}: expected '{expected_value}', got '{actual_value}'")
-                            
-                            if data_correct:
-                                self.log_result("Salvador Client Profile", True, 
-                                              "Salvador Palma profile found with correct data",
-                                              {"client_data": client})
-                            else:
-                                self.log_result("Salvador Client Profile", False, 
-                                              "Salvador found but data incorrect", 
-                                              {"issues": issues, "client_data": client})
-                            break
-                
-                if not salvador_found:
-                    self.log_result("Salvador Client Profile", False, 
-                                  "Salvador Palma (client_003) not found in clients list",
-                                  {"total_clients": len(clients) if isinstance(clients, list) else "unknown"})
+                # Verify response structure
+                if data.get('success') and 'auth_url' in data:
+                    auth_url = data.get('auth_url')
+                    
+                    # Verify OAuth URL contains required parameters
+                    required_params = [
+                        'client_id=',
+                        'redirect_uri=',
+                        'response_type=code',
+                        'scope=',
+                        'access_type=offline',
+                        'prompt=consent'
+                    ]
+                    
+                    # Check for required scopes
+                    required_scopes = [
+                        'gmail.readonly',
+                        'gmail.send',
+                        'calendar',
+                        'drive'
+                    ]
+                    
+                    url_valid = True
+                    missing_params = []
+                    missing_scopes = []
+                    
+                    for param in required_params:
+                        if param not in auth_url:
+                            url_valid = False
+                            missing_params.append(param)
+                    
+                    for scope in required_scopes:
+                        if scope not in auth_url:
+                            missing_scopes.append(scope)
+                    
+                    if url_valid and not missing_scopes:
+                        self.log_result("Individual Google Auth URL - Valid", True, 
+                                      "Generated proper Google OAuth URL with all required parameters",
+                                      {"auth_url_length": len(auth_url), "admin_info": data.get('admin_user_id')})
+                    else:
+                        self.log_result("Individual Google Auth URL - Invalid", False, 
+                                      "OAuth URL missing required parameters or scopes", 
+                                      {"missing_params": missing_params, "missing_scopes": missing_scopes})
+                else:
+                    self.log_result("Individual Google Auth URL - Invalid Response", False, 
+                                  "Response missing required fields", {"response": data})
+            elif response.status_code == 401:
+                self.log_result("Individual Google Auth URL - Authentication", False, 
+                              "Endpoint requires admin authentication (expected behavior)")
             else:
-                self.log_result("Salvador Client Profile", False, 
-                              f"Failed to get clients: HTTP {response.status_code}")
+                self.log_result("Individual Google Auth URL - HTTP Error", False, 
+                              f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_result("Salvador Client Profile", False, f"Exception: {str(e)}")
+            self.log_result("Individual Google Auth URL", False, f"Exception: {str(e)}")
     
     def test_salvador_investments(self):
         """Test Salvador's 2 investments with correct amounts"""
