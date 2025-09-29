@@ -51,8 +51,8 @@ class AutoGoogleConnectionManager:
         self.max_retry_attempts = 5
         self.retry_delay = 30  # seconds
         
-        # Initialize on startup
-        asyncio.create_task(self.initialize_auto_connection())
+        # Initialize on startup (delayed until event loop is available)
+        self._initialized = False
     
     async def initialize_auto_connection(self):
         """Initialize Google services automatically on startup"""
