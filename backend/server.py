@@ -16588,6 +16588,285 @@ async def force_automatic_google_reconnection(current_user: dict = Depends(get_c
             "user_intervention_required": True
         }
 
+# ===============================================================================
+# AUTOMATIC GOOGLE API ENDPOINTS - SERVICE ACCOUNT BASED
+# ===============================================================================
+
+@api_router.get("/google/gmail/auto-messages")
+async def get_automatic_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages using automatic service account (no OAuth required)"""
+    try:
+        if not auto_google_manager:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not available",
+                "messages": [],
+                "source": "no_auto_manager"
+            }
+        
+        # Check if Gmail service is connected
+        status = auto_google_manager.get_connection_status()
+        if not status["services"]["gmail"]["connected"]:
+            return {
+                "success": False,
+                "error": "Gmail service not connected via automatic manager",
+                "messages": [],
+                "source": "gmail_disconnected",
+                "auto_managed": True
+            }
+        
+        # Use the Gmail service from auto manager
+        gmail_service = auto_google_manager.gmail_service
+        if not gmail_service:
+            return {
+                "success": False,
+                "error": "Gmail service not initialized",
+                "messages": [],
+                "source": "gmail_not_initialized"
+            }
+        
+        # Get Gmail messages directly via service account
+        try:
+            # For service account, we need to specify the user email to impersonate
+            # This requires domain-wide delegation setup
+            result = gmail_service.users().messages().list(
+                userId='me', 
+                maxResults=20,
+                labelIds=['INBOX']
+            ).execute()
+            
+            messages = result.get('messages', [])
+            detailed_messages = []
+            
+            # Get detailed info for each message
+            for message in messages[:10]:  # Limit to 10 for demo
+                try:
+                    msg_detail = gmail_service.users().messages().get(
+                        userId='me',
+                        id=message['id']
+                    ).execute()
+                    
+                    # Extract headers
+                    headers = {}
+                    for header in msg_detail['payload'].get('headers', []):
+                        headers[header['name']] = header['value']
+                    
+                    detailed_messages.append({
+                        'id': msg_detail['id'],
+                        'subject': headers.get('Subject', 'No Subject'),
+                        'sender': headers.get('From', 'Unknown Sender'),
+                        'date': headers.get('Date', ''),
+                        'snippet': msg_detail.get('snippet', ''),
+                        'unread': 'UNREAD' in msg_detail.get('labelIds', []),
+                        'labels': msg_detail.get('labelIds', []),
+                        'source': 'automatic_service_account'
+                    })
+                except Exception as msg_error:
+                    logging.warning(f"Failed to get message details for {message['id']}: {str(msg_error)}")
+            
+            logging.info(f"✅ AUTOMATIC: Retrieved {len(detailed_messages)} Gmail messages")
+            
+            return {
+                "success": True,
+                "messages": detailed_messages,
+                "source": "automatic_service_account",
+                "count": len(detailed_messages),
+                "auto_managed": True
+            }
+            
+        except Exception as gmail_error:
+            logging.error(f"Gmail service account API error: {str(gmail_error)}")
+            return {
+                "success": False,
+                "error": f"Gmail API error: {str(gmail_error)}",
+                "messages": [],
+                "source": "gmail_api_error",
+                "auto_managed": True
+            }
+        
+    except Exception as e:
+        logging.error(f"❌ Automatic Gmail messages error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "messages": [],
+            "source": "system_error"
+        }
+
+@api_router.get("/google/calendar/auto-events")
+async def get_automatic_calendar_events(current_user: dict = Depends(get_current_admin_user)):
+    """Get Calendar events using automatic service account (no OAuth required)"""
+    try:
+        if not auto_google_manager:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not available",
+                "events": [],
+                "source": "no_auto_manager"
+            }
+        
+        # Check if Calendar service is connected
+        status = auto_google_manager.get_connection_status()
+        if not status["services"]["calendar"]["connected"]:
+            return {
+                "success": False,
+                "error": "Calendar service not connected via automatic manager",
+                "events": [],
+                "source": "calendar_disconnected",
+                "auto_managed": True
+            }
+        
+        # Use the Calendar service from auto manager
+        calendar_service = auto_google_manager.calendar_service
+        if not calendar_service:
+            return {
+                "success": False,
+                "error": "Calendar service not initialized",
+                "events": [],
+                "source": "calendar_not_initialized"
+            }
+        
+        # Get Calendar events directly via service account
+        try:
+            now = datetime.now(timezone.utc).isoformat()
+            events_result = calendar_service.events().list(
+                calendarId='primary',
+                timeMin=now,
+                maxResults=20,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            events = events_result.get('items', [])
+            
+            formatted_events = []
+            for event in events:
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                end = event['end'].get('dateTime', event['end'].get('date'))
+                
+                formatted_events.append({
+                    'id': event['id'],
+                    'summary': event.get('summary', 'No Title'),
+                    'description': event.get('description', ''),
+                    'start': start,
+                    'end': end,
+                    'location': event.get('location', ''),
+                    'status': event.get('status'),
+                    'source': 'automatic_service_account'
+                })
+            
+            logging.info(f"✅ AUTOMATIC: Retrieved {len(formatted_events)} Calendar events")
+            
+            return {
+                "success": True,
+                "events": formatted_events,
+                "source": "automatic_service_account",
+                "count": len(formatted_events),
+                "auto_managed": True
+            }
+            
+        except Exception as calendar_error:
+            logging.error(f"Calendar service account API error: {str(calendar_error)}")
+            return {
+                "success": False,
+                "error": f"Calendar API error: {str(calendar_error)}",
+                "events": [],
+                "source": "calendar_api_error",
+                "auto_managed": True
+            }
+        
+    except Exception as e:
+        logging.error(f"❌ Automatic Calendar events error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "events": [],
+            "source": "system_error"
+        }
+
+@api_router.get("/google/drive/auto-files")
+async def get_automatic_drive_files(current_user: dict = Depends(get_current_admin_user)):
+    """Get Drive files using automatic service account (no OAuth required)"""
+    try:
+        if not auto_google_manager:
+            return {
+                "success": False,
+                "error": "Automatic Google manager not available",
+                "files": [],
+                "source": "no_auto_manager"
+            }
+        
+        # Check if Drive service is connected
+        status = auto_google_manager.get_connection_status()
+        if not status["services"]["drive"]["connected"]:
+            return {
+                "success": False,
+                "error": "Drive service not connected via automatic manager",
+                "files": [],
+                "source": "drive_disconnected",
+                "auto_managed": True
+            }
+        
+        # Use the Drive service from auto manager
+        drive_service = auto_google_manager.drive_service
+        if not drive_service:
+            return {
+                "success": False,
+                "error": "Drive service not initialized",
+                "files": [],
+                "source": "drive_not_initialized"
+            }
+        
+        # Get Drive files directly via service account
+        try:
+            results = drive_service.files().list(
+                pageSize=20,
+                fields="nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink)"
+            ).execute()
+            
+            files = results.get('files', [])
+            
+            formatted_files = []
+            for file in files:
+                formatted_files.append({
+                    'id': file['id'],
+                    'name': file['name'],
+                    'mimeType': file.get('mimeType'),
+                    'size': file.get('size'),
+                    'modifiedTime': file.get('modifiedTime'),
+                    'webViewLink': file.get('webViewLink'),
+                    'source': 'automatic_service_account'
+                })
+            
+            logging.info(f"✅ AUTOMATIC: Retrieved {len(formatted_files)} Drive files")
+            
+            return {
+                "success": True,
+                "files": formatted_files,
+                "source": "automatic_service_account",
+                "count": len(formatted_files),
+                "auto_managed": True
+            }
+            
+        except Exception as drive_error:
+            logging.error(f"Drive service account API error: {str(drive_error)}")
+            return {
+                "success": False,
+                "error": f"Drive API error: {str(drive_error)}",
+                "files": [],
+                "source": "drive_api_error",
+                "auto_managed": True
+            }
+        
+    except Exception as e:
+        logging.error(f"❌ Automatic Drive files error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "files": [],
+            "source": "system_error"
+        }
+
 # Include the API router in the main app
 app.include_router(api_router)
 
