@@ -836,10 +836,6 @@ ${documentRequestType === 'aml_kyc' ? `
     checkGoogleSetup();
   };
 
-  // Temporary variables for compatibility
-  const autoConnected = authenticated && googleSetupComplete;
-  const autoConnectionStatus = { success: true };
-
   // Show Google credential setup if admin hasn't connected their Google account yet
   if (authenticated && !googleSetupComplete) {
     return (
