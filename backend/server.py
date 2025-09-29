@@ -15796,8 +15796,8 @@ async def auto_initialize_alejandro_documents():
         logging.warning(f"⚠️ Auto-initialize documents/readiness failed: {str(e)}")
 
 # Call auto-initialization when server starts
-import asyncio
-asyncio.create_task(auto_initialize_alejandro_documents())
+# import asyncio
+# asyncio.create_task(auto_initialize_alejandro_documents())  # DISABLED: Causes server startup issues
 async def upload_document_to_client_folder(
     file: UploadFile = File(...),
     client_id: str = Form(...),
