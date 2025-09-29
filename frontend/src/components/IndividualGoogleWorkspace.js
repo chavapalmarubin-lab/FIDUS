@@ -9,18 +9,6 @@ const IndividualGoogleWorkspace = () => {
   // Google Connection State
   const [googleStatus, setGoogleStatus] = useState(null);
   const [connectingToGoogle, setConnectingToGoogle] = useState(false);
-  const [allAdminConnections, setAllAdminConnections] = useState([]);
-  const [showAllConnections, setShowAllConnections] = useState(false);
-  
-  // Google Data State
-  const [emails, setEmails] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [driveFiles, setDriveFiles] = useState([]);
-  const [sheets, setSheets] = useState([]);
-  
-  // CRM Data
-  const [crmClients, setCrmClients] = useState([]);
-  const [crmProspects, setCrmProspects] = useState([]);
 
   useEffect(() => {
     checkGoogleConnectionStatus();
