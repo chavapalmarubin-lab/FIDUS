@@ -73,28 +73,47 @@ const GoogleConnectionMonitor = () => {
     }
   };
 
-  // Test all Google connections
+  // Fetch connection status from new automated endpoints
   const testAllConnections = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiAxios.get('/google/connection/test-all');
-      setConnectionStatus(response.data);
+      // Use new automated monitoring endpoint
+      const response = await apiAxios.get('/admin/google/monitor');
       
       if (response.data.success) {
-        console.log('✅ Google connection test completed:', response.data.connection_quality);
+        setConnectionStatus(response.data);
+        
+        // Add to connection history for trending
+        const timestamp = new Date().toISOString();
+        setConnectionHistory(prev => [
+          ...prev.slice(-9), // Keep last 9 entries + new one = 10 total
+          {
+            timestamp,
+            overall_health: response.data.overall_health,
+            connected_services: response.data.services.filter(s => s.connected).length,
+            total_services: response.data.services.length
+          }
+        ]);
+        
+        console.log('✅ PRODUCTION: Automated Google connection status retrieved');
       } else {
-        console.warn('⚠️ Google connection test issues:', response.data.error);
+        console.error('❌ Failed to get connection status:', response.data.error);
+        setConnectionStatus({
+          success: false,
+          title: "Connection Status Error",
+          subtitle: response.data.error || "Failed to retrieve status",
+          services: [],
+          auto_managed: false
+        });
       }
     } catch (error) {
-      console.error('❌ Connection test failed:', error);
+      console.error('❌ Connection status fetch error:', error);
       setConnectionStatus({
         success: false,
-        error: error.message,
-        overall_status: 'test_failed',
-        services: {},
-        connection_quality: {
-          last_test_time: new Date().toISOString()
-        }
+        title: "Connection Error", 
+        subtitle: "Failed to connect to monitoring system",
+        services: [],
+        auto_managed: false
       });
     } finally {
       setLoading(false);
