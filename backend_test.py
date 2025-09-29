@@ -352,28 +352,32 @@ class IndividualGoogleOAuthTest:
             self.log_result("Google OAuth Environment Variables", False, f"Exception: {str(e)}")
     
     def run_all_tests(self):
-        """Run all Salvador data restoration verification tests"""
-        print("🎯 SALVADOR PALMA DATABASE RESTORATION VERIFICATION TEST")
+        """Run all Individual Google OAuth endpoint tests"""
+        print("🎯 INDIVIDUAL GOOGLE OAUTH ENDPOINTS TESTING")
         print("=" * 60)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test Time: {datetime.now().isoformat()}")
         print()
         
-        # Authenticate first
+        # Test authentication requirements first (without auth)
+        print("🔒 Testing Authentication Requirements...")
+        print("-" * 50)
+        self.test_authentication_requirements()
+        
+        # Authenticate for protected endpoint tests
         if not self.authenticate_admin():
-            print("❌ CRITICAL: Admin authentication failed. Cannot proceed with tests.")
+            print("❌ CRITICAL: Admin authentication failed. Cannot proceed with protected endpoint tests.")
             return False
         
-        print("\n🔍 Running Database Restoration Verification Tests...")
+        print("\n🔍 Running Individual Google OAuth Endpoint Tests...")
         print("-" * 50)
         
-        # Run all verification tests
-        self.test_database_cleanup_verification()
-        self.test_salvador_client_profile()
-        self.test_salvador_investments()
-        self.test_salvador_mt5_accounts()
-        self.test_total_aum_calculation()
-        self.test_critical_api_endpoints()
+        # Run all endpoint tests
+        self.test_individual_google_status_endpoint()
+        self.test_individual_google_auth_url_endpoint()
+        self.test_all_admin_google_connections_endpoint()
+        self.test_individual_google_disconnect_endpoint()
+        self.test_google_oauth_environment_variables()
         
         # Generate summary
         self.generate_test_summary()
