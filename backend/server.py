@@ -1947,11 +1947,6 @@ async def google_connection_monitor():
             "services": [],
             "auto_managed": False
         }
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "service": "FIDUS Investment Management API"
-    }
 
 @api_router.get("/health/ready")
 async def readiness_check():
