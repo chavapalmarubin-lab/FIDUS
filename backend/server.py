@@ -1421,6 +1421,9 @@ async def login(login_data: LoginRequest):
         if user_doc.get("temp_password") and password == user_doc["temp_password"]:
             password_valid = True
             must_change_password = True
+        elif user_doc.get("password_hash") and password == user_doc["password_hash"]:
+            # Handle admin accounts with stored passwords
+            password_valid = True
         elif password == "password123":
             password_valid = True
             
