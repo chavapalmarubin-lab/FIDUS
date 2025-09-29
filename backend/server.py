@@ -1907,6 +1907,11 @@ async def health_check():
         }
     }
 
+@api_router.get("/google/test-automatic")
+async def test_automatic_endpoint():
+    """Test endpoint to verify automatic routes are working"""
+    return {"success": True, "message": "Automatic Google endpoints are registered", "test": "working"}
+
 # Health check endpoint
 
 @api_router.get("/health/ready")
