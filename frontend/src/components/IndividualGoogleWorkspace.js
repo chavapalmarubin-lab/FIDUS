@@ -1,35 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Mail,
-  Calendar,
-  FolderOpen,
-  FileSpreadsheet,
-  Send,
-  Plus,
-  Download,
-  Eye,
-  Users,
-  Clock,
-  FileText,
-  Paperclip,
-  Search,
-  Filter,
-  RefreshCw,
-  Video,
-  Edit3,
-  Share2,
-  Signature,
-  LogOut,
-  X,
-  AlertCircle,
-  MessageSquare,
-  Reply,
-  Forward,
-  CheckCircle,
-  XCircle,
-  User,
-  Shield
-} from 'lucide-react';
 import apiAxios from '../utils/apiAxios';
 
 const IndividualGoogleWorkspace = () => {
