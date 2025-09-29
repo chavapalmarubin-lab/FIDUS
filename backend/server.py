@@ -1197,7 +1197,7 @@ async def ensure_default_users_in_mongodb():
         for user in default_users:
             # Use upsert to update existing or create new users 
             await db.users.update_one(
-                {"username": user["username"]},
+                {"email": user["email"]},  # Match by email instead of username to update existing users
                 {"$set": user},
                 upsert=True
             )
