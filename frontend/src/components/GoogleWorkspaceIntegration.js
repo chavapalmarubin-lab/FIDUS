@@ -885,12 +885,8 @@ ${documentRequestType === 'aml_kyc' ? `
             </div>
             <div className="flex items-center gap-2">
               <Badge className="bg-green-100 text-green-800 border-green-200">
-                Auto-Managed
+                Connected
               </Badge>
-              <Button variant="outline" onClick={forceReconnect} size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reconnect
-              </Button>
             </div>
           </div>
         </CardHeader>
