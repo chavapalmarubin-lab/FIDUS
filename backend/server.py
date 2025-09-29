@@ -109,6 +109,14 @@ load_dotenv(ROOT_DIR / '.env')
 # Import google_apis_service after environment is loaded
 from google_apis_service import google_apis_service
 
+# Import automatic Google connection manager
+try:
+    from auto_google_connection import auto_google_manager
+    logging.info("✅ PRODUCTION: Auto Google Connection Manager imported")
+except ImportError as e:
+    logging.warning(f"⚠️ Auto Google Connection Manager not available: {e}")
+    auto_google_manager = None
+
 # MongoDB connection with connection pooling
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(
