@@ -857,6 +857,7 @@ ${documentRequestType === 'aml_kyc' ? `
 
   // Show Google credential setup if admin hasn't connected their Google account yet
   if (authenticated && !googleSetupComplete) {
+    console.log('Showing Google setup for user:', currentUser);
     return (
       <div className="w-full space-y-6">
         <GoogleCredentialSetup 
