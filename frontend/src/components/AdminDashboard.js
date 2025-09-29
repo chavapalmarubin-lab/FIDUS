@@ -23,6 +23,7 @@ import UserAdministration from "./UserAdministration";
 // Clean imports - removed unused Google components
 import FullGoogleWorkspace from './FullGoogleWorkspace';
 import RealGoogleWorkspace from './RealGoogleWorkspace';
+import IndividualGoogleWorkspace from './IndividualGoogleWorkspace';
 import GoogleConnectionMonitor from './GoogleConnectionMonitor';
 import {
   LineChart,
