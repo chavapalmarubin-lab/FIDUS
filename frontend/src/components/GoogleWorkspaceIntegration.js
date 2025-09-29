@@ -872,23 +872,20 @@ ${documentRequestType === 'aml_kyc' ? `
 
   return (
     <div className="w-full space-y-6">
-      {/* Header with Automatic Connection Status */}
+      {/* Header with Profile */}
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Google Workspace Integration</CardTitle>
               <p className="text-sm text-slate-600 mt-1">
-                <CheckCircle className="h-4 w-4 inline mr-1 text-green-500" />
-                Automatically connected via FIDUS service account • Gmail, Calendar, Drive, and Meet
+                Connected as {profile?.email} • Full access to Gmail, Calendar, Drive, and Sheets
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-800 border-green-200">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Auto-Managed
-              </Badge>
-            </div>
+            <Button variant="outline" onClick={logout} size="sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Disconnect
+            </Button>
           </div>
         </CardHeader>
       </Card>
