@@ -1149,6 +1149,19 @@ async def ensure_default_users_in_mongodb():
             "notes": "Default admin account"
         },
         {
+            "id": "admin_chava",
+            "username": "chavapalmarubin@gmail.com",
+            "name": "Chava Palma",
+            "email": "chavapalmarubin@gmail.com",
+            "phone": "",
+            "type": "admin",
+            "status": "active",
+            "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
+            "created_at": datetime.now(timezone.utc),
+            "notes": "Main admin account - Chava Palma",
+            "password_hash": "2170Tenoch!"  # Your actual password
+        },
+        {
             "id": "client_alejandro",  # Fixed: use "id" not "user_id"
             "username": "alejandro_mariscal",
             "name": "Alejandro Mariscal Romero",
