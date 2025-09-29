@@ -171,6 +171,18 @@ const GoogleWorkspaceIntegration = () => {
     }
   };
 
+  const loadDriveFiles = async () => {
+    try {
+      setDriveLoading(true);
+      const response = await apiAxios.get('/google/drive/real-files');
+      setDriveFiles(response.data.files || []);
+    } catch (err) {
+      console.error('Failed to load drive files:', err);
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
   // Load CRM data on component mount
   useEffect(() => {
     if (isAuthenticated) {
