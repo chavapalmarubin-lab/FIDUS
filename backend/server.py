@@ -1077,72 +1077,84 @@ async def ensure_default_users_in_mongodb():
     """Seed default users into MongoDB if they don't exist (PRODUCTION SETUP)"""
     default_users = [
         {
-            "id": "client_001",  # Fixed: use "id" not "user_id"
+            "id": "client_001",
+            "user_id": "client_001",
             "username": "client1", 
             "name": "Gerardo Briones",
             "email": "g.b@fidus.com",
             "phone": "+1-555-0100",
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default seeded client"
         },
         {
-            "id": "client_002",  # Fixed: use "id" not "user_id"
+            "id": "client_002",
+            "user_id": "client_002",
             "username": "client2",
             "name": "Maria Rodriguez", 
             "email": "m.rodriguez@fidus.com",
             "phone": "+1-555-0200",
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client", 
             "status": "active", 
             "profile_picture": "https://images.unsplash.com/photo-1494790108755-2616b812358f?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default seeded client"
         },
         {
-            "id": "client_003",  # Fixed: use "id" not "user_id" 
+            "id": "client_003",
+            "user_id": "client_003", 
             "username": "client3",
             "name": "SALVADOR PALMA",
             "email": "chava@alyarglobal.com",
             "phone": "+1-555-0300",
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default seeded client - VIP"
         },
         {
-            "id": "client_004",  # Fixed: use "id" not "user_id"
+            "id": "client_004",
+            "user_id": "client_004",
             "username": "client4", 
             "name": "Javier Gonzalez",
             "email": "javier.gonzalez@fidus.com", 
             "phone": "+1-555-0400",
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default seeded client"
         },
         {
-            "id": "client_005",  # Fixed: use "id" not "user_id"
+            "id": "client_005",
+            "user_id": "client_005", 
             "username": "client5",
             "name": "Jorge Gonzalez",
             "email": "jorge.gonzalez@fidus.com",
             "phone": "+1-555-0500", 
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Default seeded client"
         },
         {
-            "id": "admin_001",  # Fixed: use "id" not "user_id"
+            "id": "admin_001",
+            "user_id": "admin_001",
             "username": "admin",
             "name": "Investment Committee", 
             "email": "ic@fidus.com",
             "phone": "+1-555-0001",
-            "type": "admin",  # Fixed: use "type" not "user_type"
+            "type": "admin",
+            "user_type": "admin",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
@@ -1150,24 +1162,28 @@ async def ensure_default_users_in_mongodb():
         },
         {
             "id": "admin_chava",
+            "user_id": "admin_chava",
             "username": "chavapalmarubin@gmail.com",
             "name": "Chava Palma",
             "email": "chavapalmarubin@gmail.com",
             "phone": "",
             "type": "admin",
+            "user_type": "admin",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
             "notes": "Main admin account - Chava Palma",
-            "password_hash": "2170Tenoch!"  # Your actual password
+            "password_hash": "2170Tenoch!"
         },
         {
-            "id": "client_alejandro",  # Fixed: use "id" not "user_id"
+            "id": "client_alejandro",
+            "user_id": "client_alejandro",
             "username": "alejandro_mariscal",
             "name": "Alejandro Mariscal Romero",
             "email": "alejandro.mariscal@email.com",
             "phone": "+525551058520",
-            "type": "client",  # Fixed: use "type" not "user_type"
+            "type": "client",
+            "user_type": "client",
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
