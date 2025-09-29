@@ -150,7 +150,7 @@ const GoogleWorkspaceIntegration = () => {
   const loadEmails = async () => {
     try {
       setEmailLoading(true);
-      const response = await apiAxios.get('/google/gmail/auto-messages');
+      const response = await apiAxios.get('/google/gmail/real-messages');
       setEmails(response.data.messages || []);
     } catch (err) {
       console.error('Failed to load emails:', err);
@@ -162,24 +162,12 @@ const GoogleWorkspaceIntegration = () => {
   const loadCalendarEvents = async () => {
     try {
       setCalendarLoading(true);
-      const response = await apiAxios.get('/google/calendar/auto-events');
+      const response = await apiAxios.get('/google/calendar/events');
       setEvents(response.data.events || []);
     } catch (err) {
       console.error('Failed to load calendar events:', err);
     } finally {
       setCalendarLoading(false);
-    }
-  };
-
-  const loadDriveFiles = async () => {
-    try {
-      setDriveLoading(true);
-      const response = await apiAxios.get('/google/drive/auto-files');
-      setDriveFiles(response.data.files || []);
-    } catch (err) {
-      console.error('Failed to load drive files:', err);
-    } finally {
-      setDriveLoading(false);
     }
   };
 
