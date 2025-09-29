@@ -67,12 +67,14 @@ class AutoGoogleConnectionManager:
                 # Start continuous monitoring
                 asyncio.create_task(self._start_connection_monitoring())
                 
+                self._initialized = True
                 logger.info("✅ PRODUCTION: Automated Google connection system active")
             else:
                 logger.error("❌ PRODUCTION: Failed to initialize Google connection - missing credentials")
                 
         except Exception as e:
             logger.error(f"❌ PRODUCTION: Auto-connection initialization failed: {str(e)}")
+            self._initialized = True  # Mark as initialized even if failed to avoid infinite loops
     
     async def _load_service_account_credentials(self) -> bool:
         """Load and validate service account credentials"""
