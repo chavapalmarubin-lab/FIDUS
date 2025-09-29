@@ -791,7 +791,161 @@ ${documentRequestType === 'aml_kyc' ? `
     }
   };
 
-  if (!isAuthenticated) {
+  // Auto-check connection status on component mount
+  useEffect(() => {
+    checkAutoConnectionStatus();
+  }, []);
+
+  const [autoConnectionStatus, setAutoConnectionStatus] = useState(null);
+  const [autoConnected, setAutoConnected] = useState(false);
+
+  const checkAutoConnectionStatus = async () => {
+    try {
+      const response = await apiAxios.get('/admin/google/connection-status');
+      setAutoConnectionStatus(response.data);
+      
+      if (response.data.success && response.data.connection_status?.auto_managed) {
+        setAutoConnected(true);
+        // Auto-load data if connected
+        loadEmails();
+        loadCalendarEvents(); 
+        loadDriveFiles();
+      }
+    } catch (err) {
+      console.error('Auto connection check failed:', err);
+      setAutoConnected(false);
+    }
+  };
+
+  const forceReconnect = async () => {
+    try {
+      setLoading(true);
+      await apiAxios.post('/admin/google/force-reconnect');
+      
+      // Recheck status after reconnect
+      setTimeout(() => {
+        checkAutoConnectionStatus();
+        setLoading(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Force reconnect failed:', err);
+      setLoading(false);
+    }
+  };
+
+  // Show automatic connection status instead of manual OAuth
+  if (!autoConnected) {
+    if (autoConnectionStatus === null) {
+      return (
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle>Google Workspace Integration</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-12">
+            <div className="space-y-4">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+              <div className="text-slate-600">
+                Checking automatic Google connection status...
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (autoConnectionStatus?.success && autoConnectionStatus?.connection_status?.auto_managed) {
+      return (
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Google Workspace - Automatic Connection Active
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-8">
+            <div className="space-y-6">
+              <div className="text-green-600 text-lg font-medium">
+                ✅ Automatically Connected via Service Account
+              </div>
+              <div className="text-slate-600">
+                FIDUS maintains automatic connection to Google services. No manual authentication required.
+              </div>
+              
+              {/* Service Status Monitor */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {autoConnectionStatus.connection_status.services && Object.entries(autoConnectionStatus.connection_status.services).map(([service, status]) => (
+                  <div key={service} className="text-center">
+                    <div className={`p-3 rounded-lg ${status.connected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {status.connected ? '✅' : '❌'}
+                    </div>
+                    <div className="text-sm mt-1 capitalize font-medium">{service}</div>
+                    <div className="text-xs text-slate-500">
+                      {status.connected ? 'Connected' : 'Disconnected'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                onClick={() => setAutoConnected(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Access Google Workspace
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    } else {
+      // Connection issue - show reconnect option
+      return (
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Google Workspace - Connection Issue
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-8">
+            <div className="space-y-6">
+              <div className="text-amber-600 text-lg font-medium">
+                ⚠️ Automatic Connection Not Available
+              </div>
+              <div className="text-slate-600">
+                The automatic Google connection system is experiencing issues.
+              </div>
+              
+              {/* Connection Monitor */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="text-red-800 font-medium">Connection Status:</div>
+                <div className="text-red-600 text-sm mt-1">
+                  {autoConnectionStatus?.error || 'Service account connection failed'}
+                </div>
+              </div>
+              
+              <button 
+                onClick={forceReconnect}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Reconnecting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Force Reconnect
+                  </>
+                )}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+  }
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
