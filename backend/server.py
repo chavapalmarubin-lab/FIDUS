@@ -16597,11 +16597,6 @@ async def force_automatic_google_reconnection(current_user: dict = Depends(get_c
 # AUTOMATIC GOOGLE API ENDPOINTS - SERVICE ACCOUNT BASED
 # ===============================================================================
 
-@api_router.get("/google/test-automatic")
-async def test_automatic_endpoint():
-    """Test endpoint to verify automatic routes are working"""
-    return {"success": True, "message": "Automatic Google endpoints are registered", "test": "working"}
-
 @api_router.get("/google/gmail/auto-messages")
 async def get_automatic_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get Gmail messages using automatic service account (no OAuth required)"""
