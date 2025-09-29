@@ -313,29 +313,43 @@ class IndividualGoogleOAuthTest:
         except Exception as e:
             self.log_result("Authentication Requirements", False, f"Exception: {str(e)}")
     
-    def test_critical_api_endpoints(self):
-        """Test all critical API endpoints are responding"""
-        critical_endpoints = [
-            ("/health", "Health Check"),
-            ("/admin/clients", "Admin Clients"),
-            ("/investments/client/client_003", "Salvador Investments"),
-            ("/mt5/admin/accounts", "MT5 Accounts"),
-            ("/admin/fund-performance/dashboard", "Fund Performance"),
-            ("/admin/cashflow/overview", "Cash Flow Management")
-        ]
-        
-        for endpoint, name in critical_endpoints:
-            try:
-                response = self.session.get(f"{BACKEND_URL}{endpoint}")
-                if response.status_code == 200:
-                    self.log_result(f"API Endpoint - {name}", True, 
-                                  f"Endpoint responding: {endpoint}")
+    def test_google_oauth_environment_variables(self):
+        """Test that Google OAuth environment variables are properly configured"""
+        try:
+            # Test auth URL generation to verify environment variables
+            response = self.session.get(f"{BACKEND_URL}/admin/google/individual-auth-url")
+            
+            if response.status_code == 200:
+                data = response.json()
+                auth_url = data.get('auth_url', '')
+                
+                # Check for Google client ID in URL
+                if 'client_id=' in auth_url and len(auth_url) > 200:
+                    # Extract client ID from URL
+                    import re
+                    client_id_match = re.search(r'client_id=([^&]+)', auth_url)
+                    redirect_uri_match = re.search(r'redirect_uri=([^&]+)', auth_url)
+                    
+                    if client_id_match and redirect_uri_match:
+                        client_id = client_id_match.group(1)
+                        redirect_uri = redirect_uri_match.group(1)
+                        
+                        self.log_result("Google OAuth Environment Variables", True, 
+                                      "Google OAuth environment variables properly configured",
+                                      {"client_id_prefix": client_id[:20] + "...", 
+                                       "redirect_uri": redirect_uri})
+                    else:
+                        self.log_result("Google OAuth Environment Variables", False, 
+                                      "Could not extract OAuth parameters from URL")
                 else:
-                    self.log_result(f"API Endpoint - {name}", False, 
-                                  f"HTTP {response.status_code}: {endpoint}")
-            except Exception as e:
-                self.log_result(f"API Endpoint - {name}", False, 
-                              f"Exception on {endpoint}: {str(e)}")
+                    self.log_result("Google OAuth Environment Variables", False, 
+                                  "OAuth URL appears malformed or missing client_id")
+            else:
+                self.log_result("Google OAuth Environment Variables", False, 
+                              f"Could not test environment variables: HTTP {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Google OAuth Environment Variables", False, f"Exception: {str(e)}")
     
     def run_all_tests(self):
         """Run all Salvador data restoration verification tests"""
