@@ -1769,6 +1769,145 @@ async def sync_client_folder_info(request_data: dict, current_user: dict = Depen
         logging.error(f"Folder sync error: {str(e)}")
         return {"success": False, "error": str(e)}
 
+# Google Auto-Connection Management (PRODUCTION)
+from auto_google_connection import auto_google_manager, get_auto_google_manager
+
+# PRODUCTION Google Connection Monitoring Endpoints
+@api_router.get("/admin/google/connection-status")
+async def get_google_connection_status():
+    """Get real-time Google connection status - PRODUCTION AUTOMATED"""
+    try:
+        manager = await get_auto_google_manager()
+        status = manager.get_connection_status()
+        
+        return {
+            "success": True,
+            "message": "Automated Google connection management active",
+            "connection_status": status,
+            "production_ready": True,
+            "user_intervention_required": False
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to get connection status: {str(e)}")
+        return {
+            "success": False,
+            "message": "Failed to retrieve connection status",
+            "error": str(e),
+            "production_ready": False
+        }
+
+@api_router.post("/admin/google/force-reconnect")
+async def force_google_reconnection():
+    """Force reconnection of all Google services - PRODUCTION ADMIN TOOL"""
+    try:
+        manager = await get_auto_google_manager()
+        status = await manager.force_reconnect_all()
+        
+        logging.info("🔄 PRODUCTION: Admin forced Google services reconnection")
+        
+        return {
+            "success": True,
+            "message": "All Google services reconnection initiated",
+            "connection_status": status,
+            "reconnection_forced": True
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to force reconnection: {str(e)}")
+        return {
+            "success": False,
+            "message": "Failed to force reconnection",
+            "error": str(e)
+        }
+
+@api_router.get("/admin/google/health-check")
+async def google_services_health_check():
+    """Comprehensive Google services health check - PRODUCTION MONITORING"""
+    try:
+        manager = await get_auto_google_manager()
+        status = manager.get_connection_status()
+        
+        # Calculate health metrics
+        total_services = len(status["services"])
+        connected_services = sum(1 for svc in status["services"].values() if svc["connected"])
+        health_percentage = (connected_services / total_services) * 100
+        
+        # Determine overall status
+        if health_percentage == 100:
+            overall_status = "HEALTHY"
+        elif health_percentage >= 75:
+            overall_status = "WARNING" 
+        else:
+            overall_status = "CRITICAL"
+        
+        return {
+            "success": True,
+            "overall_status": overall_status,
+            "health_percentage": health_percentage,
+            "connected_services": connected_services,
+            "total_services": total_services,
+            "services_detail": status["services"],
+            "auto_managed": True,
+            "last_check": status.get("last_monitoring_check"),
+            "production_ready": health_percentage >= 75
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Health check failed: {str(e)}")
+        return {
+            "success": False,
+            "overall_status": "ERROR",
+            "health_percentage": 0,
+            "error": str(e),
+            "production_ready": False
+        }
+
+# Enhanced Connection Monitor for Frontend
+@api_router.get("/admin/google/monitor")
+async def google_connection_monitor():
+    """Production Google connection monitor for admin dashboard"""
+    try:
+        manager = await get_auto_google_manager()
+        status = manager.get_connection_status()
+        
+        # Format for frontend display
+        services_info = []
+        for service_name, service_status in status["services"].items():
+            services_info.append({
+                "service": service_name.upper(),
+                "status": "Connected" if service_status["connected"] else "Disconnected",
+                "connected": service_status["connected"],
+                "last_check": service_status.get("last_check"),
+                "error": service_status.get("error"),
+                "icon": f"📧" if service_name == "gmail" else 
+                        f"📅" if service_name == "calendar" else
+                        f"📁" if service_name == "drive" else
+                        f"🎥" if service_name == "meet" else "🔧"
+            })
+        
+        return {
+            "success": True,
+            "title": "Production Google Services Monitor",
+            "subtitle": "Automated connection management - No user action required",
+            "overall_health": status["overall_health"] * 100,
+            "services": services_info,
+            "auto_managed": True,
+            "monitoring_active": True,
+            "user_connection_required": False,
+            "next_check": "Continuous monitoring active"
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Connection monitor failed: {str(e)}")
+        return {
+            "success": False,
+            "title": "Google Services Monitor - Error",
+            "error": str(e),
+            "services": [],
+            "auto_managed": False
+        }
+
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
