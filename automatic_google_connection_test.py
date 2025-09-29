@@ -1,17 +1,31 @@
 #!/usr/bin/env python3
 """
 AUTOMATIC GOOGLE CONNECTION SYSTEM TESTING
-===========================================
+==========================================
 
-Testing the newly implemented automatic Google connection system that should eliminate 
-all manual intervention requirements.
+This test verifies the new automatic Google connection system as requested in the review:
 
-CRITICAL TESTS:
-1. Automatic Connection Initialization
-2. Existing Google Connection Endpoint (OVERRIDDEN)
-3. Google Connection Monitor Integration
-4. Database Verification
-5. System Health Confirmation
+1. **New Automatic Google Connection Endpoints**:
+   - Test `/api/admin/google/connection-status` - should return automatic connection status
+   - Test `/api/admin/google/monitor` - should return monitoring dashboard data
+   - Test `/api/admin/google/health-check` - should return health metrics
+   - Test `/api/admin/google/force-reconnect` - should trigger reconnection
+
+2. **New Automatic Google API Endpoints**:
+   - Test `/api/google/gmail/auto-messages` - should retrieve Gmail messages via service account
+   - Test `/api/google/calendar/auto-events` - should retrieve Calendar events via service account  
+   - Test `/api/google/drive/auto-files` - should retrieve Drive files via service account
+
+3. **Connection Status Verification**:
+   - Verify that the system reports "auto_managed": true
+   - Verify that the system reports "user_intervention_required": false
+   - Check if the automatic Google manager is initialized and working
+
+4. **Compare with Previous System**:
+   - Test the old manual endpoints to compare (like `/api/google/gmail/real-messages`)
+   - Verify that the new automatic endpoints return data without requiring OAuth
+
+Authentication: Use admin/password123 for all tests.
 """
 
 import requests
@@ -20,13 +34,10 @@ import sys
 from datetime import datetime
 import time
 
-# Configuration
-BACKEND_URL = "https://fidus-invest.emergent.host/api"
-ADMIN_CREDENTIALS = {
-    "username": "admin",
-    "password": "password123",
-    "user_type": "admin"
-}
+# Configuration - Use the correct backend URL from frontend/.env
+BACKEND_URL = "https://fidus-workspace-2.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
 
 class AutoGoogleConnectionTester:
     def __init__(self):
