@@ -1423,7 +1423,7 @@ async def login(login_data: LoginRequest):
         # MongoDB-only authentication - NO MOCK DATA
         user_doc = await db.users.find_one({
             "username": username,
-            "type": user_type,  # Fixed: use "type" field, not "user_type"
+            "user_type": user_type,  # Use user_type field for MongoDB schema
             "status": "active"
         })
         
