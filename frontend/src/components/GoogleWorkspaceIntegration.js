@@ -831,15 +831,21 @@ ${documentRequestType === 'aml_kyc' ? `
   const checkGoogleSetup = async () => {
     try {
       const response = await apiAxios.get('/admin/google/user-connection-status');
+      
       if (response.data.success && response.data.google_email) {
+        // User has Google credentials configured
         setGoogleSetupComplete(true);
-        // Load user's personal Google data
         loadEmails();
         loadCalendarEvents();
         loadDriveFiles();
+      } else {
+        // User needs to set up Google credentials
+        console.log('Google setup required for user');
+        setGoogleSetupComplete(false);
       }
     } catch (err) {
       console.error('Google setup check failed:', err);
+      // If endpoint fails, assume setup is needed
       setGoogleSetupComplete(false);
     }
   };
