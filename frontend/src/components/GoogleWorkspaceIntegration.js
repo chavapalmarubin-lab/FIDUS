@@ -795,13 +795,16 @@ ${documentRequestType === 'aml_kyc' ? `
     }
   };
 
-  // Get current user info on component mount
+  // Always check for token and show Google setup for admins
   useEffect(() => {
     const token = localStorage.getItem('fidus_token');
+    console.log('Token found:', !!token);
     
     if (token) {
       // Get current user info from token or API
       getCurrentUser();
+    } else {
+      console.log('No token found - user not authenticated');
     }
   }, []);
 
