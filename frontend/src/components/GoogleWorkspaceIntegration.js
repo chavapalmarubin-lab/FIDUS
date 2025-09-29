@@ -840,8 +840,36 @@ ${documentRequestType === 'aml_kyc' ? `
   const autoConnected = authenticated && googleSetupComplete;
   const autoConnectionStatus = { success: true };
 
-  // Show automatic connection status instead of manual OAuth
-  if (!autoConnected) {
+  // Show Google credential setup if admin hasn't connected their Google account yet
+  if (authenticated && !googleSetupComplete) {
+    return (
+      <div className="w-full space-y-6">
+        <GoogleCredentialSetup 
+          currentUser={currentUser}
+          onCredentialsSet={handleGoogleCredentialsSet}
+        />
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!authenticated) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>Google Workspace Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-12">
+          <div className="space-y-4">
+            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
+            <div className="text-slate-600">
+              Please login as an admin to access Google Workspace integration
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
     if (autoConnectionStatus === null) {
       return (
         <Card className="w-full max-w-4xl mx-auto">
