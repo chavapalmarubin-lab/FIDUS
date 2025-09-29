@@ -1150,7 +1150,7 @@ async def ensure_default_users_in_mongodb():
             "id": "admin_001",
             "user_id": "admin_001",
             "username": "admin",
-            "name": "Investment Committee", 
+            "name": "Chava Palma", 
             "email": "ic@fidus.com",
             "phone": "+1-555-0001",
             "type": "admin",
@@ -1158,7 +1158,8 @@ async def ensure_default_users_in_mongodb():
             "status": "active",
             "profile_picture": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
             "created_at": datetime.now(timezone.utc),
-            "notes": "Default admin account"
+            "notes": "Main admin account - Chava Palma",
+            "google_email": "chavapalmarubin@gmail.com"  # Link to your Google account
         },
         {
             "id": "admin_chava",
