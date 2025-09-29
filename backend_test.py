@@ -79,43 +79,41 @@ class IndividualGoogleOAuthTest:
             self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_database_cleanup_verification(self):
-        """Verify database cleanup was successful"""
+    def test_individual_google_status_endpoint(self):
+        """Test GET /admin/google/individual-status endpoint"""
         try:
-            # Check total clients count
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
-            if response.status_code == 200:
-                clients = response.json()
-                client_count = len(clients) if isinstance(clients, list) else clients.get('total_clients', 0)
-                
-                if client_count <= 2:  # Should have admin + Salvador only
-                    self.log_result("Database Cleanup - Client Count", True, 
-                                  f"Client count acceptable: {client_count} (should be ≤2)")
-                else:
-                    self.log_result("Database Cleanup - Client Count", False, 
-                                  f"Too many clients: {client_count} (should be ≤2)", {"clients": clients})
-            else:
-                self.log_result("Database Cleanup - Client Count", False, 
-                              f"Failed to get clients: HTTP {response.status_code}")
+            response = self.session.get(f"{BACKEND_URL}/admin/google/individual-status")
             
-            # Check total investments
-            response = self.session.get(f"{BACKEND_URL}/admin/investments")
             if response.status_code == 200:
-                investments = response.json()
-                investment_count = len(investments) if isinstance(investments, list) else investments.get('total_investments', 0)
+                data = response.json()
                 
-                if investment_count <= 2:  # Should have exactly Salvador's 2 investments
-                    self.log_result("Database Cleanup - Investment Count", True, 
-                                  f"Investment count correct: {investment_count} (should be ≤2)")
+                # Verify response structure
+                if data.get('success') and 'connected' in data and 'admin_info' in data:
+                    # Should show "No Google account connected" initially
+                    if not data.get('connected') and data.get('message') == "No Google account connected":
+                        self.log_result("Individual Google Status - Not Connected", True, 
+                                      "Correctly shows no Google account connected initially",
+                                      {"response": data})
+                    elif data.get('connected'):
+                        self.log_result("Individual Google Status - Connected", True, 
+                                      "Google account is connected for admin",
+                                      {"google_info": data.get('google_info', {})})
+                    else:
+                        self.log_result("Individual Google Status - Unexpected State", False, 
+                                      f"Unexpected connection state: {data.get('message')}", 
+                                      {"response": data})
                 else:
-                    self.log_result("Database Cleanup - Investment Count", False, 
-                                  f"Too many investments: {investment_count} (should be ≤2)")
+                    self.log_result("Individual Google Status - Invalid Response", False, 
+                                  "Response missing required fields", {"response": data})
+            elif response.status_code == 401:
+                self.log_result("Individual Google Status - Authentication", False, 
+                              "Endpoint requires admin authentication (expected behavior)")
             else:
-                self.log_result("Database Cleanup - Investment Count", False, 
-                              f"Failed to get investments: HTTP {response.status_code}")
+                self.log_result("Individual Google Status - HTTP Error", False, 
+                              f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_result("Database Cleanup Verification", False, f"Exception: {str(e)}")
+            self.log_result("Individual Google Status", False, f"Exception: {str(e)}")
     
     def test_salvador_client_profile(self):
         """Test Salvador's client profile exists with correct data"""
