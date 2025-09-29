@@ -1,41 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Badge } from './ui/badge';
-import { Alert, AlertDescription } from './ui/alert';
-import {
-  Mail,
-  Calendar,
-  FolderOpen,
-  FileSpreadsheet,
-  Send,
-  Plus,
-  Download,
-  Eye,
-  Users,
-  Clock,
-  FileText,
-  Paperclip,
-  Search,
-  Filter,
-  RefreshCw,
-  Video,
-  Edit3,
-  Share2,
-  Signature,
-  LogOut,
-  X,
-  AlertCircle,
-  MessageSquare,
-  Reply,
-  Forward,
-  CheckCircle
-} from 'lucide-react';
-import useGoogleAdmin from '../hooks/useGoogleAdmin';
-import apiAxios from '../utils/apiAxios';
-import GoogleCredentialSetup from './GoogleCredentialSetup';
+import React from 'react';
+import SimpleGoogleSetup from './SimpleGoogleSetup';
 
 const GoogleWorkspaceIntegration = () => {
   const [currentUser, setCurrentUser] = useState(null);
