@@ -19,12 +19,108 @@ function App() {
     // Check for OAuth callback parameters
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');  // Emergent OAuth
-    const googleAuthSuccess = urlParams.get('google_auth') === 'success';  // Direct Google OAuth
+    const googleAuthSuccess = urlParams.get('google_auth') === 'success';  // Direct Google OAuth (legacy)
     const googleAuthTab = urlParams.get('tab');
+    
+    // NEW: Individual Google OAuth callback parameters
+    const googleOAuthCode = urlParams.get('code');  // Individual Google OAuth authorization code
+    const googleOAuthState = urlParams.get('state');  // Individual Google OAuth state
+    const googleOAuthError = urlParams.get('error');  // Individual Google OAuth error
     
     console.log('URL params:', window.location.search);
     console.log('Session ID detected:', sessionId);
     console.log('Google Auth Success:', googleAuthSuccess);
+    console.log('Individual Google OAuth Code:', googleOAuthCode ? 'Present' : 'None');
+    console.log('Individual Google OAuth State:', googleOAuthState);
+    console.log('Individual Google OAuth Error:', googleOAuthError);
+    
+    // Handle Individual Google OAuth callback (NEW)
+    if (googleOAuthCode && googleOAuthState) {
+      console.log('✅ INDIVIDUAL GOOGLE OAUTH CALLBACK DETECTED - Processing...');
+      
+      // Process individual Google OAuth callback
+      const processIndividualOAuthCallback = async () => {
+        try {
+          console.log('📡 Processing individual Google OAuth callback...');
+          
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/individual-callback`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              code: googleOAuthCode,
+              state: googleOAuthState
+            })
+          });
+
+          console.log('🔍 Individual OAuth callback response status:', response.status);
+          const data = await response.json();
+          console.log('🔍 Individual OAuth callback response data:', data);
+          
+          if (data.success) {
+            console.log('✅ INDIVIDUAL GOOGLE OAUTH SUCCESS - Connection established');
+            
+            // Store authentication success for this admin
+            localStorage.setItem('individual_google_authenticated', 'true');
+            localStorage.setItem('individual_google_completed', new Date().toISOString());
+            
+            // Clean URL and redirect to Google Workspace tab
+            const baseUrl = window.location.origin + window.location.pathname;
+            const newUrl = `${baseUrl}?skip_animation=true&tab=google-workspace`;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Show success message and redirect
+            console.log('🚀 Individual Google authentication successful - redirecting to Google Workspace');
+            
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            console.error('❌ Individual Google OAuth failed:', data.message);
+            // Clean URL and redirect back
+            const baseUrl = window.location.origin + window.location.pathname;
+            const newUrl = `${baseUrl}?skip_animation=true&tab=google-workspace&oauth_error=${encodeURIComponent(data.message)}`;
+            window.history.replaceState({}, '', newUrl);
+            
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+          
+        } catch (error) {
+          console.error('❌ Individual Google OAuth processing failed:', error);
+          // Clean URL and redirect back with error
+          const baseUrl = window.location.origin + window.location.pathname;
+          const newUrl = `${baseUrl}?skip_animation=true&tab=google-workspace&oauth_error=${encodeURIComponent(error.message)}`;
+          window.history.replaceState({}, '', newUrl);
+          
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      };
+      
+      processIndividualOAuthCallback();
+      return;
+    }
+    
+    // Handle Individual Google OAuth error (NEW)
+    if (googleOAuthError) {
+      console.error('❌ INDIVIDUAL GOOGLE OAUTH ERROR:', googleOAuthError);
+      
+      // Clean URL and redirect back with error
+      const baseUrl = window.location.origin + window.location.pathname;
+      const newUrl = `${baseUrl}?skip_animation=true&tab=google-workspace&oauth_error=${encodeURIComponent(googleOAuthError)}`;
+      window.history.replaceState({}, '', newUrl);
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      return;
+    }
     
     // Handle Direct Google OAuth success
     if (googleAuthSuccess) {
