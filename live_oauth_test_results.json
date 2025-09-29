@@ -1,0 +1,93 @@
+{
+  "overall_status": "\u26a0\ufe0f GOOGLE OAUTH MOSTLY READY - MINOR ISSUES",
+  "success_rate": 83.33333333333334,
+  "total_tests": 12,
+  "passed_tests": 10,
+  "critical_failures": 1,
+  "test_results": [
+    {
+      "test": "Live Backend Health Check",
+      "success": true,
+      "details": "Backend is healthy: healthy",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.740439"
+    },
+    {
+      "test": "Admin Login on Live Backend",
+      "success": true,
+      "details": "Successfully authenticated as admin, token received",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.764576"
+    },
+    {
+      "test": "Emergent OAuth URL Generation",
+      "success": false,
+      "details": "OAuth URL missing live domain or invalid: https://auth.emergentagent.com/?redirect=https%3A%2F%2Ffidus-invest.emergent.host%2F%3Fsession_id%3D%7Bsession_id%7D",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.780191"
+    },
+    {
+      "test": "Direct Google OAuth URL Generation",
+      "success": true,
+      "details": "OAuth URL contains correct live redirect URI: https://fidus-invest.emergent.host/admin/google-callback",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.799426"
+    },
+    {
+      "test": "Google Client ID Verification",
+      "success": true,
+      "details": "Client ID present in OAuth URL: 909926639154-r3v0ka9...",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.799474"
+    },
+    {
+      "test": "OAuth Callback Endpoint Accessibility (/admin/google-callback)",
+      "success": true,
+      "details": "Endpoint accessible, returned 200",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.813570"
+    },
+    {
+      "test": "OAuth Callback Endpoint Accessibility (/api/admin/google-callback)",
+      "success": true,
+      "details": "Endpoint accessible, returned 200",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.838447"
+    },
+    {
+      "test": "OAuth Callback Endpoint Accessibility (/auth/google/callback)",
+      "success": true,
+      "details": "Endpoint accessible, returned 200",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.850742"
+    },
+    {
+      "test": "Google Connection Monitor",
+      "success": true,
+      "details": "Connection monitor accessible, overall status: disconnected, services: 4",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.866025"
+    },
+    {
+      "test": "Google Environment Variables",
+      "success": true,
+      "details": "Google services configured: ['gmail', 'calendar', 'drive', 'meet']",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.866070"
+    },
+    {
+      "test": "Google Profile Endpoint",
+      "success": false,
+      "details": "Google profile endpoint failed: 404 - {\"detail\":\"Not Found\"}",
+      "critical": false,
+      "timestamp": "2025-09-29T14:21:46.878955"
+    },
+    {
+      "test": "Gmail API Readiness",
+      "success": true,
+      "details": "Gmail API correctly indicates authentication required",
+      "critical": true,
+      "timestamp": "2025-09-29T14:21:46.895221"
+    }
+  ]
+}
