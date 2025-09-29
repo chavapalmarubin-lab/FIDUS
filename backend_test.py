@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-SALVADOR PALMA DATABASE RESTORATION VERIFICATION TEST
-====================================================
+INDIVIDUAL GOOGLE OAUTH ENDPOINTS TESTING
+=========================================
 
-This test verifies the critical database restoration as requested in the urgent review:
-- Clean database of test data contamination
-- Create Salvador's correct client profile (client_003)
-- Create exactly 2 investments: BALANCE ($1,263,485.40) and CORE ($4,000.00)
-- Create 2 MT5 accounts: DooTechnology (9928326) and VT Markets (15759667)
-- Verify all API endpoints work correctly
+This test verifies the new Individual Google OAuth endpoints as requested in the review:
+- GET /admin/google/individual-status - Should return connection status for current admin
+- GET /admin/google/individual-auth-url - Should generate Google OAuth URL for individual admin
+- GET /admin/google/all-connections - Should return all admin Google connections (master admin view)
+- POST /admin/google/individual-disconnect - Should disconnect admin's Google account
+
+Authentication: Use admin credentials (admin/password123)
 
 Expected Results:
-- Salvador Palma visible in clients
-- Exactly 2 investments with correct amounts
-- Both MT5 accounts properly linked
-- Total AUM: $1,267,485.40 (not millions)
+- All endpoints should require admin JWT authentication
+- individual-status should show "No Google account connected" initially
+- individual-auth-url should generate proper Google OAuth URL with all required scopes
+- all-connections should return empty list initially
+- individual-disconnect should return proper error message when no connection exists
 """
 
 import requests
