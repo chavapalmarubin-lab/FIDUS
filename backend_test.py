@@ -25,12 +25,12 @@ import sys
 from datetime import datetime
 import time
 
-# Configuration
+# Configuration - Use correct backend URL from frontend/.env
 BACKEND_URL = "https://fidus-google-sync.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
-class SalvadorDataRestorationTest:
+class IndividualGoogleOAuthTest:
     def __init__(self):
         self.session = requests.Session()
         self.admin_token = None
