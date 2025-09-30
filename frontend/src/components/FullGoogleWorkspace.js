@@ -382,31 +382,58 @@ const FullGoogleWorkspace = () => {
   // ==================== CALENDAR FUNCTIONS ====================
   
   const loadCalendarEvents = async () => {
+    setLoading(true);
     try {
-      // Mock calendar events
-      const mockEvents = [
-        {
-          id: '1',
-          title: 'Investment Strategy Meeting',
-          description: 'Quarterly review with portfolio manager',
-          start: '2025-09-25T14:00:00Z',
-          end: '2025-09-25T15:00:00Z',
-          attendees: ['client@example.com', 'advisor@fidus.com'],
-          meetLink: 'https://meet.google.com/abc-defg-hij'
-        },
-        {
-          id: '2',
-          title: 'Market Analysis Webinar',
-          description: 'Monthly market outlook and investment opportunities',
-          start: '2025-09-26T16:00:00Z',
-          end: '2025-09-26T17:00:00Z',
-          attendees: ['all-clients@fidus.com'],
-          meetLink: 'https://meet.google.com/xyz-uvwx-123'
-        }
-      ];
-      setEvents(mockEvents);
+      console.log('📅 Loading REAL Google Calendar events from API...');
+      
+      // Call the REAL Google Calendar API endpoint
+      const response = await apiAxios.get('/google/calendar/events');
+      
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`✅ Loaded ${response.data.length} real calendar events`);
+        
+        // Transform real Calendar data to our format
+        const transformedEvents = response.data.map(event => ({
+          id: event.id,
+          title: event.summary || event.title || 'No Title',
+          description: event.description || 'No description available',
+          start: event.start?.dateTime || event.start || new Date().toISOString(),
+          end: event.end?.dateTime || event.end || new Date().toISOString(),
+          attendees: event.attendees?.map(a => a.email) || [],
+          meetLink: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || null,
+          real_calendar_api: true
+        }));
+        
+        setEvents(transformedEvents);
+        console.log(`✅ Successfully loaded ${transformedEvents.length} events from your Google Calendar`);
+      } else {
+        console.warn('⚠️ No events returned from Calendar API, using fallback');
+        // Fallback message for when no events are returned
+        setEvents([{
+          id: 'no-events',
+          title: '📅 Connect to Google Calendar to see your events',
+          description: 'Complete Google OAuth authentication to load your real calendar events',
+          start: new Date().toISOString(),
+          end: new Date(Date.now() + 3600000).toISOString(), // 1 hour later
+          attendees: [],
+          meetLink: null
+        }]);
+      }
     } catch (error) {
-      console.error('Failed to load calendar events:', error);
+      console.error('❌ Failed to load real Calendar events:', error);
+      
+      // Show error message instead of mock data
+      setEvents([{
+        id: 'error-calendar',
+        title: '⚠️ Calendar API Connection Error',
+        description: `Error loading Calendar: ${error.message}. Please check your Google OAuth connection.`,
+        start: new Date().toISOString(),
+        end: new Date(Date.now() + 3600000).toISOString(),
+        attendees: [],
+        meetLink: null
+      }]);
+    } finally {
+      setLoading(false);
     }
   };
 
