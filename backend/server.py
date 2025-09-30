@@ -6731,6 +6731,10 @@ class MockMT5Service:
                 
                 # Generate mock trade history
                 self._generate_mock_trade_history(account_id)
+        except Exception as e:
+            logging.error(f"Failed to initialize mock MT5 data: {str(e)}")
+            # Continue with empty accounts if MongoDB fails
+            pass
     
     def _generate_mock_positions(self, account_id):
         """Generate mock open positions"""
