@@ -892,6 +892,49 @@ const FullGoogleWorkspace = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Sheets Tab */}
+        <TabsContent value="sheets" className="mt-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Google Sheets</CardTitle>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Sheet
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Google Sheets Integration
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Create and manage spreadsheets for financial data, client portfolios, and reporting
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <FileText className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <h4 className="font-medium text-sm">Portfolio Tracker</h4>
+                    <p className="text-xs text-gray-600 mt-1">Track client investments and performance</p>
+                  </div>
+                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <FileText className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <h4 className="font-medium text-sm">Financial Reports</h4>
+                    <p className="text-xs text-gray-600 mt-1">Generate comprehensive financial reports</p>
+                  </div>
+                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                    <h4 className="font-medium text-sm">CRM Data</h4>
+                    <p className="text-xs text-gray-600 mt-1">Export and analyze client data</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Compose Email Modal */}
