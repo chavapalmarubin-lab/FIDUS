@@ -64,6 +64,9 @@ const FullGoogleWorkspace = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
+  // Sheets State
+  const [sheets, setSheets] = useState([]);
+
   useEffect(() => {
     // Load initial connection status and try to load emails if connected
     const initializeGoogleWorkspace = async () => {
