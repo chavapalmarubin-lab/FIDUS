@@ -33,6 +33,10 @@ import jwt
 import requests
 from collections import defaultdict
 
+# JWT Authentication imports
+from passlib.context import CryptContext
+from passlib.hash import bcrypt
+
 # MongoDB Integration
 from mongodb_integration import mongodb_manager
 
