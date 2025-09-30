@@ -1318,7 +1318,7 @@ class IndividualGoogleOAuth:
 
 # Initialize individual Google OAuth manager
 individual_google_oauth = IndividualGoogleOAuth()
-MOCK_USERS = {}  # DEPRECATED: MongoDB is the single source of truth
+# MOCK_USERS completely removed - MongoDB is the single source of truth
 
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     """Generate mock transaction data"""
