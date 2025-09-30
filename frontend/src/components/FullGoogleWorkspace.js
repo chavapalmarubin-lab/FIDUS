@@ -547,24 +547,26 @@ const FullGoogleWorkspace = () => {
               )}
               
               {/* Connect to Google Button */}
-              {!connectionStatus.success && (
-                <Button 
-                  onClick={handleConnectToGoogle}
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {loading ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Connect Google Workspace
-                    </>
-                  )}
-                </Button>
+              {(!connectionStatus.connected || !connectionStatus.success) && (
+                <div className="mt-3">
+                  <Button 
+                    onClick={handleConnectToGoogle}
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Connect Google Workspace
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
             
