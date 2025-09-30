@@ -597,8 +597,9 @@ const FullGoogleWorkspace = () => {
         loadCalendarEvents();
       } else if (activeTab === 'drive') {
         loadDriveFiles();
+      } else if (activeTab === 'sheets') {
+        loadSheets();
       }
-      // Sheets will be added later
     }
   }, [activeTab, connectionStatus]);
 
