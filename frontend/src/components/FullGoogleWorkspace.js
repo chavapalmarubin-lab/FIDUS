@@ -558,10 +558,20 @@ const FullGoogleWorkspace = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'calendar') {
-      loadCalendarEvents();
+    // Load data when tab changes and user is connected
+    if (connectionStatus?.connected && !connectionStatus?.is_expired) {
+      console.log(`🔄 Tab changed to ${activeTab}, loading data...`);
+      
+      if (activeTab === 'gmail') {
+        loadEmails();
+      } else if (activeTab === 'calendar') {
+        loadCalendarEvents();
+      } else if (activeTab === 'drive') {
+        loadDriveFiles();
+      }
+      // Sheets will be added later
     }
-  }, [activeTab]);
+  }, [activeTab, connectionStatus]);
 
   return (
     <div className="w-full space-y-6">
