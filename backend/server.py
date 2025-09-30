@@ -8822,7 +8822,7 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
                 "connected_at": tokens.get('connected_at', ''),
                 "last_used": tokens.get('last_used', '')
             },
-            "scopes": tokens.get('granted_scopes', []),
+            "scopes": tokens.get('granted_scopes', []) or (tokens.get('scope', '').split(' ') if tokens.get('scope') else []),
             "token_expires_at": expires_at
         }
         
