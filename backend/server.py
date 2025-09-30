@@ -1503,9 +1503,10 @@ async def refresh_token(request: Request):
         
         # Create new token with fresh expiration
         user_data = {
-            "id": payload["user_id"],
+            "user_id": payload.get("user_id") or payload.get("id"),
+            "id": payload.get("id") or payload.get("user_id"),
             "username": payload["username"],
-            "type": payload["user_type"]
+            "type": payload.get("type") or payload.get("user_type")
         }
         
         new_token = create_jwt_token(user_data)
