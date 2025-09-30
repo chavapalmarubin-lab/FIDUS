@@ -7619,14 +7619,14 @@ async def get_all_clients_details():
         # Get clients from MongoDB instead of MOCK_USERS
         async for user in db.users.find({"type": "client", "status": "active"}):
             client_id = user["id"]
-                
-                # Get fund allocations
-                client_allocations = investor_allocations.get(client_id, [])
-                total_fund_value = sum(alloc.current_value for alloc in client_allocations)
-                
-                # Get MT5 account
-                mt5_account = await mock_mt5.get_account_info(client_id)
-                mt5_positions = await mock_mt5.get_positions(client_id)
+            
+            # Get fund allocations
+            client_allocations = investor_allocations.get(client_id, [])
+            total_fund_value = sum(alloc.current_value for alloc in client_allocations)
+            
+            # Get MT5 account
+            mt5_account = await mock_mt5.get_account_info(client_id)
+            mt5_positions = await mock_mt5.get_positions(client_id)
                 
                 # Get recent capital flows
                 client_flows = capital_flows.get(client_id, [])
