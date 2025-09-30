@@ -7600,9 +7600,9 @@ async def get_all_clients_details():
     try:
         clients_details = []
         
-        for username, user in MOCK_USERS.items():
-            if user["type"] == "client":
-                client_id = user["id"]
+        # Get clients from MongoDB instead of MOCK_USERS
+        async for user in db.users.find({"type": "client", "status": "active"}):
+            client_id = user["id"]
                 
                 # Get fund allocations
                 client_allocations = investor_allocations.get(client_id, [])
