@@ -12241,28 +12241,17 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
             "error": None if calendar_connected else "Calendar access not granted in OAuth"
         }
         
-        # Test Drive API
-        try:
-            drive_service = build('drive', 'v3', credentials=credentials)
-            # Make actual API call to test connection
-            drive_result = drive_service.files().list(pageSize=1).execute()
-            
-            services_results["drive"] = {
-                "connected": True,
-                "status": "Connected",
-                "files_accessible": len(drive_result.get('files', [])),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "service_account_real_api",
-                "auto_managed": True
-            }
-        except Exception as e:
-            services_results["drive"] = {
-                "connected": False,
-                "status": "API Error",
-                "error": str(e),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "auto_managed": False
-            }
+        # Check Drive scope
+        drive_connected = any('drive' in scope for scope in granted_scopes)
+        services_results["drive"] = {
+            "connected": drive_connected,
+            "status": "Connected" if drive_connected else "Not authorized",
+            "user_email": user_email,
+            "user_name": user_name,
+            "last_checked": datetime.now(timezone.utc).isoformat(),
+            "method": "individual_oauth",
+            "error": None if drive_connected else "Drive access not granted in OAuth"
+        }
         
         # Meet API (placeholder - Google Meet API is complex)
         services_results["meet"] = {
