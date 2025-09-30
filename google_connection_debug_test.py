@@ -303,15 +303,29 @@ class GoogleConnectionDebugTest:
             # Check individual status
             individual_connected = individual_data.get('connected', False)
             
-            # Count failed API tests
+            # Count working API tests
+            working_apis = []
             failed_apis = []
             for result in self.test_results:
-                if not result['success'] and 'Auth Required' in result['test']:
+                if 'Data Retrieved' in result['test'] and result['success']:
+                    api_name = result['test'].split(' - ')[0]
+                    working_apis.append(api_name)
+                elif not result['success'] and 'Auth Required' in result['test']:
                     api_name = result['test'].split(' - ')[0]
                     failed_apis.append(api_name)
             
-            # Analyze discrepancy
-            if monitor_connected and not individual_connected:
+            # Analyze discrepancy - FOUND THE ISSUE!
+            if not monitor_connected and individual_connected and len(working_apis) > 0:
+                self.log_result("Discrepancy Analysis - FOUND ROOT CAUSE", False, 
+                              f"CRITICAL ISSUE: Monitor shows disconnected but individual status shows connected and {len(working_apis)} APIs are working",
+                              {
+                                  "monitor_status": "disconnected", 
+                                  "individual_status": "connected",
+                                  "working_apis": working_apis,
+                                  "monitor_services": {k: v.get('status', 'unknown') for k, v in monitor_services.items()},
+                                  "root_cause": "Connection monitor endpoint is not detecting the individual Google OAuth connection properly"
+                              })
+            elif monitor_connected and not individual_connected:
                 self.log_result("Discrepancy Analysis - Monitor vs Individual", False, 
                               "Monitor shows connected but individual status shows not connected",
                               {"monitor_status": "connected", "individual_status": "not connected"})
@@ -327,7 +341,8 @@ class GoogleConnectionDebugTest:
                               "Unable to determine clear discrepancy pattern",
                               {"monitor_connected": monitor_connected, 
                                "individual_connected": individual_connected,
-                               "failed_apis": failed_apis})
+                               "failed_apis": failed_apis,
+                               "working_apis": working_apis})
                 
         except Exception as e:
             self.log_result("Discrepancy Analysis", False, f"Exception: {str(e)}")
