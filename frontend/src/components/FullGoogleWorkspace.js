@@ -615,7 +615,7 @@ const FullGoogleWorkspace = () => {
 
       {/* Main Workspace */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 bg-slate-100">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-100">
           <TabsTrigger value="gmail" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900">
             <Mail className="h-4 w-4 mr-2" />
             Gmail
@@ -627,6 +627,10 @@ const FullGoogleWorkspace = () => {
           <TabsTrigger value="drive" className="data-[state=active]:bg-yellow-50 data-[state=active]:text-yellow-900">
             <FolderOpen className="h-4 w-4 mr-2" />
             Drive
+          </TabsTrigger>
+          <TabsTrigger value="sheets" className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-900">
+            <FileText className="h-4 w-4 mr-2" />
+            Sheets
           </TabsTrigger>
         </TabsList>
 
