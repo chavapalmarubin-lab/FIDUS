@@ -1464,7 +1464,9 @@ async def login(login_data: LoginRequest):
             "type": user_doc["type"]
         }
         
+        logging.info(f"🔍 Creating JWT token with data: {token_data}")
         jwt_token = create_jwt_token(token_data)
+        logging.info(f"🔍 Created JWT token: {jwt_token[:50]}...")
         user_response_dict["token"] = jwt_token
         
         return UserResponse(**user_response_dict)
