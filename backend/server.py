@@ -12253,13 +12253,16 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
             "error": None if drive_connected else "Drive access not granted in OAuth"
         }
         
-        # Meet API (placeholder - Google Meet API is complex)
+        # Meet API (based on OAuth scopes - Meet API is complex)
+        meet_connected = any('meet' in scope.lower() for scope in granted_scopes)
         services_results["meet"] = {
-            "connected": True,
-            "status": "Service Account Ready",
+            "connected": meet_connected,
+            "status": "Connected" if meet_connected else "Not authorized",
+            "user_email": user_email,
+            "user_name": user_name,
             "last_checked": datetime.now(timezone.utc).isoformat(),
-            "method": "service_account_ready",
-            "auto_managed": True,
+            "method": "individual_oauth",
+            "error": None if meet_connected else "Meet access not granted in OAuth",
             "note": "Meet API requires additional setup"
         }
         
