@@ -472,53 +472,61 @@ const FullGoogleWorkspace = () => {
   // ==================== DRIVE FUNCTIONS ====================
   
   const loadDriveFiles = async () => {
+    setLoading(true);
     try {
-      const result = await googleCRMIntegration.getDriveFiles(50);
-      if (result.success) {
-        // Mock drive files
-        const mockFiles = [
-          {
-            id: '1',
-            name: 'Investment Agreement - John Doe.pdf',
-            mimeType: 'application/pdf',
-            size: '2.3 MB',
-            createdTime: '2025-09-20T10:00:00Z',
-            modifiedTime: '2025-09-20T10:00:00Z',
-            shared: true
-          },
-          {
-            id: '2',
-            name: 'Portfolio Analysis Q3 2025.xlsx',
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            size: '1.8 MB',
-            createdTime: '2025-09-15T14:30:00Z',
-            modifiedTime: '2025-09-22T16:45:00Z',
-            shared: false
-          },
-          {
-            id: '3',
-            name: 'Client Presentation Template.pptx',
-            mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            size: '5.2 MB',
-            createdTime: '2025-09-10T09:15:00Z',
-            modifiedTime: '2025-09-18T11:20:00Z',
-            shared: true
-          },
-          {
-            id: '4',
-            name: 'AML KYC Documents',
-            mimeType: 'application/vnd.google-apps.folder',
-            size: '—',
-            createdTime: '2025-09-01T08:00:00Z',
-            modifiedTime: '2025-09-23T17:30:00Z',
-            shared: false,
-            isFolder: true
-          }
-        ];
-        setDriveFiles(mockFiles);
+      console.log('💾 Loading REAL Google Drive files from API...');
+      
+      // Call the REAL Google Drive API endpoint
+      const response = await apiAxios.get('/google/drive/real-files');
+      
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`✅ Loaded ${response.data.length} real drive files`);
+        
+        // Transform real Drive data to our format
+        const transformedFiles = response.data.map(file => ({
+          id: file.id,
+          name: file.name,
+          mimeType: file.mimeType || 'application/octet-stream',
+          size: file.size ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : '—',
+          createdTime: file.createdTime || new Date().toISOString(),
+          modifiedTime: file.modifiedTime || new Date().toISOString(),
+          shared: file.shared || false,
+          isFolder: file.mimeType === 'application/vnd.google-apps.folder',
+          real_drive_api: true
+        }));
+        
+        setDriveFiles(transformedFiles);
+        console.log(`✅ Successfully loaded ${transformedFiles.length} files from your Google Drive`);
+      } else {
+        console.warn('⚠️ No files returned from Drive API, using fallback');
+        // Fallback message for when no files are returned
+        setDriveFiles([{
+          id: 'no-files',
+          name: '💾 Connect to Google Drive to see your files',
+          mimeType: 'text/plain',
+          size: '—',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString(),
+          shared: false,
+          isFolder: false
+        }]);
       }
     } catch (error) {
-      console.error('Failed to load Drive files:', error);
+      console.error('❌ Failed to load real Drive files:', error);
+      
+      // Show error message instead of mock data
+      setDriveFiles([{
+        id: 'error-drive',
+        name: '⚠️ Drive API Connection Error',
+        mimeType: 'text/plain',
+        size: '—',
+        createdTime: new Date().toISOString(),
+        modifiedTime: new Date().toISOString(),
+        shared: false,
+        isFolder: false
+      }]);
+    } finally {
+      setLoading(false);
     }
   };
 
