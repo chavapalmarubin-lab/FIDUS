@@ -6693,9 +6693,23 @@ class MockMT5Service:
     
     def _initialize_mock_data(self):
         """Initialize mock trading data for clients"""
-        # Create mock accounts for existing clients
-        for username, user in MOCK_USERS.items():
-            if user["type"] == "client":
+        # Create mock accounts for existing clients from MongoDB
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            # Get clients from MongoDB instead of MOCK_USERS
+            async def get_clients():
+                clients = []
+                async for user in db.users.find({"type": "client", "status": "active"}):
+                    clients.append(user)
+                return clients
+            
+            clients = loop.run_until_complete(get_clients())
+            loop.close()
+            
+            for user in clients:
                 account_id = f"mt5_{user['id']}"
                 self.accounts[account_id] = {
                     "client_id": user["id"],
