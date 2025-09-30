@@ -560,6 +560,32 @@ const FullGoogleWorkspace = () => {
     }
   };
 
+  // ==================== SHEETS FUNCTIONS ====================
+  
+  const loadSheets = async () => {
+    setLoading(true);
+    try {
+      console.log('📊 Loading REAL Google Sheets from API...');
+      
+      // Call the REAL Google Sheets API endpoint
+      const response = await apiAxios.get('/google/sheets/list');
+      
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`✅ Loaded ${response.data.length} real sheets`);
+        setSheets(response.data);
+        console.log(`✅ Successfully loaded ${response.data.length} sheets from your Google Sheets`);
+      } else {
+        console.warn('⚠️ No sheets returned from Sheets API, using fallback');
+        setSheets([]);
+      }
+    } catch (error) {
+      console.error('❌ Failed to load real Sheets:', error);
+      setSheets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Load data when tab changes and user is connected
     if (connectionStatus?.connected && !connectionStatus?.is_expired) {
