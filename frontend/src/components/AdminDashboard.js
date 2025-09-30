@@ -437,9 +437,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             <SimpleIndividualGoogleWorkspace />
           </TabsContent>
 
-          <TabsContent value="google-monitor" className="mt-6">
-            <GoogleConnectionMonitor />
-          </TabsContent>
+          {/* Google Connection Monitor content removed - redundant with Google Workspace integration */}
 
           <TabsContent value="documents" className="mt-6">
             <ApplicationDocuments />
