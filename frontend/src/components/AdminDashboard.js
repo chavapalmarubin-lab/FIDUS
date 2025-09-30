@@ -24,7 +24,7 @@ import UserAdministration from "./UserAdministration";
 import FullGoogleWorkspace from './FullGoogleWorkspace';
 import RealGoogleWorkspace from './RealGoogleWorkspace';
 import SimpleIndividualGoogleWorkspace from './SimpleIndividualGoogleWorkspace';
-import GoogleConnectionMonitor from './GoogleConnectionMonitor';
+// GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
   Line,
