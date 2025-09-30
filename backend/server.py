@@ -1449,7 +1449,7 @@ async def login(login_data: LoginRequest):
         user_response_dict = {
             "id": user_doc["id"],  # Fixed: use "id" field, not "user_id"
             "username": user_doc["username"], 
-            "name": user_doc["name"],
+            "name": user_doc["name"] + " [JWT-FIXED]",  # Debug marker
             "email": user_doc["email"],
             "type": user_doc["type"],  # Fixed: use "type" field, not "user_type"
             "profile_picture": user_doc.get("profile_picture", ""),
