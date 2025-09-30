@@ -29,6 +29,15 @@ const SimpleIndividualGoogleWorkspace = () => {
   const checkGoogleConnectionStatus = async () => {
     try {
       setLoading(true);
+      
+      // Check if user is authenticated first
+      const token = localStorage.getItem('fidus_token');
+      if (!token) {
+        setError('Please login as admin to access Google Workspace integration');
+        setLoading(false);
+        return;
+      }
+      
       const response = await apiAxios.get('/admin/google/individual-status');
       
       if (response.data.success) {
@@ -37,7 +46,15 @@ const SimpleIndividualGoogleWorkspace = () => {
       }
     } catch (err) {
       console.error('❌ Failed to check Google status:', err);
-      setError('Failed to check Google connection status');
+      
+      // Handle specific authentication errors
+      if (err.response?.status === 401) {
+        setError('Authentication required. Please login as admin to access Google integration.');
+      } else if (err.response?.data?.detail) {
+        setError(`API Error: ${err.response.data.detail}`);
+      } else {
+        setError('Failed to check Google connection status');
+      }
     } finally {
       setLoading(false);
     }
