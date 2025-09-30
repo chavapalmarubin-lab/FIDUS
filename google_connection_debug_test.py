@@ -441,7 +441,30 @@ class GoogleConnectionDebugTest:
         # ROOT CAUSE ANALYSIS
         print("🔬 ROOT CAUSE ANALYSIS:")
         
-        if auth_issues and len(auth_issues) >= 3:
+        # Check for the specific discrepancy we found
+        root_cause_found = [r for r in self.test_results if not r['success'] and 'FOUND ROOT CAUSE' in r['test']]
+        if root_cause_found:
+            issue = root_cause_found[0]
+            print("🎯 ROOT CAUSE IDENTIFIED:")
+            print("❌ CRITICAL ISSUE: Connection Monitor Endpoint Bug")
+            print("   • Individual Google OAuth is working correctly")
+            print("   • All Google APIs (Gmail, Calendar, Drive) are functional")
+            print("   • Connection monitor endpoint is not detecting individual OAuth properly")
+            print("   • Monitor shows 'disconnected' while APIs work perfectly")
+            print()
+            print("🔧 RECOMMENDED FIXES:")
+            print("   1. Fix /api/google/connection/test-all endpoint to check individual OAuth tokens")
+            print("   2. Update monitor logic to use individual_google_oauth.get_admin_google_tokens()")
+            print("   3. Ensure monitor reflects actual OAuth connection status")
+            print("   4. Test monitor endpoint after fixing OAuth detection")
+            print()
+            print("📊 EVIDENCE:")
+            details = issue.get('details', {})
+            print(f"   • Individual Status: {details.get('individual_status', 'unknown')}")
+            print(f"   • Monitor Status: {details.get('monitor_status', 'unknown')}")
+            print(f"   • Working APIs: {', '.join(details.get('working_apis', []))}")
+            print(f"   • Google Account: chavapalmarubin@gmail.com")
+        elif auth_issues and len(auth_issues) >= 3:
             print("❌ PRIMARY ISSUE: Google OAuth tokens are missing or invalid")
             print("   • All Google API endpoints require authentication")
             print("   • Individual Google OAuth connection not properly established")
