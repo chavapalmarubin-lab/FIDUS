@@ -2377,6 +2377,77 @@ async def update_client_details(client_id: str, update_data: dict):
         logging.error(f"❌ Failed to update client {client_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update client: {str(e)}")
 
+@api_router.put("/clients/{client_id}")
+async def update_client(client_id: str, update_data: dict, current_user: dict = Depends(get_current_admin_user)):
+    """Update client details - Frontend-compatible endpoint (requires admin auth)"""
+    try:
+        # Check if client exists in MongoDB
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Validate email format if being updated
+        new_email = update_data.get("email")
+        if new_email:
+            import re
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, new_email):
+                raise HTTPException(status_code=400, detail="Invalid email format")
+            
+            # Check if email already exists for another client
+            existing_client = await db.users.find_one({"email": new_email, "id": {"$ne": client_id}})
+            if existing_client:
+                raise HTTPException(status_code=400, detail="Email already exists for another client")
+        
+        # Prepare update fields
+        update_fields = {}
+        allowed_fields = ["name", "email", "phone", "notes", "status"]
+        
+        for field in allowed_fields:
+            if field in update_data:
+                update_fields[field] = update_data[field]
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        # Add timestamp
+        update_fields["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update in MongoDB
+        result = await db.users.update_one(
+            {"id": client_id, "type": "client"},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update client")
+        
+        # Get updated client data
+        updated_client = await db.users.find_one({"id": client_id, "type": "client"})
+        
+        logging.info(f"✅ Admin updated client {client_id}: {list(update_fields.keys())}")
+        
+        return {
+            "success": True,
+            "message": "Client details updated successfully",
+            "client": {
+                "id": updated_client["id"],
+                "username": updated_client["username"],
+                "name": updated_client["name"],
+                "email": updated_client["email"],
+                "phone": updated_client.get("phone", ""),
+                "notes": updated_client.get("notes", ""),
+                "status": updated_client.get("status", "active"),
+                "updated_at": updated_client.get("updated_at", datetime.now(timezone.utc)).isoformat() if isinstance(updated_client.get("updated_at"), datetime) else updated_client.get("updated_at", datetime.now(timezone.utc).isoformat())
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Failed to update client {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update client: {str(e)}")
+
 @api_router.get("/admin/clients/{client_id}/documents")
 async def get_client_documents(client_id: str):
     """Get all documents for a specific client - MONGODB ONLY"""
