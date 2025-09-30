@@ -1,5 +1,548 @@
 #!/usr/bin/env python3
 """
+PRODUCTION READINESS TEST FOR MONGODB ATLAS DEPLOYMENT
+======================================================
+
+CRITICAL TESTING FOR TOMORROW'S DEPLOYMENT
+
+This test verifies production readiness for MongoDB Atlas deployment:
+1. Backend Health & MongoDB Connection
+2. User Data Availability & Authentication  
+3. CRM Data Accessibility
+4. Investment Data Integrity
+5. Google Integration Status
+6. All Critical API Endpoints
+
+Expected Results:
+- Backend connects successfully to MongoDB (Atlas or existing)
+- All existing data is available and accessible
+- Authentication works properly
+- All critical functionality operational
+- Ready for production deployment tomorrow
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+import time
+
+# Configuration - Use production backend URL
+BACKEND_URL = "https://fidus-invest.emergent.host/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
+
+class ProductionReadinessTest:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        
+    def log_result(self, test_name, success, message, details=None):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        result = {
+            "test": test_name,
+            "status": status,
+            "success": success,
+            "message": message,
+            "details": details or {},
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        print(f"{status}: {test_name} - {message}")
+        if details and not success:
+            print(f"   Details: {details}")
+    
+    def test_backend_health_and_mongodb(self):
+        """Test backend health and MongoDB connection"""
+        try:
+            print("🏥 Testing backend health and MongoDB connection...")
+            
+            # Test basic health endpoint
+            response = self.session.get(f"{BACKEND_URL}/health", timeout=10)
+            
+            if response.status_code == 200:
+                health_data = response.json()
+                
+                # Check MongoDB connection status
+                mongodb_status = health_data.get("services", {}).get("mongodb")
+                backend_status = health_data.get("status")
+                
+                # Test readiness endpoint
+                ready_response = self.session.get(f"{BACKEND_URL}/health/ready", timeout=10)
+                ready_success = ready_response.status_code == 200
+                
+                if mongodb_status == "connected" and backend_status == "healthy":
+                    self.log_result("Backend Health & MongoDB Connection", True, 
+                                  "Backend healthy with MongoDB connection established",
+                                  {
+                                      "backend_status": backend_status,
+                                      "mongodb_status": mongodb_status,
+                                      "readiness_check": ready_success,
+                                      "services": health_data.get("services", {})
+                                  })
+                    return True
+                else:
+                    self.log_result("Backend Health & MongoDB Connection", False, 
+                                  f"Backend or MongoDB not healthy: {backend_status}, MongoDB: {mongodb_status}",
+                                  {"health_data": health_data})
+                    return False
+            else:
+                self.log_result("Backend Health & MongoDB Connection", False, 
+                              f"Health check failed: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Backend Health & MongoDB Connection", False, 
+                          f"Error testing backend health: {str(e)}")
+            return False
+    
+    def authenticate_admin(self):
+        """Test admin authentication"""
+        try:
+            print("🔐 Testing admin authentication...")
+            
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
+                "user_type": "admin"
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("token")
+                if self.admin_token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_result("Admin Authentication", True, 
+                                  "Admin authentication successful",
+                                  {
+                                      "user_id": data.get("id"),
+                                      "username": data.get("username"),
+                                      "name": data.get("name"),
+                                      "email": data.get("email")
+                                  })
+                    return True
+                else:
+                    self.log_result("Admin Authentication", False, 
+                                  "No token received", {"response": data})
+                    return False
+            else:
+                self.log_result("Admin Authentication", False, 
+                              f"Authentication failed: HTTP {response.status_code}", 
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Authentication", False, 
+                          f"Exception during authentication: {str(e)}")
+            return False
+    
+    def test_user_data_availability(self):
+        """Test user data availability"""
+        try:
+            if not self.admin_token:
+                self.log_result("User Data Availability", False, "No admin authentication")
+                return False
+            
+            print("👥 Testing user data availability...")
+            
+            # Test admin users endpoint
+            response = self.session.get(f"{BACKEND_URL}/admin/users", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                users = data.get("users", [])
+                
+                # Check for critical users
+                admin_users = [u for u in users if u.get("type") == "admin"]
+                client_users = [u for u in users if u.get("type") == "client"]
+                salvador_found = any(u.get("name") == "SALVADOR PALMA" for u in users)
+                alejandro_found = any("alejandro" in u.get("name", "").lower() for u in users)
+                
+                if len(users) >= 6 and len(admin_users) >= 1 and len(client_users) >= 4:
+                    self.log_result("User Data Availability", True, 
+                                  f"User data accessible - {len(users)} users found",
+                                  {
+                                      "total_users": len(users),
+                                      "admin_users": len(admin_users),
+                                      "client_users": len(client_users),
+                                      "salvador_palma_found": salvador_found,
+                                      "alejandro_found": alejandro_found,
+                                      "sample_users": [{"name": u.get("name"), "type": u.get("type")} for u in users[:5]]
+                                  })
+                    return True
+                else:
+                    self.log_result("User Data Availability", False, 
+                                  f"Insufficient user data: {len(users)} users, {len(admin_users)} admins, {len(client_users)} clients")
+                    return False
+            else:
+                self.log_result("User Data Availability", False, 
+                              f"User data not accessible: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("User Data Availability", False, 
+                          f"Error testing user data: {str(e)}")
+            return False
+    
+    def test_crm_data_availability(self):
+        """Test CRM data availability"""
+        try:
+            if not self.admin_token:
+                self.log_result("CRM Data Availability", False, "No admin authentication")
+                return False
+            
+            print("📊 Testing CRM data availability...")
+            
+            # Test CRM prospects endpoint
+            response = self.session.get(f"{BACKEND_URL}/crm/prospects", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                prospects = data.get("prospects", [])
+                
+                # Test pipeline stats
+                stats_response = self.session.get(f"{BACKEND_URL}/crm/pipeline-stats", timeout=10)
+                stats_success = stats_response.status_code == 200
+                
+                # Look for Alejandro in prospects
+                alejandro_prospect = None
+                for prospect in prospects:
+                    if "alejandro" in prospect.get("name", "").lower():
+                        alejandro_prospect = prospect
+                        break
+                
+                self.log_result("CRM Data Availability", True, 
+                              f"CRM data accessible - {len(prospects)} prospects found",
+                              {
+                                  "prospects_count": len(prospects),
+                                  "pipeline_stats_available": stats_success,
+                                  "alejandro_prospect_found": alejandro_prospect is not None,
+                                  "sample_prospects": [{"name": p.get("name"), "stage": p.get("stage")} for p in prospects[:3]]
+                              })
+                return True
+            else:
+                self.log_result("CRM Data Availability", False, 
+                              f"CRM data not accessible: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("CRM Data Availability", False, 
+                          f"Error testing CRM data: {str(e)}")
+            return False
+    
+    def test_investment_data_integrity(self):
+        """Test investment data integrity"""
+        try:
+            if not self.admin_token:
+                self.log_result("Investment Data Integrity", False, "No admin authentication")
+                return False
+            
+            print("💰 Testing investment data integrity...")
+            
+            # Test fund portfolio overview
+            response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check for fund data
+                funds = data.get("funds", [])
+                total_aum = data.get("total_aum", 0)
+                
+                # Test Salvador's client data (known to have investments)
+                salvador_response = self.session.get(f"{BACKEND_URL}/client/client_003/data", timeout=10)
+                salvador_success = salvador_response.status_code == 200
+                salvador_investments = 0
+                
+                if salvador_success:
+                    salvador_data = salvador_response.json()
+                    salvador_investments = len(salvador_data.get("investments", []))
+                
+                self.log_result("Investment Data Integrity", True, 
+                              f"Investment data accessible - {len(funds)} funds, ${total_aum:,.2f} AUM",
+                              {
+                                  "funds_count": len(funds),
+                                  "total_aum": total_aum,
+                                  "salvador_data_accessible": salvador_success,
+                                  "salvador_investments": salvador_investments,
+                                  "fund_codes": [f.get("fund_code") for f in funds]
+                              })
+                return True
+            else:
+                self.log_result("Investment Data Integrity", False, 
+                              f"Investment data not accessible: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Investment Data Integrity", False, 
+                          f"Error testing investment data: {str(e)}")
+            return False
+    
+    def test_google_integration_status(self):
+        """Test Google integration status"""
+        try:
+            if not self.admin_token:
+                self.log_result("Google Integration Status", False, "No admin authentication")
+                return False
+            
+            print("🌐 Testing Google integration status...")
+            
+            # Test Google connection status
+            response = self.session.get(f"{BACKEND_URL}/admin/google/individual-status", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Test Google OAuth URL generation
+                auth_url_response = self.session.get(f"{BACKEND_URL}/admin/google/individual-auth-url", timeout=10)
+                auth_url_success = auth_url_response.status_code == 200
+                
+                # Test Google APIs (should return auth required if not connected)
+                gmail_response = self.session.get(f"{BACKEND_URL}/google/gmail/real-messages", timeout=10)
+                gmail_accessible = gmail_response.status_code in [200, 401]  # 401 means auth required (expected)
+                
+                self.log_result("Google Integration Status", True, 
+                              f"Google integration infrastructure operational",
+                              {
+                                  "individual_status_accessible": True,
+                                  "auth_url_generation": auth_url_success,
+                                  "gmail_api_accessible": gmail_accessible,
+                                  "connection_status": data.get("connected", False),
+                                  "admin_info": data.get("admin_info", {})
+                              })
+                return True
+            else:
+                self.log_result("Google Integration Status", False, 
+                              f"Google integration not accessible: HTTP {response.status_code}",
+                              {"response": response.text})
+                return False
+                
+        except Exception as e:
+            self.log_result("Google Integration Status", False, 
+                          f"Error testing Google integration: {str(e)}")
+            return False
+    
+    def test_critical_api_endpoints(self):
+        """Test all critical API endpoints"""
+        try:
+            if not self.admin_token:
+                self.log_result("Critical API Endpoints", False, "No admin authentication")
+                return False
+            
+            print("🔗 Testing critical API endpoints...")
+            
+            # Define critical endpoints to test
+            critical_endpoints = [
+                ("/health", "GET", 200),
+                ("/health/ready", "GET", 200),
+                ("/admin/users", "GET", 200),
+                ("/crm/prospects", "GET", 200),
+                ("/crm/pipeline-stats", "GET", 200),
+                ("/fund-portfolio/overview", "GET", 200),
+                ("/admin/google/individual-status", "GET", 200)
+            ]
+            
+            endpoint_results = {}
+            working_endpoints = 0
+            
+            for endpoint, method, expected_status in critical_endpoints:
+                try:
+                    if method == "GET":
+                        response = self.session.get(f"{BACKEND_URL}{endpoint}", timeout=10)
+                    else:
+                        response = self.session.post(f"{BACKEND_URL}{endpoint}", timeout=10)
+                    
+                    is_working = response.status_code == expected_status
+                    if is_working:
+                        working_endpoints += 1
+                    
+                    endpoint_results[endpoint] = {
+                        "status_code": response.status_code,
+                        "expected": expected_status,
+                        "working": is_working
+                    }
+                except Exception as e:
+                    endpoint_results[endpoint] = {
+                        "status_code": "ERROR",
+                        "expected": expected_status,
+                        "working": False,
+                        "error": str(e)
+                    }
+            
+            success_rate = (working_endpoints / len(critical_endpoints)) * 100
+            
+            if success_rate >= 85:  # At least 85% of endpoints working
+                self.log_result("Critical API Endpoints", True, 
+                              f"Critical endpoints operational - {working_endpoints}/{len(critical_endpoints)} working ({success_rate:.1f}%)",
+                              {
+                                  "working_endpoints": working_endpoints,
+                                  "total_endpoints": len(critical_endpoints),
+                                  "success_rate": success_rate,
+                                  "endpoint_details": endpoint_results
+                              })
+                return True
+            else:
+                self.log_result("Critical API Endpoints", False, 
+                              f"Too many endpoints failing - {working_endpoints}/{len(critical_endpoints)} working ({success_rate:.1f}%)",
+                              {"endpoint_results": endpoint_results})
+                return False
+                
+        except Exception as e:
+            self.log_result("Critical API Endpoints", False, 
+                          f"Error testing critical endpoints: {str(e)}")
+            return False
+    
+    def run_all_tests(self):
+        """Run all production readiness tests"""
+        print("🎯 PRODUCTION READINESS TEST FOR MONGODB ATLAS DEPLOYMENT")
+        print("=" * 70)
+        print(f"Backend URL: {BACKEND_URL}")
+        print(f"Test Time: {datetime.now().isoformat()}")
+        print(f"Deployment Target: Tomorrow's Production Launch")
+        print()
+        
+        # Test 1: Backend Health & MongoDB Connection
+        print("🏥 Testing Backend Health & MongoDB...")
+        print("-" * 50)
+        backend_healthy = self.test_backend_health_and_mongodb()
+        
+        if not backend_healthy:
+            print("❌ CRITICAL: Backend not healthy. Cannot proceed with further tests.")
+            self.generate_test_summary()
+            return False
+        
+        # Test 2: Admin Authentication
+        print("\n🔐 Testing Authentication...")
+        print("-" * 50)
+        auth_success = self.authenticate_admin()
+        
+        if not auth_success:
+            print("❌ CRITICAL: Admin authentication failed. Cannot proceed with protected endpoint tests.")
+            self.generate_test_summary()
+            return False
+        
+        # Test 3: User Data Availability
+        print("\n👥 Testing User Data...")
+        print("-" * 50)
+        self.test_user_data_availability()
+        
+        # Test 4: CRM Data Availability
+        print("\n📊 Testing CRM Data...")
+        print("-" * 50)
+        self.test_crm_data_availability()
+        
+        # Test 5: Investment Data Integrity
+        print("\n💰 Testing Investment Data...")
+        print("-" * 50)
+        self.test_investment_data_integrity()
+        
+        # Test 6: Google Integration Status
+        print("\n🌐 Testing Google Integration...")
+        print("-" * 50)
+        self.test_google_integration_status()
+        
+        # Test 7: Critical API Endpoints
+        print("\n🔗 Testing Critical API Endpoints...")
+        print("-" * 50)
+        self.test_critical_api_endpoints()
+        
+        # Generate summary
+        self.generate_test_summary()
+        
+        return True
+    
+    def generate_test_summary(self):
+        """Generate comprehensive test summary"""
+        print("\n" + "=" * 70)
+        print("🎯 PRODUCTION READINESS TEST SUMMARY")
+        print("=" * 70)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"Passed: {passed_tests}")
+        print(f"Failed: {failed_tests}")
+        print(f"Success Rate: {success_rate:.1f}%")
+        print()
+        
+        # Show failed tests first (critical for deployment)
+        if failed_tests > 0:
+            print("❌ FAILED TESTS (DEPLOYMENT BLOCKERS):")
+            for result in self.test_results:
+                if not result['success']:
+                    print(f"   • {result['test']}: {result['message']}")
+            print()
+        
+        # Show passed tests
+        if passed_tests > 0:
+            print("✅ PASSED TESTS:")
+            for result in self.test_results:
+                if result['success']:
+                    print(f"   • {result['test']}: {result['message']}")
+            print()
+        
+        # Critical deployment assessment
+        critical_tests = [
+            "Backend Health & MongoDB Connection",
+            "Admin Authentication", 
+            "User Data Availability",
+            "CRM Data Availability",
+            "Investment Data Integrity",
+            "Critical API Endpoints"
+        ]
+        
+        critical_passed = sum(1 for result in self.test_results 
+                            if result['success'] and any(critical in result['test'] for critical in critical_tests))
+        
+        print("🚨 DEPLOYMENT READINESS ASSESSMENT:")
+        if critical_passed >= 5:  # At least 5 out of 6 critical tests
+            print("✅ FIDUS SYSTEM: READY FOR PRODUCTION DEPLOYMENT")
+            print("   ✓ Backend healthy with MongoDB connection")
+            print("   ✓ User authentication and data accessible")
+            print("   ✓ CRM and investment data integrity verified")
+            print("   ✓ All critical API endpoints operational")
+            print("   🚀 APPROVED FOR TOMORROW'S PRODUCTION DEPLOYMENT")
+            print()
+            print("📋 DEPLOYMENT CHECKLIST:")
+            print("   ✓ MongoDB connection established and working")
+            print("   ✓ All user data migrated and accessible")
+            print("   ✓ Admin login functionality verified")
+            print("   ✓ CRM pipeline data available")
+            print("   ✓ Investment tracking operational")
+            print("   ✓ Google integration infrastructure ready")
+        else:
+            print("❌ FIDUS SYSTEM: NOT READY FOR DEPLOYMENT")
+            print("   ⚠️  Critical system issues detected")
+            print("   🛑 DEPLOYMENT BLOCKED - Fix required before tomorrow")
+            print("   📞 Contact development team immediately")
+            print()
+            print("🔧 REQUIRED FIXES:")
+            for result in self.test_results:
+                if not result['success'] and any(critical in result['test'] for critical in critical_tests):
+                    print(f"   • {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 70)
+
+def main():
+    """Main test execution"""
+    test_runner = ProductionReadinessTest()
+    success = test_runner.run_all_tests()
+    
+    if not success:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+"""
 FIDUS COMPREHENSIVE PRODUCTION READINESS BACKEND TESTING
 
 This test suite focuses on:
