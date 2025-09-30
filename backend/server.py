@@ -12210,25 +12210,11 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
                 }
             }
         
-        # Create service account credentials with proper scopes
-        scopes = [
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/calendar.readonly',
-            'https://www.googleapis.com/auth/drive.readonly'
-        ]
+        # Check scopes and create service status based on individual OAuth
+        granted_scopes = tokens.get('granted_scopes', [])
+        user_email = tokens.get('user_email', 'Unknown')
+        user_name = tokens.get('user_name', 'Unknown')
         
-        try:
-            credentials = service_account.Credentials.from_service_account_info(
-                credentials_info, scopes=scopes
-            )
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to create credentials: {str(e)}",
-                "services": {service: {"connected": False, "status": "Credential error", "error": str(e)} for service in ["gmail", "calendar", "drive", "meet"]}
-            }
-        
-        # Test each Google service with REAL API calls
         services_results = {}
         
         # Test Gmail API
