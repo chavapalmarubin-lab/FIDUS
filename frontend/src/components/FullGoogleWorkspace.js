@@ -615,6 +615,39 @@ const FullGoogleWorkspace = () => {
         </Card>
       )}
 
+      {/* Connection Required Banner */}
+      {(!connectionStatus?.connected) && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-orange-500" />
+            <h3 className="text-lg font-medium text-orange-900 mb-2">
+              Google Workspace Connection Required
+            </h3>
+            <p className="text-orange-700 mb-4">
+              Connect your Google account to access Gmail, Calendar, Drive, and Sheets functionality
+            </p>
+            <Button 
+              onClick={handleConnectToGoogle}
+              disabled={loading}
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Connect My Google Account
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Main Workspace */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-100">
