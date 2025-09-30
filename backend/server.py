@@ -12187,14 +12187,27 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
                 "services": {service: {"connected": False, "status": "Library missing", "error": str(e)} for service in ["gmail", "calendar", "drive", "meet"]}
             }
         
-        # Parse service account credentials
-        try:
-            credentials_info = json.loads(service_account_key)
-        except json.JSONDecodeError:
+        # Check token expiration
+        expires_at = tokens.get('expires_at')
+        is_expired = False
+        if expires_at:
+            try:
+                expiry_time = datetime.fromisoformat(expires_at)
+                is_expired = expiry_time <= datetime.now(timezone.utc)
+            except:
+                is_expired = True
+        
+        if is_expired:
             return {
                 "success": False,
-                "error": "Invalid service account JSON format",
-                "services": {service: {"connected": False, "status": "Invalid credentials", "error": "JSON parse error"} for service in ["gmail", "calendar", "drive", "meet"]}
+                "overall_status": "token_expired",
+                "error": "Google OAuth token has expired. Please reconnect your Google account.",
+                "services": {
+                    "gmail": {"connected": False, "status": "Token expired", "error": "Please reconnect your Google account"},
+                    "calendar": {"connected": False, "status": "Token expired", "error": "Please reconnect your Google account"},
+                    "drive": {"connected": False, "status": "Token expired", "error": "Please reconnect your Google account"},
+                    "meet": {"connected": False, "status": "Token expired", "error": "Please reconnect your Google account"}
+                }
             }
         
         # Create service account credentials with proper scopes
