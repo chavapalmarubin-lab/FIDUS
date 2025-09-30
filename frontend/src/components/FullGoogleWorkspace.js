@@ -214,7 +214,7 @@ const FullGoogleWorkspace = () => {
       console.log('🔗 Starting REAL Google OAuth flow...');
       
       // Get the REAL Google OAuth URL from backend
-      const response = await apiAxios.get('/auth/google/url');
+      const response = await apiAxios.get('/admin/google/individual-auth-url');
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
