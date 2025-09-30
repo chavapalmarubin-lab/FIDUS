@@ -12156,20 +12156,22 @@ async def get_funds_overview():
 
 @api_router.get("/google/connection/test-all")
 async def test_google_connections_automatic(current_user: dict = Depends(get_current_admin_user)):
-    """REAL Google API Integration - Production Service Account Authentication"""
+    """Individual Google OAuth Integration - Check admin's personal Google connection"""
     try:
-        # Get actual Google service account credentials from environment
-        service_account_key = os.environ.get('GOOGLE_SERVICE_ACCOUNT_KEY')
+        # Get admin's individual Google OAuth tokens
+        admin_user_id = current_user["user_id"]
+        tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
         
-        if not service_account_key:
+        if not tokens:
             return {
                 "success": False,
-                "error": "Google service account credentials not configured",
+                "overall_status": "not_connected",
+                "error": "No Google account connected. Please connect your personal Google account.",
                 "services": {
-                    "gmail": {"connected": False, "status": "No service account", "error": "Missing GOOGLE_SERVICE_ACCOUNT_KEY"},
-                    "calendar": {"connected": False, "status": "No service account", "error": "Missing GOOGLE_SERVICE_ACCOUNT_KEY"},
-                    "drive": {"connected": False, "status": "No service account", "error": "Missing GOOGLE_SERVICE_ACCOUNT_KEY"},
-                    "meet": {"connected": False, "status": "No service account", "error": "Missing GOOGLE_SERVICE_ACCOUNT_KEY"}
+                    "gmail": {"connected": False, "status": "Not connected", "error": "Complete Google OAuth to connect Gmail"},
+                    "calendar": {"connected": False, "status": "Not connected", "error": "Complete Google OAuth to connect Calendar"},
+                    "drive": {"connected": False, "status": "Not connected", "error": "Complete Google OAuth to connect Drive"},
+                    "meet": {"connected": False, "status": "Not connected", "error": "Complete Google OAuth to connect Meet"}
                 }
             }
         
