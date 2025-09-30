@@ -101,10 +101,10 @@ MONGODB MIGRATION TASK: Complete database migration from MOCK_USERS to MongoDB f
 
   - task: "Google APIs Integration Testing"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
+    stuck_count: 1
+    priority: "critical"
     needs_retesting: false
     status_history:
         - working: "NA"
