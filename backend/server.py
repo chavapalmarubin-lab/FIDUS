@@ -7627,35 +7627,35 @@ async def get_all_clients_details():
             # Get MT5 account
             mt5_account = await mock_mt5.get_account_info(client_id)
             mt5_positions = await mock_mt5.get_positions(client_id)
-                
-                # Get recent capital flows
-                client_flows = capital_flows.get(client_id, [])
-                recent_subscriptions = sum(f.amount for f in client_flows[-5:] if f.flow_type == "subscription")
-                
-                client_detail = {
-                    "client_id": client_id,
-                    "name": user["name"],
-                    "email": user.get("email", f"{username}@example.com"),
-                    "status": "Active",
-                    "fund_portfolio": {
-                        "total_value": round(total_fund_value, 2),
-                        "number_of_funds": len(client_allocations)
-                    },
-                    "trading_account": {
-                        "account_number": mt5_account.get("account_number") if mt5_account else None,
-                        "balance": mt5_account.get("balance", 0) if mt5_account else 0,
-                        "equity": mt5_account.get("equity", 0) if mt5_account else 0,
-                        "open_positions": len(mt5_positions),
-                        "last_activity": mt5_account.get("login_time") if mt5_account else None
-                    },
-                    "recent_activity": {
-                        "recent_subscriptions": round(recent_subscriptions, 2),
-                        "last_capital_flow": client_flows[-1].trade_date.isoformat() if client_flows else None
-                    },
-                    "total_assets": round(total_fund_value + (mt5_account.get("balance", 0) if mt5_account else 0), 2)
-                }
-                
-                clients_details.append(client_detail)
+            
+            # Get recent capital flows
+            client_flows = capital_flows.get(client_id, [])
+            recent_subscriptions = sum(f.amount for f in client_flows[-5:] if f.flow_type == "subscription")
+            
+            client_detail = {
+                "client_id": client_id,
+                "name": user["name"],
+                "email": user.get("email", f"{user['username']}@example.com"),
+                "status": "Active",
+                "fund_portfolio": {
+                    "total_value": round(total_fund_value, 2),
+                    "number_of_funds": len(client_allocations)
+                },
+                "trading_account": {
+                    "account_number": mt5_account.get("account_number") if mt5_account else None,
+                    "balance": mt5_account.get("balance", 0) if mt5_account else 0,
+                    "equity": mt5_account.get("equity", 0) if mt5_account else 0,
+                    "open_positions": len(mt5_positions),
+                    "last_activity": mt5_account.get("login_time") if mt5_account else None
+                },
+                "recent_activity": {
+                    "recent_subscriptions": round(recent_subscriptions, 2),
+                    "last_capital_flow": client_flows[-1].trade_date.isoformat() if client_flows else None
+                },
+                "total_assets": round(total_fund_value + (mt5_account.get("balance", 0) if mt5_account else 0), 2)
+            }
+            
+            clients_details.append(client_detail)
         
         # Sort by total assets descending
         clients_details.sort(key=lambda x: x["total_assets"], reverse=True)
