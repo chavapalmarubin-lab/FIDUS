@@ -434,7 +434,11 @@ const AdminDashboard = ({ user, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="google" className="mt-6">
-            <FullGoogleWorkspace />
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-bold mb-4">🌐 Google Workspace Integration</h2>
+              <p className="text-gray-600 mb-4">Testing Google Workspace tab routing...</p>
+              <FullGoogleWorkspace />
+            </div>
           </TabsContent>
 
           {/* Google Connection Monitor content removed - redundant with Google Workspace integration */}
