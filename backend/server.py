@@ -159,7 +159,7 @@ def get_current_admin_user(request: Request) -> dict:
     payload = verify_jwt_token(token)
     
     # Check if user is admin
-    if payload.get("user_type") != "admin":
+    if payload.get("type") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
     return payload
