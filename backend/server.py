@@ -12158,6 +12158,7 @@ async def get_funds_overview():
 async def test_google_connections_automatic(current_user: dict = Depends(get_current_admin_user)):
     """Individual Google OAuth Integration - Check admin's personal Google connection"""
     try:
+        logging.info("🔍 DEBUG: Connection monitor endpoint called")
         # Get admin's individual Google OAuth tokens
         admin_user_id = current_user["user_id"]
         tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
