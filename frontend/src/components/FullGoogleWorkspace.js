@@ -1019,39 +1019,72 @@ const FullGoogleWorkspace = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Google Sheets</CardTitle>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Sheet
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => loadSheets()} variant="outline" size="sm">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Sheet
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Google Sheets Integration
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Create and manage spreadsheets for financial data, client portfolios, and reporting
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <FileText className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-medium text-sm">Portfolio Tracker</h4>
-                    <p className="text-xs text-gray-600 mt-1">Track client investments and performance</p>
-                  </div>
-                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <FileText className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <h4 className="font-medium text-sm">Financial Reports</h4>
-                    <p className="text-xs text-gray-600 mt-1">Generate comprehensive financial reports</p>
-                  </div>
-                  <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                    <h4 className="font-medium text-sm">CRM Data</h4>
-                    <p className="text-xs text-gray-600 mt-1">Export and analyze client data</p>
-                  </div>
+              {sheets.length > 0 ? (
+                <div className="space-y-2">
+                  {sheets.map((sheet, index) => (
+                    <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-green-600" />
+                        <div className="flex-1">
+                          <div className="font-medium">{sheet.name}</div>
+                          <div className="text-sm text-gray-600">
+                            Modified: {new Date(sheet.modifiedTime || sheet.updated).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            Open
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Google Sheets Integration
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    {connectionStatus?.connected 
+                      ? 'Loading your Google Sheets...' 
+                      : 'Connect your Google account to access Sheets'
+                    }
+                  </p>
+                  {!connectionStatus?.connected && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                      <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <FileText className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                        <h4 className="font-medium text-sm">Portfolio Tracker</h4>
+                        <p className="text-xs text-gray-600 mt-1">Track client investments and performance</p>
+                      </div>
+                      <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <FileText className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                        <h4 className="font-medium text-sm">Financial Reports</h4>
+                        <p className="text-xs text-gray-600 mt-1">Generate comprehensive financial reports</p>
+                      </div>
+                      <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                        <h4 className="font-medium text-sm">CRM Data</h4>
+                        <p className="text-xs text-gray-600 mt-1">Export and analyze client data</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
