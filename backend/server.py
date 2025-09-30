@@ -1456,7 +1456,15 @@ async def login(login_data: LoginRequest):
             "must_change_password": must_change_password
         }
         
-        jwt_token = create_jwt_token(user_response_dict)
+        # Create JWT token data with consistent field naming
+        token_data = {
+            "user_id": user_doc["id"],  # Consistent field naming
+            "id": user_doc["id"],       # Backward compatibility
+            "username": user_doc["username"],
+            "type": user_doc["type"]
+        }
+        
+        jwt_token = create_jwt_token(token_data)
         user_response_dict["token"] = jwt_token
         
         return UserResponse(**user_response_dict)
