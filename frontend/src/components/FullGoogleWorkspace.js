@@ -91,7 +91,7 @@ const FullGoogleWorkspace = () => {
   // Quick connection test for status display
   const testConnectionQuick = async () => {
     try {
-      const response = await apiAxios.get('/google/connection/test-all');
+      const response = await apiAxios.get('/admin/google/individual-status');
       setConnectionStatus(response.data);
     } catch (error) {
       console.error('Failed to test connection:', error);
