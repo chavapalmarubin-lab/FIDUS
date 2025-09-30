@@ -127,9 +127,9 @@ const AdminDashboard = ({ user, onLogout }) => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     
-    if (tabParam === 'connection-monitor') {
-      console.log('🎯 OAuth callback detected - setting Connection Monitor as active tab');
-      return 'google-monitor';
+    if (tabParam === 'connection-monitor' || tabParam === 'google-workspace') {
+      console.log('🎯 OAuth callback detected - setting Google Workspace as active tab');
+      return 'google';
     }
     return 'portfolio';
   });
