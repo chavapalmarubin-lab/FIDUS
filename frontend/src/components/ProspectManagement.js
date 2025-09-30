@@ -1434,7 +1434,10 @@ FIDUS Investment Management Team`;
         </TabsContent>
 
         <TabsContent value="pipeline" className="space-y-4">
-          <EnhancedPipelineView />
+          <EnhancedPipelineView 
+            onEmailProspect={openEmailModal}
+            onScheduleMeeting={openMeetingModal}
+          />
         </TabsContent>
 
         <TabsContent value="simulator" className="space-y-4">
