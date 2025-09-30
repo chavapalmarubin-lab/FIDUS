@@ -12212,6 +12212,12 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
         
         # Check scopes and create service status based on individual OAuth
         granted_scopes = tokens.get('granted_scopes', [])
+        
+        # Handle case where scopes are stored as string instead of array
+        if not granted_scopes and 'scope' in tokens:
+            scope_string = tokens.get('scope', '')
+            granted_scopes = scope_string.split(' ') if scope_string else []
+        
         user_email = tokens.get('user_email', 'Unknown')
         user_name = tokens.get('user_name', 'Unknown')
         
