@@ -1318,7 +1318,7 @@ class IndividualGoogleOAuth:
 
 # Initialize individual Google OAuth manager
 individual_google_oauth = IndividualGoogleOAuth()
-# MOCK_USERS completely removed - MongoDB is the single source of truth
+# MOCK_USERS REMOVED - MongoDB is the ONLY database used by FIDUS application
 
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     """Generate mock transaction data"""
