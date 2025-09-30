@@ -8261,7 +8261,7 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             "profile_picture": f"https://images.unsplash.com/photo-150700{random.randint(1000, 9999)}?w=150&h=150&fit=crop&crop=face"
         }
         
-        # Save to MongoDB users collection (NO MOCK_USERS)
+        # Save to MongoDB users collection (ONLY database)
         try:
             mongodb_client_data = new_client.copy()
             mongodb_client_data['user_id'] = client_id
@@ -8271,7 +8271,7 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             logging.info(f"Client {client_id} added to MongoDB users collection")
         except Exception as mongo_error:
             logging.error(f"Failed to add client to MongoDB: {str(mongo_error)}")
-            # Continue anyway - client is still in MOCK_USERS
+            raise HTTPException(status_code=500, detail="Failed to create client in database")
         
         # Generate AML/KYC approval document
         approval_document_path = None
