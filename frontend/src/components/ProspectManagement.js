@@ -2262,6 +2262,7 @@ FIDUS Investment Management Team`;
       </AnimatePresence>
 
       {/* Email Sending Modal */}
+      {console.log('🔍 Email modal render check:', showEmailModal, 'Selected prospect:', selectedProspect?.name)}
       <AnimatePresence>
         {showEmailModal && selectedProspect && (
           <motion.div
