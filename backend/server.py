@@ -8229,14 +8229,14 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
         client_id = f"client_{str(uuid.uuid4())[:8]}"
         username = prospect_data['email'].split('@')[0].lower().replace('.', '').replace('-', '')[:10]
         
-        # Ensure username uniqueness
+        # Ensure username uniqueness by checking MongoDB
         counter = 1
         original_username = username
-        while username in MOCK_USERS:
+        while await db.users.find_one({"username": username}):
             username = f"{original_username}{counter}"
             counter += 1
         
-        # Create new client in MOCK_USERS
+        # Create new client data
         new_client = {
             "id": client_id,
             "username": username,
