@@ -92,11 +92,51 @@ const FullGoogleWorkspace = () => {
   const testConnectionQuick = async () => {
     try {
       const response = await apiAxios.get('/admin/google/individual-status');
-      setConnectionStatus(response.data);
+      console.log('🔍 Google connection status:', response.data);
+      
+      // Update connection status based on individual OAuth response
+      const statusData = {
+        success: response.data.connected && !response.data.is_expired,
+        connected: response.data.connected,
+        overall_status: response.data.connected && !response.data.is_expired ? 'fully_connected' : 'disconnected',
+        google_info: response.data.google_info,
+        admin_info: response.data.admin_info,
+        scopes: response.data.scopes,
+        services: {
+          gmail: { 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
+          },
+          calendar: { 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
+          },
+          drive: { 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
+          },
+          sheets: { 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
+          }
+        }
+      };
+      
+      setConnectionStatus(statusData);
+      
+      // Auto-load data if connected
+      if (statusData.connected && !response.data.is_expired) {
+        console.log('✅ Google connected - auto-loading Gmail data');
+        if (activeTab === 'gmail') {
+          loadEmails();
+        } else if (activeTab === 'calendar') {
+          loadCalendarEvents();
+        } else if (activeTab === 'drive') {
+          loadDriveFiles();
+        }
+      }
+      
     } catch (error) {
       console.error('Failed to test connection:', error);
       setConnectionStatus({
         success: false,
+        connected: false,
         overall_status: 'test_failed',
         services: {}
       });
