@@ -577,24 +577,26 @@ const ClientManagement = () => {
               </div>
             </div>
             
-            <div className="flex gap-3 mt-6">
-              <Button
-                variant="outline"
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              <button
+                type="button"
                 onClick={() => {
                   setShowEditModal(false);
                   setSelectedClient(null);
                   resetForm();
                 }}
-                className="flex-1"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 font-medium"
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
+                type="button"
                 onClick={handleUpdateClient}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 font-medium disabled:opacity-50"
               >
-                Update Client
-              </Button>
+                {loading ? 'Updating...' : 'Update Client'}
+              </button>
             </div>
           </motion.div>
         </div>
