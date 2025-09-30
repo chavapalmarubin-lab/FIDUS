@@ -203,6 +203,7 @@ const ProspectManagement = () => {
 
   // Schedule meeting via Calendar API with modal
   const openMeetingModal = (prospect, meetingType = 'consultation') => {
+    console.log('🔍 Opening meeting modal for:', prospect.name, 'Type:', meetingType);
     setSelectedProspect(prospect);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -215,6 +216,7 @@ const ProspectManagement = () => {
       notes: `${meetingType === 'consultation' ? 'Investment consultation' : 'Follow-up meeting'} with ${prospect.name}`
     });
     setShowMeetingModal(true);
+    console.log('✅ Meeting modal state set to true');
   };
 
   // Send email function
