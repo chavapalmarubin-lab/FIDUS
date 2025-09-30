@@ -12229,28 +12229,17 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
             "error": None if gmail_connected else "Gmail access not granted in OAuth"
         }
         
-        # Test Calendar API
-        try:
-            calendar_service = build('calendar', 'v3', credentials=credentials)
-            # Make actual API call to test connection
-            calendar_result = calendar_service.calendarList().list().execute()
-            
-            services_results["calendar"] = {
-                "connected": True,
-                "status": "Connected",
-                "calendars_count": len(calendar_result.get('items', [])),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "service_account_real_api",
-                "auto_managed": True
-            }
-        except Exception as e:
-            services_results["calendar"] = {
-                "connected": False,
-                "status": "API Error",
-                "error": str(e),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "auto_managed": False
-            }
+        # Check Calendar scope
+        calendar_connected = any('calendar' in scope for scope in granted_scopes)
+        services_results["calendar"] = {
+            "connected": calendar_connected,
+            "status": "Connected" if calendar_connected else "Not authorized",
+            "user_email": user_email,
+            "user_name": user_name,
+            "last_checked": datetime.now(timezone.utc).isoformat(),
+            "method": "individual_oauth",
+            "error": None if calendar_connected else "Calendar access not granted in OAuth"
+        }
         
         # Test Drive API
         try:
