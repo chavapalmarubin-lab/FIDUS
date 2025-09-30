@@ -605,11 +605,33 @@ const FullGoogleWorkspace = () => {
 
   // Auto-load Gmail data when connection is established
   useEffect(() => {
-    if (connectionStatus?.connected && !connectionStatus?.is_expired && activeTab === 'gmail') {
-      console.log('✅ Auto-loading Gmail data for connected user...');
-      loadEmails();
+    if (connectionStatus?.connected && !connectionStatus?.is_expired) {
+      console.log('✅ Connected user detected, auto-loading data for current tab...');
+      
+      // Load data for the current active tab immediately
+      if (activeTab === 'gmail') {
+        console.log('📧 Auto-loading Gmail messages...');
+        loadEmails();
+      } else if (activeTab === 'calendar') {
+        console.log('📅 Auto-loading Calendar events...');
+        loadCalendarEvents();
+      } else if (activeTab === 'drive') {
+        console.log('💾 Auto-loading Drive files...');
+        loadDriveFiles();
+      } else if (activeTab === 'sheets') {
+        console.log('📊 Auto-loading Sheets...');
+        loadSheets();
+      }
     }
   }, [connectionStatus]);
+
+  // Auto-load data when Gmail tab opens for connected users
+  useEffect(() => {
+    if (connectionStatus?.connected && !connectionStatus?.is_expired && activeTab === 'gmail' && emails.length === 0) {
+      console.log('📧 Gmail tab opened - loading emails for connected user...');
+      loadEmails();
+    }
+  }, [activeTab]);
 
   return (
     <div className="w-full space-y-6">
