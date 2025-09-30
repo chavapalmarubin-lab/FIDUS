@@ -67,6 +67,14 @@ const SimpleIndividualGoogleWorkspace = () => {
       
       console.log('🚀 Initiating individual Google OAuth...');
       
+      // Check authentication first
+      const token = localStorage.getItem('fidus_token');
+      if (!token) {
+        setError('Please login as admin to connect Google account');
+        setConnectingToGoogle(false);
+        return;
+      }
+      
       // Get individual Google OAuth URL
       const response = await apiAxios.get('/admin/google/individual-auth-url');
       
@@ -79,7 +87,15 @@ const SimpleIndividualGoogleWorkspace = () => {
       }
     } catch (err) {
       console.error('❌ Google connection failed:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to connect Google account');
+      
+      // Handle specific authentication errors
+      if (err.response?.status === 401) {
+        setError('Authentication required. Please login as admin to connect Google account.');
+      } else if (err.response?.data?.detail) {
+        setError(`API Error: ${err.response.data.detail}`);
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Failed to connect Google account');
+      }
     } finally {
       setConnectingToGoogle(false);
     }
