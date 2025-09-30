@@ -59,8 +59,9 @@ apiAxios.interceptors.response.use(
   (error) => {
     // Handle 401 errors (token expired or invalid)
     if (error.response?.status === 401) {
-      console.warn('Authentication failed - redirecting to login');
-      // Clear invalid token
+      console.warn('Authentication failed - token invalid or expired');
+      // Clear invalid tokens
+      localStorage.removeItem('fidus_token');
       localStorage.removeItem('fidus_user');
       // Optionally redirect to login page
       // window.location.href = '/';
