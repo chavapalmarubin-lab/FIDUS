@@ -185,7 +185,6 @@ const ProspectManagement = () => {
   
   // Email prospect via Gmail API with modal
   const openEmailModal = (prospect, emailType = 'general') => {
-    console.log('🔍 Opening email modal for:', prospect.name, 'Type:', emailType);
     setSelectedProspect(prospect);
     setEmailData({
       type: emailType,
@@ -198,7 +197,6 @@ const ProspectManagement = () => {
       recipient: prospect
     });
     setShowEmailModal(true);
-    console.log('✅ Email modal state set to true');
   };
 
   // Schedule meeting via Calendar API with modal
