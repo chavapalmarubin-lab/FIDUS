@@ -12273,13 +12273,12 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
         
         return {
             "success": success_rate > 0,
-            "message": f"Real Google API integration - {connected_services}/{total_services} services connected",
+            "message": f"Individual Google OAuth - {connected_services}/{total_services} services connected",
             "services": services_results,
             "overall_health": success_rate,
             "overall_status": "connected" if success_rate == 100 else "partial" if success_rate > 0 else "disconnected",
-            "auto_managed": True,
-            "user_intervention_required": False,
-            "connection_method": "service_account_real_api",
+            "user_intervention_required": success_rate < 100,
+            "connection_method": "individual_oauth",
             "monitoring_active": True,
             "last_test_time": datetime.now(timezone.utc).isoformat()
         }
