@@ -6970,8 +6970,22 @@ capital_flows = {}
 # Initialize mock allocations for existing clients
 def initialize_mock_allocations():
     """Initialize mock investor allocations"""
-    for username, user in MOCK_USERS.items():
-        if user["type"] == "client":
+    # Get clients from MongoDB instead of MOCK_USERS
+    try:
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        async def get_clients():
+            clients = []
+            async for user in db.users.find({"type": "client", "status": "active"}):
+                clients.append(user)
+            return clients
+        
+        clients = loop.run_until_complete(get_clients())
+        loop.close()
+        
+        for user in clients:
             client_id = user["id"]
             investor_allocations[client_id] = []
             
