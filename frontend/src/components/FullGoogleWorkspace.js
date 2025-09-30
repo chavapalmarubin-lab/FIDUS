@@ -603,6 +603,14 @@ const FullGoogleWorkspace = () => {
     }
   }, [activeTab, connectionStatus]);
 
+  // Auto-load Gmail data when connection is established
+  useEffect(() => {
+    if (connectionStatus?.connected && !connectionStatus?.is_expired && activeTab === 'gmail') {
+      console.log('✅ Auto-loading Gmail data for connected user...');
+      loadEmails();
+    }
+  }, [connectionStatus]);
+
   return (
     <div className="w-full space-y-6">
       {/* Header */}
