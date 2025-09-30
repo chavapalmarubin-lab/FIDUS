@@ -12217,29 +12217,17 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
         
         services_results = {}
         
-        # Test Gmail API
-        try:
-            gmail_service = build('gmail', 'v1', credentials=credentials)
-            # Make actual API call to test connection
-            gmail_result = gmail_service.users().getProfile(userId='me').execute()
-            
-            services_results["gmail"] = {
-                "connected": True,
-                "status": "Connected",
-                "email": gmail_result.get('emailAddress', 'Unknown'),
-                "messages_total": gmail_result.get('messagesTotal', 0),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "method": "service_account_real_api",
-                "auto_managed": True
-            }
-        except Exception as e:
-            services_results["gmail"] = {
-                "connected": False,
-                "status": "API Error",
-                "error": str(e),
-                "last_checked": datetime.now(timezone.utc).isoformat(),
-                "auto_managed": False
-            }
+        # Check Gmail scope
+        gmail_connected = any('gmail' in scope for scope in granted_scopes)
+        services_results["gmail"] = {
+            "connected": gmail_connected,
+            "status": "Connected" if gmail_connected else "Not authorized",
+            "user_email": user_email,
+            "user_name": user_name,
+            "last_checked": datetime.now(timezone.utc).isoformat(),
+            "method": "individual_oauth",
+            "error": None if gmail_connected else "Gmail access not granted in OAuth"
+        }
         
         # Test Calendar API
         try:
