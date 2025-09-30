@@ -2114,6 +2114,7 @@ FIDUS Investment Management Team`;
       </AnimatePresence>
 
       {/* Meeting Scheduling Modal */}
+      {console.log('🔍 Meeting modal render check:', showMeetingModal, 'Selected prospect:', selectedProspect?.name)}
       <AnimatePresence>
         {showMeetingModal && selectedProspect && (
           <motion.div
