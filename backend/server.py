@@ -113,12 +113,39 @@ client = AsyncIOMotorClient(
 )
 db = client[os.environ.get('DB_NAME', 'fidus_investment_db')]
 
-# JWT Configuration
-JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-if not JWT_SECRET_KEY:
-    raise ValueError("JWT_SECRET_KEY environment variable is required")
+# JWT and Password Security Configuration
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
+
+# Password hashing configuration
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_jwt_token(data: dict) -> str:
+    """Create a JWT token with expiration"""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+
+def verify_jwt_token(token: str) -> dict:
+    """Verify and decode a JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 def create_jwt_token(user_data: dict) -> str:
     """Create JWT token for authenticated user"""
