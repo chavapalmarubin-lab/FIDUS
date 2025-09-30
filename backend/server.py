@@ -8686,7 +8686,7 @@ async def get_admin_google_profile(current_user: dict = Depends(get_current_admi
 async def get_individual_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
     """Get Google OAuth URL for individual admin authentication"""
     try:
-        admin_user_id = current_user["user_id"]
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
         admin_username = current_user["username"]
         
         # Generate state parameter for security
@@ -8825,7 +8825,7 @@ async def process_individual_google_callback(request: Request):
 async def get_individual_google_status(current_user: dict = Depends(get_current_admin_user)):
     """Get individual Google connection status for current admin"""
     try:
-        admin_user_id = current_user["user_id"]
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
         
         # Get admin's Google tokens
         tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
@@ -8878,7 +8878,7 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
 async def disconnect_individual_google(current_user: dict = Depends(get_current_admin_user)):
     """Disconnect Google account for current admin"""
     try:
-        admin_user_id = current_user["user_id"]
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
         admin_username = current_user["username"]
         
         # Disconnect admin's Google account
@@ -12204,7 +12204,7 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
     try:
         logging.info("🔍 DEBUG: Connection monitor endpoint called")
         # Get admin's individual Google OAuth tokens
-        admin_user_id = current_user["user_id"]
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
         tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
         
         if not tokens:
