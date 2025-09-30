@@ -74,7 +74,7 @@ const PIPELINE_STAGES = {
   }
 };
 
-const EnhancedPipelineView = () => {
+const EnhancedPipelineView = ({ onEmailProspect, onScheduleMeeting }) => {
   const [prospects, setProspects] = useState([]);
   const [pipeline, setPipeline] = useState({});
   const [loading, setLoading] = useState(false);
