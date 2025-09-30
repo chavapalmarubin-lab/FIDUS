@@ -348,6 +348,7 @@ const EnhancedPipelineView = ({ onEmailProspect, onScheduleMeeting }) => {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700"
+              onClick={() => onEmailProspect && onEmailProspect(prospect, 'general')}
             >
               <MessageSquare className="w-3 h-3 mr-1" />
               Email
@@ -356,6 +357,7 @@ const EnhancedPipelineView = ({ onEmailProspect, onScheduleMeeting }) => {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs text-green-600 hover:text-green-700"
+              onClick={() => onScheduleMeeting && onScheduleMeeting(prospect, 'consultation')}
             >
               <Video className="w-3 h-3 mr-1" />
               Meet
