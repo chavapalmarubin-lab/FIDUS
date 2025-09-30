@@ -2498,12 +2498,8 @@ async def get_client_documents(client_id: str):
 async def get_client_activity_log(client_id: str):
     """Get activity timeline for a specific client"""
     try:
-        # Check if client exists
-        client_data = None
-        for username, user in MOCK_USERS.items():
-            if user.get('id') == client_id:
-                client_data = user
-                break
+        # Check if client exists in MongoDB
+        client_data = await db.users.find_one({"id": client_id, "type": "client"})
         
         if not client_data:
             raise HTTPException(status_code=404, detail="Client not found")
