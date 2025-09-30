@@ -7022,6 +7022,10 @@ def initialize_mock_allocations():
             total_value = sum(alloc.current_value for alloc in investor_allocations[client_id])
             for allocation in investor_allocations[client_id]:
                 allocation.allocation_percentage = round((allocation.current_value / total_value) * 100, 2)
+    except Exception as e:
+        logging.error(f"Failed to initialize mock allocations: {str(e)}")
+        # Continue with empty allocations if MongoDB fails
+        pass
 
 # Initialize allocations
 initialize_mock_allocations()
