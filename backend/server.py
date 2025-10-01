@@ -15889,19 +15889,7 @@ async def api_authentication_middleware(request: Request, call_next):
     if is_public_crm:
         return await call_next(request)
     
-    # Log all requests for debugging
-    logging.info(f"🔍 Middleware processing: {request.method} {path}")
-    
     # Check if this is a protected endpoint
-    # Explicit bypass for investment creation testing
-    if path == "/api/investments/create":
-        logging.info(f"🔓 BYPASSING AUTH for investment creation: {path}")
-        return await call_next(request)
-    
-    # Temporary bypass for client endpoints to test database connectivity
-    if path == "/api/clients/all" or path == "/api/admin/users":
-        logging.info(f"🔓 TEMPORARY BYPASS for debugging: {path}")
-        return await call_next(request)
         
     is_protected = any(path.startswith(endpoint) for endpoint in PROTECTED_ENDPOINTS)
     is_admin_only = any(path.startswith(endpoint) for endpoint in ADMIN_ONLY_ENDPOINTS)
