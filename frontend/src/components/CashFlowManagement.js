@@ -81,9 +81,9 @@ const CashFlowManagement = () => {
           total_inflows: 0
         },
         liabilities: {
-          client_obligations: 300000,
+          client_obligations: 0,
           upcoming_redemptions: 0,
-          total_outflows: 300000
+          total_outflows: 0
         },
         net_fund_profitability: 250000
       });
