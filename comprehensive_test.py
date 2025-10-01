@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://fidus-google-sync.preview.emergentagent.com/api'
+BACKEND_URL = 'https://crm-workspace-1.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

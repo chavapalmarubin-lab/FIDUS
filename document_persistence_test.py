@@ -29,7 +29,7 @@ from datetime import datetime
 import os
 
 # Configuration
-BACKEND_URL = "https://fidus-google-sync.preview.emergentagent.com/api"
+BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

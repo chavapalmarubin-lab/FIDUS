@@ -26,7 +26,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-google-sync.preview.emergentagent.com/api"
+BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
 CLIENT_USERNAME = "client3"
 CLIENT_PASSWORD = "password123"
 CLIENT_USER_TYPE = "client"

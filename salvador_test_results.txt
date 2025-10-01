@@ -9,7 +9,7 @@ Expected MT5 Account: 9928326
 ============================================================
 🔍 TESTING PREVIEW ENVIRONMENT
 ============================================================
-URL: https://fidus-google-sync.preview.emergentagent.com
+URL: https://crm-workspace-1.preview.emergentagent.com
 ✅ Authentication successful
 ✅ Clients endpoint working: 3 clients found
    ✅ Salvador found: Salvador Palma (salvador.palma@fidus.com)
@@ -33,7 +33,7 @@ URL: https://fidus-invest.emergent.host
 ================================================================================
 
 🔍 PREVIEW ENVIRONMENT:
-   URL: https://fidus-google-sync.preview.emergentagent.com
+   URL: https://crm-workspace-1.preview.emergentagent.com
    Authentication: ✅
    Total Clients: 3
    Salvador Client: ✅
