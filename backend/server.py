@@ -15933,7 +15933,8 @@ async def api_authentication_middleware(request: Request, call_next):
                 }
             )
         except Exception as e:
-            logging.error(f"JWT token validation error for {path}: {str(e)}")
+            logging.error(f"❌ JWT token validation error for {path}: {str(e)}")
+            logging.error(f"❌ Token details - length: {len(token) if 'token' in locals() else 'N/A'}")
             return JSONResponse(
                 status_code=401,
                 content={
