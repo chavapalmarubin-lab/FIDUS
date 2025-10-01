@@ -43,7 +43,7 @@ function App() {
         try {
           console.log('📡 Processing individual Google OAuth callback...');
           
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/callback`, {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/individual-callback`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`,
