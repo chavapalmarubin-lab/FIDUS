@@ -315,20 +315,14 @@ const AdminDashboard = ({ user, onLogout }) => {
       case 'portfolio':
         exportPortfolioData();
         break;
-      case 'fund-portfolio':
-        exportFundPortfolioData();
-        break;
       case 'fund-performance':
         exportFundVsMT5Data();
         break;
-      case 'cash-flow':
+      case 'cashflow':
         exportCashFlowData();
         break;
       case 'investments':
         exportInvestmentsData();
-        break;
-      case 'redemptions':
-        exportRedemptionsData();
         break;
       default:
         alert('Export not available for this tab');
