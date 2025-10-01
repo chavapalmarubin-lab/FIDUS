@@ -15900,12 +15900,13 @@ async def api_authentication_middleware(request: Request, call_next):
             
             # Check role-based access for admin-only endpoints
             if is_admin_only and (payload.get("type") or payload.get("user_type")) != "admin":
+                user_type = payload.get("type") or payload.get("user_type")
                 logging.warning(f"Access denied for non-admin user {payload['username']} to {path}")
                 return JSONResponse(
                     status_code=403,
                     content={
                         "error": "Forbidden", 
-                        "message": f"Admin access required. User type '{payload['user_type']}' cannot access this endpoint.",
+                        "message": f"Admin access required. User type '{user_type}' cannot access this endpoint.",
                         "endpoint": path
                     }
                 )
