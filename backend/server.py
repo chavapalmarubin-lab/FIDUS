@@ -1971,6 +1971,25 @@ async def debug_get_clients():
             "error": str(e)
         }
 
+@api_router.post("/debug/jwt")
+async def debug_jwt_verification(token: str):
+    """Debug JWT token verification"""
+    import jwt as jwt_lib
+    try:
+        # Test with the current secret key
+        payload = jwt_lib.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        return {
+            "success": True,
+            "payload": payload,
+            "secret_preview": JWT_SECRET_KEY[:10] + "..."
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "secret_preview": JWT_SECRET_KEY[:10] + "..."
+        }
+
 # Health check endpoint
 
 @api_router.get("/health/ready")
