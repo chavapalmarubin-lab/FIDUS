@@ -543,7 +543,19 @@ const AdminDashboard = ({ user, onLogout }) => {
           </TabsList>
 
           <TabsContent value="portfolio" className="mt-6">
-            <FundPortfolioManagement />
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-white">Fund Portfolio Management</h2>
+                <Button
+                  onClick={() => exportCurrentTab()}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export to Excel
+                </Button>
+              </div>
+              <FundPortfolioManagement />
+            </div>
           </TabsContent>
 
           <TabsContent value="fund-performance" className="mt-6">
