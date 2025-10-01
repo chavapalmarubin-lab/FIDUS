@@ -1950,10 +1950,26 @@ async def health_check():
         "jwt_fix": "applied",
         "services": {
             "backend": "running",
-            "mongodb": "connected" if mongodb_manager else "unknown",
+            "mongodb": "connected" if mongodb_manager.db else "disconnected",
             "google_auto_connection": "initialized"
         }
     }
+
+@api_router.get("/debug/clients")
+async def debug_get_clients():
+    """Debug endpoint to test client fetching without auth"""
+    try:
+        clients = mongodb_manager.get_all_clients()
+        return {
+            "success": True,
+            "total_clients": len(clients),
+            "clients": clients[:5]  # Return first 5 clients for debugging
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 # Health check endpoint
 
