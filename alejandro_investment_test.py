@@ -165,22 +165,22 @@ class AlejandroInvestmentTest:
             return False
     
     def test_investments_endpoint_exists(self):
-        """Test if POST /api/investments endpoint exists"""
+        """Test if POST /api/investments/create endpoint exists"""
         try:
             # Test with invalid data to see if endpoint exists
-            response = self.session.post(f"{BACKEND_URL}/investments", json={})
+            response = self.session.post(f"{BACKEND_URL}/investments/create", json={})
             
             if response.status_code == 422:  # Validation error means endpoint exists
-                self.log_result("Investments Endpoint Exists", True, "POST /api/investments endpoint exists (validation error expected)")
+                self.log_result("Investments Endpoint Exists", True, "POST /api/investments/create endpoint exists (validation error expected)")
                 return True
             elif response.status_code == 404:
-                self.log_result("Investments Endpoint Exists", False, "POST /api/investments endpoint not found")
+                self.log_result("Investments Endpoint Exists", False, "POST /api/investments/create endpoint not found")
                 return False
             elif response.status_code == 401:
-                self.log_result("Investments Endpoint Exists", True, "POST /api/investments endpoint exists (authentication required)")
+                self.log_result("Investments Endpoint Exists", True, "POST /api/investments/create endpoint exists (authentication required)")
                 return True
             else:
-                self.log_result("Investments Endpoint Exists", True, f"POST /api/investments endpoint exists (HTTP {response.status_code})")
+                self.log_result("Investments Endpoint Exists", True, f"POST /api/investments/create endpoint exists (HTTP {response.status_code})")
                 return True
                 
         except Exception as e:
