@@ -318,7 +318,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       case 'fund-portfolio':
         exportFundPortfolioData();
         break;
-      case 'fund-vs-mt5':
+      case 'fund-performance':
         exportFundVsMT5Data();
         break;
       case 'cash-flow':
