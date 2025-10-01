@@ -1417,7 +1417,7 @@ def calculate_balances(client_id: str) -> dict:
 # Authentication endpoints
 @api_router.post("/auth/login", response_model=UserResponse)
 async def login(login_data: LoginRequest):
-    """Production MongoDB-only authentication"""
+    """Production MongoDB-only authentication - JWT FIELD FIX APPLIED"""
     username = login_data.username
     password = login_data.password
     user_type = login_data.user_type
