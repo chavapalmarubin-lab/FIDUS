@@ -8698,8 +8698,23 @@ async def get_admin_google_profile(current_user: dict = Depends(get_current_admi
 async def get_individual_google_auth_url(request: Request):
     """Get Google OAuth URL for individual admin authentication"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
-        admin_username = current_user["username"]
+        # Get current user from JWT token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="No token provided")
+        
+        token = auth_header.split(" ")[1]
+        try:
+            payload = verify_jwt_token(token)
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Token validation failed: {str(e)}")
+        
+        # Check if user is admin
+        if payload.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        admin_user_id = payload.get("user_id") or payload.get("id")
+        admin_username = payload.get("username")
         
         # Generate state parameter for security
         state = f"{admin_user_id}:{str(uuid.uuid4())}"
