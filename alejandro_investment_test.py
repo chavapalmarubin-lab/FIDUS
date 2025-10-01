@@ -260,7 +260,7 @@ class AlejandroInvestmentTest:
             
             print(f"🎯 Testing investment creation with data: {json.dumps(investment_data, indent=2)}")
             
-            response = self.session.post(f"{BACKEND_URL}/investments", json=investment_data)
+            response = self.session.post(f"{BACKEND_URL}/investments/create", json=investment_data)
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
