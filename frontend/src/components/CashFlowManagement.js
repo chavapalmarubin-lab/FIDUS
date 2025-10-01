@@ -85,7 +85,7 @@ const CashFlowManagement = () => {
           upcoming_redemptions: 0,
           total_outflows: 0
         },
-        net_fund_profitability: 250000
+        net_fund_profitability: 0
       });
     } finally {
       setLoading(false);
