@@ -15900,6 +15900,7 @@ async def api_authentication_middleware(request: Request, call_next):
         # Extract and validate JWT token
         try:
             token = auth_header.split(" ")[1]
+            logging.info(f"🔍 Middleware extracting token for {path} - token length: {len(token)}")
             payload = verify_jwt_token(token)
             
             # Add user info to request state for downstream use
