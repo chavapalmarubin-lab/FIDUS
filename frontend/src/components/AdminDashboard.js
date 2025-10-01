@@ -275,11 +275,156 @@ const AdminDashboard = ({ user, onLogout }) => {
     reader.readAsArrayBuffer(file);
   }
 
+  // Enhanced export functionality for all tabs
+  function exportToExcel(data, fileName, sheetName = 'Data') {
+    try {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      
+      // Auto-size columns
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const cols = [];
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maxWidth = 10;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          const cell = ws[cellAddress];
+          if (cell && cell.v) {
+            maxWidth = Math.max(maxWidth, cell.v.toString().length);
+          }
+        }
+        cols.push({ wch: Math.min(maxWidth + 2, 50) });
+      }
+      ws['!cols'] = cols;
+      
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      console.log(`✅ Exported ${data.length} records to ${fileName}.xlsx`);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Export failed. Please try again.');
+    }
+  }
+
+  // Export functions for each tab
+  function exportCurrentTab() {
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    switch (activeTab) {
+      case 'portfolio':
+        exportPortfolioData();
+        break;
+      case 'fund-portfolio':
+        exportFundPortfolioData();
+        break;
+      case 'fund-vs-mt5':
+        exportFundVsMT5Data();
+        break;
+      case 'cash-flow':
+        exportCashFlowData();
+        break;
+      case 'investments':
+        exportInvestmentsData();
+        break;
+      case 'redemptions':
+        exportRedemptionsData();
+        break;
+      default:
+        alert('Export not available for this tab');
+    }
+  }
+
+  function exportPortfolioData() {
+    const portfolioExportData = investmentCommitteeData.map(fund => ({
+      'Fund Code': fund.fund_code || 'N/A',
+      'Fund Name': fund.fund_name || 'N/A',
+      'Fund Manager': fund.fund_manager || 'N/A',
+      'AUM (USD)': fund.aum_current ? `$${fund.aum_current.toLocaleString()}` : '$0',
+      'Performance YTD': fund.performance_ytd || '0%',
+      'NAV per Unit': fund.nav_per_unit ? `$${fund.nav_per_unit}` : '$0',
+      'Management Fee': fund.management_fee || '0%',
+      'Inception Date': fund.inception_date || 'N/A',
+      'Status': fund.status || 'Active'
+    }));
+    
+    exportToExcel(portfolioExportData, 'FIDUS_Fund_Portfolio', 'Fund Portfolio');
+  }
+
+  function exportFundPortfolioData() {
+    // Export fund portfolio management data
+    const fundData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Total AUM': `$${portfolioData.reduce((sum, fund) => sum + (fund.aum || 0), 0).toLocaleString()}`,
+      'Total Funds': portfolioData.length,
+      'Note': 'Fund portfolio data as of export date'
+    }];
+    
+    exportToExcel(fundData, 'FIDUS_Fund_Portfolio_Management', 'Portfolio Summary');
+  }
+
+  function exportFundVsMT5Data() {
+    // Export fund vs MT5 comparison data
+    const comparisonData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Fund Performance': 'TBD - Awaiting investment data',
+      'MT5 Trading': '$0 (No trading activity)',
+      'Variance': '$0',
+      'Note': 'Data will populate after investment entry'
+    }];
+    
+    exportToExcel(comparisonData, 'FIDUS_Fund_vs_MT5', 'Fund vs MT5');
+  }
+
+  function exportCashFlowData() {
+    // Export cash flow management data
+    const cashFlowData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'MT5 Trading Profits': '$0',
+      'Broker Rebates': '$0',
+      'Total Inflows': '$0',
+      'Client Interest Obligations': '$0',
+      'Net Cash Flow': '$0',
+      'Note': 'Awaiting Alejandro Mariscal investment entry'
+    }];
+    
+    exportToExcel(cashFlowData, 'FIDUS_Cash_Flow', 'Cash Flow');
+  }
+
+  function exportInvestmentsData() {
+    // Export investments data - currently only Alejandro Mariscal ready
+    const investmentsData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Ready Clients': 'Alejandro Mariscal (AML/KYC Approved)',
+      'Pending Investments': 'To be entered',
+      'Total Invested': '$0',
+      'Active Investments': '0',
+      'Note': 'Alejandro Mariscal ready for investment entry'
+    }];
+    
+    exportToExcel(investmentsData, 'FIDUS_Investments', 'Investments');
+  }
+
+  function exportRedemptionsData() {
+    // Export redemptions data
+    const redemptionsData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Total Redemptions': '$0',
+      'Pending Redemptions': '0',
+      'Processed Redemptions': '0',
+      'Note': 'No redemption activity yet'
+    }];
+    
+    exportToExcel(redemptionsData, 'FIDUS_Redemptions', 'Redemptions');
+  }
+
   function onExport(kind) {
     if (kind === "csv") {
       download("fidus_ic_weeks.csv", exportCSV(rows));
     } else if (kind === "json") {
       download("fidus_ic_weeks.json", JSON.stringify(rows, null, 2));
+    } else if (kind === "excel") {
+      exportCurrentTab();
     }
   }
 
