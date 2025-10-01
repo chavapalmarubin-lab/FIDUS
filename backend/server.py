@@ -15873,6 +15873,9 @@ async def api_authentication_middleware(request: Request, call_next):
     if is_public_crm:
         return await call_next(request)
     
+    # Log all requests for debugging
+    logging.info(f"🔍 Middleware processing: {request.method} {path}")
+    
     # Check if this is a protected endpoint
     # Explicit bypass for investment creation testing
     if path == "/api/investments/create":
