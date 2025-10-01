@@ -140,15 +140,12 @@ def create_jwt_token(data: dict) -> str:
 def verify_jwt_token(token: str) -> dict:
     """Verify and decode a JWT token"""
     try:
-        logging.info(f"🔍 JWT verification - Token length: {len(token)}, Secret key length: {len(JWT_SECRET_KEY)}")
+        # Use the exact same secret key and algorithm as token creation
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        logging.info(f"✅ JWT verification successful for user: {payload.get('username', 'unknown')}")
         return payload
-    except jwt.ExpiredSignatureError as e:
-        logging.error(f"❌ JWT expired: {str(e)}")
+    except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError as e:
-        logging.error(f"❌ JWT invalid: {str(e)} - Secret key preview: {JWT_SECRET_KEY[:10]}...")
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # JWT functions moved to security configuration section above
