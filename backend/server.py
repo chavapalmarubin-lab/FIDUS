@@ -11279,7 +11279,7 @@ async def update_investment_deposit_date(
         raise HTTPException(status_code=500, detail="Failed to update investment deposit date")
 
 @api_router.post("/investments/create")
-async def create_client_investment(investment_data: InvestmentCreate):
+async def create_client_investment(investment_data: InvestmentCreate, current_user: dict = Depends(get_current_admin_user)):
     """Create a new investment for a client"""
     try:
         # PRODUCTION SAFEGUARD: Prevent test data creation
