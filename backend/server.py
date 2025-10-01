@@ -8695,7 +8695,7 @@ async def get_admin_google_profile(current_user: dict = Depends(get_current_admi
 # ===============================================================================
 
 @api_router.get("/admin/google/individual-auth-url")
-async def get_individual_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
+async def get_individual_google_auth_url(request: Request):
     """Get Google OAuth URL for individual admin authentication"""
     try:
         admin_user_id = current_user.get("user_id") or current_user.get("id")
