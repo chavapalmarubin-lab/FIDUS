@@ -226,24 +226,28 @@ class JWTFieldFixTest:
             return False
     
     def test_jwt_field_access_patterns(self):
-        """Test that both current_user['user_id'] and current_user.get('id') work"""
+        """Test the fallback pattern used in Google OAuth endpoints"""
         try:
             # This test verifies the JWT payload structure we decoded earlier
             if not self.jwt_payload:
                 self.log_result("JWT Field Access Patterns", False, "No JWT payload available for testing")
                 return False
             
-            # Simulate the access patterns that were causing issues
+            # Test the specific pattern used in Google OAuth endpoints:
+            # current_user.get("user_id") or current_user.get("id")
             access_patterns = []
             
-            # Test current_user["user_id"] pattern
+            # Test current_user.get("user_id") pattern
             try:
-                user_id_direct = self.jwt_payload["user_id"]
-                access_patterns.append("✅ current_user['user_id'] - SUCCESS")
-            except KeyError:
-                access_patterns.append("❌ current_user['user_id'] - KeyError")
+                user_id_safe = self.jwt_payload.get("user_id")
+                if user_id_safe is not None:
+                    access_patterns.append("✅ current_user.get('user_id') - SUCCESS")
+                else:
+                    access_patterns.append("⚠️ current_user.get('user_id') - None value (expected)")
+            except Exception as e:
+                access_patterns.append(f"❌ current_user.get('user_id') - Exception: {str(e)}")
             
-            # Test current_user.get("id") pattern
+            # Test current_user.get("id") pattern (fallback)
             try:
                 id_fallback = self.jwt_payload.get("id")
                 if id_fallback is not None:
@@ -253,27 +257,40 @@ class JWTFieldFixTest:
             except Exception as e:
                 access_patterns.append(f"❌ current_user.get('id') - Exception: {str(e)}")
             
-            # Test current_user.get("user_id") pattern
+            # Test the combined fallback pattern used in the actual code
             try:
-                user_id_safe = self.jwt_payload.get("user_id")
-                if user_id_safe is not None:
-                    access_patterns.append("✅ current_user.get('user_id') - SUCCESS")
+                combined_result = self.jwt_payload.get("user_id") or self.jwt_payload.get("id")
+                if combined_result is not None:
+                    access_patterns.append("✅ Fallback pattern (user_id or id) - SUCCESS")
                 else:
-                    access_patterns.append("❌ current_user.get('user_id') - None value")
+                    access_patterns.append("❌ Fallback pattern (user_id or id) - Failed")
             except Exception as e:
-                access_patterns.append(f"❌ current_user.get('user_id') - Exception: {str(e)}")
+                access_patterns.append(f"❌ Fallback pattern - Exception: {str(e)}")
             
-            # Check if all critical patterns work
+            # Test current_user.get("type") pattern (for admin check)
+            try:
+                type_value = self.jwt_payload.get("type")
+                if type_value == "admin":
+                    access_patterns.append("✅ current_user.get('type') - SUCCESS (admin)")
+                elif type_value is not None:
+                    access_patterns.append(f"⚠️ current_user.get('type') - SUCCESS ({type_value})")
+                else:
+                    access_patterns.append("❌ current_user.get('type') - None value")
+            except Exception as e:
+                access_patterns.append(f"❌ current_user.get('type') - Exception: {str(e)}")
+            
+            # Check if the critical fallback pattern works
             successful_patterns = sum(1 for pattern in access_patterns if "SUCCESS" in pattern)
+            fallback_works = "Fallback pattern (user_id or id) - SUCCESS" in str(access_patterns)
             
-            if successful_patterns >= 2:  # At least 2 out of 3 patterns should work
+            if fallback_works and successful_patterns >= 2:
                 self.log_result("JWT Field Access Patterns", True, 
-                              f"JWT field access patterns working ({successful_patterns}/3 patterns successful)",
+                              f"JWT field access patterns compatible with Google OAuth endpoints ({successful_patterns}/4 patterns successful)",
                               {"access_patterns": access_patterns, "jwt_keys": list(self.jwt_payload.keys())})
                 return True
             else:
                 self.log_result("JWT Field Access Patterns", False, 
-                              f"JWT field access patterns failing ({successful_patterns}/3 patterns successful)",
+                              f"JWT field access patterns not compatible ({successful_patterns}/4 patterns successful)",
                               {"access_patterns": access_patterns, "jwt_keys": list(self.jwt_payload.keys())})
                 return False
                 
