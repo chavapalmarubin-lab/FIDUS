@@ -15894,12 +15894,12 @@ async def api_authentication_middleware(request: Request, call_next):
             payload = verify_jwt_token(token)
             
             # Add user info to request state for downstream use
-            request.state.user_id = payload["user_id"]
+            request.state.user_id = payload.get("user_id") or payload.get("id")
             request.state.username = payload["username"]
-            request.state.user_type = payload["user_type"]
+            request.state.user_type = payload.get("type") or payload.get("user_type")
             
             # Check role-based access for admin-only endpoints
-            if is_admin_only and payload["user_type"] != "admin":
+            if is_admin_only and (payload.get("type") or payload.get("user_type")) != "admin":
                 logging.warning(f"Access denied for non-admin user {payload['username']} to {path}")
                 return JSONResponse(
                     status_code=403,
