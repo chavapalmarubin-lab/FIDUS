@@ -10,9 +10,14 @@ from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 import bcrypt
 
-# Get MongoDB URL from environment
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-DB_NAME = os.environ.get('DB_NAME', 'fidus_investment_db')
+# Get MongoDB URL from environment - PRODUCTION: MongoDB Atlas ONLY
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    raise Exception("MONGO_URL environment variable is required for production")
+if not MONGO_URL.startswith('mongodb+srv://'):
+    raise Exception("Production requires MongoDB Atlas connection string (mongodb+srv://)")
+
+DB_NAME = os.environ.get('DB_NAME', 'fidus_production')
 
 class MongoDBManager:
     def __init__(self):
