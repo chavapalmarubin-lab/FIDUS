@@ -24,10 +24,10 @@
 - **Cluster Name:** FIDUS
 - **Database:** fidus_production
 - **Username:** chavapalmarubin_db_user
-- **Password:** HlX8kJaF38fIOVHi
-- **Connection String:** `mongodb+srv://chavapalmarubin_db_user:HlX8kJaF38fIOVHi@fidus.ylp9be2.mongodb.net/?retryWrites=true&w=majority&appName=FIDUS`
+- **Password:** HLX8kJaF38fi0VHi
+- **Connection String:** `mongodb+srv://chavapalmarubin_db_user:HLX8kJaF38fi0VHi@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS`
 - **Region:** Global Cloud (MongoDB Atlas)
-- **Plan:** Free Tier (512MB) - Upgradable to Dedicated Clusters
+- **Plan:** M0 Sandbox (512MB) - Production MongoDB Atlas Cluster
 
 ### **Application Access Credentials**
 - **Admin Username:** admin
