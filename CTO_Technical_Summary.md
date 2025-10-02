@@ -63,21 +63,27 @@
 - **PWA Ready:** Service worker and offline capability
 
 ### **Database Architecture (MongoDB Atlas)**
+- **Type:** NoSQL Document Database
+- **Connection:** MongoDB Atlas Cloud-hosted (NO Local Database)
 - **Provider:** MongoDB Atlas (Cloud-hosted, Enterprise-grade)
 - **Database:** fidus_production
-- **Connection Pooling:** 5-100 concurrent connections
-- **Backup:** Automated continuous backup with point-in-time recovery
+- **Connection Pooling:** Optimized Atlas connection with SSL/TLS encryption
+- **Schema:** Document-based with UUID Primary Keys
+- **Backup:** MongoDB Atlas Continuous Cloud Backups with 30-day retention
+- **Performance:** Indexed Queries with Sub-second Response Times
 - **Security:** Atlas-managed encryption at rest and in transit
 - **Collections Structure:**
   ```
   fidus_production/
-  ├── users (13 active users)
-  ├── crm_prospects (19 prospects)  
+  ├── users (Alejandro and other clients ready for investment)
+  ├── crm_prospects (CRM pipeline management)  
   ├── admin_google_sessions (Individual OAuth tokens)
-  ├── investments (Client portfolios)
+  ├── investments (Client investment portfolios)
+  ├── mt5_accounts (MetaTrader5 account mappings)
   ├── documents (Document storage metadata)
   └── sessions (JWT session management)
   ```
+- **Note:** MongoDB's NoSQL document-based storage is ideal for financial data with varying structures and rapid development cycles
 
 ---
 
