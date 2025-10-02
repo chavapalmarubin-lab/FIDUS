@@ -111,7 +111,7 @@ client = AsyncIOMotorClient(
     connectTimeoutMS=10000,  # 10 seconds timeout for connection
     retryWrites=True         # Enable retryable writes
 )
-db = client[os.environ.get('DB_NAME', 'fidus_investment_db')]
+db = client[os.environ.get('DB_NAME', 'fidus_production')]
 
 # JWT and Password Security Configuration
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
