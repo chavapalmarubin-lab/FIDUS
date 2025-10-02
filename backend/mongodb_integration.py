@@ -17,7 +17,21 @@ DB_NAME = os.environ.get('DB_NAME', 'fidus_investment_db')
 class MongoDBManager:
     def __init__(self):
         try:
-            self.client = MongoClient(MONGO_URL)
+            # Configure MongoDB client for Atlas with SSL
+            if "mongodb+srv" in MONGO_URL:
+                # MongoDB Atlas connection with SSL/TLS
+                self.client = MongoClient(
+                    MONGO_URL,
+                    tls=True,
+                    tlsAllowInvalidCertificates=False,
+                    serverSelectionTimeoutMS=30000,
+                    connectTimeoutMS=20000,
+                    socketTimeoutMS=20000
+                )
+            else:
+                # Local MongoDB connection
+                self.client = MongoClient(MONGO_URL)
+                
             self.db_name = DB_NAME  
             self.db = self.client[self.db_name]
             
