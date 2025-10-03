@@ -55,7 +55,7 @@ def main():
             "bank_reference": "ALEJANDRO-INV1-80K-BALANCE-MT5-886557"
         },
         {
-            "client_id": "alejandrom", 
+            "client_id": "client_11aed9e2", 
             "fund_code": "BALANCE",
             "amount": 10000,  # CORRECT amount for Investment 2
             "deposit_date": "2025-10-01",
