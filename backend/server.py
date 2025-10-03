@@ -11325,6 +11325,7 @@ async def update_investment_deposit_date(
 async def create_client_investment(investment_data: InvestmentCreate):
     """Create a new investment for a client - PRODUCTION READY"""
     try:
+        logging.info(f"🚀 Investment creation request - client_id: {investment_data.client_id}, fund: {investment_data.fund_code}, amount: ${investment_data.amount}")
         # PRODUCTION SAFEGUARD: Prevent test data creation
         if investment_data.client_id.startswith('test_') or investment_data.client_id.startswith('client_001'):
             raise HTTPException(
