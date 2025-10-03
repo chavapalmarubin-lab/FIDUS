@@ -74,7 +74,7 @@ def main():
         },
         {
             "client_id": "alejandrom",
-            "fund_code": "FIDUS_CORE",  # CORE fund for Investment 4
+            "fund_code": "CORE",  # CORE fund for Investment 4
             "amount": 18151.41,  # CORRECT amount for Investment 4
             "deposit_date": "2025-10-01", 
             "payment_method": "cryptocurrency",
