@@ -47,7 +47,7 @@ def main():
     investments = [
         {
             "client_id": "alejandrom",
-            "fund_code": "FIDUS_BALANCE",
+            "fund_code": "BALANCE",
             "amount": 80000,
             "deposit_date": "2025-10-01",
             "payment_method": "cryptocurrency",
@@ -56,7 +56,7 @@ def main():
         },
         {
             "client_id": "alejandrom", 
-            "fund_code": "FIDUS_BALANCE",
+            "fund_code": "BALANCE",
             "amount": 10000,  # CORRECT amount for Investment 2
             "deposit_date": "2025-10-01",
             "payment_method": "cryptocurrency", 
@@ -65,7 +65,7 @@ def main():
         },
         {
             "client_id": "alejandrom",
-            "fund_code": "FIDUS_BALANCE", 
+            "fund_code": "BALANCE", 
             "amount": 10000,  # CORRECT amount for Investment 3
             "deposit_date": "2025-10-01",
             "payment_method": "cryptocurrency",
