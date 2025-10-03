@@ -46,7 +46,7 @@ def main():
     # The 4 CORRECT investments as specified
     investments = [
         {
-            "client_id": "alejandrom",
+            "client_id": "client_11aed9e2",
             "fund_code": "BALANCE",
             "amount": 80000,
             "deposit_date": "2025-10-01",
