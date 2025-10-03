@@ -73,7 +73,7 @@ def main():
             "bank_reference": "ALEJANDRO-INV3-10K-BALANCE-MT5-886066"
         },
         {
-            "client_id": "alejandrom",
+            "client_id": "client_11aed9e2",
             "fund_code": "CORE",  # CORE fund for Investment 4
             "amount": 18151.41,  # CORRECT amount for Investment 4
             "deposit_date": "2025-10-01", 
