@@ -12016,7 +12016,7 @@ async def approve_redemption_request(approval_data: RedemptionApproval):
 
 # Payment Confirmation Endpoints
 @api_router.post("/payments/deposit/confirm")
-async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest, admin_id: str = "admin_001"):
+async def confirm_deposit_payment(confirmation_data: DepositConfirmationRequest, current_user: dict = Depends(get_current_admin_user)):
     """Confirm that a deposit payment has been received"""
     try:
         # Find the investment by searching through all client investments
