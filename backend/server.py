@@ -839,15 +839,19 @@ def create_investment(client_id: str, fund_code: str, amount: float, deposit_dat
     fund_config = FIDUS_FUND_CONFIG[fund_code]
     
     # Validate minimum investment (with exceptions)
-    # - Salvador Palma: minimum waived
-    # - Alejandro Mariscal: minimum waived for additional BALANCE investments (already has $80K BALANCE)
+    # ALEJANDRO MARISCAL: Permanent waiver for all minimums (high-value client with $80K BALANCE investment)
+    # Salvador Palma: minimum waived
     waiver_clients = ["client_003", "alejandrom", "client_11aed9e2"]
-    logging.info(f"💰 Investment validation - client_id: {client_id}, fund: {fund_code}, amount: ${amount}, waiver_clients: {waiver_clients}")
-    if amount < fund_config.minimum_investment and client_id not in waiver_clients:
-        logging.warning(f"❌ Minimum investment check failed for client_id: {client_id}")
+    
+    if client_id in waiver_clients:
+        logging.info(f"✅ MINIMUM WAIVER GRANTED for client_id: {client_id} - Amount: ${amount} {fund_code}")
+    elif amount < fund_config.minimum_investment:
+        logging.warning(f"❌ Minimum investment requirement: ${fund_config.minimum_investment:,.2f} for {fund_code}")
         raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
     else:
-        logging.info(f"✅ Minimum investment check passed for client_id: {client_id}")
+        logging.info(f"✅ Minimum investment requirement met: ${amount} >= ${fund_config.minimum_investment}")
+    
+    # Skip minimum validation for waiver clients completely
     
     # Check invitation-only restriction
     if fund_config.invitation_only:
