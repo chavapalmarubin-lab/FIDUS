@@ -841,7 +841,7 @@ def create_investment(client_id: str, fund_code: str, amount: float, deposit_dat
     # Validate minimum investment (with exceptions)
     # - Salvador Palma: minimum waived
     # - Alejandro Mariscal: minimum waived for additional BALANCE investments (already has $80K BALANCE)
-    waiver_clients = ["client_003", "alejandrom"]
+    waiver_clients = ["client_003", "alejandrom", "client_11aed9e2"]
     if amount < fund_config.minimum_investment and client_id not in waiver_clients:
         raise ValueError(f"Minimum investment for {fund_code} is ${fund_config.minimum_investment:,.2f}")
     
