@@ -11607,6 +11607,42 @@ async def get_investment_projections(investment_id: str):
         logging.error(f"Get investment projections error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch investment projections")
 
+@api_router.delete("/investments/{investment_id}")
+async def delete_investment(investment_id: str):
+    """Delete a specific investment - PRODUCTION ADMIN USE"""
+    try:
+        # Delete from MongoDB
+        result = mongodb_manager.db.investments.delete_one({"investment_id": investment_id})
+        
+        if result.deleted_count > 0:
+            logging.info(f"✅ Deleted investment: {investment_id}")
+            return {"success": True, "message": f"Investment {investment_id} deleted"}
+        else:
+            logging.warning(f"❌ Investment not found: {investment_id}")
+            return {"success": False, "message": "Investment not found"}
+            
+    except Exception as e:
+        logging.error(f"❌ Error deleting investment {investment_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting investment: {str(e)}")
+
+@api_router.delete("/admin/investments/client/{client_id}")  
+async def delete_all_client_investments(client_id: str):
+    """Delete ALL investments for a specific client - EMERGENCY USE ONLY"""
+    try:
+        # Delete all investments for this client
+        result = mongodb_manager.db.investments.delete_many({"client_id": client_id})
+        
+        logging.info(f"🧹 Deleted {result.deleted_count} investments for client {client_id}")
+        return {
+            "success": True, 
+            "message": f"Deleted {result.deleted_count} investments for client {client_id}",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Error deleting investments for client {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting client investments: {str(e)}")
+
 @api_router.get("/investments/admin/overview")
 async def get_admin_investments_overview():
     """Get comprehensive investment overview for admin"""
