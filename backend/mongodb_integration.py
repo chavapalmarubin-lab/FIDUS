@@ -11,11 +11,33 @@ from pymongo.errors import PyMongoError
 import bcrypt
 
 # Get MongoDB URL from environment - PRODUCTION: MongoDB Atlas ONLY
+# Get MongoDB URL from environment - PRODUCTION: MongoDB Atlas ONLY
 MONGO_URL = os.environ.get('MONGO_URL')
 if not MONGO_URL:
+    # Fallback to check for the connection string directly
+    MONGO_URL = os.environ.get('MONGODB_URL') 
+if not MONGO_URL:
+    print("⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...")
+    import os
+    from pathlib import Path
+    env_file = Path(__file__).parent / '.env'
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                if line.startswith('MONGO_URL='):
+                    MONGO_URL = line.split('=', 1)[1].strip().strip('"')
+                    print(f"✅ Found MONGO_URL in .env file")
+                    break
+    
+if not MONGO_URL:
     raise Exception("MONGO_URL environment variable is required for production")
-if not MONGO_URL.startswith('mongodb+srv://'):
-    raise Exception("Production requires MongoDB Atlas connection string (mongodb+srv://)")
+
+if MONGO_URL.startswith('mongodb+srv://'):
+    print("✅ Using MongoDB Atlas connection")
+elif MONGO_URL.startswith('mongodb://'):
+    print("⚠️ Using local MongoDB connection")
+else:
+    raise Exception("Invalid MongoDB connection string format")
 
 DB_NAME = os.environ.get('DB_NAME', 'fidus_production')
 
