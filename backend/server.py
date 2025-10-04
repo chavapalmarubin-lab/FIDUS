@@ -7385,23 +7385,41 @@ async def get_client_mt5_account(client_id: str, current_user=Depends(get_curren
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 account data")
 
 @api_router.get("/crm/mt5/client/{client_id}/positions")
-async def get_client_mt5_positions(client_id: str):
+async def get_client_mt5_positions(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 open positions for a client"""
     try:
-        positions = await mock_mt5.get_positions(client_id)
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
         
-        # Calculate summary
-        total_profit = sum(pos["profit"] for pos in positions)
-        total_volume = sum(pos["volume"] for pos in positions)
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
         
-        return {
-            "positions": positions,
-            "summary": {
-                "total_positions": len(positions),
-                "total_profit": round(total_profit, 2),
-                "total_volume": round(total_volume, 2)
+        # Get client's MT5 accounts
+        accounts = await mt5_service.mt5_repo.find_accounts_by_client_id(client_id)
+        if not accounts:
+            return {
+                "success": True,
+                "positions": [],
+                "summary": {
+                    "total_positions": 0,
+                    "total_profit": 0.0,
+                    "total_volume": 0.0
+                }
             }
+        
+        # For now return empty positions (would connect to bridge service for real data)
+        return {
+            "success": True,
+            "positions": [],
+            "summary": {
+                "total_positions": 0,
+                "total_profit": 0.0,
+                "total_volume": 0.0
+            },
+            "note": "Position data available when MT5 bridge is accessible"
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Get MT5 positions error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 positions")
