@@ -37,7 +37,7 @@ import io
 import base64
 
 # Configuration
-BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
 
 class MT5DiagnosticTester:
     def __init__(self):

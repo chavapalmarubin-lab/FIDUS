@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
-FRONTEND_URL = "https://crm-workspace-1.preview.emergentagent.com"
+BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
+FRONTEND_URL = "https://invest-manager-9.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

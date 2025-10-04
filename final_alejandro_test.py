@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://crm-workspace-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
 
 def get_admin_token():
     """Get admin JWT token"""
