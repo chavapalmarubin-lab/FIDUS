@@ -1955,16 +1955,38 @@ async def sync_client_folder_info(request_data: dict, current_user: dict = Depen
 @api_router.get("/health")
 async def health_check():
     """Basic health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "jwt_fix": "applied",
-        "services": {
-            "backend": "running",
-            "mongodb": "connected" if mongodb_manager.db is not None else "disconnected",
-            "google_auto_connection": "initialized"
+    try:
+        # Check MongoDB connection safely
+        mongodb_status = "disconnected"
+        try:
+            if hasattr(mongodb_manager, 'db') and mongodb_manager.db is not None:
+                # Test the connection with a simple ping
+                mongodb_manager.client.admin.command('ping')
+                mongodb_status = "connected"
+        except Exception as e:
+            mongodb_status = f"error: {str(e)}"
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "jwt_fix": "applied",
+            "services": {
+                "backend": "running",
+                "mongodb": mongodb_status,
+                "google_auto_connection": "initialized"
+            }
         }
-    }
+    except Exception as e:
+        return {
+            "status": "error",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": str(e),
+            "services": {
+                "backend": "running",
+                "mongodb": "unknown",
+                "google_auto_connection": "unknown"
+            }
+        }
 
 @api_router.get("/debug/clients")
 async def debug_get_clients():
