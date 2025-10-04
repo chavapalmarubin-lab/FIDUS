@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 """
-MT5 Integration Backend Testing Suite
-Tests the newly implemented MT5 integration system with focus on:
-1. MT5 Account Creation & Management
-2. MT5 Admin Endpoints
-3. MT5 Client Endpoints
-4. MT5 Integration Logic
-5. Business Logic Validation
+FIDUS MT5 Bridge Service Unreachable Testing Suite
+Tests MT5 endpoints when bridge service is running but blocked by ForexVPS firewall.
+Focus areas:
+1. All FIDUS /api/mt5/* endpoints
+2. Proper error handling when bridge is unreachable
+3. Timeout behavior (30 seconds)
+4. MT5 admin endpoints with admin authentication
+5. Client MT5 endpoints return appropriate responses
 """
 
 import requests
 import sys
 import json
+import time
 from datetime import datetime
 from typing import Dict, Any, List
 
 class MT5BackendTester:
-    def __init__(self, base_url="https://fidus-admin.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-invest.emergent.host"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
