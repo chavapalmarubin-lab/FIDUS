@@ -31,7 +31,7 @@ class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9._-]+$")
     email: EmailStr
     full_name: Optional[str] = Field(None, max_length=100)
-    phone: Optional[str] = Field(None, pattern="^\\+?[1-9]\\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern="^[+]?[0-9\\s\\-\\(\\)]{7,20}$")
     user_type: UserRole
     is_active: bool = True
     is_verified: bool = False
