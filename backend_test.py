@@ -1,34 +1,54 @@
 #!/usr/bin/env python3
 """
-INDIVIDUAL GOOGLE OAUTH ENDPOINTS TESTING
-=========================================
+FIDUS Backend API Testing Suite - Phase 2 Database Architecture Verification
+Testing comprehensive backend functionality after MongoDB migration and repository pattern implementation.
 
-This test verifies the new Individual Google OAuth endpoints as requested in the review:
-- GET /admin/google/individual-status - Should return connection status for current admin
-- GET /admin/google/individual-auth-url - Should generate Google OAuth URL for individual admin
-- GET /admin/google/all-connections - Should return all admin Google connections (master admin view)
-- POST /admin/google/individual-disconnect - Should disconnect admin's Google account
+Test Areas:
+1. Health Check Endpoints
+2. User Authentication & Session Management  
+3. User Management System
+4. Investment Management System
+5. CRM Pipeline System
+6. Google Integration APIs
+7. Database Operations & Repository Pattern
+8. JWT Token Management
 
-Authentication: Use admin credentials (admin/password123)
-
-Expected Results:
-- All endpoints should require admin JWT authentication
-- individual-status should show "No Google account connected" initially
-- individual-auth-url should generate proper Google OAuth URL with all required scopes
-- all-connections should return empty list initially
-- individual-disconnect should return proper error message when no connection exists
+Context: 7 users exist in database (including alejandro_mariscal)
+Investment collection is clean (0 investments)
+MongoDB Atlas connection operational at ~30ms ping time
 """
 
 import requests
 import json
-import sys
-from datetime import datetime
 import time
+import sys
+from datetime import datetime, timezone
+import uuid
 
-# Configuration - Use correct backend URL from frontend/.env
+# Backend URL Configuration
 BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "password123"
+
+# Test Users Available
+TEST_USERS = {
+    "admin": {
+        "username": "admin", 
+        "password": "password123",
+        "user_type": "admin",
+        "expected_name": "Investment Committee"
+    },
+    "alejandro_mariscal": {
+        "username": "alejandro_mariscal",
+        "password": "password123", 
+        "user_type": "client",
+        "expected_email": "alejandro.mariscal@email.com"
+    },
+    "client1": {
+        "username": "client1",
+        "password": "password123",
+        "user_type": "client", 
+        "expected_email": "g.b@fidus.com"
+    }
+}
 
 class IndividualGoogleOAuthTest:
     def __init__(self):
