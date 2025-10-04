@@ -161,7 +161,7 @@ class InvestmentSearch(BaseModel):
     investment_before: Optional[datetime] = None
     limit: int = Field(default=50, le=100)
     skip: int = Field(default=0, ge=0)
-    sort_by: str = Field(default="created_at", regex="^(investment_id|client_id|fund_code|principal_amount|current_value|investment_date|created_at|updated_at)$")
+    sort_by: str = Field(default="created_at", pattern="^(investment_id|client_id|fund_code|principal_amount|current_value|investment_date|created_at|updated_at)$")
     sort_order: int = Field(default=-1, ge=-1, le=1)  # -1 for desc, 1 for asc
     
     @validator('max_amount')
