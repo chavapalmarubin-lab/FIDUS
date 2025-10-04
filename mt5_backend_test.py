@@ -981,8 +981,9 @@ class MT5BackendTester:
 
 def main():
     """Main test execution"""
-    print("🔧 MT5 Integration Backend Testing Suite")
-    print("Testing MT5 account mapping, admin endpoints, client endpoints, and business logic")
+    print("🔧 FIDUS MT5 Bridge Unreachable Testing Suite")
+    print("Testing MT5 endpoints when bridge service is running but blocked by ForexVPS firewall")
+    print("Expected: All endpoints return structured error responses with proper timeout handling")
     
     tester = MT5BackendTester()
     
@@ -990,10 +991,12 @@ def main():
         success = tester.run_comprehensive_mt5_tests()
         
         if success:
-            print("\n✅ All MT5 integration tests completed successfully!")
+            print("\n✅ All MT5 bridge unreachable tests completed successfully!")
+            print("   System handles unreachable bridge gracefully")
             sys.exit(0)
         else:
-            print("\n❌ Some MT5 integration tests failed!")
+            print("\n❌ Some MT5 bridge unreachable tests failed!")
+            print("   System may not handle unreachable bridge properly")
             sys.exit(1)
             
     except KeyboardInterrupt:
