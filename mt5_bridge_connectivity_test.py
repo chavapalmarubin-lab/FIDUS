@@ -93,17 +93,17 @@ class MT5BridgeConnectivityTester:
             print(f"❌ Failed after {elapsed_time:.2f}s - Error: {str(e)}")
             return False, {"error": str(e), "elapsed_time": elapsed_time}
 
-    def setup_fidus_authentication(self) -> bool:
-        """Setup FIDUS backend authentication"""
+    def setup_authentication(self) -> bool:
+        """Setup admin and client authentication"""
         print("\n" + "="*80)
-        print("🔐 SETTING UP FIDUS BACKEND AUTHENTICATION")
+        print("🔐 SETTING UP AUTHENTICATION")
         print("="*80)
         
-        # Test admin login to FIDUS backend
+        # Test admin login
         success, response = self.run_test(
-            "FIDUS Admin Login",
+            "Admin Login",
             "POST",
-            f"{self.fidus_backend_url}/api/auth/login",
+            "api/auth/login",
             200,
             data={
                 "username": "admin", 
@@ -111,14 +111,33 @@ class MT5BridgeConnectivityTester:
                 "user_type": "admin"
             }
         )
-        
-        if success and response.get('token'):
-            self.admin_token = response['token']
+        if success:
+            self.admin_user = response
             print(f"   ✅ Admin logged in: {response.get('name', 'Unknown')} (ID: {response.get('id')})")
-            return True
         else:
-            print("   ❌ Admin login failed - cannot proceed with FIDUS backend tests")
+            print("   ❌ Admin login failed - cannot proceed with MT5 admin tests")
             return False
+
+        # Test client login (Salvador Palma)
+        success, response = self.run_test(
+            "Client Login (Salvador Palma)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "username": "client3", 
+                "password": "password123",
+                "user_type": "client"
+            }
+        )
+        if success:
+            self.client_user = response
+            print(f"   ✅ Client logged in: {response.get('name', 'Unknown')} (ID: {response.get('id')})")
+        else:
+            print("   ❌ Client login failed - cannot proceed with MT5 client tests")
+            return False
+            
+        return True
 
     def test_basic_connectivity(self) -> bool:
         """Test basic connectivity to MT5 bridge service"""
