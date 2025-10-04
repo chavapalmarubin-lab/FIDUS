@@ -22,7 +22,7 @@ from typing import Dict, Any, List
 class MT5BridgeHealthTester:
     def __init__(self):
         # Use the correct backend URL from frontend/.env
-        self.backend_url = "https://fidus-admin.preview.emergentagent.com/api"
+        self.backend_url = "https://fidus-invest.emergent.host/api"
         self.session = requests.Session()
         self.admin_token = None
         self.client_token = None
