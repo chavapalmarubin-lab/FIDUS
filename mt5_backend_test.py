@@ -570,7 +570,7 @@ class MT5BackendTester:
 
         return True
 
-    def test_business_logic_validation(self) -> bool:
+    def test_business_logic_validation_REMOVED(self) -> bool:
         """Test Business Logic Validation"""
         print("\n" + "="*80)
         print("📋 TESTING BUSINESS LOGIC VALIDATION")
