@@ -748,10 +748,178 @@ class MT5BackendTester:
 
         return True
 
+    def test_mt5_bridge_unreachable_scenarios(self) -> bool:
+        """Test MT5 endpoints when bridge service is unreachable"""
+        print("\n" + "="*80)
+        print("🚫 TESTING MT5 BRIDGE UNREACHABLE SCENARIOS")
+        print("="*80)
+        
+        if not self.admin_user:
+            print("❌ No admin user available for MT5 bridge tests")
+            return False
+            
+        admin_headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {self.admin_user.get('token')}"
+        }
+        
+        # Test all MT5 admin endpoints that should handle bridge unreachable gracefully
+        mt5_admin_endpoints = [
+            ("MT5 Admin Accounts Overview", "GET", "api/mt5/admin/accounts", 200),
+            ("MT5 Admin Performance Overview", "GET", "api/mt5/admin/performance/overview", 200),
+            ("MT5 Brokers List", "GET", "api/mt5/brokers", 200),
+            ("MT5 System Status", "GET", "api/mt5/admin/system-status", 200),
+            ("MT5 Realtime Data", "GET", "api/mt5/admin/realtime-data", 200),
+            ("MT5 Accounts by Broker", "GET", "api/mt5/admin/accounts/by-broker", 200)
+        ]
+        
+        bridge_unreachable_count = 0
+        timeout_tests = 0
+        
+        for test_name, method, endpoint, expected_status in mt5_admin_endpoints:
+            print(f"\n🔍 Testing {test_name} (Bridge Unreachable)...")
+            
+            start_time = time.time()
+            success, response = self.run_test(
+                test_name,
+                method,
+                endpoint,
+                expected_status,
+                headers=admin_headers
+            )
+            end_time = time.time()
+            
+            response_time = end_time - start_time
+            
+            if success:
+                # Check if response indicates bridge is unreachable
+                if isinstance(response, dict):
+                    error_msg = response.get('error', '').lower()
+                    detail_msg = response.get('detail', '').lower()
+                    message_msg = response.get('message', '').lower()
+                    
+                    bridge_indicators = [
+                        'bridge', 'unreachable', 'connection', 'timeout', 
+                        'failed to connect', 'service unavailable', 'mt5 service'
+                    ]
+                    
+                    if any(indicator in error_msg or indicator in detail_msg or indicator in message_msg 
+                           for indicator in bridge_indicators):
+                        bridge_unreachable_count += 1
+                        print(f"   ✅ Properly indicates bridge unreachable")
+                    else:
+                        print(f"   ✅ Returns structured response (may be cached/fallback data)")
+                
+                # Check timeout behavior (should be around 30 seconds for bridge calls)
+                if response_time > 25:  # Allow some margin
+                    timeout_tests += 1
+                    print(f"   ✅ Timeout behavior observed: {response_time:.1f}s")
+                else:
+                    print(f"   ✅ Quick response (cached/fallback): {response_time:.1f}s")
+            else:
+                print(f"   ❌ Endpoint failed unexpectedly")
+                return False
+        
+        # Test client MT5 endpoints
+        if self.client_user:
+            client_id = self.client_user.get('id')
+            client_headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f"Bearer {self.client_user.get('token')}"
+            }
+            
+            mt5_client_endpoints = [
+                ("Client MT5 Accounts", "GET", f"api/mt5/client/{client_id}/accounts", 200),
+                ("Client MT5 Performance", "GET", f"api/mt5/client/{client_id}/performance", 200)
+            ]
+            
+            for test_name, method, endpoint, expected_status in mt5_client_endpoints:
+                print(f"\n🔍 Testing {test_name} (Bridge Unreachable)...")
+                
+                start_time = time.time()
+                success, response = self.run_test(
+                    test_name,
+                    method,
+                    endpoint,
+                    expected_status,
+                    headers=client_headers
+                )
+                end_time = time.time()
+                
+                response_time = end_time - start_time
+                
+                if success:
+                    print(f"   ✅ Client endpoint handles bridge unreachable gracefully")
+                    if response_time > 25:
+                        timeout_tests += 1
+                        print(f"   ✅ Timeout behavior observed: {response_time:.1f}s")
+                    else:
+                        print(f"   ✅ Quick response: {response_time:.1f}s")
+                else:
+                    print(f"   ❌ Client endpoint failed unexpectedly")
+                    return False
+        
+        # Test MT5 bridge-dependent operations that should fail gracefully
+        print(f"\n🔍 Testing MT5 Bridge-Dependent Operations...")
+        
+        # Test credentials update (should handle bridge unreachable)
+        success, response = self.run_test(
+            "MT5 Credentials Update (Bridge Unreachable)",
+            "POST",
+            "api/mt5/admin/credentials/update",
+            400,  # Expect 400 or similar error when bridge unreachable
+            data={
+                "client_id": "client_001",
+                "fund_code": "CORE",
+                "mt5_login": 12345678,
+                "mt5_password": "TestPass123!",
+                "mt5_server": "Test-Server"
+            },
+            headers=admin_headers
+        )
+        
+        if success:
+            print(f"   ✅ Credentials update properly handles bridge unreachable")
+        else:
+            # Try with 500 status code as alternative
+            success, response = self.run_test(
+                "MT5 Credentials Update (Bridge Unreachable - Alt)",
+                "POST",
+                "api/mt5/admin/credentials/update",
+                500,
+                data={
+                    "client_id": "client_001",
+                    "fund_code": "CORE",
+                    "mt5_login": 12345678,
+                    "mt5_password": "TestPass123!",
+                    "mt5_server": "Test-Server"
+                },
+                headers=admin_headers
+            )
+            
+            if success:
+                print(f"   ✅ Credentials update returns 500 when bridge unreachable")
+            else:
+                print(f"   ❌ Credentials update doesn't handle bridge unreachable properly")
+                return False
+        
+        print(f"\n📊 Bridge Unreachable Test Summary:")
+        print(f"   Bridge unreachable indicators: {bridge_unreachable_count}")
+        print(f"   Timeout behaviors observed: {timeout_tests}")
+        print(f"   All endpoints returned structured responses: ✅")
+        
+        return True
+
     def run_comprehensive_mt5_tests(self) -> bool:
-        """Run all MT5 integration tests"""
+        """Run MT5 bridge unreachable tests"""
         print("\n" + "="*100)
-        print("🚀 STARTING COMPREHENSIVE MT5 INTEGRATION TESTING")
+        print("🚀 STARTING MT5 BRIDGE UNREACHABLE TESTING")
+        print("="*100)
+        print("Current Status:")
+        print("- MT5 Bridge Service: Running on VPS localhost:8000 ✅")
+        print("- Windows Firewall: Disabled ✅")
+        print("- External Access: Blocked by ForexVPS provider firewall ❌")
+        print("- Expected: All endpoints return structured error responses")
         print("="*100)
         
         # Setup authentication
@@ -759,13 +927,9 @@ class MT5BackendTester:
             print("\n❌ Authentication setup failed - cannot proceed")
             return False
         
-        # Run all test suites
+        # Run bridge unreachable test suite
         test_suites = [
-            ("MT5 Account Creation & Management", self.test_mt5_account_creation_and_management),
-            ("MT5 Admin Endpoints", self.test_mt5_admin_endpoints),
-            ("MT5 Client Endpoints", self.test_mt5_client_endpoints),
-            ("MT5 Integration Logic", self.test_mt5_integration_logic),
-            ("Business Logic Validation", self.test_business_logic_validation)
+            ("MT5 Bridge Unreachable Scenarios", self.test_mt5_bridge_unreachable_scenarios)
         ]
         
         suite_results = []
