@@ -17228,6 +17228,12 @@ async def test_router_registration():
     """Test endpoint to verify router registration is working"""
     return {"success": True, "message": "Router registration is working", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# Test direct app endpoint (not using router)
+@app.get("/direct-test")
+async def direct_test_endpoint():
+    """Test endpoint directly on app (not router)"""
+    return {"success": True, "message": "Direct app endpoint working", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 # Include the API router in the main app (MUST be after all endpoints are defined)
 app.include_router(api_router)
 
