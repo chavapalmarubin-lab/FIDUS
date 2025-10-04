@@ -17162,7 +17162,7 @@ async def sync_mt5_account(account_id: str, current_user=Depends(get_current_use
         logging.error(f"MT5 sync error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/mt5/sync-all")
+@api_router.post("/mt5/sync-all")
 async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
     """Synchronize all active MT5 accounts"""
     try:
