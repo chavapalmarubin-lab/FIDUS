@@ -1,25 +1,31 @@
 """
-MT5 Bridge Client for FIDUS Investment Management System
-Connects to Windows VPS running MT5 Bridge Service via REST API
+Enhanced MT5 Bridge Client for FIDUS Investment Management System
+Production-grade client for Windows VPS MT5 Bridge Service with comprehensive error handling
 """
 
 import asyncio
 import aiohttp
 import logging
 import os
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Union
+from datetime import datetime, timezone, timedelta
 import json
+from decimal import Decimal
+import time
 
 class MT5BridgeClient:
-    """Client to communicate with MT5 Bridge Service on Windows VPS"""
+    """Production-grade client to communicate with MT5 Bridge Service on Windows VPS"""
     
     def __init__(self):
-        self.bridge_url = os.environ.get('MT5_BRIDGE_URL', 'https://217.197.163.11:8000')
-        self.api_key = os.environ.get('MT5_BRIDGE_API_KEY', 'dev-key-change-in-production')
+        self.bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://217.197.163.11:8000')
+        self.api_key = os.environ.get('MT5_BRIDGE_API_KEY', 'fidus-mt5-bridge-key-2025-secure')
         self.timeout = int(os.environ.get('MT5_BRIDGE_TIMEOUT', '30'))
         self.session = None
         self.logger = logging.getLogger(__name__)
+        self.last_health_check = None
+        self.is_healthy = False
+        self.retry_attempts = 3
+        self.retry_delay = 1  # seconds
         
     async def _ensure_session(self):
         """Ensure aiohttp session is available"""
