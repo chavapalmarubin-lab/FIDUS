@@ -17170,27 +17170,7 @@ async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
         logging.error(f"MT5 sync all error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/mt5/bridge/health")
-async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
-    """Check MT5 bridge service health - SIMPLIFIED VERSION FOR TESTING"""
-    try:
-        if current_user.get("type") != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required")
-        
-        # Simplified version to test endpoint registration
-        return {
-            "success": True,
-            "message": "MT5 Bridge Health endpoint is registered and working",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        
-    except Exception as e:
-        logging.error(f"MT5 bridge health check error: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+# MT5 Bridge Health endpoint moved to working location above
 
 @app.get("/api/mt5/status")
 async def get_mt5_system_status(current_user=Depends(get_current_user)):
