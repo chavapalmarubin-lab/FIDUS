@@ -17209,6 +17209,12 @@ async def get_mt5_system_status(current_user=Depends(get_current_user)):
 # APPLICATION STARTUP & SHUTDOWN
 # ============================================================================
 
+# Test endpoint to verify router registration
+@api_router.get("/test/router-registration")
+async def test_router_registration():
+    """Test endpoint to verify router registration is working"""
+    return {"success": True, "message": "Router registration is working", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 # Include the API router in the main app (MUST be after all endpoints are defined)
 app.include_router(api_router)
 
