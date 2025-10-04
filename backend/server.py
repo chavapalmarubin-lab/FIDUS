@@ -17152,6 +17152,7 @@ async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
+        # Import moved outside to avoid potential import issues during endpoint registration
         from mt5_bridge_client import mt5_bridge
         
         health = await mt5_bridge.health_check()
