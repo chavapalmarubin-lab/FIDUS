@@ -245,6 +245,10 @@ class BaseRepository(ABC, Generic[T]):
         if '_id' in document and isinstance(document['_id'], ObjectId):
             document['_id'] = str(document['_id'])
         
+        # Handle legacy field mappings for existing data
+        if 'type' in document and 'user_type' not in document:
+            document['user_type'] = document['type']
+        
         # Handle datetime strings
         for key, value in document.items():
             if isinstance(value, str) and key.endswith('_at'):
