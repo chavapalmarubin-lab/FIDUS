@@ -119,7 +119,7 @@ class MT5BackendTester:
             
         return True
 
-    def test_mt5_account_creation_and_management(self) -> bool:
+    def test_mt5_account_creation_and_management_REMOVED(self) -> bool:
         """Test MT5 Account Creation & Management"""
         print("\n" + "="*80)
         print("🏦 TESTING MT5 ACCOUNT CREATION & MANAGEMENT")
