@@ -347,11 +347,19 @@ class MT5BridgeConnectivityTester:
         
         # Test 1: MT5 Brokers Configuration
         print("\n📊 Test 1: MT5 Brokers Configuration")
+        
+        # Need admin authentication for MT5 endpoints
+        admin_headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {self.admin_user.get('token')}"
+        } if self.admin_user else {'Content-Type': 'application/json'}
+        
         success, response = self.run_test(
             "Get MT5 Brokers Configuration",
             "GET",
             "api/mt5/brokers",
-            200
+            200,
+            headers=admin_headers
         )
         
         if success:
