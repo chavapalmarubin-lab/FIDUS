@@ -171,5 +171,5 @@ class UserSearch(BaseModel):
     created_before: Optional[datetime] = None
     limit: int = Field(default=50, le=100)
     skip: int = Field(default=0, ge=0)
-    sort_by: str = Field(default="created_at", regex="^(username|email|created_at|updated_at|last_login)$")
+    sort_by: str = Field(default="created_at", pattern="^(username|email|created_at|updated_at|last_login)$")
     sort_order: int = Field(default=-1, ge=-1, le=1)  # -1 for desc, 1 for asc
