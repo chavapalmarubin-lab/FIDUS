@@ -51,6 +51,9 @@ from document_signing_service import document_signing_service
 from services.mt5_service import mt5_service
 from models.mt5_account import BrokerCode
 
+# Import MT5 Bridge Client
+from mt5_bridge_client import mt5_bridge
+
 # Import REAL Google API service
 from real_google_api_service import real_google_api
 
