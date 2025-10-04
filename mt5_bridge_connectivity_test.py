@@ -34,15 +34,18 @@ class MT5BridgeConnectivityTester:
         self.bridge_url = "http://217.197.163.11:8000"
         self.expected_timeout = 30
         
-    def run_test(self, name: str, method: str, url: str, expected_status: int, 
-                 data: Dict = None, headers: Dict = None, timeout: int = 30) -> tuple[bool, Dict]:
-        """Run a single API test"""
+    def run_test(self, name: str, method: str, endpoint: str, expected_status: int, 
+                 data: Dict = None, headers: Dict = None, timeout: int = 35) -> tuple[bool, Dict]:
+        """Run a single API test with timeout handling"""
+        url = f"{self.base_url}/{endpoint}"
         if headers is None:
             headers = {'Content-Type': 'application/json'}
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {url}")
+        
+        start_time = time.time()
         
         try:
             if method == 'GET':
@@ -54,7 +57,9 @@ class MT5BridgeConnectivityTester:
             elif method == 'DELETE':
                 response = requests.delete(url, headers=headers, timeout=timeout)
 
+            elapsed_time = time.time() - start_time
             print(f"   Status Code: {response.status_code}")
+            print(f"   Response Time: {elapsed_time:.2f}s")
             
             success = response.status_code == expected_status
             if success:
@@ -62,7 +67,6 @@ class MT5BridgeConnectivityTester:
                 print(f"✅ Passed - Status: {response.status_code}")
                 try:
                     response_data = response.json()
-                    print(f"   Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Non-dict response'}")
                     return True, response_data
                 except:
                     return True, {"text": response.text}
@@ -70,20 +74,24 @@ class MT5BridgeConnectivityTester:
                 print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
                 try:
                     error_data = response.json()
-                    print(f"   Error: {error_data}")
+                    print(f"   Error Response: {json.dumps(error_data, indent=2)}")
+                    return False, error_data
                 except:
                     print(f"   Error text: {response.text}")
-                return False, {}
+                    return False, {"text": response.text}
 
-        except requests.exceptions.Timeout:
-            print(f"❌ Failed - Request timeout after {timeout} seconds")
-            return False, {}
-        except requests.exceptions.ConnectionError:
-            print(f"❌ Failed - Connection error (service may be down)")
-            return False, {}
+        except requests.exceptions.Timeout as e:
+            elapsed_time = time.time() - start_time
+            print(f"⏰ Timeout after {elapsed_time:.2f}s - {str(e)}")
+            return False, {"error": "timeout", "elapsed_time": elapsed_time}
+        except requests.exceptions.ConnectionError as e:
+            elapsed_time = time.time() - start_time
+            print(f"🔌 Connection Error after {elapsed_time:.2f}s - {str(e)}")
+            return False, {"error": "connection_error", "elapsed_time": elapsed_time}
         except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
+            elapsed_time = time.time() - start_time
+            print(f"❌ Failed after {elapsed_time:.2f}s - Error: {str(e)}")
+            return False, {"error": str(e), "elapsed_time": elapsed_time}
 
     def setup_fidus_authentication(self) -> bool:
         """Setup FIDUS backend authentication"""
