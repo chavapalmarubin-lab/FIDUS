@@ -16947,6 +16947,209 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize startup tasks
+# ============================================================================
+# MT5 TRADING INTEGRATION ENDPOINTS
+# ============================================================================
+
+class MT5AccountCreateRequest(BaseModel):
+    client_id: str
+    mt5_login: int
+    mt5_password: str
+    mt5_server: str
+    broker_code: str
+    fund_code: Optional[str] = None
+
+class MT5ConnectionTestRequest(BaseModel):
+    mt5_login: int
+    mt5_password: str
+    mt5_server: str
+
+@app.post("/api/mt5/test-connection")
+async def test_mt5_connection(request: MT5ConnectionTestRequest, current_user=Depends(get_current_user)):
+    """Test MT5 connection via bridge service"""
+    try:
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        result = await mt5_service.test_mt5_connection(
+            request.mt5_login, 
+            request.mt5_password, 
+            request.mt5_server
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"MT5 connection test error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/mt5/accounts")
+async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depends(get_current_user)):
+    """Create and link MT5 account"""
+    try:
+        # Admin only endpoint
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        # Validate broker code
+        try:
+            broker_code = BrokerCode(request.broker_code.lower())
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid broker code: {request.broker_code}")
+        
+        result = await mt5_service.create_mt5_account(
+            client_id=request.client_id,
+            mt5_login=request.mt5_login,
+            password=request.mt5_password,
+            server=request.mt5_server,
+            broker_code=broker_code,
+            fund_code=request.fund_code
+        )
+        
+        if result["success"]:
+            logging.info(f"Created MT5 account {request.mt5_login} for client {request.client_id}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"MT5 account creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/mt5/accounts/{client_id}")
+async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
+    """Get MT5 accounts for a client"""
+    try:
+        # Allow clients to view their own accounts, admins can view any
+        if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        accounts = await mt5_service.get_client_mt5_accounts(client_id)
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "accounts": accounts,
+            "count": len(accounts)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get MT5 accounts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/mt5/sync/{account_id}")
+async def sync_mt5_account(account_id: str, current_user=Depends(get_current_user)):
+    """Manually synchronize MT5 account data"""
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        result = await mt5_service.sync_account_data(account_id)
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"MT5 sync error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/mt5/sync-all")
+async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
+    """Synchronize all active MT5 accounts"""
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        result = await mt5_service.sync_all_accounts()
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"MT5 sync all error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/mt5/bridge/health")
+async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
+    """Check MT5 bridge service health"""
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        from mt5_bridge_client import mt5_bridge
+        
+        health = await mt5_bridge.health_check()
+        
+        return {
+            "success": True,
+            "bridge_health": health,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 bridge health check error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+@app.get("/api/mt5/status")
+async def get_mt5_system_status(current_user=Depends(get_current_user)):
+    """Get comprehensive MT5 system status"""
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        # Get bridge health
+        from mt5_bridge_client import mt5_bridge
+        bridge_health = await mt5_bridge.health_check()
+        
+        # Get account statistics
+        active_accounts = await mt5_service.mt5_repo.find_active_accounts()
+        broker_stats = await mt5_service.mt5_repo.get_broker_statistics()
+        
+        return {
+            "success": True,
+            "bridge_health": bridge_health,
+            "total_accounts": len(active_accounts),
+            "broker_statistics": broker_stats,
+            "sync_status": {
+                "last_sync": None,  # Would track last sync time
+                "next_sync": None,  # Would track next scheduled sync
+                "sync_interval": mt5_service.sync_interval
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# APPLICATION STARTUP & SHUTDOWN
+# ============================================================================
+
 @app.on_event("startup")
 async def startup_event():
     """Application startup tasks"""
@@ -16954,6 +17157,13 @@ async def startup_event():
     
     # Initialize default users in MongoDB
     await ensure_default_users_in_mongodb()
+    
+    # Initialize MT5 service
+    try:
+        await mt5_service.initialize()
+        logging.info("💹 MT5 Service initialized successfully")
+    except Exception as e:
+        logging.error(f"MT5 Service initialization failed: {e}")
     
     # Individual Google OAuth - no automatic startup needed
     logging.info("💡 Individual Google OAuth system ready")
