@@ -80,13 +80,24 @@ class MT5BridgeClient:
                             'success': False, 
                             'error': f"HTTP {response.status}: {error_text}"
                         }
+                        
+            except asyncio.TimeoutError as e:
+                last_error = f"Connection timeout: {e}"
+                self.logger.warning(f"MT5 Bridge timeout attempt {attempt + 1}/{self.retry_attempts}")
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                    continue
                     
-        except asyncio.TimeoutError:
-            self.logger.error(f"MT5 Bridge timeout for {endpoint}")
-            return {'success': False, 'error': 'Connection timeout'}
-        except Exception as e:
-            self.logger.error(f"MT5 Bridge connection error: {e}")
-            return {'success': False, 'error': str(e)}
+            except Exception as e:
+                last_error = f"Connection error: {e}"
+                self.logger.warning(f"MT5 Bridge error attempt {attempt + 1}/{self.retry_attempts}: {e}")
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                    continue
+                    
+        # All retry attempts failed
+        self.logger.error(f"MT5 Bridge failed after {self.retry_attempts} attempts: {last_error}")
+        return {'success': False, 'error': last_error or 'Unknown error'}
     
     async def health_check(self) -> Dict[str, Any]:
         """Check if MT5 Bridge Service is healthy"""
