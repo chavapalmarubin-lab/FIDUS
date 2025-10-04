@@ -380,7 +380,8 @@ class MT5BridgeConnectivityTester:
             "Get MT5 Broker Servers (Multibank)",
             "GET",
             "api/mt5/brokers/multibank/servers",
-            200
+            200,
+            headers=admin_headers
         )
         
         if success:
