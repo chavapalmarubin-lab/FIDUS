@@ -17079,7 +17079,7 @@ async def test_mt5_connection(request: MT5ConnectionTestRequest, current_user=De
         logging.error(f"MT5 connection test error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/mt5/accounts")
+@api_router.post("/mt5/accounts")
 async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depends(get_current_user)):
     """Create and link MT5 account"""
     try:
