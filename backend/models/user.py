@@ -69,7 +69,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Model for updating user information"""
     full_name: Optional[str] = Field(None, max_length=100)
-    phone: Optional[str] = Field(None, pattern="^\\+?[1-9]\\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern="^[+]?[0-9\\s\\-\\(\\)]{7,20}$")
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
     profile_picture: Optional[str] = None
