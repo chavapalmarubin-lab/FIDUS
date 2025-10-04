@@ -17108,7 +17108,7 @@ async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
         logging.error(f"MT5 sync all error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/mt5/bridge/health")
+@api_router.get("/mt5/bridge/health")
 async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
     """Check MT5 bridge service health"""
     try:
