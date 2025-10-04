@@ -14839,15 +14839,18 @@ async def get_all_mt5_accounts():
 
 @api_router.get("/mt5/bridge/health")
 async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
-    """Check MT5 bridge service health - MOVED TO WORKING LOCATION"""
+    """Check MT5 bridge service health - ROUTER FIX VERIFICATION"""
     try:
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        # Test endpoint registration at this location
+        # Now test the actual MT5 bridge health check
+        health = await mt5_bridge.health_check()
+        
         return {
             "success": True,
-            "message": "MT5 Bridge Health endpoint is registered and working - MOVED LOCATION",
+            "message": "MT5 Bridge Health endpoint is working after router fix",
+            "bridge_health": health,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
@@ -14858,6 +14861,15 @@ async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
             "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+
+@api_router.get("/mt5/test-new-endpoint")
+async def test_new_mt5_endpoint():
+    """Test new MT5 endpoint to verify router registration"""
+    return {
+        "success": True,
+        "message": "New MT5 test endpoint is working",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 @api_router.post("/mt5/admin/credentials/update")
 async def update_mt5_credentials(credentials: MT5CredentialsRequest):
