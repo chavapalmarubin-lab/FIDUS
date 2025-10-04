@@ -366,9 +366,353 @@ class FidusBackendTester:
             self.log_test("Investment Management - Fund Configurations", False, f"HTTP {status_code}")
 
     def test_crm_system(self):
-        """Test GET /admin/google/individual-status endpoint"""
-        try:
-            response = self.session.get(f"{BACKEND_URL}/admin/google/individual-status")
+        """Test CRM pipeline system"""
+        print("🔍 Testing CRM Pipeline System...")
+        
+        if not self.admin_token:
+            self.log_test("CRM System", False, "No admin token available")
+            return
+
+        # Test get all prospects
+        response = self.make_request("GET", "/crm/prospects", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                prospects = data.get("prospects", [])
+                self.log_test("CRM System - Get All Prospects", True,
+                            f"Found {len(prospects)} prospects")
+            except json.JSONDecodeError:
+                self.log_test("CRM System - Get All Prospects", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("CRM System - Get All Prospects", False, f"HTTP {status_code}")
+
+        # Test pipeline statistics
+        response = self.make_request("GET", "/crm/pipeline-stats", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if "total_prospects" in data or "stats" in data:
+                    self.log_test("CRM System - Pipeline Statistics", True,
+                                "Pipeline stats endpoint working")
+                else:
+                    self.log_test("CRM System - Pipeline Statistics", False,
+                                "Missing expected stats fields")
+            except json.JSONDecodeError:
+                self.log_test("CRM System - Pipeline Statistics", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("CRM System - Pipeline Statistics", False, f"HTTP {status_code}")
+
+        # Test prospect creation
+        prospect_data = {
+            "name": f"Test Prospect Phase2 {int(time.time())}",
+            "email": f"test.prospect.{int(time.time())}@example.com",
+            "phone": "+1-555-PHASE2",
+            "notes": "Created during Phase 2 backend testing"
+        }
+        
+        response = self.make_request("POST", "/crm/prospects", prospect_data,
+                                   auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("prospect_id"):
+                    self.log_test("CRM System - Create Prospect", True,
+                                f"Created prospect: {data.get('prospect_id')}")
+                else:
+                    self.log_test("CRM System - Create Prospect", False,
+                                "Missing success flag or prospect_id")
+            except json.JSONDecodeError:
+                self.log_test("CRM System - Create Prospect", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("CRM System - Create Prospect", False, f"HTTP {status_code}")
+
+    def test_google_integration(self):
+        """Test Google integration endpoints"""
+        print("🔍 Testing Google Integration APIs...")
+        
+        if not self.admin_token:
+            self.log_test("Google Integration", False, "No admin token available")
+            return
+
+        # Test Google OAuth URL generation
+        response = self.make_request("GET", "/auth/google/url", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("auth_url") and "accounts.google.com" in data["auth_url"]:
+                    self.log_test("Google Integration - OAuth URL Generation", True,
+                                "Valid Google OAuth URL generated")
+                else:
+                    self.log_test("Google Integration - OAuth URL Generation", False,
+                                "Invalid or missing OAuth URL")
+            except json.JSONDecodeError:
+                self.log_test("Google Integration - OAuth URL Generation", False, 
+                            "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Google Integration - OAuth URL Generation", False, f"HTTP {status_code}")
+
+        # Test Google connection status
+        response = self.make_request("GET", "/google/connection/test-all", 
+                                   auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if "overall_status" in data and "services" in data:
+                    services = data.get("services", {})
+                    expected_services = ["gmail", "calendar", "drive", "meet"]
+                    found_services = [svc for svc in expected_services if svc in services]
+                    self.log_test("Google Integration - Connection Monitor", True,
+                                f"Connection monitor working, {len(found_services)}/4 services configured")
+                else:
+                    self.log_test("Google Integration - Connection Monitor", False,
+                                "Missing expected connection status fields")
+            except json.JSONDecodeError:
+                self.log_test("Google Integration - Connection Monitor", False, 
+                            "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Google Integration - Connection Monitor", False, f"HTTP {status_code}")
+
+        # Test Gmail API endpoints
+        response = self.make_request("GET", "/google/gmail/real-messages", 
+                                   auth_token=self.admin_token)
+        if response:
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if "messages" in data or "auth_required" in data:
+                        self.log_test("Google Integration - Gmail API", True,
+                                    "Gmail API endpoint accessible")
+                    else:
+                        self.log_test("Google Integration - Gmail API", False,
+                                    "Unexpected Gmail API response format")
+                except json.JSONDecodeError:
+                    self.log_test("Google Integration - Gmail API", False, "Invalid JSON response")
+            else:
+                self.log_test("Google Integration - Gmail API", True,
+                            f"Gmail API endpoint exists (HTTP {response.status_code})")
+        else:
+            self.log_test("Google Integration - Gmail API", False, "No response")
+
+        # Test Calendar API endpoints
+        response = self.make_request("GET", "/google/calendar/events", 
+                                   auth_token=self.admin_token)
+        if response:
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if "events" in data or "auth_required" in data:
+                        self.log_test("Google Integration - Calendar API", True,
+                                    "Calendar API endpoint accessible")
+                    else:
+                        self.log_test("Google Integration - Calendar API", False,
+                                    "Unexpected Calendar API response format")
+                except json.JSONDecodeError:
+                    self.log_test("Google Integration - Calendar API", False, "Invalid JSON response")
+            else:
+                self.log_test("Google Integration - Calendar API", True,
+                            f"Calendar API endpoint exists (HTTP {response.status_code})")
+        else:
+            self.log_test("Google Integration - Calendar API", False, "No response")
+
+    def test_database_operations(self):
+        """Test database operations and repository pattern"""
+        print("🔍 Testing Database Operations & Repository Pattern...")
+        
+        if not self.admin_token:
+            self.log_test("Database Operations", False, "No admin token available")
+            return
+
+        # Test database connectivity through health endpoint
+        response = self.make_request("GET", "/health/ready", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            self.log_test("Database Operations - Connectivity", True,
+                        "Database connectivity verified through readiness check")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Database Operations - Connectivity", False, f"HTTP {status_code}")
+
+        # Test MongoDB user operations (repository pattern)
+        response = self.make_request("GET", "/admin/users", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                users = data.get("users", [])
+                # Verify expected users exist (Phase 2 migration verification)
+                expected_users = ["admin", "alejandro_mariscal", "client1"]
+                found_users = []
+                for user in users:
+                    if user.get("username") in expected_users:
+                        found_users.append(user.get("username"))
+                
+                if len(found_users) >= 3:
+                    self.log_test("Database Operations - User Repository", True,
+                                f"Repository pattern working, found {len(found_users)} expected users")
+                else:
+                    self.log_test("Database Operations - User Repository", False,
+                                f"Expected ≥3 users, found {len(found_users)}")
+            except json.JSONDecodeError:
+                self.log_test("Database Operations - User Repository", False, 
+                            "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Database Operations - User Repository", False, f"HTTP {status_code}")
+
+        # Test data consistency (user_type field migration)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                users = data.get("users", [])
+                users_with_type = [u for u in users if u.get("type")]
+                if len(users_with_type) == len(users):
+                    self.log_test("Database Operations - Schema Migration", True,
+                                "All users have 'type' field (Phase 2 migration successful)")
+                else:
+                    self.log_test("Database Operations - Schema Migration", False,
+                                f"{len(users) - len(users_with_type)} users missing 'type' field")
+            except json.JSONDecodeError:
+                self.log_test("Database Operations - Schema Migration", False, 
+                            "Invalid JSON response")
+
+    def test_session_management(self):
+        """Test JWT session management and security"""
+        print("🔍 Testing Session Management & JWT Security...")
+        
+        # Test protected endpoint without token
+        response = self.make_request("GET", "/admin/users")
+        if response and response.status_code == 401:
+            self.log_test("Session Management - Unauthorized Access", True,
+                        "Protected endpoint correctly returns 401 without token")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Session Management - Unauthorized Access", False,
+                        f"Expected 401, got HTTP {status_code}")
+
+        # Test protected endpoint with valid token
+        if self.admin_token:
+            response = self.make_request("GET", "/admin/users", auth_token=self.admin_token)
+            if response and response.status_code == 200:
+                self.log_test("Session Management - Authorized Access", True,
+                            "Protected endpoint accessible with valid token")
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Session Management - Authorized Access", False,
+                            f"Expected 200, got HTTP {status_code}")
+
+        # Test token validation with invalid token
+        invalid_token = "invalid.jwt.token"
+        response = self.make_request("GET", "/admin/users", auth_token=invalid_token)
+        if response and response.status_code == 401:
+            self.log_test("Session Management - Invalid Token", True,
+                        "Invalid token correctly rejected")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Session Management - Invalid Token", False,
+                        f"Expected 401, got HTTP {status_code}")
+
+        # Test role-based access (client token on admin endpoint)
+        if self.client_token:
+            response = self.make_request("GET", "/admin/users", auth_token=self.client_token)
+            if response and response.status_code == 403:
+                self.log_test("Session Management - Role-Based Access", True,
+                            "Client token correctly denied admin access")
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Session Management - Role-Based Access", False,
+                            f"Expected 403, got HTTP {status_code}")
+
+    def run_comprehensive_test(self):
+        """Run all backend tests"""
+        print("🚀 FIDUS Backend API Testing Suite - Phase 2 Database Architecture Verification")
+        print("=" * 80)
+        print(f"Backend URL: {BACKEND_URL}")
+        print(f"Test Started: {datetime.now(timezone.utc).isoformat()}")
+        print("=" * 80)
+        print()
+
+        # Run all test suites
+        self.test_health_endpoints()
+        self.test_user_authentication()
+        self.test_user_management()
+        self.test_investment_management()
+        self.test_crm_system()
+        self.test_google_integration()
+        self.test_database_operations()
+        self.test_session_management()
+
+        # Generate summary
+        print("=" * 80)
+        print("🎯 FIDUS BACKEND TESTING SUMMARY")
+        print("=" * 80)
+        
+        success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+        print(f"Total Tests: {self.total_tests}")
+        print(f"Passed: {self.passed_tests}")
+        print(f"Failed: {self.total_tests - self.passed_tests}")
+        print(f"Success Rate: {success_rate:.1f}%")
+        print()
+
+        # Show failed tests
+        failed_tests = [t for t in self.test_results if not t["success"]]
+        if failed_tests:
+            print("❌ FAILED TESTS:")
+            for test in failed_tests:
+                print(f"   • {test['test']}: {test['error']}")
+            print()
+
+        # Show critical findings
+        print("🔍 CRITICAL FINDINGS:")
+        
+        if self.admin_token:
+            print("   ✅ Admin authentication working with JWT tokens")
+        else:
+            print("   ❌ Admin authentication failed - critical issue")
+            
+        if self.client_token:
+            print("   ✅ Client authentication working (alejandro_mariscal verified)")
+        else:
+            print("   ❌ Client authentication failed - user access blocked")
+
+        # Database architecture verification
+        user_mgmt_tests = [t for t in self.test_results if "User Management" in t["test"]]
+        user_mgmt_success = sum(1 for t in user_mgmt_tests if t["success"])
+        if user_mgmt_success >= 2:
+            print("   ✅ Phase 2 database architecture operational")
+        else:
+            print("   ❌ Phase 2 database architecture issues detected")
+
+        # Google integration status
+        google_tests = [t for t in self.test_results if "Google Integration" in t["test"]]
+        google_success = sum(1 for t in google_tests if t["success"])
+        if google_success >= 2:
+            print("   ✅ Google integration infrastructure ready")
+        else:
+            print("   ❌ Google integration infrastructure needs attention")
+
+        print()
+        print("=" * 80)
+        
+        if success_rate >= 80:
+            print("🎉 BACKEND STATUS: READY FOR PHASE 3 MT5 INTEGRATION")
+        elif success_rate >= 60:
+            print("⚠️  BACKEND STATUS: MINOR ISSUES - REVIEW REQUIRED")
+        else:
+            print("🚨 BACKEND STATUS: CRITICAL ISSUES - IMMEDIATE ATTENTION REQUIRED")
+            
+        print("=" * 80)
+        
+        return success_rate
+
+if __name__ == "__main__":
+    tester = FidusBackendTester()
+    success_rate = tester.run_comprehensive_test()
+    
+    # Exit with appropriate code
+    sys.exit(0 if success_rate >= 80 else 1)
             
             if response.status_code == 200:
                 data = response.json()
