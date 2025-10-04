@@ -7350,14 +7350,34 @@ async def get_client_capital_flows(client_id: str, days: int = 90):
 
 # MT4/MT5 Integration Endpoints
 @api_router.get("/crm/mt5/client/{client_id}/account")
-async def get_client_mt5_account(client_id: str):
+async def get_client_mt5_account(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 account information for a client"""
     try:
-        account_info = await mock_mt5.get_account_info(client_id)
-        if not account_info:
-            raise HTTPException(status_code=404, detail="MT5 account not found for client")
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
         
-        return {"account": account_info}
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
+        # Get client's MT5 accounts
+        accounts = await mt5_service.mt5_repo.find_accounts_by_client_id(client_id)
+        if not accounts:
+            raise HTTPException(status_code=404, detail="No MT5 accounts found for client")
+        
+        # Return the first account (primary)
+        account = accounts[0]
+        return {
+            "success": True,
+            "account": {
+                "account_id": account["account_id"],
+                "mt5_login": account["mt5_login"],
+                "broker_code": account["broker_code"],
+                "broker_name": account["broker_name"],
+                "mt5_server": account["mt5_server"],
+                "fund_code": account["fund_code"],
+                "client_id": account["client_id"]
+            }
+        }
     except HTTPException:
         raise
     except Exception as e:
