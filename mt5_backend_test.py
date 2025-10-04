@@ -885,6 +885,7 @@ class MT5BackendTester:
         
         if success:
             print(f"   ✅ Manual account addition properly handles bridge unreachable")
+            print(f"   📋 Response: {response}")
             if response_time > 25:  # Should timeout around 30 seconds
                 print(f"   ✅ Timeout behavior confirmed: {response_time:.1f}s")
                 timeout_tests += 1
