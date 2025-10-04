@@ -17142,7 +17142,7 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
         logging.error(f"Get MT5 accounts error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/mt5/sync/{account_id}")
+@api_router.post("/mt5/sync/{account_id}")
 async def sync_mt5_account(account_id: str, current_user=Depends(get_current_user)):
     """Manually synchronize MT5 account data"""
     try:
