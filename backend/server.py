@@ -17184,7 +17184,7 @@ async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
 
 # MT5 Bridge Health endpoint moved to working location above
 
-@app.get("/api/mt5/status")
+@api_router.get("/mt5/status")
 async def get_mt5_system_status(current_user=Depends(get_current_user)):
     """Get comprehensive MT5 system status"""
     try:
