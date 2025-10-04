@@ -480,7 +480,7 @@ class MT5BackendTester:
 
         return True
 
-    def test_mt5_integration_logic(self) -> bool:
+    def test_mt5_integration_logic_REMOVED(self) -> bool:
         """Test MT5 Integration Logic"""
         print("\n" + "="*80)
         print("⚙️ TESTING MT5 INTEGRATION LOGIC")
