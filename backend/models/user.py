@@ -103,13 +103,6 @@ class User(UserBase):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
-    @validator('user_type', pre=True)
-    def handle_legacy_type_field(cls, v, values):
-        # Handle legacy 'type' field from existing data
-        if isinstance(values, dict) and 'type' in values and not v:
-            return values['type']
-        return v
-    
     class Config:
         allow_population_by_field_name = True
         json_encoders = {
