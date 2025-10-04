@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
 """
 FIDUS MT5 Bridge Health Endpoint Testing Suite
-Testing MT5 Bridge Health endpoint after server restart and verifying latest endpoint fixes.
+Tests MT5 Bridge Health endpoint after critical router inclusion fix.
 
-Focus Areas:
-1. MT5 Bridge Health Endpoint - GET /api/mt5/bridge/health with admin authentication
-2. Fixed CRM MT5 Endpoints - /api/crm/mt5/client/{client_id}/account and /api/crm/mt5/client/{client_id}/positions
-3. Endpoint Registration Status - verify all MT5 endpoints are properly registered
-4. Overall Integration Health - test comprehensive set of MT5 endpoints
+CRITICAL TEST FOCUS:
+1. MT5 Bridge Health Endpoint: Test GET /api/mt5/bridge/health - should now return proper response instead of 404
+2. Endpoint Registration Verification: Confirm the endpoint is now properly registered in FastAPI routes
+3. Admin Authentication: Verify proper admin authentication is working for the endpoint
+4. Bridge Connectivity Response: Check the response structure when bridge is unreachable (expected behavior)
+5. CRM MT5 Account Endpoints: Re-test /api/crm/mt5/client/{client_id}/account to see if other routing issues are fixed
+6. Overall MT5 Integration: Calculate updated success rate after the router fix
+7. No Regression Testing: Ensure existing working endpoints still function
 
-Expected: Higher MT5 integration success rate with previously failing endpoints now working after fixes and server restart.
+EXPECTED RESULTS:
+- MT5 Bridge Health endpoint should now return 200 OK (or proper error) instead of 404
+- Success rate should improve significantly 
+- All endpoints should be properly registered
+- No regression in existing functionality
+
+ROUTER FIX DETAILS:
+The issue was that the endpoint was defined after `app.include_router(api_router)` which prevented it from being registered. 
+Now the router inclusion is moved to the end of the file.
 """
 
 import requests
