@@ -17184,7 +17184,6 @@ async def get_mt5_system_status(current_user=Depends(get_current_user)):
             await mt5_service.initialize()
         
         # Get bridge health
-        from mt5_bridge_client import mt5_bridge
         bridge_health = await mt5_bridge.health_check()
         
         # Get account statistics
