@@ -25,13 +25,14 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class MT5BridgeConnectivityTester:
-    def __init__(self, fidus_backend_url="https://fidus-invest.emergent.host"):
-        self.fidus_backend_url = fidus_backend_url
-        self.mt5_bridge_url = "http://217.197.163.11:8000"
-        self.mt5_api_key = "fidus-mt5-bridge-key-2025-secure"
+    def __init__(self, base_url="https://fidus-invest.emergent.host"):
+        self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
-        self.admin_token = None
+        self.admin_user = None
+        self.client_user = None
+        self.bridge_url = "http://217.197.163.11:8000"
+        self.expected_timeout = 30
         
     def run_test(self, name: str, method: str, url: str, expected_status: int, 
                  data: Dict = None, headers: Dict = None, timeout: int = 30) -> tuple[bool, Dict]:
