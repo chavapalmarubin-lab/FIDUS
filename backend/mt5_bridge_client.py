@@ -1,0 +1,167 @@
+"""
+MT5 Bridge Client for FIDUS Investment Management System
+Connects to Windows VPS running MT5 Bridge Service via REST API
+"""
+
+import asyncio
+import aiohttp
+import logging
+import os
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
+import json
+
+class MT5BridgeClient:
+    """Client to communicate with MT5 Bridge Service on Windows VPS"""
+    
+    def __init__(self):
+        self.bridge_url = os.environ.get('MT5_BRIDGE_URL', 'https://217.197.163.11:8000')
+        self.api_key = os.environ.get('MT5_BRIDGE_API_KEY', 'dev-key-change-in-production')
+        self.timeout = int(os.environ.get('MT5_BRIDGE_TIMEOUT', '30'))
+        self.session = None
+        self.logger = logging.getLogger(__name__)
+        
+    async def _ensure_session(self):
+        """Ensure aiohttp session is available"""
+        if self.session is None or self.session.closed:
+            connector = aiohttp.TCPConnector(
+                ssl=False,  # For development - use True in production with proper SSL
+                limit_per_host=10,
+                ttl_dns_cache=300
+            )
+            
+            self.session = aiohttp.ClientSession(
+                connector=connector,
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
+                headers={
+                    'Content-Type': 'application/json',
+                    'X-API-Key': self.api_key
+                }
+            )
+    
+    async def _make_request(self, method: str, endpoint: str, data: dict = None) -> dict:
+        """Make HTTP request to MT5 Bridge Service"""
+        await self._ensure_session()
+        
+        url = f"{self.bridge_url}{endpoint}"
+        
+        try:
+            async with self.session.request(method, url, json=data) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    error_text = await response.text()
+                    self.logger.error(f"MT5 Bridge API error {response.status}: {error_text}")
+                    return {
+                        'success': False, 
+                        'error': f"HTTP {response.status}: {error_text}"
+                    }
+                    
+        except asyncio.TimeoutError:
+            self.logger.error(f"MT5 Bridge timeout for {endpoint}")
+            return {'success': False, 'error': 'Connection timeout'}
+        except Exception as e:
+            self.logger.error(f"MT5 Bridge connection error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    async def health_check(self) -> Dict[str, Any]:
+        """Check if MT5 Bridge Service is healthy"""
+        return await self._make_request('GET', '/health')
+    
+    async def mt5_initialize(self) -> Dict[str, Any]:
+        """Initialize MT5 connection on bridge service"""
+        return await self._make_request('POST', '/api/mt5/initialize')
+    
+    async def mt5_login(self, login: int, password: str, server: str) -> Dict[str, Any]:
+        """Login to MT5 account via bridge service"""
+        return await self._make_request('POST', '/api/mt5/login', {
+            'login': login,
+            'password': password,
+            'server': server
+        })
+    
+    async def get_account_info(self, login: int) -> Dict[str, Any]:
+        """Get MT5 account information"""
+        return await self._make_request('GET', f'/api/mt5/account/{login}/info')
+    
+    async def get_account_history(self, login: int, from_date: str = None, to_date: str = None) -> Dict[str, Any]:
+        """Get MT5 account trading history"""
+        params = {'login': login}
+        if from_date:
+            params['from_date'] = from_date
+        if to_date:
+            params['to_date'] = to_date
+            
+        return await self._make_request('POST', '/api/mt5/history', params)
+    
+    async def get_positions(self, login: int) -> Dict[str, Any]:
+        """Get current open positions"""
+        return await self._make_request('GET', f'/api/mt5/account/{login}/positions')
+    
+    async def get_deals(self, login: int, from_date: str = None, to_date: str = None) -> Dict[str, Any]:
+        """Get deals history for finding deposits/withdrawals"""
+        params = {'login': login}
+        if from_date:
+            params['from_date'] = from_date
+        if to_date:
+            params['to_date'] = to_date
+            
+        return await self._make_request('POST', '/api/mt5/deals', params)
+    
+    async def test_connection(self) -> Dict[str, Any]:
+        """Test full MT5 connection through bridge"""
+        try:
+            # Test bridge health
+            health = await self.health_check()
+            if not health.get('success'):
+                return health
+            
+            # Test MT5 initialization
+            init_result = await self.mt5_initialize()
+            
+            return {
+                'success': True,
+                'bridge_health': health,
+                'mt5_init': init_result,
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }
+    
+    async def close(self):
+        """Close aiohttp session"""
+        if self.session and not self.session.closed:
+            await self.session.close()
+
+# Global instance
+mt5_bridge = MT5BridgeClient()
+
+# For testing
+async def test_bridge_connectivity():
+    """Test connectivity to MT5 Bridge Service"""
+    print("🔗 Testing MT5 Bridge Service Connectivity...")
+    
+    try:
+        result = await mt5_bridge.test_connection()
+        
+        if result['success']:
+            print("✅ MT5 Bridge Service connection successful!")
+            print(f"   Bridge Health: {result['bridge_health']}")
+            print(f"   MT5 Init: {result['mt5_init']}")
+        else:
+            print("❌ MT5 Bridge Service connection failed:")
+            print(f"   Error: {result['error']}")
+            
+    except Exception as e:
+        print(f"❌ Bridge test failed: {e}")
+    
+    finally:
+        await mt5_bridge.close()
+
+if __name__ == "__main__":
+    asyncio.run(test_bridge_connectivity())
