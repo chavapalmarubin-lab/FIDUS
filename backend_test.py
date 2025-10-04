@@ -150,31 +150,74 @@ class FidusBackendTester:
             self.log_test("Health Metrics Endpoint", False, f"HTTP {status_code}")
 
     def test_user_authentication(self):
-        """Authenticate as admin user"""
-        try:
-            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
-                "username": ADMIN_USERNAME,
-                "password": ADMIN_PASSWORD,
-                "user_type": "admin"
-            })
-            
-            if response.status_code == 200:
+        """Test user authentication and JWT token management"""
+        print("🔍 Testing User Authentication & JWT Management...")
+        
+        # Test admin login
+        admin_data = TEST_USERS["admin"]
+        login_payload = {
+            "username": admin_data["username"],
+            "password": admin_data["password"], 
+            "user_type": admin_data["user_type"]
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_payload)
+        if response and response.status_code == 200:
+            try:
                 data = response.json()
-                self.admin_token = data.get("token")
-                if self.admin_token:
-                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
-                    self.log_result("Admin Authentication", True, "Successfully authenticated as admin")
-                    return True
+                if data.get("token") and data.get("type") == "admin":
+                    self.admin_token = data["token"]
+                    self.log_test("Admin Authentication", True, 
+                                f"Admin: {data.get('name')}, Type: {data.get('type')}")
                 else:
-                    self.log_result("Admin Authentication", False, "No token received", {"response": data})
-                    return False
+                    self.log_test("Admin Authentication", False, "Missing token or incorrect type")
+            except json.JSONDecodeError:
+                self.log_test("Admin Authentication", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Admin Authentication", False, f"HTTP {status_code}")
+
+        # Test client login (alejandro_mariscal)
+        client_data = TEST_USERS["alejandro_mariscal"]
+        login_payload = {
+            "username": client_data["username"],
+            "password": client_data["password"],
+            "user_type": client_data["user_type"]
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_payload)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("token") and data.get("type") == "client":
+                    self.client_token = data["token"]
+                    self.log_test("Client Authentication (Alejandro)", True,
+                                f"Client: {data.get('name')}, Email: {data.get('email')}")
+                else:
+                    self.log_test("Client Authentication (Alejandro)", False, 
+                                "Missing token or incorrect type")
+            except json.JSONDecodeError:
+                self.log_test("Client Authentication (Alejandro)", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Client Authentication (Alejandro)", False, f"HTTP {status_code}")
+
+        # Test JWT token refresh
+        if self.admin_token:
+            response = self.make_request("POST", "/auth/refresh-token", 
+                                       auth_token=self.admin_token)
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    if data.get("success") and data.get("token"):
+                        self.log_test("JWT Token Refresh", True, "Token refreshed successfully")
+                    else:
+                        self.log_test("JWT Token Refresh", False, "Invalid refresh response")
+                except json.JSONDecodeError:
+                    self.log_test("JWT Token Refresh", False, "Invalid JSON response")
             else:
-                self.log_result("Admin Authentication", False, f"HTTP {response.status_code}", {"response": response.text})
-                return False
-                
-        except Exception as e:
-            self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
-            return False
+                status_code = response.status_code if response else "No response"
+                self.log_test("JWT Token Refresh", False, f"HTTP {status_code}")
     
     def test_individual_google_status_endpoint(self):
         """Test GET /admin/google/individual-status endpoint"""
