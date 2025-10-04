@@ -103,7 +103,7 @@ def insert_activities_to_database():
     """Insert activities directly to MongoDB via backend API"""
     
     # First, let's authenticate as admin
-    base_url = "https://invest-manager-9.preview.emergentagent.com"
+    base_url = "https://fidus-admin.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

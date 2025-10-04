@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://invest-manager-9.preview.emergentagent.com`
+`https://fidus-admin.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

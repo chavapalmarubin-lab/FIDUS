@@ -26,7 +26,7 @@ import time
 import io
 
 # Configuration
-BACKEND_URL = "https://invest-manager-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-admin.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

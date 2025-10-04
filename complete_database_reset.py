@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://invest-manager-9.preview.emergentagent.com"
+        self.base_url = "https://fidus-admin.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

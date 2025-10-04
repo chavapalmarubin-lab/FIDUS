@@ -16,7 +16,7 @@ def test_google_oauth_flow():
     
     # Test both backend URLs
     backend_urls = [
-        "https://invest-manager-9.preview.emergentagent.com/api",
+        "https://fidus-admin.preview.emergentagent.com/api",
         "https://fidus-invest.emergent.host/api"
     ]
     
@@ -215,7 +215,7 @@ def test_oauth_callback_endpoint():
     print("="*60)
     
     backend_urls = [
-        "https://invest-manager-9.preview.emergentagent.com/api",
+        "https://fidus-admin.preview.emergentagent.com/api",
         "https://fidus-invest.emergent.host/api"
     ]
     

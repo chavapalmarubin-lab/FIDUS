@@ -7,7 +7,7 @@ import requests
 import json
 
 class TargetedTester:
-    def __init__(self, base_url="https://invest-manager-9.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-admin.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.client_token = None

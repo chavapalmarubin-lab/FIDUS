@@ -24,7 +24,7 @@ from typing import Dict, Any, List
 import time
 
 class MT5RealtimeDataTester:
-    def __init__(self, base_url="https://invest-manager-9.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-admin.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

@@ -1,68 +1,135 @@
 <analysis>
-The trajectory chronicles a highly iterative and often frustrating development process. Initial efforts focused on fixing critical login and dashboard display issues stemming from a stale frontend environment variable and a misconfigured JWT token secret. Repeated attempts to fix the JWT authentication proved challenging, with the middleware logic often overriding temporary unprotection efforts. A significant issue was the repeated confusion and data inconsistency regarding Alejandro's client status and investment totals, leading to user frustration. The MongoDB Atlas connection was severely misconfigured, starting with a local host, then an incorrect password, and finally persistent local fallbacks and a hardcoded database name, all causing production stability problems. Despite multiple attempts to create Alejandro's investments, the process was fraught with errors, leading to the accidental creation of 10 investments instead of the requested 4, and significant data corruption. The MT5 API connectivity was also found to be non-functional initially. The trajectory concludes with the user expressing extreme dissatisfaction and providing a new, comprehensive 10-phase implementation guide for MongoDB Atlas integration, effectively resetting the current work focus.
+The trajectory outlines a multi-phase project to stabilize and enhance the FIDUS platform. Initially, the project was in a chaotic state with critical bugs in JWT authentication, data integrity (specifically for a client named Alejandro), and a severely misconfigured MongoDB connection that defaulted to localhost.
+
+The user intervened by providing a comprehensive 10-phase guide, resetting the focus to a structured rebuild, starting with a production-grade MongoDB Atlas integration. **Phase 1 (Discovery & Analysis)** involved a thorough codebase audit, which uncovered the root causes of the instability: a critical MongoDB Atlas SSL/TLS connection failure and a missing  package in the backend dependencies. After a collaborative debugging process involving IP whitelisting and credential updates, the database connectivity was successfully restored.
+
+**Phase 2 (Database Architecture)** focused on establishing a robust data foundation. This included designing schemas, creating Pydantic models, implementing a full repository pattern for data access, and migrating existing user data to a new, validated schema.
+
+**Phase 3 (MT5 Integration)** introduced a bridge architecture to circumvent the issue of the  package being Windows-only. A separate FastAPI service was designed to run on a Windows VPS, acting as an intermediary between the main Linux-based backend and the MT5 terminal. The work concluded with the creation of an automated PowerShell setup script for this bridge service. When that script failed due to an old PowerShell version on the user's VPS, a simplified, manual command-line setup guide was provided as the final step.
 </analysis>
 
 <product_requirements>
-The FIDUS platform aims to be a robust investment management system for admin users, requiring individual Google Workspace integration via OAuth 2.0. This includes secure token storage for seamless access to Gmail, Calendar, Drive, and Sheets, supporting CRM functions like emailing and scheduling. All user, client, and investment data must reside in a production-grade MongoDB Atlas database, replacing mock data. The admin dashboard needs to display accurate, real-time financial data, like AUM and cash flow, with Excel export functionality. A key requirement is the accurate creation and management of client investments, which involves MT5 API integration for real-time trading account data. The system must maintain data consistency and provide a reliable, production-ready environment.
+The FIDUS platform is an investment management system for internal admin users. The core requirements are:
+
+1.  **Secure User Management:** Admins must log in securely. The system uses a combination of JWT tokens and individual Google Workspace integration via OAuth 2.0 for CRM functions (Gmail, Calendar, Drive).
+2.  **Production-Grade Database:** All application data (users, clients, investments, CRM prospects, etc.) must be stored in a reliable, production-ready MongoDB Atlas cluster, completely replacing any mock or local data.
+3.  **Real-Time Financial Data:** The platform must connect to the MetaTrader5 (MT5) trading API to fetch real-time client account data, including balances, equity, and open positions. This data is crucial for accurate AUM (Assets Under Management) calculations displayed on the admin dashboard.
+4.  **Data Integrity:** The system must enforce strong data consistency. A previous incident involving the erroneous creation of multiple investments for a single client highlighted the need for robust validation, duplicate prevention, and data cleanup capabilities. The architecture must be resilient to prevent such corruption in the future.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** Python with FastAPI for REST APIs.
-- **Frontend:** React.js with Tailwind CSS/shadcn/ui.
-- **Database:** MongoDB (now exclusively MongoDB Atlas).
-- **Authentication:** JWT (JSON Web Tokens) for API security, Google OAuth 2.0 for user authorization.
-- **Integrations:** MetaTrader5 (MT5) API for trading data.
+- **Backend:** Python with FastAPI, leveraging asynchronous programming (async/await) and Pydantic for data validation.
+- **Frontend:** React.js.
+- **Database:** MongoDB Atlas, accessed asynchronously using the  library.
+- **Authentication:** JWT for securing internal APIs and Google OAuth 2.0 for integrating with user Google Workspace accounts.
+- **Architecture:** A microservice-like bridge architecture was designed for MT5 integration, where the main Linux-based FastAPI backend communicates via a REST API with a secondary FastAPI service running on a Windows VPS.
 </key_technical_concepts>
 
 <code_architecture>
-The application employs a React frontend and a Python FastAPI backend, backed by MongoDB.
+The application is structured into a React frontend, a Python/FastAPI backend, and a new, separate MT5 bridge service.
 
 
 
-- ****
-  - **Importance:** Central backend, hosts API endpoints, business logic, authentication, and database interactions.
-  - **Changes:** Extensive modifications to JWT token creation/verification logic, middleware for authentication bypass attempts, adding investment creation and deletion endpoints, and initial waiver logic for fund minimums. Crucially, the hardcoded  fallback was removed.
-- ****
-  - **Importance:** Stores environment variables like  and .
-  - **Changes:** Updated  multiple times, first from  to an incorrect MongoDB Atlas string, then to the correct one with the correct password.  was found to be empty, then restored.
-- ****
-  - **Importance:** Manages MongoDB client connection and operations.
-  - **Changes:** Removed the  fallback in  acquisition, and added SSL configuration for MongoDB Atlas connectivity.
-- ****
-  - **Importance:** Likely handles fund-related calculations and data retrieval.
-  - **Changes:** Removed a  fallback in its MongoDB connection setup.
-- ****
-  - **Importance:** Stores frontend environment variables, notably .
-  - **Changes:** Updated  from an old development URL to the production URL, and the frontend build was re-run to apply this change.
-- ****
-  - **Importance:** Root component, handles global state and OAuth callbacks.
-  - **Changes:** Login handling () was examined for token storage.
-- ****
-  - **Importance:** Handles user login interaction.
-  - **Changes:** Examined for correct usage of  and  prop.
-- ****
-  - **Importance:** Configures Axios for API calls and JWT injection.
-  - **Changes:** Examined for correct JWT token retrieval from .
-- ****
-  - **Importance:** Primary technical documentation.
-  - **Changes:** Heavily updated to reflect MongoDB Atlas usage, correct passwords, and overall system status, removing outdated references to local MongoDB.
-- **, , , , , , **
-  - **Importance:** Temporary scripts created for debugging, testing, and attempting to fix data issues or create investments programmatically.
-  - **Changes:** These were created and modified throughout the trajectory to address specific problems (e.g., checking investments, deleting them, creating them with specific parameters, testing MT5).
+-   ****: Crucial for environment configuration. It was updated multiple times to fix the  (correcting the password) and add new variables for the MT5 bridge service (, ).
+-   ****: The main FastAPI application file. It was significantly modified to integrate the new repository pattern for database access and to add new API endpoints for interacting with the MT5 service.
+-   **, , **: These new directories were created during Phase 2 to implement a clean, maintainable repository pattern. This separates data access logic from the main application logic, using Pydantic models for type-safe data handling.
+-   ****: This new file contains the client class responsible for making HTTP requests to the MT5 bridge service running on the Windows VPS.
+-   ****: This directory holds various utility and migration scripts.  was created and run to optimize database performance.  was used to migrate existing user data to the new schema.
+-   ****: A new, self-contained FastAPI application designed to run on a Windows VPS.
+    -   ****: The core of the bridge service. It exposes REST API endpoints that the main FIDUS backend can call. Internally, it uses the  Python package to communicate directly with the MT5 trading terminal.
+    -   ****: An automated PowerShell script created to handle the entire deployment of the bridge service on the Windows VPS, from creating files to installing dependencies and configuring the firewall.
 </code_architecture>
 
 <pending_tasks>
-- **Password Security:** Implement bcrypt password hashing for user credentials.
-- **Automate Rebate Tracking:** Implement the API for tracking rebates based on trading volume.
-- **Implement Send for Signature:** Add DocuSign or similar functionality on the Drive tab.
-- **Complete Advanced Dashboard:** Integrate the  component with real data.
-- **Comprehensive MongoDB Atlas Integration:** Implement the full 10-phase guide provided by the user, starting with Phase 1: Discovery & Analysis.
+- **Deploy MT5 Bridge Service:** The primary pending task is for the user to set up the MT5 bridge service on the Windows VPS (IP: ) using the provided manual command-line instructions, since the PowerShell script was incompatible with their environment.
+- **Configure and Test MT5:** Once deployed, the service needs to be configured with actual MT5 account credentials and tested end-to-end from the FIDUS application.
+- **Original Pending Tasks:** The original tasks like implementing bcrypt hashing, DocuSign, and the Advanced Dashboard remain pending as the focus shifted to the critical database and MT5 integration.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the system was in a state of critical data inconsistency and authentication issues in the production environment. The AI engineer was repeatedly attempting to create four specific investments for Alejandro Mariscal. Despite numerous attempts, and debugging efforts focused on JWT authentication, MongoDB Atlas connection (where the database URL, password, and local fallbacks were incorrect/stale for extended periods), and fund minimum waivers, the system had inadvertently created 10 investments for Alejandro with incorrect aggregate values, leading to significant data corruption. For example, the total AUM for Alejandro was reported as 52,605.64 instead of the desired 18,151.41. The MT5 API connectivity, although endpoints were verified to exist, was also initially problematic. The AI engineer was unable to delete these incorrect investments due to missing/non-functional delete API endpoints and issues with direct database access. The user expressed extreme dissatisfaction with the production state, prompting a shift in focus.
+The AI engineer was in the final stages of **Phase 3: MetaTrader 5 Integration**. The core task was to enable the deployment of the MT5 bridge service on the user's Windows VPS. The user reported being unable to access the VPS via RDP and, to simplify the process, requested a single automated setup script.
+
+The engineer created a comprehensive PowerShell script () designed to automate the entire setup: creating directories, writing the Python service code () and dependencies (), installing packages, generating an API key, creating a  file, and adding a firewall rule.
+
+However, the user reported that this script failed on the VPS due to an older, incompatible version of PowerShell. In response to this, the engineer's final action was to provide a simplified, fully manual, step-by-step guide. This guide instructs the user on how to use basic Command Prompt commands (, , etc.) and Notepad to create the necessary files (, , ), install dependencies via 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5), and run the service manually with . The user is currently on the VPS, ready to execute these manual instructions. The FIDUS backend has already been prepared to communicate with this service once it's live.
 </current_work>
 
 <optional_next_step>
-Review the comprehensive MongoDB Atlas integration guide and start with Phase 1: Discovery & Analysis.
+Guide the user through the manual setup of the MT5 bridge service on the Windows VPS and then perform an end-to-end connectivity test from the main FIDUS backend to confirm the integration is fully operational.
 </optional_next_step>
