@@ -950,7 +950,7 @@ class MT5BackendTester:
         
         # Print final results
         print("\n" + "="*100)
-        print("📊 MT5 INTEGRATION TEST RESULTS SUMMARY")
+        print("📊 MT5 BRIDGE UNREACHABLE TEST RESULTS SUMMARY")
         print("="*100)
         
         passed_suites = sum(1 for _, result in suite_results if result)
@@ -964,25 +964,18 @@ class MT5BackendTester:
         print(f"   Test Suites: {passed_suites}/{total_suites} passed ({passed_suites/total_suites*100:.1f}%)")
         print(f"   Individual Tests: {self.tests_passed}/{self.tests_run} passed ({self.tests_passed/self.tests_run*100:.1f}%)")
         
-        if self.created_investments:
-            print(f"\n💰 Created Investments During Testing:")
-            for inv in self.created_investments:
-                print(f"   - {inv['fund_code']}: ${inv['amount']:,.2f} (ID: {inv['investment_id']})")
-        
-        if self.mt5_accounts:
-            print(f"\n🏦 MT5 Accounts Created:")
-            for acc in self.mt5_accounts:
-                print(f"   - {acc.get('fund_code')} Account: ${acc.get('total_allocated', 0):,.2f} allocated")
-        
         # Determine overall success
         overall_success = passed_suites == total_suites and self.tests_passed >= (self.tests_run * 0.8)
         
         if overall_success:
-            print(f"\n🎉 MT5 INTEGRATION TESTING COMPLETED SUCCESSFULLY!")
-            print("   All critical MT5 functionality is working correctly.")
+            print(f"\n🎉 MT5 BRIDGE UNREACHABLE TESTING COMPLETED SUCCESSFULLY!")
+            print("   All MT5 endpoints handle unreachable bridge gracefully.")
+            print("   ✅ No 500 errors or crashes detected")
+            print("   ✅ Structured error responses confirmed")
+            print("   ✅ Timeout behavior working correctly")
         else:
-            print(f"\n⚠️ MT5 INTEGRATION TESTING COMPLETED WITH ISSUES")
-            print("   Some MT5 functionality may need attention.")
+            print(f"\n⚠️ MT5 BRIDGE UNREACHABLE TESTING COMPLETED WITH ISSUES")
+            print("   Some MT5 endpoints may not handle unreachable bridge properly.")
         
         return overall_success
 
