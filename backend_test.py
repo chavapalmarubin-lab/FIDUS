@@ -218,8 +218,154 @@ class FidusBackendTester:
             else:
                 status_code = response.status_code if response else "No response"
                 self.log_test("JWT Token Refresh", False, f"HTTP {status_code}")
-    
-    def test_individual_google_status_endpoint(self):
+
+    def test_user_management(self):
+        """Test user management endpoints"""
+        print("🔍 Testing User Management System...")
+        
+        if not self.admin_token:
+            self.log_test("User Management", False, "No admin token available")
+            return
+
+        # Test get all users (admin endpoint)
+        response = self.make_request("GET", "/admin/users", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                users = data.get("users", [])
+                if len(users) >= 7:  # Expected 7 users including alejandro_mariscal
+                    alejandro_found = any(u.get("username") == "alejandro_mariscal" for u in users)
+                    if alejandro_found:
+                        self.log_test("User Management - Get All Users", True,
+                                    f"Found {len(users)} users including alejandro_mariscal")
+                    else:
+                        self.log_test("User Management - Get All Users", False,
+                                    "alejandro_mariscal not found in users list")
+                else:
+                    self.log_test("User Management - Get All Users", False,
+                                f"Expected ≥7 users, found {len(users)}")
+            except json.JSONDecodeError:
+                self.log_test("User Management - Get All Users", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("User Management - Get All Users", False, f"HTTP {status_code}")
+
+        # Test get all clients
+        response = self.make_request("GET", "/admin/clients", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                clients = data.get("clients", [])
+                if len(clients) > 0:
+                    self.log_test("User Management - Get All Clients", True,
+                                f"Found {len(clients)} clients")
+                else:
+                    self.log_test("User Management - Get All Clients", False, "No clients found")
+            except json.JSONDecodeError:
+                self.log_test("User Management - Get All Clients", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("User Management - Get All Clients", False, f"HTTP {status_code}")
+
+        # Test user creation
+        test_user_data = {
+            "username": f"test_user_{int(time.time())}",
+            "name": "Test User Phase2",
+            "email": f"test.phase2.{int(time.time())}@fidus.com",
+            "phone": "+1-555-TEST",
+            "temporary_password": "TempPass123!",
+            "notes": "Created during Phase 2 backend testing"
+        }
+        
+        response = self.make_request("POST", "/admin/users/create", test_user_data, 
+                                   auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("user_id"):
+                    self.log_test("User Management - Create User", True,
+                                f"Created user: {data.get('user_id')}")
+                else:
+                    self.log_test("User Management - Create User", False, 
+                                "Missing success flag or user_id")
+            except json.JSONDecodeError:
+                self.log_test("User Management - Create User", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("User Management - Create User", False, f"HTTP {status_code}")
+
+    def test_investment_management(self):
+        """Test investment management endpoints"""
+        print("🔍 Testing Investment Management System...")
+        
+        if not self.admin_token:
+            self.log_test("Investment Management", False, "No admin token available")
+            return
+
+        # Test get client investments (should be clean slate - 0 investments)
+        response = self.make_request("GET", "/admin/investments", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                investments = data.get("investments", [])
+                self.log_test("Investment Management - Get All Investments", True,
+                            f"Found {len(investments)} investments (clean slate expected)")
+            except json.JSONDecodeError:
+                self.log_test("Investment Management - Get All Investments", False, 
+                            "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Investment Management - Get All Investments", False, f"HTTP {status_code}")
+
+        # Test investment creation (using alejandro_mariscal as test client)
+        if self.client_token:
+            investment_data = {
+                "client_id": "client_alejandro",  # Alejandro's client ID
+                "fund_code": "CORE",
+                "amount": 10000.0,
+                "deposit_date": "2025-01-01"
+            }
+            
+            response = self.make_request("POST", "/investments/create", investment_data,
+                                       auth_token=self.admin_token)
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    if data.get("success") and data.get("investment_id"):
+                        self.log_test("Investment Management - Create Investment", True,
+                                    f"Created investment: {data.get('investment_id')}")
+                    else:
+                        self.log_test("Investment Management - Create Investment", False,
+                                    "Missing success flag or investment_id")
+                except json.JSONDecodeError:
+                    self.log_test("Investment Management - Create Investment", False, 
+                                "Invalid JSON response")
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Investment Management - Create Investment", False, f"HTTP {status_code}")
+
+        # Test fund configurations
+        response = self.make_request("GET", "/investments/fund-configs", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                funds = data.get("funds", {})
+                expected_funds = ["CORE", "BALANCE", "DYNAMIC", "UNLIMITED"]
+                found_funds = [fund for fund in expected_funds if fund in funds]
+                if len(found_funds) == len(expected_funds):
+                    self.log_test("Investment Management - Fund Configurations", True,
+                                f"All {len(found_funds)} fund configs available")
+                else:
+                    self.log_test("Investment Management - Fund Configurations", False,
+                                f"Expected {len(expected_funds)} funds, found {len(found_funds)}")
+            except json.JSONDecodeError:
+                self.log_test("Investment Management - Fund Configurations", False, 
+                            "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Investment Management - Fund Configurations", False, f"HTTP {status_code}")
+
+    def test_crm_system(self):
         """Test GET /admin/google/individual-status endpoint"""
         try:
             response = self.session.get(f"{BACKEND_URL}/admin/google/individual-status")
