@@ -51,8 +51,7 @@ class MT5BridgeClient:
         
         url = f"{self.bridge_url}{endpoint}"
         
-        try:
-            return await self._make_request_with_retry(method, url, json=data)
+        return await self._make_request_with_retry(method, url, json=data)
         
     async def _make_request_with_retry(self, method: str, url: str, **kwargs) -> dict:
         """Make HTTP request with retry logic"""
