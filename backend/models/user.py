@@ -28,10 +28,10 @@ class AMLStatus(str, Enum):
 
 class UserBase(BaseModel):
     """Base user model with common fields"""
-    username: str = Field(..., min_length=3, max_length=50, regex="^[a-zA-Z0-9._-]+$")
+    username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9._-]+$")
     email: EmailStr
     full_name: Optional[str] = Field(None, max_length=100)
-    phone: Optional[str] = Field(None, regex="^\\+?[1-9]\\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern="^\\+?[1-9]\\d{1,14}$")
     user_type: UserRole
     is_active: bool = True
     is_verified: bool = False
