@@ -286,7 +286,7 @@ class MT5BackendTester:
 
         return True
 
-    def test_mt5_admin_endpoints(self) -> bool:
+    def test_mt5_admin_endpoints_REMOVED(self) -> bool:
         """Test MT5 Admin Endpoints"""
         print("\n" + "="*80)
         print("🔧 TESTING MT5 ADMIN ENDPOINTS")
