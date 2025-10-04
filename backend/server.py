@@ -17116,7 +17116,7 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
         logging.error(f"MT5 account creation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/mt5/accounts/{client_id}")
+@api_router.get("/mt5/accounts/{client_id}")
 async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 accounts for a client"""
     try:
