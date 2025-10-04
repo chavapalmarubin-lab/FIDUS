@@ -50,24 +50,39 @@ TEST_USERS = {
     }
 }
 
-class IndividualGoogleOAuthTest:
+class FidusBackendTester:
     def __init__(self):
         self.session = requests.Session()
         self.admin_token = None
+        self.client_token = None
         self.test_results = []
+        self.total_tests = 0
+        self.passed_tests = 0
         
-    def log_result(self, test_name, success, message, details=None):
+    def log_test(self, test_name, success, details="", error_msg=""):
         """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
+        self.total_tests += 1
+        if success:
+            self.passed_tests += 1
+            status = "✅ PASS"
+        else:
+            status = "❌ FAIL"
+            
         result = {
             "test": test_name,
             "status": status,
             "success": success,
-            "message": message,
-            "details": details or {},
-            "timestamp": datetime.now().isoformat()
+            "details": details,
+            "error": error_msg,
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         self.test_results.append(result)
+        print(f"{status}: {test_name}")
+        if details:
+            print(f"   Details: {details}")
+        if error_msg:
+            print(f"   Error: {error_msg}")
+        print()
         print(f"{status}: {test_name} - {message}")
         if details and not success:
             print(f"   Details: {details}")
