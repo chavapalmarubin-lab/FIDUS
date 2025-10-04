@@ -153,6 +153,6 @@ xlsxwriter==3.2.5
 yarl==1.20.1
 yfinance==0.2.65
 zipp==3.23.0
-MetaTrader5
+# MetaTrader5==5.0.47  # Windows-only package - install manually on Windows deployment
 bcrypt==4.3.0
 passlib==1.7.4
