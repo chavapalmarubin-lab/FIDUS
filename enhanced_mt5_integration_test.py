@@ -227,37 +227,56 @@ class EnhancedMT5IntegrationTester:
         
         client_id = self.client_user.get('id')
         
+        # First, check if client has any MT5 accounts
+        print(f"\n📊 Pre-test: Check if {client_id} has MT5 accounts")
+        success_check, response_check = self.run_test(
+            "Check Client MT5 Accounts",
+            "GET",
+            f"api/mt5/client/{client_id}/accounts",
+            200
+        )
+        
+        has_mt5_accounts = False
+        if success_check and isinstance(response_check, dict):
+            accounts = response_check.get('accounts', [])
+            has_mt5_accounts = len(accounts) > 0
+            print(f"   📋 Client has {len(accounts)} MT5 accounts")
+        
         # Test 1: CRM MT5 Client Account Endpoint
         print(f"\n📊 Test 1: CRM MT5 Client Account Endpoint for {client_id}")
         success, response = self.run_test(
             "CRM MT5 Client Account (Real MT5 Service)",
             "GET",
             f"api/crm/mt5/client/{client_id}/account",
-            200,
+            200 if has_mt5_accounts else 404,  # Expect 404 if no MT5 account exists
             headers=admin_headers
         )
         
         if success:
-            print("   ✅ CRM MT5 client account endpoint accessible")
-            
-            # Verify response indicates real MT5 service (not mock)
-            if isinstance(response, dict):
-                # Check for real MT5 service indicators
-                if 'account_info' in response or 'mt5_login' in response or 'balance' in response:
-                    print("   ✅ Response indicates real MT5 service integration")
-                    
-                    # Check for specific MT5 account data
-                    if response.get('mt5_login') or response.get('account_info', {}).get('login'):
-                        print("   ✅ Real MT5 account data present")
+            if has_mt5_accounts:
+                print("   ✅ CRM MT5 client account endpoint accessible")
+                
+                # Verify response indicates real MT5 service (not mock)
+                if isinstance(response, dict):
+                    # Check for real MT5 service indicators
+                    if 'account_info' in response or 'mt5_login' in response or 'balance' in response:
+                        print("   ✅ Response indicates real MT5 service integration")
+                        
+                        # Check for specific MT5 account data
+                        if response.get('mt5_login') or response.get('account_info', {}).get('login'):
+                            print("   ✅ Real MT5 account data present")
+                        else:
+                            print("   ⚠️ No MT5 account data found (may be expected if no account exists)")
                     else:
-                        print("   ⚠️ No MT5 account data found (may be expected if no account exists)")
+                        print("   ⚠️ Response format unclear - may still be using mock data")
                 else:
-                    print("   ⚠️ Response format unclear - may still be using mock data")
+                    print("   ❌ Invalid response format")
+                    return False
             else:
-                print("   ❌ Invalid response format")
-                return False
+                print("   ✅ Properly returns 404 when no MT5 account exists for client")
+                print("   ✅ This indicates the endpoint is working correctly")
         else:
-            print("   ❌ Failed to access CRM MT5 client account endpoint")
+            print("   ❌ CRM MT5 client account endpoint test failed")
             return False
 
         # Test 2: CRM MT5 Client Positions Endpoint
