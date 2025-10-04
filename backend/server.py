@@ -16996,8 +16996,7 @@ async def force_google_reconnection_test():
         "user_intervention_required": False
     }
 
-# Include the API router in the main app
-app.include_router(api_router)
+# Router will be included at the end of the file after all endpoints are defined
 
 # Configure logging
 logging.basicConfig(
