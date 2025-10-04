@@ -1961,7 +1961,7 @@ async def health_check():
         "jwt_fix": "applied",
         "services": {
             "backend": "running",
-            "mongodb": "connected" if mongodb_manager.db else "disconnected",
+            "mongodb": "connected" if mongodb_manager.db is not None else "disconnected",
             "google_auto_connection": "initialized"
         }
     }
