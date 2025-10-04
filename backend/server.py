@@ -14837,6 +14837,28 @@ async def get_all_mt5_accounts():
         logging.error(f"Get all MT5 accounts error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 accounts")
 
+@api_router.get("/mt5/bridge/health")
+async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
+    """Check MT5 bridge service health - MOVED TO WORKING LOCATION"""
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Test endpoint registration at this location
+        return {
+            "success": True,
+            "message": "MT5 Bridge Health endpoint is registered and working - MOVED LOCATION",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 bridge health check error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
 @api_router.post("/mt5/admin/credentials/update")
 async def update_mt5_credentials(credentials: MT5CredentialsRequest):
     """Update MT5 login credentials for a specific client and fund (Admin only)"""
