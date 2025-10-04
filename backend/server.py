@@ -17060,7 +17060,7 @@ class MT5ConnectionTestRequest(BaseModel):
     mt5_password: str
     mt5_server: str
 
-@app.post("/api/mt5/test-connection")
+@api_router.post("/mt5/test-connection")
 async def test_mt5_connection(request: MT5ConnectionTestRequest, current_user=Depends(get_current_user)):
     """Test MT5 connection via bridge service"""
     try:
