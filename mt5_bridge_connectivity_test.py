@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 """
 MT5 Bridge Service Connectivity Testing Suite
-Tests the MT5 Bridge Service running on Windows VPS (217.197.163.11:8000)
-and FIDUS backend integration with the bridge service.
+Tests MT5 Bridge Service connectivity after ForexVPS firewall configuration.
 
-Testing Requirements:
-1. Basic Connectivity Test - Test connection to MT5 bridge service
-2. API Authentication Test - Test API key security
-3. MT5 Integration Endpoints - Test MT5 bridge endpoints
-4. FIDUS Backend Integration - Test end-to-end connectivity
-5. Expected Results - Verify MT5 availability and initialization
+Focus Areas:
+1. FIDUS Backend MT5 Endpoints (/api/mt5/*)
+2. Error Handling when bridge is unreachable
+3. Configuration Validation
+4. Timeout Handling (30-second timeout)
+5. Fallback Behavior when MT5 bridge is unavailable
+
+Expected Results:
+- Proper error messages (connection timeout/refused)
+- Graceful error handling with informative messages
+- No 500 errors or crashes when bridge is unreachable
+- Configuration should be correct for when bridge becomes accessible
 """
 
 import requests
 import sys
 import json
+import time
 from datetime import datetime
 from typing import Dict, Any, List
-import time
 
 class MT5BridgeConnectivityTester:
     def __init__(self, fidus_backend_url="https://fidus-invest.emergent.host"):
