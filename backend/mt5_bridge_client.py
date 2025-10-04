@@ -52,16 +52,34 @@ class MT5BridgeClient:
         url = f"{self.bridge_url}{endpoint}"
         
         try:
-            async with self.session.request(method, url, json=data) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    error_text = await response.text()
-                    self.logger.error(f"MT5 Bridge API error {response.status}: {error_text}")
-                    return {
-                        'success': False, 
-                        'error': f"HTTP {response.status}: {error_text}"
-                    }
+            return await self._make_request_with_retry(method, url, json=data)
+        
+    async def _make_request_with_retry(self, method: str, url: str, **kwargs) -> dict:
+        """Make HTTP request with retry logic"""
+        last_error = None
+        
+        for attempt in range(self.retry_attempts):
+            try:
+                await self._ensure_session()
+                
+                async with self.session.request(method, url, **kwargs) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 401:
+                        return {'success': False, 'error': 'Invalid API key'}
+                    elif response.status == 503:
+                        # Service temporarily unavailable - retry
+                        if attempt < self.retry_attempts - 1:
+                            await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                            continue
+                        return {'success': False, 'error': 'MT5 Bridge service unavailable'}
+                    else:
+                        error_text = await response.text()
+                        self.logger.error(f"MT5 Bridge API error {response.status}: {error_text}")
+                        return {
+                            'success': False, 
+                            'error': f"HTTP {response.status}: {error_text}"
+                        }
                     
         except asyncio.TimeoutError:
             self.logger.error(f"MT5 Bridge timeout for {endpoint}")
