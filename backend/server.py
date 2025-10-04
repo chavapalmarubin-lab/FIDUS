@@ -17209,6 +17209,9 @@ async def get_mt5_system_status(current_user=Depends(get_current_user)):
 # APPLICATION STARTUP & SHUTDOWN
 # ============================================================================
 
+# Include the API router in the main app (MUST be after all endpoints are defined)
+app.include_router(api_router)
+
 @app.on_event("startup")
 async def startup_event():
     """Application startup tasks"""
