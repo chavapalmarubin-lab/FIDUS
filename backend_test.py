@@ -83,11 +83,73 @@ class FidusBackendTester:
         if error_msg:
             print(f"   Error: {error_msg}")
         print()
-        print(f"{status}: {test_name} - {message}")
-        if details and not success:
-            print(f"   Details: {details}")
-    
-    def authenticate_admin(self):
+
+    def make_request(self, method, endpoint, data=None, headers=None, auth_token=None):
+        """Make HTTP request with proper error handling"""
+        url = f"{BACKEND_URL}{endpoint}"
+        
+        # Set up headers
+        req_headers = {"Content-Type": "application/json"}
+        if headers:
+            req_headers.update(headers)
+        if auth_token:
+            req_headers["Authorization"] = f"Bearer {auth_token}"
+            
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=req_headers, timeout=30)
+            elif method.upper() == "POST":
+                response = self.session.post(url, json=data, headers=req_headers, timeout=30)
+            elif method.upper() == "PUT":
+                response = self.session.put(url, json=data, headers=req_headers, timeout=30)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url, headers=req_headers, timeout=30)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+                
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+
+    def test_health_endpoints(self):
+        """Test health check and readiness endpoints"""
+        print("🔍 Testing Health Check Endpoints...")
+        
+        # Test basic health endpoint
+        response = self.make_request("GET", "/health")
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("status") == "healthy":
+                    self.log_test("Health Check Endpoint", True, 
+                                f"Status: {data.get('status')}, Service: {data.get('service', 'N/A')}")
+                else:
+                    self.log_test("Health Check Endpoint", False, 
+                                f"Unexpected status: {data.get('status')}")
+            except json.JSONDecodeError:
+                self.log_test("Health Check Endpoint", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Health Check Endpoint", False, f"HTTP {status_code}")
+
+        # Test readiness endpoint
+        response = self.make_request("GET", "/health/ready")
+        if response and response.status_code == 200:
+            self.log_test("Readiness Check Endpoint", True, "System ready for requests")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Readiness Check Endpoint", False, f"HTTP {status_code}")
+
+        # Test health metrics endpoint
+        response = self.make_request("GET", "/health/metrics")
+        if response and response.status_code == 200:
+            self.log_test("Health Metrics Endpoint", True, "Metrics endpoint accessible")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Health Metrics Endpoint", False, f"HTTP {status_code}")
+
+    def test_user_authentication(self):
         """Authenticate as admin user"""
         try:
             response = self.session.post(f"{BACKEND_URL}/auth/login", json={
