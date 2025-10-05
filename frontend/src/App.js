@@ -18,9 +18,13 @@ function App() {
     
     // Check for OAuth callback parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');  // Emergent OAuth
     const googleAuthSuccess = urlParams.get('google_auth') === 'success';  // Direct Google OAuth (legacy)
     const googleAuthTab = urlParams.get('tab');
+    
+    // NEW: Emergent Auth session_id from URL fragment (format: #session_id=xxx)
+    const urlFragment = window.location.hash.substring(1);
+    const fragmentParams = new URLSearchParams(urlFragment);
+    const emergentSessionId = fragmentParams.get('session_id');
     
     // NEW: Individual Google OAuth callback parameters
     const googleOAuthCode = urlParams.get('code');  // Individual Google OAuth authorization code
