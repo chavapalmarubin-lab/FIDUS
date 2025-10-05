@@ -1,6 +1,32 @@
-# Getting Started with Create React App
+# FIDUS Frontend Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Version:** 2.1.0  
+**Updated:** October 5, 2025  
+**Framework:** React 18 with modern UI components
+
+This is the frontend React application for the FIDUS Investment Management Platform, featuring complete Google Workspace integration and real-time MT5 data connectivity.
+
+## 🚀 Recent Major Updates (v2.1.0)
+
+### Google Workspace Integration
+- **Complete OAuth 2.0 Flow**: Seamless Google authentication
+- **Gmail Integration**: Real-time email access and management  
+- **Calendar Integration**: Meeting scheduling and event management
+- **Drive Integration**: Document access and file management
+- **CRM Automation**: Email sending and calendar scheduling from CRM
+
+### System Integration
+- **Backend Connectivity**: Production API integration (https://fidus-invest.emergent.host)
+- **Authentication**: JWT + Google OAuth dual authentication system
+- **Real-time Updates**: Live data synchronization with MT5 bridge
+- **Error Handling**: Comprehensive error management and user feedback
+
+### User Interface Enhancements  
+- **Google Workspace Tab**: Dedicated interface for Google services
+- **Connection Status**: Real-time service monitoring indicators
+- **CRM Features**: Enhanced email and meeting scheduling interfaces
+- **Investment Dashboard**: Live MT5 data integration
+- **Document Portal**: Google Drive integration for file management
 
 ## Available Scripts
 
