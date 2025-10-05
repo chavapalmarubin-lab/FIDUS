@@ -139,23 +139,27 @@ class GoogleOAuthGmailTester:
                 data = response.json()
                 auth_url = data.get("auth_url", "")
                 
-                # Verify OAuth URL contains required parameters
+                # Verify OAuth URL contains required parameters (handle URL encoding)
                 required_params = [
                     "accounts.google.com/o/oauth2",
                     "client_id=909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com",
-                    "redirect_uri=https://fidus-invest.emergent.host/admin/google-callback",
                     "response_type=code",
                     "scope="
                 ]
                 
+                # Check for redirect_uri (may be URL encoded)
+                redirect_uri_present = ("redirect_uri=https://fidus-invest.emergent.host/admin/google-callback" in auth_url or 
+                                      "redirect_uri=https%3A%2F%2Ffidus-invest.emergent.host%2Fadmin%2Fgoogle-callback" in auth_url)
+                
                 missing_params = [param for param in required_params if param not in auth_url]
                 
-                if not missing_params and auth_url:
+                if not missing_params and redirect_uri_present and auth_url:
                     self.log_test("OAuth URL Generation - Direct Google OAuth", True,
                                 f"Valid OAuth URL generated with all required parameters")
                 else:
+                    missing_info = missing_params + ([] if redirect_uri_present else ["redirect_uri"])
                     self.log_test("OAuth URL Generation - Direct Google OAuth", False,
-                                f"Missing parameters: {missing_params}")
+                                f"Missing parameters: {missing_info}")
                     
             except json.JSONDecodeError:
                 self.log_test("OAuth URL Generation - Direct Google OAuth", False, 
