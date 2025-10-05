@@ -32,7 +32,7 @@ function App() {
     const googleOAuthError = urlParams.get('error');  // Individual Google OAuth error
     
     console.log('URL params:', window.location.search);
-    console.log('Session ID detected:', sessionId);
+    console.log('Session ID detected:', emergentSessionId);
     console.log('Google Auth Success:', googleAuthSuccess);
     console.log('Individual Google OAuth Code:', googleOAuthCode ? 'Present' : 'None');
     console.log('Individual Google OAuth State:', googleOAuthState);
