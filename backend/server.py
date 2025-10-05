@@ -13780,6 +13780,8 @@ async def google_connection_monitor():
 
 # Import Hybrid Google Service
 from hybrid_google_service import hybrid_google_service
+from emergent_google_auth import initialize_emergent_google_auth
+from emergent_gmail_service import emergent_gmail_service
 
 # ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
 
