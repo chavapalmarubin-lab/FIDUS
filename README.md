@@ -140,6 +140,60 @@ POST /mt5/positions     # Position data retrieval
 - **Real-time MT5 Data Collection** via HTTP bridge
 - **Automated Email & Calendar Services**
 
+**External Services**
+- **MT5 Bridge VPS**: Windows Server (217.197.163.11:8000)
+- **MongoDB Atlas**: Production cluster (fidus_production)
+- **Google Workspace**: OAuth 2.0 integration
+- **ForexVPS**: MT5 hosting provider
+- **Emergent Platform**: Kubernetes deployment
+
+---
+
+## 🏗️ Deployment Architecture
+
+### Production Infrastructure
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   FIDUS Web     │    │   FIDUS Backend  │    │  MT5 Bridge VPS │
+│   React App     │◄──►│   FastAPI        │◄──►│  Windows Server │
+│   (Port 3000)   │    │   (Port 8001)    │    │  (Port 8000)    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                        │                        │
+         ▼                        ▼                        ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Google APIs    │    │  MongoDB Atlas   │    │   MetaTrader 5  │
+│  OAuth/Gmail    │    │  Production DB   │    │   Platform      │
+│  Calendar/Drive │    │  fidus_production│    │   Live Trading  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+### Service Endpoints
+```bash
+# FIDUS Production URLs
+Frontend: https://fidus-invest.emergent.host
+Backend:  https://fidus-invest.emergent.host/api
+Health:   https://fidus-invest.emergent.host/api/health
+
+# External Services  
+MT5 Bridge: http://217.197.163.11:8000/health
+MongoDB:    MongoDB Atlas Cluster (fidus_production)
+Google:     OAuth via accounts.google.com
+```
+
+### Environment Configuration
+```bash
+# Backend Environment (.env)
+MONGO_URL="mongodb+srv://...fidus_production"
+GOOGLE_CLIENT_ID="909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs..."
+GOOGLE_OAUTH_REDIRECT_URI="https://fidus-invest.emergent.host/admin/google-callback"
+MT5_BRIDGE_URL="http://217.197.163.11:8000"
+JWT_SECRET_KEY="fidus-production-secret-2025-secure-key"
+
+# Frontend Environment (.env)
+REACT_APP_BACKEND_URL=https://fidus-invest.emergent.host
+REACT_APP_GOOGLE_REDIRECT_URI=https://fidus-invest.emergent.host/admin/google-callback
+```
+
 ---
 
 ## 📊 System Capabilities
