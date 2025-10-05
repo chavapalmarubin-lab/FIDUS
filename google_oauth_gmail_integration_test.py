@@ -85,17 +85,20 @@ class GoogleOAuthGmailTester:
             
         try:
             if method.upper() == "GET":
-                response = self.session.get(url, headers=req_headers, timeout=30)
+                response = self.session.get(url, headers=req_headers, timeout=10)
             elif method.upper() == "POST":
-                response = self.session.post(url, json=data, headers=req_headers, timeout=30)
+                response = self.session.post(url, json=data, headers=req_headers, timeout=10)
             elif method.upper() == "PUT":
-                response = self.session.put(url, json=data, headers=req_headers, timeout=30)
+                response = self.session.put(url, json=data, headers=req_headers, timeout=10)
             elif method.upper() == "DELETE":
-                response = self.session.delete(url, headers=req_headers, timeout=30)
+                response = self.session.delete(url, headers=req_headers, timeout=10)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
                 
             return response
+        except requests.exceptions.Timeout:
+            print(f"Request timed out for {endpoint}")
+            return None
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
             return None
