@@ -284,16 +284,16 @@ const FullGoogleWorkspace = () => {
   const loadEmails = async () => {
     setLoading(true);
     try {
-      console.log('📧 Loading REAL Gmail messages from API...');
+      console.log('📧 Loading Gmail messages from Emergent Auth...');
       
-      // Call the REAL Gmail API endpoint
-      const response = await apiAxios.get('/google/gmail/real-messages');
+      // Call the Emergent Gmail API endpoint
+      const response = await apiAxios.get('/admin/google/emergent/gmail/messages');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} real Gmail messages`);
+      if (response.data.success && response.data.messages && Array.isArray(response.data.messages)) {
+        console.log(`✅ Loaded ${response.data.messages.length} Gmail messages via Emergent Auth`);
         
-        // Transform real Gmail data to our format
-        const transformedEmails = response.data.map(email => ({
+        // Transform Emergent Gmail data to our format
+        const transformedEmails = response.data.messages.map(email => ({
           id: email.gmail_id || email.id,
           subject: email.subject || 'No Subject',
           sender: email.sender || email.from || 'Unknown Sender',
