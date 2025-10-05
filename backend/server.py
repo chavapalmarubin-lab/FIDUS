@@ -14075,11 +14075,8 @@ async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
             "CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0
         }
         
-        # Import MT5 service to get real-time data
-        try:
-            from mt5_integration import mt5_service
-        except:
-            mt5_service = None
+        # Use the already imported MT5 service for real-time data
+        # (mt5_service is already imported at the top of the file)
         
         for client in all_clients:
             client_id = client['id']
