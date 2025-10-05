@@ -260,8 +260,8 @@ const FullGoogleWorkspace = () => {
     try {
       console.log('🔗 Starting Emergent Google OAuth flow...');
       
-      // Get the Emergent Google OAuth URL from backend
-      const response = await apiAxios.get('/admin/google/emergent/auth-url');
+      // Get the Google OAuth URL from backend
+      const response = await apiAxios.get('/auth/google/url');
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
