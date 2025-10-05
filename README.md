@@ -55,11 +55,12 @@ FIDUS is a comprehensive investment management platform that provides sophistica
 - Pydantic for data validation
 - Fernet encryption for credentials
 
-**Integration**
-- MetaTrader 5 API integration
-- Gmail OAuth for document sending
-- Real-time data collection
-- Automated backup systems
+**Integration & External Services**
+- **MetaTrader 5 Bridge Architecture** (Windows VPS)
+- **Google Workspace Integration** (OAuth 2.0, Gmail, Calendar, Drive)
+- **Production MongoDB Atlas** (fidus_production database)
+- **Real-time MT5 Data Collection** via HTTP bridge
+- **Automated Email & Calendar Services**
 
 ---
 
