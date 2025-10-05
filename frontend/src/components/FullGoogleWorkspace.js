@@ -292,7 +292,7 @@ const FullGoogleWorkspace = () => {
       if (response.data.success && response.data.messages && Array.isArray(response.data.messages)) {
         console.log(`✅ Loaded ${response.data.messages.length} Gmail messages via Google API`);
         
-        // Transform Emergent Gmail data to our format
+        // Transform Gmail API data to our format
         const transformedEmails = response.data.messages.map(email => ({
           id: email.gmail_id || email.id,
           subject: email.subject || 'No Subject',
