@@ -99,28 +99,24 @@ const FullGoogleWorkspace = () => {
       
       // Update connection status based on Google Auth response
       const statusData = {
-        success: response.data.success && response.data.connected,
+        success: response.data.connected && !response.data.is_expired,
         connected: response.data.connected,
-        overall_status: response.data.connected ? 'fully_connected' : 'disconnected',
-        google_info: {
-          email: response.data.google_email,
-          name: response.data.google_name,
-          picture: response.data.google_picture
-        },
+        overall_status: response.data.connected && !response.data.is_expired ? 'fully_connected' : 'disconnected',
+        google_info: response.data.google_info,
         admin_info: response.data.admin_info,
-        expires_at: response.data.expires_at,
-        services: {
+        scopes: response.data.scopes,
+        services: response.data.services || {
           gmail: { 
-            status: response.data.connected ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
           },
           calendar: { 
-            status: response.data.connected ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
           },
           drive: { 
-            status: response.data.connected ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
           },
-          meet: { 
-            status: response.data.connected ? 'connected' : 'disconnected' 
+          sheets: { 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
           }
         }
       };
