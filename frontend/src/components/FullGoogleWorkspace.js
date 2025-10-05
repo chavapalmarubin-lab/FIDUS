@@ -274,7 +274,7 @@ const FullGoogleWorkspace = () => {
       }
       
     } catch (error) {
-      console.error('❌ Emergent Google OAuth connection failed:', error);
+      console.error('❌ Google OAuth connection failed:', error);
       setConnectionStatus({ 
         success: false, 
         error: 'Failed to connect to Google OAuth. Please try again.' 
