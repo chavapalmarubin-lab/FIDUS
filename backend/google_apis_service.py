@@ -199,16 +199,21 @@ class GoogleAPIsService:
         """
         try:
             expiry = None
-            if token_data.get('expiry'):
-                expiry = datetime.fromisoformat(token_data['expiry'].replace('Z', '+00:00'))
+            # Handle both 'expiry' and 'expires_at' field names
+            expiry_field = token_data.get('expires_at') or token_data.get('expiry')
+            if expiry_field:
+                if isinstance(expiry_field, str):
+                    expiry = datetime.fromisoformat(expiry_field.replace('Z', '+00:00'))
+                elif isinstance(expiry_field, datetime):
+                    expiry = expiry_field
             
             credentials = Credentials(
-                token=token_data['access_token'],
+                token=token_data.get('access_token'),
                 refresh_token=token_data.get('refresh_token'),
-                token_uri=token_data.get('token_uri'),
+                token_uri=token_data.get('token_uri', 'https://oauth2.googleapis.com/token'),
                 client_id=token_data.get('client_id'),
                 client_secret=token_data.get('client_secret'),
-                scopes=token_data.get('scopes'),
+                scopes=token_data.get('scopes', []),
                 expiry=expiry
             )
             
