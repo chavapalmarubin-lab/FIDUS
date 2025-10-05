@@ -47,6 +47,44 @@ class MT5Repository(BaseRepository[MT5Account]):
         """Get all MT5 accounts for a client"""
         return await self.find_many({'client_id': client_id})
     
+    async def find_accounts_by_client_id(self, client_id: str) -> List[Dict[str, Any]]:
+        """Get all MT5 accounts for a client (CRM endpoint compatible)"""
+        try:
+            accounts = await self.find_by_client_id(client_id)
+            
+            # Convert to dict format for CRM endpoints
+            result = []
+            for account in accounts:
+                if hasattr(account, 'dict'):
+                    # Pydantic model - convert to dict
+                    account_dict = account.dict()
+                elif isinstance(account, dict):
+                    # Already a dict
+                    account_dict = account
+                else:
+                    # Convert object attributes to dict
+                    account_dict = {
+                        'account_id': getattr(account, 'account_id', ''),
+                        'client_id': getattr(account, 'client_id', ''),
+                        'mt5_login': getattr(account, 'mt5_login', 0),
+                        'broker_code': getattr(account, 'broker_code', ''),
+                        'broker_name': getattr(account, 'broker_name', ''),
+                        'mt5_server': getattr(account, 'mt5_server', ''),
+                        'fund_code': getattr(account, 'fund_code', ''),
+                        'is_active': getattr(account, 'is_active', False),
+                        'status': getattr(account, 'status', ''),
+                        'balance': getattr(account, 'balance', 0),
+                        'equity': getattr(account, 'equity', 0)
+                    }
+                
+                result.append(account_dict)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error finding accounts for client {client_id}: {e}")
+            return []
+    
     async def find_by_fund_code(self, fund_code: str) -> List[MT5Account]:
         """Get all MT5 accounts for a specific fund"""
         return await self.find_many({'fund_code': fund_code})
