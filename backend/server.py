@@ -9483,6 +9483,10 @@ async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin
             "messages": [],
             "source": "error"
         }
+@api_router.get("/admin/gmail/messages")
+async def get_admin_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages for admin user (alias for /api/google/gmail/real-messages)"""
+    return await get_real_gmail_messages(current_user)
 
 @api_router.post("/google/gmail/real-send")
 async def send_real_gmail_message(request: Request, current_user: dict = Depends(get_current_admin_user)):
