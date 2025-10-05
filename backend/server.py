@@ -13786,6 +13786,170 @@ from emergent_gmail_service import emergent_gmail_service
 # Initialize Emergent Google Auth
 emergent_google_auth = initialize_emergent_google_auth(db)
 
+# ==================== EMERGENT GOOGLE AUTH ENDPOINTS ====================
+
+@api_router.get("/admin/google/emergent/auth-url")
+async def get_emergent_google_auth_url(current_user: dict = Depends(get_current_admin_user)):
+    """Get Emergent Google Auth URL for admin user"""
+    try:
+        # Use production URL for redirect after auth
+        redirect_url = "https://fidus-invest.emergent.host/?skip_animation=true&tab=google-workspace"
+        
+        auth_url = emergent_google_auth.get_auth_url(redirect_url)
+        
+        return {
+            "success": True,
+            "auth_url": auth_url,
+            "redirect_url": redirect_url,
+            "message": "Emergent Google Auth URL generated"
+        }
+    except Exception as e:
+        logging.error(f"Error generating Emergent auth URL: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.post("/admin/google/emergent/callback")
+async def process_emergent_google_callback(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    """Process Emergent Google OAuth callback with session_id"""
+    try:
+        data = await request.json()
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            raise HTTPException(status_code=400, detail="session_id is required")
+        
+        # Exchange session_id for user data and session_token
+        result = await emergent_google_auth.exchange_session_id(session_id)
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=400, detail=result.get('error', 'Session exchange failed'))
+        
+        # Get admin user ID
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        
+        # Store session token in database
+        user_data = result['user_data']
+        session_token = result['session_token']
+        
+        stored = await emergent_google_auth.store_session_token(admin_user_id, user_data, session_token)
+        
+        if not stored:
+            raise HTTPException(status_code=500, detail="Failed to store session token")
+        
+        logging.info(f"✅ Emergent Google Auth completed for admin {admin_user_id}")
+        logging.info(f"✅ Connected Google account: {user_data.get('email')}")
+        
+        return {
+            "success": True,
+            "user_email": user_data.get('email'),
+            "user_name": user_data.get('name'),
+            "message": "Emergent Google authentication successful"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error processing Emergent Google callback: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Callback processing failed: {str(e)}")
+
+@api_router.get("/admin/google/emergent/status")
+async def get_emergent_google_status(current_user: dict = Depends(get_current_admin_user)):
+    """Get Emergent Google authentication status for admin user"""
+    try:
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        
+        # Get user info from stored session
+        user_info = await emergent_google_auth.get_user_info(admin_user_id)
+        
+        if user_info:
+            return {
+                "success": True,
+                "connected": True,
+                "google_email": user_info.get('google_email'),
+                "google_name": user_info.get('google_name'),
+                "google_picture": user_info.get('google_picture'),
+                "expires_at": user_info.get('expires_at'),
+                "connection_status": user_info.get('connection_status')
+            }
+        else:
+            return {
+                "success": True,
+                "connected": False,
+                "message": "No Emergent Google authentication found"
+            }
+            
+    except Exception as e:
+        logging.error(f"Error getting Emergent Google status: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@api_router.get("/admin/google/emergent/gmail/messages")
+async def get_emergent_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages using Emergent authentication"""
+    try:
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        
+        # Get session token
+        session_token = await emergent_google_auth.get_session_token(admin_user_id)
+        
+        if not session_token:
+            return {
+                "success": False,
+                "auth_required": True,
+                "message": "Emergent Google authentication required",
+                "messages": []
+            }
+        
+        # Get Gmail messages using session token
+        messages = await emergent_gmail_service.get_gmail_messages(session_token, max_results=20)
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "count": len(messages),
+            "source": "emergent_gmail_api",
+            "admin_user_id": admin_user_id
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting Emergent Gmail messages: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "messages": []
+        }
+
+@api_router.post("/admin/google/emergent/logout")
+async def emergent_google_logout(current_user: dict = Depends(get_current_admin_user)):
+    """Logout from Emergent Google authentication"""
+    try:
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        
+        # Logout user (delete session from database)
+        success = await emergent_google_auth.logout_user(admin_user_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Logged out from Emergent Google authentication"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No active session found"
+            }
+            
+    except Exception as e:
+        logging.error(f"Error logging out from Emergent Google auth: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 # ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
 
 @api_router.get("/auth/google/url")
