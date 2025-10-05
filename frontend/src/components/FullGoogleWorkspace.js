@@ -124,8 +124,8 @@ const FullGoogleWorkspace = () => {
       setConnectionStatus(statusData);
       
       // Auto-load data if connected
-      if (statusData.connected) {
-        console.log('✅ Emergent Google connected - auto-loading Gmail data');
+      if (statusData.connected && !response.data.is_expired) {
+        console.log('✅ Google connected - auto-loading Gmail data');
         if (activeTab === 'gmail') {
           loadEmails();
         } else if (activeTab === 'calendar') {
