@@ -179,7 +179,7 @@ function App() {
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
             method: 'POST',
             headers: {
-              'X-Session-ID': sessionId,
+              'X-Session-ID': emergentSessionId,
               'Content-Type': 'application/json'
             }
           });
