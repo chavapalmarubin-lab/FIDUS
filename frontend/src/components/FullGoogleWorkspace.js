@@ -294,11 +294,11 @@ const FullGoogleWorkspace = () => {
       // Call the Gmail API endpoint  
       const response = await apiAxios.get('/google/gmail/real-messages');
       
-      if (Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} Gmail messages via Google API`);
+      if (response.data.success && response.data.messages && Array.isArray(response.data.messages)) {
+        console.log(`✅ Loaded ${response.data.messages.length} Gmail messages via Google API`);
         
         // Transform Gmail API data to our format
-        const transformedEmails = response.data.map(email => ({
+        const transformedEmails = response.data.messages.map(email => ({
           id: email.gmail_id || email.id,
           subject: email.subject || 'No Subject',
           sender: email.sender || email.from || 'Unknown Sender',
