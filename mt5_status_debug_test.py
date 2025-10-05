@@ -18,8 +18,8 @@ from datetime import datetime, timezone
 
 class MT5StatusDebugTester:
     def __init__(self):
-        # Use the correct backend URL from frontend/.env
-        self.backend_url = "https://fidus-finance-api.preview.emergentagent.com/api"
+        # Use the correct backend URL from frontend/.env - but should be the live app URL
+        self.backend_url = "https://fidus-invest.emergent.host/api"
         self.admin_token = None
         self.test_results = []
         
