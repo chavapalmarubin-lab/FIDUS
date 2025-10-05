@@ -13775,10 +13775,11 @@ from hybrid_google_service import hybrid_google_service
 # ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
 
 @api_router.get("/auth/google/url")
-async def get_google_oauth_url():
+async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
     """Get the REAL Google OAuth URL that redirects to accounts.google.com"""
     try:
-        auth_url = hybrid_google_service.get_oauth_url()
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        auth_url = hybrid_google_service.get_oauth_url(admin_user_id)
         return {
             "success": True,
             "auth_url": auth_url,
