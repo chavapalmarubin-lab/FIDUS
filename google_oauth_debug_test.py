@@ -393,7 +393,7 @@ class GoogleOAuthDebugTester:
                     for service_name, service_data in services.items():
                         if isinstance(service_data, dict):
                             error_msg = service_data.get("error", "")
-                            if "credential" in error_msg.lower():
+                            if error_msg and "credential" in error_msg.lower():
                                 print(f"   ⚠️ {service_name} credential error: {error_msg}")
                     
                 else:
