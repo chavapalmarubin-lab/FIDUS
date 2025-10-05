@@ -2801,8 +2801,7 @@ class ClientMT5Mapping:
         account_id = self.investment_to_mt5[investment_id]
         return self.mt5_accounts.get(account_id)
 
-# MT5 Integration Service
-from mt5_integration import mt5_service
+# MT5 Integration Service (using the proper service from line 51)
 from mfa_service import mfa_service
 
 # Global MT5 mapping manager
