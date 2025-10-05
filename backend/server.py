@@ -7358,8 +7358,13 @@ async def get_client_mt5_account(client_id: str, current_user=Depends(get_curren
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         # Get client's MT5 accounts
         accounts = await mt5_service.mt5_repo.find_accounts_by_client_id(client_id)
@@ -7393,8 +7398,13 @@ async def get_client_mt5_positions(client_id: str, current_user=Depends(get_curr
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         # Get client's MT5 accounts
         accounts = await mt5_service.mt5_repo.find_accounts_by_client_id(client_id)
@@ -17063,8 +17073,13 @@ class MT5ConnectionTestRequest(BaseModel):
 async def test_mt5_connection(request: MT5ConnectionTestRequest, current_user=Depends(get_current_user)):
     """Test MT5 connection via bridge service"""
     try:
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         result = await mt5_service.test_mt5_connection(
             request.mt5_login, 
@@ -17086,8 +17101,13 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         # Validate broker code
         try:
@@ -17123,8 +17143,13 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
         if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         accounts = await mt5_service.get_client_mt5_accounts(client_id)
         
@@ -17148,8 +17173,13 @@ async def sync_mt5_account(account_id: str, current_user=Depends(get_current_use
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         result = await mt5_service.sync_account_data(account_id)
         
@@ -17168,8 +17198,13 @@ async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         result = await mt5_service.sync_all_accounts()
         
@@ -17190,8 +17225,13 @@ async def get_comprehensive_mt5_status(current_user=Depends(get_current_user)):
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
-        if not mt5_service.mt5_repo:
-            await mt5_service.initialize()
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            try:
+                await mt5_service.initialize()
+                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
+            except Exception as e:
+                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
+                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
         
         # Get bridge health
         bridge_health = await mt5_bridge.health_check()
