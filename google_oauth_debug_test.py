@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration - Use REACT_APP_BACKEND_URL from frontend/.env
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-invest.emergent.host/api"
 
 class GoogleOAuthDebugTester:
     def __init__(self):
