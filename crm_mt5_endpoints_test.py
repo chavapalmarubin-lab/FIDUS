@@ -18,8 +18,8 @@ import time
 import sys
 from datetime import datetime, timezone
 
-# Backend URL - Using production URL as mentioned in review request
-BACKEND_URL = "https://fidus-invest.emergent.host/api"
+# Backend URL - Using the URL from frontend/.env
+BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
 
 # Test Configuration
 TEST_CLIENT_ID = "client_003"  # Salvador Palma
