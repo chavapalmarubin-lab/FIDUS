@@ -313,6 +313,9 @@ const FullGoogleWorkspace = () => {
         
         setEmails(transformedEmails);
         console.log(`✅ Successfully loaded ${transformedEmails.length} emails from your Gmail`);
+      } else if (response.data.auth_required) {
+        console.log('🔐 Gmail API requires authentication');
+        setEmails([]);
       } else {
         console.warn('⚠️ No emails returned from Gmail API, using fallback');
         // Fallback message for when no emails are returned
