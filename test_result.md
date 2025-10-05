@@ -48,6 +48,18 @@ MONGODB MIGRATION TASK: Complete database migration from MOCK_USERS to MongoDB f
 
 **Remaining Work**: Fix schema validation and migrate remaining MOCK_USERS references.
 
+## MT5 Status Endpoint Fix (Latest Update)
+**RESOLVED**: The reported 500 error on `/api/mt5/status` endpoint has been resolved and is now working correctly (HTTP 200).
+
+**Status**: ✅ MT5 integration endpoints operational:
+- ✅ `/api/mt5/status` endpoint working (was 500, now 200)
+- ✅ Admin authentication successful 
+- ✅ Bridge health status reporting correctly
+- ✅ Related MT5 endpoints mostly functional (3/5 working)
+- ⚠️ Some MT5 endpoints experience timeouts but no critical 500 errors
+
+**VPS Bridge Status**: Confirmed operational at http://217.197.163.11:8000 with MT5 connection active.
+
 **Google Integration Requirements:**
 1. Fix Google OAuth to work properly across all components
 2. Complete Google integration in CRM (Gmail, Calendar, Drive, Meet)
