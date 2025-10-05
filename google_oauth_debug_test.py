@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-Google OAuth Token Debugging Test Suite
-Debug Google API service calls that are failing after successful OAuth authentication.
+Google OAuth Connection Failure Debug Test
+Testing the specific OAuth flow issues reported by the user:
+- "Connection Failed" when clicking "Connect Google Workspace"
+- "Google Auth Success: false"
+- "Individual Google OAuth Code: None"
+- "No OAuth callback - checking normal authentication"
 
 Focus Areas:
-1. Test token storage and retrieval - check what scopes are stored in OAuth tokens
-2. Test Gmail API calls - specifically /api/admin/gmail/messages endpoint
-3. Check stored token format - verify token data structure in database
-4. Look for missing client_id, client_secret, token_uri in stored token data
+1. OAuth URL generation (/api/auth/google/url)
+2. Connection status check (/api/google/connection/test-all)
+3. OAuth callback accessibility (/api/admin/google-callback)
+4. Redirect URI configuration verification
+5. OAuth flow completion testing
 
 Admin Credentials: admin/password123
 """
