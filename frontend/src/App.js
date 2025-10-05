@@ -238,7 +238,7 @@ function App() {
         setCurrentView("login");
       };
       
-      processOAuthCallback();
+      processEmergentOAuthCallback();
       return; // CRITICAL: Return here to prevent normal auth check
     }
     
