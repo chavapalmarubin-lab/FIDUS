@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://fidus-admin.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
 
 class ComprehensiveProductionTest:
     def __init__(self):

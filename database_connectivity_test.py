@@ -29,7 +29,7 @@ import pymongo
 from pymongo import MongoClient
 
 class DatabaseConnectivityTester:
-    def __init__(self, base_url="https://fidus-admin.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-finance-api.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
