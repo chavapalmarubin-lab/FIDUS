@@ -281,9 +281,14 @@ class GoogleOAuthGmailTester:
             if response.status_code == 200:
                 try:
                     data = response.json()
-                    if "messages" in data or "auth_required" in data or "success" in data:
+                    if "messages" in data and "auth_required" in data:
+                        # This is the expected response when OAuth is not completed
                         self.log_test("Gmail API - Admin Messages Endpoint", True,
-                                    "Admin Gmail messages endpoint working correctly")
+                                    "Admin Gmail messages endpoint working correctly (requires OAuth)")
+                    elif "messages" in data and isinstance(data["messages"], list):
+                        # This would be the response with actual messages
+                        self.log_test("Gmail API - Admin Messages Endpoint", True,
+                                    f"Admin Gmail messages endpoint working with {len(data['messages'])} messages")
                     else:
                         self.log_test("Gmail API - Admin Messages Endpoint", False,
                                     "Unexpected response format")
