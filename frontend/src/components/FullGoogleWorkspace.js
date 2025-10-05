@@ -98,10 +98,15 @@ const FullGoogleWorkspace = () => {
       console.log('🔍 Google connection status:', response.data);
       
       // Update connection status based on Google Auth response
+      const isConnected = response.data.overall_status === 'fully_connected' || 
+                          response.data.overall_status === 'partial' ||
+                          (response.data.success && response.data.overall_status !== 'disconnected');
+      const isExpired = response.data.is_expired || false;
+      
       const statusData = {
-        success: response.data.connected && !response.data.is_expired,
-        connected: response.data.connected,
-        overall_status: response.data.connected && !response.data.is_expired ? 'fully_connected' : 'disconnected',
+        success: isConnected && !isExpired,
+        connected: isConnected,
+        overall_status: isConnected && !isExpired ? 'fully_connected' : 'disconnected',
         google_info: response.data.google_info,
         admin_info: response.data.admin_info,
         scopes: response.data.scopes,
