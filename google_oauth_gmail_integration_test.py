@@ -307,19 +307,22 @@ class GoogleOAuthGmailTester:
             self.log_test("Gmail API - Admin Messages Endpoint", False, "No response")
 
         # Test Gmail send functionality (should expect POST method)
-        response = self.make_request("GET", "/google/gmail/real-send", auth_token=self.admin_token)
-        if response:
-            if response.status_code == 405:  # Method not allowed - expects POST
-                self.log_test("Gmail API - Send Endpoint", True,
-                            "Gmail send endpoint exists (expects POST method)")
-            elif response.status_code == 200:
-                self.log_test("Gmail API - Send Endpoint", True,
-                            "Gmail send endpoint accessible")
+        try:
+            response = self.make_request("GET", "/google/gmail/real-send", auth_token=self.admin_token)
+            if response:
+                if response.status_code == 405:  # Method not allowed - expects POST
+                    self.log_test("Gmail API - Send Endpoint", True,
+                                "Gmail send endpoint exists (expects POST method)")
+                elif response.status_code == 200:
+                    self.log_test("Gmail API - Send Endpoint", True,
+                                "Gmail send endpoint accessible")
+                else:
+                    self.log_test("Gmail API - Send Endpoint", True,
+                                f"Gmail send endpoint exists (HTTP {response.status_code})")
             else:
-                self.log_test("Gmail API - Send Endpoint", True,
-                            f"Gmail send endpoint exists (HTTP {response.status_code})")
-        else:
-            self.log_test("Gmail API - Send Endpoint", False, "No response from Gmail send endpoint")
+                self.log_test("Gmail API - Send Endpoint", False, "No response from Gmail send endpoint")
+        except Exception as e:
+            self.log_test("Gmail API - Send Endpoint", False, f"Request failed: {str(e)}")
 
     def test_stored_token_retrieval(self):
         """Test stored token retrieval and verify OAuth fields"""
