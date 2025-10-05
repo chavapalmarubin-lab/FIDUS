@@ -94,10 +94,10 @@ const FullGoogleWorkspace = () => {
   // Quick connection test for status display
   const testConnectionQuick = async () => {
     try {
-      const response = await apiAxios.get('/admin/google/emergent/status');
-      console.log('🔍 Emergent Google connection status:', response.data);
+      const response = await apiAxios.get('/google/connection/test-all');
+      console.log('🔍 Google connection status:', response.data);
       
-      // Update connection status based on Emergent Auth response
+      // Update connection status based on Google Auth response
       const statusData = {
         success: response.data.success && response.data.connected,
         connected: response.data.connected,
