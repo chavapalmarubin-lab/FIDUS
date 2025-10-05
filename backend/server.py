@@ -17222,6 +17222,11 @@ async def get_comprehensive_mt5_status(current_user=Depends(get_current_user)):
         if current_user.get("type") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         
+        # Debug: Check what type mt5_service actually is
+        logging.error(f"DEBUG: mt5_service type: {type(mt5_service)}")
+        logging.error(f"DEBUG: mt5_service module: {mt5_service.__class__.__module__}")
+        logging.error(f"DEBUG: Has mt5_repo: {hasattr(mt5_service, 'mt5_repo')}")
+        
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
             try:
                 await mt5_service.initialize()
