@@ -1148,7 +1148,7 @@ async def ensure_default_users_in_mongodb():
             "id": "admin_001",  # Fixed: use "id" not "user_id"
             "username": "admin",
             "name": "Investment Committee", 
-            "email": "ic@fidus.com",
+            "email": "hq@getfidus.com",
             "phone": "+1-555-0001",
             "type": "admin",  # Fixed: use "type" not "user_type"
             "status": "active",
