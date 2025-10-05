@@ -1286,4 +1286,4 @@ class MT5IntegrationService:
             return {}
 
 # Global MT5 integration service instance
-mt5_service = MT5IntegrationService()
+legacy_mt5_service = MT5IntegrationService()  # Renamed to avoid conflict with services/mt5_service.py
