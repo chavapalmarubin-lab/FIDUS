@@ -167,21 +167,24 @@ function App() {
       return;
     }
     
-    // Handle Emergent OAuth (existing logic)
+    // Handle Emergent OAuth callback
     if (emergentSessionId) {
-      console.log('🔄 GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', emergentSessionId);
+      console.log('🔄 EMERGENT GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', emergentSessionId);
       
-      // Process the Google OAuth session immediately
-      const processOAuthCallback = async () => {
+      // Process the Emergent Google OAuth session immediately
+      const processEmergentOAuthCallback = async () => {
         try {
-          console.log('📡 Calling process-session endpoint...');
+          console.log('📡 Processing Emergent Google OAuth callback...');
           
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/process-session`, {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/emergent/callback`, {
             method: 'POST',
             headers: {
-              'X-Session-ID': emergentSessionId,
+              'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`,
               'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+              session_id: emergentSessionId
+            })
           });
 
           console.log('🔍 Process-session response status:', response.status);
