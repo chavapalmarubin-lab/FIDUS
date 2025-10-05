@@ -168,8 +168,8 @@ function App() {
     }
     
     // Handle Emergent OAuth (existing logic)
-    if (sessionId) {
-      console.log('🔄 GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', sessionId);
+    if (emergentSessionId) {
+      console.log('🔄 GOOGLE OAUTH CALLBACK DETECTED - Processing session_id:', emergentSessionId);
       
       // Process the Google OAuth session immediately
       const processOAuthCallback = async () => {
