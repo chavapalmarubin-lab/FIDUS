@@ -85,7 +85,7 @@ class HybridGoogleService:
             logger.error(f"❌ Failed to initialize service account: {str(e)}")
             self.authenticated = False
     
-    def get_oauth_url(self) -> str:
+    def get_oauth_url(self, admin_user_id: str = None) -> str:
         """Generate OAuth URL for user consent - redirects to accounts.google.com"""
         from urllib.parse import urlencode
         
@@ -96,6 +96,9 @@ class HybridGoogleService:
             'https://www.googleapis.com/auth/calendar'
         ]
         
+        # Include admin_user_id in state for callback processing
+        state_value = f"{admin_user_id}:fidus_oauth_state" if admin_user_id else 'fidus_oauth_state'
+        
         params = {
             'client_id': self.oauth_client_id,
             'redirect_uri': self.oauth_redirect_uri,
@@ -103,7 +106,7 @@ class HybridGoogleService:
             'response_type': 'code',
             'access_type': 'offline',
             'prompt': 'consent',
-            'state': 'fidus_oauth_state'
+            'state': state_value
         }
         
         oauth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
