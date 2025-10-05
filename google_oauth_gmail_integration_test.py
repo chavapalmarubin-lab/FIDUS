@@ -333,40 +333,43 @@ class GoogleOAuthGmailTester:
             return
 
         # Test Google profile endpoint (check if it exists - may not be implemented)
-        response = self.make_request("GET", "/google/profile", auth_token=self.admin_token)
-        if response:
-            if response.status_code == 200:
-                try:
-                    data = response.json()
-                    if data.get("email") and data.get("name"):
-                        self.log_test("Stored Token Retrieval - Google Profile", True,
-                                    f"Google profile accessible: {data.get('email')}")
-                    else:
-                        self.log_test("Stored Token Retrieval - Google Profile", False,
-                                    "Google profile data incomplete")
-                except json.JSONDecodeError:
-                    self.log_test("Stored Token Retrieval - Google Profile", False, "Invalid JSON response")
-            elif response.status_code == 404:
-                # Google profile endpoint may not be implemented - this is not critical for the fixes
-                self.log_test("Stored Token Retrieval - Google Profile", True,
-                            "Google profile endpoint not implemented (not critical for OAuth fixes)")
-            elif response.status_code == 401 or response.status_code == 403:
-                try:
-                    data = response.json()
-                    if data.get("auth_required") or "authentication" in data.get("detail", "").lower():
-                        self.log_test("Stored Token Retrieval - Google Profile", True,
-                                    "Endpoint working correctly, requires OAuth completion")
-                    else:
-                        self.log_test("Stored Token Retrieval - Google Profile", False,
-                                    "Unexpected authentication error")
-                except json.JSONDecodeError:
+        try:
+            response = self.make_request("GET", "/google/profile", auth_token=self.admin_token)
+            if response:
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        if data.get("email") and data.get("name"):
+                            self.log_test("Stored Token Retrieval - Google Profile", True,
+                                        f"Google profile accessible: {data.get('email')}")
+                        else:
+                            self.log_test("Stored Token Retrieval - Google Profile", False,
+                                        "Google profile data incomplete")
+                    except json.JSONDecodeError:
+                        self.log_test("Stored Token Retrieval - Google Profile", False, "Invalid JSON response")
+                elif response.status_code == 404:
+                    # Google profile endpoint may not be implemented - this is not critical for the fixes
                     self.log_test("Stored Token Retrieval - Google Profile", True,
-                                "Endpoint exists, requires OAuth authentication")
+                                "Google profile endpoint not implemented (not critical for OAuth fixes)")
+                elif response.status_code == 401 or response.status_code == 403:
+                    try:
+                        data = response.json()
+                        if data.get("auth_required") or "authentication" in data.get("detail", "").lower():
+                            self.log_test("Stored Token Retrieval - Google Profile", True,
+                                        "Endpoint working correctly, requires OAuth completion")
+                        else:
+                            self.log_test("Stored Token Retrieval - Google Profile", False,
+                                        "Unexpected authentication error")
+                    except json.JSONDecodeError:
+                        self.log_test("Stored Token Retrieval - Google Profile", True,
+                                    "Endpoint exists, requires OAuth authentication")
+                else:
+                    self.log_test("Stored Token Retrieval - Google Profile", True,
+                                f"Google profile endpoint accessible (HTTP {response.status_code})")
             else:
-                self.log_test("Stored Token Retrieval - Google Profile", True,
-                            f"Google profile endpoint accessible (HTTP {response.status_code})")
-        else:
-            self.log_test("Stored Token Retrieval - Google Profile", False, "No response")
+                self.log_test("Stored Token Retrieval - Google Profile", False, "No response")
+        except Exception as e:
+            self.log_test("Stored Token Retrieval - Google Profile", False, f"Request failed: {str(e)}")
 
         # Test Google connection test-all (should use stored tokens)
         response = self.make_request("GET", "/google/connection/test-all", auth_token=self.admin_token)
