@@ -13783,6 +13783,9 @@ from hybrid_google_service import hybrid_google_service
 from emergent_google_auth import initialize_emergent_google_auth
 from emergent_gmail_service import emergent_gmail_service
 
+# Initialize Emergent Google Auth
+emergent_google_auth = initialize_emergent_google_auth(db)
+
 # ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
 
 @api_router.get("/auth/google/url")
