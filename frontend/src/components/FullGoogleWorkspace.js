@@ -254,23 +254,23 @@ const FullGoogleWorkspace = () => {
   const handleConnectToGoogle = async () => {
     setLoading(true);
     try {
-      console.log('🔗 Starting REAL Google OAuth flow...');
+      console.log('🔗 Starting Emergent Google OAuth flow...');
       
-      // Get the REAL Google OAuth URL from backend
-      const response = await apiAxios.get('/auth/google/url');
+      // Get the Emergent Google OAuth URL from backend
+      const response = await apiAxios.get('/admin/google/emergent/auth-url');
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
-        console.log('🚀 Redirecting to Google OAuth via Emergent:', authUrl);
+        console.log('🚀 Redirecting to Emergent Google OAuth:', authUrl);
         
-        // Redirect to ACTUAL Google OAuth (accounts.google.com)
+        // Redirect to Emergent Google OAuth
         window.location.href = authUrl;
       } else {
-        throw new Error(response.data.error || 'Failed to get Google OAuth URL');
+        throw new Error(response.data.error || 'Failed to get Emergent Google OAuth URL');
       }
       
     } catch (error) {
-      console.error('❌ Google OAuth connection failed:', error);
+      console.error('❌ Emergent Google OAuth connection failed:', error);
       setConnectionStatus({ 
         success: false, 
         error: 'Failed to connect to Google OAuth. Please try again.' 
