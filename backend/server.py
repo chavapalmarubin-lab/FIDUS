@@ -8923,7 +8923,7 @@ async def process_individual_google_callback(request: Request):
                 else:
                     user_info = {}
         
-        # Prepare token data for storage
+        # Prepare token data for storage - include all required OAuth fields
         token_data = {
             'access_token': token_response['access_token'],
             'refresh_token': token_response.get('refresh_token'),
@@ -8934,7 +8934,12 @@ async def process_individual_google_callback(request: Request):
             'user_name': user_info.get('name', ''),
             'user_picture': user_info.get('picture', ''),
             'user_id': user_info.get('id', ''),
-            'granted_scopes': token_response.get('scope', '').split(' ') if token_response.get('scope') else []
+            'granted_scopes': token_response.get('scope', '').split(' ') if token_response.get('scope') else [],
+            # Add required OAuth credentials for API calls
+            'client_id': individual_google_oauth.google_client_id,
+            'client_secret': individual_google_oauth.google_client_secret,
+            'token_uri': 'https://oauth2.googleapis.com/token',
+            'scopes': token_response.get('scope', '').split(' ') if token_response.get('scope') else []
         }
         
         # Store tokens for this specific admin
