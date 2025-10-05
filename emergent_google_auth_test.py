@@ -305,9 +305,113 @@ class EmergentGoogleAuthTester:
         except Exception as e:
             self.log_test("Backend URL Configuration", False, f"Exception: {str(e)}")
     
+    def test_existing_google_oauth_system(self):
+        """Test the existing Google OAuth system that's currently working"""
+        try:
+            # Test standard Google OAuth URL generation
+            response = self.session.get(f"{self.backend_url}/auth/google/url")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("success") and data.get("auth_url"):
+                    auth_url = data["auth_url"]
+                    
+                    # Verify auth URL points to Google OAuth service
+                    if "accounts.google.com" in auth_url:
+                        self.log_test("Existing Google OAuth URL Generation", True,
+                                    f"Standard Google OAuth URL working: {auth_url[:100]}...")
+                        
+                        # Verify required OAuth parameters
+                        required_params = ["client_id", "redirect_uri", "scope", "response_type"]
+                        params_present = all(param in auth_url for param in required_params)
+                        
+                        if params_present:
+                            self.log_test("Existing Google OAuth Parameters", True,
+                                        "All required OAuth parameters present")
+                        else:
+                            self.log_test("Existing Google OAuth Parameters", False,
+                                        "Missing required OAuth parameters")
+                    else:
+                        self.log_test("Existing Google OAuth URL Generation", False,
+                                    f"Auth URL does not point to Google: {auth_url}")
+                else:
+                    self.log_test("Existing Google OAuth URL Generation", False,
+                                f"Invalid response structure: {data}")
+            else:
+                self.log_test("Existing Google OAuth URL Generation", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Existing Google OAuth URL Generation", False, f"Exception: {str(e)}")
+    
+    def test_existing_gmail_api_integration(self):
+        """Test the existing Gmail API integration that's currently working"""
+        try:
+            response = self.session.get(f"{self.backend_url}/google/gmail/real-messages")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("success") and data.get("messages"):
+                    messages = data.get("messages", [])
+                    count = len(messages)
+                    
+                    # Check if we got real Gmail messages
+                    if count > 0:
+                        # Verify message structure
+                        first_message = messages[0]
+                        required_fields = ["id", "subject", "sender", "date"]
+                        has_required_fields = all(field in first_message for field in required_fields)
+                        
+                        if has_required_fields:
+                            self.log_test("Existing Gmail API Integration", True,
+                                        f"Retrieved {count} real Gmail messages with proper structure")
+                        else:
+                            self.log_test("Existing Gmail API Integration", False,
+                                        "Gmail messages missing required fields")
+                    else:
+                        self.log_test("Existing Gmail API Integration", True,
+                                    "Gmail API accessible but no messages returned")
+                else:
+                    self.log_test("Existing Gmail API Integration", False,
+                                f"Invalid response structure: {data}")
+            else:
+                self.log_test("Existing Gmail API Integration", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Existing Gmail API Integration", False, f"Exception: {str(e)}")
+    
+    def test_emergent_vs_existing_comparison(self):
+        """Compare Emergent Google Auth vs existing Google OAuth system"""
+        try:
+            # Test both systems
+            emergent_response = self.session.get(f"{self.backend_url}/admin/google/emergent/auth-url")
+            existing_response = self.session.get(f"{self.backend_url}/auth/google/url")
+            
+            emergent_available = emergent_response.status_code == 200
+            existing_available = existing_response.status_code == 200
+            
+            if emergent_available and existing_available:
+                self.log_test("Google Auth System Comparison", True,
+                            "Both Emergent and existing Google OAuth systems available")
+            elif existing_available and not emergent_available:
+                self.log_test("Google Auth System Comparison", True,
+                            "Existing Google OAuth working, Emergent system not deployed yet")
+            elif emergent_available and not existing_available:
+                self.log_test("Google Auth System Comparison", True,
+                            "Emergent Google Auth available, existing system deprecated")
+            else:
+                self.log_test("Google Auth System Comparison", False,
+                            "Neither Google OAuth system is available")
+                
+        except Exception as e:
+            self.log_test("Google Auth System Comparison", False, f"Exception: {str(e)}")
+    
     def run_all_tests(self):
-        """Run all Emergent Google Auth tests"""
-        logger.info("🚀 Starting Emergent Google Auth Integration Testing")
+        """Run all Google Auth integration tests"""
+        logger.info("🚀 Starting Complete Google Auth Integration Testing")
         logger.info("=" * 80)
         
         # Test backend connectivity first
@@ -318,12 +422,21 @@ class EmergentGoogleAuthTester:
             logger.error("❌ Cannot proceed without admin authentication")
             return False
         
-        # Run all Emergent Google Auth tests
+        # Test existing Google OAuth system (currently working)
+        logger.info("📋 Testing Existing Google OAuth System...")
+        self.test_existing_google_oauth_system()
+        self.test_existing_gmail_api_integration()
+        
+        # Test new Emergent Google Auth system
+        logger.info("📋 Testing New Emergent Google Auth System...")
         self.test_emergent_auth_url_generation()
         self.test_emergent_status_endpoint()
         self.test_emergent_gmail_messages_endpoint()
         self.test_emergent_callback_endpoint()
         self.test_emergent_logout_endpoint()
+        
+        # Compare both systems
+        self.test_emergent_vs_existing_comparison()
         self.verify_no_mock_codes()
         
         # Generate summary
