@@ -269,7 +269,7 @@ const InvestmentCreationWithMT5 = () => {
         setSubmitResult(null);
 
         try {
-            // Prepare data for submission
+            const currentDate = new Date();
             const submissionData = {
                 ...formData,
                 principal_amount: parseFloat(formData.principal_amount),
@@ -287,7 +287,19 @@ const InvestmentCreationWithMT5 = () => {
                     ...formData.gains_separation_account,
                     mt5_account_number: parseInt(formData.gains_separation_account.mt5_account_number),
                     account_type: 'GAINS_SEPARATION'
-                } : null
+                } : null,
+                // Investment timeline and status
+                creation_date: currentDate.toISOString(),
+                incubation_start_date: currentDate.toISOString(),
+                incubation_end_date: addMonths(currentDate, 2).toISOString(),
+                interest_start_date: addMonths(currentDate, 2).toISOString(),
+                contract_end_date: addMonths(currentDate, 14).toISOString(),
+                next_redemption_date: calculateNextRedemption(formData.fund_code, currentDate).toISOString(),
+                status: 'incubation',
+                current_value: parseFloat(formData.principal_amount),
+                total_interest_paid: 0.00,
+                last_interest_payment_date: null,
+                next_interest_payment_date: addMonths(currentDate, 2).toISOString()
             };
 
             const response = await apiAxios.post('/mt5/pool/create-investment-with-mt5', submissionData);
