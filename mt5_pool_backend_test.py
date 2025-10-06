@@ -81,7 +81,7 @@ class MT5PoolTestSuite:
     def test_mt5_pool_health(self):
         """Test MT5 pool health check endpoint"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5/pool/health")
+            response = requests.get(f"{BACKEND_URL}/mt5-pool/api/mt5/pool/health")
             
             if response.status_code == 200:
                 data = response.json()
