@@ -51,6 +51,9 @@ from document_signing_service import document_signing_service
 from services.mt5_service import mt5_service
 from models.mt5_account import BrokerCode
 
+# Import Enhanced MT5 Pool Management (Phase 1)
+from api.mt5_pool_endpoints import mt5_pool_router
+
 # Import MT5 Bridge Client
 from mt5_bridge_client import mt5_bridge
 
