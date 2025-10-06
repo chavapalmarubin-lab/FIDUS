@@ -290,21 +290,16 @@ const MT5Management = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-400">
+                        📊 View and monitor all MT5 accounts
+                    </span>
                     <Button 
-                        onClick={fetchMT5Data}
-                        variant="outline"
-                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        onClick={() => window.location.reload()}
+                        className="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded flex items-center gap-2"
                     >
-                        <RefreshCw size={16} className="mr-2" />
-                        Refresh Data
-                    </Button>
-                    <Button 
-                        onClick={() => setShowAddAccountModal(true)}
-                        className="bg-cyan-600 hover:bg-cyan-700"
-                    >
-                        <Plus size={16} className="mr-2" />
-                        Add MT5 Account
+                        <RefreshCw className="h-4 w-4" />
+                        Refresh
                     </Button>
                 </div>
             </div>
