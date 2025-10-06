@@ -14826,7 +14826,12 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
             'investment_ready': False,
             'notes': '',
             'updated_at': datetime.now(timezone.utc).isoformat(),
-            'updated_by': ''
+            'updated_by': '',
+            # Override fields
+            'readiness_override': False,
+            'readiness_override_reason': '',
+            'readiness_override_by': '',
+            'readiness_override_date': None
         })
         
         # Update provided fields
