@@ -23,11 +23,38 @@ from repositories.mt5_account_pool_repository import (
     MT5AccountPoolRepository, MT5InvestmentMappingRepository
 )
 from config.database import get_database
-# Import authentication utilities - use server's auth function
-import sys
+# Import authentication utilities
+import jwt
 import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from server import get_current_admin_user
+
+# JWT Configuration
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
+JWT_ALGORITHM = 'HS256'
+
+def verify_jwt_token(token: str) -> dict:
+    """Verify and decode JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_current_admin_user(request: Request) -> dict:
+    """Get current admin user from JWT token"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="No token provided")
+    
+    token = auth_header.split(" ")[1]
+    payload = verify_jwt_token(token)
+    
+    # Check if user is admin
+    if payload.get("type") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    return payload
 
 logger = logging.getLogger(__name__)
 
