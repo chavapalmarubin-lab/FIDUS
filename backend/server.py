@@ -52,7 +52,12 @@ from services.mt5_service import mt5_service
 from models.mt5_account import BrokerCode
 
 # Import Enhanced MT5 Pool Management (Phase 1)
-from api.mt5_pool_endpoints import mt5_pool_router
+try:
+    from api.mt5_pool_endpoints import mt5_pool_router
+    logging.info("✅ MT5 Pool router imported successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to import MT5 Pool router: {e}")
+    mt5_pool_router = None
 
 # Import MT5 Bridge Client
 from mt5_bridge_client import mt5_bridge
