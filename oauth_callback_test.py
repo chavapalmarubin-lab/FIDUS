@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 
 def test_oauth_callback_state_processing():
     """Test OAuth callback with the new state parameter format"""

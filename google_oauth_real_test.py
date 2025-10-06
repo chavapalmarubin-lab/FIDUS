@@ -34,7 +34,7 @@ import time
 import urllib.parse
 
 # Configuration
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

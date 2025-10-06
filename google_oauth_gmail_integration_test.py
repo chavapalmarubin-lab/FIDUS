@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration - Use from frontend/.env
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {

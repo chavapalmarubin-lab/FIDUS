@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Test Configuration
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {
     "username": "admin",
     "password": "password123",
@@ -730,7 +730,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-finance-api.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 TEST_CLIENT_ID = "client_003"  # Salvador Palma

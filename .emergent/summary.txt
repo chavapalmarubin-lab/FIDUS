@@ -1,62 +1,82 @@
 <analysis>
-The trajectory details a multi-phase effort to stabilize and integrate the FIDUS platform with MetaTrader5 (MT5). Initially, the project struggled with a misconfigured MongoDB and the Windows-only nature of the  package. The AI engineer established a robust MongoDB Atlas connection and implemented a bridge architecture using a separate FastAPI service on a Windows VPS to interact with MT5.
+The trajectory details a multi-phase development and debugging effort on the FIDUS platform. Initially, the focus was on stabilizing the MT5 integration, which involved setting up a FastAPI bridge on a Windows VPS, resolving numerous environment issues (NumPy, firewalls), and fixing backend endpoint registration and module-level name collisions. A persistent blocker identified was Kubernetes ingress routing.
 
-Key challenges involved manually deploying the bridge service on the VPS due to PowerShell version incompatibility, troubleshooting external access blocked by ForexVPS firewalls, and resolving an internal Python NumPy version conflict that prevented the MT5 Python package from connecting. A significant persistent issue was Kubernetes ingress routing, selectively blocking certain  endpoints despite them being correctly defined in FastAPI. The AI also fixed a critical module-level name collision that caused initialization errors. The conversation concludes with the AI and user preparing an email to the Emergent platform team, providing concrete evidence of the ingress routing issue, and the user waiting for this platform-level fix.
+Subsequently, a significant portion of the work revolved around fixing the Google OAuth integration, plagued by URL mismatches, token storage issues, and frontend-backend API response format inconsistencies. This included attempts to refactor to an Emergent Auth system, which was later reverted when the existing OAuth was found to be functional after core configuration and response handling fixes.
+
+The project then transitioned to a new feature: enabling multiple MT5 account mappings per investment with strict investor password warnings. An initial pool approach for MT5 accounts was implemented, then refactored to a just-in-time allocation during investment creation. The current task is blocked by a React compilation error in , occurring after the latest refactoring.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an investment management system for internal admin users, with four core requirements:
+The FIDUS platform is an investment management system for internal admin users, requiring secure user management (JWT, Google OAuth), a production-grade MongoDB Atlas database, and real-time financial data from MetaTrader5 (MT5). It enforces data integrity via robust validation. So far, MongoDB Atlas and a FastAPI bridge for MT5 on a Windows VPS are integrated.
 
-1.  **Secure User Management:** Admins require secure login using JWT tokens and OAuth 2.0 with Google Workspace for CRM functions (Gmail, Calendar, Drive).
-2.  **Production-Grade Database:** All application data (users, clients, investments, CRM prospects, etc.) must be stored in a reliable, production-ready MongoDB Atlas cluster, replacing any local or mock data.
-3.  **Real-Time Financial Data:** The platform must connect to the MetaTrader5 (MT5) trading API to fetch real-time client account data (balances, equity, open positions) for AUM calculations on the admin dashboard.
-4.  **Data Integrity:** The system must enforce strong data consistency, with robust validation and duplicate prevention to avoid incidents like erroneous investment creation.
-
-So far, a production-grade MongoDB Atlas has been integrated. A bridge architecture for MT5 has been deployed on a Windows VPS, with a separate FastAPI service. The FIDUS backend has been configured to communicate with this bridge service. Critical fixes include resolving MongoDB connection issues, a NumPy version incompatibility on the VPS for MT5 Python connectivity, and initial debugging of backend endpoint registration issues.
+Recent enhancements focus on MT5:
+1.  **Multiple MT5 Account Mapping**: Support unlimited MT5 accounts per investment product, ensuring total allocations match the investment amount.
+2.  **MT5 Account Exclusivity**: Prevent reusing MT5 accounts across different clients.
+3.  **Investor Password Management**: Crucially, the system must *only* accept MT5 Investor Passwords (read-only), *never* Trading Passwords. Prominent visual warnings are mandatory across all MT5-related interfaces.
+4.  **MT5 Account Deallocation**: Implement an admin-approved workflow with mandatory notes and audit trails.
+5.  **Admin-Only MT5 Management**: Restrict creation, editing, and deallocation to admins, requiring mandatory notes for all changes.
+6.  **Broker Account Structure**: Support OMNIBUS sub-accounts and future multi-broker integration.
+7.  **Google OAuth Integration**: Ensure secure login via JWT and OAuth 2.0 with Google Workspace for CRM functions (Gmail, Calendar, Drive).
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** Python with FastAPI, asynchronous programming (async/await), Pydantic for data validation,  for async MongoDB.
-- **Frontend:** React.js.
-- **Database:** MongoDB Atlas.
-- **Authentication:** JWT for APIs, Google OAuth 2.0 for Google Workspace integration.
-- **MT5 Integration:** Bridge architecture using a separate FastAPI service on Windows VPS to interface with  Python package.
-- **Deployment:** Kubernetes ingress for routing, Windows VPS for MT5 bridge.
+-   **Backend**: Python with FastAPI, Pydantic,  (async MongoDB).
+-   **Frontend**: React.js.
+-   **Database**: MongoDB Atlas.
+-   **Authentication**: JWT for APIs, Google OAuth 2.0.
+-   **MT5 Integration**: FastAPI bridge on Windows VPS interfacing with  Python package.
+-   **Deployment**: Kubernetes ingress, Docker, Supervisor.
+-   **Security**: Password encryption, secure credential handling.
 </key_technical_concepts>
 
 <code_architecture>
 
 
--   ****: Stores , , , . It was updated to correctly point to the MT5 bridge on the VPS.
--   ****: The main FastAPI application. Significant changes included refactoring to use a repository pattern for database access, integrating  for MT5 communications, and fixing  inclusion issues. Crucially, multiple MT5-related endpoints were incorrectly using  instead of , which caused 404s due to Kubernetes ingress rules. A conflicting import and module-level assignment of  from  vs  was also resolved.
--   ****: The correct MT5 service implementation that handles interactions with the MT5 bridge client.
--   ****: A new file created to act as the client for the MT5 bridge service, sending HTTP requests to the Windows VPS.
--   ****: This new directory contains the standalone FastAPI service for the Windows VPS.
-    -   ****: The core of the bridge service. It was provided to the user for manual deployment on the VPS. It exposes REST API endpoints, wraps  package calls, and now includes  to improve compatibility with FIDUS backend expectations (e.g., , ).
-    -   ****: Lists Python dependencies for the MT5 bridge service, notably . Provided to the user for manual installation.
-    -   ****: Configuration for the MT5 bridge service (PORT, API KEY). Provided as a template to the user for manual setup.
+-   ****: Stores , , , , , , .  was modified to fix OAuth redirect URI mismatch to .
+-   ****: Main FastAPI app. Refactored MT5 endpoints, fixed module-level name collisions, corrected  to . OAuth callback and initialization endpoints exist. Modified to include new MT5 pool router and . Hardcoded  was updated to .
+-   ****: Handles MT5 bridge client interactions.
+-   ****: Client for the MT5 bridge service.
+-   ****: Core of the Windows VPS bridge service; exposes MT5 REST API endpoints and aliases.
+-   ****: Modified to add  to fix CRM client MT5 endpoints.
+-   ****: Handles Google API calls. Modified  to correctly use token data, and token storage in  () was updated to include , , and .
+-   ****:  was temporarily changed to fix OAuth, then reverted to fix login. The correct value should be .
+-   ****: Critical frontend component for Google Workspace integration. It was heavily modified for:
+    *   Using new Emergent Auth endpoints (later reverted).
+    *   Correctly handling backend API response formats for connection status and Gmail messages.
+-   ****: Admin interface for MT5 accounts. Initially modified to add investor password warnings. Later refactored to be a view-only dashboard, removing Add MT5 Account functionality. Currently has a React JSX compilation error.
+-   ** (New - pre-refactor)**: Defined models for MT5 accounts in the pool.
+-   ** (New - pre-refactor)**: Enhanced investment model.
+-   ** (New - post-refactor)**: Defines a model for creating investments with just-in-time MT5 account allocations.
+-   ** (New - pre-refactor)**: Repository for MT5 account pool operations.
+-   ** (New)**: Defines API endpoints for MT5 account pool management (later modified for just-in-time allocation). Router prefix was fixed from  to .
+-   ** (New)**: Centralized authentication utility functions ().
+-   ** (New)**: Script for generating mock data for MT5 account pool (pre-refactor, adapted for new models).
+-   ** (New)**: Frontend component for creating investments with integrated MT5 account entry (just-in-time allocation).
 </code_architecture>
 
 <pending_tasks>
-- **Kubernetes Ingress Routing Fix:** The Emergent platform team needs to update the Kubernetes ingress configuration to allow all  paths, not just the current whitelisted ones. This is blocking 2 MT5 endpoints from working.
-- ** 500 Error Fix:** Debug and resolve the 500 error specifically on the  endpoint in the FIDUS backend.
-- **CRM Client Endpoint Errors:** Debug and fix the 500 errors occurring on CRM client MT5 endpoints.
-- **Integration Testing (Final):** Conduct full end-to-end integration testing once all blockers are resolved.
+-   **Kubernetes Ingress Routing Fix**: The Emergent platform team needs to allow all  paths.
+-   ** 500 Error Fix**: Debug and resolve the 500 error specifically on the  endpoint in the FIDUS backend. (Initially reported fixed, but ingress still blocks it externally).
+-   **Complete Google OAuth/Gmail API Integration**: Ensure full Gmail API functionality beyond retrieving messages, and verify Calendar/Drive.
+-   **MT5 Management Frontend Fix**: Resolve the React JSX compilation error in .
+-   **Frontend Integration of Investment Creation with MT5**: Implement  into the main application flow.
+-   **End-to-End Testing (MT5 New Feature)**: Full integration testing for the new multiple MT5 account mapping and deallocation workflow.
 </pending_tasks>
 
 <current_work>
-The immediate work involved resolving deep-seated conflicts and preparing the MT5 Bridge service for seamless integration.
+The immediate work involved refactoring the MT5 account management system from a pre-populated pool approach to a just-in-time allocation during investment creation.
 
-1.  **VPS MT5 Bridge Service Setup:** The user manually deployed the , , and  files on their Windows VPS. A critical NumPy version incompatibility on the VPS (2.3.3 -> 1.26.4) was identified and resolved, making the  Python package fully functional. The service was configured for auto-startup via the Windows Startup folder.
-2.  **External Access Resolution:** Initially, external access to the VPS bridge was blocked by ForexVPS firewalls. After contacting ForexVPS support, port 8000 was successfully opened, making the MT5 Bridge service externally accessible at .
-3.  **FIDUS Backend MT5 Service Initialization Fixes:**
-    *   **Module-level Name Collision:** A critical bug was found where  was overwriting the correct  instance from  due to a module-level variable assignment. This was fixed by renaming the conflicting variable in the older  file.
-    *   **Endpoint Definition Correction:** Multiple MT5-related endpoints in  were incorrectly defined using  instead of , leading to 404 errors due to Kubernetes ingress rules. These were corrected.
-4.  **Kubernetes Ingress Routing:** It was discovered that the Kubernetes ingress was selectively blocking certain  paths. While the  endpoint's routing was resolved by the Emergent team, the  endpoint still returns a 500 error, and other  paths are still blocked by ingress.
-5.  **Bridge Endpoint Aliases:** The AI provided specific code and instructions for the user to add endpoint aliases to the  file on the VPS. These aliases (e.g., , , , ) are intended to improve compatibility with FIDUS backend expectations.
-6.  **Current Status:** The MT5 Bridge service is running on the VPS, externally accessible, and the MT5 connection is operational. FIDUS backend has been significantly refined. However, a 500 error persists for , and some routing issues for other MT5 endpoints remain due to Kubernetes ingress configuration. The user has just received instructions to deploy the bridge endpoint aliases on the VPS.
+The previous AI engineer:
+1.  **Updated Database Models**: Adjusted MT5 account models to support just-in-time creation. ( was created).
+2.  **Updated API Endpoints**: Modified  to remove pool creation endpoints and add validation/allocation endpoints tied to investment creation. The router prefix in  was corrected from  to .
+3.  **Updated MT5 Management Component**: Refactored  to be a view-only dashboard, removing Add MT5 Account functionality and updating table display logic.
+4.  **Created Investment Creation Form**: Started developing  to handle just-in-time MT5 account entry within the investment creation flow.
+5.  **Tested Backend**: Successfully tested the refactored backend MT5 pool endpoints, confirming functionality for health checks, statistics, available/allocated accounts, exclusivity checks, and mapping validation.
+
+Currently, there is a **React compilation error** in  at line 669, stating Adjacent JSX elements must be wrapped in an enclosing tag. This is blocking access to the application.
 </current_work>
 
 <optional_next_step>
-Deploy the provided endpoint aliases in  on the VPS and test the new alias endpoints.
+Fix the React JSX compilation error in  at line 669.
 </optional_next_step>
+
