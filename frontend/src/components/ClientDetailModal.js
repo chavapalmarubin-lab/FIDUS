@@ -126,6 +126,64 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
       setOverrideLoading(false);
     }
   };
+
+  // Document upload functionality
+  const handleDocumentUpload = async (docType, file) => {
+    setUploadingDocs(prev => ({ ...prev, [docType]: true }));
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('document_type', docType);
+      formData.append('client_id', client.id);
+      
+      const response = await apiAxios.post(`/clients/${client.id}/upload-document`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`Upload progress for ${docType}: ${percentCompleted}%`);
+        },
+      });
+      
+      if (response.data.success) {
+        setUploadedDocs(prev => ({ 
+          ...prev, 
+          [docType]: {
+            filename: file.name,
+            uploadDate: new Date().toISOString(),
+            fileId: response.data.file_id
+          }
+        }));
+        alert(`${docType} uploaded successfully`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(`Failed to upload ${docType}: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setUploadingDocs(prev => ({ ...prev, [docType]: false }));
+    }
+  };
+
+  const handleViewDocument = async (docType) => {
+    try {
+      const docInfo = uploadedDocs[docType];
+      if (docInfo?.fileId) {
+        const response = await apiAxios.get(`/clients/${client.id}/documents/${docInfo.fileId}`, {
+          responseType: 'blob'
+        });
+        
+        const blob = new Blob([response.data]);
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
+    } catch (error) {
+      console.error('View document error:', error);
+      alert('Failed to view document');
+    }
+  };
+
   useEffect(() => {
     if (isOpen && client) {
       loadClientData();
