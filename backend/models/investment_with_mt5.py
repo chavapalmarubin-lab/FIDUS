@@ -60,6 +60,21 @@ class InvestmentWithMT5Create(BaseModel):
     investment_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: Optional[str] = Field(None, max_length=1000)
     
+    # Investment lifecycle dates
+    creation_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    incubation_start_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    incubation_end_date: Optional[datetime] = Field(None, description="End of 2-month incubation period")
+    interest_start_date: Optional[datetime] = Field(None, description="When interest payments begin")
+    contract_end_date: Optional[datetime] = Field(None, description="14-month contract end date")
+    next_redemption_date: Optional[datetime] = Field(None, description="Next allowed redemption date")
+    
+    # Investment status and tracking
+    status: Optional[str] = Field(default="incubation", description="Investment status: incubation, active, completed, cancelled")
+    current_value: Optional[Decimal] = Field(None, description="Current investment value")
+    total_interest_paid: Optional[Decimal] = Field(default=Decimal("0.00"), description="Total interest paid to date")
+    last_interest_payment_date: Optional[datetime] = Field(None, description="Date of last interest payment")
+    next_interest_payment_date: Optional[datetime] = Field(None, description="Date of next scheduled interest payment")
+    
     # MT5 Account allocations (investment accounts)
     mt5_accounts: List[MT5AccountInput] = Field(
         ..., 
