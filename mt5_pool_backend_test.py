@@ -215,9 +215,9 @@ class MT5PoolTestSuite:
                         self.log_test("Available Accounts", False, f"Available account shows as allocated: {account}")
                         return False
                 
-                # Check for expected brokers (MULTIBANK and DOOTECHNOLOGY)
+                # Check for expected brokers (multibank and dootechnology)
                 brokers = set(account.get("broker_name", "") for account in accounts)
-                expected_brokers = {"MULTIBANK", "DOOTECHNOLOGY"}
+                expected_brokers = {"multibank", "dootechnology"}
                 
                 if not expected_brokers.issubset(brokers):
                     missing_brokers = expected_brokers - brokers
