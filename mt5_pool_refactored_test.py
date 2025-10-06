@@ -367,13 +367,13 @@ class MT5PoolRefactoredTester:
         if response and response.status_code == 200:
             try:
                 data = response.json()
-                if data.get("success") and "overview" in data:
-                    overview = data["overview"]
-                    total_investments = overview.get("total_investments", 0)
-                    total_value = overview.get("total_value", 0)
+                if data.get("success") and "total_investments" in data:
+                    total_investments = data.get("total_investments", 0)
+                    total_aum = data.get("total_aum", 0)
+                    total_clients = data.get("total_clients", 0)
                     
                     self.log_test("Main Investment Endpoints - Overview", True,
-                                f"Total Investments: {total_investments}, Total Value: ${total_value:,.2f}")
+                                f"Total Investments: {total_investments}, Total AUM: ${total_aum:,.2f}, Total Clients: {total_clients}")
                     
                     # Check if our test investment is reflected
                     if self.test_investment_id:
