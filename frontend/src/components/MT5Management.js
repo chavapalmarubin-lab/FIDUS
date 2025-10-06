@@ -449,6 +449,23 @@ const MT5Management = () => {
                                                             {account.connection_status}
                                                         </Badge>
                                                     </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            <Button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedAccountDetails(account);
+                                                                    setShowAccountDetailsModal(true);
+                                                                }}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                                            >
+                                                                <Eye size={14} className="mr-1" />
+                                                                View Details
+                                                            </Button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
