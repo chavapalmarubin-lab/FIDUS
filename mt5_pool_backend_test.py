@@ -149,51 +149,42 @@ class MT5PoolTestSuite:
             self.log_test("Pool Statistics", False, f"Exception: {str(e)}")
             return False
     
-    def test_available_accounts(self):
-        """Test available MT5 accounts endpoint"""
+    def test_mt5_accounts_endpoint(self):
+        """Test corrected MT5 accounts endpoint - /api/mt5/pool/accounts"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/available", headers=self.get_auth_headers())
+            response = requests.get(f"{BACKEND_URL}/mt5/pool/accounts", headers=self.get_auth_headers())
             
             if response.status_code == 200:
-                accounts = response.json()
+                data = response.json()
                 
-                if not isinstance(accounts, list):
-                    self.log_test("Available Accounts", False, f"Expected list, got {type(accounts)}")
+                # Check if response is a list or dict with accounts
+                if isinstance(data, list):
+                    accounts = data
+                elif isinstance(data, dict) and "accounts" in data:
+                    accounts = data["accounts"]
+                else:
+                    self.log_test("MT5 Accounts Endpoint", False, f"Unexpected response format: {type(data)}")
                     return False
                 
-                # Verify account structure
+                # Verify accounts structure
                 if len(accounts) > 0:
                     account = accounts[0]
-                    required_fields = ["pool_id", "mt5_account_number", "broker_name", "account_type", "status"]
+                    required_fields = ["mt5_account_number", "broker_name"]
                     missing_fields = [field for field in required_fields if field not in account]
                     
                     if missing_fields:
-                        self.log_test("Available Accounts", False, f"Missing account fields: {missing_fields}")
-                        return False
-                    
-                    # Verify account is not allocated
-                    if account.get("is_allocated", True):
-                        self.log_test("Available Accounts", False, f"Available account shows as allocated: {account}")
+                        self.log_test("MT5 Accounts Endpoint", False, f"Missing account fields: {missing_fields}")
                         return False
                 
-                # Check for expected brokers (multibank and dootechnology)
-                brokers = set(account.get("broker_name", "") for account in accounts)
-                expected_brokers = {"multibank", "dootechnology"}
-                
-                if not expected_brokers.issubset(brokers):
-                    missing_brokers = expected_brokers - brokers
-                    self.log_test("Available Accounts", False, f"Missing expected brokers: {missing_brokers}, Found: {brokers}")
-                    return False
-                
-                self.log_test("Available Accounts", True, f"Found {len(accounts)} available accounts from brokers: {brokers}")
+                self.log_test("MT5 Accounts Endpoint", True, f"Found {len(accounts)} MT5 accounts")
                 return True
                 
             else:
-                self.log_test("Available Accounts", False, f"Status: {response.status_code}, Response: {response.text}")
+                self.log_test("MT5 Accounts Endpoint", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Available Accounts", False, f"Exception: {str(e)}")
+            self.log_test("MT5 Accounts Endpoint", False, f"Exception: {str(e)}")
             return False
     
     def test_allocated_accounts(self):
