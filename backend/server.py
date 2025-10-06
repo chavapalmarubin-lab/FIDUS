@@ -512,6 +512,11 @@ class ClientInvestmentReadiness(BaseModel):
     notes: str = ""
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_by: str = ""
+    # Override fields
+    readiness_override: bool = False
+    readiness_override_reason: str = ""
+    readiness_override_by: str = ""
+    readiness_override_date: Optional[str] = None
 
 class ClientInvestmentReadinessUpdate(BaseModel):
     aml_kyc_completed: Optional[bool] = None
