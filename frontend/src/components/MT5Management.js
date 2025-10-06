@@ -275,7 +275,7 @@ const MT5Management = () => {
         <div className="mt5-management p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management (Monitoring View)</h2>
                     <div className="flex items-center space-x-4">
                         <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
                         <div className="flex items-center space-x-2">
