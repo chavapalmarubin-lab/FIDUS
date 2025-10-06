@@ -117,6 +117,10 @@ const InvestmentCreationWithMT5 = () => {
 
     // Load clients on component mount
     useEffect(() => {
+        console.log('🔄 useEffect TRIGGERED');
+        console.log('📊 Initial formData:', formData);
+        console.log('📊 Available clients state:', availableClients);
+        
         fetchClients();
     }, []);
 
