@@ -171,7 +171,7 @@ class MongoDBManager:
                     'name': profile.get('name', user['username']) if profile else user['username'],
                     'email': profile.get('email', user['email']) if profile else user['email'],
                     'phone': profile.get('phone', '') if profile else '',
-                    'type': user['user_type'],
+                    'type': user['type'],
                     'status': user['status'],
                     'fidus_account_number': profile.get('fidus_account_number', '') if profile else '',
                     'total_investments': investment_count,
