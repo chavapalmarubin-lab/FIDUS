@@ -14907,7 +14907,7 @@ async def get_client_readiness(client_id: str):
         raise HTTPException(status_code=500, detail="Failed to fetch client readiness")
 
 @api_router.get("/clients/ready-for-investment")
-async def get_investment_ready_clients():
+async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     logging.info(f"🔍 DEBUG: get_investment_ready_clients endpoint called")
     try:
