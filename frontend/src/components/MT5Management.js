@@ -470,6 +470,18 @@ const MT5Management = () => {
                     <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
                         <h3 className="text-lg font-semibold text-white mb-4">Add MT5 Account</h3>
                         
+                        {/* CRITICAL SYSTEM WARNING - INVESTOR PASSWORDS ONLY */}
+                        <Alert className="mb-4 border-red-500 bg-red-950/50">
+                            <AlertCircle className="h-4 w-4 text-red-400" />
+                            <AlertDescription className="text-red-200 font-bold">
+                                🚨 CRITICAL SYSTEM REQUIREMENT 🚨
+                                <br />
+                                This system ONLY accepts INVESTOR PASSWORDS for MT5 accounts
+                                <br />
+                                <strong>DO NOT enter trading passwords - they will not work</strong>
+                            </AlertDescription>
+                        </Alert>
+                        
                         <div className="space-y-4">
                             <div>
                                 <Label className="text-slate-300">Client ID *</Label>
