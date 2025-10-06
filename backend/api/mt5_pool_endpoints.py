@@ -23,8 +23,8 @@ from auth.auth_utils import get_current_admin_user
 
 logger = logging.getLogger(__name__)
 
-# Create router for MT5 pool endpoints
-mt5_pool_router = APIRouter(tags=["MT5 Account Pool"])
+# Create router for MT5 management endpoints
+mt5_pool_router = APIRouter(tags=["MT5 Account Management"])
 
 # Dependency to get repositories
 async def get_pool_repository():
