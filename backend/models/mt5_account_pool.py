@@ -47,9 +47,13 @@ class MT5AccountPoolCreate(MT5AccountPoolBase):
     pass
 
 class MT5AccountPool(MT5AccountPoolBase):
-    """Complete MT5 account pool model"""
-    pool_id: str = Field(default_factory=lambda: f"pool_{uuid.uuid4().hex[:16]}")
-    status: MT5AccountPoolStatus = Field(MT5AccountPoolStatus.AVAILABLE, description="Current allocation status")
+    """Complete MT5 account model - created just-in-time during investment allocation"""
+    pool_id: str = Field(default_factory=lambda: f"mt5_{uuid.uuid4().hex[:16]}")
+    status: MT5AccountPoolStatus = Field(MT5AccountPoolStatus.ALLOCATED, description="Current allocation status")
+    
+    # Track how this account was created
+    created_via: str = Field("investment_allocation", description="How this MT5 account was created")
+    creation_context: Optional[str] = Field(None, description="Additional context about account creation")
     
     # Allocation tracking
     allocated_to_client_id: Optional[str] = Field(None, description="Client ID if allocated")
