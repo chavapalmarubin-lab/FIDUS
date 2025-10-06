@@ -50,8 +50,11 @@ const InvestmentDetailView = ({ investmentId, onBack }) => {
     };
 
     const formatCurrency = (amount) => {
-        if (!amount) return '$0.00';
-        return new Decimal(amount).toFixed(2);
+        if (!amount) return '0.00';
+        return parseFloat(amount).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     };
 
     const getStatusColor = (status) => {
