@@ -417,6 +417,7 @@ const MT5Management = () => {
                                                 <th className="text-left py-3 px-4 text-slate-300">Equity</th>
                                                 <th className="text-left py-3 px-4 text-slate-300">P&L</th>
                                                 <th className="text-left py-3 px-4 text-slate-300">Status</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
