@@ -14947,10 +14947,11 @@ async def get_investment_ready_clients_test():
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
-    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called")
+    print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
+    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
     
     # IMMEDIATE TEST: Return Alejandro directly to test the fix
-    return {
+    hardcoded_response = {
         "success": True,
         "ready_clients": [{
             'client_id': 'client_alejandro',
@@ -14963,6 +14964,9 @@ async def get_investment_ready_clients(request: Request):
         "total_ready": 1,
         "debug": "HARDCODED RESPONSE FOR TESTING"
     }
+    print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
+    logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
+    return hardcoded_response
     
     # COMMENTED OUT FOR TESTING - USING HARDCODED RESPONSE ABOVE
     # # Require admin authentication
