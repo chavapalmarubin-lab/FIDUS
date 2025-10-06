@@ -33,8 +33,10 @@ const calculateNextRedemption = (product, startDate) => {
     }
 };
 
-const InvestmentCreationWithMT5 = () => {
-    console.log('🚀 InvestmentCreationWithMT5 COMPONENT MOUNTED');
+const InvestmentCreationWithMT5 = ({ onClose, onSuccess }) => {
+    // THIS MUST BE THE FIRST LINE
+    console.log('🚀🚀🚀 InvestmentCreationWithMT5 COMPONENT MOUNTED 🚀🚀🚀');
+    console.log('Component props:', { onClose, onSuccess });
     
     // Form state
     const [formData, setFormData] = useState({
