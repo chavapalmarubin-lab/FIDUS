@@ -321,6 +321,7 @@ async def create_mock_mt5_pool_data():
             # FIDUS CORE: $15,000 in single account
             simple_core_mappings = [
                 {
+                    'investment_id': 'inv_simpleclient_core_001',
                     'mt5_account_number': 887001,
                     'allocated_amount': Decimal('15000.00'),
                     'allocation_notes': 'Simple CORE investment - single account allocation for straightforward management'
