@@ -18,9 +18,8 @@ from repositories.mt5_account_pool_repository import (
     MT5AccountPoolRepository, MT5InvestmentMappingRepository
 )
 from config.database import get_database
-# Import auth function from server.py (will be available when router is included)
-# Note: get_current_admin_user will be available from server.py context
-pass  # Auth function imported via router inclusion in server.py
+# Import authentication utilities
+from auth.auth_utils import get_current_admin_user
 
 logger = logging.getLogger(__name__)
 
