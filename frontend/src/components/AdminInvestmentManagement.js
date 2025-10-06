@@ -132,6 +132,13 @@ const AdminInvestmentManagement = () => {
     } catch (err) {
       setError("Failed to fetch investment overview");
       console.error("Error fetching investment overview:", err);
+      // Set minimal default data to prevent blocking UI
+      setOverviewData({
+        total_investments: 0,
+        total_aum: 0,
+        total_clients: 1,
+        ready_for_investment: 1
+      });
     } finally {
       setLoading(false);
     }
