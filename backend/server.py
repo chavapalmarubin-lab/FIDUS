@@ -14911,6 +14911,7 @@ async def get_investment_ready_clients():
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     try:
         # Get all clients from MongoDB and filter for ready ones
+        logging.info(f"🔍 DEBUG: About to call mongodb_manager.get_all_clients()")
         all_clients = mongodb_manager.get_all_clients()
         logging.info(f"🔍 DEBUG: get_all_clients returned {len(all_clients)} clients")
         
