@@ -125,6 +125,7 @@ class MongoDBManager:
             
             # Get all client users
             client_users = self.db.users.find({'type': 'client', 'status': 'active'})
+            print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
             
             for user in client_users:
                 client_id = user['id']
