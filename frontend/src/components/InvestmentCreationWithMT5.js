@@ -79,6 +79,7 @@ const InvestmentCreationWithMT5 = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitResult, setSubmitResult] = useState(null);
     const [clients, setClients] = useState([]);
+    const [availableClients, setAvailableClients] = useState([]);
     const [loading, setLoading] = useState(false);
 
     // Fund configurations
