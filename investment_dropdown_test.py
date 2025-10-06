@@ -258,7 +258,7 @@ class InvestmentDropdownTester:
             "updated_by": "admin"
         }
 
-        response = self.make_request("POST", f"/clients/{self.alejandro_client_id}/readiness", 
+        response = self.make_request("PUT", f"/clients/{self.alejandro_client_id}/readiness", 
                                    readiness_data, auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
