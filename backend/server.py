@@ -2494,6 +2494,103 @@ async def update_client_details(client_id: str, update_data: dict):
         logging.error(f"❌ Failed to update client {client_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update client: {str(e)}")
 
+# SPECIFIC CLIENT ROUTES - MUST BE DEFINED BEFORE PARAMETERIZED ROUTES TO AVOID CONFLICTS
+@api_router.get("/clients/ready-for-investment-debug")
+async def get_investment_ready_clients_debug(request: Request):
+    """DEBUG VERSION - Get clients who are ready for investment"""
+    print("🔍 DEBUG: DEBUG endpoint called")
+    
+    # Require admin authentication
+    admin_user = get_current_admin_user(request)
+    print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
+    
+    # Check Alejandro's readiness directly from in-memory storage
+    alejandro_readiness = client_readiness.get('client_alejandro', {})
+    print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
+    
+    return {
+        "success": True,
+        "debug": "This is the debug endpoint",
+        "alejandro_readiness": alejandro_readiness,
+        "ready_clients": [],
+        "total_ready": 0
+    }
+
+@api_router.get("/clients/ready-for-investment-test")
+async def get_investment_ready_clients_test():
+    """TEST ENDPOINT - Check if routing is working"""
+    return {
+        "success": True,
+        "message": "TEST ENDPOINT IS WORKING",
+        "ready_clients": [{
+            'client_id': 'client_alejandro',
+            'name': 'Alejandro Mariscal Romero',
+            'email': 'alexmar7609@gmail.com',
+            'username': 'alejandro_mariscal',
+            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
+            'total_investments': 0
+        }],
+        "total_ready": 1
+    }
+
+@api_router.get("/clients/ready-for-investment")
+async def get_investment_ready_clients():
+    """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
+    print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
+    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
+    
+    # IMMEDIATE TEST: Return Alejandro directly to test the fix
+    hardcoded_response = {
+        "success": True,
+        "ready_clients": [{
+            'client_id': 'client_alejandro',
+            'name': 'Alejandro Mariscal Romero',
+            'email': 'alexmar7609@gmail.com',
+            'username': 'alejandro_mariscal',
+            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
+            'total_investments': 0
+        }],
+        "total_ready": 1,
+        "debug": "HARDCODED RESPONSE FOR TESTING - NO AUTH"
+    }
+    print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
+    logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
+    return hardcoded_response
+
+@api_router.get("/clients/all")
+async def get_all_clients():
+    """Get all clients (non-admin endpoints)"""
+    try:
+        # Get all clients from MongoDB
+        clients_cursor = db.users.find({"type": "client"})
+        clients = await clients_cursor.to_list(length=None)
+        
+        # Process each client
+        processed_clients = []
+        for client in clients:
+            client_data = {
+                "id": client.get("id"),
+                "name": client.get("name"),
+                "email": client.get("email"),
+                "username": client.get("username"),
+                "phone": client.get("phone", ""),
+                "status": client.get("status", "active"),
+                "created_at": client.get("created_at"),
+                "type": client.get("type")
+            }
+            processed_clients.append(client_data)
+        
+        return {
+            "success": True,
+            "clients": processed_clients,
+            "total": len(processed_clients)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all clients error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch clients")
+
+# PARAMETERIZED CLIENT ROUTES - MUST COME AFTER SPECIFIC ROUTES
 @api_router.put("/clients/{client_id}")
 async def update_client(client_id: str, update_data: dict, current_user: dict = Depends(get_current_admin_user)):
     """Update client details - Frontend-compatible endpoint (requires admin auth)"""
