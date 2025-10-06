@@ -688,65 +688,6 @@ const InvestmentDashboard = ({ user, userType }) => {
                 </div>
                 
                 <InvestmentCreationWithMT5 />
-              
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Select Fund</Label>
-                  <Select value={investmentForm.fund_code} onValueChange={(value) => setInvestmentForm({...investmentForm, fund_code: value})}>
-                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
-                      <SelectValue placeholder="Choose a fund" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      {(fundConfigs || []).map(fund => (
-                        <SelectItem key={fund.fund_code} value={fund.fund_code} className="text-white">
-                          <div>
-                            <div className="font-medium">{fund.name}</div>
-                            <div className="text-sm text-slate-400">
-                              {fund.interest_rate > 0 ? `${fund.interest_rate}% monthly` : 'No fixed return'} • 
-                              Min: {formatCurrency(fund.minimum_investment)}
-                              {fund.invitation_only && ' • Invitation Only'}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300">Investment Amount</Label>
-                  <Input
-                    type="number"
-                    value={investmentForm.amount}
-                    onChange={(e) => setInvestmentForm({...investmentForm, amount: e.target.value})}
-                    placeholder="Enter amount in USD"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  {investmentForm.fund_code && (
-                    <p className="text-slate-400 text-sm mt-1">
-                      Minimum: {formatCurrency(fundConfigs.find(f => f.fund_code === investmentForm.fund_code)?.minimum_investment || 0)}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowInvestModal(false);
-                    resetInvestmentForm();
-                  }}
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateInvestment}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                >
-                  Create Investment
-                </Button>
               </div>
             </motion.div>
           </motion.div>
