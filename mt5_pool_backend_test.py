@@ -339,9 +339,9 @@ class MT5PoolTestSuite:
         try:
             # Create test account data
             test_account = {
-                "mt5_account_number": 999999999,  # Test account number
-                "broker_name": "TEST_BROKER",
-                "account_type": "DEMO",
+                "mt5_account_number": 99999999,  # Test account number (within valid range)
+                "broker_name": "multibank",
+                "account_type": "investment",
                 "mt5_server": "TestServer-Demo",
                 "investor_password": "TestInvestorPass123",
                 "notes": "Test account for MT5 pool testing"
