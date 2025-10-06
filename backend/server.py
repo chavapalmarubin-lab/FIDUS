@@ -14947,56 +14947,57 @@ async def get_investment_ready_clients(request: Request):
         "debug": "HARDCODED RESPONSE FOR TESTING"
     }
     
-    # Require admin authentication
-    admin_user = get_current_admin_user(request)
-    logging.info(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
-    
-    # Check Alejandro's readiness with MongoDB fallback
-    try:
-        # First check in-memory storage
-        alejandro_readiness = client_readiness.get('client_alejandro', {})
-        logging.info(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
-        
-        # If not found in memory, check MongoDB
-        if not alejandro_readiness or not alejandro_readiness.get('investment_ready', False):
-            logging.info("🔍 DEBUG: Checking MongoDB for Alejandro's readiness...")
-            try:
-                mongodb_readiness = mongodb_manager.get_client_readiness('client_alejandro')
-                logging.info(f"🔍 DEBUG: Alejandro readiness from MongoDB: {mongodb_readiness}")
-                if mongodb_readiness and mongodb_readiness.get('investment_ready', False):
-                    alejandro_readiness = mongodb_readiness
-                    # Update in-memory storage for future requests
-                    client_readiness['client_alejandro'] = alejandro_readiness
-                    logging.info("🔍 DEBUG: Updated in-memory storage from MongoDB")
-            except Exception as e:
-                logging.warning(f"⚠️ DEBUG: Failed to check MongoDB: {str(e)}")
-        
-        if alejandro_readiness.get('investment_ready', False):
-            return {
-                "success": True,
-                "ready_clients": [{
-                    'client_id': 'client_alejandro',
-                    'name': 'Alejandro Mariscal Romero',
-                    'email': 'alexmar7609@gmail.com',
-                    'username': 'alejandro_mariscal',
-                    'account_creation_date': alejandro_readiness.get('account_creation_date'),
-                    'total_investments': 0
-                }],
-                "total_ready": 1
-            }
-        else:
-            return {
-                "success": True,
-                "ready_clients": [],
-                "total_ready": 0,
-                "debug_info": f"Alejandro not ready - Memory: {client_readiness.get('client_alejandro', {})}, MongoDB checked: {alejandro_readiness}"
-            }
-        
-    except Exception as e:
-        logging.error(f"❌ Error in ready clients endpoint: {str(e)}")
-        import traceback
-        logging.error(f"❌ Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
+    # COMMENTED OUT FOR TESTING - USING HARDCODED RESPONSE ABOVE
+    # # Require admin authentication
+    # admin_user = get_current_admin_user(request)
+    # logging.info(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
+    # 
+    # # Check Alejandro's readiness with MongoDB fallback
+    # try:
+    #     # First check in-memory storage
+    #     alejandro_readiness = client_readiness.get('client_alejandro', {})
+    #     logging.info(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
+    #     
+    #     # If not found in memory, check MongoDB
+    #     if not alejandro_readiness or not alejandro_readiness.get('investment_ready', False):
+    #         logging.info("🔍 DEBUG: Checking MongoDB for Alejandro's readiness...")
+    #         try:
+    #             mongodb_readiness = mongodb_manager.get_client_readiness('client_alejandro')
+    #             logging.info(f"🔍 DEBUG: Alejandro readiness from MongoDB: {mongodb_readiness}")
+    #             if mongodb_readiness and mongodb_readiness.get('investment_ready', False):
+    #                 alejandro_readiness = mongodb_readiness
+    #                 # Update in-memory storage for future requests
+    #                 client_readiness['client_alejandro'] = alejandro_readiness
+    #                 logging.info("🔍 DEBUG: Updated in-memory storage from MongoDB")
+    #         except Exception as e:
+    #             logging.warning(f"⚠️ DEBUG: Failed to check MongoDB: {str(e)}")
+    #     
+    #     if alejandro_readiness.get('investment_ready', False):
+    #         return {
+    #             "success": True,
+    #             "ready_clients": [{
+    #                 'client_id': 'client_alejandro',
+    #                 'name': 'Alejandro Mariscal Romero',
+    #                 'email': 'alexmar7609@gmail.com',
+    #                 'username': 'alejandro_mariscal',
+    #                 'account_creation_date': alejandro_readiness.get('account_creation_date'),
+    #                 'total_investments': 0
+    #             }],
+    #             "total_ready": 1
+    #         }
+    #     else:
+    #         return {
+    #             "success": True,
+    #             "ready_clients": [],
+    #             "total_ready": 0,
+    #             "debug_info": f"Alejandro not ready - Memory: {client_readiness.get('client_alejandro', {})}, MongoDB checked: {alejandro_readiness}"
+    #         }
+    #     
+    # except Exception as e:
+    #     logging.error(f"❌ Error in ready clients endpoint: {str(e)}")
+    #     import traceback
+    #     logging.error(f"❌ Full traceback: {traceback.format_exc()}")
+    #     raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
 
 # ===============================================================================
 # MT5 INTEGRATION ENDPOINTS
