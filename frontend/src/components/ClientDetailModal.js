@@ -78,6 +78,51 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
   });
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
+  // Fetch client readiness data
+  const fetchReadinessData = async () => {
+    try {
+      const response = await apiAxios.get(`/clients/client_${client.username}/readiness`);
+      if (response.data.success) {
+        setReadinessData(response.data.readiness);
+        setOverrideEnabled(response.data.readiness.readiness_override || false);
+        setOverrideReason(response.data.readiness.readiness_override_reason || '');
+      }
+    } catch (error) {
+      console.error('Failed to fetch readiness data:', error);
+    }
+  };
+  
+  // Apply override for client readiness
+  const applyOverride = async () => {
+    if (!overrideReason.trim() || overrideReason.length < 10) {
+      alert('Override reason must be at least 10 characters long.');
+      return;
+    }
+    
+    setOverrideLoading(true);
+    try {
+      const overrideData = {
+        readiness_override: true,
+        readiness_override_reason: overrideReason.trim(),
+        readiness_override_by: 'admin', // Should get from current user context
+        readiness_override_date: new Date().toISOString(),
+        aml_kyc_completed: true,
+        agreement_signed: true
+      };
+      
+      const response = await apiAxios.post(`/clients/client_${client.username}/readiness`, overrideData);
+      if (response.data.success) {
+        alert(`✅ ${client.name} is now ready for investment via override!`);
+        fetchReadinessData(); // Refresh data
+        // Optionally close modal or refresh parent component
+      }
+    } catch (error) {
+      console.error('Failed to apply override:', error);
+      alert('Failed to apply override. Please try again.');
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
   useEffect(() => {
     if (isOpen && client) {
       loadClientData();
