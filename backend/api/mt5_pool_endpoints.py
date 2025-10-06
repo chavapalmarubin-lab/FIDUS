@@ -85,6 +85,175 @@ async def validate_account_availability(
         logger.error(f"Error validating account availability: {e}")
         raise HTTPException(status_code=500, detail="Failed to validate account availability")
 
+@mt5_pool_router.post("/create-investment-with-mt5", response_model=InvestmentCreationResult)
+async def create_investment_with_mt5_accounts(
+    investment_data: InvestmentWithMT5Create,
+    current_user: dict = Depends(get_current_admin_user),
+    pool_repository: MT5AccountPoolRepository = Depends(get_pool_repository),
+    mapping_repository: MT5InvestmentMappingRepository = Depends(get_mapping_repository)
+):
+    """
+    🚀 CREATE INVESTMENT WITH MT5 ACCOUNTS (JUST-IN-TIME)
+    ⚠️ CRITICAL: Only enter INVESTOR PASSWORDS for all MT5 accounts
+    
+    Creates investment and associated MT5 accounts in one operation
+    """
+    try:
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        
+        # Step 1: Validate all MT5 accounts are available
+        unavailable_accounts = []
+        for mt5_account in investment_data.mt5_accounts:
+            existing = await pool_repository.get_account_by_number(mt5_account.mt5_account_number)
+            if existing and existing.status == "allocated":
+                unavailable_accounts.append({
+                    'account': mt5_account.mt5_account_number,
+                    'allocated_to': existing.allocated_to_client_id
+                })
+        
+        # Also check separation accounts
+        if investment_data.interest_separation_account:
+            existing = await pool_repository.get_account_by_number(investment_data.interest_separation_account.mt5_account_number)
+            if existing and existing.status == "allocated":
+                unavailable_accounts.append({
+                    'account': investment_data.interest_separation_account.mt5_account_number,
+                    'allocated_to': existing.allocated_to_client_id
+                })
+        
+        if investment_data.gains_separation_account:
+            existing = await pool_repository.get_account_by_number(investment_data.gains_separation_account.mt5_account_number)
+            if existing and existing.status == "allocated":
+                unavailable_accounts.append({
+                    'account': investment_data.gains_separation_account.mt5_account_number,
+                    'allocated_to': existing.allocated_to_client_id
+                })
+        
+        if unavailable_accounts:
+            conflicts = [f"MT5 Account {acc['account']} (allocated to {acc['allocated_to']})" for acc in unavailable_accounts]
+            raise HTTPException(
+                status_code=409, 
+                detail=f"⚠️ The following MT5 accounts are already allocated: {', '.join(conflicts)}. Please use different accounts."
+            )
+        
+        # Step 2: Generate investment ID
+        investment_id = f"inv_{uuid.uuid4().hex[:16]}"
+        
+        # Step 3: Create MT5 account records
+        created_mt5_accounts = []
+        created_separation_accounts = []
+        
+        # Create investment MT5 accounts
+        for mt5_account in investment_data.mt5_accounts:
+            account_data = MT5AccountPoolCreate(
+                mt5_account_number=mt5_account.mt5_account_number,
+                broker_name=mt5_account.broker_name,
+                account_type=MT5AccountType.INVESTMENT,
+                investor_password=mt5_account.investor_password,
+                mt5_server=mt5_account.mt5_server,
+                notes=f"Investment allocation: {mt5_account.allocation_notes}"
+            )
+            
+            # Create the MT5 account record
+            new_account = await pool_repository.add_account_to_pool(account_data, admin_user_id)
+            
+            # Immediately allocate it
+            await pool_repository.allocate_account_to_client(
+                mt5_account_number=mt5_account.mt5_account_number,
+                client_id=investment_data.client_id,
+                investment_id=investment_id,
+                allocated_amount=mt5_account.allocated_amount,
+                admin_user_id=admin_user_id,
+                allocation_notes=mt5_account.allocation_notes
+            )
+            
+            created_mt5_accounts.append({
+                'mt5_account_number': mt5_account.mt5_account_number,
+                'broker_name': mt5_account.broker_name.value,
+                'allocated_amount': float(mt5_account.allocated_amount),
+                'allocation_notes': mt5_account.allocation_notes
+            })
+        
+        # Create separation accounts if provided
+        for sep_account, account_type in [
+            (investment_data.interest_separation_account, MT5AccountType.INTEREST_SEPARATION),
+            (investment_data.gains_separation_account, MT5AccountType.GAINS_SEPARATION)
+        ]:
+            if sep_account:
+                sep_data = MT5AccountPoolCreate(
+                    mt5_account_number=sep_account.mt5_account_number,
+                    broker_name=sep_account.broker_name,
+                    account_type=account_type,
+                    investor_password=sep_account.investor_password,
+                    mt5_server=sep_account.mt5_server,
+                    notes=f"{account_type.value} account for {investment_data.client_id}: {sep_account.notes or 'Separation tracking'}"
+                )
+                
+                await pool_repository.add_account_to_pool(sep_data, admin_user_id)
+                await pool_repository.allocate_account_to_client(
+                    mt5_account_number=sep_account.mt5_account_number,
+                    client_id=investment_data.client_id,
+                    investment_id=investment_id,
+                    allocated_amount=Decimal(0),  # Separation accounts don't have allocation amounts
+                    admin_user_id=admin_user_id,
+                    allocation_notes=f"{account_type.value} tracking for investment {investment_id}"
+                )
+                
+                created_separation_accounts.append({
+                    'mt5_account_number': sep_account.mt5_account_number,
+                    'broker_name': sep_account.broker_name.value,
+                    'account_type': account_type.value,
+                    'notes': sep_account.notes
+                })
+        
+        # Step 4: Create investment mappings
+        mapping_creates = []
+        for mt5_account in investment_data.mt5_accounts:
+            mapping_creates.append(MT5InvestmentMappingCreate(
+                investment_id=investment_id,
+                mt5_account_number=mt5_account.mt5_account_number,
+                allocated_amount=mt5_account.allocated_amount,
+                allocation_notes=mt5_account.allocation_notes
+            ))
+        
+        await mapping_repository.create_mappings_for_investment(
+            investment_id=investment_id,
+            client_id=investment_data.client_id,
+            fund_code=investment_data.fund_code.value,
+            mappings=mapping_creates,
+            admin_user_id=admin_user_id
+        )
+        
+        # Step 5: Prepare response
+        total_allocated = sum(acc.allocated_amount for acc in investment_data.mt5_accounts)
+        
+        return InvestmentCreationResult(
+            success=True,
+            investment_id=investment_id,
+            message=f"✅ Investment {investment_id} created successfully with {len(created_mt5_accounts)} MT5 accounts",
+            investment={
+                'investment_id': investment_id,
+                'client_id': investment_data.client_id,
+                'fund_code': investment_data.fund_code.value,
+                'principal_amount': float(investment_data.principal_amount),
+                'currency': investment_data.currency.value,
+                'investment_date': investment_data.investment_date,
+                'creation_notes': investment_data.creation_notes
+            },
+            mt5_accounts_created=created_mt5_accounts,
+            separation_accounts_created=created_separation_accounts,
+            total_investment_amount=investment_data.principal_amount,
+            total_allocated_amount=total_allocated,
+            allocation_is_valid=abs(total_allocated - investment_data.principal_amount) < Decimal('0.01'),
+            created_by_admin=admin_user_id,
+            creation_timestamp=datetime.now(timezone.utc)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating investment with MT5 accounts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
+
 @mt5_pool_router.get("/accounts/available", response_model=List[MT5AccountPoolResponse])
 async def get_available_accounts(
     account_type: Optional[MT5AccountType] = None,
