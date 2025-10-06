@@ -17,6 +17,10 @@ sys.path.append('/app/backend')
 # Backend URL from environment
 BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com"
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv('/app/backend/.env')
+
 async def authenticate_admin():
     """Authenticate as admin and get JWT token"""
     try:
