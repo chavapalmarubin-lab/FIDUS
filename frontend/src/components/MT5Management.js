@@ -505,7 +505,7 @@ const MT5Management = () => {
                             </div>
                             <div>
                                 <label className="text-slate-300 font-medium">Client</label>
-                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.client_id || 'Not allocated'}</p>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.client_id || 'Not allocated'}</p>
                             </div>
                             <div>
                                 <label className="text-slate-300 font-medium">Fund Code</label>
