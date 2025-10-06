@@ -411,8 +411,9 @@ class MT5PoolTestSuite:
     
     def run_all_tests(self):
         """Run all MT5 pool management tests"""
-        print("🚀 Starting MT5 Account Pool Management System Testing - Phase 1")
+        print("🚀 Starting MT5 Pool Endpoints Testing - CORRECTED ROUTING")
         print(f"🔗 Backend URL: {BACKEND_URL}")
+        print(f"🎯 Testing corrected endpoints with /mt5/pool prefix (was /mt5pool)")
         print(f"⏰ Test Start Time: {datetime.now(timezone.utc).isoformat()}")
         print("=" * 80)
         
