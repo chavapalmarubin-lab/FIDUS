@@ -902,17 +902,56 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                         <div key={doc.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center gap-3">
                             <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                              uploadedDocs[doc.key] ? 'bg-green-500 border-green-500' : 
                               readinessData?.readiness_override ? 'bg-yellow-500 border-yellow-500' : 'bg-gray-200 border-gray-300'
                             }`}>
-                              {readinessData?.readiness_override ? '⚠️' : '☐'}
+                              {uploadedDocs[doc.key] ? '✓' : readinessData?.readiness_override ? '⚠️' : '☐'}
                             </div>
                             <span className="font-medium">{doc.label}</span>
+                            {uploadedDocs[doc.key] && (
+                              <span className="text-xs text-green-600">
+                                ({uploadedDocs[doc.key].filename})
+                              </span>
+                            )}
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled>
-                              Upload Document
+                            <input
+                              type="file"
+                              id={`upload-${doc.key}`}
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  handleDocumentUpload(doc.key, file);
+                                }
+                              }}
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById(`upload-${doc.key}`).click()}
+                              disabled={uploadingDocs[doc.key]}
+                            >
+                              {uploadingDocs[doc.key] ? (
+                                <>
+                                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3 h-3 mr-1" />
+                                  {uploadedDocs[doc.key] ? 'Replace' : 'Upload'}
+                                </>
+                              )}
                             </Button>
-                            <Button variant="ghost" size="sm" disabled>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewDocument(doc.key)}
+                              disabled={!uploadedDocs[doc.key]}
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
                               View
                             </Button>
                           </div>
