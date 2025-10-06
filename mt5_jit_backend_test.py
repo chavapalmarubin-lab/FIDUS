@@ -129,7 +129,7 @@ class MT5JITTester:
         # Test validation for available account
         validation_data = {"mt5_account_number": 999001}
         
-        response = self.make_request("POST", "/mt5-pool/validate-account-availability", 
+        response = self.make_request("POST", "/mt5/pool/validate-account-availability", 
                                    validation_data, auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
