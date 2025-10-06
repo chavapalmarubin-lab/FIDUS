@@ -2557,38 +2557,7 @@ async def get_investment_ready_clients():
     logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
     return hardcoded_response
 
-@api_router.get("/clients/all")
-async def get_all_clients():
-    """Get all clients (non-admin endpoints)"""
-    try:
-        # Get all clients from MongoDB
-        clients_cursor = db.users.find({"type": "client"})
-        clients = await clients_cursor.to_list(length=None)
-        
-        # Process each client
-        processed_clients = []
-        for client in clients:
-            client_data = {
-                "id": client.get("id"),
-                "name": client.get("name"),
-                "email": client.get("email"),
-                "username": client.get("username"),
-                "phone": client.get("phone", ""),
-                "status": client.get("status", "active"),
-                "created_at": client.get("created_at"),
-                "type": client.get("type")
-            }
-            processed_clients.append(client_data)
-        
-        return {
-            "success": True,
-            "clients": processed_clients,
-            "total": len(processed_clients)
-        }
-        
-    except Exception as e:
-        logging.error(f"Get all clients error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch clients")
+# This endpoint was moved above to prevent routing conflicts
 
 # PARAMETERIZED CLIENT ROUTES - MUST COME AFTER SPECIFIC ROUTES
 @api_router.put("/clients/{client_id}")
