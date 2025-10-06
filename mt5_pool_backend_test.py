@@ -223,65 +223,77 @@ class MT5PoolTestSuite:
             self.log_test("Validate Account Availability", False, f"Exception: {str(e)}")
             return False
     
-    def test_account_exclusivity_check(self):
-        """Test MT5 account exclusivity check"""
+    def test_create_investment_with_mt5(self):
+        """Test corrected create investment with MT5 accounts - /api/mt5/pool/create-investment-with-mt5"""
         try:
-            # First get an available account to test
-            available_response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/available", headers=self.get_auth_headers())
+            # Use the test data from the review request
+            investment_data = {
+                "client_id": "test_client_jit_001",
+                "fund_code": "BALANCE", 
+                "principal_amount": 100000,
+                "currency": "USD",
+                "creation_notes": "Test of corrected just-in-time MT5 account creation workflow after routing fix",
+                "mt5_accounts": [
+                    {
+                        "mt5_account_number": 999001,
+                        "investor_password": "InvestorPass001",
+                        "broker_name": "MULTIBANK",
+                        "allocated_amount": 80000,
+                        "allocation_notes": "Primary allocation for BALANCE strategy - largest portion",
+                        "mt5_server": "MultiBank-Live"
+                    },
+                    {
+                        "mt5_account_number": 999002,
+                        "investor_password": "InvestorPass002", 
+                        "broker_name": "MULTIBANK",
+                        "allocated_amount": 20000,
+                        "allocation_notes": "Secondary allocation for risk diversification",
+                        "mt5_server": "MultiBank-Live"
+                    }
+                ],
+                "interest_separation_account": {
+                    "mt5_account_number": 999003,
+                    "investor_password": "InvestorPass003",
+                    "broker_name": "MULTIBANK",
+                    "account_type": "INTEREST_SEPARATION",
+                    "mt5_server": "MultiBank-Live",
+                    "notes": "Interest tracking for client payouts"
+                },
+                "gains_separation_account": {
+                    "mt5_account_number": 999004,
+                    "investor_password": "InvestorPass004",
+                    "broker_name": "MULTIBANK", 
+                    "account_type": "GAINS_SEPARATION",
+                    "mt5_server": "MultiBank-Live",
+                    "notes": "Gains tracking for performance fees"
+                }
+            }
             
-            if available_response.status_code != 200:
-                self.log_test("Account Exclusivity Check", False, "Could not get available accounts for testing")
-                return False
-            
-            available_accounts = available_response.json()
-            if not available_accounts:
-                self.log_test("Account Exclusivity Check", False, "No available accounts to test exclusivity")
-                return False
-            
-            # Test exclusivity check on first available account
-            test_account = available_accounts[0]
-            account_number = test_account["mt5_account_number"]
-            
-            response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/{account_number}/exclusivity-check", headers=self.get_auth_headers())
+            response = requests.post(f"{BACKEND_URL}/mt5/pool/create-investment-with-mt5", 
+                                   json=investment_data, headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 data = response.json()
                 
                 # Verify response structure
                 if not data.get("success"):
-                    self.log_test("Account Exclusivity Check", False, f"Success flag is false: {data}")
+                    self.log_test("Create Investment with MT5", False, f"Success flag is false: {data}")
                     return False
                 
-                exclusivity_check = data.get("exclusivity_check", {})
-                
-                # Verify exclusivity check structure
-                required_fields = ["is_available", "reason"]
-                missing_fields = [field for field in required_fields if field not in exclusivity_check]
-                
-                if missing_fields:
-                    self.log_test("Account Exclusivity Check", False, f"Missing exclusivity fields: {missing_fields}")
+                # Check for investment creation
+                if "investment_id" not in data and "investment" not in data:
+                    self.log_test("Create Investment with MT5", False, f"Missing investment data: {data}")
                     return False
                 
-                # For available account, should be available for allocation
-                if not exclusivity_check.get("is_available"):
-                    self.log_test("Account Exclusivity Check", False, f"Available account shows as not available: {exclusivity_check}")
-                    return False
-                
-                # Verify message indicates availability
-                message = data.get("message", "")
-                if "Available for allocation" not in message:
-                    self.log_test("Account Exclusivity Check", False, f"Message doesn't indicate availability: {message}")
-                    return False
-                
-                self.log_test("Account Exclusivity Check", True, f"Account {account_number}: {message}")
+                self.log_test("Create Investment with MT5", True, f"Investment created successfully: {data.get('message', 'OK')}")
                 return True
                 
             else:
-                self.log_test("Account Exclusivity Check", False, f"Status: {response.status_code}, Response: {response.text}")
+                self.log_test("Create Investment with MT5", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Account Exclusivity Check", False, f"Exception: {str(e)}")
+            self.log_test("Create Investment with MT5", False, f"Exception: {str(e)}")
             return False
     
     def test_add_account_to_pool(self):
