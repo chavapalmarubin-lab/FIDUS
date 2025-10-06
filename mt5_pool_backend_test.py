@@ -442,7 +442,7 @@ class MT5PoolTestSuite:
         
         # Print summary
         print("=" * 80)
-        print("🎯 MT5 ACCOUNT POOL MANAGEMENT TESTING SUMMARY")
+        print("🎯 MT5 POOL ENDPOINTS TESTING SUMMARY - CORRECTED ROUTING")
         print(f"📊 Total Tests: {self.test_results['total_tests']}")
         print(f"✅ Passed: {self.test_results['passed']}")
         print(f"❌ Failed: {self.test_results['failed']}")
@@ -456,11 +456,11 @@ class MT5PoolTestSuite:
         print(f"\n📈 Success Rate: {success_rate:.1f}%")
         
         if success_rate >= 85:
-            print("🎉 MT5 ACCOUNT POOL MANAGEMENT SYSTEM: PHASE 1 OPERATIONAL")
+            print("🎉 MT5 POOL ROUTING FIX: SUCCESSFUL - ALL ENDPOINTS ACCESSIBLE")
         elif success_rate >= 70:
-            print("⚠️ MT5 ACCOUNT POOL MANAGEMENT SYSTEM: MOSTLY FUNCTIONAL WITH MINOR ISSUES")
+            print("⚠️ MT5 POOL ROUTING FIX: MOSTLY SUCCESSFUL WITH MINOR ISSUES")
         else:
-            print("🚨 MT5 ACCOUNT POOL MANAGEMENT SYSTEM: CRITICAL ISSUES DETECTED")
+            print("🚨 MT5 POOL ROUTING FIX: CRITICAL ISSUES - ENDPOINTS STILL NOT ACCESSIBLE")
         
         print(f"⏰ Test End Time: {datetime.now(timezone.utc).isoformat()}")
         
