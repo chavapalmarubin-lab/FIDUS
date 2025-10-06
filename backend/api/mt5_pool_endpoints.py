@@ -1,6 +1,6 @@
 """
-MT5 Account Pool API Endpoints for FIDUS Investment Management Platform
-Phase 1: Basic MT5 pool management and allocation endpoints
+MT5 Account Management API Endpoints for FIDUS Investment Management Platform
+Refactored Phase 1: Just-in-time MT5 account creation during investment allocation
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
