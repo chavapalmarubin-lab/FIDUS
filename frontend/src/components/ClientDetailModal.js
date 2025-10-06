@@ -4,6 +4,8 @@ import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import {
   User,
   Mail,
