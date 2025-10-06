@@ -124,7 +124,7 @@ class MongoDBManager:
             clients = []
             
             # Get all client users
-            client_users = self.db.users.find({'user_type': 'client', 'status': 'active'})
+            client_users = self.db.users.find({'type': 'client', 'status': 'active'})
             
             for user in client_users:
                 client_id = user['user_id']
