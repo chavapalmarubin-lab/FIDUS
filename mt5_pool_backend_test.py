@@ -134,7 +134,7 @@ class MT5PoolTestSuite:
     def test_pool_statistics(self):
         """Test MT5 pool statistics endpoint"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5/pool/statistics", headers=self.get_auth_headers())
+            response = requests.get(f"{BACKEND_URL}/mt5-pool/statistics", headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 data = response.json()
