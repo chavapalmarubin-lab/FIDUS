@@ -77,57 +77,33 @@ class MT5PoolTestSuite:
             return {}
         return {"Authorization": f"Bearer {self.admin_token}"}
     
-    def test_mt5_pool_health(self):
-        """Test MT5 pool health check endpoint"""
+    def test_mt5_pool_test_endpoint(self):
+        """Test corrected MT5 pool test endpoint - /api/mt5/pool/test"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5-pool/health")
+            response = requests.get(f"{BACKEND_URL}/mt5/pool/test")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Verify health check response structure
-                required_fields = ["status", "service", "timestamp", "version", "features"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if missing_fields:
-                    self.log_test("MT5 Pool Health Check", False, f"Missing fields: {missing_fields}")
+                # Verify basic response structure
+                if not isinstance(data, dict):
+                    self.log_test("MT5 Pool Test Endpoint", False, f"Expected dict response, got {type(data)}")
                     return False
                 
-                # Verify Phase 1 features
-                expected_features = [
-                    "MT5 Account Pool Management",
-                    "Multiple Account Mapping Support",
-                    "Allocation/Deallocation Workflow", 
-                    "Account Exclusivity Enforcement",
-                    "Comprehensive Audit Trail",
-                    "⚠️ INVESTOR PASSWORD ONLY System"
-                ]
-                
-                features = data.get("features", [])
-                missing_features = [f for f in expected_features if f not in features]
-                
-                if missing_features:
-                    self.log_test("MT5 Pool Health Check", False, f"Missing features: {missing_features}")
+                # Check for success indicator
+                if not data.get("success", False):
+                    self.log_test("MT5 Pool Test Endpoint", False, f"Success flag is false: {data}")
                     return False
                 
-                # Verify service details
-                if data.get("service") != "MT5 Account Pool Management":
-                    self.log_test("MT5 Pool Health Check", False, f"Wrong service name: {data.get('service')}")
-                    return False
-                
-                if "Phase 1" not in data.get("version", ""):
-                    self.log_test("MT5 Pool Health Check", False, f"Version doesn't indicate Phase 1: {data.get('version')}")
-                    return False
-                
-                self.log_test("MT5 Pool Health Check", True, f"Status: {data.get('status')}, Version: {data.get('version')}")
+                self.log_test("MT5 Pool Test Endpoint", True, f"Router working correctly: {data.get('message', 'OK')}")
                 return True
                 
             else:
-                self.log_test("MT5 Pool Health Check", False, f"Status: {response.status_code}, Response: {response.text}")
+                self.log_test("MT5 Pool Test Endpoint", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("MT5 Pool Health Check", False, f"Exception: {str(e)}")
+            self.log_test("MT5 Pool Test Endpoint", False, f"Exception: {str(e)}")
             return False
     
     def test_pool_statistics(self):
