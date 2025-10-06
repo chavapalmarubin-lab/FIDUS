@@ -34,6 +34,8 @@ const calculateNextRedemption = (product, startDate) => {
 };
 
 const InvestmentCreationWithMT5 = () => {
+    console.log('🚀 InvestmentCreationWithMT5 COMPONENT MOUNTED');
+    
     // Form state
     const [formData, setFormData] = useState({
         client_id: '',
