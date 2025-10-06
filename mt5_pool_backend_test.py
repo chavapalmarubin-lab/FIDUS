@@ -405,7 +405,7 @@ class MT5PoolTestSuite:
                 "total_investment_amount": 100000.00
             }
             
-            response = requests.post(f"{BACKEND_URL}/mt5/pool/validate-mappings", json=validation_data, headers=self.get_auth_headers())
+            response = requests.post(f"{BACKEND_URL}/mt5-pool/validate-mappings", json=validation_data, headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 data = response.json()
