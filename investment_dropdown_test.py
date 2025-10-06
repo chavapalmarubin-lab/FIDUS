@@ -172,7 +172,7 @@ class InvestmentDropdownTester:
         if response and response.status_code == 200:
             try:
                 data = response.json()
-                ready_clients = data.get("clients", []) if isinstance(data, dict) else data
+                ready_clients = data.get("ready_clients", []) if isinstance(data, dict) else data
                 
                 if isinstance(ready_clients, list):
                     # Check if Alejandro is in the ready clients list
