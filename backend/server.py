@@ -14909,6 +14909,7 @@ async def get_client_readiness(client_id: str):
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients():
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
+    logging.info(f"🔍 DEBUG: get_investment_ready_clients endpoint called")
     try:
         # Get all clients from MongoDB and filter for ready ones
         logging.info(f"🔍 DEBUG: About to call mongodb_manager.get_all_clients()")
