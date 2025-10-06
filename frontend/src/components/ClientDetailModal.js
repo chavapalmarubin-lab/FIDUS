@@ -815,29 +815,146 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
 
               {/* KYC/AML Tab */}
               <TabsContent value="kyc" className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">KYC/AML Status</h3>
-                  {kycStatus ? (
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Shield className={`w-6 h-6 ${
-                            kycStatus.status === 'approved' ? 'text-green-500' : 
-                            kycStatus.status === 'pending' ? 'text-yellow-500' : 
-                            'text-red-500'
-                          }`} />
-                          <div>
-                            <h4 className="font-medium">Status: {kycStatus.status}</h4>
-                            <p className="text-sm text-gray-600">{kycStatus.description}</p>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Client Onboarding Checklist</h3>
+                    <Badge variant={readinessData?.investment_ready ? 'default' : 'secondary'} className={
+                      readinessData?.investment_ready ? 'bg-green-600' : 'bg-yellow-600'
+                    }>
+                      {readinessData?.investment_ready ? 'Ready for Investment' : 'In Progress'}
+                    </Badge>
+                  </div>
+
+                  {/* Document Checklist */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Required Documents</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {[
+                        { key: 'passport', label: 'Passport' },
+                        { key: 'government_id', label: 'Government ID' },
+                        { key: 'proof_of_residence', label: 'Proof of Residence' },
+                        { key: 'aml_kyc_report', label: 'AML/KYC Report' },
+                        { key: 'fidus_agreement', label: 'Signed FIDUS Agreement' }
+                      ].map((doc, index) => (
+                        <div key={doc.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                              readinessData?.readiness_override ? 'bg-yellow-500 border-yellow-500' : 'bg-gray-200 border-gray-300'
+                            }`}>
+                              {readinessData?.readiness_override ? '⚠️' : '☐'}
+                            </div>
+                            <span className="font-medium">{doc.label}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" disabled>
+                              Upload Document
+                            </Button>
+                            <Button variant="ghost" size="sm" disabled>
+                              View
+                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-8 text-center">
-                        <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                        <p className="text-gray-500">KYC/AML process not started</p>
+                      ))}
+                      
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <strong>Progress:</strong> {readinessData?.readiness_override ? 'Override Applied' : '0/5 documents uploaded'}
+                        </p>
+                        <p className="text-sm text-blue-600 mt-1">
+                          Document upload functionality coming soon. Use override below for testing.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Readiness Status */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Shield className={`w-5 h-5 ${readinessData?.investment_ready ? 'text-green-500' : 'text-gray-400'}`} />
+                        Investment Readiness Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {readinessData?.investment_ready ? (
+                        <Alert className="border-green-200 bg-green-50">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-green-800">
+                            <strong>✅ {client.name} is ready for investment!</strong>
+                            {readinessData.readiness_override && (
+                              <div className="mt-2 text-sm">
+                                <p><strong>Override Applied:</strong> {readinessData.readiness_override_reason}</p>
+                                <p><strong>Applied By:</strong> {readinessData.readiness_override_by}</p>
+                                <p><strong>Date:</strong> {new Date(readinessData.readiness_override_date).toLocaleDateString()}</p>
+                              </div>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Alert className="border-yellow-200 bg-yellow-50">
+                          <AlertCircle className="h-4 w-4 text-yellow-600" />
+                          <AlertDescription className="text-yellow-800">
+                            Client is not ready for investment. Complete document upload or use override below.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Override Section */}
+                  {!readinessData?.investment_ready && (
+                    <Card className="border-orange-200">
+                      <CardHeader>
+                        <CardTitle className="text-base text-orange-700">Override Options (Admin Only)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="override-checkbox"
+                            checked={overrideEnabled}
+                            onChange={(e) => setOverrideEnabled(e.target.checked)}
+                            className="w-4 h-4 text-orange-600"
+                          />
+                          <Label htmlFor="override-checkbox" className="text-sm font-medium">
+                            Override readiness requirements
+                          </Label>
+                        </div>
+                        
+                        {overrideEnabled && (
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="override-reason" className="text-sm font-medium text-gray-700">
+                                Reason for override (required - minimum 10 characters):
+                              </Label>
+                              <Input
+                                id="override-reason"
+                                value={overrideReason}
+                                onChange={(e) => setOverrideReason(e.target.value)}
+                                placeholder="Enter reason for overriding readiness requirements..."
+                                className="mt-1"
+                              />
+                            </div>
+                            
+                            <Alert className="border-red-200 bg-red-50">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800 text-sm">
+                                <strong>Warning:</strong> Override will mark client as ready without proper documentation. 
+                                Use only for testing or exceptional circumstances.
+                              </AlertDescription>
+                            </Alert>
+                            
+                            <Button 
+                              onClick={applyOverride}
+                              disabled={overrideLoading || !overrideReason.trim() || overrideReason.length < 10}
+                              className="w-full bg-orange-600 hover:bg-orange-700"
+                            >
+                              {overrideLoading ? 'Applying Override...' : 'Apply Override and Mark Ready'}
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )}
