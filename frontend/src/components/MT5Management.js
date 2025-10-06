@@ -514,7 +514,7 @@ const MT5Management = () => {
                             <div>
                                 <label className="text-slate-300 font-medium">Allocated Amount</label>
                                 <p className="text-white bg-slate-700 p-2 rounded">
-                                    {selectedAccount.allocated_amount ? `$${Number(selectedAccount.allocated_amount).toLocaleString()}` : 'N/A'}
+                                    {selectedAccountDetails.allocated_amount ? `$${Number(selectedAccountDetails.allocated_amount).toLocaleString()}` : 'N/A'}
                                 </p>
                             </div>
                             <div className="col-span-2">
