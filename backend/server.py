@@ -2495,7 +2495,100 @@ async def update_client_details(client_id: str, update_data: dict):
         raise HTTPException(status_code=500, detail=f"Failed to update client: {str(e)}")
 
 # SPECIFIC CLIENT ROUTES - MUST BE DEFINED BEFORE PARAMETERIZED ROUTES TO AVOID CONFLICTS
-# These endpoints were moved above to prevent routing conflicts with parameterized routes
+
+@api_router.get("/clients/ready-for-investment")
+async def get_investment_ready_clients():
+    """Get clients who are ready for investment (for dropdown in investment creation)"""
+    print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
+    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
+    
+    try:
+        # Check in-memory client_readiness for investment-ready clients
+        ready_clients_list = []
+        
+        for client_id, readiness in client_readiness.items():
+            if readiness.get('investment_ready', False):
+                # Get client details from MongoDB
+                try:
+                    client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+                    if client_doc:
+                        ready_clients_list.append({
+                            'client_id': client_id,
+                            'name': client_doc.get('name', 'Unknown'),
+                            'email': client_doc.get('email', ''),
+                            'username': client_doc.get('username', ''),
+                            'account_creation_date': readiness.get('account_creation_date', ''),
+                            'total_investments': 0  # Could calculate from investments collection
+                        })
+                        print(f"✅ Found ready client: {client_doc.get('name')} ({client_id})")
+                except Exception as e:
+                    logging.warning(f"Failed to get client details for {client_id}: {str(e)}")
+        
+        print(f"🔍 DEBUG: Found {len(ready_clients_list)} ready clients in total")
+        
+        response = {
+            "success": True,
+            "ready_clients": ready_clients_list,
+            "total_ready": len(ready_clients_list)
+        }
+        
+        print(f"🔍 DEBUG: Returning response: {response}")
+        return response
+        
+    except Exception as e:
+        logging.error(f"Ready clients endpoint error: {str(e)}")
+        print(f"❌ ERROR in ready clients endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
+
+@api_router.get("/clients/ready-for-investment-test")
+async def get_investment_ready_clients_test():
+    """TEST ENDPOINT - Check if routing is working"""
+    return {
+        "success": True,
+        "message": "TEST ENDPOINT IS WORKING",
+        "ready_clients": [{
+            'client_id': 'client_alejandro',
+            'name': 'Alejandro Mariscal Romero',
+            'email': 'alexmar7609@gmail.com',
+            'username': 'alejandro_mariscal',
+            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
+            'total_investments': 0
+        }],
+        "total_ready": 1
+    }
+
+@api_router.get("/clients/all")
+async def get_all_clients():
+    """Get all clients (non-admin endpoints)"""
+    try:
+        # Get all clients from MongoDB
+        clients_cursor = db.users.find({"type": "client"})
+        clients = await clients_cursor.to_list(length=None)
+        
+        # Process each client
+        processed_clients = []
+        for client in clients:
+            client_data = {
+                "id": client.get("id"),
+                "name": client.get("name"),
+                "email": client.get("email"),
+                "username": client.get("username"),
+                "phone": client.get("phone", ""),
+                "status": client.get("status", "active"),
+                "created_at": client.get("created_at"),
+                "type": client.get("type")
+            }
+            processed_clients.append(client_data)
+        
+        return {
+            "success": True,
+            "clients": processed_clients,
+            "total": len(processed_clients)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get all clients error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch clients")
 
 # This endpoint was moved above to prevent routing conflicts
 
