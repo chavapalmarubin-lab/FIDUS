@@ -292,7 +292,7 @@ class MT5PoolTestSuite:
             test_account = available_accounts[0]
             account_number = test_account["mt5_account_number"]
             
-            response = requests.get(f"{BACKEND_URL}/mt5/pool/accounts/{account_number}/exclusivity-check", headers=self.get_auth_headers())
+            response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/{account_number}/exclusivity-check", headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 data = response.json()
