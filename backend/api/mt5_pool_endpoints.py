@@ -72,6 +72,11 @@ async def get_mapping_repository():
 
 # ==================== MT5 ACCOUNT POOL MANAGEMENT ====================
 
+@mt5_pool_router.get("/test")
+async def test_endpoint():
+    """Simple test endpoint to verify router is working"""
+    return {"success": True, "message": "MT5 Pool router is working", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 @mt5_pool_router.post("/validate-account-availability")
 async def validate_account_availability(
     availability_check: Dict[str, int],
