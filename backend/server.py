@@ -14936,11 +14936,25 @@ async def get_investment_ready_clients(request: Request):
     admin_user = get_current_admin_user(request)
     print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
     
-    # Simple test - return Alejandro directly if he's ready
+    # Check Alejandro's readiness with MongoDB fallback
     try:
-        # Check Alejandro's readiness directly from in-memory storage
+        # First check in-memory storage
         alejandro_readiness = client_readiness.get('client_alejandro', {})
         print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
+        
+        # If not found in memory, check MongoDB
+        if not alejandro_readiness or not alejandro_readiness.get('investment_ready', False):
+            print("🔍 DEBUG: Checking MongoDB for Alejandro's readiness...")
+            try:
+                mongodb_readiness = mongodb_manager.get_client_readiness('client_alejandro')
+                print(f"🔍 DEBUG: Alejandro readiness from MongoDB: {mongodb_readiness}")
+                if mongodb_readiness and mongodb_readiness.get('investment_ready', False):
+                    alejandro_readiness = mongodb_readiness
+                    # Update in-memory storage for future requests
+                    client_readiness['client_alejandro'] = alejandro_readiness
+                    print("🔍 DEBUG: Updated in-memory storage from MongoDB")
+            except Exception as e:
+                print(f"⚠️ DEBUG: Failed to check MongoDB: {str(e)}")
         
         if alejandro_readiness.get('investment_ready', False):
             return {
@@ -14960,7 +14974,7 @@ async def get_investment_ready_clients(request: Request):
                 "success": True,
                 "ready_clients": [],
                 "total_ready": 0,
-                "debug_info": f"Alejandro not ready: {alejandro_readiness}"
+                "debug_info": f"Alejandro not ready - Memory: {client_readiness.get('client_alejandro', {})}, MongoDB checked: {alejandro_readiness}"
             }
         
     except Exception as e:
