@@ -60,6 +60,12 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
   const [portfolioData, setPortfolioData] = useState(null);
   const [kycStatus, setKycStatus] = useState(null);
   
+  // KYC/AML Override functionality
+  const [readinessData, setReadinessData] = useState(null);
+  const [overrideEnabled, setOverrideEnabled] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideLoading, setOverrideLoading] = useState(false);
+  
   // Compose states
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeData, setComposeData] = useState({ subject: '', body: '' });
