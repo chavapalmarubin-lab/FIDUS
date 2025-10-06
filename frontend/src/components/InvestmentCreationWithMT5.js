@@ -221,6 +221,9 @@ const InvestmentCreationWithMT5 = () => {
             }));
         }
     };
+    
+    console.log('🎨 Rendering with availableClients:', availableClients.length);
+    console.log('🎨 Current formData.client_id:', formData.client_id);
 
     const addMT5Account = () => {
         setFormData(prev => ({
