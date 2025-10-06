@@ -347,7 +347,7 @@ class MT5PoolTestSuite:
                 "notes": "Test account for MT5 pool testing"
             }
             
-            response = requests.post(f"{BACKEND_URL}/mt5/pool/accounts", json=test_account, headers=self.get_auth_headers())
+            response = requests.post(f"{BACKEND_URL}/mt5-pool/accounts", json=test_account, headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 data = response.json()
