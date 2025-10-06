@@ -14912,9 +14912,11 @@ async def get_investment_ready_clients():
     try:
         # Get all clients from MongoDB and filter for ready ones
         all_clients = mongodb_manager.get_all_clients()
+        logging.info(f"🔍 DEBUG: get_all_clients returned {len(all_clients)} clients")
         
         ready_clients = []
         for client in all_clients:
+            logging.info(f"🔍 DEBUG: Client {client.get('name', 'Unknown')}: investment_ready = {client.get('investment_ready', False)}")
             if client.get('investment_ready', False):
                 ready_clients.append({
                     'client_id': client['id'],
@@ -14928,6 +14930,7 @@ async def get_investment_ready_clients():
         # Sort by name
         ready_clients.sort(key=lambda x: x['name'])
         
+        logging.info(f"🔍 DEBUG: Found {len(ready_clients)} ready clients")
         return {
             "success": True,
             "ready_clients": ready_clients,
