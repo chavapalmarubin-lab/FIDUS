@@ -427,13 +427,10 @@ const InvestmentDashboard = ({ user, userType }) => {
           </Button>
           {/* Investment creation only available for admins */}
           {userType === "admin" && (
-            <Button
-              onClick={() => setShowInvestModal(true)}
-              className="bg-cyan-600 hover:bg-cyan-700"
-            >
-              <Plus size={16} className="mr-2" />
-              New Investment
-            </Button>
+            <InvestmentCreationWithMT5 
+              user={user}
+              onInvestmentCreated={fetchInvestments}
+            />
           )}
         </div>
       </div>
