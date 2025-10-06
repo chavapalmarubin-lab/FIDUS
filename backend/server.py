@@ -14930,11 +14930,11 @@ async def get_investment_ready_clients_debug(request: Request):
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
-    print("🔍 DEBUG: get_investment_ready_clients endpoint called")
+    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called")
     
     # Require admin authentication
     admin_user = get_current_admin_user(request)
-    print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
+    logging.info(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
     
     # Check Alejandro's readiness with MongoDB fallback
     try:
