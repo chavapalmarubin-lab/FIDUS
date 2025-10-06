@@ -129,6 +129,7 @@ class MongoDBManager:
             
             for user in client_users:
                 client_id = user['id']
+                print(f"🔍 DEBUG: Processing client {client_id} - {user.get('name', 'Unknown')}")
                 
                 # Get client profile
                 profile = self.db.client_profiles.find_one({'client_id': client_id})
