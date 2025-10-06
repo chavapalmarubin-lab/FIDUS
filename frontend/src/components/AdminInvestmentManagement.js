@@ -637,7 +637,46 @@ const AdminInvestmentManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Create Investment Modal */}
+      {/* New Investment Creation with MT5 - Full Screen Modal */}
+      <AnimatePresence>
+        {showNewInvestmentCreation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowNewInvestmentCreation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 rounded-lg w-full max-w-7xl max-h-[95vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white">Create Investment with MT5 Integration</h3>
+                    <p className="text-slate-400">Complete investment creation with just-in-time MT5 account allocation</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowNewInvestmentCreation(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <InvestmentCreationWithMT5 />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Legacy Create Investment Modal */}
       <AnimatePresence>
         {showCreateInvestmentModal && (
           <motion.div
