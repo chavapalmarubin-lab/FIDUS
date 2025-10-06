@@ -14940,21 +14940,21 @@ async def get_investment_ready_clients(request: Request):
     try:
         # First check in-memory storage
         alejandro_readiness = client_readiness.get('client_alejandro', {})
-        print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
+        logging.info(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
         
         # If not found in memory, check MongoDB
         if not alejandro_readiness or not alejandro_readiness.get('investment_ready', False):
-            print("🔍 DEBUG: Checking MongoDB for Alejandro's readiness...")
+            logging.info("🔍 DEBUG: Checking MongoDB for Alejandro's readiness...")
             try:
                 mongodb_readiness = mongodb_manager.get_client_readiness('client_alejandro')
-                print(f"🔍 DEBUG: Alejandro readiness from MongoDB: {mongodb_readiness}")
+                logging.info(f"🔍 DEBUG: Alejandro readiness from MongoDB: {mongodb_readiness}")
                 if mongodb_readiness and mongodb_readiness.get('investment_ready', False):
                     alejandro_readiness = mongodb_readiness
                     # Update in-memory storage for future requests
                     client_readiness['client_alejandro'] = alejandro_readiness
-                    print("🔍 DEBUG: Updated in-memory storage from MongoDB")
+                    logging.info("🔍 DEBUG: Updated in-memory storage from MongoDB")
             except Exception as e:
-                print(f"⚠️ DEBUG: Failed to check MongoDB: {str(e)}")
+                logging.warning(f"⚠️ DEBUG: Failed to check MongoDB: {str(e)}")
         
         if alejandro_readiness.get('investment_ready', False):
             return {
