@@ -637,6 +637,17 @@ const AdminInvestmentManagement = () => {
                       <td className="px-4 py-3 text-green-400">+{formatCurrency(investment.earned_interest)}</td>
                       <td className="px-4 py-3">{getStatusBadge(investment)}</td>
                       <td className="px-4 py-3 text-slate-400">{format(new Date(investment.deposit_date), 'MMM dd, yyyy')}</td>
+                      <td className="px-4 py-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedInvestment(investment.investment_id)}
+                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                        >
+                          <Eye size={16} className="mr-1" />
+                          View Details
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
