@@ -519,6 +519,11 @@ class ClientInvestmentReadinessUpdate(BaseModel):
     account_creation_date: Optional[datetime] = None
     notes: Optional[str] = None
     updated_by: Optional[str] = None
+    # Override fields
+    readiness_override: Optional[bool] = None
+    readiness_override_reason: Optional[str] = None
+    readiness_override_by: Optional[str] = None
+    readiness_override_date: Optional[str] = None
 
 class ClientCreate(BaseModel):
     username: str
