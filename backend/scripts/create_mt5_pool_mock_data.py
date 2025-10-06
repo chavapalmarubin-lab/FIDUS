@@ -269,11 +269,13 @@ async def create_mock_mt5_pool_data():
             # FIDUS DYNAMIC: $300,000 split across 2 accounts (using available DooTechnology accounts)
             dynamic_mappings = [
                 {
+                    'investment_id': 'inv_testclient_dynamic_001',
                     'mt5_account_number': 1001234,
                     'allocated_amount': Decimal('200000.00'),
                     'allocation_notes': 'Primary DYNAMIC allocation - aggressive growth strategy with DooTechnology'
                 },
                 {
+                    'investment_id': 'inv_testclient_dynamic_001',
                     'mt5_account_number': 1001235,
                     'allocated_amount': Decimal('100000.00'),
                     'allocation_notes': 'Secondary DYNAMIC allocation - portfolio balancing with DooTechnology'
