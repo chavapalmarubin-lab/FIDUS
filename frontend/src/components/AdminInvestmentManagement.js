@@ -42,6 +42,7 @@ import {
 } from "recharts";
 import apiAxios from "../utils/apiAxios";
 import { format, differenceInDays } from "date-fns";
+import InvestmentCreationWithMT5 from "./InvestmentCreationWithMT5";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
