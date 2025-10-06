@@ -100,7 +100,12 @@ const AdminInvestmentManagement = () => {
     // Delay fetchReadyClients to ensure authentication is established
     setTimeout(() => {
       fetchReadyClients();
-    }, 1000);
+    }, 2000); // Increased delay to 2 seconds
+    
+    // Also call fetchReadyClients again after longer delay to catch authentication
+    setTimeout(() => {
+      fetchReadyClients();
+    }, 5000);
   }, []);
 
   const fetchFundConfigs = async () => {
