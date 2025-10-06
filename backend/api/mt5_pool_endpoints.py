@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import logging
+import uuid
 from decimal import Decimal
 
 from models.mt5_account_pool import (
