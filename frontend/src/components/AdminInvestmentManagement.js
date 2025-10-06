@@ -421,7 +421,10 @@ const AdminInvestmentManagement = () => {
             Refresh
           </Button>
           <Button
-            onClick={() => setShowNewInvestmentCreation(true)}
+            onClick={() => {
+              setShowNewInvestmentCreation(true);
+              fetchReadyClients(); // Refresh client list when opening modal
+            }}
             className="bg-cyan-600 hover:bg-cyan-700"
           >
             <Plus size={16} className="mr-2" />
