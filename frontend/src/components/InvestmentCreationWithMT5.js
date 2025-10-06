@@ -11,6 +11,28 @@ import {
 } from 'lucide-react';
 import apiAxios from '../utils/apiAxios';
 
+// Helper functions for date calculations
+const addMonths = (date, months) => {
+    const newDate = new Date(date);
+    newDate.setMonth(newDate.getMonth() + months);
+    return newDate;
+};
+
+const calculateNextRedemption = (product, startDate) => {
+    switch(product) {
+        case 'CORE':
+            return addMonths(startDate, 3); // Monthly after 2 month incubation + 1 month
+        case 'BALANCE':
+            return addMonths(startDate, 5); // Quarterly after 2 month incubation + 3 months
+        case 'DYNAMIC':
+            return addMonths(startDate, 8); // Semi-annual after 2 month incubation + 6 months
+        case 'UNLIMITED':
+            return addMonths(startDate, 14); // At contract end
+        default:
+            return addMonths(startDate, 3);
+    }
+};
+
 const InvestmentCreationWithMT5 = () => {
     // Form state
     const [formData, setFormData] = useState({
