@@ -193,6 +193,8 @@ class MongoDBManager:
             
         except Exception as e:
             print(f"❌ Error getting clients: {str(e)}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
             return []
     
     # ===============================================================================
