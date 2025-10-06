@@ -196,7 +196,7 @@ class AlejandroReadinessTester:
             "readiness_override_date": datetime.now(timezone.utc).isoformat()
         }
         
-        response = self.make_request("POST", "/clients/client_alejandro/readiness", 
+        response = self.make_request("PUT", "/clients/client_alejandro/readiness", 
                                    override_data, auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
