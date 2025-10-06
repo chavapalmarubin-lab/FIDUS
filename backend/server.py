@@ -14945,7 +14945,7 @@ async def get_investment_ready_clients_test():
     }
 
 @api_router.get("/clients/ready-for-investment")
-async def get_investment_ready_clients(request: Request):
+async def get_investment_ready_clients():
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
     logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
@@ -14962,7 +14962,7 @@ async def get_investment_ready_clients(request: Request):
             'total_investments': 0
         }],
         "total_ready": 1,
-        "debug": "HARDCODED RESPONSE FOR TESTING"
+        "debug": "HARDCODED RESPONSE FOR TESTING - NO AUTH"
     }
     print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
     logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
