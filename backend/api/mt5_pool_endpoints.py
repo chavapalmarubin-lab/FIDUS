@@ -58,7 +58,7 @@ def get_current_admin_user(request: Request) -> dict:
 
 logger = logging.getLogger(__name__)
 
-# Create router for MT5 management endpoints
+# Create router for MT5 management endpoints (prefix will be added when including in main router)
 mt5_pool_router = APIRouter(tags=["MT5 Account Management"])
 
 # Dependency to get repositories
