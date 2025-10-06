@@ -540,14 +540,32 @@ const MT5Management = () => {
                             </div>
                             
                             <div>
-                                <Label className="text-slate-300">MT5 Password *</Label>
+                                <Label className="text-slate-300 flex items-center gap-2">
+                                    🔒 MT5 Investor Password * 
+                                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                                </Label>
+                                
+                                {/* CRITICAL INVESTOR PASSWORD WARNING */}
+                                <Alert className="mb-3 border-amber-500 bg-amber-950/50">
+                                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                                    <AlertDescription className="text-amber-200 font-medium">
+                                        ⚠️ CRITICAL: Enter INVESTOR PASSWORD ONLY (not trading password)
+                                        <br />
+                                        This system only accepts Investor Passwords for MT5 accounts
+                                    </AlertDescription>
+                                </Alert>
+                                
                                 <Input
                                     type="password"
                                     value={newAccount.mt5_password}
                                     onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_password: e.target.value }))}
                                     className="bg-slate-700 border-slate-600 text-white"
-                                    placeholder="R1d567j!"
+                                    placeholder="Enter investor password only"
                                 />
+                                
+                                <p className="text-xs text-amber-300 mt-1">
+                                    💡 Tip: MT5 accounts have two password types. Only use the "Investor Password" (read-only access)
+                                </p>
                             </div>
                             
                             <div>
