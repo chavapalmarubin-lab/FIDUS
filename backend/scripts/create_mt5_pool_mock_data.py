@@ -156,6 +156,7 @@ async def create_mock_mt5_pool_data():
         # FIDUS BALANCE Product: $100,000 split across 3 MT5 accounts
         balance_mappings = [
             {
+                'investment_id': 'inv_alejandro_balance_001',
                 'mt5_account_number': 886557,
                 'allocated_amount': Decimal('80000.00'),
                 'allocation_notes': 'Primary allocation for BALANCE fund - largest portion for main trading strategy'
