@@ -1,82 +1,53 @@
 <analysis>
-The trajectory details a multi-phase development and debugging effort on the FIDUS platform. Initially, the focus was on stabilizing the MT5 integration, which involved setting up a FastAPI bridge on a Windows VPS, resolving numerous environment issues (NumPy, firewalls), and fixing backend endpoint registration and module-level name collisions. A persistent blocker identified was Kubernetes ingress routing.
-
-Subsequently, a significant portion of the work revolved around fixing the Google OAuth integration, plagued by URL mismatches, token storage issues, and frontend-backend API response format inconsistencies. This included attempts to refactor to an Emergent Auth system, which was later reverted when the existing OAuth was found to be functional after core configuration and response handling fixes.
-
-The project then transitioned to a new feature: enabling multiple MT5 account mappings per investment with strict investor password warnings. An initial pool approach for MT5 accounts was implemented, then refactored to a just-in-time allocation during investment creation. The current task is blocked by a React compilation error in , occurring after the latest refactoring.
+The AI engineer's trajectory details a complex journey building the FIDUS investment platform. Initially, critical MT5 integration and Google OAuth issues were tackled. The focus then shifted to developing a just-in-time MT5 account allocation feature, which involved significant backend refactoring and the creation of new frontend components. A recurring theme has been frontend integration challenges, particularly with authentication state persistence and correctly identifying which UI components are rendered. Despite numerous fixes, including a React JSX error and backend routing issues, the main blocker remains the inability to properly display the  component, with a legacy modal persistently appearing. The AI engineer has been trapped in a loop of modifying the wrong files due to difficulty in identifying the active UI component, currently unable to locate the Create Client Investment modal in the codebase despite it appearing in screenshots.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an investment management system for internal admin users, requiring secure user management (JWT, Google OAuth), a production-grade MongoDB Atlas database, and real-time financial data from MetaTrader5 (MT5). It enforces data integrity via robust validation. So far, MongoDB Atlas and a FastAPI bridge for MT5 on a Windows VPS are integrated.
-
-Recent enhancements focus on MT5:
-1.  **Multiple MT5 Account Mapping**: Support unlimited MT5 accounts per investment product, ensuring total allocations match the investment amount.
-2.  **MT5 Account Exclusivity**: Prevent reusing MT5 accounts across different clients.
-3.  **Investor Password Management**: Crucially, the system must *only* accept MT5 Investor Passwords (read-only), *never* Trading Passwords. Prominent visual warnings are mandatory across all MT5-related interfaces.
-4.  **MT5 Account Deallocation**: Implement an admin-approved workflow with mandatory notes and audit trails.
-5.  **Admin-Only MT5 Management**: Restrict creation, editing, and deallocation to admins, requiring mandatory notes for all changes.
-6.  **Broker Account Structure**: Support OMNIBUS sub-accounts and future multi-broker integration.
-7.  **Google OAuth Integration**: Ensure secure login via JWT and OAuth 2.0 with Google Workspace for CRM functions (Gmail, Calendar, Drive).
+The FIDUS platform is an investment management system for internal admin users, requiring secure user management (JWT, Google OAuth), a production-grade MongoDB Atlas database, and real-time financial data from MetaTrader5 (MT5). Recent enhancements focus on:
+1.  **Multiple MT5 Account Mapping**: Support unlimited MT5 accounts per investment, ensuring total allocations match the investment amount, with exclusivity checks.
+2.  **Investor Password Management**: Crucially, only accept MT5 Investor Passwords (read-only), *never* Trading Passwords, with prominent visual warnings.
+3.  **MT5 Account Deallocation**: Admin-approved workflow with mandatory notes and audit trails.
+4.  **Admin-Only MT5 Management**: Restrict creation, editing, and deallocation to admins, requiring mandatory notes for all changes.
+5.  **Broker Account Structure**: Support OMNIBUS sub-accounts and future multi-broker integration.
+6.  **Google OAuth Integration**: Secure login via JWT and OAuth 2.0 with Google Workspace for CRM functions (Gmail, Calendar, Drive).
+**Current Implementation State:** The MT5 backend refactoring for just-in-time allocation is complete and tested. A client readiness system with an override mechanism has been implemented. Investment creation now includes interest/gains separation accounts and calculates incubation/contract dates. A basic Investment Detail View component has been created.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Backend**: Python with FastAPI, Pydantic,  (async MongoDB).
--   **Frontend**: React.js.
+-   **Frontend**: React.js, React Router, Tailwind CSS.
 -   **Database**: MongoDB Atlas.
--   **Authentication**: JWT for APIs, Google OAuth 2.0.
--   **MT5 Integration**: FastAPI bridge on Windows VPS interfacing with  Python package.
+-   **Authentication**: JWT, Google OAuth 2.0,  for token.
+-   **MT5 Integration**: FastAPI bridge on Windows VPS,  Python package.
 -   **Deployment**: Kubernetes ingress, Docker, Supervisor.
--   **Security**: Password encryption, secure credential handling.
 </key_technical_concepts>
 
 <code_architecture>
 
 
--   ****: Stores , , , , , , .  was modified to fix OAuth redirect URI mismatch to .
--   ****: Main FastAPI app. Refactored MT5 endpoints, fixed module-level name collisions, corrected  to . OAuth callback and initialization endpoints exist. Modified to include new MT5 pool router and . Hardcoded  was updated to .
--   ****: Handles MT5 bridge client interactions.
--   ****: Client for the MT5 bridge service.
--   ****: Core of the Windows VPS bridge service; exposes MT5 REST API endpoints and aliases.
--   ****: Modified to add  to fix CRM client MT5 endpoints.
--   ****: Handles Google API calls. Modified  to correctly use token data, and token storage in  () was updated to include , , and .
--   ****:  was temporarily changed to fix OAuth, then reverted to fix login. The correct value should be .
--   ****: Critical frontend component for Google Workspace integration. It was heavily modified for:
-    *   Using new Emergent Auth endpoints (later reverted).
-    *   Correctly handling backend API response formats for connection status and Gmail messages.
--   ****: Admin interface for MT5 accounts. Initially modified to add investor password warnings. Later refactored to be a view-only dashboard, removing Add MT5 Account functionality. Currently has a React JSX compilation error.
--   ** (New - pre-refactor)**: Defined models for MT5 accounts in the pool.
--   ** (New - pre-refactor)**: Enhanced investment model.
--   ** (New - post-refactor)**: Defines a model for creating investments with just-in-time MT5 account allocations.
--   ** (New - pre-refactor)**: Repository for MT5 account pool operations.
--   ** (New)**: Defines API endpoints for MT5 account pool management (later modified for just-in-time allocation). Router prefix was fixed from  to .
--   ** (New)**: Centralized authentication utility functions ().
--   ** (New)**: Script for generating mock data for MT5 account pool (pre-refactor, adapted for new models).
--   ** (New)**: Frontend component for creating investments with integrated MT5 account entry (just-in-time allocation).
+-   ****: Main FastAPI app. Fixed route order for specific  paths and added client readiness override endpoints. Re-added  endpoint logic.
+-   ****: Updated to include fields for , , and various date/status fields (e.g., , ).
+-   ****: Main React app, fixed authentication token retrieval from  to .
+-   ****: Refactored to be view-only by removing floating JSX form elements, resolving a compilation error.
+-   ****: A new component for just-in-time MT5 allocation with UI for multiple accounts and date calculations. Its  endpoint was corrected, and a large visual marker was added for debugging.
+-   ****: Intended to be the main investment tab; its  dependencies and loading state were adjusted. Its legacy modal content was replaced with .
+-   ****: This component's Create Investment button was mistakenly identified as the entry point. Its internal modal content for investment creation was replaced with .
+-   ****: Modified to include a KYC/AML override interface for testing client readiness.
+-   ****: A new component created to display investment details, but currently unrouted and inaccessible.
 </code_architecture>
 
 <pending_tasks>
--   **Kubernetes Ingress Routing Fix**: The Emergent platform team needs to allow all  paths.
--   ** 500 Error Fix**: Debug and resolve the 500 error specifically on the  endpoint in the FIDUS backend. (Initially reported fixed, but ingress still blocks it externally).
--   **Complete Google OAuth/Gmail API Integration**: Ensure full Gmail API functionality beyond retrieving messages, and verify Calendar/Drive.
--   **MT5 Management Frontend Fix**: Resolve the React JSX compilation error in .
--   **Frontend Integration of Investment Creation with MT5**: Implement  into the main application flow.
--   **End-to-End Testing (MT5 New Feature)**: Full integration testing for the new multiple MT5 account mapping and deallocation workflow.
+-   **Frontend Integration**: Correctly integrate  so it renders when creating an investment.
+-   **Client Dropdown Fix**: Ensure the client dropdown in the investment creation form is populated.
+-   **Investment Detail View Integration**: Add routing and navigation to .
+-   **KYC/AML Document Upload Workflow**: Implement the full UI for document uploads.
+-   **Google OAuth/Gmail API Integration**: Complete full Gmail API functionality beyond messages, and verify Calendar/Drive.
 </pending_tasks>
 
 <current_work>
-The immediate work involved refactoring the MT5 account management system from a pre-populated pool approach to a just-in-time allocation during investment creation.
-
-The previous AI engineer:
-1.  **Updated Database Models**: Adjusted MT5 account models to support just-in-time creation. ( was created).
-2.  **Updated API Endpoints**: Modified  to remove pool creation endpoints and add validation/allocation endpoints tied to investment creation. The router prefix in  was corrected from  to .
-3.  **Updated MT5 Management Component**: Refactored  to be a view-only dashboard, removing Add MT5 Account functionality and updating table display logic.
-4.  **Created Investment Creation Form**: Started developing  to handle just-in-time MT5 account entry within the investment creation flow.
-5.  **Tested Backend**: Successfully tested the refactored backend MT5 pool endpoints, confirming functionality for health checks, statistics, available/allocated accounts, exclusivity checks, and mapping validation.
-
-Currently, there is a **React compilation error** in  at line 669, stating Adjacent JSX elements must be wrapped in an enclosing tag. This is blocking access to the application.
+The immediate work involved resolving a persistent frontend issue: the Create Investment button consistently opens a legacy modal titled Create Client Investment instead of the developed  component. Despite multiple attempts to replace modal content in  and , fixing an authentication token mismatch in , and correcting the API endpoint called by , the correct component is still not rendering. Debugging logs from  (including a prominent visual marker) are not appearing in the console, confirming it's not mounted. The AI engineer is currently unable to locate the actual component responsible for rendering the Create Client Investment modal, as direct text searches for this title in the codebase yield no results, leading to a critical blocking issue for the frontend's usability.
 </current_work>
 
 <optional_next_step>
-Fix the React JSX compilation error in  at line 669.
+Search the codebase for Create Client Investment to identify the component rendering the legacy modal.
 </optional_next_step>
-

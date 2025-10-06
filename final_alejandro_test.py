@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-integration.preview.emergentagent.com/api"
 
 def get_admin_token():
     """Get admin JWT token"""

@@ -21,7 +21,7 @@ Document Content:
     return io.BytesIO(content.encode('utf-8'))
 
 def test_gmail_endpoints():
-    base_url = "https://tradehub-mt5.preview.emergentagent.com"
+    base_url = "https://mt5-integration.preview.emergentagent.com"
     
     print("🚀 Testing Gmail Integration Endpoints...")
     print("=" * 60)

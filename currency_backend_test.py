@@ -37,7 +37,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-integration.preview.emergentagent.com/api"
 
 class CurrencyConversionTest:
     def __init__(self):

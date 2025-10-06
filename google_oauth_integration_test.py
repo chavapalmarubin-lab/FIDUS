@@ -27,7 +27,7 @@ import re
 from urllib.parse import urlparse, parse_qs
 
 # Configuration
-BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-integration.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
