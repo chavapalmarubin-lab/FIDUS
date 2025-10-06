@@ -124,7 +124,7 @@ class AlejandroReadinessTester:
         if response and response.status_code == 200:
             try:
                 data = response.json()
-                clients = data.get("clients", [])
+                clients = data.get("ready_clients", data.get("clients", []))
                 
                 # Check if Alejandro is in the response
                 alejandro_found = False
@@ -264,7 +264,7 @@ class AlejandroReadinessTester:
         if response and response.status_code == 200:
             try:
                 data = response.json()
-                clients = data.get("clients", [])
+                clients = data.get("ready_clients", data.get("clients", []))
                 
                 # Check if Alejandro is in the response
                 alejandro_found = False
