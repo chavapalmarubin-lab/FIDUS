@@ -241,6 +241,21 @@ MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to
           agent: "testing"
           comment: "🚨 CRITICAL BUG FOUND IN GOOGLE CONNECTION MONITOR - INCORRECT STATUS REPORTING! Discovered the root cause of user-reported Google connection discrepancy through comprehensive debugging. CRITICAL ISSUE: /api/google/connection/test-all endpoint shows 'disconnected' status with 'Credential error' for all 4 services (gmail, calendar, drive, meet) while individual Google OAuth is connected and all Google APIs are working perfectly. EVIDENCE: (1) ❌ MONITOR SHOWS WRONG STATUS: Connection monitor reports 0/4 services connected with overall_status 'disconnected', (2) ✅ INDIVIDUAL OAUTH WORKING: /api/admin/google/individual-status shows connected with chavapalmarubin@gmail.com account, (3) ✅ ALL APIS FUNCTIONAL: Gmail (20 messages), Calendar (4 events), Drive (20 files) all working perfectly with real data. ROOT CAUSE: Monitor endpoint uses outdated credential checking logic that doesn't recognize individual Google OAuth tokens stored by individual_google_oauth system. URGENT FIX REQUIRED: Update connection monitor logic to check individual_google_oauth.get_admin_google_tokens() instead of legacy credential system. This explains why users see 'connected' in some places but 'not connected' in service tabs - the monitor is giving false negative results while APIs work correctly."
 
+  - task: "Investment Dropdown Fix Testing (Alejandro Mariscal Romero)"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 2
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Testing specific endpoints for investment dropdown fix: GET /api/clients/ready-for-investment should return Alejandro Mariscal Romero after backend routing fixes and MongoDB integration."
+        - working: false
+          agent: "testing"
+          comment: "🚨 INVESTMENT DROPDOWN FIX TESTING FAILED - CRITICAL ROUTING ISSUE IDENTIFIED! Comprehensive testing reveals the investment dropdown endpoints are NOT working correctly. CRITICAL FINDINGS: (1) ❌ Ready Clients Endpoint (/api/clients/ready-for-investment): Returns empty array despite Alejandro being investment_ready=true in MongoDB. Endpoint appears to be checking in-memory storage which is empty after server restart. (2) ❌ Debug Endpoint (/api/clients/ready-for-investment-debug): Returns HTTP 405 Method Not Allowed, indicating routing issue. (3) ✅ Individual Readiness Status (/api/clients/client_alejandro/readiness): Working correctly, shows investment_ready=true with all required flags set. (4) ✅ Readiness Update Endpoint (/api/clients/client_alejandro/readiness): Working correctly with PUT method, successfully updates MongoDB. (5) ❌ ROUTING ISSUE: Even hardcoded test responses in ready-for-investment endpoint are not being returned, suggesting fundamental routing problem or endpoint override. ROOT CAUSE: The ready clients endpoint checks in-memory client_readiness storage which is empty on server startup, but individual readiness endpoint somehow returns MongoDB data. There's a disconnect between data storage and retrieval mechanisms. URGENT FIXES REQUIRED: (1) Fix routing issue preventing ready-for-investment endpoints from working, (2) Implement MongoDB fallback in ready clients endpoint, (3) Load client readiness data from MongoDB on server startup, (4) Investigate why debug endpoint returns 405 Method Not Allowed. CONCLUSION: Alejandro will NOT appear in investment dropdown until these critical routing and data synchronization issues are resolved."
+
   - task: "Automated Google Connection Management System Testing"
     implemented: true
     working: false
