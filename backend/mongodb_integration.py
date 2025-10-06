@@ -649,7 +649,7 @@ class MongoDBManager:
             
             for acc in account_docs:
                 # Get client name
-                client = self.db.users.find_one({'user_id': acc['client_id']})
+                client = self.db.users.find_one({'id': acc['client_id']})
                 client_profile = self.db.client_profiles.find_one({'client_id': acc['client_id']})
                 
                 client_name = client_profile.get('name', client['username']) if client_profile and client else acc['client_id']
