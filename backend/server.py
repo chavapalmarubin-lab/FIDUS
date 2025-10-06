@@ -14942,6 +14942,31 @@ async def get_investment_ready_clients():
     print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
     logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
     return hardcoded_response
+
+@api_router.get("/clients/{client_id}/readiness")
+async def get_client_readiness(client_id: str):
+    """Get client investment readiness status"""
+    try:
+        readiness = client_readiness.get(client_id, {
+            'client_id': client_id,
+            'aml_kyc_completed': False,
+            'agreement_signed': False,
+            'account_creation_date': None,
+            'investment_ready': False,
+            'notes': '',
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'updated_by': ''
+        })
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "readiness": readiness
+        }
+        
+    except Exception as e:
+        logging.error(f"Get client readiness error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch client readiness")
     
     # COMMENTED OUT FOR TESTING - USING HARDCODED RESPONSE ABOVE
     # # Require admin authentication
