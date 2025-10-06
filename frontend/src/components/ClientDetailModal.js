@@ -55,6 +55,8 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
   const [clientMeetings, setClientMeetings] = useState([]);
   const [clientDocuments, setClientDocuments] = useState([]);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState({});
+  const [uploadedDocs, setUploadedDocs] = useState({});
   
   // Client interaction data
   const [interactionHistory, setInteractionHistory] = useState([]);
