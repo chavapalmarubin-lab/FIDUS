@@ -162,11 +162,13 @@ async def create_mock_mt5_pool_data():
                 'allocation_notes': 'Primary allocation for BALANCE fund - largest portion for main trading strategy'
             },
             {
+                'investment_id': 'inv_alejandro_balance_001',
                 'mt5_account_number': 886602,
                 'allocated_amount': Decimal('10000.00'),
                 'allocation_notes': 'Secondary allocation for BALANCE fund - diversification and risk management'
             },
             {
+                'investment_id': 'inv_alejandro_balance_001',
                 'mt5_account_number': 886066,
                 'allocated_amount': Decimal('10000.00'),
                 'allocation_notes': 'Tertiary allocation for BALANCE fund - additional risk distribution'
