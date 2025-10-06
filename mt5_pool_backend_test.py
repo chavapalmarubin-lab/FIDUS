@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-FIDUS MT5 Account Pool Management System Testing Suite - Phase 1
-Testing the newly implemented MT5 Account Pool Management system with multiple account mapping support.
+FIDUS MT5 Account Pool Management System Testing Suite - CORRECTED ROUTING
+Testing the corrected MT5 pool endpoints after fixing the routing issue.
 
-Test Areas:
-1. MT5 Pool Health Check
-2. Pool Statistics and Utilization
-3. Available MT5 Accounts Retrieval
-4. Allocated MT5 Accounts Retrieval  
-5. MT5 Account Addition to Pool (with INVESTOR PASSWORD warnings)
-6. Account Exclusivity Checks
-7. Investment Mapping Validation
+ISSUE FIXED: MT5 pool router was included with prefix `/mt5pool` instead of `/mt5/pool`
+CORRECTED ENDPOINTS TO TEST:
+1. `/api/mt5/pool/test` - Simple test endpoint to verify router is working
+2. `/api/mt5/pool/validate-account-availability` - Check if MT5 account is available
+3. `/api/mt5/pool/create-investment-with-mt5` - Create investment with MT5 accounts
+4. `/api/mt5/pool/accounts` - Get all MT5 accounts (monitoring view)
+5. `/api/mt5/pool/statistics` - Get pool statistics
 
-Context: Testing Phase 1 implementation with 10 MT5 accounts (8 MULTIBANK + 2 DOOTECHNOLOGY)
-Expected: All pool endpoints operational, proper INVESTOR PASSWORD warnings, exclusivity enforcement
+Test Scenario: Just-In-Time Investment Creation workflow
+Expected: All endpoints accessible with HTTP 200 instead of 404
 """
 
 import requests
