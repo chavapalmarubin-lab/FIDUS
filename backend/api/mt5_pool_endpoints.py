@@ -21,6 +21,11 @@ from config.database import get_database
 # TODO: Fix auth import - temporarily disabled for integration
 # from auth.auth_utils import get_current_admin_user
 
+# Temporary auth placeholder - replace with proper auth integration
+def get_current_admin_user():
+    """Temporary placeholder for admin authentication"""
+    return {"id": "admin_001", "username": "admin", "type": "admin"}
+
 logger = logging.getLogger(__name__)
 
 # Create router for MT5 pool endpoints
