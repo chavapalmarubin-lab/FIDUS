@@ -14906,6 +14906,27 @@ async def get_client_readiness(client_id: str):
         logging.error(f"Get client readiness error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client readiness")
 
+@api_router.get("/clients/ready-for-investment-debug")
+async def get_investment_ready_clients_debug(request: Request):
+    """DEBUG VERSION - Get clients who are ready for investment"""
+    print("🔍 DEBUG: DEBUG endpoint called")
+    
+    # Require admin authentication
+    admin_user = get_current_admin_user(request)
+    print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
+    
+    # Check Alejandro's readiness directly from in-memory storage
+    alejandro_readiness = client_readiness.get('client_alejandro', {})
+    print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
+    
+    return {
+        "success": True,
+        "debug": "This is the debug endpoint",
+        "alejandro_readiness": alejandro_readiness,
+        "ready_clients": [],
+        "total_ready": 0
+    }
+
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
