@@ -238,7 +238,7 @@ class MT5PoolTestSuite:
     def test_allocated_accounts(self):
         """Test allocated MT5 accounts endpoint"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5/pool/accounts/allocated", headers=self.get_auth_headers())
+            response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/allocated", headers=self.get_auth_headers())
             
             if response.status_code == 200:
                 accounts = response.json()
