@@ -114,10 +114,13 @@ const AdminInvestmentManagement = () => {
 
   const fetchReadyClients = async () => {
     try {
+      console.log("🔍 Fetching ready clients...");
       const response = await apiAxios.get(`/clients/ready-for-investment`);
-      setReadyClients(response.data.ready_clients);
+      console.log("✅ Ready clients response:", response.data);
+      setReadyClients(response.data.ready_clients || []);
     } catch (err) {
-      console.error("Error fetching ready clients:", err);
+      console.error("❌ Error fetching ready clients:", err);
+      setReadyClients([]); // Ensure it's an empty array on error
     }
   };
 
