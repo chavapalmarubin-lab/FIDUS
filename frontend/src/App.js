@@ -135,8 +135,8 @@ function App() {
       localStorage.setItem('google_auth_completed', new Date().toISOString());
       
       // CRITICAL: Preserve admin login state during OAuth callback
-      const existingToken = localStorage.getItem('token');
-      const existingUser = localStorage.getItem('currentUser');
+      const existingToken = localStorage.getItem('fidus_token');
+      const existingUser = localStorage.getItem('fidus_user');
       
       if (!existingToken || !existingUser) {
         console.log('⚠️ Admin session not found, restoring admin login state');
