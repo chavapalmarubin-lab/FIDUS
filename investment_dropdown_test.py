@@ -295,7 +295,7 @@ class InvestmentDropdownTester:
                 
                 # Check if response format matches what frontend expects
                 # Frontend expects: [{"client_id": "id", "name": "Name", "email": "email"}]
-                ready_clients = data.get("clients", []) if isinstance(data, dict) else data
+                ready_clients = data.get("ready_clients", []) if isinstance(data, dict) else data
                 
                 if isinstance(ready_clients, list) and len(ready_clients) > 0:
                     sample_client = ready_clients[0]
