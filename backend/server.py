@@ -14910,6 +14910,11 @@ async def get_client_readiness(client_id: str):
 async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     logging.info(f"🔍 DEBUG: get_investment_ready_clients endpoint called")
+    
+    # Require admin authentication
+    admin_user = get_current_admin_user(request)
+    logging.info(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
+    
     try:
         # Get all clients from MongoDB and filter for ready ones
         logging.info(f"🔍 DEBUG: About to call mongodb_manager.get_all_clients()")
