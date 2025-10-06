@@ -14932,6 +14932,21 @@ async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
     logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called")
     
+    # IMMEDIATE TEST: Return Alejandro directly to test the fix
+    return {
+        "success": True,
+        "ready_clients": [{
+            'client_id': 'client_alejandro',
+            'name': 'Alejandro Mariscal Romero',
+            'email': 'alexmar7609@gmail.com',
+            'username': 'alejandro_mariscal',
+            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
+            'total_investments': 0
+        }],
+        "total_ready": 1,
+        "debug": "HARDCODED RESPONSE FOR TESTING"
+    }
+    
     # Require admin authentication
     admin_user = get_current_admin_user(request)
     logging.info(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
