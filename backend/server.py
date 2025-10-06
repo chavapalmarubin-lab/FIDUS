@@ -17463,7 +17463,11 @@ async def direct_test_endpoint():
     return {"success": True, "message": "Direct app endpoint working", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 # Include MT5 Pool Management Router (Phase 1)
-api_router.include_router(mt5_pool_router, prefix="/mt5-pool", tags=["MT5 Pool Management"])
+if mt5_pool_router:
+    api_router.include_router(mt5_pool_router, prefix="/mt5-pool", tags=["MT5 Pool Management"])
+    logging.info("✅ MT5 Pool router included successfully")
+else:
+    logging.error("❌ MT5 Pool router not available - skipping inclusion")
 
 # Include the API router in the main app (MUST be after all endpoints are defined)
 app.include_router(api_router)
