@@ -520,7 +520,7 @@ const MT5Management = () => {
                             <div className="col-span-2">
                                 <label className="text-slate-300 font-medium">Allocation Notes</label>
                                 <p className="text-white bg-slate-700 p-2 rounded min-h-[60px]">
-                                    {selectedAccount.allocation_notes || 'No notes available'}
+                                    {selectedAccountDetails.allocation_notes || 'No notes available'}
                                 </p>
                             </div>
                         </div>
