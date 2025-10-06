@@ -243,19 +243,51 @@ class UrgentDataCleanupTester:
         
         print(f"🗑️  Attempting to delete client: {client_name} (ID: {client_id})")
         
-        # Method 1: Try DELETE endpoint
+        # Skip clients with empty IDs
+        if not client_id or client_id.strip() == "":
+            self.log_result(f"Delete Client - {client_name}", False, 
+                          f"Client has empty ID - cannot delete")
+            return False
+        
+        # Method 1: Try DELETE endpoint for clients
+        response = self.make_request("DELETE", f"/admin/clients/{client_id}", 
+                                   auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success"):
+                    self.log_result(f"Delete Client - {client_name}", True, 
+                                  f"Successfully deleted via DELETE /admin/clients endpoint")
+                    return True
+                else:
+                    print(f"   DELETE response indicates failure: {data}")
+            except json.JSONDecodeError:
+                print(f"   DELETE succeeded but invalid JSON response")
+                self.log_result(f"Delete Client - {client_name}", True, 
+                              f"Successfully deleted (HTTP 200)")
+                return True
+        elif response and response.status_code == 404:
+            print(f"   Client not found (HTTP 404), may already be deleted")
+            self.log_result(f"Delete Client - {client_name}", True, 
+                          f"Client not found - may already be deleted")
+            return True
+        else:
+            status_code = response.status_code if response else "No response"
+            print(f"   DELETE failed (HTTP {status_code}), trying alternative methods...")
+        
+        # Method 2: Try DELETE endpoint for users
         response = self.make_request("DELETE", f"/admin/users/{client_id}", 
                                    auth_token=self.admin_token)
         if response and response.status_code == 200:
             self.log_result(f"Delete Client - {client_name}", True, 
-                          f"Successfully deleted via DELETE endpoint")
+                          f"Successfully deleted via DELETE /admin/users endpoint")
             return True
         elif response and response.status_code == 404:
-            print(f"   DELETE endpoint not found, trying alternative methods...")
+            print(f"   User DELETE endpoint not found, trying update methods...")
         else:
-            print(f"   DELETE failed (HTTP {response.status_code if response else 'No response'}), trying alternatives...")
+            print(f"   User DELETE failed (HTTP {response.status_code if response else 'No response'}), trying update methods...")
         
-        # Method 2: Try marking as inactive
+        # Method 3: Try marking as inactive
         update_data = {"is_active": False, "status": "inactive"}
         response = self.make_request("PUT", f"/admin/users/{client_id}", update_data,
                                    auth_token=self.admin_token)
@@ -268,7 +300,7 @@ class UrgentDataCleanupTester:
         else:
             print(f"   Deactivation failed (HTTP {response.status_code if response else 'No response'}), trying final method...")
         
-        # Method 3: Try marking with test notes
+        # Method 4: Try marking with test notes
         update_data = {"notes": "TEST USER - DO NOT USE - MARKED FOR DELETION", "status": "test"}
         response = self.make_request("PUT", f"/admin/users/{client_id}", update_data,
                                    auth_token=self.admin_token)
