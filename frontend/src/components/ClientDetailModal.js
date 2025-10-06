@@ -127,6 +127,7 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     if (isOpen && client) {
       loadClientData();
       loadGoogleIntegratedData();
+      fetchReadinessData();
     }
   }, [isOpen, client]);
 
