@@ -617,6 +617,7 @@ const AdminInvestmentManagement = () => {
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Interest Earned</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Status</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Date</th>
+                    <th className="px-4 py-3 text-left text-slate-300 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
