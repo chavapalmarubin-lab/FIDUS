@@ -414,11 +414,11 @@ const AdminInvestmentManagement = () => {
             Refresh
           </Button>
           <Button
-            onClick={() => setShowCreateInvestmentModal(true)}
+            onClick={() => setShowNewInvestmentCreation(true)}
             className="bg-cyan-600 hover:bg-cyan-700"
           >
             <Plus size={16} className="mr-2" />
-            Create Investment
+            Create Investment with MT5
           </Button>
           <Button
             variant="outline"
