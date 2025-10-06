@@ -781,6 +781,14 @@ const AdminInvestmentManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Investment Detail View */}
+      {selectedInvestment && (
+        <InvestmentDetailView
+          investmentId={selectedInvestment}
+          onBack={() => setSelectedInvestment(null)}
+        />
+      )}
     </div>
   );
 };
