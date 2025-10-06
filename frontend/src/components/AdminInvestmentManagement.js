@@ -120,11 +120,19 @@ const AdminInvestmentManagement = () => {
   const fetchReadyClients = async () => {
     try {
       console.log("🔍 Fetching ready clients...");
+      console.log("🔍 Current auth token:", localStorage.getItem('fidus_token'));
+      console.log("🔍 Current user:", localStorage.getItem('fidus_user'));
+      
       const response = await apiAxios.get(`/clients/ready-for-investment`);
       console.log("✅ Ready clients response:", response.data);
+      console.log("✅ Ready clients array:", response.data.ready_clients);
+      
       setReadyClients(response.data.ready_clients || []);
+      console.log("✅ Set readyClients state to:", response.data.ready_clients || []);
     } catch (err) {
       console.error("❌ Error fetching ready clients:", err);
+      console.error("❌ Error status:", err.response?.status);
+      console.error("❌ Error data:", err.response?.data);
       setReadyClients([]); // Ensure it's an empty array on error
     }
   };
