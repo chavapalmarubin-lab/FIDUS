@@ -178,6 +178,7 @@ async def create_mock_mt5_pool_data():
         # FIDUS CORE Product: $18,151.41 in single MT5 account
         core_mappings = [
             {
+                'investment_id': 'inv_alejandro_core_001',
                 'mt5_account_number': 885822,
                 'allocated_amount': Decimal('18151.41'),
                 'allocation_notes': 'Full allocation for CORE fund - conservative strategy in dedicated account'
