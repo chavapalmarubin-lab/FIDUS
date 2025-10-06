@@ -666,13 +666,28 @@ const InvestmentDashboard = ({ user, userType }) => {
             onClick={() => setShowInvestModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 rounded-lg w-full max-w-7xl max-h-[95vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-semibold text-white mb-4">New Investment</h3>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white">Create Investment with MT5 Accounts</h3>
+                    <p className="text-slate-400">Complete investment creation with just-in-time MT5 account allocation</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowInvestModal(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <InvestmentCreationWithMT5 />
               
               <div className="space-y-4">
                 <div>
