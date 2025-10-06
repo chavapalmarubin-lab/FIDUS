@@ -14792,7 +14792,12 @@ async def create_new_client(client_data: ClientCreate):
             'investment_ready': False,
             'notes': client_data.notes,
             'updated_at': datetime.now(timezone.utc).isoformat(),
-            'updated_by': 'admin'
+            'updated_by': 'admin',
+            # Override fields
+            'readiness_override': False,
+            'readiness_override_reason': '',
+            'readiness_override_by': '',
+            'readiness_override_date': None
         }
         
         # CRITICAL FIX: Sync initial readiness to MongoDB
