@@ -37,43 +37,49 @@ async def get_mapping_repository():
 
 # ==================== MT5 ACCOUNT POOL MANAGEMENT ====================
 
-@mt5_pool_router.post("/accounts", response_model=Dict[str, Any])
-async def add_account_to_pool(
-    account_data: MT5AccountPoolCreate,
+@mt5_pool_router.post("/validate-account-availability")
+async def validate_account_availability(
+    availability_check: Dict[str, int],
     current_user: dict = Depends(get_current_admin_user),
     repository: MT5AccountPoolRepository = Depends(get_pool_repository)
 ):
     """
-    🔒 ADD MT5 ACCOUNT TO POOL
-    ⚠️ CRITICAL: Only enter INVESTOR PASSWORDS - Never trading passwords
-    
-    Admin-only endpoint to add MT5 accounts to the available pool
+    Check if MT5 account is available for allocation during investment creation
+    ⚠️ Real-time validation to prevent conflicts
     """
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        mt5_account_number = availability_check.get('mt5_account_number')
+        if not mt5_account_number:
+            raise HTTPException(status_code=400, detail="mt5_account_number is required")
         
-        new_account = await repository.add_account_to_pool(account_data, admin_user_id)
+        # Check if account already exists and is allocated
+        existing_account = await repository.get_account_by_number(mt5_account_number)
         
-        return {
-            "success": True,
-            "message": f"✅ MT5 account {account_data.mt5_account_number} added to pool successfully",
-            "account": {
-                "pool_id": new_account.pool_id,
-                "mt5_account_number": new_account.mt5_account_number,
-                "broker_name": new_account.broker_name,
-                "account_type": new_account.account_type,
-                "status": new_account.status,
-                "created_by": admin_user_id
-            },
-            "warning": "⚠️ Ensure you entered the INVESTOR password (not trading password)"
-        }
+        if existing_account and existing_account.status == "allocated":
+            return {
+                "mt5_account_number": mt5_account_number,
+                "is_available": False,
+                "reason": f"⚠️ MT5 Account {mt5_account_number} is already allocated to {existing_account.allocated_to_client_id}",
+                "current_allocation": {
+                    "client_id": existing_account.allocated_to_client_id,
+                    "investment_id": existing_account.allocated_to_investment_id,
+                    "allocated_amount": float(existing_account.allocated_amount) if existing_account.allocated_amount else 0,
+                    "allocation_date": existing_account.allocation_date
+                }
+            }
+        else:
+            return {
+                "mt5_account_number": mt5_account_number,
+                "is_available": True,
+                "reason": "✅ Account available for allocation",
+                "current_allocation": None
+            }
         
-    except ValueError as ve:
-        logger.error(f"Validation error adding account to pool: {ve}")
-        raise HTTPException(status_code=400, detail=str(ve))
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error adding account to pool: {e}")
-        raise HTTPException(status_code=500, detail="Failed to add MT5 account to pool")
+        logger.error(f"Error validating account availability: {e}")
+        raise HTTPException(status_code=500, detail="Failed to validate account availability")
 
 @mt5_pool_router.get("/accounts/available", response_model=List[MT5AccountPoolResponse])
 async def get_available_accounts(
