@@ -96,7 +96,11 @@ const AdminInvestmentManagement = () => {
   useEffect(() => {
     fetchOverviewData();
     fetchFundConfigs();
-    fetchReadyClients();
+    
+    // Delay fetchReadyClients to ensure authentication is established
+    setTimeout(() => {
+      fetchReadyClients();
+    }, 1000);
   }, []);
 
   const fetchFundConfigs = async () => {
