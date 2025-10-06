@@ -2495,67 +2495,7 @@ async def update_client_details(client_id: str, update_data: dict):
         raise HTTPException(status_code=500, detail=f"Failed to update client: {str(e)}")
 
 # SPECIFIC CLIENT ROUTES - MUST BE DEFINED BEFORE PARAMETERIZED ROUTES TO AVOID CONFLICTS
-@api_router.get("/clients/ready-for-investment-debug")
-async def get_investment_ready_clients_debug(request: Request):
-    """DEBUG VERSION - Get clients who are ready for investment"""
-    print("🔍 DEBUG: DEBUG endpoint called")
-    
-    # Require admin authentication
-    admin_user = get_current_admin_user(request)
-    print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
-    
-    # Check Alejandro's readiness directly from in-memory storage
-    alejandro_readiness = client_readiness.get('client_alejandro', {})
-    print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
-    
-    return {
-        "success": True,
-        "debug": "This is the debug endpoint",
-        "alejandro_readiness": alejandro_readiness,
-        "ready_clients": [],
-        "total_ready": 0
-    }
-
-@api_router.get("/clients/ready-for-investment-test")
-async def get_investment_ready_clients_test():
-    """TEST ENDPOINT - Check if routing is working"""
-    return {
-        "success": True,
-        "message": "TEST ENDPOINT IS WORKING",
-        "ready_clients": [{
-            'client_id': 'client_alejandro',
-            'name': 'Alejandro Mariscal Romero',
-            'email': 'alexmar7609@gmail.com',
-            'username': 'alejandro_mariscal',
-            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
-            'total_investments': 0
-        }],
-        "total_ready": 1
-    }
-
-@api_router.get("/clients/ready-for-investment")
-async def get_investment_ready_clients():
-    """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
-    print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
-    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
-    
-    # IMMEDIATE TEST: Return Alejandro directly to test the fix
-    hardcoded_response = {
-        "success": True,
-        "ready_clients": [{
-            'client_id': 'client_alejandro',
-            'name': 'Alejandro Mariscal Romero',
-            'email': 'alexmar7609@gmail.com',
-            'username': 'alejandro_mariscal',
-            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
-            'total_investments': 0
-        }],
-        "total_ready": 1,
-        "debug": "HARDCODED RESPONSE FOR TESTING - NO AUTH"
-    }
-    print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
-    logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
-    return hardcoded_response
+# These endpoints were moved above to prevent routing conflicts with parameterized routes
 
 # This endpoint was moved above to prevent routing conflicts
 
@@ -14982,67 +14922,7 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
         logging.error(f"Update client readiness error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update client readiness")
 
-@api_router.get("/clients/ready-for-investment-debug")
-async def get_investment_ready_clients_debug(request: Request):
-    """DEBUG VERSION - Get clients who are ready for investment"""
-    print("🔍 DEBUG: DEBUG endpoint called")
-    
-    # Require admin authentication
-    admin_user = get_current_admin_user(request)
-    print(f"🔍 DEBUG: Admin user authenticated: {admin_user.get('username')}")
-    
-    # Check Alejandro's readiness directly from in-memory storage
-    alejandro_readiness = client_readiness.get('client_alejandro', {})
-    print(f"🔍 DEBUG: Alejandro readiness from memory: {alejandro_readiness}")
-    
-    return {
-        "success": True,
-        "debug": "This is the debug endpoint",
-        "alejandro_readiness": alejandro_readiness,
-        "ready_clients": [],
-        "total_ready": 0
-    }
-
-@api_router.get("/clients/ready-for-investment-test")
-async def get_investment_ready_clients_test():
-    """TEST ENDPOINT - Check if routing is working"""
-    return {
-        "success": True,
-        "message": "TEST ENDPOINT IS WORKING",
-        "ready_clients": [{
-            'client_id': 'client_alejandro',
-            'name': 'Alejandro Mariscal Romero',
-            'email': 'alexmar7609@gmail.com',
-            'username': 'alejandro_mariscal',
-            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
-            'total_investments': 0
-        }],
-        "total_ready": 1
-    }
-
-@api_router.get("/clients/ready-for-investment")
-async def get_investment_ready_clients():
-    """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
-    print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
-    logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
-    
-    # IMMEDIATE TEST: Return Alejandro directly to test the fix
-    hardcoded_response = {
-        "success": True,
-        "ready_clients": [{
-            'client_id': 'client_alejandro',
-            'name': 'Alejandro Mariscal Romero',
-            'email': 'alexmar7609@gmail.com',
-            'username': 'alejandro_mariscal',
-            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
-            'total_investments': 0
-        }],
-        "total_ready": 1,
-        "debug": "HARDCODED RESPONSE FOR TESTING - NO AUTH"
-    }
-    print(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
-    logging.info(f"🔍 DEBUG: Returning hardcoded response: {hardcoded_response}")
-    return hardcoded_response
+# These endpoints were moved above to prevent routing conflicts with parameterized routes
 
 @api_router.get("/clients/{client_id}/readiness")
 async def get_client_readiness(client_id: str):
