@@ -553,13 +553,10 @@ const InvestmentDashboard = ({ user, userType }) => {
                   }
                 </p>
                 {userType === "admin" && (
-                  <Button
-                    onClick={() => setShowInvestModal(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Create Client Investment
-                  </Button>
+                  <InvestmentCreationWithMT5 
+                    user={user}
+                    onInvestmentCreated={fetchInvestments}
+                  />
                 )}
               </CardContent>
             </Card>
