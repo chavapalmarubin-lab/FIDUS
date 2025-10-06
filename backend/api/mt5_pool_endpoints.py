@@ -14,6 +14,10 @@ from models.mt5_account_pool import (
     MT5InvestmentMappingCreate, MT5InvestmentMappingUpdate,
     DeallocationRequest, MT5AccountType, BrokerCode, MT5AccountPoolStatus
 )
+from models.investment_with_mt5 import (
+    InvestmentWithMT5Create, MT5AccountAvailabilityCheck, MT5AccountAvailabilityResult,
+    InvestmentCreationResult, InvestmentMT5Summary, MT5AccountInput
+)
 from repositories.mt5_account_pool_repository import (
     MT5AccountPoolRepository, MT5InvestmentMappingRepository
 )
