@@ -421,15 +421,15 @@ class MT5PoolTestSuite:
             print("❌ Cannot proceed without admin authentication")
             return False
         
-        # Run all tests
+        # Run all tests for corrected MT5 pool endpoints
         tests = [
-            self.test_mt5_pool_health,
+            self.test_endpoint_accessibility,
+            self.test_mt5_pool_test_endpoint,
             self.test_pool_statistics,
-            self.test_available_accounts,
-            self.test_allocated_accounts,
-            self.test_account_exclusivity_check,
-            self.test_add_account_to_pool,
-            self.test_validate_mappings
+            self.test_mt5_accounts_endpoint,
+            self.test_validate_account_availability,
+            self.test_create_investment_with_mt5,
+            self.test_just_in_time_workflow
         ]
         
         for test in tests:
