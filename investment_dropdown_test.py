@@ -18,8 +18,8 @@ import time
 import sys
 from datetime import datetime, timezone
 
-# Backend URL Configuration
-BACKEND_URL = "https://fidus-invest.emergent.host/api"
+# Backend URL Configuration - Use URL from frontend .env
+BACKEND_URL = "https://tradehub-mt5.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {
