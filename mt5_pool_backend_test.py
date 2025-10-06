@@ -277,7 +277,7 @@ class MT5PoolTestSuite:
         """Test MT5 account exclusivity check"""
         try:
             # First get an available account to test
-            available_response = requests.get(f"{BACKEND_URL}/mt5/pool/accounts/available", headers=self.get_auth_headers())
+            available_response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/available", headers=self.get_auth_headers())
             
             if available_response.status_code != 200:
                 self.log_test("Account Exclusivity Check", False, "Could not get available accounts for testing")
