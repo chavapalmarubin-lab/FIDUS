@@ -14841,14 +14841,24 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
         if readiness_data.updated_by is not None:
             current_readiness['updated_by'] = readiness_data.updated_by
         
+        # Update override fields
+        if readiness_data.readiness_override is not None:
+            current_readiness['readiness_override'] = readiness_data.readiness_override
+        if readiness_data.readiness_override_reason is not None:
+            current_readiness['readiness_override_reason'] = readiness_data.readiness_override_reason
+        if readiness_data.readiness_override_by is not None:
+            current_readiness['readiness_override_by'] = readiness_data.readiness_override_by
+        if readiness_data.readiness_override_date is not None:
+            current_readiness['readiness_override_date'] = readiness_data.readiness_override_date
+        
         # Update timestamp
         current_readiness['updated_at'] = datetime.now(timezone.utc).isoformat()
         
-        # Calculate investment readiness - only need AML KYC and Agreement for investment readiness
+        # Calculate investment readiness - only need AML KYC and Agreement for investment readiness OR override
         # (account creation date is for record keeping, not a requirement for investment)
         investment_ready = (
-            current_readiness['aml_kyc_completed'] and 
-            current_readiness['agreement_signed']
+            current_readiness.get('readiness_override', False) or  # If override is enabled, mark as ready
+            (current_readiness['aml_kyc_completed'] and current_readiness['agreement_signed'])  # Normal conditions
         )
         current_readiness['investment_ready'] = investment_ready
         
