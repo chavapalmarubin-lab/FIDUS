@@ -18,13 +18,9 @@ from repositories.mt5_account_pool_repository import (
     MT5AccountPoolRepository, MT5InvestmentMappingRepository
 )
 from config.database import get_database
-# TODO: Fix auth import - temporarily disabled for integration
-# from auth.auth_utils import get_current_admin_user
-
-# Temporary auth placeholder - replace with proper auth integration
-def get_current_admin_user():
-    """Temporary placeholder for admin authentication"""
-    return {"id": "admin_001", "username": "admin", "type": "admin"}
+# Import auth function from server.py (will be available when router is included)
+# Note: get_current_admin_user will be available from server.py context
+pass  # Auth function imported via router inclusion in server.py
 
 logger = logging.getLogger(__name__)
 
