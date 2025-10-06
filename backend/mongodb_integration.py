@@ -136,6 +136,7 @@ class MongoDBManager:
                 
                 # Get readiness status
                 readiness = self.db.client_readiness.find_one({'client_id': client_id})
+                print(f"🔍 DEBUG: Readiness for {client_id}: {readiness}")
                 
                 # Get investment count
                 investment_count = self.db.investments.count_documents({'client_id': client_id})
