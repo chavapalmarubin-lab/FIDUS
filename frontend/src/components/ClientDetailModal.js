@@ -878,7 +878,7 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
               <TabsContent value="kyc" className="p-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Client Onboarding Checklist</h3>
+                    <h3 className="text-lg font-semibold">TEST TEST TEST</h3>
                     <Badge variant={readinessData?.investment_ready ? 'default' : 'secondary'} className={
                       readinessData?.investment_ready ? 'bg-green-600' : 'bg-yellow-600'
                     }>
