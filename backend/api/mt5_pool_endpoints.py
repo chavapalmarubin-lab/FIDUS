@@ -23,8 +23,11 @@ from repositories.mt5_account_pool_repository import (
     MT5AccountPoolRepository, MT5InvestmentMappingRepository
 )
 from config.database import get_database
-# Import authentication utilities
-from auth.auth_utils import get_current_admin_user
+# Import authentication utilities - use server's auth function
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from server import get_current_admin_user
 
 logger = logging.getLogger(__name__)
 
