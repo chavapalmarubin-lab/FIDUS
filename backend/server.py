@@ -17757,6 +17757,12 @@ if mt5_pool_router:
 else:
     logging.error("❌ MT5 Pool router not available - skipping inclusion")
 
+# Test endpoint to verify routing
+@api_router.get("/test-routing")
+async def test_routing():
+    """Test endpoint to verify routing is working"""
+    return {"success": True, "message": "Routing is working", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 # Include the API router in the main app (MUST be after all endpoints are defined)
 app.include_router(api_router)
 
