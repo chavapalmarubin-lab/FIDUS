@@ -64,6 +64,7 @@ const AdminInvestmentManagement = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showCreateInvestmentModal, setShowCreateInvestmentModal] = useState(false);
+  const [showNewInvestmentCreation, setShowNewInvestmentCreation] = useState(false);
   const [fundConfigs, setFundConfigs] = useState([]);
   const [readyClients, setReadyClients] = useState([]);
 
