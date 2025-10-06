@@ -493,7 +493,7 @@ const MT5Management = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                                 <label className="text-slate-300 font-medium">MT5 Account Number</label>
-                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.mt5_login}</p>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.mt5_login}</p>
                             </div>
                             <div>
                                 <label className="text-slate-300 font-medium">Broker</label>
