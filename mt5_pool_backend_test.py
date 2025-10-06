@@ -187,42 +187,40 @@ class MT5PoolTestSuite:
             self.log_test("MT5 Accounts Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def test_allocated_accounts(self):
-        """Test allocated MT5 accounts endpoint"""
+    def test_validate_account_availability(self):
+        """Test corrected MT5 account availability validation - /api/mt5/pool/validate-account-availability"""
         try:
-            response = requests.get(f"{BACKEND_URL}/mt5-pool/accounts/allocated", headers=self.get_auth_headers())
+            # Test with a sample MT5 account number
+            test_data = {
+                "mt5_account_number": 999001,
+                "broker_name": "MULTIBANK"
+            }
+            
+            response = requests.post(f"{BACKEND_URL}/mt5/pool/validate-account-availability", 
+                                   json=test_data, headers=self.get_auth_headers())
             
             if response.status_code == 200:
-                accounts = response.json()
+                data = response.json()
                 
-                if not isinstance(accounts, list):
-                    self.log_test("Allocated Accounts", False, f"Expected list, got {type(accounts)}")
+                # Verify response structure
+                if not isinstance(data, dict):
+                    self.log_test("Validate Account Availability", False, f"Expected dict response, got {type(data)}")
                     return False
                 
-                # Verify account structure if any allocated accounts exist
-                if len(accounts) > 0:
-                    account = accounts[0]
-                    required_fields = ["pool_id", "mt5_account_number", "broker_name", "allocated_to_client_id", "allocation_date"]
-                    missing_fields = [field for field in required_fields if field not in account]
-                    
-                    if missing_fields:
-                        self.log_test("Allocated Accounts", False, f"Missing allocated account fields: {missing_fields}")
-                        return False
-                    
-                    # Verify allocation data is present
-                    if not account.get("allocated_to_client_id"):
-                        self.log_test("Allocated Accounts", False, f"Allocated account missing client_id: {account}")
-                        return False
+                # Check for availability status
+                if "available" not in data and "is_available" not in data:
+                    self.log_test("Validate Account Availability", False, f"Missing availability status: {data}")
+                    return False
                 
-                self.log_test("Allocated Accounts", True, f"Found {len(accounts)} allocated accounts")
+                self.log_test("Validate Account Availability", True, f"Validation working: {data}")
                 return True
                 
             else:
-                self.log_test("Allocated Accounts", False, f"Status: {response.status_code}, Response: {response.text}")
+                self.log_test("Validate Account Availability", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Allocated Accounts", False, f"Exception: {str(e)}")
+            self.log_test("Validate Account Availability", False, f"Exception: {str(e)}")
             return False
     
     def test_account_exclusivity_check(self):
