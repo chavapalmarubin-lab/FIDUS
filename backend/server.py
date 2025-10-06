@@ -14978,9 +14978,9 @@ async def get_investment_ready_clients(request: Request):
             }
         
     except Exception as e:
-        print(f"❌ Error in ready clients endpoint: {str(e)}")
+        logging.error(f"❌ Error in ready clients endpoint: {str(e)}")
         import traceback
-        print(f"❌ Full traceback: {traceback.format_exc()}")
+        logging.error(f"❌ Full traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
 
 # ===============================================================================
