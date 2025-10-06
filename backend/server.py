@@ -17464,8 +17464,8 @@ async def direct_test_endpoint():
 
 # Include MT5 Pool Management Router (Phase 1)
 if mt5_pool_router:
-    api_router.include_router(mt5_pool_router, prefix="/mt5-pool", tags=["MT5 Pool Management"])
-    logging.info("✅ MT5 Pool router included successfully")
+    api_router.include_router(mt5_pool_router, prefix="/mt5pool", tags=["MT5 Pool Management"])
+    logging.info("✅ MT5 Pool router included successfully with prefix /mt5pool")
 else:
     logging.error("❌ MT5 Pool router not available - skipping inclusion")
 
