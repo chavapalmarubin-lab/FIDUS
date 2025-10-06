@@ -425,9 +425,7 @@ const MT5Management = () => {
                                             {brokerData.accounts.map((account) => (
                                                 <tr 
                                                     key={account.account_id} 
-                                                    className="border-b border-slate-700 hover:bg-slate-750 cursor-pointer transition-colors"
-                                                    onClick={() => handleAccountClick(account)}
-                                                    title="Click to view account details"
+                                                    className="border-b border-slate-700 hover:bg-slate-750 transition-colors"
                                                 >
                                                     <td className="py-3 px-4 text-white">{account.client_id}</td>
                                                     <td className="py-3 px-4">
