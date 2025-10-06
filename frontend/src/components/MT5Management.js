@@ -464,23 +464,66 @@ const MT5Management = () => {
                 )}
             </div>
 
-            {/* Add Account Modal */}
-            {showAddAccountModal && (
+            {/* MT5 Account Details Modal - VIEW ONLY */}
+            {showAccountDetailsModal && selectedAccount && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Add MT5 Account</h3>
+                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-2xl mx-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-white">MT5 Account Details</h3>
+                            <button 
+                                onClick={() => setShowAccountDetailsModal(false)}
+                                className="text-slate-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
                         
-                        {/* CRITICAL SYSTEM WARNING - INVESTOR PASSWORDS ONLY */}
-                        <Alert className="mb-4 border-red-500 bg-red-950/50">
-                            <AlertCircle className="h-4 w-4 text-red-400" />
-                            <AlertDescription className="text-red-200 font-bold">
-                                🚨 CRITICAL SYSTEM REQUIREMENT 🚨
-                                <br />
-                                This system ONLY accepts INVESTOR PASSWORDS for MT5 accounts
-                                <br />
-                                <strong>DO NOT enter trading passwords - they will not work</strong>
-                            </AlertDescription>
-                        </Alert>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <label className="text-slate-300 font-medium">MT5 Account Number</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.mt5_login}</p>
+                            </div>
+                            <div>
+                                <label className="text-slate-300 font-medium">Broker</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.broker}</p>
+                            </div>
+                            <div>
+                                <label className="text-slate-300 font-medium">Status</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.status}</p>
+                            </div>
+                            <div>
+                                <label className="text-slate-300 font-medium">Client</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.client_id || 'Not allocated'}</p>
+                            </div>
+                            <div>
+                                <label className="text-slate-300 font-medium">Fund Code</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccount.fund_code || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <label className="text-slate-300 font-medium">Allocated Amount</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">
+                                    {selectedAccount.allocated_amount ? `$${Number(selectedAccount.allocated_amount).toLocaleString()}` : 'N/A'}
+                                </p>
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-slate-300 font-medium">Allocation Notes</label>
+                                <p className="text-white bg-slate-700 p-2 rounded min-h-[60px]">
+                                    {selectedAccount.allocation_notes || 'No notes available'}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end mt-6">
+                            <button 
+                                onClick={() => setShowAccountDetailsModal(false)}
+                                className="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
                         
                         <div className="space-y-4">
                             <div>
