@@ -402,6 +402,9 @@ const InvestmentCreationWithMT5 = ({ onClose, onSuccess }) => {
 
     return (
         <div className="investment-creation p-6 max-w-6xl mx-auto">
+            <h1 style={{color: 'red', fontSize: '50px', background: 'yellow', textAlign: 'center', padding: '20px'}}>
+                THIS IS InvestmentCreationWithMT5 COMPONENT
+            </h1>
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold text-white mb-2">Create Investment with MT5 Accounts</h1>
