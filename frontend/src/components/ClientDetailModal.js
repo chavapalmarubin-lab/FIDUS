@@ -960,10 +960,14 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                       
                       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-blue-800">
-                          <strong>Progress:</strong> {readinessData?.readiness_override ? 'Override Applied' : '0/5 documents uploaded'}
+                          <strong>Progress:</strong> {readinessData?.readiness_override ? 'Override Applied' : 
+                            `${Object.keys(uploadedDocs).length}/5 documents uploaded`}
                         </p>
                         <p className="text-sm text-blue-600 mt-1">
-                          Document upload functionality coming soon. Use override below for testing.
+                          {Object.keys(uploadedDocs).length === 5 ? 
+                            'All required documents uploaded! Client is ready for investment.' :
+                            'Upload all required documents to complete KYC/AML process.'
+                          }
                         </p>
                       </div>
                     </CardContent>
