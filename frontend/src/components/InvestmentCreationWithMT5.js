@@ -130,11 +130,34 @@ const InvestmentCreationWithMT5 = () => {
     }, [formData.mt5_accounts, formData.principal_amount]);
 
     const fetchClients = async () => {
+        console.log('🌐 fetchClients STARTED');
+        
         try {
-            const response = await apiAxios.get('/users');
-            setClients(response.data.filter(user => user.type === 'client'));
+            // Check auth token
+            const token = localStorage.getItem('fidus_token');
+            console.log('🔑 Token found:', !!token);
+            
+            if (!token) {
+                console.error('❌ No auth token - cannot fetch clients');
+                return;
+            }
+
+            // Call the correct ready clients endpoint
+            console.log('📡 Calling ready clients API...');
+            const response = await apiAxios.get('/clients/ready-for-investment');
+            
+            console.log('📡 API Response status:', response.status);
+            console.log('✅ Ready clients received:', response.data);
+            console.log('📊 Number of ready clients:', response.data.ready_clients?.length || 0);
+            
+            // Update state with ready clients
+            setAvailableClients(response.data.ready_clients || []);
+            console.log('💾 State updated with ready clients');
+            
         } catch (error) {
-            console.error('Error fetching clients:', error);
+            console.error('💥 Fetch clients error:', error);
+            console.error('💥 Error response:', error.response?.data);
+            console.error('💥 Error status:', error.response?.status);
         }
     };
 
