@@ -28,6 +28,7 @@ import {
   Download,
   Calculator
 } from "lucide-react";
+import InvestmentCreationWithMT5 from "./InvestmentCreationWithMT5";
 import { 
   LineChart, 
   Line, 
