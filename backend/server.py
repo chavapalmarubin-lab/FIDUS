@@ -17462,6 +17462,11 @@ async def direct_test_endpoint():
     """Test endpoint directly on app (not router)"""
     return {"success": True, "message": "Direct app endpoint working", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+@api_router.get("/mt5pool-direct-test")
+async def mt5pool_direct_test():
+    """Test MT5 pool endpoint directly on main router"""
+    return {"success": True, "message": "MT5 Pool direct endpoint working", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 # Include MT5 Pool Management Router (Phase 1)
 if mt5_pool_router:
     api_router.include_router(mt5_pool_router, prefix="/mt5pool", tags=["MT5 Pool Management"])
