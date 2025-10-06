@@ -39,8 +39,8 @@ def set_alejandro_readiness(token):
     
     print(f"Setting readiness data: {json.dumps(readiness_data, indent=2)}")
     
-    response = requests.post(f"{BACKEND_URL}/clients/client_alejandro/readiness", 
-                           json=readiness_data, headers=headers, timeout=30)
+    response = requests.put(f"{BACKEND_URL}/clients/client_alejandro/readiness", 
+                          json=readiness_data, headers=headers, timeout=30)
     
     print(f"Response status: {response.status_code}")
     if response.status_code == 200:
