@@ -14927,6 +14927,23 @@ async def get_investment_ready_clients_debug(request: Request):
         "total_ready": 0
     }
 
+@api_router.get("/clients/ready-for-investment-test")
+async def get_investment_ready_clients_test():
+    """TEST ENDPOINT - Check if routing is working"""
+    return {
+        "success": True,
+        "message": "TEST ENDPOINT IS WORKING",
+        "ready_clients": [{
+            'client_id': 'client_alejandro',
+            'name': 'Alejandro Mariscal Romero',
+            'email': 'alexmar7609@gmail.com',
+            'username': 'alejandro_mariscal',
+            'account_creation_date': '2025-10-06T17:11:21.683923+00:00',
+            'total_investments': 0
+        }],
+        "total_ready": 1
+    }
+
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients(request: Request):
     """Get clients who are ready for investment (for dropdown in investment creation) - MongoDB version"""
