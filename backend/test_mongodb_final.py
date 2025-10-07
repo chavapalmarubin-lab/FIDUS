@@ -15,7 +15,8 @@ def test_mongodb_connection():
     """Test MongoDB Atlas connection after IP whitelist update"""
     
     # Load environment variables
-    env_file = Path('/app/backend/.env')
+    from path_utils import get_backend_path
+    env_file = Path(get_backend_path('.env'))
     load_dotenv(env_file)
     
     mongo_url = os.environ.get('MONGO_URL')
