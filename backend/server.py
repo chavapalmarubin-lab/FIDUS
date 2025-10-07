@@ -7893,9 +7893,9 @@ async def get_client_detailed_profile(client_id: str):
             total_fund_value += allocation.current_value
         
         # Get MT5 trading data
-        mt5_account = await mock_mt5.get_account_info(client_id)
-        mt5_positions = await mock_mt5.get_positions(client_id)
-        mt5_history = await mock_mt5.get_trade_history(client_id, 30)
+        mt5_account = await get_mock_mt5_service().get_account_info(client_id)
+        mt5_positions = await get_mock_mt5_service().get_positions(client_id)
+        mt5_history = await get_mock_mt5_service().get_trade_history(client_id, 30)
         
         # Get capital flows
         client_flows = capital_flows.get(client_id, [])
