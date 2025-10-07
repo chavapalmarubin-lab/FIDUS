@@ -128,7 +128,7 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
   };
 
   // Document upload functionality
-  const handleDocumentUpload = async (docType, file) => {
+  const handleKYCDocumentUpload = async (docType, file) => {
     setUploadingDocs(prev => ({ ...prev, [docType]: true }));
     
     try {
