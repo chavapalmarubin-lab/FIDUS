@@ -15230,7 +15230,7 @@ async def get_client_document(client_id: str, file_id: str):
 # ===============================================================================
 
 @api_router.get("/admin/google/chava/auth-url")
-async def get_chava_oauth_url():
+async def get_chava_oauth_url(current_user: dict = Depends(get_current_admin_user)):
     """Get OAuth URL for Chava (chavapalmarubin@gmail.com) authentication"""
     try:
         from chava_google_service import get_chava_google_service
