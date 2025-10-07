@@ -7676,7 +7676,7 @@ async def get_client_mt5_history(client_id: str, days: int = 30):
 async def get_mt5_admin_overview():
     """Get MT5 overview for admin dashboard"""
     try:
-        overview = await mock_mt5.get_all_accounts_summary()
+        overview = await get_mock_mt5_service().get_all_accounts_summary()
         return overview
     except Exception as e:
         logging.error(f"Get MT5 admin overview error: {str(e)}")
