@@ -6320,8 +6320,9 @@ async def authenticate_gmail():
     try:
         # Always force fresh authentication to ensure proper scopes
         # Delete any existing token to force re-authentication with new scopes
-        if os.path.exists('/app/backend/gmail_token.pickle'):
-            os.remove('/app/backend/gmail_token.pickle')
+        token_path = get_credentials_path('gmail_token.pickle')
+        if os.path.exists(token_path):
+            os.remove(token_path)
         
         # Always redirect to OAuth flow with proper scopes
         return {
