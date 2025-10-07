@@ -15235,8 +15235,13 @@ async def get_chava_oauth_url(current_user: dict = Depends(get_current_admin_use
     try:
         from chava_google_service import get_chava_google_service
         
+        logging.info(f"Getting Chava OAuth URL for user: {current_user.get('username')}")
+        
         chava_service = get_chava_google_service(db)
+        logging.info("Chava service created, generating OAuth URL...")
+        
         auth_url = await chava_service.get_oauth_url()
+        logging.info(f"OAuth URL generated successfully: {auth_url[:50]}...")
         
         return {
             "success": True,
@@ -15246,7 +15251,9 @@ async def get_chava_oauth_url(current_user: dict = Depends(get_current_admin_use
         
     except Exception as e:
         logging.error(f"Failed to generate Chava OAuth URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+        import traceback
+        logging.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate OAuth URL: {str(e)}")
 
 @api_router.post("/admin/google/chava/callback")
 async def chava_oauth_callback(code: str = Form(...), current_user: dict = Depends(get_current_admin_user)):
