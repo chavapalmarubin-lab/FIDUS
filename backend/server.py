@@ -6916,7 +6916,13 @@ class MockMT5Service:
         self.positions = {}
         self.trades_history = {}
         self.market_data = {}
-        self._initialize_mock_data()
+        self.initialized = False
+        try:
+            self._initialize_mock_data()
+            logging.info("✅ MockMT5Service initialized successfully")
+        except Exception as e:
+            logging.error(f"❌ MockMT5Service initialization failed: {str(e)}")
+            # Continue with empty data structures
     
     def _initialize_mock_data(self):
         """Initialize mock trading data for clients"""
