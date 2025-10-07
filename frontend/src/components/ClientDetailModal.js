@@ -136,7 +136,7 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
       formData.append('document_type', docType);
       formData.append('client_id', client.id);
       
-      const response = await apiAxios.post(`/clients/${client.id}/upload-document`, formData, {
+      const response = await apiAxios.post(`/fidus/client/${client.id}/upload-documents`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
