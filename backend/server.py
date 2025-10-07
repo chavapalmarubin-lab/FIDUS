@@ -7786,7 +7786,7 @@ async def get_fund_investors(fund_id: str):
                     
                     if client_info:
                         # Get MT5 account info
-                        mt5_account = await mock_mt5.get_account_info(client_id)
+                        mt5_account = await get_mock_mt5_service().get_account_info(client_id)
                         
                         # Calculate additional metrics
                         total_pnl = allocation.current_value - allocation.invested_amount
