@@ -15249,7 +15249,7 @@ async def get_chava_oauth_url(current_user: dict = Depends(get_current_admin_use
         raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.post("/admin/google/chava/callback")
-async def chava_oauth_callback(code: str = Form(...)):
+async def chava_oauth_callback(code: str = Form(...), current_user: dict = Depends(get_current_admin_user)):
     """Handle OAuth callback for Chava's Google authentication"""
     try:
         from chava_google_service import get_chava_google_service
