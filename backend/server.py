@@ -7231,22 +7231,12 @@ investor_allocations = {}
 capital_flows = {}
 
 # Initialize mock allocations for existing clients
-def initialize_mock_allocations():
-    """Initialize mock investor allocations"""
-    # Get clients from MongoDB instead of MOCK_USERS
+async def async_initialize_mock_allocations():
+    """Initialize mock investor allocations asynchronously"""
     try:
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        async def get_clients():
-            clients = []
-            async for user in db.users.find({"type": "client", "status": "active"}):
-                clients.append(user)
-            return clients
-        
-        clients = loop.run_until_complete(get_clients())
-        loop.close()
+        clients = []
+        async for user in db.users.find({"type": "client", "status": "active"}):
+            clients.append(user)
         
         for user in clients:
             client_id = user["id"]
@@ -7285,13 +7275,60 @@ def initialize_mock_allocations():
             total_value = sum(alloc.current_value for alloc in investor_allocations[client_id])
             for allocation in investor_allocations[client_id]:
                 allocation.allocation_percentage = round((allocation.current_value / total_value) * 100, 2)
+        
+        logging.info(f"✅ Initialized mock allocations for {len(clients)} clients")
     except Exception as e:
         logging.error(f"Failed to initialize mock allocations: {str(e)}")
         # Continue with empty allocations if MongoDB fails
         pass
 
+def sync_initialize_mock_allocations():
+    """Synchronous fallback for mock allocations"""
+    try:
+        # Check if we're in an event loop
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            # Schedule async version as background task
+            asyncio.create_task(async_initialize_mock_allocations())
+            logging.info("✅ Scheduled mock allocations initialization as background task")
+        except RuntimeError:
+            # No event loop, create basic mock data
+            mock_clients = [
+                {"id": "client_alejandro"},
+                {"id": "client_demo"}
+            ]
+            
+            for user in mock_clients:
+                client_id = user["id"]
+                investor_allocations[client_id] = []
+                
+                # Create simple mock allocation
+                fund_name = random.choice(list(FIDUS_FUNDS.keys()))
+                fund = FIDUS_FUNDS[fund_name]
+                allocation_amount = random.uniform(100000, 500000)
+                shares = allocation_amount / fund.nav_per_share
+                
+                allocation = InvestorAllocation(
+                    client_id=client_id,
+                    fund_id=fund.id,
+                    fund_name=fund.name,
+                    shares=round(shares, 4),
+                    invested_amount=round(allocation_amount, 2),
+                    current_value=round(allocation_amount * random.uniform(0.95, 1.15), 2),
+                    allocation_percentage=100.0,
+                    entry_date=datetime.now(timezone.utc) - timedelta(days=random.randint(30, 365)),
+                    entry_nav=fund.nav_per_share * random.uniform(0.95, 1.05)
+                )
+                
+                investor_allocations[client_id].append(allocation)
+            
+            logging.info(f"✅ Initialized fallback mock allocations for {len(mock_clients)} clients")
+    except Exception as e:
+        logging.error(f"Failed to initialize mock allocations: {str(e)}")
+
 # Initialize allocations
-initialize_mock_allocations()
+sync_initialize_mock_allocations()
 
 # CRM API Endpoints
 @api_router.get("/crm/funds")
