@@ -18147,6 +18147,14 @@ async def startup_event():
     except Exception as e:
         logging.error(f"MT5 Service initialization failed: {e}")
     
+    # Initialize Mock MT5 Service (background task to avoid blocking)
+    try:
+        # This will trigger the initialization in a background task
+        get_mock_mt5_service()
+        logging.info("💹 Mock MT5 Service initialization triggered")
+    except Exception as e:
+        logging.error(f"Mock MT5 Service initialization failed: {e}")
+    
     # Individual Google OAuth - no automatic startup needed
     logging.info("💡 Individual Google OAuth system ready")
     
