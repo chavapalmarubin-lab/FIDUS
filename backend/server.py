@@ -15190,7 +15190,7 @@ async def upload_client_document(
 
 @api_router.get("/clients/{client_id}/documents/{file_id}")
 async def get_client_document(client_id: str, file_id: str):
-    """Retrieve uploaded client document"""
+    """Retrieve uploaded client document (redirect to Google Drive link)"""
     try:
         # Find client and document
         client_doc = await db.users.find_one({"id": client_id, "type": "client"})
@@ -15200,23 +15200,26 @@ async def get_client_document(client_id: str, file_id: str):
         # Find document in uploaded_documents array
         document = None
         for doc in client_doc.get("uploaded_documents", []):
-            if doc.get("file_id") == file_id:
+            if doc.get("file_id") == file_id or doc.get("google_drive_file_id") == file_id:
                 document = doc
                 break
         
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
         
-        # Return file
-        file_path = document["file_path"]
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found on disk")
+        # If document is in Google Drive, redirect to web view link
+        if document.get("web_view_link"):
+            return RedirectResponse(url=document["web_view_link"])
         
-        return FileResponse(
-            path=file_path,
-            filename=document["filename"],
-            media_type="application/octet-stream"
-        )
+        # Fallback to local file if exists
+        if document.get("file_path") and os.path.exists(document["file_path"]):
+            return FileResponse(
+                path=document["file_path"],
+                filename=document["filename"],
+                media_type="application/octet-stream"
+            )
+        
+        raise HTTPException(status_code=404, detail="Document file not accessible")
         
     except Exception as e:
         logging.error(f"Get document error: {str(e)}")
