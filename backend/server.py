@@ -15109,35 +15109,62 @@ async def upload_client_document(
     file: UploadFile = File(...),
     document_type: str = Form(...),
 ):
-    """Upload KYC/AML document for client"""
+    """Upload KYC/AML document for client to Chava's Google Drive"""
     try:
+        # Import Chava's Google service
+        from chava_google_service import get_chava_google_service
+        
         # Validate client exists
         client_doc = await db.users.find_one({"id": client_id, "type": "client"})
         if not client_doc:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        # Create upload directory if it doesn't exist
-        upload_dir = f"/app/uploads/clients/{client_id}"
-        os.makedirs(upload_dir, exist_ok=True)
+        client_name = client_doc.get('name', client_id)
         
-        # Generate file ID and save file
-        file_id = str(uuid.uuid4())
+        # Get or create client's Drive folder
+        chava_service = get_chava_google_service(db)
+        
+        # Check if client already has a folder ID stored
+        folder_id = client_doc.get('google_drive_folder_id')
+        
+        if not folder_id:
+            # Create new folder for client
+            folder_result = await chava_service.create_client_folder(client_name)
+            folder_id = folder_result['folder_id']
+            
+            # Store folder ID in client document
+            await db.users.update_one(
+                {"id": client_id},
+                {"$set": {"google_drive_folder_id": folder_id}}
+            )
+            
+            logging.info(f"Created new Drive folder for {client_name}: {folder_id}")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Generate clean filename
         file_extension = os.path.splitext(file.filename)[1]
-        file_path = os.path.join(upload_dir, f"{document_type}_{file_id}{file_extension}")
+        clean_filename = f"{document_type}_{client_name.replace(' ', '_')}{file_extension}"
         
-        # Save uploaded file
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        # Upload to Chava's Google Drive
+        upload_result = await chava_service.upload_document_to_drive(
+            file_content=file_content,
+            filename=clean_filename,
+            folder_id=folder_id,
+            mime_type=file.content_type
+        )
         
-        # Update client document record in MongoDB
+        # Store document info in client record
         document_info = {
-            "file_id": file_id,
+            "file_id": upload_result['file_id'],
             "filename": file.filename,
             "document_type": document_type,
-            "file_path": file_path,
+            "google_drive_file_id": upload_result['file_id'],
+            "web_view_link": upload_result['web_view_link'],
             "upload_date": datetime.now(timezone.utc).isoformat(),
-            "file_size": len(content)
+            "file_size": len(file_content),
+            "uploaded_to": "chava_google_drive"
         }
         
         # Add to client's documents array
@@ -15146,19 +15173,20 @@ async def upload_client_document(
             {"$push": {"uploaded_documents": document_info}}
         )
         
-        logging.info(f"Document uploaded for client {client_id}: {document_type} - {file.filename}")
+        logging.info(f"Document uploaded to Chava's Drive for {client_name}: {document_type} - {file.filename}")
         
         return {
             "success": True,
-            "file_id": file_id,
+            "file_id": upload_result['file_id'],
             "filename": file.filename,
             "document_type": document_type,
-            "message": "Document uploaded successfully"
+            "web_view_link": upload_result['web_view_link'],
+            "message": f"Document uploaded to Chava's Google Drive successfully"
         }
         
     except Exception as e:
         logging.error(f"Document upload error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to upload document")
+        raise HTTPException(status_code=500, detail=f"Failed to upload document: {str(e)}")
 
 @api_router.get("/clients/{client_id}/documents/{file_id}")
 async def get_client_document(client_id: str, file_id: str):
