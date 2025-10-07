@@ -229,7 +229,7 @@ class ChavaGoogleService:
     async def get_connection_status(self) -> Dict:
         """Check if Chava's Google account is connected"""
         try:
-            if not self.db:
+            if self.db is None:
                 return {"connected": False, "error": "Database not available"}
             
             token_doc = await self.db.google_tokens.find_one({"email": self.chava_email})
