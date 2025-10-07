@@ -15223,6 +15223,73 @@ async def get_client_document(client_id: str, file_id: str):
         raise HTTPException(status_code=500, detail="Failed to retrieve document")
 
 # ===============================================================================
+# CHAVA GOOGLE OAUTH ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/google/chava/auth-url")
+async def get_chava_oauth_url():
+    """Get OAuth URL for Chava (chavapalmarubin@gmail.com) authentication"""
+    try:
+        from chava_google_service import get_chava_google_service
+        
+        chava_service = get_chava_google_service(db)
+        auth_url = await chava_service.get_oauth_url()
+        
+        return {
+            "success": True,
+            "auth_url": auth_url,
+            "email": "chavapalmarubin@gmail.com"
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to generate Chava OAuth URL: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+
+@api_router.post("/admin/google/chava/callback")
+async def chava_oauth_callback(code: str = Form(...)):
+    """Handle OAuth callback for Chava's Google authentication"""
+    try:
+        from chava_google_service import get_chava_google_service
+        
+        chava_service = get_chava_google_service(db)
+        result = await chava_service.exchange_code_for_tokens(code)
+        
+        logging.info(f"✅ Chava Google OAuth completed: {result['email']}")
+        
+        return {
+            "success": True,
+            "message": "Chava's Google account connected successfully",
+            "email": result['email'],
+            "has_refresh_token": result['has_refresh_token']
+        }
+        
+    except Exception as e:
+        logging.error(f"Chava OAuth callback failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
+
+@api_router.get("/admin/google/chava/status")
+async def get_chava_connection_status():
+    """Check Chava's Google connection status"""
+    try:
+        from chava_google_service import get_chava_google_service
+        
+        chava_service = get_chava_google_service(db)
+        status = await chava_service.get_connection_status()
+        
+        return {
+            "success": True,
+            **status
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to check Chava connection status: {str(e)}")
+        return {
+            "success": False,
+            "connected": False,
+            "error": str(e)
+        }
+
+# ===============================================================================
 # MT5 INTEGRATION ENDPOINTS
 # ===============================================================================
 
