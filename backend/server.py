@@ -6227,7 +6227,7 @@ async def get_gmail_auth_url():
         
         # Create flow for web application
         flow = Flow.from_client_secrets_file(
-            '/app/backend/gmail_credentials.json',
+            get_credentials_path('gmail_credentials.json'),
             scopes=[
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
@@ -6269,7 +6269,7 @@ async def gmail_oauth_callback(code: str, state: str):
         
         # Create flow
         flow = Flow.from_client_secrets_file(
-            '/app/backend/gmail_credentials.json',
+            get_credentials_path('gmail_credentials.json'),
             scopes=[
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
