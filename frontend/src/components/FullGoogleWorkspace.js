@@ -262,7 +262,7 @@ const FullGoogleWorkspace = () => {
       console.log('🔗 Starting Chava Google OAuth flow...');
       
       // Get Chava's Google OAuth URL from backend
-      const response = await apiAxios.get('/admin/google/chava/auth-url');
+      const response = await apiAxios.get('/admin/google/individual-auth-url');
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
