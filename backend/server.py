@@ -7814,7 +7814,7 @@ async def get_fund_investors(fund_id: str):
                                 "account_number": mt5_account.get("account_number") if mt5_account else None,
                                 "balance": mt5_account.get("balance", 0) if mt5_account else 0,
                                 "equity": mt5_account.get("equity", 0) if mt5_account else 0,
-                                "open_positions": len(await mock_mt5.get_positions(client_id))
+                                "open_positions": len(await get_mock_mt5_service().get_positions(client_id))
                             },
                             "status": "Active"
                         }
