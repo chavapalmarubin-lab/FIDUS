@@ -7649,7 +7649,7 @@ async def get_client_mt5_positions(client_id: str, current_user=Depends(get_curr
 async def get_client_mt5_history(client_id: str, days: int = 30):
     """Get MT5 trade history for a client"""
     try:
-        history = await mock_mt5.get_trade_history(client_id, days)
+        history = await get_mock_mt5_service().get_trade_history(client_id, days)
         
         # Calculate summary
         total_profit = sum(trade["profit"] for trade in history)
