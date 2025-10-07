@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://mt5-integration.preview.emergentagent.com/api'
+BACKEND_URL = 'https://investor-dash-1.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

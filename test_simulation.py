@@ -6,7 +6,7 @@ import json
 session = requests.Session()
 
 # Authenticate
-auth_response = session.post('https://mt5-integration.preview.emergentagent.com/api/auth/login', json={
+auth_response = session.post('https://investor-dash-1.preview.emergentagent.com/api/auth/login', json={
     'username': 'admin',
     'password': 'password123',
     'user_type': 'admin'
@@ -17,7 +17,7 @@ if auth_response.status_code == 200:
     session.headers.update({'Authorization': f'Bearer {token}'})
     
     # Test simulation
-    sim_response = session.post('https://mt5-integration.preview.emergentagent.com/api/investments/simulate', json={
+    sim_response = session.post('https://investor-dash-1.preview.emergentagent.com/api/investments/simulate', json={
         'investments': [
             {'fund_code': 'BALANCE', 'amount': 100000},
             {'fund_code': 'DYNAMIC', 'amount': 250000}

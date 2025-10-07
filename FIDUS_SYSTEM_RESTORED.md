@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://mt5-integration.preview.emergentagent.com`
+`https://investor-dash-1.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
