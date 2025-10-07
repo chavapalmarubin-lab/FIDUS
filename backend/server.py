@@ -5799,7 +5799,8 @@ prospect_document_requests = {}  # {prospect_id: [request_records]}
 # File storage directory
 import os
 from pathlib import Path
-UPLOAD_DIR = Path("/app/uploads")
+from path_utils import get_upload_path
+UPLOAD_DIR = Path(get_upload_path())
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Mock DocuSign Service
