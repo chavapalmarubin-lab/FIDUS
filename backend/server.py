@@ -15271,7 +15271,7 @@ async def chava_oauth_callback(code: str = Form(...), current_user: dict = Depen
         raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
 
 @api_router.get("/admin/google/chava/status")
-async def get_chava_connection_status():
+async def get_chava_connection_status(current_user: dict = Depends(get_current_admin_user)):
     """Check Chava's Google connection status"""
     try:
         from chava_google_service import get_chava_google_service
