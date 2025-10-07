@@ -6922,50 +6922,82 @@ class MockMT5Service:
         """Initialize mock trading data for clients"""
         # Create mock accounts for existing clients from MongoDB
         try:
+            # Use background task to avoid event loop conflicts in production
             import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
             
-            # Get clients from MongoDB instead of MOCK_USERS
-            async def get_clients():
-                clients = []
-                async for user in db.users.find({"type": "client", "status": "active"}):
-                    clients.append(user)
-                return clients
+            # Check if we're in an event loop
+            try:
+                loop = asyncio.get_running_loop()
+                # If we're already in a loop, schedule as task
+                asyncio.create_task(self._async_initialize_mock_data())
+                logging.info("✅ Scheduled mock MT5 data initialization as background task")
+                return
+            except RuntimeError:
+                # No event loop running, we can create one
+                pass
             
-            clients = loop.run_until_complete(get_clients())
-            loop.close()
+            # Fallback to synchronous initialization if no async context
+            logging.info("⚠️ Initializing mock MT5 data synchronously (no event loop)")
+            self._sync_initialize_mock_data()
             
-            for user in clients:
-                account_id = f"mt5_{user['id']}"
-                self.accounts[account_id] = {
-                    "client_id": user["id"],
-                    "account_number": f"500{random.randint(1000, 9999)}",
-                    "broker": "FIDUS Broker",
-                    "balance": round(random.uniform(50000, 500000), 2),
-                    "equity": round(random.uniform(48000, 520000), 2),
-                    "margin": round(random.uniform(1000, 50000), 2),
-                    "free_margin": 0,
-                    "leverage": random.choice([1, 50, 100, 200, 500]),
-                    "currency": "USD",
-                    "server": "FIDUS-Demo",
-                    "login_time": datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 24))
-                }
-                
-                # Calculate free margin
-                self.accounts[account_id]["free_margin"] = (
-                    self.accounts[account_id]["equity"] - self.accounts[account_id]["margin"]
-                )
-                
-                # Generate mock positions
-                self._generate_mock_positions(account_id)
-                
-                # Generate mock trade history
-                self._generate_mock_trade_history(account_id)
         except Exception as e:
             logging.error(f"Failed to initialize mock MT5 data: {str(e)}")
             # Continue with empty accounts if MongoDB fails
             pass
+    
+    async def _async_initialize_mock_data(self):
+        """Async version of mock data initialization"""
+        try:
+            clients = []
+            async for user in db.users.find({"type": "client", "status": "active"}):
+                clients.append(user)
+            
+            self._create_mock_accounts(clients)
+            logging.info(f"✅ Initialized mock MT5 data for {len(clients)} clients")
+        except Exception as e:
+            logging.error(f"Failed to async initialize mock MT5 data: {str(e)}")
+    
+    def _sync_initialize_mock_data(self):
+        """Synchronous fallback initialization"""
+        try:
+            # Create some basic mock accounts without MongoDB dependency
+            mock_clients = [
+                {"id": "client_alejandro", "name": "Alejandro Mariscal Romero"},
+                {"id": "client_demo", "name": "Demo Client"}
+            ]
+            self._create_mock_accounts(mock_clients)
+            logging.info(f"✅ Initialized fallback mock MT5 data for {len(mock_clients)} clients")
+        except Exception as e:
+            logging.error(f"Failed to sync initialize mock MT5 data: {str(e)}")
+    
+    def _create_mock_accounts(self, clients):
+        """Create mock accounts for given clients list"""
+        for user in clients:
+            account_id = f"mt5_{user['id']}"
+            self.accounts[account_id] = {
+                "client_id": user["id"],
+                "account_number": f"500{random.randint(1000, 9999)}",
+                "broker": "FIDUS Broker",
+                "balance": round(random.uniform(50000, 500000), 2),
+                "equity": round(random.uniform(48000, 520000), 2),
+                "margin": round(random.uniform(1000, 50000), 2),
+                "free_margin": 0,
+                "leverage": random.choice([1, 50, 100, 200, 500]),
+                "currency": "USD",
+                "server": "FIDUS-Demo",
+                "login_time": datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 24))
+            }
+            
+            # Calculate free margin
+            self.accounts[account_id]["free_margin"] = (
+                self.accounts[account_id]["equity"] - self.accounts[account_id]["margin"]
+            )
+            
+            # Generate mock positions
+            self._generate_mock_positions(account_id)
+            
+            # Generate mock trade history
+            self._generate_mock_trade_history(account_id)
     
     def _generate_mock_positions(self, account_id):
         """Generate mock open positions"""
