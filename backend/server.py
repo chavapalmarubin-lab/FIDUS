@@ -7155,8 +7155,15 @@ class MockMT5Service:
             "clients": client_summaries
         }
 
-# Initialize services
-mock_mt5 = MockMT5Service()
+# Initialize services - delayed to avoid event loop conflicts
+mock_mt5 = None
+
+def get_mock_mt5_service():
+    """Get or create MockMT5Service instance safely"""
+    global mock_mt5
+    if mock_mt5 is None:
+        mock_mt5 = MockMT5Service()
+    return mock_mt5
 
 # Fund Management System
 FIDUS_FUNDS = {
