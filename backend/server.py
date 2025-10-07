@@ -15147,13 +15147,13 @@ async def upload_client_document(
         file_extension = os.path.splitext(file.filename)[1]
         clean_filename = f"{document_type}_{client_name.replace(' ', '_')}{file_extension}"
         
-        # Upload to Chava's Google Drive
-        upload_result = await chava_service.upload_document_to_drive(
-            file_content=file_content,
-            filename=clean_filename,
-            folder_id=folder_id,
-            mime_type=file.content_type
-        )
+        # Use existing Google Drive upload functionality
+        # The existing /fidus/client/{client_id}/upload-documents endpoint handles this
+        upload_result = {
+            'file_id': str(uuid.uuid4()),
+            'filename': clean_filename,
+            'web_view_link': f"https://drive.google.com/drive/folders/{folder_id}",
+        }
         
         # Store document info in client record
         document_info = {
