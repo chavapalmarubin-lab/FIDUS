@@ -1800,7 +1800,7 @@ async def get_system_info(current_user: dict = Depends(get_current_admin_user)):
         # Get application version from package.json if available
         version = "1.0.0"
         try:
-            package_json_path = Path("/app/frontend/package.json")
+            package_json_path = Path(f"{get_base_path()}/frontend/package.json")
             if package_json_path.exists():
                 import json
                 with open(package_json_path, 'r') as f:
