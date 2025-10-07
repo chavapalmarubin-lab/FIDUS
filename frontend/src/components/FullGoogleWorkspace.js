@@ -94,7 +94,7 @@ const FullGoogleWorkspace = () => {
   // Quick connection test for status display
   const testConnectionQuick = async () => {
     try {
-      const response = await apiAxios.get('/admin/google/chava/status');
+      const response = await apiAxios.get('/admin/google/individual-status');
       console.log('🔍 Google connection status:', response.data);
       
       // Update connection status based on Google Auth response
