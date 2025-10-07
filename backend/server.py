@@ -5470,8 +5470,9 @@ class GmailService:
             'https://www.googleapis.com/auth/gmail.send',
             'https://www.googleapis.com/auth/gmail.readonly'
         ]
-        self.credentials_path = '/app/backend/gmail_credentials.json'
-        self.token_path = '/app/backend/gmail_token.pickle'
+        from path_utils import get_credentials_path
+        self.credentials_path = get_credentials_path('gmail_credentials.json')
+        self.token_path = get_credentials_path('gmail_token.pickle')
         self.service = None
         
     async def authenticate(self):
