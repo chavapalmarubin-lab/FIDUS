@@ -259,14 +259,15 @@ const FullGoogleWorkspace = () => {
   const handleConnectToGoogle = async () => {
     setLoading(true);
     try {
-      console.log('🔗 Starting Google OAuth flow...');
+      console.log('🔗 Starting Chava Google OAuth flow...');
       
-      // Get the Google OAuth URL from backend
-      const response = await apiAxios.get('/auth/google/url');
+      // Get Chava's Google OAuth URL from backend
+      const response = await apiAxios.get('/admin/google/chava/auth-url');
       
       if (response.data.success) {
         const authUrl = response.data.auth_url;
-        console.log('🚀 Redirecting to Google OAuth:', authUrl);
+        console.log('🚀 Redirecting to Chava Google OAuth:', authUrl);
+        console.log('📧 Connecting account: chavapalmarubin@gmail.com');
         
         // Redirect to Google OAuth
         window.location.href = authUrl;
@@ -275,10 +276,10 @@ const FullGoogleWorkspace = () => {
       }
       
     } catch (error) {
-      console.error('❌ Google OAuth connection failed:', error);
+      console.error('❌ Chava Google OAuth connection failed:', error);
       setConnectionStatus({ 
         success: false, 
-        error: 'Failed to connect to Google OAuth. Please try again.' 
+        error: 'Failed to connect to Chava Google account. Please try again.' 
       });
       setLoading(false);
     }
