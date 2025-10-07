@@ -21,7 +21,8 @@ class RealGmailService:
         """Authenticate using service account with domain-wide delegation"""
         try:
             # Load service account credentials
-            credentials_path = os.path.join(os.path.dirname(__file__), 'google_credentials.json')
+            from path_utils import get_credentials_path
+            credentials_path = get_credentials_path('google_credentials.json')
             
             if not os.path.exists(credentials_path):
                 raise Exception("Google credentials file not found")
