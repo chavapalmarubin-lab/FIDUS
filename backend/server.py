@@ -15100,6 +15100,101 @@ async def get_client_readiness(client_id: str):
     #     raise HTTPException(status_code=500, detail="Failed to fetch investment ready clients")
 
 # ===============================================================================
+# CLIENT DOCUMENT UPLOAD ENDPOINT
+# ===============================================================================
+
+@api_router.post("/clients/{client_id}/upload-document")
+async def upload_client_document(
+    client_id: str,
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+):
+    """Upload KYC/AML document for client"""
+    try:
+        # Validate client exists
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Create upload directory if it doesn't exist
+        upload_dir = f"/app/uploads/clients/{client_id}"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate file ID and save file
+        file_id = str(uuid.uuid4())
+        file_extension = os.path.splitext(file.filename)[1]
+        file_path = os.path.join(upload_dir, f"{document_type}_{file_id}{file_extension}")
+        
+        # Save uploaded file
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Update client document record in MongoDB
+        document_info = {
+            "file_id": file_id,
+            "filename": file.filename,
+            "document_type": document_type,
+            "file_path": file_path,
+            "upload_date": datetime.now(timezone.utc).isoformat(),
+            "file_size": len(content)
+        }
+        
+        # Add to client's documents array
+        await db.users.update_one(
+            {"id": client_id},
+            {"$push": {"uploaded_documents": document_info}}
+        )
+        
+        logging.info(f"Document uploaded for client {client_id}: {document_type} - {file.filename}")
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "filename": file.filename,
+            "document_type": document_type,
+            "message": "Document uploaded successfully"
+        }
+        
+    except Exception as e:
+        logging.error(f"Document upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload document")
+
+@api_router.get("/clients/{client_id}/documents/{file_id}")
+async def get_client_document(client_id: str, file_id: str):
+    """Retrieve uploaded client document"""
+    try:
+        # Find client and document
+        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+        if not client_doc:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Find document in uploaded_documents array
+        document = None
+        for doc in client_doc.get("uploaded_documents", []):
+            if doc.get("file_id") == file_id:
+                document = doc
+                break
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Return file
+        file_path = document["file_path"]
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on disk")
+        
+        return FileResponse(
+            path=file_path,
+            filename=document["filename"],
+            media_type="application/octet-stream"
+        )
+        
+    except Exception as e:
+        logging.error(f"Get document error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve document")
+
+# ===============================================================================
 # MT5 INTEGRATION ENDPOINTS
 # ===============================================================================
 
