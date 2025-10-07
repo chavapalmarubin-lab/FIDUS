@@ -15822,7 +15822,7 @@ async def get_fund_performance_dashboard():
     try:
         # Import fund performance manager directly
         import sys
-        sys.path.append('/app/backend')
+        sys.path.append(get_backend_path())
         from fund_performance_manager import fund_performance_manager as fpm
         
         if not fpm:
@@ -15854,7 +15854,7 @@ async def get_client_fund_performance(client_id: str):
     try:
         # Import fund performance manager directly
         import sys
-        sys.path.append('/app/backend')
+        sys.path.append(get_backend_path())
         from fund_performance_manager import fund_performance_manager as fpm
         
         if not fpm:
@@ -15886,7 +15886,7 @@ async def get_performance_gaps():
     try:
         # Import fund performance manager directly
         import sys
-        sys.path.append('/app/backend')
+        sys.path.append(get_backend_path())
         from fund_performance_manager import fund_performance_manager as fpm
         
         if not fpm:
@@ -15953,7 +15953,7 @@ async def get_fund_commitments():
     try:
         # Import fund performance manager directly
         import sys
-        sys.path.append('/app/backend')
+        sys.path.append(get_backend_path())
         from fund_performance_manager import fund_performance_manager as fpm
         
         if not fpm:
@@ -15988,7 +15988,7 @@ async def test_fund_performance_manager():
     """Test fund performance manager availability and basic functionality"""
     try:
         import sys
-        sys.path.append('/app/backend')
+        sys.path.append(get_backend_path())
         from fund_performance_manager import fund_performance_manager as fpm
         
         if not fpm:
