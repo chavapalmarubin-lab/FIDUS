@@ -37,6 +37,9 @@ from collections import defaultdict
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
 
+# Path utilities for production deployment
+from path_utils import get_base_path, get_upload_path, get_credentials_path, ensure_dir_exists
+
 # MongoDB Integration
 from mongodb_integration import mongodb_manager
 
