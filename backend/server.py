@@ -7968,8 +7968,8 @@ async def get_all_clients_details():
             total_fund_value = sum(alloc.current_value for alloc in client_allocations)
             
             # Get MT5 account
-            mt5_account = await mock_mt5.get_account_info(client_id)
-            mt5_positions = await mock_mt5.get_positions(client_id)
+            mt5_account = await get_mock_mt5_service().get_account_info(client_id)
+            mt5_positions = await get_mock_mt5_service().get_positions(client_id)
             
             # Get recent capital flows
             client_flows = capital_flows.get(client_id, [])
