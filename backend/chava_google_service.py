@@ -139,7 +139,7 @@ class ChavaGoogleService:
     async def get_valid_credentials(self) -> Optional[Credentials]:
         """Get valid credentials, refreshing if needed"""
         try:
-            if not self.db:
+            if self.db is None:
                 logger.error("Database not available")
                 return None
             
