@@ -6282,7 +6282,7 @@ async def gmail_oauth_callback(code: str, state: str):
         
         # Save credentials
         creds = flow.credentials
-        with open('/app/backend/gmail_token.pickle', 'wb') as token:
+        with open(get_credentials_path('gmail_token.pickle'), 'wb') as token:
             pickle.dump(creds, token)
         
         # Initialize Gmail service with new credentials
