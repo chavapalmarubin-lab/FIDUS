@@ -57,7 +57,8 @@ def update_backend_config():
     config['MT5_BRIDGE_TIMEOUT'] = timeout or default_values['MT5_BRIDGE_TIMEOUT']
     
     # Update .env file
-    env_file = Path("/app/backend/.env")
+    from path_utils import get_backend_path
+    env_file = Path(get_backend_path(".env"))
     
     if not env_file.exists():
         print(f"❌ Backend .env file not found: {env_file}")
