@@ -922,7 +922,7 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
                               onChange={(e) => {
                                 const file = e.target.files[0];
                                 if (file) {
-                                  handleDocumentUpload(doc.key, file);
+                                  handleKYCDocumentUpload(doc.key, file);
                                 }
                               }}
                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
