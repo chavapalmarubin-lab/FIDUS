@@ -284,16 +284,26 @@ class MT5IntegrationService:
     
     def _get_or_create_encryption_key(self) -> bytes:
         """Get or create encryption key for MT5 credentials"""
-        key_file = "/app/backend/.mt5_key"
+        # Use writable path for production deployment
+        import os
+        if os.environ.get('ENVIRONMENT') == 'production' or os.environ.get('RENDER'):
+            key_file = "/tmp/.mt5_key"
+        else:
+            key_file = "/app/backend/.mt5_key"
         
         if os.path.exists(key_file):
             with open(key_file, 'rb') as f:
                 return f.read()
         else:
             key = Fernet.generate_key()
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(key_file), exist_ok=True)
             with open(key_file, 'wb') as f:
                 f.write(key)
-            os.chmod(key_file, 0o600)  # Restrict file permissions
+            try:
+                os.chmod(key_file, 0o600)  # Restrict file permissions if possible
+            except OSError:
+                pass  # Ignore permission errors in containerized environments
             return key
     
     def _generate_mt5_login(self) -> int:
