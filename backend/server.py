@@ -18137,6 +18137,11 @@ async def startup_event():
     """Application startup tasks"""
     logging.info("🚀 FIDUS Server starting up...")
     
+    # Log environment info for debugging
+    env = os.environ.get('ENVIRONMENT', 'development')
+    is_render = bool(os.environ.get('RENDER'))
+    logging.info(f"📊 Environment: {env}, Render: {is_render}")
+    
     # Initialize default users in MongoDB
     await ensure_default_users_in_mongodb()
     
