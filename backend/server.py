@@ -194,6 +194,11 @@ def get_current_user(request: Request) -> dict:
     
     return payload
 
+# Initialize directories for production deployment
+ensure_dir_exists(get_upload_path("documents"))
+ensure_dir_exists(get_upload_path("signed"))
+ensure_dir_exists(get_credentials_path(""))
+
 # Create the main app without a prefix
 app = FastAPI()
 
