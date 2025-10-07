@@ -104,16 +104,15 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     
     setOverrideLoading(true);
     try {
-      const overrideData = {
+      const response = await apiAxios.put(`/clients/${client.id}/readiness`, {
+        aml_kyc_completed: true,
+        agreement_signed: true,
         readiness_override: true,
         readiness_override_reason: overrideReason.trim(),
-        readiness_override_by: 'admin', // Should get from current user context
-        readiness_override_date: new Date().toISOString(),
-        aml_kyc_completed: true,
-        agreement_signed: true
-      };
+        readiness_override_by: "admin",
+        readiness_override_date: new Date().toISOString()
+      });
       
-      const response = await apiAxios.post(`/clients/client_${client.username}/readiness`, overrideData);
       if (response.data.success) {
         alert(`✅ ${client.name} is now ready for investment via override!`);
         fetchReadinessData(); // Refresh data
