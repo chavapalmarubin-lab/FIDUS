@@ -251,61 +251,69 @@ class FundPortfolioEndpointTest:
         except Exception as e:
             self.log_result("Fund Allocation Details", False, f"Exception: {str(e)}")
     
-    def test_data_consistency_verification(self):
-        """Test data consistency between fund portfolio and client totals"""
+    def test_alejandro_client_investments(self):
+        """Test Alejandro's client investments (should total $118,151.41)"""
         try:
-            # Get fund portfolio total
-            fund_response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
-            fund_total = 0
+            # Get Alejandro's investments
+            response = self.session.get(f"{BACKEND_URL}/investments/client/client_alejandro")
             
-            if fund_response.status_code == 200:
-                fund_data = fund_response.json()
-                fund_total = fund_data.get('total_aum', 0)
-            
-            # Get client investment total
-            client_response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
-            client_total = 0
-            
-            if client_response.status_code == 200:
-                client_data = client_response.json()
-                if isinstance(client_data, dict) and 'investments' in client_data:
-                    investments = client_data['investments']
-                    client_total = sum(inv.get('current_value', 0) for inv in investments)
-                elif isinstance(client_data, list):
-                    client_total = sum(inv.get('current_value', 0) for inv in client_data)
-            
-            # Compare totals
-            if fund_total > 0 and client_total > 0:
-                if abs(fund_total - client_total) < 1000:  # Allow $1K variance
-                    self.log_result("Data Consistency - Fund vs Client Totals", True, 
-                                  f"Totals match: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-                else:
-                    self.log_result("Data Consistency - Fund vs Client Totals", False, 
-                                  f"Totals mismatch: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-            else:
-                self.log_result("Data Consistency - Fund vs Client Totals", False, 
-                              f"One or both totals are zero: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-            
-            # Check expected total value consistency
-            expected_total = self.expected_salvador_total
-            fund_matches = abs(fund_total - expected_total) < 10000
-            client_matches = abs(client_total - expected_total) < 10000
-            
-            if fund_matches and client_matches:
-                self.log_result("Data Consistency - Expected Total", True, 
-                              f"Both endpoints show expected ${expected_total:,.2f} total")
-            else:
-                issues = []
-                if not fund_matches:
-                    issues.append(f"Fund total ${fund_total:,.2f} != expected ${expected_total:,.2f}")
-                if not client_matches:
-                    issues.append(f"Client total ${client_total:,.2f} != expected ${expected_total:,.2f}")
+            if response.status_code == 200:
+                data = response.json()
                 
-                self.log_result("Data Consistency - Expected Total", False, 
-                              f"Total value inconsistencies: {'; '.join(issues)}")
+                # Handle different response formats
+                investments = []
+                if isinstance(data, dict) and 'investments' in data:
+                    investments = data['investments']
+                elif isinstance(data, list):
+                    investments = data
+                
+                if len(investments) == 0:
+                    self.log_result("Alejandro Investments", False, 
+                                  "No investments found for client_alejandro")
+                    return
+                
+                # Calculate total and check individual funds
+                total_value = sum(inv.get('current_value', 0) for inv in investments)
+                core_investment = next((inv for inv in investments if inv.get('fund_code') == 'CORE'), None)
+                balance_investment = next((inv for inv in investments if inv.get('fund_code') == 'BALANCE'), None)
+                
+                # Validate total matches expected
+                if abs(total_value - self.expected_total_aum) < 0.01:
+                    self.log_result("Alejandro Total Investments", True, 
+                                  f"Total investment value correct: ${total_value:,.2f}")
+                else:
+                    self.log_result("Alejandro Total Investments", False, 
+                                  f"Total investment value incorrect: Expected ${self.expected_total_aum:,.2f}, got ${total_value:,.2f}")
+                
+                # Validate CORE investment
+                if core_investment:
+                    core_value = core_investment.get('current_value', 0)
+                    if abs(core_value - self.expected_core_aum) < 0.01:
+                        self.log_result("Alejandro CORE Investment", True, 
+                                      f"CORE investment correct: ${core_value:,.2f}")
+                    else:
+                        self.log_result("Alejandro CORE Investment", False, 
+                                      f"CORE investment incorrect: Expected ${self.expected_core_aum:,.2f}, got ${core_value:,.2f}")
+                else:
+                    self.log_result("Alejandro CORE Investment", False, "CORE investment not found")
+                
+                # Validate BALANCE investment
+                if balance_investment:
+                    balance_value = balance_investment.get('current_value', 0)
+                    if abs(balance_value - self.expected_balance_aum) < 0.01:
+                        self.log_result("Alejandro BALANCE Investment", True, 
+                                      f"BALANCE investment correct: ${balance_value:,.2f}")
+                    else:
+                        self.log_result("Alejandro BALANCE Investment", False, 
+                                      f"BALANCE investment incorrect: Expected ${self.expected_balance_aum:,.2f}, got ${balance_value:,.2f}")
+                else:
+                    self.log_result("Alejandro BALANCE Investment", False, "BALANCE investment not found")
+                    
+            else:
+                self.log_result("Alejandro Investments", False, f"HTTP {response.status_code}")
                 
         except Exception as e:
-            self.log_result("Data Consistency Verification", False, f"Exception: {str(e)}")
+            self.log_result("Alejandro Investments", False, f"Exception: {str(e)}")
     
     def test_frontend_api_compatibility(self):
         """Test frontend API compatibility for key endpoints"""
