@@ -201,7 +201,7 @@ class AlejandroProductionVerifier:
             self.log_test("MT5 Accounts Endpoint", False, "No admin token available")
             return
         
-        response = self.make_request("GET", "/mt5/accounts/client_alejandro_mariscal", auth_token=self.admin_token)
+        response = self.make_request("GET", "/mt5/accounts/client_alejandro", auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
                 data = response.json()
