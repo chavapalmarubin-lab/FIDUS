@@ -69,6 +69,7 @@ class BaseRepository(ABC, Generic[T]):
                 # Also search by common ID fields
                 query = {'$or': [
                     {'_id': doc_id},
+                    {'id': doc_id},  # Added for users collection
                     {'user_id': doc_id},
                     {'investment_id': doc_id},
                     {'account_id': doc_id}
