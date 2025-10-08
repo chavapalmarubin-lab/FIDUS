@@ -14548,50 +14548,54 @@ async def get_google_calendar_events(max_results: int = 10):
 
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
-    """Get fund portfolio overview for the dashboard (matches frontend API call)"""
+    """Get fund portfolio overview for the dashboard - Direct MongoDB version"""
     try:
-        # Reuse the same logic as admin/funds-overview for consistency
         funds_overview = {}
         
-        # Get all clients and their investments from MongoDB
-        all_clients = mongodb_manager.get_all_clients()
+        # Get all investments directly from MongoDB
+        investments_cursor = db.investments.find({})
+        all_investments = await investments_cursor.to_list(length=None)
+        
+        # Get MT5 accounts for allocation details
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
         for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
-            # Calculate fund AUM from MongoDB investments
-            fund_aum = 0
-            total_investors = 0
-            client_interest_rate = fund_config.interest_rate
+            # Calculate fund AUM from investments
+            fund_investments = [inv for inv in all_investments if inv.get('fund_code') == fund_code]
+            fund_aum = sum(inv.get('principal_amount', 0) for inv in fund_investments)
+            total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Sum all investments for this fund from MongoDB
-            for client in all_clients:
-                client_investments_list = mongodb_manager.get_client_investments(client['id'])
-                for investment in client_investments_list:
-                    if investment['fund_code'] == fund_code:
-                        current_value = investment['current_value']
-                        fund_aum += current_value
-                        total_investors += 1
-            
-            # Get fund configuration from FIDUS_FUNDS (fallback data)
-            fund_info = FIDUS_FUNDS.get(fund_code, {})
+            # Get MT5 allocations for this fund
+            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_code') == fund_code]
+            total_mt5_allocation = sum(mt5.get('total_allocated', 0) for mt5 in fund_mt5_accounts)
+            mt5_account_count = len(fund_mt5_accounts)
             
             funds_overview[fund_code] = {
                 "fund_code": fund_code,
                 "fund_name": fund_config.name,
                 "aum": round(fund_aum, 2),
                 "total_investors": total_investors,
-                "interest_rate": client_interest_rate,
+                "interest_rate": fund_config.interest_rate,
                 "client_investments": round(fund_aum, 2),
                 "minimum_investment": fund_config.minimum_investment,
-                "management_fee": getattr(fund_info, 'management_fee', 0.0),
-                "performance_fee": getattr(fund_info, 'performance_fee', 0.0),
-                "total_rebates": 0.0  # Will be calculated from rebate system
+                "mt5_allocation": round(total_mt5_allocation, 2),
+                "mt5_accounts_count": mt5_account_count,
+                "allocation_match": abs(fund_aum - total_mt5_allocation) < 0.01,
+                "management_fee": 0.0,  # Would come from fund configuration
+                "performance_fee": 0.0,  # Would come from fund configuration
+                "total_rebates": 0.0     # Would come from rebate system
             }
+        
+        total_aum = sum(fund["aum"] for fund in funds_overview.values())
+        total_investors = sum(fund["total_investors"] for fund in funds_overview.values())
         
         return {
             "success": True,
             "funds": funds_overview,
-            "total_aum": round(sum(fund["aum"] for fund in funds_overview.values()), 2),
-            "total_investors": sum(fund["total_investors"] for fund in funds_overview.values())
+            "total_aum": round(total_aum, 2),
+            "total_investors": total_investors,
+            "fund_count": len([f for f in funds_overview.values() if f["aum"] > 0])
         }
         
     except Exception as e:
