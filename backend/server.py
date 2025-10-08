@@ -11992,11 +11992,11 @@ async def delete_all_client_investments(client_id: str):
 
 @api_router.get("/investments/admin/overview")
 async def get_admin_investments_overview():
-    """Get comprehensive investment overview for admin"""
+    """Get comprehensive investment overview for admin - Direct MongoDB version"""
     try:
         all_investments = []
         fund_summaries = {}
-        clients_summary = []  # Add clients array for admin dashboard
+        clients_summary = []
         total_aum = 0.0
         
         # Initialize fund summaries
@@ -12011,16 +12011,21 @@ async def get_admin_investments_overview():
                 "average_investment": 0.0
             }
         
-        # Get all clients and their investments from MongoDB
-        all_clients = mongodb_manager.get_all_clients()
+        # Get all clients directly from MongoDB
+        clients_cursor = db.users.find({"type": "client", "status": "active"})
+        all_clients = await clients_cursor.to_list(length=None)
         
         for client in all_clients:
-            client_id = client['id']
-            client_name = client['name']
+            client_id = client.get('id')
+            client_name = client.get('name', 'Unknown')
             
-            # Get investments for this client from MongoDB
-            client_investments_list = mongodb_manager.get_client_investments(client_id)
+            # Get investments for this client directly from MongoDB
+            investments_cursor = db.investments.find({"client_id": client_id})
+            client_investments = await investments_cursor.to_list(length=None)
             
+            if not client_investments:
+                continue
+                
             # Initialize client summary
             client_summary = {
                 "client_id": client_id,
@@ -12028,61 +12033,67 @@ async def get_admin_investments_overview():
                 "total_invested": 0.0,
                 "current_value": 0.0,
                 "total_interest": 0.0,
-                "investment_count": len(client_investments_list),
+                "investment_count": len(client_investments),
                 "funds": []
             }
             
-            for investment in client_investments_list:
-                # Add to all investments with proper client name
+            for investment in client_investments:
+                fund_code = investment.get("fund_code", "")
+                fund_config = FIDUS_FUND_CONFIG.get(fund_code)
+                fund_name = fund_config.name if fund_config else f"FIDUS {fund_code} Fund"
+                
+                principal_amount = investment.get("principal_amount", 0)
+                current_value = investment.get("current_value", principal_amount)
+                interest_earned = investment.get("total_interest_earned", 0)
+                
+                # Add to all investments
                 investment_record = {
-                    "investment_id": investment["investment_id"],
+                    "investment_id": investment.get("investment_id"),
                     "client_id": client_id,
                     "client_name": client_name,
-                    "fund_code": investment["fund_code"],
-                    "fund_name": investment["fund_name"],
-                    "principal_amount": investment["principal_amount"],
-                    "current_value": investment["current_value"],
-                    "interest_earned": investment["interest_earned"],
-                    "deposit_date": investment["deposit_date"],
-                    "status": investment["status"],
-                    "monthly_interest_rate": investment["monthly_interest_rate"],
-                    "can_redeem_interest": investment["can_redeem_interest"],
-                    "can_redeem_principal": investment["can_redeem_principal"]
+                    "fund_code": fund_code,
+                    "fund_name": fund_name,
+                    "principal_amount": principal_amount,
+                    "current_value": current_value,
+                    "interest_earned": interest_earned,
+                    "deposit_date": investment.get("deposit_date").isoformat() if investment.get("deposit_date") else None,
+                    "status": investment.get("status", "active"),
+                    "monthly_interest_rate": fund_config.interest_rate if fund_config else 0,
+                    "can_redeem_interest": False,  # Simplified for overview
+                    "can_redeem_principal": False  # Simplified for overview
                 }
                 
                 all_investments.append(investment_record)
                 
                 # Update client summary
-                client_summary["total_invested"] += investment["principal_amount"]
-                client_summary["current_value"] += investment["current_value"]
-                client_summary["total_interest"] += investment["interest_earned"]
+                client_summary["total_invested"] += principal_amount
+                client_summary["current_value"] += current_value
+                client_summary["total_interest"] += interest_earned
                 
-                # Add fund to client summary if not already there
+                # Add fund to client summary
                 fund_info = {
-                    "fund_code": investment["fund_code"],
-                    "fund_name": investment["fund_name"],
-                    "amount": investment["current_value"]
+                    "fund_code": fund_code,
+                    "fund_name": fund_name,
+                    "amount": current_value
                 }
                 client_summary["funds"].append(fund_info)
                 
-                # Update fund summaries with MongoDB data
-                fund_code = investment["fund_code"]
-                fund_summaries[fund_code]["total_invested"] += investment["principal_amount"]
-                fund_summaries[fund_code]["total_current_value"] += investment["current_value"]
-                fund_summaries[fund_code]["total_investors"] += 1
-                fund_summaries[fund_code]["total_interest_paid"] += investment["interest_earned"]
+                # Update fund summaries
+                if fund_code in fund_summaries:
+                    fund_summaries[fund_code]["total_invested"] += principal_amount
+                    fund_summaries[fund_code]["total_current_value"] += current_value
+                    fund_summaries[fund_code]["total_investors"] += 1
+                    fund_summaries[fund_code]["total_interest_paid"] += interest_earned
                 
-                total_aum += investment["current_value"]
+                total_aum += current_value
             
-            # Only add clients with investments to the summary
-            if client_investments_list:
-                # Round client summary values
-                client_summary["total_invested"] = round(client_summary["total_invested"], 2)
-                client_summary["current_value"] = round(client_summary["current_value"], 2)
-                client_summary["total_interest"] = round(client_summary["total_interest"], 2)
-                clients_summary.append(client_summary)
+            # Round and add client summary
+            client_summary["total_invested"] = round(client_summary["total_invested"], 2)
+            client_summary["current_value"] = round(client_summary["current_value"], 2)
+            client_summary["total_interest"] = round(client_summary["total_interest"], 2)
+            clients_summary.append(client_summary)
         
-        # Calculate averages
+        # Calculate averages and round fund summaries
         for fund_summary in fund_summaries.values():
             if fund_summary["total_investors"] > 0:
                 fund_summary["average_investment"] = fund_summary["total_invested"] / fund_summary["total_investors"]
@@ -12095,8 +12106,8 @@ async def get_admin_investments_overview():
             "success": True,
             "total_aum": round(total_aum, 2),
             "total_investments": len(all_investments),
-            "total_clients": len(all_clients),
-            "clients": clients_summary,  # Add clients array for admin dashboard
+            "total_clients": len(clients_summary),
+            "clients": clients_summary,
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
         }
