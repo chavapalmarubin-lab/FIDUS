@@ -5843,7 +5843,7 @@ import os
 from pathlib import Path
 from path_utils import get_upload_path
 UPLOAD_DIR = Path(get_upload_path())
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Mock DocuSign Service
 class MockDocuSignService:
