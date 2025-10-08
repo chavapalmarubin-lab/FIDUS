@@ -14,7 +14,7 @@ import json
 from dateutil.relativedelta import relativedelta
 
 class CorrectedFidusFundTester:
-    def __init__(self, base_url="https://mt5-deploy-debug.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trading-platform-76.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

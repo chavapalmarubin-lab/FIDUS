@@ -13,7 +13,7 @@ from urllib.parse import urlparse, parse_qs
 import sys
 
 # Configuration
-BACKEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com"
+BACKEND_URL = "https://trading-platform-76.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
@@ -96,7 +96,7 @@ def test_google_console_configuration():
     print_section("GOOGLE CONSOLE CONFIGURATION ANALYSIS")
     
     # Based on our findings, let's analyze what should be configured
-    actual_redirect_uri = "https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback"
+    actual_redirect_uri = "https://trading-platform-76.preview.emergentagent.com/admin/google-callback"
     expected_redirect_uri = "https://fidus-invest.emergent.host/admin/google-callback"
     
     print(f"📋 REDIRECT URI ANALYSIS:")
@@ -115,7 +115,7 @@ def simulate_oauth_callback_test():
     """Test what happens when OAuth callback is called"""
     print_section("OAUTH CALLBACK SIMULATION")
     
-    callback_url = "https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback"
+    callback_url = "https://trading-platform-76.preview.emergentagent.com/admin/google-callback"
     
     # Test callback endpoint with mock parameters
     test_params = {
@@ -151,7 +151,7 @@ def generate_fix_recommendations():
     print(f"2. Find OAuth 2.0 Client: 909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com")
     print(f"3. Click Edit")
     print(f"4. In 'Authorized redirect URIs', ADD:")
-    print(f"   https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback")
+    print(f"   https://trading-platform-76.preview.emergentagent.com/admin/google-callback")
     print(f"5. Keep existing URI if present:")
     print(f"   https://fidus-invest.emergent.host/admin/google-callback")
     print(f"6. Save changes")
@@ -165,7 +165,7 @@ def generate_fix_recommendations():
     print(f"OPTION 3 - Update Frontend Configuration:")
     print(f"1. Edit /app/frontend/.env")
     print(f"2. Change REACT_APP_GOOGLE_REDIRECT_URI to:")
-    print(f"   REACT_APP_GOOGLE_REDIRECT_URI=https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback")
+    print(f"   REACT_APP_GOOGLE_REDIRECT_URI=https://trading-platform-76.preview.emergentagent.com/admin/google-callback")
     print(f"3. Restart frontend service")
     print(f"")
     print(f"🎯 RECOMMENDED APPROACH:")
@@ -215,7 +215,7 @@ def main():
     print_header("OAUTH FLOW TEST SUMMARY")
     print(f"🎯 ISSUE CONFIRMED:")
     print(f"The 'Error 400: redirect_uri_mismatch' occurs because:")
-    print(f"1. Backend sends redirect_uri: https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback")
+    print(f"1. Backend sends redirect_uri: https://trading-platform-76.preview.emergentagent.com/admin/google-callback")
     print(f"2. Google Console is likely configured for: https://fidus-invest.emergent.host/admin/google-callback")
     print(f"3. Google OAuth validates redirect_uri against Console configuration")
     print(f"4. Mismatch = Error 400: redirect_uri_mismatch")

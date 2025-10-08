@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://mt5-deploy-debug.preview.emergentagent.com`
+`https://trading-platform-76.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

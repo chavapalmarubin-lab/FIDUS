@@ -696,7 +696,7 @@ class SalvadorProductionTester:
 
 if __name__ == "__main__":
     # Allow custom base URL via command line
-    base_url = sys.argv[1] if len(sys.argv) > 1 else "https://mt5-deploy-debug.preview.emergentagent.com"
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "https://trading-platform-76.preview.emergentagent.com"
     
     tester = SalvadorProductionTester(base_url)
     success = tester.run_all_tests()

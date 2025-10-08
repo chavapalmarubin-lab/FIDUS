@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com/api"
-FRONTEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com"
+BACKEND_URL = "https://trading-platform-76.preview.emergentagent.com/api"
+FRONTEND_URL = "https://trading-platform-76.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
