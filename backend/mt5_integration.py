@@ -348,6 +348,12 @@ class MT5IntegrationService:
                 "BALANCE": "DooTechnology-Live",
                 "DYNAMIC": "DooTechnology-Live", 
                 "UNLIMITED": "DooTechnology-Live"
+            },
+            "mexatlantic": {
+                "CORE": "MEXAtlantic-Real",
+                "BALANCE": "MEXAtlantic-Real",
+                "DYNAMIC": "MEXAtlantic-Real",
+                "UNLIMITED": "MEXAtlantic-Real"
             }
         }
         
