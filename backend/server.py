@@ -12128,6 +12128,8 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         investments_cursor = db.investments.find({})
         investments = await investments_cursor.to_list(length=None)
         
+        logging.info(f"🔍 Cash flow calculation: Found {len(investments)} investments")
+        
         obligations = []
         
         # Generate cash flow obligations from investments
