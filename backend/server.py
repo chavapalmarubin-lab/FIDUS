@@ -12148,7 +12148,10 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
             redemption_freq = fund_config.redemption_frequency
             
             if not all([fund_code, principal, monthly_rate, interest_start_str]):
+                logging.info(f"🔍 Skipping investment: fund_code={fund_code}, principal={principal}, monthly_rate={monthly_rate}, interest_start={interest_start_str}")
                 continue
+                
+            logging.info(f"🔍 Processing investment: {fund_code} ${principal:,.2f} at {monthly_rate*100:.1f}% starting {interest_start_str}")
                 
             # Parse interest start date
             try:
