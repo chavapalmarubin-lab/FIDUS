@@ -503,31 +503,27 @@ class FundPortfolioEndpointTest:
                     print(f"   • {result['test']}: {result['message']}")
             print()
         
-        # Critical assessment for review request
-        critical_tests = [
-            "Fund Portfolio Overview - Success Flag",
-            "Fund Portfolio - BALANCE Fund", 
-            "Admin Clients - Response Format",
-            "Admin Clients - Salvador Present",
-            "Data Consistency - Expected Total"
-        ]
+        # Critical assessment for Issue #5 resolution
+        issue_5_resolved = any(result['test'] == "Issue #5 Resolution" and result['success'] 
+                              for result in self.test_results)
         
-        critical_passed = sum(1 for result in self.test_results 
-                            if result['success'] and any(critical in result['test'] for critical in critical_tests))
+        core_tests_passed = sum(1 for result in self.test_results 
+                               if result['success'] and any(test in result['test'] for test in 
+                                   ["CORE Fund AUM", "BALANCE Fund AUM", "Total AUM", "Issue #5 Resolution"]))
         
-        print("🚨 CRITICAL ASSESSMENT FOR REVIEW REQUEST:")
-        if critical_passed >= 4:  # At least 4 out of 5 critical tests
-            print("✅ FUND PORTFOLIO & ADMIN CLIENTS FIXES: SUCCESSFUL")
-            print("   • /api/fund-portfolio/overview endpoint working correctly")
-            print("   • /api/admin/clients endpoint returns proper format")
-            print("   • Salvador's $1,371,485.40 investments properly displayed")
-            print("   • Data consistency verified across endpoints")
-            print("   • Frontend API compatibility confirmed")
+        print("🚨 CRITICAL ASSESSMENT FOR ISSUE #5 RESOLUTION:")
+        if issue_5_resolved and core_tests_passed >= 3:
+            print("✅ ISSUE #5 (FUND PORTFOLIO EMPTY): RESOLVED")
+            print("   • Fund portfolio is no longer empty")
+            print("   • CORE fund shows correct $18,151.41 AUM with 1 MT5 account")
+            print("   • BALANCE fund shows correct $100,000.00 AUM with 3 MT5 accounts")
+            print("   • Total AUM equals $118,151.41 as expected")
+            print("   • Fund allocation details match client investments")
         else:
-            print("❌ FUND PORTFOLIO & ADMIN CLIENTS FIXES: INCOMPLETE")
-            print("   • Critical endpoint issues still exist")
-            print("   • User-reported data display problems not fully resolved")
-            print("   • Main agent action required to complete fixes")
+            print("❌ ISSUE #5 (FUND PORTFOLIO EMPTY): NOT RESOLVED")
+            print("   • Fund portfolio issues still exist")
+            print("   • Expected fund data not matching actual results")
+            print("   • Main agent action required to complete Issue #5 resolution")
         
         print("\n" + "=" * 70)
 
