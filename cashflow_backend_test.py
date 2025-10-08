@@ -91,8 +91,8 @@ class CashFlowTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check for client_interest_obligations
-                client_interest_obligations = data.get("client_interest_obligations")
+                # Check for client_interest_obligations in summary
+                client_interest_obligations = data.get("summary", {}).get("client_interest_obligations")
                 
                 if client_interest_obligations is None:
                     self.log_test(
