@@ -625,18 +625,147 @@ class FidusBackendTester:
                 self.log_test("Session Management - Role-Based Access", False,
                             f"Expected 403, got HTTP {status_code}")
 
+    def test_alejandro_production_setup(self):
+        """Test Alejandro Mariscal's production setup verification"""
+        print("🔍 Testing Alejandro Mariscal Production Setup Verification...")
+        
+        if not self.admin_token:
+            self.log_test("Alejandro Production Setup", False, "No admin token available")
+            return
+
+        # 1. Client Record Verification
+        response = self.make_request("GET", "/clients/client_alejandro_mariscal", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("email") == "alexmar7609@gmail.com":
+                    self.log_test("Client Record Verification", True, 
+                                f"Client found: {data.get('name', 'N/A')}, Email: {data.get('email', 'N/A')}")
+                else:
+                    self.log_test("Client Record Verification", False, 
+                                f"Email mismatch. Expected: alexmar7609@gmail.com, Got: {data.get('email', 'N/A')}")
+            except json.JSONDecodeError:
+                self.log_test("Client Record Verification", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Client Record Verification", False, f"HTTP {status_code}")
+
+        # 2. Ready for Investment Endpoint
+        response = self.make_request("GET", "/clients/ready-for-investment", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                ready_clients = data.get("ready_clients", [])
+                alejandro_found = any(client.get("name") == "Alejandro Mariscal Romero" for client in ready_clients)
+                if alejandro_found:
+                    self.log_test("Ready for Investment Endpoint", True, 
+                                f"Alejandro found in ready clients list ({len(ready_clients)} total)")
+                else:
+                    self.log_test("Ready for Investment Endpoint", False, 
+                                f"Alejandro not found in ready clients list ({len(ready_clients)} clients)")
+            except json.JSONDecodeError:
+                self.log_test("Ready for Investment Endpoint", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Ready for Investment Endpoint", False, f"HTTP {status_code}")
+
+        # 3. Investment Records Verification
+        response = self.make_request("GET", "/clients/client_alejandro_mariscal/investments", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                investments = data.get("investments", [])
+                if len(investments) == 2:
+                    # Check for BALANCE ($100,000) and CORE ($18,151.41)
+                    balance_found = any(inv.get("fund_code") == "BALANCE" and inv.get("principal_amount") == 100000 for inv in investments)
+                    core_found = any(inv.get("fund_code") == "CORE" and inv.get("principal_amount") == 18151.41 for inv in investments)
+                    
+                    if balance_found and core_found:
+                        total_amount = sum(inv.get("principal_amount", 0) for inv in investments)
+                        self.log_test("Investment Records Verification", True, 
+                                    f"Found 2 investments: BALANCE ($100,000) + CORE ($18,151.41) = ${total_amount:,.2f}")
+                    else:
+                        self.log_test("Investment Records Verification", False, 
+                                    f"Investment amounts/types incorrect. Expected: BALANCE $100,000 + CORE $18,151.41")
+                else:
+                    self.log_test("Investment Records Verification", False, 
+                                f"Expected 2 investments, found {len(investments)}")
+            except json.JSONDecodeError:
+                self.log_test("Investment Records Verification", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Investment Records Verification", False, f"HTTP {status_code}")
+
+        # 4. MT5 Accounts Verification
+        response = self.make_request("GET", "/mt5/accounts/client_alejandro_mariscal", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                accounts = data.get("accounts", [])
+                if len(accounts) == 4:
+                    # Check for expected MT5 accounts: 886557, 886066, 886602, 885822
+                    expected_accounts = ["886557", "886066", "886602", "885822"]
+                    found_accounts = [acc.get("mt5_account_number") for acc in accounts]
+                    
+                    # Check if all expected accounts are found
+                    all_found = all(acc in found_accounts for acc in expected_accounts)
+                    
+                    # Check MEXAtlantic broker
+                    mexatlantic_accounts = [acc for acc in accounts if acc.get("broker_name") == "MEXAtlantic"]
+                    
+                    if all_found and len(mexatlantic_accounts) == 4:
+                        total_balance = sum(acc.get("balance", 0) for acc in accounts)
+                        self.log_test("MT5 Accounts Verification", True, 
+                                    f"Found 4 MT5 accounts with MEXAtlantic broker, Total: ${total_balance:,.2f}")
+                    else:
+                        self.log_test("MT5 Accounts Verification", False, 
+                                    f"Account numbers or broker mismatch. Expected: {expected_accounts} with MEXAtlantic")
+                else:
+                    self.log_test("MT5 Accounts Verification", False, 
+                                f"Expected 4 MT5 accounts, found {len(accounts)}")
+            except json.JSONDecodeError:
+                self.log_test("MT5 Accounts Verification", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("MT5 Accounts Verification", False, f"HTTP {status_code}")
+
+        # 5. Investment Overview
+        response = self.make_request("GET", "/investments/admin/overview", auth_token=self.admin_token)
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                total_aum = data.get("total_aum", 0)
+                expected_aum = 118151.41
+                
+                if abs(total_aum - expected_aum) < 0.01:  # Allow for small floating point differences
+                    self.log_test("Investment Overview", True, 
+                                f"Total AUM matches expected: ${total_aum:,.2f}")
+                else:
+                    self.log_test("Investment Overview", False, 
+                                f"AUM mismatch. Expected: ${expected_aum:,.2f}, Got: ${total_aum:,.2f}")
+            except json.JSONDecodeError:
+                self.log_test("Investment Overview", False, "Invalid JSON response")
+        else:
+            status_code = response.status_code if response else "No response"
+            self.log_test("Investment Overview", False, f"HTTP {status_code}")
+
     def run_comprehensive_test(self):
         """Run all backend tests"""
-        print("🚀 FIDUS Backend API Testing Suite - Phase 2 Database Architecture Verification")
+        print("🚀 FIDUS Backend API Testing Suite - Alejandro Mariscal Production Setup Verification")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test Started: {datetime.now(timezone.utc).isoformat()}")
         print("=" * 80)
         print()
 
-        # Run all test suites
-        self.test_health_endpoints()
+        # Run authentication first
         self.test_user_authentication()
+        
+        # Run Alejandro production setup verification
+        self.test_alejandro_production_setup()
+        
+        # Run other critical tests
+        self.test_health_endpoints()
         self.test_user_management()
         self.test_investment_management()
         self.test_crm_system()
