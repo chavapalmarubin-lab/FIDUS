@@ -462,10 +462,8 @@ class FundPortfolioEndpointTest:
         
         # Run all tests
         self.test_fund_portfolio_overview_endpoint()
-        self.test_admin_clients_endpoint_structure()
-        self.test_data_consistency_verification()
-        self.test_frontend_api_compatibility()
-        self.test_zero_values_verification()
+        self.test_fund_allocation_details()
+        self.test_alejandro_client_investments()
         
         # Generate summary
         self.generate_test_summary()
