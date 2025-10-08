@@ -247,7 +247,7 @@ class MT5ManualAccountTester:
                 
                 # Check for the specific account logins we created
                 expected_logins = ["886557", "886066", "886602", "885822"]
-                found_logins = [acc.get("mt5_login") for acc in accounts if acc.get("mt5_login") in expected_logins]
+                found_logins = [str(int(acc.get("mt5_account_number", 0))) for acc in accounts if str(int(acc.get("mt5_account_number", 0))) in expected_logins]
                 
                 if len(found_logins) == 4:
                     self.log_test(
