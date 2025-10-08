@@ -20,7 +20,7 @@ from urllib.parse import urlparse, parse_qs
 import sys
 
 # Configuration
-BACKEND_URL = "https://investor-dash-1.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
@@ -134,13 +134,13 @@ def check_environment_configuration():
     # Check backend environment variables (from the code we saw)
     backend_env_config = {
         'GOOGLE_CLIENT_ID': '909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com',
-        'GOOGLE_OAUTH_REDIRECT_URI': 'https://investor-dash-1.preview.emergentagent.com/admin/google-callback',
+        'GOOGLE_OAUTH_REDIRECT_URI': 'https://mt5-deploy-debug.preview.emergentagent.com/admin/google-callback',
         'GOOGLE_OAUTH_REDIRECT_URI_COMMENTED': 'https://fidus-invest.emergent.host/admin/google-callback'
     }
     
     # Check frontend environment variables (from the code we saw)
     frontend_env_config = {
-        'REACT_APP_BACKEND_URL': 'https://investor-dash-1.preview.emergentagent.com',
+        'REACT_APP_BACKEND_URL': 'https://mt5-deploy-debug.preview.emergentagent.com',
         'REACT_APP_GOOGLE_CLIENT_ID': '909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com',
         'REACT_APP_GOOGLE_REDIRECT_URI': 'https://fidus-invest.emergent.host/admin/google-callback'
     }

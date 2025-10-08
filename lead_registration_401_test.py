@@ -28,7 +28,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use production URL from frontend/.env
-BACKEND_URL = "https://investor-dash-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com/api"
 
 class LeadRegistration401Test:
     def __init__(self):

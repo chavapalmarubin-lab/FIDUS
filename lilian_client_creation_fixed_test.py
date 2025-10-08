@@ -18,7 +18,7 @@ import time
 
 # Configuration - Use PRODUCTION environment as specified in review
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://investor-dash-1.preview.emergentagent.com/api"
+PREVIEW_URL = "https://mt5-deploy-debug.preview.emergentagent.com/api"
 
 BACKEND_URLS = {
     "production": PRODUCTION_URL,

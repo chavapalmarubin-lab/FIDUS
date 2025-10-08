@@ -7,7 +7,7 @@ import requests
 import json
 
 class TargetedTester:
-    def __init__(self, base_url="https://investor-dash-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://mt5-deploy-debug.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.client_token = None
