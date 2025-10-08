@@ -11817,10 +11817,11 @@ async def create_client_investment(investment_data: InvestmentCreate):
 
 @api_router.get("/investments/client/{client_id}")
 async def get_client_investments(client_id: str):
-    """Get all investments for a specific client - MongoDB version"""
+    """Get all investments for a specific client - Direct MongoDB version"""
     try:
-        # Get investments from MongoDB (already enriched with calculations)
-        client_investments_list = mongodb_manager.get_client_investments(client_id)
+        # Get investments directly from MongoDB
+        investments_cursor = db.investments.find({"client_id": client_id})
+        investments_data = await investments_cursor.to_list(length=None)
         
         # Calculate portfolio statistics from MongoDB data
         enriched_investments = []
@@ -11828,37 +11829,49 @@ async def get_client_investments(client_id: str):
         total_current_value = 0.0
         total_earned_interest = 0.0
         
-        for investment in client_investments_list:
-            # MongoDB data already includes calculations and current values
+        for investment in investments_data:
+            fund_code = investment.get("fund_code", "")
+            fund_config = FIDUS_FUND_CONFIG.get(fund_code)
+            fund_name = fund_config.name if fund_config else f"FIDUS {fund_code} Fund"
+            
+            principal_amount = investment.get("principal_amount", 0)
+            current_value = investment.get("current_value", principal_amount)
+            interest_earned = investment.get("total_interest_earned", 0)
+            
+            # Format dates for response
+            deposit_date = investment.get("deposit_date")
+            interest_start_date = investment.get("interest_start_date")
+            minimum_hold_end_date = investment.get("minimum_hold_end_date")
+            
             enriched_investment = {
-                "investment_id": investment["investment_id"],
-                "fund_code": investment["fund_code"],
-                "fund_name": investment["fund_name"],
-                "principal_amount": investment["principal_amount"],
-                "current_value": investment["current_value"],
-                "interest_earned": investment["interest_earned"],
-                "deposit_date": investment["deposit_date"],
-                "interest_start_date": investment["interest_start_date"],
-                "minimum_hold_end_date": investment["minimum_hold_end_date"],
-                "status": investment["status"],
-                "monthly_interest_rate": investment["monthly_interest_rate"],
-                "can_redeem_interest": investment["can_redeem_interest"],
-                "can_redeem_principal": investment["can_redeem_principal"],
-                "created_at": investment["created_at"]
+                "investment_id": investment.get("investment_id"),
+                "fund_code": fund_code,
+                "fund_name": fund_name,
+                "principal_amount": principal_amount,
+                "current_value": current_value,
+                "interest_earned": interest_earned,
+                "deposit_date": deposit_date.isoformat() if deposit_date else None,
+                "interest_start_date": interest_start_date.isoformat() if interest_start_date else None,
+                "minimum_hold_end_date": minimum_hold_end_date.isoformat() if minimum_hold_end_date else None,
+                "status": investment.get("status", "active"),
+                "monthly_interest_rate": fund_config.interest_rate if fund_config else 0,
+                "can_redeem_interest": datetime.now(timezone.utc) >= interest_start_date if interest_start_date else False,
+                "can_redeem_principal": datetime.now(timezone.utc) >= minimum_hold_end_date if minimum_hold_end_date else False,
+                "created_at": investment.get("created_at").isoformat() if investment.get("created_at") else None
             }
             
             enriched_investments.append(enriched_investment)
-            total_invested += investment["principal_amount"]
-            total_current_value += investment["current_value"]
-            total_earned_interest += investment["interest_earned"]
+            total_invested += principal_amount
+            total_current_value += current_value
+            total_earned_interest += interest_earned
         
-        # Calculate portfolio statistics from MongoDB data
+        # Calculate portfolio statistics
         portfolio_stats = {
             "total_investments": len(enriched_investments),
             "total_invested": round(total_invested, 2),
             "total_current_value": round(total_current_value, 2),
             "total_earned_interest": round(total_earned_interest, 2),
-            "total_projected_interest": round(total_earned_interest, 2),  # Using earned as projected for now
+            "total_projected_interest": round(total_earned_interest, 2),
             "projected_portfolio_value": round(total_current_value, 2),
             "overall_return_percentage": round(((total_current_value - total_invested) / total_invested * 100), 2) if total_invested > 0 else 0.0
         }
