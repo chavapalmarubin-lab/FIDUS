@@ -12124,9 +12124,52 @@ async def get_admin_investments_overview():
 async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"):
     """Get cash flow overview for admin dashboard"""
     try:
-        # Get cash flow obligations from MongoDB
-        obligations_cursor = db.cash_flow_obligations.find({})
-        obligations = await obligations_cursor.to_list(length=None)
+        # Calculate cash flow obligations on-the-fly from investment data
+        investments_cursor = db.investments.find({})
+        investments = await investments_cursor.to_list(length=None)
+        
+        obligations = []
+        
+        # Generate cash flow obligations from investments
+        for investment in investments:
+            fund_code = investment.get('fund_code')
+            principal = investment.get('principal_amount', 0)
+            monthly_rate = investment.get('monthly_interest_rate', 0) / 100
+            redemption_freq = investment.get('redemption_frequency')
+            first_redemption = investment.get('first_redemption_date')
+            client_id = investment.get('client_id')
+            
+            if not all([fund_code, principal, monthly_rate, redemption_freq, first_redemption]):
+                continue
+                
+            monthly_interest = principal * monthly_rate
+            
+            # Generate 12 months of payments
+            if redemption_freq == 'monthly':
+                # Monthly payments for 12 months
+                for i in range(12):
+                    from dateutil.relativedelta import relativedelta
+                    payment_date = first_redemption + relativedelta(months=i)
+                    obligations.append({
+                        'client_id': client_id,
+                        'fund_code': fund_code,
+                        'payment_date': payment_date,
+                        'payment_type': 'interest',
+                        'amount': monthly_interest
+                    })
+            elif redemption_freq == 'quarterly':
+                # Quarterly payments for 4 quarters
+                quarterly_amount = monthly_interest * 3
+                for i in range(4):
+                    from dateutil.relativedelta import relativedelta
+                    payment_date = first_redemption + relativedelta(months=i*3)
+                    obligations.append({
+                        'client_id': client_id,
+                        'fund_code': fund_code,
+                        'payment_date': payment_date,
+                        'payment_type': 'interest',
+                        'amount': quarterly_amount
+                    })
         
         # Calculate current date for filtering
         now = datetime.now(timezone.utc)
