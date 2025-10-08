@@ -320,6 +320,84 @@ class MT5Service:
             logger.error(f"Error getting client MT5 accounts: {e}")
             raise
     
+    async def add_manual_mt5_account(self, client_id: str, fund_code: str, 
+                                   broker_code: str, mt5_login: int, 
+                                   mt5_password: str, mt5_server: str,
+                                   allocated_amount: float = 0.0) -> Optional[str]:
+        """Manually add MT5 account with existing credentials (for pre-existing client accounts)"""
+        try:
+            # Import here to avoid circular imports
+            from mongodb_integration import mongodb_manager
+            import uuid
+            
+            # Validate client exists
+            client = await self.user_repo.find_by_id(client_id)
+            if not client:
+                logger.error(f"Client not found: {client_id}")
+                return None
+            
+            # Convert broker_code string to BrokerCode enum
+            try:
+                if broker_code == "multibank":
+                    broker_enum = BrokerCode.MULTIBANK
+                elif broker_code == "dootechnology":
+                    broker_enum = BrokerCode.DOOTECHNOLOGY
+                elif broker_code == "vtmarkets":
+                    broker_enum = BrokerCode.VTMARKETS
+                else:
+                    broker_enum = BrokerCode.CUSTOM
+            except:
+                logger.error(f"Invalid broker code: {broker_code}")
+                return None
+            
+            # Check if MT5 account already exists
+            existing = await self.mt5_repo.find_by_mt5_login(mt5_login)
+            if existing:
+                logger.warning(f"MT5 account {mt5_login} already exists")
+                return existing.account_id
+            
+            # Generate unique account ID
+            account_id = f"mt5_{client_id}_{fund_code}_{broker_code}_{str(uuid.uuid4())[:8]}"
+            
+            # Encrypt password
+            from cryptography.fernet import Fernet
+            import os
+            
+            encryption_key = os.environ.get('MT5_ENCRYPTION_KEY')
+            if not encryption_key:
+                # Generate key for demo - in production, use proper key management
+                encryption_key = Fernet.generate_key().decode()
+                logger.warning("Generated temporary encryption key - use proper key management in production")
+            
+            fernet = Fernet(encryption_key.encode() if isinstance(encryption_key, str) else encryption_key)
+            encrypted_password = fernet.encrypt(mt5_password.encode()).decode()
+            
+            # Create account record
+            account_data = MT5AccountCreate(
+                account_id=account_id,
+                client_id=client_id,
+                mt5_login=mt5_login,
+                broker_code=broker_enum,
+                broker_name=self._get_broker_name(broker_enum),
+                mt5_server=mt5_server,
+                fund_code=fund_code,
+                encrypted_password=encrypted_password,
+                is_demo=self._is_demo_server(mt5_server)
+            )
+            
+            mt5_account = await self.mt5_repo.create_mt5_account(account_data)
+            
+            if mt5_account:
+                logger.info(f"Manually added MT5 account {mt5_login} for client {client_id} (Account ID: {account_id})")
+                return account_id
+            else:
+                logger.error(f"Failed to create MT5 account record for {mt5_login}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error adding manual MT5 account: {e}")
+            return None
+    
     def _get_broker_name(self, broker_code: BrokerCode) -> str:
         """Get human-readable broker name"""
         broker_names = {
