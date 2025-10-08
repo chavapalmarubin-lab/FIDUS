@@ -51,6 +51,13 @@ class MT5BrokerConfig:
             "description": "VT Markets - PAMM Trading Solutions",
             "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER", "CRUDE", "INDICES"],
             "max_accounts_per_client": 25
+        },
+        "mexatlantic": {
+            "name": "MEXAtlantic",
+            "servers": ["MEXAtlantic-Real", "MEXAtlantic-Demo"],
+            "description": "MEXAtlantic - Mexico Trading Platform",
+            "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER"],
+            "max_accounts_per_client": 10
         }
     }
     
