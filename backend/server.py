@@ -18089,20 +18089,33 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
 
 @api_router.get("/mt5/accounts/{client_id}")
 async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
-    """Get MT5 accounts for a client - Direct MongoDB version"""
+    """Get MT5 accounts for a client - Enhanced with live data"""
     try:
         # Allow clients to view their own accounts, admins can view any
         if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        # Get MT5 accounts directly from MongoDB
         logging.info(f"Searching MT5 accounts for client_id: {client_id}")
         mt5_cursor = db.mt5_accounts.find({"client_id": client_id})
         mt5_accounts_data = await mt5_cursor.to_list(length=None)
         logging.info(f"Found {len(mt5_accounts_data)} MT5 accounts for client_id: {client_id}")
         
         accounts = []
+        total_allocated = 0.0
+        total_equity = 0.0
+        total_profit = 0.0
+        
         for mt5_account in mt5_accounts_data:
+            # Use live data if available, otherwise use stored data
+            allocated_amount = mt5_account.get("total_allocated", 0)
+            current_equity = mt5_account.get("current_equity", allocated_amount)
+            profit_loss = mt5_account.get("profit_loss", 0)
+            
+            # Check if this is live data from MT5 bridge
+            data_source = "stored"
+            if mt5_account.get("mt5_data_source") == "live_bridge":
+                data_source = "live"
+            
             account = {
                 "account_id": mt5_account.get("account_id"),
                 "mt5_account_number": mt5_account.get("mt5_login"),
@@ -18110,23 +18123,48 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
                 "broker_code": mt5_account.get("broker_code"),
                 "server": mt5_account.get("mt5_server"),
                 "fund_code": mt5_account.get("fund_code"),
-                "balance": mt5_account.get("total_allocated", 0),
-                "equity": mt5_account.get("current_equity", mt5_account.get("total_allocated", 0)),
-                "profit_loss": mt5_account.get("profit_loss", 0),
+                
+                # Financial data (live or stored)
+                "allocated_amount": allocated_amount,
+                "balance": mt5_account.get("current_balance", allocated_amount),
+                "equity": current_equity,
+                "profit_loss": profit_loss,
                 "profit_loss_percentage": mt5_account.get("profit_loss_percentage", 0),
+                "return_percent": mt5_account.get("profit_loss_percentage", 0),
+                
+                # Margin data (from live MT5 if available)
+                "margin_used": mt5_account.get("margin_used", 0),
+                "margin_free": mt5_account.get("margin_free", current_equity),
+                
+                # Status and metadata
                 "status": mt5_account.get("status", "active"),
                 "is_active": mt5_account.get("is_active", True),
+                "data_source": data_source,
                 "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") else None,
-                "last_sync": mt5_account.get("last_sync").isoformat() if mt5_account.get("last_sync") else None,
-                "sync_status": mt5_account.get("sync_status", "pending")
+                "last_sync": mt5_account.get("last_mt5_update").isoformat() if mt5_account.get("last_mt5_update") else None,
+                "sync_status": mt5_account.get("mt5_status", "pending")
             }
+            
             accounts.append(account)
+            total_allocated += allocated_amount
+            total_equity += current_equity
+            total_profit += profit_loss
+        
+        # Calculate overall performance
+        overall_return = (total_profit / total_allocated * 100) if total_allocated > 0 else 0
         
         return {
             "success": True,
             "client_id": client_id,
             "accounts": accounts,
-            "count": len(accounts)
+            "count": len(accounts),
+            "summary": {
+                "total_allocated": round(total_allocated, 2),
+                "total_equity": round(total_equity, 2),
+                "total_profit": round(total_profit, 2),
+                "overall_return_percent": round(overall_return, 2)
+            },
+            "data_source": "enhanced_with_live_data"
         }
         
     except HTTPException:
