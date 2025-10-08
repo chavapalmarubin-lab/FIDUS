@@ -38,7 +38,13 @@ class FundPortfolioEndpointTest:
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []
-        self.expected_salvador_total = 1371485.40  # As specified in review request
+        self.expected_total_aum = 118151.41  # As specified in review request
+        self.expected_core_aum = 18151.41
+        self.expected_balance_aum = 100000.00
+        self.expected_core_mt5_accounts = 1
+        self.expected_balance_mt5_accounts = 3
+        self.expected_total_investors = 1
+        self.expected_fund_count = 2
         
     def log_result(self, test_name, success, message, details=None):
         """Log test result"""
