@@ -697,7 +697,7 @@ class FidusBackendTester:
             self.log_test("Investment Records Verification", False, f"HTTP {status_code}")
 
         # 4. MT5 Accounts Verification
-        response = self.make_request("GET", "/mt5/accounts/client_alejandro_mariscal", auth_token=self.admin_token)
+        response = self.make_request("GET", "/mt5/accounts/client_alejandro", auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
                 data = response.json()
