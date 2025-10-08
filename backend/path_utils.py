@@ -45,4 +45,4 @@ def ensure_dir_exists(path: str) -> None:
     """
     Ensure directory exists, create if not
     """
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).mkdir(parents=True, exist_ok=True)
