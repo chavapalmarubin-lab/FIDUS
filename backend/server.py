@@ -12135,11 +12135,31 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
             fund_code = investment.get('fund_code')
             principal = investment.get('principal_amount', 0)
             monthly_rate = investment.get('monthly_interest_rate', 0) / 100
-            redemption_freq = investment.get('redemption_frequency')
-            first_redemption = investment.get('first_redemption_date')
+            interest_start_str = investment.get('interest_start_date')
             client_id = investment.get('client_id')
             
-            if not all([fund_code, principal, monthly_rate, redemption_freq, first_redemption]):
+            # Get redemption frequency from fund configuration
+            fund_config = FIDUS_FUND_CONFIG.get(fund_code)
+            if not fund_config:
+                continue
+                
+            redemption_freq = fund_config.redemption_frequency
+            
+            if not all([fund_code, principal, monthly_rate, interest_start_str]):
+                continue
+                
+            # Parse interest start date
+            try:
+                if isinstance(interest_start_str, str):
+                    if interest_start_str.endswith('Z'):
+                        first_redemption = datetime.fromisoformat(interest_start_str.replace('Z', '+00:00'))
+                    elif '+' not in interest_start_str and 'T' in interest_start_str:
+                        first_redemption = datetime.fromisoformat(interest_start_str).replace(tzinfo=timezone.utc)
+                    else:
+                        first_redemption = datetime.fromisoformat(interest_start_str)
+                else:
+                    first_redemption = interest_start_str
+            except (ValueError, TypeError):
                 continue
                 
             monthly_interest = principal * monthly_rate
