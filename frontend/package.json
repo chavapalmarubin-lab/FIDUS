@@ -61,8 +61,9 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
-    "test": "craco test"
+    "build": "craco build", 
+    "test": "craco test",
+    "serve": "serve -s build -l 3000"
   },
   "browserslist": {
     "production": [
