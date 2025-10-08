@@ -461,15 +461,14 @@ class MT5RenderTester:
             print("   ⚠️  Skipping protected MT5 endpoints (no authentication)")
             return
 
-        # Key endpoints to test as specified in review
-        key_endpoints = [
-            ("/health", "Health Check with MT5 Integration Status", False),  # No auth needed
+        # Protected endpoints to test as specified in review
+        protected_endpoints = [
             ("/mt5/accounts/client_003", "Client MT5 Account Retrieval", True),
             ("/mt5/account/123456", "MT5 Account by ID", True),
             ("/mt5/performance/123456", "Real-time Performance Data", True)
         ]
         
-        for endpoint, test_name, requires_auth in key_endpoints:
+        for endpoint, test_name, requires_auth in protected_endpoints:
             auth_token = self.admin_token if requires_auth else None
             response = self.make_request("GET", endpoint, auth_token=auth_token)
             
