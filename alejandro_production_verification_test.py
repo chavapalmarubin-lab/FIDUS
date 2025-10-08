@@ -155,7 +155,7 @@ class AlejandroProductionVerifier:
             self.log_test("Client Investments Endpoint", False, "No admin token available")
             return
         
-        response = self.make_request("GET", "/clients/client_alejandro_mariscal/investments", auth_token=self.admin_token)
+        response = self.make_request("GET", "/investments/client/client_alejandro", auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
                 data = response.json()
