@@ -12153,7 +12153,7 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
                 
             logging.info(f"🔍 Processing investment: {fund_code} ${principal:,.2f} at {monthly_rate*100:.1f}% starting {interest_start_str}")
                 
-            # Parse interest start date
+            # Parse interest start date and ensure it's timezone-aware
             try:
                 if isinstance(interest_start_str, str):
                     if interest_start_str.endswith('Z'):
@@ -12164,6 +12164,11 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
                         first_redemption = datetime.fromisoformat(interest_start_str)
                 else:
                     first_redemption = interest_start_str
+                    
+                # Ensure timezone-aware
+                if first_redemption.tzinfo is None:
+                    first_redemption = first_redemption.replace(tzinfo=timezone.utc)
+                    
             except (ValueError, TypeError):
                 continue
                 
