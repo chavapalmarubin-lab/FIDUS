@@ -13,6 +13,7 @@ class BrokerCode(str, Enum):
     MULTIBANK = "multibank"
     DOOTECHNOLOGY = "dootechnology"
     VTMARKETS = "vtmarkets"
+    MEXATLANTIC = "mexatlantic"
     CUSTOM = "custom"
 
 class MT5AccountStatus(str, Enum):
