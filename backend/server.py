@@ -15667,6 +15667,10 @@ async def add_manual_mt5_account(request: Request):
         if not client:
             raise HTTPException(status_code=404, detail="Client not found")
         
+        # Initialize MT5 service if needed
+        if not mt5_service.mt5_repo:
+            await mt5_service.initialize()
+        
         account_id = await mt5_service.add_manual_mt5_account(
             client_id=data['client_id'],
             fund_code=data['fund_code'],
