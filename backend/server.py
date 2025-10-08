@@ -12117,10 +12117,10 @@ async def get_admin_investments_overview():
         raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
 
 # ===============================================================================
-# LIVE MT5 DATA INTEGRATION ENDPOINTS
+# MULTI-ACCOUNT MT5 DATA INTEGRATION ENDPOINTS
 # ===============================================================================
 
-from live_mt5_integration import live_mt5_service
+from multi_account_mt5_service import multi_account_mt5_service
 
 @api_router.get("/mt5/live/test-connection")
 async def test_live_mt5_connection():
