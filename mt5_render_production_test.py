@@ -83,6 +83,7 @@ class MT5RenderTester:
             req_headers["Authorization"] = f"Bearer {auth_token}"
             
         try:
+            print(f"Making {method} request to: {url}")  # Debug logging
             if method.upper() == "GET":
                 response = self.session.get(url, headers=req_headers, timeout=timeout)
             elif method.upper() == "POST":
@@ -94,6 +95,7 @@ class MT5RenderTester:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
                 
+            print(f"Response: {response.status_code}")  # Debug logging
             return response
         except requests.exceptions.Timeout:
             print(f"Request timeout after {timeout}s: {url}")
