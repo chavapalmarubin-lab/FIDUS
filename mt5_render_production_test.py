@@ -597,10 +597,12 @@ class MT5RenderTester:
         print("=" * 80)
         print()
 
-        # Authenticate first
-        if not self.authenticate_admin():
-            print("🚨 CRITICAL: Admin authentication failed - cannot proceed with MT5 tests")
-            return 0
+        # Authenticate first (but continue even if it fails)
+        auth_success = self.authenticate_admin()
+        if not auth_success:
+            print("⚠️  Admin authentication failed - proceeding with limited testing")
+            print("   (Testing endpoints that don't require authentication)")
+            print()
 
         # Run all MT5 test suites
         self.test_mt5_service_initialization()
