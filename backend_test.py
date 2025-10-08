@@ -634,7 +634,7 @@ class FidusBackendTester:
             return
 
         # 1. Client Record Verification
-        response = self.make_request("GET", "/clients/client_alejandro_mariscal", auth_token=self.admin_token)
+        response = self.make_request("GET", "/clients/client_alejandro", auth_token=self.admin_token)
         if response and response.status_code == 200:
             try:
                 data = response.json()
