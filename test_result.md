@@ -1115,10 +1115,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Emergent Google Auth Integration Testing"
+    - "MT5 Integration Testing on Render Production Service"
   stuck_tasks: []
   test_all: false
-  test_priority: "deployment_verification"
+  test_priority: "production_deployment_verification"
 
 agent_communication:
     - agent: "testing"
