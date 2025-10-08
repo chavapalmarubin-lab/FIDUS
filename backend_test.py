@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 """
-FIDUS Backend API Testing Suite - Phase 2 Database Architecture Verification
-Testing comprehensive backend functionality after MongoDB migration and repository pattern implementation.
+URGENT DEBUG: Frontend Data Visibility Testing
+Testing specific endpoints that frontend should be calling but user reports no data visible.
 
-Test Areas:
-1. Health Check Endpoints
-2. User Authentication & Session Management  
-3. User Management System
-4. Investment Management System
-5. CRM Pipeline System
-6. Google Integration APIs
-7. Database Operations & Repository Pattern
-8. JWT Token Management
+Focus Areas:
+1. Admin Authentication 
+2. Investment Admin Overview (dashboard totals)
+3. Ready Clients (investment dropdown)
+4. Client Investments (Alejandro's data)
+5. MT5 Accounts (Alejandro's accounts)
+6. Google Connection Status
 
-Context: 7 users exist in database (including alejandro_mariscal)
-Investment collection is clean (0 investments)
-MongoDB Atlas connection operational at ~30ms ping time
+Context: User reports no investments, MT5 accounts, or Google email functionality visible in frontend.
+Need to verify these specific endpoints are returning correct data for frontend consumption.
 """
 
 import requests
