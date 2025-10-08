@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration
-BACKEND_URL = "https://fidus-invest.emergent.host/api"
+BACKEND_URL = "https://trading-platform-76.preview.emergentagent.com/api"
 
 # Test Users Available
 TEST_USERS = {
