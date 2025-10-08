@@ -1044,8 +1044,8 @@ class FrontendDataVisibilityTester:
         return success_rate
 
 if __name__ == "__main__":
-    tester = FidusBackendTester()
-    success_rate = tester.run_comprehensive_test()
+    tester = FrontendDataVisibilityTester()
+    success = tester.run_all_tests()
     
     # Exit with appropriate code
-    sys.exit(0 if success_rate >= 80 else 1)
+    sys.exit(0 if success else 1)
