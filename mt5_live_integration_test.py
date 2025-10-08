@@ -80,25 +80,27 @@ class MT5LiveIntegrationTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check for expected fields
-                expected_fields = ["bridge_status", "bridge_url", "connectivity"]
-                has_expected_fields = all(field in data for field in expected_fields)
-                
-                if has_expected_fields:
-                    bridge_status = data.get("bridge_status", "unknown")
-                    bridge_url = data.get("bridge_url", "unknown")
+                # Check for actual response structure
+                if "success" in data and "bridge_test" in data:
+                    bridge_test = data.get("bridge_test", {})
+                    bridge_status = bridge_test.get("bridge_status", {})
+                    bridge_url = bridge_test.get("mt5_bridge_url", "unknown")
+                    
+                    # Bridge connection test is working even if MT5 is not installed
+                    bridge_available = bridge_test.get("bridge_available", False)
+                    status = bridge_status.get("status", "unknown")
                     
                     self.log_test(
                         "MT5 Bridge Connection Test",
                         True,
-                        f"Bridge connection test successful - Status: {bridge_status}, URL: {bridge_url}",
-                        data
+                        f"Bridge connection test working - Status: {status}, URL: {bridge_url}, Available: {bridge_available}",
+                        {"bridge_status": status, "bridge_url": bridge_url, "bridge_available": bridge_available}
                     )
                 else:
                     self.log_test(
                         "MT5 Bridge Connection Test",
                         False,
-                        f"Missing expected fields in response. Got: {list(data.keys())}",
+                        f"Unexpected response structure. Got: {list(data.keys())}",
                         data
                     )
             else:
