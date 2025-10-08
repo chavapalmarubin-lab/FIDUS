@@ -278,7 +278,7 @@ MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to
     implemented: false
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: false
     status_history:
