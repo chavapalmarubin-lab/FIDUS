@@ -90,68 +90,107 @@ class FundPortfolioEndpointTest:
             return False
     
     def test_fund_portfolio_overview_endpoint(self):
-        """Test the new /api/fund-portfolio/overview endpoint"""
+        """Test the /api/fund-portfolio/overview endpoint for Issue #5 resolution"""
         try:
             response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if success=true
-                success_flag = data.get('success', False)
-                if success_flag:
-                    self.log_result("Fund Portfolio Overview - Success Flag", True, 
-                                  "Endpoint returns success=true")
-                else:
-                    self.log_result("Fund Portfolio Overview - Success Flag", False, 
-                                  "Endpoint does not return success=true", {"response": data})
-                
-                # Check for Salvador's fund data
-                funds = data.get('funds', {})
+                # Check if portfolio is not empty (Issue #5 resolution)
+                funds = data.get('funds', [])
                 total_aum = data.get('total_aum', 0)
                 
-                # Look for BALANCE fund (~$1.36M)
-                balance_fund_found = False
-                core_fund_found = False
-                balance_amount = 0
-                core_amount = 0
-                
-                # Handle funds as dictionary format
-                if 'BALANCE' in funds:
-                    balance_fund_found = True
-                    balance_amount = funds['BALANCE'].get('aum', 0)
-                    if balance_amount > 1300000:  # Should be around $1.36M
-                        self.log_result("Fund Portfolio - BALANCE Fund", True, 
-                                      f"BALANCE fund found with correct amount: ${balance_amount:,.2f}")
-                    else:
-                        self.log_result("Fund Portfolio - BALANCE Fund", False, 
-                                      f"BALANCE fund amount too low: ${balance_amount:,.2f} (expected ~$1.36M)")
-                
-                if 'CORE' in funds:
-                    core_fund_found = True
-                    core_amount = funds['CORE'].get('aum', 0)
-                    if core_amount > 0:  # Should be around $8K
-                        self.log_result("Fund Portfolio - CORE Fund", True, 
-                                      f"CORE fund found with amount: ${core_amount:,.2f}")
-                    else:
-                        self.log_result("Fund Portfolio - CORE Fund", False, 
-                                      f"CORE fund shows zero amount: ${core_amount:,.2f}")
-                
-                # Check total AUM matches expected
-                if abs(total_aum - self.expected_salvador_total) < 10000:  # Allow $10K variance
-                    self.log_result("Fund Portfolio - Total AUM", True, 
-                                  f"Total AUM matches expected: ${total_aum:,.2f}")
+                if len(funds) == 0:
+                    self.log_result("Issue #5 Resolution", False, 
+                                  "Fund portfolio is still EMPTY - Issue #5 NOT resolved", {"response": data})
+                    return
+                elif total_aum == 0:
+                    self.log_result("Issue #5 Resolution", False, 
+                                  f"Fund portfolio has {len(funds)} funds but $0 AUM - Issue #5 partially resolved", {"response": data})
                 else:
-                    self.log_result("Fund Portfolio - Total AUM", False, 
-                                  f"Total AUM mismatch: got ${total_aum:,.2f}, expected ${self.expected_salvador_total:,.2f}")
+                    self.log_result("Issue #5 Resolution", True, 
+                                  f"Fund portfolio is NOT empty: {len(funds)} funds with ${total_aum:,.2f} total AUM - Issue #5 RESOLVED")
                 
-                # Check no zero values (unless legitimately empty)
-                if total_aum > 0 and len(funds) > 0:
-                    self.log_result("Fund Portfolio - Non-Zero Values", True, 
-                                  "Endpoint returns non-zero values as expected")
+                # Check CORE fund details
+                core_fund = None
+                balance_fund = None
+                
+                # Handle both array and dict formats for funds
+                if isinstance(funds, list):
+                    core_fund = next((f for f in funds if f.get("fund_code") == "CORE"), None)
+                    balance_fund = next((f for f in funds if f.get("fund_code") == "BALANCE"), None)
+                elif isinstance(funds, dict):
+                    core_fund = funds.get("CORE")
+                    balance_fund = funds.get("BALANCE")
+                
+                # Validate CORE fund
+                if core_fund:
+                    core_aum = core_fund.get("total_aum", 0) or core_fund.get("aum", 0)
+                    core_mt5_count = core_fund.get("mt5_accounts_count", 0)
+                    
+                    if abs(core_aum - self.expected_core_aum) < 0.01:
+                        self.log_result("CORE Fund AUM", True, 
+                                      f"CORE fund AUM correct: ${core_aum:,.2f}")
+                    else:
+                        self.log_result("CORE Fund AUM", False, 
+                                      f"CORE fund AUM incorrect: Expected ${self.expected_core_aum:,.2f}, got ${core_aum:,.2f}")
+                    
+                    if core_mt5_count == self.expected_core_mt5_accounts:
+                        self.log_result("CORE Fund MT5 Accounts", True, 
+                                      f"CORE fund MT5 accounts correct: {core_mt5_count}")
+                    else:
+                        self.log_result("CORE Fund MT5 Accounts", False, 
+                                      f"CORE fund MT5 accounts incorrect: Expected {self.expected_core_mt5_accounts}, got {core_mt5_count}")
                 else:
-                    self.log_result("Fund Portfolio - Non-Zero Values", False, 
-                                  "Endpoint returns zero values", {"total_aum": total_aum, "funds_count": len(funds)})
+                    self.log_result("CORE Fund Presence", False, "CORE fund not found in portfolio")
+                
+                # Validate BALANCE fund
+                if balance_fund:
+                    balance_aum = balance_fund.get("total_aum", 0) or balance_fund.get("aum", 0)
+                    balance_mt5_count = balance_fund.get("mt5_accounts_count", 0)
+                    
+                    if abs(balance_aum - self.expected_balance_aum) < 0.01:
+                        self.log_result("BALANCE Fund AUM", True, 
+                                      f"BALANCE fund AUM correct: ${balance_aum:,.2f}")
+                    else:
+                        self.log_result("BALANCE Fund AUM", False, 
+                                      f"BALANCE fund AUM incorrect: Expected ${self.expected_balance_aum:,.2f}, got ${balance_aum:,.2f}")
+                    
+                    if balance_mt5_count == self.expected_balance_mt5_accounts:
+                        self.log_result("BALANCE Fund MT5 Accounts", True, 
+                                      f"BALANCE fund MT5 accounts correct: {balance_mt5_count}")
+                    else:
+                        self.log_result("BALANCE Fund MT5 Accounts", False, 
+                                      f"BALANCE fund MT5 accounts incorrect: Expected {self.expected_balance_mt5_accounts}, got {balance_mt5_count}")
+                else:
+                    self.log_result("BALANCE Fund Presence", False, "BALANCE fund not found in portfolio")
+                
+                # Validate total AUM
+                if abs(total_aum - self.expected_total_aum) < 0.01:
+                    self.log_result("Total AUM", True, 
+                                  f"Total AUM correct: ${total_aum:,.2f}")
+                else:
+                    self.log_result("Total AUM", False, 
+                                  f"Total AUM incorrect: Expected ${self.expected_total_aum:,.2f}, got ${total_aum:,.2f}")
+                
+                # Validate portfolio summary
+                total_investors = data.get("total_investors", 0)
+                fund_count = data.get("fund_count", 0)
+                
+                if total_investors == self.expected_total_investors:
+                    self.log_result("Total Investors", True, 
+                                  f"Total investors correct: {total_investors}")
+                else:
+                    self.log_result("Total Investors", False, 
+                                  f"Total investors incorrect: Expected {self.expected_total_investors}, got {total_investors}")
+                
+                if fund_count == self.expected_fund_count:
+                    self.log_result("Fund Count", True, 
+                                  f"Fund count correct: {fund_count}")
+                else:
+                    self.log_result("Fund Count", False, 
+                                  f"Fund count incorrect: Expected {self.expected_fund_count}, got {fund_count}")
                 
             elif response.status_code == 404:
                 self.log_result("Fund Portfolio Overview Endpoint", False, 
