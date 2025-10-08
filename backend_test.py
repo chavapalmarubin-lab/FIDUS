@@ -108,44 +108,265 @@ class FrontendDataVisibilityTester:
             print(f"Request failed: {e}")
             return None
 
-    def test_health_endpoints(self):
-        """Test health check and readiness endpoints"""
-        print("🔍 Testing Health Check Endpoints...")
+    def test_admin_authentication(self):
+        """Test admin login with credentials admin/password123"""
+        print("🔐 TESTING ADMIN AUTHENTICATION")
         
-        # Test basic health endpoint
-        response = self.make_request("GET", "/health")
-        if response and response.status_code == 200:
-            try:
+        try:
+            login_data = {
+                "username": "admin",
+                "password": "password123", 
+                "user_type": "admin"
+            }
+            
+            response = self.make_request("POST", "/auth/login", data=login_data)
+            
+            if response and response.status_code == 200:
                 data = response.json()
-                if data.get("status") == "healthy":
-                    self.log_test("Health Check Endpoint", True, 
-                                f"Status: {data.get('status')}, Service: {data.get('service', 'N/A')}")
+                if data.get("token"):
+                    self.admin_token = data["token"]
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    
+                    self.log_test(
+                        "Admin Authentication",
+                        True,
+                        f"Successfully authenticated as {data.get('name', 'admin')} with JWT token"
+                    )
+                    return True
                 else:
-                    self.log_test("Health Check Endpoint", False, 
-                                f"Unexpected status: {data.get('status')}")
-            except json.JSONDecodeError:
-                self.log_test("Health Check Endpoint", False, "Invalid JSON response")
-        else:
-            status_code = response.status_code if response else "No response"
-            self.log_test("Health Check Endpoint", False, f"HTTP {status_code}")
+                    self.log_test("Admin Authentication", False, "No token in response", str(data))
+                    return False
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Admin Authentication", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
+            return False
 
-        # Test readiness endpoint
-        response = self.make_request("GET", "/health/ready")
-        if response and response.status_code == 200:
-            self.log_test("Readiness Check Endpoint", True, "System ready for requests")
-        else:
-            status_code = response.status_code if response else "No response"
-            self.log_test("Readiness Check Endpoint", False, f"HTTP {status_code}")
+    def test_investment_admin_overview(self):
+        """Test investment admin overview for dashboard totals"""
+        print("📊 TESTING INVESTMENT ADMIN OVERVIEW")
+        
+        try:
+            response = self.make_request("GET", "/investments/admin/overview", auth_token=self.admin_token)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                # Check if data structure is correct for frontend
+                required_fields = ["total_aum", "total_investments", "total_clients"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test(
+                        "Investment Admin Overview",
+                        False,
+                        f"Missing required fields: {missing_fields}"
+                    )
+                else:
+                    self.log_test(
+                        "Investment Admin Overview", 
+                        True,
+                        f"AUM: {data.get('total_aum', 'N/A')}, Investments: {data.get('total_investments', 'N/A')}, Clients: {data.get('total_clients', 'N/A')}"
+                    )
+                    
+                return response.status_code == 200
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Investment Admin Overview", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Investment Admin Overview", False, f"Exception: {str(e)}")
+            return False
 
-        # Test health metrics endpoint
-        response = self.make_request("GET", "/health/metrics")
-        if response and response.status_code == 200:
-            self.log_test("Health Metrics Endpoint", True, "Metrics endpoint accessible")
-        else:
-            status_code = response.status_code if response else "No response"
-            self.log_test("Health Metrics Endpoint", False, f"HTTP {status_code}")
+    def test_ready_clients(self):
+        """Test ready clients endpoint for investment dropdown"""
+        print("👥 TESTING READY CLIENTS (Investment Dropdown)")
+        
+        try:
+            response = self.make_request("GET", "/clients/ready-for-investment", auth_token=self.admin_token)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                # Check if Alejandro is in the list
+                ready_clients = data.get("ready_clients", [])
+                alejandro_found = any(
+                    client.get("client_id") == "client_alejandro" or 
+                    "Alejandro" in client.get("name", "") 
+                    for client in ready_clients
+                )
+                
+                if alejandro_found:
+                    alejandro_client = next(
+                        client for client in ready_clients 
+                        if client.get("client_id") == "client_alejandro" or "Alejandro" in client.get("name", "")
+                    )
+                    self.log_test(
+                        "Ready Clients - Alejandro Found",
+                        True,
+                        f"Alejandro found: {alejandro_client.get('name')} ({alejandro_client.get('client_id')})"
+                    )
+                else:
+                    self.log_test(
+                        "Ready Clients - Alejandro Missing",
+                        False,
+                        f"Alejandro not found in {len(ready_clients)} ready clients"
+                    )
+                
+                return response.status_code == 200
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Ready Clients", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Ready Clients", False, f"Exception: {str(e)}")
+            return False
 
-    def test_user_authentication(self):
+    def test_client_investments(self):
+        """Test client investments for Alejandro"""
+        print("💰 TESTING CLIENT INVESTMENTS (Alejandro)")
+        
+        try:
+            response = self.make_request("GET", "/investments/client/client_alejandro", auth_token=self.admin_token)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                # Check for expected investments (BALANCE + CORE)
+                investments = data.get("investments", [])
+                
+                balance_investment = next((inv for inv in investments if inv.get("fund_code") == "BALANCE"), None)
+                core_investment = next((inv for inv in investments if inv.get("fund_code") == "CORE"), None)
+                
+                if balance_investment and core_investment:
+                    total_value = sum(inv.get("current_value", 0) for inv in investments)
+                    self.log_test(
+                        "Client Investments - Complete",
+                        True,
+                        f"Found {len(investments)} investments, Total: ${total_value:,.2f}"
+                    )
+                elif investments:
+                    self.log_test(
+                        "Client Investments - Partial",
+                        False,
+                        f"Found {len(investments)} investments but missing expected BALANCE/CORE funds"
+                    )
+                else:
+                    self.log_test(
+                        "Client Investments - Empty",
+                        False,
+                        "No investments found for client_alejandro"
+                    )
+                
+                return response.status_code == 200
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Client Investments", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Client Investments", False, f"Exception: {str(e)}")
+            return False
+
+    def test_mt5_accounts(self):
+        """Test MT5 accounts for Alejandro"""
+        print("🏦 TESTING MT5 ACCOUNTS (Alejandro)")
+        
+        try:
+            response = self.make_request("GET", "/mt5/accounts/client_alejandro", auth_token=self.admin_token)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                # Check for expected 4 MEXAtlantic accounts
+                accounts = data.get("accounts", [])
+                
+                if accounts:
+                    mexatlantic_accounts = [acc for acc in accounts if "MEXAtlantic" in acc.get("broker_name", "")]
+                    
+                    if len(mexatlantic_accounts) >= 4:
+                        self.log_test(
+                            "MT5 Accounts - Complete",
+                            True,
+                            f"Found {len(mexatlantic_accounts)} MEXAtlantic accounts out of {len(accounts)} total"
+                        )
+                    else:
+                        self.log_test(
+                            "MT5 Accounts - Incomplete",
+                            False,
+                            f"Expected 4 MEXAtlantic accounts, found {len(mexatlantic_accounts)}"
+                        )
+                else:
+                    self.log_test(
+                        "MT5 Accounts - Empty",
+                        False,
+                        "No MT5 accounts found for client_alejandro"
+                    )
+                
+                return response.status_code == 200
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("MT5 Accounts", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("MT5 Accounts", False, f"Exception: {str(e)}")
+            return False
+
+    def test_google_connection(self):
+        """Test Google connection status"""
+        print("🔗 TESTING GOOGLE CONNECTION STATUS")
+        
+        try:
+            response = self.make_request("GET", "/google/connection/test-all", auth_token=self.admin_token)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                # Check overall status and individual services
+                overall_status = data.get("overall_status", "unknown")
+                services = data.get("services", {})
+                
+                connected_services = sum(1 for service, status in services.items() if status.get("status") == "connected")
+                total_services = len(services)
+                
+                success_rate = (connected_services / total_services * 100) if total_services > 0 else 0
+                
+                if success_rate == 0:
+                    self.log_test(
+                        "Google Connection - No Services",
+                        False,
+                        f"0% success rate - no services connected ({connected_services}/{total_services})"
+                    )
+                elif success_rate < 50:
+                    self.log_test(
+                        "Google Connection - Poor",
+                        False,
+                        f"{success_rate:.1f}% success rate - most services failing ({connected_services}/{total_services})"
+                    )
+                else:
+                    self.log_test(
+                        "Google Connection - Good",
+                        True,
+                        f"{success_rate:.1f}% success rate - {connected_services}/{total_services} services connected"
+                    )
+                
+                return response.status_code == 200
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test("Google Connection", False, f"HTTP {status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Google Connection", False, f"Exception: {str(e)}")
+            return False
+
+    def run_all_tests(self):
         """Test user authentication and JWT token management"""
         print("🔍 Testing User Authentication & JWT Management...")
         
