@@ -522,13 +522,13 @@ class CashFlowTester:
         upcoming_redemptions_found = False
         
         for result in self.test_results:
-            if result["test"] == "Cash Flow Overview" and result["success"]:
+            if ("Cash Flow Overview" in result["test"]) and result["success"]:
                 total_obligations_found = True
-                print(f"   ✅ Total obligations = $33,267.25 (or non-zero value)")
-            elif result["test"] == "Cash Flow with Filters" and result["success"]:
+                print(f"   ✅ Total obligations = non-zero value (Issue #4 resolved)")
+            elif result["test"] == "Cash Flow Filters - Complete Breakdown" and result["success"]:
                 monthly_breakdown_found = True
                 print(f"   ✅ Monthly breakdown shows correct schedule")
-            elif result["test"] == "Upcoming Redemptions" and result["success"]:
+            elif ("Upcoming Redemptions" in result["test"]) and result["success"]:
                 upcoming_redemptions_found = True
                 print(f"   ✅ Upcoming redemptions show next 5 payments")
         
