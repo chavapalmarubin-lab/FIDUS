@@ -7,7 +7,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Switch } from "./ui/switch";
-import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp, ArrowDownCircle, DollarSign } from "lucide-react";
+import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp, ArrowDownCircle, DollarSign, Star } from "lucide-react";
 import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
