@@ -1239,15 +1239,15 @@ MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: true
 
 test_plan:
   current_focus:
-    - "MT5 Integration Testing on Render Production Service"
+    - "MT5 Multi-Account Solution Testing"
   stuck_tasks: []
   test_all: false
-  test_priority: "production_deployment_verification"
+  test_priority: "mt5_multi_account_verification"
 
 agent_communication:
     - agent: "testing"
