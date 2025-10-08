@@ -534,9 +534,9 @@ const AdminDashboard = ({ user, onLogout }) => {
               🌐 Google Workspace
             </TabsTrigger>
             {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
-            <TabsTrigger value="documents" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
-              <FileText size={16} className="mr-2" />
-              📄 App Documents
+            <TabsTrigger value="alejandro" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+              <Star size={16} className="mr-2" />
+              🏆 Alejandro
             </TabsTrigger>
           </TabsList>
 
