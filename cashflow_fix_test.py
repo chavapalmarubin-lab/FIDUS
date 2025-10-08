@@ -88,7 +88,12 @@ class CashFlowFixTester:
                 continue
                 
             # Parse interest start date
-            interest_start = datetime.fromisoformat(interest_start_str.replace('Z', '+00:00'))
+            if interest_start_str.endswith('Z'):
+                interest_start = datetime.fromisoformat(interest_start_str.replace('Z', '+00:00'))
+            elif '+' not in interest_start_str and 'T' in interest_start_str:
+                interest_start = datetime.fromisoformat(interest_start_str).replace(tzinfo=timezone.utc)
+            else:
+                interest_start = datetime.fromisoformat(interest_start_str)
             
             config = fund_configs.get(fund_code, {"frequency": "monthly", "rate_multiplier": 1})
             frequency = config["frequency"]
