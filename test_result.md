@@ -243,11 +243,11 @@ MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to
 
   - task: "Investment Dropdown Fix Testing (Alejandro Mariscal Romero)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
