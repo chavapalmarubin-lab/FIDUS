@@ -12136,15 +12136,15 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         for investment in investments:
             fund_code = investment.get('fund_code')
             principal = investment.get('principal_amount', 0)
-            monthly_rate = investment.get('monthly_interest_rate', 0) / 100
             interest_start_str = investment.get('interest_start_date')
             client_id = investment.get('client_id')
             
-            # Get redemption frequency from fund configuration
+            # Get fund configuration for interest rate and redemption frequency
             fund_config = FIDUS_FUND_CONFIG.get(fund_code)
             if not fund_config:
                 continue
                 
+            monthly_rate = fund_config.interest_rate / 100  # Convert percentage to decimal
             redemption_freq = fund_config.redemption_frequency
             
             if not all([fund_code, principal, monthly_rate, interest_start_str]):
