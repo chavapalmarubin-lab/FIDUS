@@ -12117,6 +12117,109 @@ async def get_admin_investments_overview():
         raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
 
 # ===============================================================================
+# CASH FLOW MANAGEMENT ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/cashflow/overview")
+async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"):
+    """Get cash flow overview for admin dashboard"""
+    try:
+        # Get cash flow obligations from MongoDB
+        obligations_cursor = db.cash_flow_obligations.find({})
+        obligations = await obligations_cursor.to_list(length=None)
+        
+        # Calculate current date for filtering
+        now = datetime.now(timezone.utc)
+        
+        # Filter by timeframe
+        if timeframe == "12_months":
+            cutoff_date = now + timedelta(days=365)
+        elif timeframe == "6_months":
+            cutoff_date = now + timedelta(days=180)
+        elif timeframe == "3_months":
+            cutoff_date = now + timedelta(days=90)
+        else:
+            cutoff_date = now + timedelta(days=365)
+        
+        filtered_obligations = [
+            o for o in obligations 
+            if o.get('payment_date') and o['payment_date'] <= cutoff_date
+        ]
+        
+        # Filter by fund if specified
+        if fund != "all":
+            filtered_obligations = [
+                o for o in filtered_obligations 
+                if o.get('fund_code', '').upper() == fund.upper()
+            ]
+        
+        # Calculate totals
+        total_client_obligations = sum(o.get('amount', 0) for o in filtered_obligations)
+        
+        # Group by month for chart data
+        monthly_breakdown = {}
+        for obligation in filtered_obligations:
+            payment_date = obligation.get('payment_date')
+            if payment_date:
+                month_key = payment_date.strftime('%Y-%m')
+                if month_key not in monthly_breakdown:
+                    monthly_breakdown[month_key] = {
+                        'month': payment_date.strftime('%B %Y'),
+                        'total': 0,
+                        'balance_fund': 0,
+                        'core_fund': 0
+                    }
+                
+                amount = obligation.get('amount', 0)
+                fund_code = obligation.get('fund_code', '').upper()
+                
+                monthly_breakdown[month_key]['total'] += amount
+                if fund_code == 'BALANCE':
+                    monthly_breakdown[month_key]['balance_fund'] += amount
+                elif fund_code == 'CORE':
+                    monthly_breakdown[month_key]['core_fund'] += amount
+        
+        # Sort monthly data
+        sorted_monthly = sorted(monthly_breakdown.values(), key=lambda x: x['month'])
+        
+        # Create upcoming redemptions list
+        upcoming_redemptions = []
+        for obligation in filtered_obligations[:10]:  # Next 10 payments
+            payment_date = obligation.get('payment_date')
+            if payment_date and payment_date >= now:
+                upcoming_redemptions.append({
+                    'date': payment_date.strftime('%Y-%m-%d'),
+                    'fund': obligation.get('fund_code'),
+                    'amount': obligation.get('amount', 0),
+                    'type': obligation.get('payment_type', 'interest'),
+                    'days_until': (payment_date - now).days
+                })
+        
+        # Sort by date
+        upcoming_redemptions.sort(key=lambda x: x['date'])
+        
+        return {
+            "success": True,
+            "timeframe": timeframe,
+            "fund_filter": fund,
+            "summary": {
+                "mt5_trading_profits": 0.0,  # Would come from MT5 data
+                "broker_rebates": 0.0,       # Would come from broker reports
+                "client_interest_obligations": round(total_client_obligations, 2),
+                "fund_revenue": 0.0,         # Would be calculated from trading
+                "fund_obligations": round(total_client_obligations, 2),
+                "net_profit": -round(total_client_obligations, 2)  # Negative until we add revenue
+            },
+            "monthly_breakdown": sorted_monthly,
+            "upcoming_redemptions": upcoming_redemptions[:5],  # Next 5 payments
+            "total_obligations_period": round(total_client_obligations, 2)
+        }
+        
+    except Exception as e:
+        logging.error(f"Cash flow overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch cash flow overview")
+
+# ===============================================================================
 # REDEMPTION SYSTEM ENDPOINTS
 # ===============================================================================
 
