@@ -21,7 +21,11 @@ import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import UserAdministration from "./UserAdministration";
 // Clean imports - removed unused Google components
+import InvestmentDashboard from './InvestmentDashboard';
+import ClientDetailModal from './ClientDetailModal';
+import InvestmentDetailView from './InvestmentDetailView';
 import FullGoogleWorkspace from './FullGoogleWorkspace';
+import AlejandroInvestmentDashboard from './AlejandroInvestmentDashboard';
 import RealGoogleWorkspace from './RealGoogleWorkspace';
 import SimpleIndividualGoogleWorkspace from './SimpleIndividualGoogleWorkspace';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
