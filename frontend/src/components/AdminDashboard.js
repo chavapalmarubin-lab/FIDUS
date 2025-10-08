@@ -634,8 +634,8 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           {/* Google Connection Monitor content removed - redundant with Google Workspace integration */}
 
-          <TabsContent value="alejandro" className="mt-6">
-            <AlejandroInvestmentDashboard />
+          <TabsContent value="documents" className="mt-6">
+            <ApplicationDocuments />
           </TabsContent>
         </Tabs>
       </div>
