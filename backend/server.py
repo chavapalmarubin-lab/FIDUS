@@ -11855,8 +11855,8 @@ async def get_client_investments(client_id: str):
                 "minimum_hold_end_date": minimum_hold_end_date.isoformat() if minimum_hold_end_date else None,
                 "status": investment.get("status", "active"),
                 "monthly_interest_rate": fund_config.interest_rate if fund_config else 0,
-                "can_redeem_interest": datetime.now(timezone.utc) >= interest_start_date if interest_start_date else False,
-                "can_redeem_principal": datetime.now(timezone.utc) >= minimum_hold_end_date if minimum_hold_end_date else False,
+                "can_redeem_interest": datetime.now(timezone.utc) >= interest_start_date if interest_start_date and interest_start_date.tzinfo else False,
+                "can_redeem_principal": datetime.now(timezone.utc) >= minimum_hold_end_date if minimum_hold_end_date and minimum_hold_end_date.tzinfo else False,
                 "created_at": investment.get("created_at").isoformat() if investment.get("created_at") else None
             }
             
