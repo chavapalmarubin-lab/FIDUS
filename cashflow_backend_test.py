@@ -177,9 +177,9 @@ class CashFlowTester:
                 
                 # Check if breakdown shows BALANCE quarterly + CORE monthly payments
                 if isinstance(monthly_breakdown, list) and len(monthly_breakdown) > 0:
-                    # Look for both BALANCE and CORE entries
-                    balance_entries = [entry for entry in monthly_breakdown if 'BALANCE' in str(entry)]
-                    core_entries = [entry for entry in monthly_breakdown if 'CORE' in str(entry)]
+                    # Look for both BALANCE and CORE entries in the breakdown
+                    balance_entries = [entry for entry in monthly_breakdown if entry.get('balance_fund', 0) > 0]
+                    core_entries = [entry for entry in monthly_breakdown if entry.get('core_fund', 0) > 0]
                     
                     if balance_entries and core_entries:
                         self.log_test(
