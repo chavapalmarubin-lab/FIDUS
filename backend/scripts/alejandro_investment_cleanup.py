@@ -146,7 +146,7 @@ class AlejandroCleanupManager:
         
         # Ensure backup directory exists
         backup_dir = Path(self.backup_file).parent
-        backup_dir.mkdir(exist_ok=True)
+        backup_dir.mkdir(parents=True, exist_ok=True)
         
         # Serialize data for backup
         backup_data = {
