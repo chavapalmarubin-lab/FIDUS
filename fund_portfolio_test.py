@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 """
-FUND PORTFOLIO OVERVIEW & ADMIN CLIENTS ENDPOINT TESTING
-========================================================
+FUND PORTFOLIO ENDPOINT TESTING - Issue #5 Resolution
+====================================================
 
-This test verifies the newly created /fund-portfolio/overview endpoint and 
-the fixed /admin/clients endpoint structure as requested in the review:
+This test verifies the fund portfolio endpoint to resolve Issue #5 (Fund Portfolio Empty):
 
-CRITICAL FIXES TO TEST:
-1. New /api/fund-portfolio/overview endpoint:
-   - Should return fund data with Salvador's $1,371,485.40 investments
-   - Should show proper fund breakdown (BALANCE ~$1.36M, CORE ~$8K)
-   - Should return success=true with non-zero values
+EXPECTED RESULTS (as per review request):
+1. CORE fund: $18,151.41 AUM with 1 MT5 account
+2. BALANCE fund: $100,000.00 AUM with 3 MT5 accounts  
+3. Total AUM: $118,151.41
+4. Total investors: 1 (Alejandro)
+5. Fund count: 2 (CORE + BALANCE)
 
-2. Fixed /api/admin/clients endpoint:
-   - Should return {"clients": [...]} format
-   - Should include Salvador Palma (client_003) with correct balance
-   - Should be compatible with frontend ClientManagement component
+VALIDATION CRITERIA:
+✅ Fund portfolio should NOT be empty anymore
+✅ Both CORE and BALANCE funds should show correct data
+✅ MT5 allocations should match investment amounts
+✅ Issue #5 (Fund Portfolio Empty) should be RESOLVED
 
-3. Data consistency verification:
-   - Fund portfolio totals should match client investment totals
-   - All endpoints should show same $1,371,485.40 total value
-   - No zero values should appear (unless data is actually empty)
-
-4. Frontend API compatibility:
-   - Verify endpoint responses match what frontend components expect
-   - Check that MT5 accounts endpoint works with frontend format
+Authentication: admin/password123
+Backend: https://trading-platform-76.preview.emergentagent.com/api
 """
 
 import requests
