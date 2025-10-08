@@ -234,7 +234,7 @@ class CashFlowTester:
                 data = response.json()
                 
                 # Check for BALANCE fund specific data
-                client_interest_obligations = data.get("client_interest_obligations")
+                client_interest_obligations = data.get("summary", {}).get("client_interest_obligations")
                 
                 if client_interest_obligations is not None:
                     try:
