@@ -17822,21 +17822,36 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
 
 @api_router.get("/mt5/accounts/{client_id}")
 async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
-    """Get MT5 accounts for a client"""
+    """Get MT5 accounts for a client - Direct MongoDB version"""
     try:
         # Allow clients to view their own accounts, admins can view any
         if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
-            try:
-                await mt5_service.initialize()
-                logging.info(f"MT5 Service initialized in endpoint, mt5_repo: {mt5_service.mt5_repo}")
-            except Exception as e:
-                logging.error(f"Failed to initialize MT5 service in endpoint: {e}")
-                raise HTTPException(status_code=500, detail=f"MT5 service initialization failed: {str(e)}")
+        # Get MT5 accounts directly from MongoDB
+        mt5_cursor = db.mt5_accounts.find({"client_id": client_id})
+        mt5_accounts_data = await mt5_cursor.to_list(length=None)
         
-        accounts = await mt5_service.get_client_mt5_accounts(client_id)
+        accounts = []
+        for mt5_account in mt5_accounts_data:
+            account = {
+                "account_id": mt5_account.get("account_id"),
+                "mt5_account_number": mt5_account.get("mt5_login"),
+                "broker_name": mt5_account.get("broker_name"),
+                "broker_code": mt5_account.get("broker_code"),
+                "server": mt5_account.get("mt5_server"),
+                "fund_code": mt5_account.get("fund_code"),
+                "balance": mt5_account.get("total_allocated", 0),
+                "equity": mt5_account.get("current_equity", mt5_account.get("total_allocated", 0)),
+                "profit_loss": mt5_account.get("profit_loss", 0),
+                "profit_loss_percentage": mt5_account.get("profit_loss_percentage", 0),
+                "status": mt5_account.get("status", "active"),
+                "is_active": mt5_account.get("is_active", True),
+                "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") else None,
+                "last_sync": mt5_account.get("last_sync").isoformat() if mt5_account.get("last_sync") else None,
+                "sync_status": mt5_account.get("sync_status", "pending")
+            }
+            accounts.append(account)
         
         return {
             "success": True,
