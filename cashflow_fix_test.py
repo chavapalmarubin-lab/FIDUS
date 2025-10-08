@@ -45,10 +45,11 @@ class CashFlowFixTester:
     
     def get_investments_raw(self):
         """Get raw investment data to understand the structure"""
-        response = self.session.get(f"{BACKEND_URL}/investments/admin/overview")
+        # Get detailed investment data from client endpoint which has all fields
+        response = self.session.get(f"{BACKEND_URL}/investments/client/client_alejandro")
         if response.status_code == 200:
             data = response.json()
-            investments = data.get("all_investments", [])
+            investments = data.get("investments", [])
             
             print(f"\n📊 Found {len(investments)} investments:")
             for inv in investments:
