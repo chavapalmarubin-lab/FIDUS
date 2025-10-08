@@ -47,11 +47,10 @@ TEST_USERS = {
     }
 }
 
-class FidusBackendTester:
+class FrontendDataVisibilityTester:
     def __init__(self):
         self.session = requests.Session()
         self.admin_token = None
-        self.client_token = None
         self.test_results = []
         self.total_tests = 0
         self.passed_tests = 0
