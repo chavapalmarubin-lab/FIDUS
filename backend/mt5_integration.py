@@ -146,6 +146,13 @@ class MT5IntegrationService:
                 "timeout": 10,
                 "max_retries": 3,
                 "retry_delay": 2
+            },
+            "mexatlantic": {
+                "primary_servers": ["MEXAtlantic-Real"],
+                "fallback_servers": ["MEXAtlantic-Demo"],
+                "timeout": 10,
+                "max_retries": 3,
+                "retry_delay": 2
             }
         }
         
