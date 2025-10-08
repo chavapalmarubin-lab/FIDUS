@@ -106,7 +106,7 @@ class MT5RenderTester:
 
     def authenticate_admin(self):
         """Authenticate as admin user"""
-        print("🔐 Authenticating Admin User...")
+        print("🔐 Attempting Admin Authentication...")
         
         admin_data = TEST_USERS["admin"]
         login_payload = {
@@ -132,7 +132,14 @@ class MT5RenderTester:
                 return False
         else:
             status_code = response.status_code if response else "No response"
-            self.log_test("Admin Authentication", False, f"HTTP {status_code}")
+            try:
+                error_detail = response.json().get("detail", "Unknown error") if response else "No response"
+                self.log_test("Admin Authentication", False, f"HTTP {status_code}: {error_detail}")
+            except:
+                self.log_test("Admin Authentication", False, f"HTTP {status_code}")
+            
+            # Continue with limited testing even without authentication
+            print("⚠️  Continuing with limited testing (no authentication)")
             return False
 
     def test_mt5_service_initialization(self):
