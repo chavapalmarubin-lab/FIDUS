@@ -17840,8 +17840,10 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
             raise HTTPException(status_code=403, detail="Access denied")
         
         # Get MT5 accounts directly from MongoDB
+        logging.info(f"Searching MT5 accounts for client_id: {client_id}")
         mt5_cursor = db.mt5_accounts.find({"client_id": client_id})
         mt5_accounts_data = await mt5_cursor.to_list(length=None)
+        logging.info(f"Found {len(mt5_accounts_data)} MT5 accounts for client_id: {client_id}")
         
         accounts = []
         for mt5_account in mt5_accounts_data:
