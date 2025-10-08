@@ -367,74 +367,64 @@ class FrontendDataVisibilityTester:
             return False
 
     def run_all_tests(self):
-        """Test user authentication and JWT token management"""
-        print("🔍 Testing User Authentication & JWT Management...")
+        """Run all frontend data visibility tests"""
+        print("🚨 URGENT DEBUG: Frontend Data Visibility Testing")
+        print("=" * 60)
+        print(f"Backend URL: {BACKEND_URL}")
+        print(f"Test Time: {datetime.now().isoformat()}")
+        print("=" * 60)
         
-        # Test admin login
-        admin_data = TEST_USERS["admin"]
-        login_payload = {
-            "username": admin_data["username"],
-            "password": admin_data["password"], 
-            "user_type": admin_data["user_type"]
-        }
+        # Test sequence matching the review request
+        tests = [
+            ("Admin Authentication", self.test_admin_authentication),
+            ("Investment Admin Overview", self.test_investment_admin_overview),
+            ("Ready Clients", self.test_ready_clients),
+            ("Client Investments", self.test_client_investments),
+            ("MT5 Accounts", self.test_mt5_accounts),
+            ("Google Connection", self.test_google_connection)
+        ]
         
-        response = self.make_request("POST", "/auth/login", login_payload)
-        if response and response.status_code == 200:
+        passed_tests = 0
+        total_tests = len(tests)
+        
+        for test_name, test_func in tests:
             try:
-                data = response.json()
-                if data.get("token") and data.get("type") == "admin":
-                    self.admin_token = data["token"]
-                    self.log_test("Admin Authentication", True, 
-                                f"Admin: {data.get('name')}, Type: {data.get('type')}")
-                else:
-                    self.log_test("Admin Authentication", False, "Missing token or incorrect type")
-            except json.JSONDecodeError:
-                self.log_test("Admin Authentication", False, "Invalid JSON response")
-        else:
-            status_code = response.status_code if response else "No response"
-            self.log_test("Admin Authentication", False, f"HTTP {status_code}")
-
-        # Test client login (alejandro_mariscal)
-        client_data = TEST_USERS["alejandro_mariscal"]
-        login_payload = {
-            "username": client_data["username"],
-            "password": client_data["password"],
-            "user_type": client_data["user_type"]
-        }
+                if test_func():
+                    passed_tests += 1
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR in {test_name}: {str(e)}")
         
-        response = self.make_request("POST", "/auth/login", login_payload)
-        if response and response.status_code == 200:
-            try:
-                data = response.json()
-                if data.get("token") and data.get("type") == "client":
-                    self.client_token = data["token"]
-                    self.log_test("Client Authentication (Alejandro)", True,
-                                f"Client: {data.get('name')}, Email: {data.get('email')}")
-                else:
-                    self.log_test("Client Authentication (Alejandro)", False, 
-                                "Missing token or incorrect type")
-            except json.JSONDecodeError:
-                self.log_test("Client Authentication (Alejandro)", False, "Invalid JSON response")
+        # Summary
+        print("\n" + "=" * 60)
+        print("🎯 FRONTEND DATA VISIBILITY TEST SUMMARY")
+        print("=" * 60)
+        
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"Overall Success Rate: {success_rate:.1f}% ({passed_tests}/{total_tests})")
+        
+        # Critical findings
+        critical_issues = []
+        for result in self.test_results:
+            if not result["success"] and any(keyword in result["test"].lower() for keyword in ["authentication", "investment", "ready", "mt5"]):
+                critical_issues.append(result["test"])
+        
+        if critical_issues:
+            print(f"\n🚨 CRITICAL ISSUES PREVENTING FRONTEND DATA DISPLAY:")
+            for issue in critical_issues:
+                print(f"   - {issue}")
+        
+        # Recommendations
+        print(f"\n📋 RECOMMENDATIONS:")
+        if not self.admin_token:
+            print("   - Fix admin authentication first - all other tests depend on it")
+        elif success_rate < 50:
+            print("   - Multiple critical endpoints failing - backend infrastructure issue")
+        elif success_rate < 100:
+            print("   - Some endpoints working but missing data - check database setup")
         else:
-            status_code = response.status_code if response else "No response"
-            self.log_test("Client Authentication (Alejandro)", False, f"HTTP {status_code}")
-
-        # Test JWT token refresh
-        if self.admin_token:
-            response = self.make_request("POST", "/auth/refresh-token", 
-                                       auth_token=self.admin_token)
-            if response and response.status_code == 200:
-                try:
-                    data = response.json()
-                    if data.get("success") and data.get("token"):
-                        self.log_test("JWT Token Refresh", True, "Token refreshed successfully")
-                    else:
-                        self.log_test("JWT Token Refresh", False, "Invalid refresh response")
-                except json.JSONDecodeError:
-                    self.log_test("JWT Token Refresh", False, "Invalid JSON response")
-            else:
-                status_code = response.status_code if response else "No response"
-                self.log_test("JWT Token Refresh", False, f"HTTP {status_code}")
+            print("   - All endpoints working - issue may be in frontend integration")
+        
+        return success_rate >= 80  # 80% success rate threshold
 
     def test_user_management(self):
         """Test user management endpoints"""
