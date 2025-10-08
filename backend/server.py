@@ -12117,6 +12117,78 @@ async def get_admin_investments_overview():
         raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
 
 # ===============================================================================
+# LIVE MT5 DATA INTEGRATION ENDPOINTS
+# ===============================================================================
+
+from live_mt5_integration import live_mt5_service
+
+@api_router.get("/mt5/live/test-connection")
+async def test_live_mt5_connection():
+    """Test connection to MT5 Bridge Service"""
+    try:
+        result = await live_mt5_service.test_mt5_bridge_connection()
+        return {
+            "success": True,
+            "bridge_test": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logging.error(f"MT5 bridge test error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Bridge test failed: {str(e)}")
+
+@api_router.post("/mt5/live/update-alejandro")
+async def update_alejandro_live_data(current_user=Depends(get_current_user)):
+    """Update Alejandro's MT5 accounts with live data from MT5 Bridge"""
+    try:
+        # Only admin can trigger manual updates
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        result = await live_mt5_service.update_alejandro_mt5_data()
+        
+        if result["success"]:
+            return {
+                "success": True,
+                "message": f"Updated {result['accounts_updated']} MT5 accounts with live data",
+                "summary": {
+                    "accounts_updated": result["accounts_updated"],
+                    "total_equity": result["total_equity"],
+                    "total_profit": result["total_profit"],
+                    "overall_return": result["overall_return_percent"]
+                },
+                "timestamp": result["update_timestamp"]
+            }
+        else:
+            return {
+                "success": False,
+                "error": result.get("error", "Unknown error"),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logging.error(f"Live MT5 update error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update live data: {str(e)}")
+
+@api_router.get("/mt5/live/summary/{client_id}")
+async def get_live_mt5_summary(client_id: str, current_user=Depends(get_current_user)):
+    """Get live MT5 data summary for client"""
+    try:
+        # Allow clients to view their own data, admins can view any
+        if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        summary = await live_mt5_service.get_live_mt5_summary(client_id)
+        
+        return {
+            "success": True,
+            "data": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Live MT5 summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get live summary: {str(e)}")
+
+# ===============================================================================
 # CASH FLOW MANAGEMENT ENDPOINTS
 # ===============================================================================
 
