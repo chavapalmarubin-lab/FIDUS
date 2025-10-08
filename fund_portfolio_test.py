@@ -446,7 +446,9 @@ class FundPortfolioEndpointTest:
         print("🎯 FUND PORTFOLIO OVERVIEW & ADMIN CLIENTS ENDPOINT TESTING")
         print("=" * 70)
         print(f"Backend URL: {BACKEND_URL}")
-        print(f"Expected Salvador Total: ${self.expected_salvador_total:,.2f}")
+        print(f"Expected Total AUM: ${self.expected_total_aum:,.2f}")
+        print(f"Expected CORE Fund: ${self.expected_core_aum:,.2f} with {self.expected_core_mt5_accounts} MT5 account")
+        print(f"Expected BALANCE Fund: ${self.expected_balance_aum:,.2f} with {self.expected_balance_mt5_accounts} MT5 accounts")
         print(f"Test Time: {datetime.now().isoformat()}")
         print()
         
