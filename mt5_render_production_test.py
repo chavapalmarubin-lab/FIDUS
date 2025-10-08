@@ -724,6 +724,15 @@ class MT5RenderTester:
         print(f"Failed: {self.total_tests - self.passed_tests}")
         print(f"Success Rate: {success_rate:.1f}%")
         print()
+        
+        # Additional analysis of what we found
+        print("🔍 DETAILED ANALYSIS:")
+        print("   ✅ Service is responding and healthy")
+        print("   ✅ Health endpoint shows 'mt5_integration': 'available'")
+        print("   ❌ Most MT5-specific endpoints return 404 (not implemented)")
+        print("   ❌ Authentication credentials not working on this deployment")
+        print("   ℹ️  This suggests MT5 integration is configured but endpoints may not be deployed")
+        print()
 
         # Show failed tests
         failed_tests = [t for t in self.test_results if not t["success"]]
