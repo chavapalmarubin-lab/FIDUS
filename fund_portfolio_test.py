@@ -202,72 +202,54 @@ class FundPortfolioEndpointTest:
         except Exception as e:
             self.log_result("Fund Portfolio Overview Endpoint", False, f"Exception: {str(e)}")
     
-    def test_admin_clients_endpoint_structure(self):
-        """Test the fixed /api/admin/clients endpoint structure"""
+    def test_fund_allocation_details(self):
+        """Test fund allocation details and MT5 mapping"""
         try:
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
+            response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
             
             if response.status_code == 200:
                 data = response.json()
+                funds = data.get('funds', [])
                 
-                # Check if response has {"clients": [...]} format
-                if isinstance(data, dict) and 'clients' in data:
-                    clients = data['clients']
-                    self.log_result("Admin Clients - Response Format", True, 
-                                  "Endpoint returns correct {'clients': [...]} format")
-                    
-                    # Check if Salvador Palma is included
-                    salvador_found = False
-                    salvador_balance = 0
-                    
-                    for client in clients:
-                        if client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper():
-                            salvador_found = True
-                            salvador_balance = client.get('total_balance', 0) or client.get('balance', 0)
-                            
-                            # Check if balance is correct
-                            if abs(salvador_balance - self.expected_salvador_total) < 10000:
-                                self.log_result("Admin Clients - Salvador Balance", True, 
-                                              f"Salvador balance correct: ${salvador_balance:,.2f}")
-                            else:
-                                self.log_result("Admin Clients - Salvador Balance", False, 
-                                              f"Salvador balance incorrect: ${salvador_balance:,.2f}, expected ${self.expected_salvador_total:,.2f}")
-                            break
-                    
-                    if salvador_found:
-                        self.log_result("Admin Clients - Salvador Present", True, 
-                                      "Salvador Palma (client_003) found in clients list")
-                    else:
-                        self.log_result("Admin Clients - Salvador Present", False, 
-                                      "Salvador Palma (client_003) missing from clients list", 
-                                      {"clients_found": [c.get('name', 'Unknown') for c in clients]})
+                allocation_issues = []
                 
-                elif isinstance(data, list):
-                    # Old format - should be fixed
-                    self.log_result("Admin Clients - Response Format", False, 
-                                  "Endpoint still returns old array format instead of {'clients': [...]}",
-                                  {"response_type": "array", "length": len(data)})
-                    
-                    # Still check for Salvador in the array
-                    salvador_found = any(client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper() 
-                                       for client in data)
-                    if salvador_found:
-                        self.log_result("Admin Clients - Salvador Present (Old Format)", True, 
-                                      "Salvador found but endpoint needs format fix")
-                    else:
-                        self.log_result("Admin Clients - Salvador Present (Old Format)", False, 
-                                      "Salvador missing and endpoint needs format fix")
+                # Handle both array and dict formats
+                if isinstance(funds, list):
+                    for fund in funds:
+                        fund_code = fund.get("fund_code")
+                        mt5_allocation = fund.get("mt5_allocation", 0)
+                        client_investments = fund.get("client_investments", 0)
+                        allocation_match = fund.get("allocation_match", False)
+                        
+                        if not allocation_match:
+                            allocation_issues.append(f"{fund_code}: MT5 allocation ${mt5_allocation:,.2f} != Client investments ${client_investments:,.2f}")
+                        else:
+                            self.log_result(f"{fund_code} Allocation Match", True, 
+                                          f"MT5 allocation matches client investments: ${mt5_allocation:,.2f}")
+                elif isinstance(funds, dict):
+                    for fund_code, fund_data in funds.items():
+                        mt5_allocation = fund_data.get("mt5_allocation", 0)
+                        client_investments = fund_data.get("client_investments", 0)
+                        allocation_match = fund_data.get("allocation_match", False)
+                        
+                        if not allocation_match:
+                            allocation_issues.append(f"{fund_code}: MT5 allocation ${mt5_allocation:,.2f} != Client investments ${client_investments:,.2f}")
+                        else:
+                            self.log_result(f"{fund_code} Allocation Match", True, 
+                                          f"MT5 allocation matches client investments: ${mt5_allocation:,.2f}")
                 
+                if allocation_issues:
+                    self.log_result("Fund Allocation Details", False, 
+                                  f"Allocation mismatches found: {'; '.join(allocation_issues)}")
                 else:
-                    self.log_result("Admin Clients - Response Format", False, 
-                                  "Endpoint returns unexpected format", {"response_type": type(data).__name__})
-            
+                    self.log_result("Fund Allocation Details", True, 
+                                  "All fund allocations match client investments")
+                    
             else:
-                self.log_result("Admin Clients Endpoint", False, 
-                              f"HTTP {response.status_code}", {"response": response.text})
+                self.log_result("Fund Allocation Details", False, f"HTTP {response.status_code}")
                 
         except Exception as e:
-            self.log_result("Admin Clients Endpoint", False, f"Exception: {str(e)}")
+            self.log_result("Fund Allocation Details", False, f"Exception: {str(e)}")
     
     def test_data_consistency_verification(self):
         """Test data consistency between fund portfolio and client totals"""
