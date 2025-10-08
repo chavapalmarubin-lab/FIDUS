@@ -28,8 +28,8 @@ import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-# Backend URL Configuration - Use production URL
-BACKEND_URL = "https://fidus-invest.emergent.host/api"
+# Backend URL Configuration - Use correct URL from frontend/.env
+BACKEND_URL = "https://mt5-deploy-debug.preview.emergentagent.com/api"
 
 # Expected Alejandro Data
 EXPECTED_ALEJANDRO = {
