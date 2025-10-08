@@ -51,7 +51,7 @@ async def check_alejandro():
         print(f'  - {acc.get("mt5_account_number")}: ${balance:,.2f} ({acc.get("broker_name")})')
     print(f'💰 Total MT5 Balance: ${total_mt5_balance:,.2f}')
     
-    await client.close()
+    client.close()
 
 if __name__ == "__main__":
     asyncio.run(check_alejandro())
