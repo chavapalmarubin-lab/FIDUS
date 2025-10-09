@@ -437,7 +437,7 @@ const CRMDashboard = ({ user }) => {
                 </p>
               </div>
               <div className="h-12 w-12 bg-purple-600/20 rounded-lg flex items-center justify-center">
-                {crmData.capital_flows.summary.net_flow >= 0 ? (
+                {(crmData?.capital_flows?.summary?.net_flow || 0) >= 0 ? (
                   <ArrowUpRight className="h-6 w-6 text-green-600" />
                 ) : (
                   <ArrowDownRight className="h-6 w-6 text-red-600" />
