@@ -462,6 +462,165 @@ const InvestmentCalendar = ({ user }) => {
         </div>
       )}
 
+      {/* Full Timeline View - 14 Months */}
+      {viewMode === 'timeline' && (
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <CalendarIcon className="mr-2 h-5 w-5 text-cyan-400" />
+              Full Contract Timeline (14 Months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {Object.keys(monthlyTimeline).length === 0 ? (
+                <div className="text-center py-8 text-slate-400">
+                  <CalendarIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p>No investment timeline data available</p>
+                </div>
+              ) : (
+                Object.entries(monthlyTimeline)
+                  .sort(([a], [b]) => new Date(a) - new Date(b))
+                  .map(([monthKey, monthData]) => (
+                    <motion.div
+                      key={monthKey}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`border rounded-lg p-6 ${monthData.is_past ? 'bg-slate-800/30 border-slate-700' : 'bg-slate-800/50 border-slate-600'}`}
+                    >
+                      {/* Month Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold text-white">
+                          📅 {monthData.month_name}
+                        </h3>
+                        {monthData.total_due > 0 && (
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-cyan-400">
+                              Total Due: {formatCurrency(monthData.total_due)}
+                            </div>
+                            {!monthData.is_past && (
+                              <div className="text-sm text-slate-400">
+                                {monthData.days_until} days away
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Month Events */}
+                      <div className="space-y-3">
+                        {monthData.events.map(event => {
+                          const Icon = getEventTypeIcon(event.type);
+                          const eventColor = getEventTypeColor(event.type);
+                          const fundColor = getFundColor(event.fund_code);
+                          
+                          return (
+                            <motion.div
+                              key={event.id}
+                              whileHover={{ scale: 1.01 }}
+                              className="flex items-center p-4 bg-slate-700/50 rounded-lg cursor-pointer"
+                              onClick={() => setSelectedEvent(event)}
+                            >
+                              <div className={`${eventColor} p-2 rounded mr-3`}>
+                                <Icon className="w-4 h-4 text-white" />
+                              </div>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center mb-1">
+                                  <span className="text-white font-medium mr-2">
+                                    {formatDate(event.date)}
+                                  </span>
+                                  <Badge className={`${fundColor} bg-transparent border`}>
+                                    {event.fund_code}
+                                  </Badge>
+                                </div>
+                                
+                                <h4 className="text-white font-semibold">{event.title}</h4>
+                                <p className="text-slate-400 text-sm">{event.description}</p>
+                                
+                                {event.amount && (
+                                  <div className="flex items-center mt-2 space-x-4">
+                                    <span className={`font-bold ${event.type === 'final_redemption' ? 'text-red-400' : 'text-green-400'}`}>
+                                      {formatCurrency(event.amount)}
+                                    </span>
+                                    
+                                    {event.can_redeem && (
+                                      <div className="ml-auto">
+                                        {event.is_available ? (
+                                          <Button
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRedemptionRequest(event);
+                                            }}
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                          >
+                                            <ArrowDownCircle className="w-4 h-4 mr-1" />
+                                            Request Redemption
+                                          </Button>
+                                        ) : (
+                                          <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                                            <Clock className="w-3 h-3 mr-1" />
+                                            Available in {event.days_until} days
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Monthly Summary */}
+                      {monthData.total_due > 0 && (
+                        <div className="mt-4 p-3 bg-slate-900/50 rounded border border-slate-600">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            {monthData.core_interest > 0 && (
+                              <div>
+                                <span className="text-slate-400">CORE Interest:</span>
+                                <div className="text-orange-400 font-medium">
+                                  {formatCurrency(monthData.core_interest)}
+                                </div>
+                              </div>
+                            )}
+                            {monthData.balance_interest > 0 && (
+                              <div>
+                                <span className="text-slate-400">BALANCE Interest:</span>
+                                <div className="text-cyan-400 font-medium">
+                                  {formatCurrency(monthData.balance_interest)}
+                                </div>
+                              </div>
+                            )}
+                            {monthData.dynamic_interest > 0 && (
+                              <div>
+                                <span className="text-slate-400">DYNAMIC Interest:</span>
+                                <div className="text-green-400 font-medium">
+                                  {formatCurrency(monthData.dynamic_interest)}
+                                </div>
+                              </div>
+                            )}
+                            {monthData.principal_amount > 0 && (
+                              <div>
+                                <span className="text-slate-400">Principal:</span>
+                                <div className="text-red-400 font-medium">
+                                  {formatCurrency(monthData.principal_amount)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Upcoming Events View */}
       {viewMode === 'upcoming' && (
         <Card className="dashboard-card">
@@ -473,46 +632,55 @@ const InvestmentCalendar = ({ user }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {getUpcomingEvents().slice(0, 10).map(event => {
-                const config = getEventTypeConfig(event.type);
-                const Icon = config.icon;
-                const daysUntil = Math.ceil((new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24));
-                
-                return (
-                  <motion.div
-                    key={event.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center p-4 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer"
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <div className={`${config.color} p-3 rounded-lg mr-4`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold">{event.title}</h3>
-                      <p className="text-slate-400 text-sm">{event.description}</p>
-                      <div className="flex items-center mt-2 space-x-4">
-                        <span className="text-cyan-400 text-sm font-medium">
-                          {formatDate(event.date)}
-                        </span>
-                        {daysUntil >= 0 && (
-                          <Badge variant="outline" className="text-slate-300">
-                            {daysUntil === 0 ? 'Today' : 
-                             daysUntil === 1 ? 'Tomorrow' :
-                             `${daysUntil} days`}
-                          </Badge>
-                        )}
-                        {event.amount && (
-                          <span className="text-green-400 font-semibold">
-                            {formatCurrency(event.amount)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-              {getUpcomingEvents().length === 0 && (
+              {calendarData && calendarData.length > 0 ? (
+                calendarData
+                  .filter(event => {
+                    const eventDate = new Date(event.date);
+                    const today = new Date();
+                    const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                    return diffDays >= 0 && diffDays <= 90;
+                  })
+                  .slice(0, 10)
+                  .map(event => {
+                    const Icon = getEventTypeIcon(event.type);
+                    const eventColor = getEventTypeColor(event.type);
+                    const daysUntil = Math.ceil((new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24));
+                    
+                    return (
+                      <motion.div
+                        key={event.id}
+                        whileHover={{ scale: 1.02 }}
+                        className="flex items-center p-4 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <div className={`${eventColor} p-3 rounded-lg mr-4`}>
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold">{event.title}</h3>
+                          <p className="text-slate-400 text-sm">{event.description}</p>
+                          <div className="flex items-center mt-2 space-x-4">
+                            <span className="text-cyan-400 text-sm font-medium">
+                              {formatDate(event.date)}
+                            </span>
+                            {daysUntil >= 0 && (
+                              <Badge variant="outline" className="text-slate-300">
+                                {daysUntil === 0 ? 'Today' : 
+                                 daysUntil === 1 ? 'Tomorrow' :
+                                 `${daysUntil} days`}
+                              </Badge>
+                            )}
+                            {event.amount && (
+                              <span className="text-green-400 font-semibold">
+                                {formatCurrency(event.amount)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+              ) : (
                 <div className="text-center py-8">
                   <p className="text-slate-400">No upcoming events in the next 90 days</p>
                 </div>
