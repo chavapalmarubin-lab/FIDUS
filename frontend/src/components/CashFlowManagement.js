@@ -462,6 +462,154 @@ const CashFlowManagement = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* CASH FLOW OBLIGATIONS CALENDAR */}
+      {cashFlowCalendar && (
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-cyan-400" />
+              Cash Flow Obligations Calendar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              
+              {/* Current Status Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-800/50 rounded-lg">
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">Current Fund Revenue</p>
+                  <p className="text-xl font-bold text-green-400">
+                    {formatCurrency(cashFlowCalendar.current_revenue || 0)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">Total Future Obligations</p>
+                  <p className="text-xl font-bold text-orange-400">
+                    {formatCurrency(cashFlowCalendar.summary?.total_future_obligations || 0)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">Net Position</p>
+                  <p className={`text-xl font-bold ${
+                    (cashFlowCalendar.current_revenue - cashFlowCalendar.summary?.total_future_obligations) >= 0 
+                      ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {formatCurrency((cashFlowCalendar.current_revenue || 0) - (cashFlowCalendar.summary?.total_future_obligations || 0))}
+                  </p>
+                </div>
+              </div>
+
+              {/* Key Milestones */}
+              {cashFlowCalendar.milestones && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {cashFlowCalendar.milestones.next_payment && (
+                    <div className="p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+                      <h4 className="text-sm font-medium text-blue-400 mb-2">⏰ Next Payment Due</h4>
+                      <p className="text-white font-bold">{cashFlowCalendar.milestones.next_payment.date}</p>
+                      <p className="text-green-400 font-bold">{formatCurrency(cashFlowCalendar.milestones.next_payment.amount)}</p>
+                      <p className="text-xs text-slate-400">{cashFlowCalendar.milestones.next_payment.days_away} days away</p>
+                    </div>
+                  )}
+                  
+                  {cashFlowCalendar.milestones.first_large_payment && (
+                    <div className="p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                      <h4 className="text-sm font-medium text-yellow-400 mb-2">⚠️ First Large Payment</h4>
+                      <p className="text-white font-bold">{cashFlowCalendar.milestones.first_large_payment.date}</p>
+                      <p className="text-yellow-400 font-bold">{formatCurrency(cashFlowCalendar.milestones.first_large_payment.amount)}</p>
+                      <p className="text-xs text-slate-400">{cashFlowCalendar.milestones.first_large_payment.days_away} days away</p>
+                    </div>
+                  )}
+                  
+                  {cashFlowCalendar.milestones.contract_end && (
+                    <div className="p-4 bg-red-900/20 border border-red-600/30 rounded-lg">
+                      <h4 className="text-sm font-medium text-red-400 mb-2">🚨 Contract End</h4>
+                      <p className="text-white font-bold">{cashFlowCalendar.milestones.contract_end.date}</p>
+                      <p className="text-red-400 font-bold">{formatCurrency(cashFlowCalendar.milestones.contract_end.amount)}</p>
+                      <p className="text-xs text-slate-400">{cashFlowCalendar.milestones.contract_end.days_away} days away</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Monthly Timeline */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-white mb-4">📅 Monthly Obligations Timeline</h4>
+                
+                {Object.entries(cashFlowCalendar.monthly_obligations || {})
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .slice(0, 12) // Show next 12 months
+                  .map(([monthKey, monthData]) => {
+                    const statusColors = {
+                      funded: 'border-green-600/30 bg-green-900/20',
+                      warning: 'border-yellow-600/30 bg-yellow-900/20', 
+                      critical: 'border-red-600/30 bg-red-900/20'
+                    };
+                    
+                    const statusIcons = {
+                      funded: '✅',
+                      warning: '⚠️',
+                      critical: '🚨'
+                    };
+                    
+                    return (
+                      <div key={monthKey} className={`p-4 border rounded-lg ${statusColors[monthData.status] || statusColors.funded}`}>
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h5 className="font-bold text-white">
+                              {statusIcons[monthData.status]} {new Date(monthData.date).toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                year: 'numeric' 
+                              })}
+                            </h5>
+                            <p className="text-xs text-slate-400">{monthData.days_away} days away</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-white">{formatCurrency(monthData.total_due)}</p>
+                            <p className="text-xs text-slate-400">Total Due</p>
+                          </div>
+                        </div>
+                        
+                        {/* Obligation Breakdown */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                          {monthData.core_interest > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">CORE Interest:</span>
+                              <span className="text-blue-400 ml-2 font-medium">{formatCurrency(monthData.core_interest)}</span>
+                            </div>
+                          )}
+                          {monthData.balance_interest > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">BALANCE Interest:</span>
+                              <span className="text-purple-400 ml-2 font-medium">{formatCurrency(monthData.balance_interest)}</span>
+                            </div>
+                          )}
+                          {monthData.principal_redemptions > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">Principal:</span>
+                              <span className="text-red-400 ml-2 font-medium">{formatCurrency(monthData.principal_redemptions)}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Running Balance */}
+                        <div className="flex justify-between items-center pt-3 border-t border-slate-600/30">
+                          <span className="text-sm text-slate-400">Running Balance After Payment:</span>
+                          <span className={`font-bold ${
+                            monthData.running_balance_after >= 0 ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {formatCurrency(monthData.running_balance_after)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* FUND ACCOUNTING BREAKDOWN TABLE */}
       <Card className="dashboard-card">
