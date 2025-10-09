@@ -12186,6 +12186,188 @@ async def get_multi_account_mt5_summary(client_id: str, current_user=Depends(get
         raise HTTPException(status_code=500, detail=f"Failed to get multi-account summary: {str(e)}")
 
 # ===============================================================================
+# MT5 DASHBOARD & ANALYTICS ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/mt5/dashboard/overview")
+async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
+    """Get comprehensive MT5 dashboard overview with live data"""
+    try:
+        # Only admin can view MT5 dashboard overview
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get all MT5 accounts with live data
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
+        
+        # Initialize dashboard metrics
+        dashboard = {
+            "total_accounts": len(all_mt5_accounts),
+            "total_allocated": 0.0,
+            "total_equity": 0.0,
+            "total_profit": 0.0,
+            "total_margin_used": 0.0,
+            "total_positions": 0,
+            "overall_return_percent": 0.0,
+            
+            # By client breakdown
+            "by_client": {},
+            
+            # By fund breakdown
+            "by_fund": {
+                "BALANCE": {"accounts": 0, "allocated": 0, "equity": 0, "profit": 0, "return_percent": 0},
+                "CORE": {"accounts": 0, "allocated": 0, "equity": 0, "profit": 0, "return_percent": 0}
+            },
+            
+            # By broker breakdown
+            "by_broker": {},
+            
+            # Data freshness
+            "data_quality": {
+                "live_accounts": 0,
+                "cached_accounts": 0,
+                "stored_accounts": 0,
+                "last_update_times": []
+            },
+            
+            # Performance summary
+            "performance_summary": {
+                "profitable_accounts": 0,
+                "losing_accounts": 0,
+                "break_even_accounts": 0,
+                "best_performer": None,
+                "worst_performer": None
+            }
+        }
+        
+        account_performances = []
+        
+        for mt5_account in all_mt5_accounts:
+            client_id = mt5_account.get("client_id", "unknown")
+            fund_code = mt5_account.get("fund_code", "unknown")
+            broker_name = mt5_account.get("broker_name", "unknown")
+            
+            # Extract financial data
+            allocated = mt5_account.get("total_allocated", 0)
+            equity = mt5_account.get("current_equity", allocated)
+            profit = mt5_account.get("profit_loss", 0)
+            margin_used = mt5_account.get("margin_used", 0)
+            
+            # Extract trading data
+            mt5_live_data = mt5_account.get("mt5_live_data", {})
+            positions_count = mt5_live_data.get("positions", {}).get("count", 0)
+            
+            # Data freshness
+            last_update = mt5_account.get("last_mt5_update")
+            data_source = "stored"
+            if last_update and mt5_account.get("mt5_data_source") in ["live_multi_account", "live_bridge"]:
+                data_age_minutes = (datetime.now(timezone.utc) - last_update).total_seconds() / 60
+                if data_age_minutes < 30:
+                    data_source = "live"
+                    dashboard["data_quality"]["live_accounts"] += 1
+                else:
+                    data_source = "cached"
+                    dashboard["data_quality"]["cached_accounts"] += 1
+                dashboard["data_quality"]["last_update_times"].append(last_update.isoformat())
+            else:
+                dashboard["data_quality"]["stored_accounts"] += 1
+            
+            # Aggregate totals
+            dashboard["total_allocated"] += allocated
+            dashboard["total_equity"] += equity
+            dashboard["total_profit"] += profit
+            dashboard["total_margin_used"] += margin_used
+            dashboard["total_positions"] += positions_count
+            
+            # By client aggregation
+            if client_id not in dashboard["by_client"]:
+                dashboard["by_client"][client_id] = {
+                    "accounts": 0, "allocated": 0, "equity": 0, "profit": 0, "return_percent": 0
+                }
+            dashboard["by_client"][client_id]["accounts"] += 1
+            dashboard["by_client"][client_id]["allocated"] += allocated
+            dashboard["by_client"][client_id]["equity"] += equity
+            dashboard["by_client"][client_id]["profit"] += profit
+            
+            # By fund aggregation
+            if fund_code in dashboard["by_fund"]:
+                dashboard["by_fund"][fund_code]["accounts"] += 1
+                dashboard["by_fund"][fund_code]["allocated"] += allocated
+                dashboard["by_fund"][fund_code]["equity"] += equity
+                dashboard["by_fund"][fund_code]["profit"] += profit
+            
+            # By broker aggregation
+            if broker_name not in dashboard["by_broker"]:
+                dashboard["by_broker"][broker_name] = {
+                    "accounts": 0, "allocated": 0, "equity": 0, "profit": 0, "return_percent": 0
+                }
+            dashboard["by_broker"][broker_name]["accounts"] += 1
+            dashboard["by_broker"][broker_name]["allocated"] += allocated
+            dashboard["by_broker"][broker_name]["equity"] += equity
+            dashboard["by_broker"][broker_name]["profit"] += profit
+            
+            # Performance tracking
+            return_pct = (profit / allocated * 100) if allocated > 0 else 0
+            account_performances.append({
+                "mt5_login": mt5_account.get("mt5_login"),
+                "client_id": client_id,
+                "fund_code": fund_code,
+                "return_percent": return_pct,
+                "profit": profit,
+                "data_source": data_source
+            })
+            
+            # Performance classification
+            if profit > 0:
+                dashboard["performance_summary"]["profitable_accounts"] += 1
+            elif profit < 0:
+                dashboard["performance_summary"]["losing_accounts"] += 1
+            else:
+                dashboard["performance_summary"]["break_even_accounts"] += 1
+        
+        # Calculate overall return
+        if dashboard["total_allocated"] > 0:
+            dashboard["overall_return_percent"] = (dashboard["total_profit"] / dashboard["total_allocated"]) * 100
+        
+        # Calculate return percentages for breakdowns
+        for client_data in dashboard["by_client"].values():
+            if client_data["allocated"] > 0:
+                client_data["return_percent"] = (client_data["profit"] / client_data["allocated"]) * 100
+        
+        for fund_data in dashboard["by_fund"].values():
+            if fund_data["allocated"] > 0:
+                fund_data["return_percent"] = (fund_data["profit"] / fund_data["allocated"]) * 100
+        
+        for broker_data in dashboard["by_broker"].values():
+            if broker_data["allocated"] > 0:
+                broker_data["return_percent"] = (broker_data["profit"] / broker_data["allocated"]) * 100
+        
+        # Find best and worst performers
+        if account_performances:
+            sorted_performances = sorted(account_performances, key=lambda x: x["return_percent"])
+            dashboard["performance_summary"]["worst_performer"] = sorted_performances[0]
+            dashboard["performance_summary"]["best_performer"] = sorted_performances[-1]
+        
+        # Round all financial values
+        dashboard["total_allocated"] = round(dashboard["total_allocated"], 2)
+        dashboard["total_equity"] = round(dashboard["total_equity"], 2)
+        dashboard["total_profit"] = round(dashboard["total_profit"], 2)
+        dashboard["total_margin_used"] = round(dashboard["total_margin_used"], 2)
+        dashboard["overall_return_percent"] = round(dashboard["overall_return_percent"], 2)
+        
+        return {
+            "success": True,
+            "dashboard": dashboard,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data_source": "live_mt5_integration"
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 dashboard overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch MT5 dashboard: {str(e)}")
+
+# ===============================================================================
 # CASH FLOW MANAGEMENT ENDPOINTS
 # ===============================================================================
 
