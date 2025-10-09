@@ -182,6 +182,49 @@ const InvestmentCalendar = ({ user }) => {
     });
   };
 
+  const getEventTypeIcon = (type) => {
+    switch (type) {
+      case 'investment_start':
+        return DollarSign;
+      case 'incubation_end':
+        return Clock;
+      case 'interest_redemption':
+        return TrendingUp;
+      case 'final_redemption':
+        return ArrowDownCircle;
+      default:
+        return CalendarIcon;
+    }
+  };
+
+  const getEventTypeColor = (type) => {
+    switch (type) {
+      case 'investment_start':
+        return 'bg-blue-600';
+      case 'incubation_end':
+        return 'bg-yellow-600';
+      case 'interest_redemption':
+        return 'bg-green-600';
+      case 'final_redemption':
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
+    }
+  };
+
+  const getFundColor = (fundCode) => {
+    switch (fundCode) {
+      case 'CORE':
+        return 'text-orange-400';
+      case 'BALANCE':
+        return 'text-cyan-400';
+      case 'DYNAMIC':
+        return 'text-green-400';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
   const getEventTypeConfig = (eventType) => {
     const configs = {
       investment_start: { 
