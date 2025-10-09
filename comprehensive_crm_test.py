@@ -19,7 +19,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://trading-platform-76.preview.emergentagent.com/api"
+BACKEND_URL = "https://investment-portal-4.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

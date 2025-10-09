@@ -18,7 +18,7 @@ def check_api_response():
     print("=" * 30)
     
     # Authenticate first
-    base_url = "https://trading-platform-76.preview.emergentagent.com"
+    base_url = "https://investment-portal-4.preview.emergentagent.com"
     
     # Login
     login_response = requests.post(f"{base_url}/api/auth/login", json={
