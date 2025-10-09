@@ -60,14 +60,16 @@ const MT5Management = () => {
         try {
             const response = await apiAxios.get('/mt5/admin/accounts');
             
-            if (response.data) {
+            if (response.data && response.data.success) {
                 const data = response.data;
                 // Group accounts by broker for display
                 const accountsByBroker = {};
                 let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0 };
                 
-                if (Array.isArray(data)) {
-                    data.forEach(account => {
+                // Access the accounts array from the API response
+                const accounts = data.accounts || [];
+                if (Array.isArray(accounts)) {
+                    accounts.forEach(account => {
                         const broker = account.broker || 'Unknown';
                         if (!accountsByBroker[broker]) {
                             accountsByBroker[broker] = [];
