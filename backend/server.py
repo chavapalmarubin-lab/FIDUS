@@ -16353,8 +16353,8 @@ async def get_realtime_mt5_data():
             account['position_count'] = len(positions)
             
             # Calculate real-time statistics
-            account['connection_status'] = 'connected'
-            account['last_update'] = account.get('last_sync', datetime.now(timezone.utc).isoformat())
+            account['connection_status'] = 'connected' if account.get('updated_at') else 'disconnected'
+            account['last_update'] = account.get('updated_at', datetime.now(timezone.utc).isoformat())
             
             accounts.append(account)
         
