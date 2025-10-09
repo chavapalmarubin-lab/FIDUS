@@ -458,39 +458,57 @@ const RedemptionManagement = ({ user }) => {
                     </div>
                     
                     <div className="ml-4 space-y-2">
-                      {/* Interest Redemption Button */}
-                      <Button
-                        onClick={() => openRedemptionModal(investment, 'interest')}
-                        disabled={!(investment.can_redeem_interest || investment.can_redeem)}
-                        className={`w-full ${
-                          (investment.can_redeem_interest || investment.can_redeem) 
-                            ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-slate-600 cursor-not-allowed'
-                        } text-white`}
-                      >
-                        <ArrowDownCircle className="mr-2 h-4 w-4" />
-                        Redeem Interest
-                        <span className="ml-2 text-xs">
-                          ({formatCurrency(investment.interest_earned || (investment.current_value - investment.principal_amount))})
-                        </span>
-                      </Button>
-                      
-                      {/* Principal Redemption Button */}
-                      <Button
-                        onClick={() => openRedemptionModal(investment, 'principal')}
-                        disabled={!investment.can_redeem_principal}
-                        className={`w-full ${
-                          investment.can_redeem_principal 
-                            ? 'bg-red-600 hover:bg-red-700' 
-                            : 'bg-slate-600 cursor-not-allowed'
-                        } text-white`}
-                      >
-                        <ArrowDownCircle className="mr-2 h-4 w-4" />
-                        Redeem Principal
-                        <span className="ml-2 text-xs">
-                          ({formatCurrency(investment.principal_amount)})
-                        </span>
-                      </Button>
+                      {investment.status === 'incubation' ? (
+                        /* During Incubation - No Redemption Available */
+                        <div className="text-center py-4 px-2 bg-yellow-900/20 border border-yellow-600 rounded">
+                          <Clock className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+                          <p className="text-yellow-400 text-sm font-medium">No Redemptions During Incubation</p>
+                          <p className="text-yellow-300 text-xs mt-1">
+                            First payment available in {getDaysUntilFirstPayment(investment)} days
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Interest Redemption Button */}
+                          <Button
+                            onClick={() => openRedemptionModal(investment, 'interest')}
+                            disabled={getAvailableInterestPayments(investment) <= 0}
+                            className={`w-full ${
+                              getAvailableInterestPayments(investment) > 0
+                                ? 'bg-green-600 hover:bg-green-700' 
+                                : 'bg-slate-600 cursor-not-allowed'
+                            } text-white`}
+                          >
+                            <ArrowDownCircle className="mr-2 h-4 w-4" />
+                            {getAvailableInterestPayments(investment) > 0 ? 'Redeem Interest' : 'No Interest Available'}
+                            <span className="ml-2 text-xs">
+                              ({formatCurrency(getAvailableInterestAmount(investment))})
+                            </span>
+                          </Button>
+                          
+                          {/* Principal Redemption Button - Only if contract ended */}
+                          {isPrincipalAvailable(investment) ? (
+                            <Button
+                              onClick={() => openRedemptionModal(investment, 'final')}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              <ArrowDownCircle className="mr-2 h-4 w-4" />
+                              Final Redemption
+                              <span className="ml-2 text-xs">
+                                ({formatCurrency(investment.principal_amount + getAvailableInterestAmount(investment))})
+                              </span>
+                            </Button>
+                          ) : (
+                            <div className="text-center py-3 px-2 bg-red-900/20 border border-red-600 rounded">
+                              <AlertCircle className="w-5 h-5 text-red-400 mx-auto mb-1" />
+                              <p className="text-red-400 text-xs font-medium">Principal Locked</p>
+                              <p className="text-red-300 text-xs">
+                                Available: {getContractEndDate(investment)}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 </motion.div>
