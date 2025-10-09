@@ -261,27 +261,81 @@ const RedemptionManagement = ({ user }) => {
                       </div>
                       
                       <div className="mt-2 space-y-1">
-                        {/* Interest Redemption Status */}
-                        <div className="flex items-center">
-                          {(investment.can_redeem_interest || investment.can_redeem) ? (
-                            <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+                        {/* Investment Status & Timing */}
+                        <div className="space-y-2">
+                          {/* Incubation Status */}
+                          {investment.status === 'incubation' ? (
+                            <div className="bg-yellow-900/20 border border-yellow-600 rounded p-3">
+                              <div className="flex items-center mb-2">
+                                <Clock className="h-5 w-5 text-yellow-400 mr-2" />
+                                <span className="text-yellow-400 font-medium">Investment in Incubation Period</span>
+                              </div>
+                              <div className="text-sm text-yellow-300 space-y-1">
+                                <p>• Investment Date: {formatDate(investment.deposit_date)}</p>
+                                <p>• Incubation Period: 60 days (no interest accrues)</p>
+                                <p>• Interest Starts: {investment.interest_start_date ? formatDate(investment.interest_start_date) : 'Calculating...'}</p>
+                                <p>• First Payment Available: {getDaysUntilFirstPayment(investment)} days</p>
+                              </div>
+                            </div>
                           ) : (
-                            <Clock className="h-4 w-4 text-yellow-400 mr-2" />
+                            <>
+                              {/* Interest Redemption Status */}
+                              <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
+                                <div className="flex items-center">
+                                  {getAvailableInterestPayments(investment) > 0 ? (
+                                    <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+                                  ) : (
+                                    <Clock className="h-4 w-4 text-yellow-400 mr-2" />
+                                  )}
+                                  <span className="text-sm text-white">Interest Payments:</span>
+                                </div>
+                                <div className="text-right">
+                                  {getAvailableInterestPayments(investment) > 0 ? (
+                                    <div>
+                                      <span className="text-green-400 font-medium">
+                                        {getAvailableInterestPayments(investment)} available
+                                      </span>
+                                      <div className="text-xs text-slate-400">
+                                        Total: {formatCurrency(getAvailableInterestAmount(investment))}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-yellow-400 text-sm">
+                                      Next: {getNextPaymentDate(investment)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Principal Redemption Status */}
+                              <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
+                                <div className="flex items-center">
+                                  {isPrincipalAvailable(investment) ? (
+                                    <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+                                  ) : (
+                                    <AlertCircle className="h-4 w-4 text-red-400 mr-2" />
+                                  )}
+                                  <span className="text-sm text-white">Principal:</span>
+                                </div>
+                                <div className="text-right">
+                                  {isPrincipalAvailable(investment) ? (
+                                    <span className="text-green-400 font-medium text-sm">
+                                      Available Now
+                                    </span>
+                                  ) : (
+                                    <div>
+                                      <span className="text-red-400 text-sm font-medium">
+                                        Locked until Contract End
+                                      </span>
+                                      <div className="text-xs text-slate-400">
+                                        Available: {getContractEndDate(investment)}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </>
                           )}
-                          <span className={`text-sm ${(investment.can_redeem_interest || investment.can_redeem) ? 'text-green-400' : 'text-yellow-400'}`}>
-                            Interest: {investment.interest_message || investment.message}
-                          </span>
-                        </div>
-                        {/* Principal Redemption Status */}
-                        <div className="flex items-center">
-                          {investment.can_redeem_principal ? (
-                            <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
-                          ) : (
-                            <Clock className="h-4 w-4 text-yellow-400 mr-2" />
-                          )}
-                          <span className={`text-sm ${investment.can_redeem_principal ? 'text-green-400' : 'text-yellow-400'}`}>
-                            Principal: {investment.principal_message || 'Principal hold period not met'}
-                          </span>
                         </div>
                       </div>
                     </div>
