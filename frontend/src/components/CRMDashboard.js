@@ -583,7 +583,7 @@ const CRMDashboard = ({ user }) => {
                         </td>
                         <td className="text-right py-3 px-4">
                           <span className={`font-medium ${fund.performance_ytd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {fund.performance_ytd >= 0 ? '+' : ''}{fund.performance_ytd.toFixed(1)}%
+                            {(fund.performance_ytd || 0) >= 0 ? '+' : ''}{(fund.performance_ytd || 0).toFixed(1)}%
                           </span>
                         </td>
                         <td className="text-right py-3 px-4 text-white">
