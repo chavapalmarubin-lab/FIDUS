@@ -445,7 +445,7 @@ const CRMDashboard = ({ user }) => {
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-gray-400">{crmData.capital_flows.summary.total_recent_flows} Recent Flows</span>
+              <span className="text-gray-400">{crmData?.capital_flows?.summary?.total_recent_flows || 0} Recent Flows</span>
             </div>
           </CardContent>
         </Card>
