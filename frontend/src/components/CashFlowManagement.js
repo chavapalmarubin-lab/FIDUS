@@ -240,8 +240,21 @@ const CashFlowManagement = () => {
                   <p className="text-xs text-slate-500">Fund's investment performance</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-green-400">
+                  <p className={`text-lg font-bold ${(fundAccounting?.assets?.mt5_trading_profits || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Separation Interest */}
+              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-400">Separation Interest</p>
+                  <p className="text-xs text-slate-500">Interest earned in separation accounts</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-400">
+                    {formatCurrency(fundAccounting?.assets?.separation_interest || 0)}
                   </p>
                 </div>
               </div>
