@@ -16603,51 +16603,53 @@ async def get_client_fund_performance(client_id: str):
 async def get_performance_gaps():
     """Get all performance gaps between FIDUS commitments and MT5 reality"""
     try:
-        # Import fund performance manager directly
-        import sys
-        sys.path.append(get_backend_path())
-        from fund_performance_manager import fund_performance_manager as fpm
+        # Get all investments and MT5 accounts for gap analysis
+        all_investments = await db.investments.find().to_list(length=None)
+        all_mt5_accounts = await db.mt5_accounts.find().to_list(length=None)
         
-        if not fpm:
-            return {
-                "success": False,
-                "performance_gaps": [],
-                "total_gaps": 0,
-                "error": "Fund performance manager not available",
-                "generated_at": datetime.now(timezone.utc).isoformat()
-            }
-        
-        # Get all MT5 accounts (primary data source for actual client positions)
         gaps = []
         
-        # Use MT5 accounts as the source of truth for client positions
-        async for account in fpm.db.mt5_accounts.find({}):
-            client_id = account["client_id"]
-            fund_code = account["fund_code"]
-            principal_amount = account.get("total_allocated", account.get("initial_deposit", 0))
-            deposit_date = account.get("deposit_date", account.get("created_at"))
+        # For each investment, find corresponding MT5 accounts and calculate gaps
+        for investment in all_investments:
+            client_id = investment.get('client_id')
+            fund_code = investment.get('fund_code')
+            principal_amount = investment.get('principal_amount', 0)
             
-            try:
-                gap = await fpm.analyze_mt5_performance_gap(
-                    client_id, fund_code, principal_amount, deposit_date, account
-                )
+            # Find MT5 accounts for this client and fund
+            client_mt5_accounts = [
+                acc for acc in all_mt5_accounts 
+                if acc.get('client_id') == client_id and acc.get('fund_type') == fund_code
+            ]
+            
+            if client_mt5_accounts:
+                # Calculate actual MT5 performance
+                total_mt5_equity = sum(acc.get('equity', 0) for acc in client_mt5_accounts)
+                total_mt5_profit = sum(acc.get('profit', 0) for acc in client_mt5_accounts)
+                
+                # Calculate gap (difference between expected and actual)
+                expected_performance = principal_amount  # Base expectation
+                actual_performance = total_mt5_equity
+                gap_amount = actual_performance - expected_performance
+                gap_percentage = (gap_amount / expected_performance * 100) if expected_performance > 0 else 0
+                
+                # Determine risk level and action required
+                risk_level = "high" if abs(gap_percentage) > 10 else "medium" if abs(gap_percentage) > 5 else "low"
+                action_required = abs(gap_percentage) > 5
                 
                 gaps.append({
-                    "client_id": gap.client_id,
-                    "fund_code": gap.fund_code,
-                    "expected_performance": gap.expected_performance,
-                    "actual_mt5_performance": gap.actual_mt5_performance,
-                    "gap_amount": gap.gap_amount,
-                    "gap_percentage": gap.gap_percentage,
-                    "risk_level": gap.risk_level,
-                    "action_required": gap.action_required,
-                    "recommendation": fpm.get_recommendation(gap),
+                    "client_id": client_id,
+                    "fund_code": fund_code,
+                    "expected_performance": expected_performance,
+                    "actual_mt5_performance": actual_performance,
+                    "gap_amount": gap_amount,
+                    "gap_percentage": gap_percentage,
+                    "risk_level": risk_level,
+                    "action_required": action_required,
+                    "recommendation": f"Monitor {fund_code} fund performance" if not action_required else f"Review {fund_code} strategy",
                     "principal_amount": principal_amount,
-                    "deposit_date": deposit_date,
-                    "mt5_login": account.get("mt5_login")
+                    "mt5_accounts": len(client_mt5_accounts),
+                    "total_profit": total_mt5_profit
                 })
-            except Exception as e:
-                logging.error(f"Error analyzing gap for {client_id} {fund_code}: {str(e)}")
         
         return {
             "success": True,
