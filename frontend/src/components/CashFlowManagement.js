@@ -24,6 +24,7 @@ const CashFlowManagement = () => {
   const [fundAccounting, setFundAccounting] = useState({});
   const [fundBreakdown, setFundBreakdown] = useState({});
   const [rebatesSummary, setRebatesSummary] = useState({});
+  const [cashFlowCalendar, setCashFlowCalendar] = useState(null);  // New calendar data
   const [selectedTimeframe, setSelectedTimeframe] = useState('3months');
   const [selectedFund, setSelectedFund] = useState('all');
   const [loading, setLoading] = useState(true);
