@@ -65,6 +65,7 @@ const CashFlowManagement = () => {
         const fundAccountingData = {
           assets: {
             mt5_trading_profits: summary.mt5_trading_profits || 0,
+            separation_interest: summary.separation_interest || 0,  // New separation account line item
             broker_rebates: summary.broker_rebates || 0,
             total_inflows: summary.fund_revenue || 0
           },
