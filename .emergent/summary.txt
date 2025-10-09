@@ -1,67 +1,63 @@
 <analysis>
-The AI engineer's work focused on preparing the FIDUS application for its first production client, Alejandro Mariscal. Key challenges included resolving Render deployment issues (MongoDB authentication, file system permissions, frontend build complexities like path aliases and circular imports). Extensive debugging led to successful frontend deployment and initial client data setup. A major pivot occurred due to MT5's single-session limitation, leading to the development of a multi-account sequential login and data collection solution for MT5. While live MT5 data is now flowing into MongoDB, a critical client ID mapping issue persists, preventing the frontend dashboard from displaying Alejandro's investment and MT5 data correctly. Backend API endpoints now return accurate data, but the frontend remains disconnected, showing zero values.
+The trajectory outlines an iterative development process by an AI engineer addressing critical data integration and display issues within the FIDUS platform, initially built by a previous AI. The work began by rectifying a field name mismatch between the MT5 Bridge Service and the FIDUS backend, compounded by client ID mapping errors and duplicate investment records. This led to a series of backend API adjustments and frontend component fixes for various dashboards. Persistent user feedback, often accompanied by screenshots, highlighted ongoing data inconsistencies and JavaScript runtime errors, prompting a systematic debugging approach. The latest phase involved implementing a cash flow calendar, which, after initial deployment, was found to have fundamentally incorrect date calculation logic, leading to the current task of rectifying these calculations based on detailed product specifications.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an investment management system integrating MongoDB Atlas and MetaTrader5 (MT5) with JWT/Google OAuth. Core functionalities include Just-in-Time MT5 allocation, a Client Readiness System, and Investment Detail View. Compatibility for Render deployment and MT5 event loop fixes were crucial. The primary goal was to onboard Alejandro Mariscal with:
-- Client record creation (alexmar7609@gmail.com, ).
-- Two investments: BALANCE (00,000) and CORE (8,151.41).
-- Four MT5 accounts with real credentials (MEXAtlantic broker, FIDUS13@ password).
-- Frontend deployment to Render and verification of Alejandro’s data.
-Implementation involved refactoring and adding specific scripts/components for Alejandro's data and ensuring live MT5 data integration, overcoming MT5's single-session constraint with a sequential login solution.
+The FIDUS platform is an investment management system integrating MongoDB Atlas and MetaTrader5 (MT5) with JWT/Google OAuth. The primary goal was to onboard Alejandro Mariscal, requiring client record creation (), two investments (BALANCE 00,000, CORE 8,151.41), and four MT5 accounts. A key architectural decision was the development of a multi-account sequential login solution for MT5 to overcome its single-session limitation. Implementation focused on ensuring live MT5 data flowed into MongoDB and was correctly displayed on the frontend, especially for Alejandro's dashboard. Subsequent requirements focused on data consistency across various admin dashboards (CRM, Fund vs MT5 Analysis, Cash Flow Management, MT5 Account Dashboard), including proper calculation of fund assets, net profitability, and the integration of a separation account (). Most recently, the critical requirement is to implement a dynamic, accurate cash flow calendar showing month-by-month obligations based on precise incubation periods, first payment timing, and intervals for CORE, BALANCE, and DYNAMIC products.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend**: Python (FastAPI, Pydantic, , ), MongoDB Atlas.
-- **Frontend**: React.js (Yarn, , Tailwind CSS, CRACO/React-scripts).
-- **MT5 Integration**: MetaTrader5 Python package, FastAPI bridge, sequential multi-account login.
-- **Deployment**: Render, Kubernetes, Supervisor.
+-   **Backend**: Python (FastAPI, Pydantic, , ), MongoDB Atlas.
+-   **Frontend**: React.js (Yarn, Tailwind CSS, CRACO/React-scripts), Axios.
+-   **MT5 Integration**: MetaTrader5 Python package, FastAPI bridge, sequential multi-account login, MT5 Bridge Service.
+-   **Deployment**: Render, Kubernetes, Supervisor.
 </key_technical_concepts>
 
 <code_architecture>
 
-
 -   ****
     -   **Summary**: Main FastAPI application handling API endpoints.
-    -   **Changes**: Refactored various endpoints (, , , ) to use direct asynchronous MongoDB queries instead of a faulty . Added new endpoints , , . Fixed datetime comparison issues and updated client contract dates.
+    -   **Changes**: Extensive refactoring of MT5, investment, and fund portfolio related endpoints (e.g., , , , , , , , , , , , , ). Changes included correcting field name mismatches (e.g.,  to ), fixing datetime comparison, handling MongoDB  serialization, integrating real MT5 data instead of mock services/hardcoded values, correcting AUM calculation logic (removing double-counting), and implementing new date calculation logic for the cash flow calendar. New functions like  and  were introduced.
 -   ****
-    -   **Summary**: Script to initialize Alejandro's client, investment, and MT5 account data.
-    -   **Changes**: Used to insert initial data and run multiple times to ensure consistency.
--   ****
-    -   **Summary**: A script created to resolve persistent data inconsistencies, including client ID mismatches and missing MT5 accounts, by performing a cleanup and re-setup.
-    -   **Changes**: Created and executed to ensure correct  ID and proper MT5 account creation.
+    -   **Summary**: Script used for data cleanup and consistency.
+    -   **Changes**: Executed to correct  ID mapping for MT5 accounts and to remove duplicate investment records.
 -   **** (NEW FILE)
-    -   **Summary**: Module for real-time MT5 data fetching, sequential login, caching, and MongoDB storage from the external MT5 Bridge Service.
-    -   **Changes**: Created to bridge the FIDUS backend with the MT5 Bridge for live data.
+    -   **Summary**: Module for real-time MT5 data fetching and MongoDB storage.
+    -   **Changes**: Created to integrate live MT5 data.
 -   **** (NEW FILE)
-    -   **Summary**: Implements the sequential login pattern for MetaTrader5 accounts to overcome the single-session limitation.
-    -   **Changes**: Developed to enable collection of data from multiple MT5 accounts by logging in and out sequentially.
+    -   **Summary**: Implements sequential login for MetaTrader5 accounts.
+    -   **Changes**: Developed to overcome MT5's single-session limitation.
 -   ****
     -   **Summary**: Central administrative interface.
-    -   **Changes**: Integrated the newly created  component, adding a new tab for MT5 Dashboard to display live data.
+    -   **Changes**: Integrated  and  components.
 -   **** (NEW FILE)
-    -   **Summary**: React component to display live MT5 account data fetched from the backend.
-    -   **Changes**: Created to visualize the real-time MT5 balance, equity, and profit/loss.
+    -   **Summary**: React component to display live MT5 account data.
+    -   **Changes**: Created to visualize MT5 data, later debugged for frontend API calls and error handling.
 -   ****
-    -   **Summary**: JavaScript configuration for path aliases.
-    -   **Changes**: Modified  and  to correctly resolve  aliases for React build.
+    -   **Summary**: Component displaying fund overview.
+    -   **Changes**: Adjusted to correctly parse backend responses (e.g.,  to ).
 -   ****
-    -   **Summary**: Various UI components.
-    -   **Changes**: Corrected circular imports by changing absolute paths to relative paths.
+    -   **Summary**: Displays overall CRM metrics.
+    -   **Changes**: Updated to fix JavaScript runtime errors (e.g.,  on undefined values), add null checks, and correctly process data from the  endpoint to display accurate total client assets.
+-   ****
+    -   **Summary**: Manages and displays cash flow data.
+    -   **Changes**: Updated to correctly display MT5 trading profits and the newly introduced separation account interest. New API calls for cash flow calendar were added, and the component was adapted to display the timeline. Frontend fields were mapped to backend  object.
+-   ****
+    -   **Summary**: Component for fund vs MT5 analysis.
+    -   **Changes**: Updated API calls and logic to correctly fetch and display fund performance gaps and commitments.
+-   ****
+    -   **Summary**: Multi-broker MT5 account management interface.
+    -   **Changes**: Fixed authentication ( vs ), corrected data structure processing ( vs ), and implemented robust null checking to prevent JavaScript errors.
 </code_architecture>
 
 <pending_tasks>
-- Link live MT5 data (currently in MongoDB) to the  ID.
-- Complete Google OAuth/Gmail API integration, including calendar/drive and fixing Invalid private key errors.
-- Populate the client dropdown in the investment creation form.
-- Develop a dedicated client-side dashboard for Alejandro.
-- Resolve frontend session timeout issues (JWT token expiration).
+- Correct the date calculation logic for the Cash Flow Calendar in the backend. This involves correctly calculating incubation periods, first payment dates, subsequent payment intervals, and contract end dates for CORE, BALANCE, and DYNAMIC products.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer successfully established the MT5 multi-account data collection using a sequential login pattern, addressing MT5's single-session limitation. Live MT5 data (balance, equity, profit/loss) is now flowing from the MT5 Bridge Service into MongoDB every 15 minutes. Backend API endpoints (, ) and a new frontend  component were implemented and integrated into the . However, the frontend  still displays /bin/bash Total AUM, 0 Total Clients, /bin/bash for both CORE and BALANCE funds despite backend APIs returning correct aggregated data for Alejandro and his MT5 accounts. The root cause has been identified as a **client mapping problem** for the live MT5 data in MongoDB, where MT5 accounts exist but are not correctly linked to .
+Immediately prior to this summary, the AI engineer had successfully implemented a Cash Flow Obligations Calendar and integrated it into the frontend. However, the user identified a critical issue: the payment dates and intervals displayed in the calendar were completely wrong. The AI engineer is currently in the process of rectifying this. The precise problem is that the previously implemented date calculation logic for investment payments (incubation period, first payment, subsequent payments, contract end) does not adhere to the specified business rules for FIDUS CORE, BALANCE, and DYNAMIC products. The user has provided detailed rules and examples for these calculations, including a universal 60-day incubation, specific first payment timings (Day 90 for CORE, Day 150 for BALANCE, Day 240 for DYNAMIC), and consistent payment intervals (30, 90, 180 days respectively). The AI engineer has just confirmed Alejandro's investment date as October 8, 2025, and has begun to completely rewrite the backend date calculation functions to align with these detailed product specifications.
 </current_work>
 
 <optional_next_step>
-Fix the client ID mapping issue for live MT5 data in MongoDB to link accounts to .
+Correct Alejandro's investment date in the database to October 1st, 2025, and then test the rewritten date calculation logic by invoking the cash flow calendar endpoint.
 </optional_next_step>

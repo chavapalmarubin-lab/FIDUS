@@ -21,7 +21,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://investment-portal-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-integration.preview.emergentagent.com/api"
 
 class FrontendDataVisibilityTester:
     def __init__(self):
