@@ -12424,19 +12424,18 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
 async def get_total_mt5_profits() -> float:
     """Get total MT5 profits/losses across all accounts"""
     try:
-        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
-            await mt5_service.initialize()
+        # Get all MT5 accounts directly from MongoDB using the working collection
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        # Get all active MT5 accounts
-        accounts = await mt5_service.mt5_repo.find_active_accounts()
         total_profit = 0.0
         
-        for account in accounts:
-            # Get current profit from account (this is the floating P&L)
-            if hasattr(account, 'profit') and account.profit:
-                total_profit += float(account.profit)
+        for account in all_mt5_accounts:
+            # Use MT5 Bridge field name for profit
+            profit = account.get('profit', 0)  # MT5 Bridge uses 'profit'
+            total_profit += float(profit) if profit else 0.0
         
-        logging.info(f"📊 Total MT5 profits calculated: ${total_profit:.2f} from {len(accounts)} accounts")
+        logging.info(f"📊 Total MT5 profits calculated: ${total_profit:.2f} from {len(all_mt5_accounts)} accounts")
         return total_profit
         
     except Exception as e:
