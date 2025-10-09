@@ -372,7 +372,7 @@ const CRMDashboard = ({ user }) => {
               <div>
                 <p className="text-sm font-medium text-gray-400">Total Client Assets</p>
                 <p className="text-2xl font-bold text-white">
-                  {formatCurrency(crmData.overview.total_client_assets)}
+                  {formatCurrency(crmData?.overview?.total_client_assets || 0)}
                 </p>
               </div>
               <div className="h-12 w-12 bg-cyan-600/20 rounded-lg flex items-center justify-center">
