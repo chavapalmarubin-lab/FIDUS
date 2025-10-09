@@ -18314,14 +18314,14 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
             recent_history = mt5_live_data.get("recent_history", {})
             
             account = {
-                # Basic info
-                "account_id": mt5_account.get("account_id"),
-                "mt5_login": mt5_account.get("mt5_login"),
-                "mt5_account_number": mt5_account.get("mt5_login"),
-                "broker_name": mt5_account.get("broker_name"),
-                "broker_code": mt5_account.get("broker_code"),
-                "server": mt5_account.get("mt5_server"),
-                "fund_code": mt5_account.get("fund_code"),
+                # Basic info - Use MT5 Bridge field names
+                "account_id": mt5_account.get("account_id") or f"mt5_{mt5_account.get('account')}",
+                "mt5_login": mt5_account.get("account"),  # MT5 Bridge uses 'account' 
+                "mt5_account_number": mt5_account.get("account"),  # MT5 Bridge uses 'account'
+                "broker_name": mt5_account.get("name", "MEXAtlantic"),  # MT5 Bridge uses 'name'
+                "broker_code": "mexatlantic",
+                "server": mt5_account.get("server", "MEXAtlantic-Real"),  # MT5 Bridge uses 'server'
+                "fund_code": mt5_account.get("fund_type"),  # MT5 Bridge uses 'fund_type'
                 
                 # Financial data
                 "allocated_amount": allocated_amount,
