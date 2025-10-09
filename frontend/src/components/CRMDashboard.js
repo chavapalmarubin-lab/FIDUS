@@ -343,7 +343,7 @@ const CRMDashboard = ({ user }) => {
   const fundAllocationData = (crmData?.funds?.data || []).map((fund, index) => ({
     name: fund.name,
     value: fund.aum,
-    percentage: ((fund.aum / crmData.funds.summary.total_aum) * 100).toFixed(1),
+    percentage: ((fund.aum || 0) / (crmData.funds.summary.total_aum || 1) * 100).toFixed(1),
     color: fundColors[index]
   }));
 
