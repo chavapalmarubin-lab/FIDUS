@@ -97,6 +97,18 @@ MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to
           agent: "testing"
           comment: "🎉 FUND ACCOUNTING SEPARATION INTEREST DISPLAY VERIFICATION COMPLETED SUCCESSFULLY - 100% SUCCESS RATE! Conducted comprehensive testing of the Cash Flow Management component as specifically requested in review. CRITICAL VERIFICATION RESULTS: (1) ✅ BACKEND API CONFIRMED WORKING: /api/admin/cashflow/overview returns HTTP 200 with correct data - MT5 Trading Profits: $-496.22, Separation Interest: $3405.53, Fund Revenue: $2909.31, Net Profit: $-30085.67. Backend is providing all required separation interest data correctly. (2) ✅ FUND ASSETS SECTION DISPLAYS ALL THREE LINE ITEMS: Successfully verified Fund Assets (Income Sources) section shows exactly 3 line items as expected - MT5 Trading Profits: -$496, Separation Interest: $3,406, Broker Rebates: $0. The reported 'missing Separation Interest' issue is RESOLVED - the line item is clearly visible and displaying the correct value. (3) ✅ NET FUND PROFITABILITY ANALYSIS CORRECT: Net Profit section shows -$30,086 (matches expected -$30,085.67), displayed in red indicating loss-making status. The field mapping from net_profit to net_fund_profitability is working correctly. (4) ✅ FUND ACCOUNTING BREAKDOWN COMPLETE: Total Fund Assets calculation includes separation account ($2,909), Net Position reflects correct gap analysis, all calculations properly include separation interest in totals. (5) ✅ NO JAVASCRIPT ERRORS: No frontend errors detected, Cash Flow Management component loads and renders correctly, all data mapping from backend API response working properly. CONCLUSION: The reported separation interest display issue has been COMPLETELY RESOLVED. All three expected line items are visible in Fund Assets section, Net Profit shows correct negative value, and separation account data is properly integrated into fund accounting calculations. The frontend Cash Flow Management component is working correctly and displaying separation interest as expected."
 
+  - task: "Cash Flow Obligations Calendar Verification"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CashFlowManagement.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "COMPREHENSIVE CASH FLOW CALENDAR VERIFICATION REQUIRED: Verify complete timeline implementation with: (1) Navigate to Cash Flow Management Page, (2) Verify NEW Calendar Section '📅 Cash Flow Obligations Calendar' appears below Net Fund Profitability, (3) Verify Current Status Summary shows Current Fund Revenue: $2,909, Total Future Obligations: calculated amount, Net Position: negative value showing gap, (4) Verify Key Milestones Section shows Next Payment Due: December 2025 (~60 days away), First Large Payment: first quarterly payment, Contract End: December 2026 contract end, (5) Verify Monthly Timeline displays 12-month timeline with month name/days away, total amount due, breakdown (CORE Interest, BALANCE Interest, Principal), Running Balance After Payment with color coding, Status indicator (✅/⚠️/🚨), (6) Verify Timeline Logic shows progression from positive to negative balance, identifies when fund becomes underfunded, shows quarterly BALANCE payments vs monthly CORE payments, highlights large payment months. Expected pattern: Early months positive balance (green ✅), March 2026 first large quarterly payment (yellow ⚠️), Later months increasing shortfall (red 🚨), December 2026 contract end with large principal payment."
+
   - task: "MT5 Components Final Verification (All Tabs)"
     implemented: true
     working: false
