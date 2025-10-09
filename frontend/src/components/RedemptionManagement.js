@@ -151,6 +151,123 @@ const RedemptionManagement = ({ user }) => {
     });
   };
 
+  const getDaysUntilFirstPayment = (investment) => {
+    if (!investment.interest_start_date) return 'Calculating...';
+    
+    const today = new Date();
+    const interestStart = new Date(investment.interest_start_date);
+    
+    // Calculate first payment date based on fund type
+    const daysToFirstPayment = investment.fund_code === 'CORE' ? 30 : 
+                               investment.fund_code === 'BALANCE' ? 90 : 
+                               investment.fund_code === 'DYNAMIC' ? 180 : 30;
+    
+    const firstPaymentDate = new Date(interestStart);
+    firstPaymentDate.setDate(firstPaymentDate.getDate() + daysToFirstPayment);
+    
+    const diffTime = firstPaymentDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const getAvailableInterestPayments = (investment) => {
+    // This would need to integrate with the calendar data
+    // For now, return 0 during incubation, check actual payment dates otherwise
+    if (investment.status === 'incubation') return 0;
+    
+    // Simple logic - in a real implementation, this would check against 
+    // the payment schedule from the calendar API
+    const today = new Date();
+    const interestStart = new Date(investment.interest_start_date);
+    
+    if (today < interestStart) return 0;
+    
+    // Calculate payments based on elapsed time and fund frequency
+    const daysSinceStart = Math.floor((today - interestStart) / (1000 * 60 * 60 * 24));
+    const paymentInterval = investment.fund_code === 'CORE' ? 30 : 
+                            investment.fund_code === 'BALANCE' ? 90 : 
+                            investment.fund_code === 'DYNAMIC' ? 180 : 30;
+    
+    return Math.floor(daysSinceStart / paymentInterval);
+  };
+
+  const getAvailableInterestAmount = (investment) => {
+    const payments = getAvailableInterestPayments(investment);
+    if (payments <= 0) return 0;
+    
+    // Calculate monthly interest rate
+    const monthlyRates = {
+      'CORE': 0.015,    // 1.5%
+      'BALANCE': 0.025, // 2.5%
+      'DYNAMIC': 0.035  // 3.5%
+    };
+    
+    const monthlyRate = monthlyRates[investment.fund_code] || 0.015;
+    const monthsPerPayment = investment.fund_code === 'CORE' ? 1 : 
+                             investment.fund_code === 'BALANCE' ? 3 : 
+                             investment.fund_code === 'DYNAMIC' ? 6 : 1;
+    
+    const interestPerPayment = investment.principal_amount * monthlyRate * monthsPerPayment;
+    
+    return payments * interestPerPayment;
+  };
+
+  const getNextPaymentDate = (investment) => {
+    if (investment.status === 'incubation') {
+      return formatDate(investment.interest_start_date || new Date());
+    }
+    
+    // Calculate next payment based on fund type and current date
+    const today = new Date();
+    const interestStart = new Date(investment.interest_start_date);
+    
+    if (today < interestStart) {
+      const firstPaymentDays = investment.fund_code === 'CORE' ? 30 : 
+                               investment.fund_code === 'BALANCE' ? 90 : 
+                               investment.fund_code === 'DYNAMIC' ? 180 : 30;
+      
+      const firstPayment = new Date(interestStart);
+      firstPayment.setDate(firstPayment.getDate() + firstPaymentDays);
+      return formatDate(firstPayment);
+    }
+    
+    // Find next payment date
+    const paymentInterval = investment.fund_code === 'CORE' ? 30 : 
+                            investment.fund_code === 'BALANCE' ? 90 : 
+                            investment.fund_code === 'DYNAMIC' ? 180 : 30;
+    
+    let nextPayment = new Date(interestStart);
+    nextPayment.setDate(nextPayment.getDate() + paymentInterval);
+    
+    while (nextPayment <= today) {
+      nextPayment.setDate(nextPayment.getDate() + paymentInterval);
+    }
+    
+    return formatDate(nextPayment);
+  };
+
+  const isPrincipalAvailable = (investment) => {
+    // Principal is only available at contract end (Day 426)
+    if (!investment.deposit_date) return false;
+    
+    const depositDate = new Date(investment.deposit_date);
+    const contractEnd = new Date(depositDate);
+    contractEnd.setDate(contractEnd.getDate() + 426);
+    
+    return new Date() >= contractEnd;
+  };
+
+  const getContractEndDate = (investment) => {
+    if (!investment.deposit_date) return 'Unknown';
+    
+    const depositDate = new Date(investment.deposit_date);
+    const contractEnd = new Date(depositDate);
+    contractEnd.setDate(contractEnd.getDate() + 426);
+    
+    return formatDate(contractEnd);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
