@@ -17,6 +17,7 @@ import AdminRedemptionManagement from "./AdminRedemptionManagement";
 import FundPortfolioManagement from "./FundPortfolioManagement";
 import CashFlowManagement from "./CashFlowManagement";
 import MT5Management from "./MT5Management";
+import MT5Dashboard from "./MT5Dashboard";
 import FundPerformanceDashboard from "./FundPerformanceDashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import UserAdministration from "./UserAdministration";
