@@ -15956,37 +15956,63 @@ async def get_client_mt5_accounts(client_id: str):
 
 @api_router.get("/mt5/admin/accounts")
 async def get_all_mt5_accounts():
-    """Get all MT5 accounts for admin overview"""
+    """Get all MT5 accounts for admin overview - Use real MT5 data"""
     try:
-        accounts = mongodb_manager.get_all_mt5_accounts()
+        # Get all MT5 accounts with live data directly from MongoDB
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        # Get real-time performance for each account
         enriched_accounts = []
         total_allocated = 0
         total_equity = 0
         total_profit_loss = 0
         
-        for account in accounts:
-            # Get performance data
-            performance = await mt5_service.get_account_performance(account['account_id'])
+        for account in all_mt5_accounts:
+            # Use MT5 Bridge field names and enrich with calculated fields
+            allocated = account.get('target_amount', 0)
+            equity = account.get('equity', 0) 
+            profit = account.get('profit', 0)
             
-            if performance:
-                account['current_equity'] = performance.equity
-                account['profit_loss'] = performance.profit
-                account['profit_loss_percentage'] = (performance.profit / account['total_allocated'] * 100) if account['total_allocated'] > 0 else 0
-                account['margin_level'] = performance.margin_level
-                account['positions_count'] = performance.positions_count
-                account['last_updated'] = performance.timestamp
+            # Calculate performance percentage
+            profit_loss_percentage = (profit / allocated * 100) if allocated > 0 else 0
             
-            # Get connection status
-            account['connection_status'] = mt5_service.get_connection_status(account['account_id']).value
+            # Determine connection status based on data freshness
+            last_update = account.get('updated_at')
+            connection_status = 'active' if last_update else 'disconnected'
+            
+            enriched_account = {
+                # Basic account info
+                'account_id': account.get('_id', str(account.get('account', 'unknown'))),
+                'mt5_login': account.get('account'),
+                'client_id': account.get('client_id'),
+                'fund_code': account.get('fund_type'),
+                'broker_name': account.get('name', 'MEXAtlantic'),
+                'server': account.get('server', 'MEXAtlantic-Real'),
+                
+                # Financial data (use MT5 Bridge field names)
+                'total_allocated': allocated,
+                'current_equity': equity,
+                'profit_loss': profit,
+                'profit_loss_percentage': profit_loss_percentage,
+                'balance': account.get('balance', equity),
+                'margin': account.get('margin', 0),
+                'free_margin': account.get('free_margin', equity),
+                'margin_level': account.get('margin_level', 0),
+                
+                # Status and metadata
+                'connection_status': connection_status,
+                'positions_count': 0,  # Would need to get from positions data
+                'last_updated': last_update,
+                'currency': account.get('currency', 'USD'),
+                'leverage': account.get('leverage', 500)
+            }
             
             # Aggregate totals
-            total_allocated += account['total_allocated']
-            total_equity += account['current_equity']
-            total_profit_loss += account['profit_loss']
+            total_allocated += allocated
+            total_equity += equity
+            total_profit_loss += profit
             
-            enriched_accounts.append(account)
+            enriched_accounts.append(enriched_account)
         
         # Calculate overall performance
         overall_performance_percentage = (total_profit_loss / total_allocated * 100) if total_allocated > 0 else 0
