@@ -382,9 +382,16 @@ const InvestmentCalendar = ({ user }) => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white flex items-center">
           <CalendarIcon className="mr-3 h-8 w-8 text-cyan-400" />
-          Investment Calendar
+          Investment Calendar - Full Contract Timeline
         </h2>
         <div className="flex space-x-2">
+          <Button
+            variant={viewMode === 'timeline' ? 'default' : 'outline'}
+            onClick={() => setViewMode('timeline')}
+            className="text-white"
+          >
+            14 Months View
+          </Button>
           <Button
             variant={viewMode === 'upcoming' ? 'default' : 'outline'}
             onClick={() => setViewMode('upcoming')}
@@ -401,6 +408,52 @@ const InvestmentCalendar = ({ user }) => {
           </Button>
         </div>
       </div>
+
+      {/* Contract Summary */}
+      {contractSummary && (
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Info className="mr-2 h-5 w-5 text-cyan-400" />
+              Contract Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-slate-400">Contract Period:</span>
+                <div className="text-white font-medium">
+                  {contractSummary.contract_start ? 
+                    `${formatDate(contractSummary.contract_start)} - ${formatDate(contractSummary.contract_end)}` :
+                    'No active investments'
+                  }
+                </div>
+                <div className="text-slate-400 text-xs">
+                  {contractSummary.contract_duration_days} days
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-400">Total Investment:</span>
+                <div className="text-cyan-400 font-medium">
+                  {formatCurrency(contractSummary.total_investment)}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-400">Total Interest:</span>
+                <div className="text-green-400 font-medium">
+                  {formatCurrency(contractSummary.total_interest)}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-400">Final Value:</span>
+                <div className="text-white font-bold">
+                  {formatCurrency(contractSummary.total_value)}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error Message */}
       {error && (
