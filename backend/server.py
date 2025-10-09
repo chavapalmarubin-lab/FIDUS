@@ -8151,20 +8151,11 @@ async def get_crm_admin_dashboard():
                 total_real_positions += 0  # Would need positions data
         
         except Exception as e:
-            logging.warning(f"Failed to get real MT5 accounts: {e}")
-            # If no real data, show Salvador as the only account
-            real_mt5_accounts = [{
-                "client_id": "client_003",
-                "client_name": "Salvador Palma",
-                "account_number": "9928326",
-                "balance": 1421421.08,
-                "equity": 1421421.08,
-                "open_positions": 0,
-                "last_activity": datetime.now(timezone.utc).isoformat(),
-                "broker": "DooTechnology"
-            }]
-            total_real_balance = 1421421.08
-            total_real_equity = 1421421.08
+            logging.error(f"Failed to get real MT5 accounts: {e}")
+            # Return empty data if MT5 connection fails
+            real_mt5_accounts = []
+            total_real_balance = 0
+            total_real_equity = 0 
             total_real_positions = 0
         
         # Create MT5 overview with real data
