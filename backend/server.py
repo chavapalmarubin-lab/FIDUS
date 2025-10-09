@@ -12466,8 +12466,116 @@ async def get_separation_account_interest() -> float:
         logging.error(f"Error calculating separation account interest: {str(e)}")
         return 0.0
 
+def add_days(date_obj, days):
+    """Add days to a date object"""
+    return date_obj + timedelta(days=days)
+
+def calculate_incubation_end(investment_date):
+    """Calculate incubation end - ALWAYS 60 days for all products"""
+    return add_days(investment_date, 60)
+
+def calculate_first_payment(investment_date, product):
+    """Calculate first payment date based on product"""
+    days_map = {
+        'FIDUS_CORE': 90,      # 60 incubation + 30 days
+        'FIDUS_BALANCE': 150,   # 60 incubation + 90 days  
+        'FIDUS_DYNAMIC': 240    # 60 incubation + 180 days
+    }
+    return add_days(investment_date, days_map.get(product, 90))
+
+def calculate_contract_end(investment_date):
+    """Calculate contract end - ALWAYS 426 days (14 months) for all products"""
+    return add_days(investment_date, 426)
+
+def get_payment_interval(product):
+    """Get payment interval in days"""
+    return {
+        'FIDUS_CORE': 30,      # Monthly
+        'FIDUS_BALANCE': 90,    # Quarterly
+        'FIDUS_DYNAMIC': 180    # Semi-annual
+    }.get(product, 30)
+
+def get_number_of_payments(product):
+    """Get number of regular payments (excluding final)"""
+    return {
+        'FIDUS_CORE': 12,      # 12 monthly payments
+        'FIDUS_BALANCE': 4,     # 4 quarterly payments
+        'FIDUS_DYNAMIC': 2      # 2 semi-annual payments
+    }.get(product, 12)
+
+def get_months_per_period(product):
+    """Get months per payment period"""
+    return {
+        'FIDUS_CORE': 1,       # 1 month
+        'FIDUS_BALANCE': 3,     # 3 months
+        'FIDUS_DYNAMIC': 6      # 6 months
+    }.get(product, 1)
+
+def generate_payment_schedule(investment):
+    """Generate complete payment schedule for a single investment"""
+    investment_date_str = investment.get('created_at')
+    if isinstance(investment_date_str, str):
+        investment_date = datetime.fromisoformat(investment_date_str.replace('Z', '+00:00')).replace(tzinfo=None)
+    else:
+        investment_date = investment_date_str or datetime.now()
+    
+    amount = investment.get('principal_amount', 0)
+    fund_code = investment.get('fund_code', '')
+    product = f'FIDUS_{fund_code}' if fund_code else 'FIDUS_CORE'
+    
+    # Get product specifications
+    monthly_rates = {
+        'FIDUS_CORE': 0.015,    # 1.5%
+        'FIDUS_BALANCE': 0.025,  # 2.5%
+        'FIDUS_DYNAMIC': 0.035   # 3.5%
+    }
+    monthly_rate = monthly_rates.get(product, 0.015)
+    
+    schedule = []
+    interval = get_payment_interval(product)
+    number_of_payments = get_number_of_payments(product)
+    months_per_period = get_months_per_period(product)
+    first_payment_date = calculate_first_payment(investment_date, product)
+    contract_end_date = calculate_contract_end(investment_date)
+    
+    # Calculate interest per payment period
+    interest_per_payment = amount * monthly_rate * months_per_period
+    
+    # Generate regular payments
+    current_date = first_payment_date
+    
+    for i in range(1, number_of_payments + 1):
+        schedule.append({
+            'payment_number': i,
+            'date': current_date,
+            'amount': interest_per_payment,
+            'type': 'interest_payment',
+            'product': product,
+            'client_id': investment.get('client_id'),
+            'fund_code': fund_code,
+            'days_from_investment': (current_date - investment_date).days
+        })
+        
+        current_date = add_days(current_date, interval)
+    
+    # Add final payment (principal + last period interest)
+    schedule.append({
+        'payment_number': number_of_payments + 1,
+        'date': contract_end_date,
+        'amount': amount + interest_per_payment,
+        'type': 'final_payment',
+        'principal': amount,
+        'interest': interest_per_payment,
+        'product': product,
+        'client_id': investment.get('client_id'),
+        'fund_code': fund_code,
+        'days_from_investment': 426
+    })
+    
+    return schedule
+
 async def calculate_cash_flow_calendar():
-    """Calculate month-by-month cash flow obligations calendar"""
+    """Calculate month-by-month cash flow obligations calendar with CORRECT date logic"""
     try:
         # Get all active investments
         investments_cursor = db.investments.find({"status": {"$ne": "cancelled"}})
@@ -12476,85 +12584,67 @@ async def calculate_cash_flow_calendar():
         # Get current fund revenue (real-time earnings)
         current_revenue = await get_total_mt5_profits() + await get_separation_account_interest()
         
-        # Calculate monthly obligations for next 15 months
-        monthly_obligations = {}
-        start_date = datetime.now(timezone.utc)
-        
+        # Generate payment schedules for all investments
+        all_schedules = []
         for investment in all_investments:
-            client_id = investment.get('client_id')
-            fund_code = investment.get('fund_code')
-            principal = investment.get('principal_amount', 0)
-            
-            # Calculate investment terms
-            if fund_code == 'CORE':
-                monthly_rate = 0.015  # 1.5%
-                payment_frequency = 'monthly'
-                incubation_months = 2  # Dec 2025 start
-            elif fund_code == 'BALANCE':
-                monthly_rate = 0.025  # 2.5% 
-                payment_frequency = 'quarterly'
-                incubation_months = 2  # Dec 2025 start
-            else:
-                continue
-            
-            # Calculate payment schedule
-            incubation_end = start_date + timedelta(days=incubation_months * 30)
-            contract_end = start_date + timedelta(days=14 * 30)  # 14 months total
-            
-            current_month = incubation_end
-            while current_month <= contract_end:
-                month_key = current_month.strftime('%Y-%m')
+            schedule = generate_payment_schedule(investment)
+            all_schedules.extend(schedule)
+        
+        # Group payments by month
+        monthly_obligations = {}
+        current_date = datetime.now()
+        
+        for payment in all_schedules:
+            # Only include future payments
+            if payment['date'] > current_date:
+                month_key = payment['date'].strftime('%Y-%m')
                 
                 if month_key not in monthly_obligations:
                     monthly_obligations[month_key] = {
-                        'date': current_month,
+                        'date': payment['date'],
                         'core_interest': 0,
                         'balance_interest': 0,
+                        'dynamic_interest': 0,
                         'principal_redemptions': 0,
                         'total_due': 0,
-                        'days_away': (current_month - start_date).days,
-                        'clients_due': []
+                        'days_away': (payment['date'] - current_date).days,
+                        'clients_due': [],
+                        'payments': []
                     }
                 
-                # Calculate payment for this month
-                if fund_code == 'CORE':
-                    # Monthly interest payments
-                    monthly_interest = principal * monthly_rate
-                    monthly_obligations[month_key]['core_interest'] += monthly_interest
-                    monthly_obligations[month_key]['total_due'] += monthly_interest
-                    
-                    # Principal at contract end
-                    if current_month >= contract_end - timedelta(days=15):
-                        monthly_obligations[month_key]['principal_redemptions'] += principal
-                        monthly_obligations[month_key]['total_due'] += principal
+                # Add payment to month
+                monthly_obligations[month_key]['payments'].append(payment)
+                monthly_obligations[month_key]['total_due'] += payment['amount']
+                
+                # Track by fund type
+                if payment['fund_code'] == 'CORE':
+                    if payment['type'] == 'final_payment':
+                        monthly_obligations[month_key]['core_interest'] += payment['interest']
+                        monthly_obligations[month_key]['principal_redemptions'] += payment['principal']
+                    else:
+                        monthly_obligations[month_key]['core_interest'] += payment['amount']
                         
-                elif fund_code == 'BALANCE' and payment_frequency == 'quarterly':
-                    # Quarterly payments (every 3 months)
-                    months_since_start = ((current_month.year - incubation_end.year) * 12 + 
-                                        (current_month.month - incubation_end.month))
-                    
-                    if months_since_start % 3 == 0:  # March, June, September, December
-                        quarterly_interest = principal * monthly_rate * 3  # 3 months worth
-                        monthly_obligations[month_key]['balance_interest'] += quarterly_interest
-                        monthly_obligations[month_key]['total_due'] += quarterly_interest
-                    
-                    # Principal at contract end
-                    if current_month >= contract_end - timedelta(days=15):
-                        monthly_obligations[month_key]['principal_redemptions'] += principal
-                        monthly_obligations[month_key]['total_due'] += principal
+                elif payment['fund_code'] == 'BALANCE':
+                    if payment['type'] == 'final_payment':
+                        monthly_obligations[month_key]['balance_interest'] += payment['interest']
+                        monthly_obligations[month_key]['principal_redemptions'] += payment['principal']
+                    else:
+                        monthly_obligations[month_key]['balance_interest'] += payment['amount']
+                        
+                elif payment['fund_code'] == 'DYNAMIC':
+                    if payment['type'] == 'final_payment':
+                        monthly_obligations[month_key]['dynamic_interest'] += payment['interest']
+                        monthly_obligations[month_key]['principal_redemptions'] += payment['principal']
+                    else:
+                        monthly_obligations[month_key]['dynamic_interest'] += payment['amount']
                 
                 # Add client info
                 monthly_obligations[month_key]['clients_due'].append({
-                    'client_id': client_id,
-                    'fund_code': fund_code,
-                    'amount': monthly_interest if fund_code == 'CORE' else (quarterly_interest if months_since_start % 3 == 0 else 0)
+                    'client_id': payment['client_id'],
+                    'fund_code': payment['fund_code'],
+                    'amount': payment['amount'],
+                    'payment_type': payment['type']
                 })
-                
-                # Next payment date
-                if fund_code == 'CORE':
-                    current_month += timedelta(days=30)  # Monthly
-                else:
-                    current_month += timedelta(days=90)  # Quarterly
         
         # Calculate running balance
         running_balance = current_revenue
@@ -12562,18 +12652,18 @@ async def calculate_cash_flow_calendar():
         
         for month_key in sorted_months:
             monthly_obligations[month_key]['running_balance_before'] = running_balance
-            running_balance -= monthly_obligations[month_key]['total_due'] 
+            running_balance -= monthly_obligations[month_key]['total_due']
             monthly_obligations[month_key]['running_balance_after'] = running_balance
             
-            # Set status indicators
+            # Set status indicators based on running balance and payment size
             if running_balance >= 0:
                 monthly_obligations[month_key]['status'] = 'funded'
-            elif running_balance >= -5000:
+            elif running_balance >= -10000:
                 monthly_obligations[month_key]['status'] = 'warning'
             else:
                 monthly_obligations[month_key]['status'] = 'critical'
         
-        # Find next payment and key milestones
+        # Find milestones
         next_payment = None
         first_large_payment = None
         contract_end_payment = None
@@ -12581,25 +12671,28 @@ async def calculate_cash_flow_calendar():
         for month_key in sorted_months:
             month_data = monthly_obligations[month_key]
             
+            # Next payment (first upcoming payment)
             if not next_payment and month_data['total_due'] > 0:
                 next_payment = {
                     'date': month_data['date'].strftime('%B %d, %Y'),
                     'amount': month_data['total_due'],
-                    'days_away': month_data['days_away']
+                    'days_away': max(0, month_data['days_away'])
                 }
             
+            # First large payment (> $5000)
             if not first_large_payment and month_data['total_due'] > 5000:
                 first_large_payment = {
                     'date': month_data['date'].strftime('%B %d, %Y'),
                     'amount': month_data['total_due'],
-                    'days_away': month_data['days_away']
+                    'days_away': max(0, month_data['days_away'])
                 }
             
+            # Contract end (month with principal redemptions)
             if month_data['principal_redemptions'] > 0:
                 contract_end_payment = {
                     'date': month_data['date'].strftime('%B %d, %Y'),
                     'amount': month_data['total_due'],
-                    'days_away': month_data['days_away']
+                    'days_away': max(0, month_data['days_away'])
                 }
         
         return {
