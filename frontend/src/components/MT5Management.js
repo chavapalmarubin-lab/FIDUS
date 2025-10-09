@@ -96,7 +96,7 @@ const MT5Management = () => {
         try {
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/brokers`, {
                 headers: {
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                    'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
                 }
             });
             
@@ -116,7 +116,7 @@ const MT5Management = () => {
         try {
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/brokers/${brokerCode}/servers`, {
                 headers: {
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                    'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
                 }
             });
             
@@ -143,7 +143,7 @@ const MT5Management = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                    'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
                 },
                 body: JSON.stringify(newAccount)
             });
@@ -172,7 +172,7 @@ const MT5Management = () => {
             // Fetch real account activity from backend
             const activityResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/account/${account.account_id}/activity`, {
                 headers: {
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
+                    'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
                 }
             });
             
