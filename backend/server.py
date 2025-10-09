@@ -12421,6 +12421,28 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
         logging.error(f"MT5 dashboard overview error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch MT5 dashboard: {str(e)}")
 
+async def get_total_mt5_profits() -> float:
+    """Get total MT5 profits/losses across all accounts"""
+    try:
+        if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
+            await mt5_service.initialize()
+        
+        # Get all active MT5 accounts
+        accounts = await mt5_service.mt5_repo.find_active_accounts()
+        total_profit = 0.0
+        
+        for account in accounts:
+            # Get current profit from account (this is the floating P&L)
+            if hasattr(account, 'profit') and account.profit:
+                total_profit += float(account.profit)
+        
+        logging.info(f"📊 Total MT5 profits calculated: ${total_profit:.2f} from {len(accounts)} accounts")
+        return total_profit
+        
+    except Exception as e:
+        logging.error(f"Error calculating total MT5 profits: {str(e)}")
+        return 0.0  # Return 0 if calculation fails
+
 # ===============================================================================
 # CASH FLOW MANAGEMENT ENDPOINTS
 # ===============================================================================
