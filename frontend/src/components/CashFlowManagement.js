@@ -60,6 +60,11 @@ const CashFlowManagement = () => {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
       
+      // Fetch cash flow calendar data
+      const calendarResponse = await apiAxios.get(`/admin/cashflow/calendar`, {
+        params: { timeframe: selectedTimeframe, fund: selectedFund }
+      });
+      
       if (cashFlowResponse.data.success) {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
