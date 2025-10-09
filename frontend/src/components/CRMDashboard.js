@@ -579,7 +579,7 @@ const CRMDashboard = ({ user }) => {
                           {formatCurrency(fund.aum)}
                         </td>
                         <td className="text-right py-3 px-4 text-white">
-                          ${fund.nav_per_share.toFixed(2)}
+                          ${(fund.nav_per_share || 0).toFixed(2)}
                         </td>
                         <td className="text-right py-3 px-4">
                           <span className={`font-medium ${fund.performance_ytd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
