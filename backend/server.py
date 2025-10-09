@@ -16348,13 +16348,13 @@ async def get_realtime_mt5_data():
             
             accounts.append(account)
         
-        # Calculate aggregate statistics
+        # Calculate aggregate statistics using MT5 Bridge field names
         total_stats = {
             'total_accounts': len(accounts),
-            'total_allocated': sum(acc.get('total_allocated', 0) for acc in accounts),
-            'total_equity': sum(acc.get('current_equity', 0) for acc in accounts),
-            'total_balance': sum(acc.get('balance', 0) for acc in accounts),
-            'total_profit_loss': sum(acc.get('profit_loss', 0) for acc in accounts),
+            'total_allocated': sum(acc.get('target_amount', 0) for acc in accounts),  # MT5 Bridge uses 'target_amount'
+            'total_equity': sum(acc.get('equity', 0) for acc in accounts),  # MT5 Bridge uses 'equity'
+            'total_balance': sum(acc.get('balance', 0) for acc in accounts),  # MT5 Bridge uses 'balance'
+            'total_profit_loss': sum(acc.get('profit', 0) for acc in accounts),  # MT5 Bridge uses 'profit'
             'connected_accounts': len([acc for acc in accounts if acc.get('connection_status') == 'connected']),
             'last_update': datetime.now(timezone.utc).isoformat()
         }
