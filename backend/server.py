@@ -16670,28 +16670,43 @@ async def get_performance_gaps():
 
 @api_router.get("/admin/fund-commitments")
 async def get_fund_commitments():
-    """Get FIDUS client investment deliverables - only funds with actual client investments"""
+    """Get FIDUS client investment commitments using real investment data"""
     try:
-        # Import fund performance manager directly
-        import sys
-        sys.path.append(get_backend_path())
-        from fund_performance_manager import fund_performance_manager as fpm
+        # Get all investments to build fund commitment data
+        all_investments = await db.investments.find().to_list(length=None)
         
-        if not fpm:
-            return {
-                "success": False,
-                "fund_commitments": {},
-                "error": "Fund performance manager not available",
-                "generated_at": datetime.now(timezone.utc).isoformat()
-            }
+        fund_commitments = {}
         
-        # Get dashboard data which only includes funds with actual client investments
-        dashboard_data = await fpm.generate_fund_management_dashboard()
+        # Group investments by fund code
+        for investment in all_investments:
+            fund_code = investment.get('fund_code')
+            client_id = investment.get('client_id')
+            principal_amount = investment.get('principal_amount', 0)
+            
+            if fund_code not in fund_commitments:
+                fund_commitments[fund_code] = {
+                    "fund_name": f"{fund_code} Fund",
+                    "total_commitments": 0,
+                    "client_count": 0,
+                    "clients": [],
+                    "expected_returns": {
+                        "monthly": 1.5 if fund_code == "CORE" else 0.75,  # Monthly percentage
+                        "annual": 18.0 if fund_code == "CORE" else 9.0    # Annual percentage
+                    }
+                }
+            
+            fund_commitments[fund_code]["total_commitments"] += principal_amount
+            fund_commitments[fund_code]["client_count"] += 1
+            fund_commitments[fund_code]["clients"].append({
+                "client_id": client_id,
+                "commitment": principal_amount,
+                "investment_date": investment.get('created_at', datetime.now(timezone.utc).isoformat())
+            })
         
         return {
             "success": True,
-            "fund_commitments": dashboard_data.get("fund_commitments", {}),
-            "note": "Only showing funds with actual client investments (client investment deliverables)",
+            "fund_commitments": fund_commitments,
+            "note": "Fund commitments based on actual client investments",
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
