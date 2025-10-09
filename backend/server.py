@@ -18516,8 +18516,8 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
             total_equity += current_equity
             total_profit += profit_loss
             
-            # Fund-level aggregation
-            fund_code = mt5_account.get("fund_code", "")
+            # Fund-level aggregation - Use MT5 Bridge field name
+            fund_code = mt5_account.get("fund_type", "")  # MT5 Bridge uses 'fund_type'
             if fund_code in fund_summaries:
                 fund_summaries[fund_code]["allocated"] += allocated_amount
                 fund_summaries[fund_code]["equity"] += current_equity
