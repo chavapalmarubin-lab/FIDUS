@@ -14823,9 +14823,9 @@ async def get_fund_portfolio_overview():
             fund_aum = sum(inv.get('principal_amount', 0) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Get MT5 allocations for this fund
-            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_code') == fund_code]
-            total_mt5_allocation = sum(mt5.get('total_allocated', 0) for mt5 in fund_mt5_accounts)
+            # Get MT5 allocations for this fund - Use MT5 Bridge field names
+            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]  # MT5 Bridge uses 'fund_type'
+            total_mt5_allocation = sum(mt5.get('target_amount', 0) for mt5 in fund_mt5_accounts)  # MT5 Bridge uses 'target_amount'
             mt5_account_count = len(fund_mt5_accounts)
             
             funds_overview[fund_code] = {
