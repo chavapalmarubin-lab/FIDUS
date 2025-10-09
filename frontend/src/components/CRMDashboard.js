@@ -414,7 +414,7 @@ const CRMDashboard = ({ user }) => {
               <div>
                 <p className="text-sm font-medium text-gray-400">Trading Balance</p>
                 <p className="text-2xl font-bold text-white">
-                  {formatCurrency(crmData.trading.summary.total_balance)}
+                  {formatCurrency(crmData?.trading?.summary?.total_balance || 0)}
                 </p>
               </div>
               <div className="h-12 w-12 bg-yellow-600/20 rounded-lg flex items-center justify-center">
@@ -662,7 +662,7 @@ const CRMDashboard = ({ user }) => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">
-                      {formatCurrency(crmData.trading.summary.total_balance)}
+                      {formatCurrency(crmData?.trading?.summary?.total_balance || 0)}
                     </div>
                     <div className="text-sm text-gray-400">Total Balance</div>
                   </div>
