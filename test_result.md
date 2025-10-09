@@ -1337,10 +1337,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "MT5 Multi-Account Solution Testing"
-  stuck_tasks: []
+    - "Cash Flow Obligations Calendar Verification"
+  stuck_tasks:
+    - "MT5 Components Final Verification (All Tabs)"
   test_all: false
-  test_priority: "mt5_multi_account_verification"
+  test_priority: "high_first"
 
 agent_communication:
     - agent: "testing"
