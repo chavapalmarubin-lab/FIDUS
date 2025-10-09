@@ -89,6 +89,12 @@ const CashFlowManagement = () => {
         setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
         setRebatesSummary(cashFlowResponse.data.rebates_summary || {});
         
+        // Process calendar data if available
+        if (calendarResponse.data.success) {
+          setCashFlowCalendar(calendarResponse.data.calendar || null);
+          console.log("✅ Cash flow calendar data loaded successfully:", calendarResponse.data.calendar);
+        }
+        
         console.log("✅ Fund accounting cash flow data loaded successfully:", cashFlowResponse.data.fund_accounting);
       } else {
         throw new Error("API returned unsuccessful response");
