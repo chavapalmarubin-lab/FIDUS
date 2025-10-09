@@ -15972,6 +15972,9 @@ async def get_all_mt5_accounts():
         total_profit_loss = 0
         
         for account in all_mt5_accounts:
+            # Remove MongoDB ObjectId to avoid serialization issues
+            account.pop('_id', None)
+            
             # Use MT5 Bridge field names and enrich with calculated fields
             allocated = account.get('target_amount', 0)
             equity = account.get('equity', 0) 
