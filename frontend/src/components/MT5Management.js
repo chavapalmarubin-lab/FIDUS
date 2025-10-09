@@ -70,19 +70,24 @@ const MT5Management = () => {
                 const accounts = data.accounts || [];
                 if (Array.isArray(accounts)) {
                     accounts.forEach(account => {
-                        const broker = account.broker || 'Unknown';
+                        const broker = account.broker_name || account.broker || 'Unknown';
                         if (!accountsByBroker[broker]) {
                             accountsByBroker[broker] = [];
                         }
                         accountsByBroker[broker].push(account);
-                        totalStats.total_accounts++;
-                        totalStats.total_balance += account.balance || 0;
-                        totalStats.total_equity += account.equity || 0;
                     });
                 }
                 
+                // Use summary data from API instead of calculating manually
+                const summary = data.summary || {};
+                const apiTotalStats = {
+                    total_accounts: summary.total_accounts || 0,
+                    total_balance: summary.total_allocated || 0,  // Use allocated amount
+                    total_equity: summary.total_equity || 0
+                };
+                
                 setAccountsByBroker(accountsByBroker);
-                setTotalStats(totalStats);
+                setTotalStats(apiTotalStats);
             } else {
                 throw new Error('Failed to fetch MT5 data');
             }
