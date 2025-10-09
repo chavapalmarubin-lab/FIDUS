@@ -8193,8 +8193,9 @@ async def get_crm_admin_dashboard():
             }
         }
         
-        # Calculate total client assets (fund investments + trading accounts)
-        total_client_assets = total_fund_aum + mt5_overview["summary"]["total_balance"]
+        # Calculate total client assets - use MT5 equity as the real-time value
+        # Don't double-count: fund_aum is the investment amount, MT5 equity is current value
+        total_client_assets = mt5_overview["summary"]["total_equity"]
         
         # Recent capital flows across all clients (last 30 days)
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
