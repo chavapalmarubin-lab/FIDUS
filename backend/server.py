@@ -18308,6 +18308,9 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
                 if isinstance(last_update, str):
                     from dateutil import parser
                     last_update = parser.parse(last_update)
+                # Ensure timezone awareness for comparison
+                if last_update.tzinfo is None:
+                    last_update = last_update.replace(tzinfo=timezone.utc)
                 data_age_minutes = (datetime.now(timezone.utc) - last_update).total_seconds() / 60
                 data_source = "live" if data_age_minutes < 30 else "cached"
             
