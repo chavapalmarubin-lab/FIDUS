@@ -55,62 +55,24 @@ const InvestmentCalendar = ({ user }) => {
     }
   };
 
-  const generateCalendarEvents = (investments) => {
-    const events = [];
-    const today = new Date();
-    
-    investments.forEach(investment => {
-      const depositDate = new Date(investment.deposit_date);
-      const interestStartDate = new Date(investment.interest_start_date);
-      const principalRedemptionDate = new Date(investment.minimum_hold_end_date);
+  const handleRedemptionRequest = async (event) => {
+    try {
+      // This would integrate with the existing redemption system
+      // For now, just show that it's pending
+      console.log('Redemption request for:', event);
       
-      // Add investment start event
-      events.push({
-        id: `start-${investment.investment_id}`,
-        date: depositDate,
-        type: 'investment_start',
-        title: `Investment Started`,
-        description: `${investment.fund_code} Fund - ${formatCurrency(investment.principal_amount)}`,
-        fund: investment.fund_code,
-        amount: investment.principal_amount,
-        investment_id: investment.investment_id
-      });
-
-      // Add interest start event
-      if (interestStartDate > depositDate) {
-        events.push({
-          id: `interest-start-${investment.investment_id}`,
-          date: interestStartDate,
-          type: 'interest_start',
-          title: `Interest Payments Begin`,
-          description: `${investment.fund_code} Fund - ${getFundInterestRate(investment.fund_code)}% monthly`,
-          fund: investment.fund_code,
-          investment_id: investment.investment_id
-        });
-      }
-
-      // Generate monthly interest payment events
-      generateInterestPayments(events, investment, interestStartDate, today);
+      // You could call the redemption API here
+      // await apiAxios.post('/redemptions/request', {
+      //   investment_id: event.investment_id,
+      //   requested_amount: event.amount,
+      //   reason: 'Client calendar redemption request'
+      // });
       
-      // Generate interest redemption opportunities
-      generateInterestRedemptions(events, investment, interestStartDate, today);
-      
-      // Add principal redemption date
-      events.push({
-        id: `principal-${investment.investment_id}`,
-        date: principalRedemptionDate,
-        type: 'principal_redemption',
-        title: `Principal Redemption Available`,
-        description: `${investment.fund_code} Fund - Principal ${formatCurrency(investment.principal_amount)}`,
-        fund: investment.fund_code,
-        amount: investment.principal_amount,
-        investment_id: investment.investment_id
-      });
-    });
-
-    // Sort events by date
-    events.sort((a, b) => new Date(a.date) - new Date(b.date));
-    setCalendarEvents(events);
+      alert('Redemption request functionality would be integrated with existing system');
+    } catch (err) {
+      console.error('Redemption request error:', err);
+      alert('Failed to submit redemption request');
+    }
   };
 
   const generateInterestPayments = (events, investment, startDate, endDate) => {
