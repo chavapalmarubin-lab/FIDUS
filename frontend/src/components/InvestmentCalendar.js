@@ -31,36 +31,25 @@ const InvestmentCalendar = ({ user }) => {
   const [viewMode, setViewMode] = useState('timeline'); // timeline, upcoming, month
 
   useEffect(() => {
-    fetchInvestmentData();
+    fetchCalendarData();
   }, [user.id]);
 
-  const fetchInvestmentData = async () => {
+  const fetchCalendarData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/investments/client/${user.id}`);
+      const response = await apiAxios.get(`/client/${user.id}/calendar`);
       
-      if (response.data.success) {
-        const investmentData = response.data.investments;
-        setInvestments(investmentData);
-        generateCalendarEvents(investmentData);
-        
-        // Set initial view to current month or month with most events
-        if (investmentData.length > 0) {
-          const firstInvestment = investmentData[0];
-          const depositDate = new Date(firstInvestment.deposit_date);
-          const today = new Date();
-          
-          // Show current month if we have recent events, otherwise show investment start month
-          if (today.getFullYear() === depositDate.getFullYear() && 
-              Math.abs(today.getMonth() - depositDate.getMonth()) <= 3) {
-            setCurrentDate(today);
-          } else {
-            setCurrentDate(new Date(depositDate.getFullYear(), depositDate.getMonth(), 1));
-          }
-        }
+      if (response.data.success && response.data.calendar) {
+        const { calendar_events, monthly_timeline, contract_summary } = response.data.calendar;
+        setCalendarData(calendar_events || []);
+        setMonthlyTimeline(monthly_timeline || {});
+        setContractSummary(contract_summary);
+      } else {
+        setError(response.data.error || "Failed to load calendar data");
       }
     } catch (err) {
-      setError("Failed to load investment data");
+      setError("Failed to load investment calendar");
+      console.error('Calendar fetch error:', err);
     } finally {
       setLoading(false);
     }
