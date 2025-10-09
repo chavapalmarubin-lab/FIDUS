@@ -18504,9 +18504,9 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
                 "is_active": mt5_account.get("is_active", True),
                 "data_source": data_source,
                 "data_age_minutes": round(data_age_minutes, 1),
-                "last_sync": last_update.isoformat() if last_update else None,
+                "last_sync": last_update.isoformat() if last_update and hasattr(last_update, 'isoformat') else str(last_update) if last_update else None,
                 "sync_status": mt5_account.get("mt5_status", "pending"),
-                "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") else None
+                "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") and hasattr(mt5_account.get("created_at"), 'isoformat') else mt5_account.get("created_at")
             }
             
             accounts.append(account)
