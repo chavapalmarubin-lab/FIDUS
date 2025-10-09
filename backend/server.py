@@ -12626,12 +12626,13 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
             "timeframe": timeframe,
             "fund_filter": fund,
             "summary": {
-                "mt5_trading_profits": await get_total_mt5_profits(),  # Get real MT5 profit/loss
+                "mt5_trading_profits": await get_total_mt5_profits(),  # Get real MT5 profit/loss (excluding separation)
+                "separation_interest": await get_separation_account_interest(),  # New line item for separation accounts
                 "broker_rebates": 0.0,       # Would come from broker reports
                 "client_interest_obligations": round(total_client_obligations, 2),
-                "fund_revenue": await get_total_mt5_profits(),         # MT5 profits are fund revenue
+                "fund_revenue": await get_total_mt5_profits() + await get_separation_account_interest(),  # Total revenue including separation
                 "fund_obligations": round(total_client_obligations, 2),
-                "net_profit": round(await get_total_mt5_profits() - total_client_obligations, 2)  # Revenue minus obligations
+                "net_profit": round((await get_total_mt5_profits() + await get_separation_account_interest()) - total_client_obligations, 2)  # Enhanced calculation
             },
             "monthly_breakdown": sorted_monthly,
             "upcoming_redemptions": upcoming_redemptions[:5],  # Next 5 payments
