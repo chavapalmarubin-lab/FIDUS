@@ -16601,7 +16601,7 @@ async def get_client_fund_performance(client_id: str):
 
 @api_router.get("/admin/fund-performance/gaps")
 async def get_performance_gaps():
-    """Get all performance gaps between FIDUS commitments and MT5 reality"""
+    """Get all performance gaps between FIDUS commitments and MT5 reality using real data"""
     try:
         # Get all investments and MT5 accounts for gap analysis
         all_investments = await db.investments.find().to_list(length=None)
