@@ -18331,9 +18331,9 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
                 "profit_loss_percentage": mt5_account.get("profit_loss_percentage", 0),
                 "return_percent": mt5_account.get("profit_loss_percentage", 0),
                 
-                # Trading data
-                "margin_used": mt5_account.get("margin_used", 0),
-                "margin_free": mt5_account.get("margin_free", current_equity),
+                # Trading data - Use MT5 Bridge field names
+                "margin_used": mt5_account.get("margin", 0),  # MT5 Bridge uses 'margin'
+                "margin_free": mt5_account.get("free_margin", current_equity),  # MT5 Bridge uses 'free_margin'
                 "margin_level": mt5_account.get("margin_level", 0),
                 "open_positions": positions_data.get("count", 0),
                 "positions_profit": positions_data.get("total_profit", 0),
