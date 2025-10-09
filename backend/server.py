@@ -16998,25 +16998,231 @@ async def get_cash_flow_calendar():
     try:
         calendar_data = await calculate_cash_flow_calendar()
         
-        if calendar_data:
-            return {
-                "success": True,
-                "calendar": calendar_data,
-                "generated_at": datetime.now(timezone.utc).isoformat()
-            }
-        else:
-            return {
-                "success": False,
-                "error": "Failed to calculate cash flow calendar",
-                "generated_at": datetime.now(timezone.utc).isoformat()
-            }
-            
+        return {
+            "success": True,
+            "calendar": calendar_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
     except Exception as e:
         logging.error(f"Cash flow calendar error: {str(e)}")
         return {
             "success": False,
             "error": f"Failed to get cash flow calendar: {str(e)}",
+            "calendar": None,
             "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+
+# ===============================================================================
+# CLIENT-SPECIFIC CALENDAR ENDPOINTS
+# ===============================================================================
+
+async def generate_client_calendar(client_id: str):
+    """Generate comprehensive 14-month calendar for a specific client"""
+    try:
+        # Get client's investments
+        investments_cursor = db.investments.find({"client_id": client_id, "status": {"$ne": "cancelled"}})
+        investments = await investments_cursor.to_list(length=None)
+        
+        if not investments:
+            return {
+                "calendar_events": [],
+                "monthly_timeline": {},
+                "contract_summary": {
+                    "total_investment": 0,
+                    "total_interest": 0,
+                    "contract_start": None,
+                    "contract_end": None
+                }
+            }
+        
+        calendar_events = []
+        all_payments = []
+        total_investment = 0
+        total_interest = 0
+        earliest_start = None
+        latest_end = None
+        
+        for investment in investments:
+            investment_date = investment.get('created_at')
+            if isinstance(investment_date, str):
+                investment_date = datetime.fromisoformat(investment_date.replace('Z', '+00:00')).replace(tzinfo=None)
+            elif investment_date.tzinfo:
+                investment_date = investment_date.replace(tzinfo=None)
+                
+            amount = investment.get('principal_amount', 0)
+            fund_code = investment.get('fund_code', '')
+            product = f'FIDUS_{fund_code}'
+            
+            total_investment += amount
+            
+            # Track contract dates
+            if not earliest_start or investment_date < earliest_start:
+                earliest_start = investment_date
+            
+            contract_end = add_days(investment_date, 426)
+            if not latest_end or contract_end > latest_end:
+                latest_end = contract_end
+            
+            # Add investment start event
+            calendar_events.append({
+                "id": f"start_{investment['investment_id']}",
+                "type": "investment_start",
+                "date": investment_date,
+                "title": f"{fund_code} Investment Start",
+                "description": f"Investment of ${amount:,.2f}",
+                "fund_code": fund_code,
+                "amount": amount,
+                "can_redeem": False,
+                "investment_id": investment['investment_id']
+            })
+            
+            # Add incubation end event
+            incubation_end = add_days(investment_date, 60)
+            calendar_events.append({
+                "id": f"incubation_end_{investment['investment_id']}",
+                "type": "incubation_end",
+                "date": incubation_end,
+                "title": f"{fund_code} Incubation Period Ends",
+                "description": "Interest begins accruing",
+                "fund_code": fund_code,
+                "can_redeem": False,
+                "investment_id": investment['investment_id']
+            })
+            
+            # Generate payment schedule
+            schedule = generate_payment_schedule(investment)
+            
+            for payment in schedule:
+                is_final = payment['type'] == 'final_payment'
+                
+                # Calculate interest for this payment
+                payment_interest = payment.get('interest', payment['amount'] if not is_final else payment['amount'] - amount)
+                total_interest += payment_interest
+                
+                calendar_events.append({
+                    "id": f"payment_{investment['investment_id']}_{payment['payment_number']}",
+                    "type": "final_redemption" if is_final else "interest_redemption",
+                    "date": payment['date'],
+                    "title": f"{fund_code} {'Final Payment & Principal' if is_final else 'Interest Payment'}",
+                    "description": f"Payment {payment['payment_number']} of {len(schedule)}" if not is_final else f"Principal: ${payment.get('principal', amount):,.2f} + Interest: ${payment_interest:,.2f}",
+                    "fund_code": fund_code,
+                    "amount": payment['amount'],
+                    "principal": payment.get('principal', amount if is_final else 0),
+                    "interest": payment_interest,
+                    "payment_number": payment['payment_number'],
+                    "can_redeem": True,
+                    "redemption_type": "final" if is_final else "interest",
+                    "investment_id": investment['investment_id']
+                })
+                
+                all_payments.append({
+                    "date": payment['date'],
+                    "amount": payment['amount'],
+                    "fund_code": fund_code,
+                    "type": payment['type']
+                })
+        
+        # Group events by month for timeline view
+        monthly_timeline = {}
+        today = datetime.now()
+        
+        # Sort all events by date
+        calendar_events.sort(key=lambda x: x['date'])
+        
+        for event in calendar_events:
+            event_date = event['date']
+            month_key = event_date.strftime('%Y-%m')
+            month_name = event_date.strftime('%B %Y')
+            
+            if month_key not in monthly_timeline:
+                monthly_timeline[month_key] = {
+                    "month_name": month_name,
+                    "date": event_date,
+                    "events": [],
+                    "total_due": 0,
+                    "core_interest": 0,
+                    "balance_interest": 0,
+                    "dynamic_interest": 0,
+                    "principal_amount": 0,
+                    "is_past": event_date < today,
+                    "days_until": max(0, (event_date - today).days)
+                }
+            
+            monthly_timeline[month_key]["events"].append(event)
+            
+            # Calculate monthly totals
+            if event.get("can_redeem"):
+                monthly_timeline[month_key]["total_due"] += event.get("amount", 0)
+                
+                if event["fund_code"] == "CORE":
+                    if event["type"] == "final_redemption":
+                        monthly_timeline[month_key]["core_interest"] += event.get("interest", 0)
+                        monthly_timeline[month_key]["principal_amount"] += event.get("principal", 0)
+                    else:
+                        monthly_timeline[month_key]["core_interest"] += event.get("amount", 0)
+                        
+                elif event["fund_code"] == "BALANCE":
+                    if event["type"] == "final_redemption":
+                        monthly_timeline[month_key]["balance_interest"] += event.get("interest", 0)
+                        monthly_timeline[month_key]["principal_amount"] += event.get("principal", 0)
+                    else:
+                        monthly_timeline[month_key]["balance_interest"] += event.get("amount", 0)
+                        
+                elif event["fund_code"] == "DYNAMIC":
+                    if event["type"] == "final_redemption":
+                        monthly_timeline[month_key]["dynamic_interest"] += event.get("interest", 0)
+                        monthly_timeline[month_key]["principal_amount"] += event.get("principal", 0)
+                    else:
+                        monthly_timeline[month_key]["dynamic_interest"] += event.get("amount", 0)
+        
+        # Add days_until for each event
+        for event in calendar_events:
+            event["days_until"] = max(0, (event["date"] - today).days)
+            event["is_available"] = event["date"] <= today and event.get("can_redeem", False)
+        
+        return {
+            "calendar_events": calendar_events,
+            "monthly_timeline": monthly_timeline,
+            "contract_summary": {
+                "total_investment": total_investment,
+                "total_interest": total_interest,
+                "total_value": total_investment + total_interest,
+                "contract_start": earliest_start.isoformat() if earliest_start else None,
+                "contract_end": latest_end.isoformat() if latest_end else None,
+                "contract_duration_days": (latest_end - earliest_start).days if earliest_start and latest_end else 0
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Client calendar generation error: {str(e)}")
+        return None
+
+@api_router.get("/client/{client_id}/calendar")
+async def get_client_calendar(client_id: str):
+    """Get comprehensive 14-month investment calendar for client"""
+    try:
+        calendar_data = await generate_client_calendar(client_id)
+        
+        if not calendar_data:
+            return {
+                "success": False,
+                "error": "Failed to generate calendar",
+                "calendar": None
+            }
+        
+        return {
+            "success": True,
+            "calendar": calendar_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Client calendar error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get client calendar: {str(e)}",
+            "calendar": None
         }
 
 @api_router.get("/admin/fund-performance/test")
