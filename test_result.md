@@ -1340,7 +1340,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Cash Flow Obligations Calendar Verification"
+    - "Cash Flow Obligations Calendar Verification - COMPLETED"
   stuck_tasks:
     - "MT5 Components Final Verification (All Tabs)"
   test_all: false
