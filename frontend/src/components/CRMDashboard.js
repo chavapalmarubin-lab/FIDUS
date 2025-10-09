@@ -738,7 +738,7 @@ const CRMDashboard = ({ user }) => {
                         </div>
                         <div className="text-right">
                           <div className={`font-medium ${position.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {position.profit >= 0 ? '+' : ''}${position.profit.toFixed(2)}
+                            {(position.profit || 0) >= 0 ? '+' : ''}${(position.profit || 0).toFixed(2)}
                           </div>
                           <div className="text-sm text-gray-400">
                             {position.current_price}
