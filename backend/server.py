@@ -7720,6 +7720,10 @@ async def get_mt5_admin_overview():
         mt5_cursor = db.mt5_accounts.find({})
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
+        # Remove MongoDB ObjectId to avoid serialization issues
+        for account in all_mt5_accounts:
+            account.pop('_id', None)
+        
         total_accounts = len(all_mt5_accounts)
         active_accounts = len([acc for acc in all_mt5_accounts if acc.get('success', True)])
         total_equity = sum(acc.get('equity', 0) for acc in all_mt5_accounts)
