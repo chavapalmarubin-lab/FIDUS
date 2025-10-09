@@ -12423,7 +12423,7 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch MT5 dashboard: {str(e)}")
 
 async def get_total_mt5_profits() -> float:
-    """Get total MT5 profits/losses across all accounts"""
+    """Get total MT5 profits/losses from trading accounts (excluding separation accounts)"""
     try:
         # Get all MT5 accounts directly from MongoDB using the working collection
         mt5_cursor = db.mt5_accounts.find({})
@@ -12432,16 +12432,39 @@ async def get_total_mt5_profits() -> float:
         total_profit = 0.0
         
         for account in all_mt5_accounts:
-            # Use MT5 Bridge field name for profit
-            profit = account.get('profit', 0)  # MT5 Bridge uses 'profit'
-            total_profit += float(profit) if profit else 0.0
+            # Exclude separation accounts from MT5 trading profits
+            if account.get('fund_type') not in ['INTEREST_SEPARATION', 'GAINS_SEPARATION', 'SEPARATION']:
+                profit = account.get('profit', 0)  # MT5 Bridge uses 'profit'
+                total_profit += float(profit) if profit else 0.0
         
-        logging.info(f"📊 Total MT5 profits calculated: ${total_profit:.2f} from {len(all_mt5_accounts)} accounts")
+        logging.info(f"📊 MT5 trading profits calculated: ${total_profit:.2f} (excluding separation accounts)")
         return total_profit
         
     except Exception as e:
-        logging.error(f"Error calculating total MT5 profits: {str(e)}")
+        logging.error(f"Error calculating MT5 trading profits: {str(e)}")
         return 0.0  # Return 0 if calculation fails
+
+async def get_separation_account_interest() -> float:
+    """Get total interest from separation accounts"""
+    try:
+        # Get separation accounts
+        separation_cursor = db.mt5_accounts.find({
+            'fund_type': {'$in': ['INTEREST_SEPARATION', 'GAINS_SEPARATION', 'SEPARATION']}
+        })
+        separation_accounts = await separation_cursor.to_list(length=None)
+        
+        total_interest = 0.0
+        
+        for account in separation_accounts:
+            equity = account.get('equity', 0)  # Use equity as the separation account value
+            total_interest += float(equity) if equity else 0.0
+        
+        logging.info(f"📊 Separation account interest calculated: ${total_interest:.2f}")
+        return total_interest
+        
+    except Exception as e:
+        logging.error(f"Error calculating separation account interest: {str(e)}")
+        return 0.0
 
 # ===============================================================================
 # CASH FLOW MANAGEMENT ENDPOINTS
