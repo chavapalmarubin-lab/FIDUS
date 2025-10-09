@@ -16899,6 +16899,33 @@ async def get_fund_commitments():
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
+@api_router.get("/admin/cashflow/calendar")
+async def get_cash_flow_calendar():
+    """Get detailed cash flow obligations calendar with timeline view"""
+    try:
+        calendar_data = await calculate_cash_flow_calendar()
+        
+        if calendar_data:
+            return {
+                "success": True,
+                "calendar": calendar_data,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Failed to calculate cash flow calendar",
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logging.error(f"Cash flow calendar error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get cash flow calendar: {str(e)}",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+
 @api_router.get("/admin/fund-performance/test")
 async def test_fund_performance_manager():
     """Test fund performance manager availability and basic functionality"""
