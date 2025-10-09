@@ -422,7 +422,7 @@ const CRMDashboard = ({ user }) => {
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-gray-400">{crmData.trading.summary.total_positions} Open Positions</span>
+              <span className="text-gray-400">{crmData?.trading?.summary?.total_positions || 0} Open Positions</span>
             </div>
           </CardContent>
         </Card>
