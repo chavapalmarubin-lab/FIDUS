@@ -16330,9 +16330,12 @@ async def get_realtime_mt5_data():
         async for account in db.mt5_accounts.find({}):
             account.pop('_id', None)
             
-            # Get the latest historical data point for charts
+            # Use MT5 Bridge field names - account number is stored as 'account'
+            account_number = account.get('account', 'unknown')
+            
+            # Get the latest historical data point for charts (if available)
             latest_historical = await db.mt5_historical_data.find_one(
-                {'account_id': account['account_id']},
+                {'account': account_number},
                 sort=[('timestamp', -1)]
             )
             
@@ -16340,9 +16343,9 @@ async def get_realtime_mt5_data():
                 latest_historical.pop('_id', None)
                 account['latest_data'] = latest_historical
             
-            # Get current real-time positions
+            # Get current real-time positions (if available)
             positions = []
-            async for position in db.mt5_realtime_positions.find({'account_id': account['account_id']}):
+            async for position in db.mt5_realtime_positions.find({'account': account_number}):
                 position.pop('_id', None)
                 positions.append(position)
             
