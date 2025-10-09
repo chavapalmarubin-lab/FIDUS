@@ -8099,16 +8099,39 @@ async def get_all_clients_details():
 async def get_crm_admin_dashboard():
     """Get comprehensive CRM dashboard data for admin"""
     try:
-        # Get funds data
-        funds_data = []
-        total_fund_aum = 0
-        total_fund_investors = 0
+        # Get real funds data from investments and MT5 accounts
+        # Use the same logic as the fund-portfolio/overview endpoint
+        all_investments = await db.investments.find().to_list(length=None)
+        all_mt5_accounts = await db.mt5_accounts.find().to_list(length=None)
         
-        for fund in FIDUS_FUNDS.values():
-            fund_dict = fund.dict()
-            funds_data.append(fund_dict)
-            total_fund_aum += fund.aum
-            total_fund_investors += fund.total_investors
+        # Group by fund
+        funds_overview = {}
+        fund_codes = set(inv.get('fund_code') for inv in all_investments if inv.get('fund_code'))
+        
+        for fund_code in fund_codes:
+            # Investment amounts for this fund
+            fund_investments = [inv for inv in all_investments if inv.get('fund_code') == fund_code]
+            total_investment = sum(inv.get('principal_amount', 0) for inv in fund_investments)
+            
+            # MT5 allocations for this fund  
+            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
+            total_mt5_allocation = sum(mt5.get('target_amount', 0) for mt5 in fund_mt5_accounts)
+            
+            # Use investment amount as AUM (more reliable than MT5 allocations)
+            funds_overview[fund_code] = {
+                "fund_code": fund_code,
+                "name": f"{fund_code} Fund",
+                "aum": total_investment,
+                "investors": len(set(inv.get('client_id') for inv in fund_investments)),
+                "mt5_allocation": total_mt5_allocation,
+                "performance_ytd": 0.0,  # Would calculate from MT5 data
+                "performance_1y": 0.0,
+                "performance_3y": 0.0
+            }
+        
+        funds_data = list(funds_overview.values())
+        total_fund_aum = sum(fund["aum"] for fund in funds_data)
+        total_fund_investors = sum(fund["investors"] for fund in funds_data)
         
         # Get REAL MT5 accounts directly from mt5_accounts collection
         real_mt5_accounts = []
