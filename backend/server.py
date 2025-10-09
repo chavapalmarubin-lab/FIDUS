@@ -12466,6 +12466,161 @@ async def get_separation_account_interest() -> float:
         logging.error(f"Error calculating separation account interest: {str(e)}")
         return 0.0
 
+async def calculate_cash_flow_calendar():
+    """Calculate month-by-month cash flow obligations calendar"""
+    try:
+        # Get all active investments
+        investments_cursor = db.investments.find({"status": {"$ne": "cancelled"}})
+        all_investments = await investments_cursor.to_list(length=None)
+        
+        # Get current fund revenue (real-time earnings)
+        current_revenue = await get_total_mt5_profits() + await get_separation_account_interest()
+        
+        # Calculate monthly obligations for next 15 months
+        monthly_obligations = {}
+        start_date = datetime.now(timezone.utc)
+        
+        for investment in all_investments:
+            client_id = investment.get('client_id')
+            fund_code = investment.get('fund_code')
+            principal = investment.get('principal_amount', 0)
+            
+            # Calculate investment terms
+            if fund_code == 'CORE':
+                monthly_rate = 0.015  # 1.5%
+                payment_frequency = 'monthly'
+                incubation_months = 2  # Dec 2025 start
+            elif fund_code == 'BALANCE':
+                monthly_rate = 0.025  # 2.5% 
+                payment_frequency = 'quarterly'
+                incubation_months = 2  # Dec 2025 start
+            else:
+                continue
+            
+            # Calculate payment schedule
+            incubation_end = start_date + timedelta(days=incubation_months * 30)
+            contract_end = start_date + timedelta(days=14 * 30)  # 14 months total
+            
+            current_month = incubation_end
+            while current_month <= contract_end:
+                month_key = current_month.strftime('%Y-%m')
+                
+                if month_key not in monthly_obligations:
+                    monthly_obligations[month_key] = {
+                        'date': current_month,
+                        'core_interest': 0,
+                        'balance_interest': 0,
+                        'principal_redemptions': 0,
+                        'total_due': 0,
+                        'days_away': (current_month - start_date).days,
+                        'clients_due': []
+                    }
+                
+                # Calculate payment for this month
+                if fund_code == 'CORE':
+                    # Monthly interest payments
+                    monthly_interest = principal * monthly_rate
+                    monthly_obligations[month_key]['core_interest'] += monthly_interest
+                    monthly_obligations[month_key]['total_due'] += monthly_interest
+                    
+                    # Principal at contract end
+                    if current_month >= contract_end - timedelta(days=15):
+                        monthly_obligations[month_key]['principal_redemptions'] += principal
+                        monthly_obligations[month_key]['total_due'] += principal
+                        
+                elif fund_code == 'BALANCE' and payment_frequency == 'quarterly':
+                    # Quarterly payments (every 3 months)
+                    months_since_start = ((current_month.year - incubation_end.year) * 12 + 
+                                        (current_month.month - incubation_end.month))
+                    
+                    if months_since_start % 3 == 0:  # March, June, September, December
+                        quarterly_interest = principal * monthly_rate * 3  # 3 months worth
+                        monthly_obligations[month_key]['balance_interest'] += quarterly_interest
+                        monthly_obligations[month_key]['total_due'] += quarterly_interest
+                    
+                    # Principal at contract end
+                    if current_month >= contract_end - timedelta(days=15):
+                        monthly_obligations[month_key]['principal_redemptions'] += principal
+                        monthly_obligations[month_key]['total_due'] += principal
+                
+                # Add client info
+                monthly_obligations[month_key]['clients_due'].append({
+                    'client_id': client_id,
+                    'fund_code': fund_code,
+                    'amount': monthly_interest if fund_code == 'CORE' else (quarterly_interest if months_since_start % 3 == 0 else 0)
+                })
+                
+                # Next payment date
+                if fund_code == 'CORE':
+                    current_month += timedelta(days=30)  # Monthly
+                else:
+                    current_month += timedelta(days=90)  # Quarterly
+        
+        # Calculate running balance
+        running_balance = current_revenue
+        sorted_months = sorted(monthly_obligations.keys())
+        
+        for month_key in sorted_months:
+            monthly_obligations[month_key]['running_balance_before'] = running_balance
+            running_balance -= monthly_obligations[month_key]['total_due'] 
+            monthly_obligations[month_key]['running_balance_after'] = running_balance
+            
+            # Set status indicators
+            if running_balance >= 0:
+                monthly_obligations[month_key]['status'] = 'funded'
+            elif running_balance >= -5000:
+                monthly_obligations[month_key]['status'] = 'warning'
+            else:
+                monthly_obligations[month_key]['status'] = 'critical'
+        
+        # Find next payment and key milestones
+        next_payment = None
+        first_large_payment = None
+        contract_end_payment = None
+        
+        for month_key in sorted_months:
+            month_data = monthly_obligations[month_key]
+            
+            if not next_payment and month_data['total_due'] > 0:
+                next_payment = {
+                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'amount': month_data['total_due'],
+                    'days_away': month_data['days_away']
+                }
+            
+            if not first_large_payment and month_data['total_due'] > 5000:
+                first_large_payment = {
+                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'amount': month_data['total_due'],
+                    'days_away': month_data['days_away']
+                }
+            
+            if month_data['principal_redemptions'] > 0:
+                contract_end_payment = {
+                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'amount': month_data['total_due'],
+                    'days_away': month_data['days_away']
+                }
+        
+        return {
+            'current_revenue': current_revenue,
+            'monthly_obligations': monthly_obligations,
+            'milestones': {
+                'next_payment': next_payment,
+                'first_large_payment': first_large_payment,
+                'contract_end': contract_end_payment
+            },
+            'summary': {
+                'total_future_obligations': sum(month['total_due'] for month in monthly_obligations.values()),
+                'months_until_shortfall': len([m for m in monthly_obligations.values() if m['running_balance_after'] >= 0]),
+                'final_balance': running_balance
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Cash flow calendar calculation error: {str(e)}")
+        return None
+
 # ===============================================================================
 # CASH FLOW MANAGEMENT ENDPOINTS
 # ===============================================================================
