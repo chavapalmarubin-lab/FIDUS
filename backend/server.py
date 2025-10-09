@@ -12245,8 +12245,8 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
         
         for mt5_account in all_mt5_accounts:
             client_id = mt5_account.get("client_id", "unknown")
-            fund_code = mt5_account.get("fund_code", "unknown")
-            broker_name = mt5_account.get("broker_name", "unknown")
+            fund_code = mt5_account.get("fund_type", "unknown")  # MT5 Bridge uses 'fund_type'
+            broker_name = mt5_account.get("name", "MEXAtlantic")  # MT5 Bridge uses 'name'
             
             # Extract financial data - Use MT5 Bridge field names
             allocated = mt5_account.get("target_amount", 0) or mt5_account.get("total_allocated", 0)
