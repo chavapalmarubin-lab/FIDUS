@@ -18290,18 +18290,21 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
         }
         
         for mt5_account in mt5_accounts_data:
-            # Extract live data
-            allocated_amount = mt5_account.get("total_allocated", 0)
-            current_equity = mt5_account.get("current_equity", allocated_amount)
-            current_balance = mt5_account.get("current_balance", allocated_amount)
-            profit_loss = mt5_account.get("profit_loss", 0)
+            # Extract live data - Use field names from MT5 Bridge Service
+            allocated_amount = mt5_account.get("total_allocated", 0) or mt5_account.get("target_amount", 0)
+            current_equity = mt5_account.get("equity", allocated_amount)  # MT5 Bridge uses 'equity'
+            current_balance = mt5_account.get("balance", allocated_amount)  # MT5 Bridge uses 'balance'
+            profit_loss = mt5_account.get("profit", 0)  # MT5 Bridge uses 'profit'
             
-            # Check data freshness
-            last_update = mt5_account.get("last_mt5_update")
+            # Check data freshness - Use MT5 Bridge field name
+            last_update = mt5_account.get("updated_at")  # MT5 Bridge uses 'updated_at'
             data_age_minutes = 0
             data_source = "stored"
             
-            if last_update and mt5_account.get("mt5_data_source") in ["live_multi_account", "live_bridge"]:
+            if last_update:
+                if isinstance(last_update, str):
+                    from dateutil import parser
+                    last_update = parser.parse(last_update)
                 data_age_minutes = (datetime.now(timezone.utc) - last_update).total_seconds() / 60
                 data_source = "live" if data_age_minutes < 30 else "cached"
             
