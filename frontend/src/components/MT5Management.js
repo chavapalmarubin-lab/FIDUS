@@ -72,9 +72,20 @@ const MT5Management = () => {
                     accounts.forEach(account => {
                         const broker = account.broker_name || account.broker || 'Unknown';
                         if (!accountsByBroker[broker]) {
-                            accountsByBroker[broker] = [];
+                            accountsByBroker[broker] = {
+                                broker_name: broker,
+                                accounts: [],
+                                stats: {
+                                    account_count: 0,
+                                    total_allocated: 0,
+                                    total_equity: 0
+                                }
+                            };
                         }
-                        accountsByBroker[broker].push(account);
+                        accountsByBroker[broker].accounts.push(account);
+                        accountsByBroker[broker].stats.account_count += 1;
+                        accountsByBroker[broker].stats.total_allocated += account.total_allocated || 0;
+                        accountsByBroker[broker].stats.total_equity += account.current_equity || 0;
                     });
                 }
                 
