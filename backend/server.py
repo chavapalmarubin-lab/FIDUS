@@ -16507,21 +16507,51 @@ except Exception as e:
 
 @api_router.get("/admin/fund-performance/dashboard")
 async def get_fund_performance_dashboard():
-    """Get comprehensive fund performance vs MT5 reality dashboard"""
+    """Get comprehensive fund performance vs MT5 reality dashboard using real data"""
     try:
-        # Import fund performance manager directly
-        import sys
-        sys.path.append(get_backend_path())
-        from fund_performance_manager import fund_performance_manager as fpm
+        # Get all investments and MT5 accounts for comparison
+        all_investments = await db.investments.find().to_list(length=None)
+        all_mt5_accounts = await db.mt5_accounts.find().to_list(length=None)
         
-        if not fpm:
-            return {
-                "success": False,
-                "error": "Fund performance manager not available",
-                "generated_at": datetime.now(timezone.utc).isoformat()
+        # Calculate key performance metrics
+        total_fund_commitments = sum(inv.get('principal_amount', 0) for inv in all_investments)
+        total_mt5_equity = sum(acc.get('equity', 0) for acc in all_mt5_accounts)
+        total_mt5_profit = sum(acc.get('profit', 0) for acc in all_mt5_accounts)
+        
+        # Calculate performance variance
+        variance_amount = total_mt5_equity - total_fund_commitments
+        variance_percentage = (variance_amount / total_fund_commitments * 100) if total_fund_commitments > 0 else 0
+        
+        # Count accounts by fund type
+        core_accounts = [acc for acc in all_mt5_accounts if acc.get('fund_type') == 'CORE']
+        balance_accounts = [acc for acc in all_mt5_accounts if acc.get('fund_type') == 'BALANCE']
+        
+        dashboard_data = {
+            "summary": {
+                "total_commitments": total_fund_commitments,
+                "total_mt5_equity": total_mt5_equity,
+                "total_profit_loss": total_mt5_profit,
+                "performance_variance": variance_amount,
+                "variance_percentage": variance_percentage,
+                "active_positions": len(all_mt5_accounts),
+                "funds_under_management": 2,  # CORE and BALANCE
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            },
+            "by_fund": {
+                "CORE": {
+                    "commitment": sum(inv.get('principal_amount', 0) for inv in all_investments if inv.get('fund_code') == 'CORE'),
+                    "mt5_equity": sum(acc.get('equity', 0) for acc in core_accounts),
+                    "mt5_profit": sum(acc.get('profit', 0) for acc in core_accounts),
+                    "account_count": len(core_accounts)
+                },
+                "BALANCE": {
+                    "commitment": sum(inv.get('principal_amount', 0) for inv in all_investments if inv.get('fund_code') == 'BALANCE'),
+                    "mt5_equity": sum(acc.get('equity', 0) for acc in balance_accounts),
+                    "mt5_profit": sum(acc.get('profit', 0) for acc in balance_accounts),
+                    "account_count": len(balance_accounts)
+                }
             }
-        
-        dashboard_data = await fpm.generate_fund_management_dashboard()
+        }
         
         return {
             "success": True,
