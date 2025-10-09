@@ -11,21 +11,24 @@ import {
   TrendingUp,
   ArrowDownCircle,
   Clock,
-  Info
+  Info,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import axios from "axios";
+import apiAxios from "../utils/apiAxios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const InvestmentCalendar = ({ user }) => {
-  const [investments, setInvestments] = useState([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarData, setCalendarData] = useState(null);
+  const [monthlyTimeline, setMonthlyTimeline] = useState({});
+  const [contractSummary, setContractSummary] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewMode, setViewMode] = useState('month'); // month, upcoming
+  const [viewMode, setViewMode] = useState('timeline'); // timeline, upcoming, month
 
   useEffect(() => {
     fetchInvestmentData();
