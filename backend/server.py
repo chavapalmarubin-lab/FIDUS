@@ -14851,6 +14851,7 @@ async def get_fund_portfolio_overview():
             "success": True,
             "funds": funds_overview,
             "total_aum": round(total_aum, 2),
+            "aum": round(total_aum, 2),  # Frontend expects this field name
             "total_investors": total_investors,
             "fund_count": len([f for f in funds_overview.values() if f["aum"] > 0])
         }
