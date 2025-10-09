@@ -516,6 +516,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="mt5" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               📈 MT5 Accounts
             </TabsTrigger>
+            <TabsTrigger value="mt5-dashboard" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+              📊 MT5 Dashboard
+            </TabsTrigger>
             <TabsTrigger value="clients" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               <Users size={16} className="mr-2" />
               Clients
