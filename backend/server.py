@@ -18086,69 +18086,110 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
 
 @api_router.get("/mt5/accounts/{client_id}")
 async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
-    """Get MT5 accounts for a client - Enhanced with live data"""
+    """Get MT5 accounts for a client with live data and detailed analysis"""
     try:
         # Allow clients to view their own accounts, admins can view any
         if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        logging.info(f"Searching MT5 accounts for client_id: {client_id}")
+        logging.info(f"Fetching MT5 accounts with live data for client_id: {client_id}")
         mt5_cursor = db.mt5_accounts.find({"client_id": client_id})
         mt5_accounts_data = await mt5_cursor.to_list(length=None)
-        logging.info(f"Found {len(mt5_accounts_data)} MT5 accounts for client_id: {client_id}")
         
         accounts = []
         total_allocated = 0.0
         total_equity = 0.0
         total_profit = 0.0
         
+        # Fund-level summaries
+        fund_summaries = {
+            "BALANCE": {"allocated": 0, "equity": 0, "profit": 0, "accounts": 0},
+            "CORE": {"allocated": 0, "equity": 0, "profit": 0, "accounts": 0}
+        }
+        
         for mt5_account in mt5_accounts_data:
-            # Use live data if available, otherwise use stored data
+            # Extract live data
             allocated_amount = mt5_account.get("total_allocated", 0)
             current_equity = mt5_account.get("current_equity", allocated_amount)
+            current_balance = mt5_account.get("current_balance", allocated_amount)
             profit_loss = mt5_account.get("profit_loss", 0)
             
-            # Check if this is live data from MT5 bridge
+            # Check data freshness
+            last_update = mt5_account.get("last_mt5_update")
+            data_age_minutes = 0
             data_source = "stored"
-            if mt5_account.get("mt5_data_source") == "live_bridge":
-                data_source = "live"
+            
+            if last_update and mt5_account.get("mt5_data_source") in ["live_multi_account", "live_bridge"]:
+                data_age_minutes = (datetime.now(timezone.utc) - last_update).total_seconds() / 60
+                data_source = "live" if data_age_minutes < 30 else "cached"
+            
+            # Extract additional live data if available
+            mt5_live_data = mt5_account.get("mt5_live_data", {})
+            positions_data = mt5_live_data.get("positions", {})
+            recent_history = mt5_live_data.get("recent_history", {})
             
             account = {
+                # Basic info
                 "account_id": mt5_account.get("account_id"),
+                "mt5_login": mt5_account.get("mt5_login"),
                 "mt5_account_number": mt5_account.get("mt5_login"),
                 "broker_name": mt5_account.get("broker_name"),
                 "broker_code": mt5_account.get("broker_code"),
                 "server": mt5_account.get("mt5_server"),
                 "fund_code": mt5_account.get("fund_code"),
                 
-                # Financial data (live or stored)
+                # Financial data
                 "allocated_amount": allocated_amount,
-                "balance": mt5_account.get("current_balance", allocated_amount),
-                "equity": current_equity,
+                "current_balance": current_balance,
+                "current_equity": current_equity,
                 "profit_loss": profit_loss,
                 "profit_loss_percentage": mt5_account.get("profit_loss_percentage", 0),
                 "return_percent": mt5_account.get("profit_loss_percentage", 0),
                 
-                # Margin data (from live MT5 if available)
+                # Trading data
                 "margin_used": mt5_account.get("margin_used", 0),
                 "margin_free": mt5_account.get("margin_free", current_equity),
+                "margin_level": mt5_account.get("margin_level", 0),
+                "open_positions": positions_data.get("count", 0),
+                "positions_profit": positions_data.get("total_profit", 0),
+                "recent_deals_7d": recent_history.get("deals_count", 0),
+                "recent_profit_7d": recent_history.get("recent_profit_7d", 0),
                 
                 # Status and metadata
                 "status": mt5_account.get("status", "active"),
                 "is_active": mt5_account.get("is_active", True),
                 "data_source": data_source,
-                "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") else None,
-                "last_sync": mt5_account.get("last_mt5_update").isoformat() if mt5_account.get("last_mt5_update") else None,
-                "sync_status": mt5_account.get("mt5_status", "pending")
+                "data_age_minutes": round(data_age_minutes, 1),
+                "last_sync": last_update.isoformat() if last_update else None,
+                "sync_status": mt5_account.get("mt5_status", "pending"),
+                "created_at": mt5_account.get("created_at").isoformat() if mt5_account.get("created_at") else None
             }
             
             accounts.append(account)
+            
+            # Aggregate totals
             total_allocated += allocated_amount
             total_equity += current_equity
             total_profit += profit_loss
+            
+            # Fund-level aggregation
+            fund_code = mt5_account.get("fund_code", "")
+            if fund_code in fund_summaries:
+                fund_summaries[fund_code]["allocated"] += allocated_amount
+                fund_summaries[fund_code]["equity"] += current_equity
+                fund_summaries[fund_code]["profit"] += profit_loss
+                fund_summaries[fund_code]["accounts"] += 1
         
-        # Calculate overall performance
+        # Calculate performance metrics
         overall_return = (total_profit / total_allocated * 100) if total_allocated > 0 else 0
+        
+        # Calculate fund-level returns
+        for fund_code in fund_summaries:
+            fund_data = fund_summaries[fund_code]
+            if fund_data["allocated"] > 0:
+                fund_data["return_percent"] = (fund_data["profit"] / fund_data["allocated"]) * 100
+            else:
+                fund_data["return_percent"] = 0
         
         return {
             "success": True,
@@ -18159,9 +18200,15 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
                 "total_allocated": round(total_allocated, 2),
                 "total_equity": round(total_equity, 2),
                 "total_profit": round(total_profit, 2),
-                "overall_return_percent": round(overall_return, 2)
+                "overall_return_percent": round(overall_return, 2),
+                "fund_breakdown": fund_summaries
             },
-            "data_source": "enhanced_with_live_data"
+            "data_freshness": {
+                "live_accounts": len([acc for acc in accounts if acc["data_source"] == "live"]),
+                "cached_accounts": len([acc for acc in accounts if acc["data_source"] == "cached"]),
+                "stored_accounts": len([acc for acc in accounts if acc["data_source"] == "stored"])
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except HTTPException:
