@@ -74,7 +74,8 @@ const CashFlowManagement = () => {
             fund_obligations: summary.fund_obligations || 0,
             total_outflows: summary.fund_obligations || 0
           },
-          net_profit: summary.net_profit || 0
+          net_profit: summary.net_profit || 0,
+          net_fund_profitability: summary.net_profit || 0  // Map to expected field name
         };
         
         setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
