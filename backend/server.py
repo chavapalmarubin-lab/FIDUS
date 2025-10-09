@@ -12248,20 +12248,23 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
             fund_code = mt5_account.get("fund_code", "unknown")
             broker_name = mt5_account.get("broker_name", "unknown")
             
-            # Extract financial data
-            allocated = mt5_account.get("total_allocated", 0)
-            equity = mt5_account.get("current_equity", allocated)
-            profit = mt5_account.get("profit_loss", 0)
-            margin_used = mt5_account.get("margin_used", 0)
+            # Extract financial data - Use MT5 Bridge field names
+            allocated = mt5_account.get("target_amount", 0) or mt5_account.get("total_allocated", 0)
+            equity = mt5_account.get("equity", allocated)  # MT5 Bridge uses 'equity'
+            profit = mt5_account.get("profit", 0)  # MT5 Bridge uses 'profit'
+            margin_used = mt5_account.get("margin", 0)  # MT5 Bridge uses 'margin'
             
             # Extract trading data
             mt5_live_data = mt5_account.get("mt5_live_data", {})
             positions_count = mt5_live_data.get("positions", {}).get("count", 0)
             
-            # Data freshness
-            last_update = mt5_account.get("last_mt5_update")
+            # Data freshness - Use MT5 Bridge field name
+            last_update = mt5_account.get("updated_at")  # MT5 Bridge uses 'updated_at'
             data_source = "stored"
-            if last_update and mt5_account.get("mt5_data_source") in ["live_multi_account", "live_bridge"]:
+            if last_update:
+                if isinstance(last_update, str):
+                    from dateutil import parser
+                    last_update = parser.parse(last_update)
                 data_age_minutes = (datetime.now(timezone.utc) - last_update).total_seconds() / 60
                 if data_age_minutes < 30:
                     data_source = "live"
