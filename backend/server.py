@@ -16664,7 +16664,7 @@ async def get_performance_gaps():
             "success": False,
             "performance_gaps": [],
             "total_gaps": 0,
-            "error": f"Failed to get performance gaps: {str(e)}",
+            "error": f"Failed to analyze performance gaps: {str(e)}",
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
