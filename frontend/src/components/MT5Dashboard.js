@@ -17,7 +17,7 @@ const MT5Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('fidus_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
