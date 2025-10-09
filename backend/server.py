@@ -8110,41 +8110,45 @@ async def get_crm_admin_dashboard():
             total_fund_aum += fund.aum
             total_fund_investors += fund.total_investors
         
-        # Get REAL MT5 accounts from MongoDB instead of mock data
+        # Get REAL MT5 accounts directly from mt5_accounts collection
         real_mt5_accounts = []
         total_real_balance = 0
         total_real_equity = 0
         total_real_positions = 0
         
         try:
-            # Get all clients from MongoDB
-            all_clients = mongodb_manager.get_all_clients()
+            # Get all MT5 accounts directly from MongoDB using the working collection
+            mt5_cursor = db.mt5_accounts.find({})
+            all_mt5_accounts = await mt5_cursor.to_list(length=None)
             
-            for client in all_clients:
-                # Get client's MT5 accounts
-                client_mt5_accounts = mongodb_manager.get_client_mt5_accounts(client['id'])
+            for mt5_account in all_mt5_accounts:
+                # Remove MongoDB ObjectId to avoid serialization issues
+                mt5_account.pop('_id', None)
                 
-                for mt5_account in client_mt5_accounts:
-                    # Only include Salvador Palma's account (client_003) as that's the only real one
-                    if client['id'] == 'client_003':
-                        real_mt5_accounts.append({
-                            "client_id": client['id'],
-                            "client_name": client['name'],
-                            "account_number": mt5_account.get('mt5_login', 'N/A'),
-                            "balance": mt5_account.get('current_equity', 0),  # Use current_equity which contains the real balance
-                            "equity": mt5_account.get('current_equity', 0),
-                            "open_positions": mt5_account.get('open_positions', 0),
-                            "last_activity": mt5_account.get('updated_at', datetime.now(timezone.utc).isoformat()),
-                            "broker": mt5_account.get('broker_name', 'Unknown'),
-                            "fund_code": mt5_account.get('fund_code', 'Unknown'),
-                            "profit_loss": mt5_account.get('profit_loss', 0)
-                        })
-                        
-                        # Use current_equity for calculations (real account balance)
-                        account_balance = mt5_account.get('current_equity', 0)
-                        total_real_balance += account_balance
-                        total_real_equity += account_balance
-                        total_real_positions += mt5_account.get('open_positions', 0)
+                # Use MT5 Bridge field names for real data
+                client_id = mt5_account.get('client_id', 'unknown')
+                account_number = mt5_account.get('account', 'N/A')
+                equity = mt5_account.get('equity', 0)  # MT5 Bridge uses 'equity'
+                balance = mt5_account.get('balance', equity)  # MT5 Bridge uses 'balance'
+                profit_loss = mt5_account.get('profit', 0)  # MT5 Bridge uses 'profit'
+                
+                real_mt5_accounts.append({
+                    "client_id": client_id,
+                    "client_name": f"Client {client_id[-8:]}" if client_id != 'unknown' else "Unknown Client",
+                    "account_number": account_number,
+                    "balance": balance,
+                    "equity": equity,
+                    "open_positions": 0,  # Would need positions data
+                    "last_activity": mt5_account.get('updated_at', datetime.now(timezone.utc).isoformat()),
+                    "broker": mt5_account.get('name', 'MEXAtlantic'),  # MT5 Bridge uses 'name'
+                    "fund_code": mt5_account.get('fund_type', 'Unknown'),  # MT5 Bridge uses 'fund_type'
+                    "profit_loss": profit_loss
+                })
+                
+                # Aggregate totals using real MT5 data
+                total_real_balance += balance
+                total_real_equity += equity
+                total_real_positions += 0  # Would need positions data
         
         except Exception as e:
             logging.warning(f"Failed to get real MT5 accounts: {e}")
