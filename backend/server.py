@@ -7714,10 +7714,36 @@ async def get_client_mt5_history(client_id: str, days: int = 30):
 
 @api_router.get("/crm/mt5/admin/overview")
 async def get_mt5_admin_overview():
-    """Get MT5 overview for admin dashboard"""
+    """Get MT5 overview for admin dashboard - Use real MT5 data"""
     try:
-        overview = await get_mock_mt5_service().get_all_accounts_summary()
-        return overview
+        # Get all MT5 accounts with live data
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
+        
+        total_accounts = len(all_mt5_accounts)
+        active_accounts = len([acc for acc in all_mt5_accounts if acc.get('success', True)])
+        total_equity = sum(acc.get('equity', 0) for acc in all_mt5_accounts)
+        total_allocated = sum(acc.get('target_amount', 0) for acc in all_mt5_accounts)
+        total_profit = sum(acc.get('profit', 0) for acc in all_mt5_accounts)
+        
+        # Get unique brokers
+        brokers = set()
+        for acc in all_mt5_accounts:
+            broker_name = acc.get('name', 'Unknown')
+            if broker_name != 'Unknown':
+                brokers.add(broker_name)
+        
+        return {
+            "success": True,
+            "total_accounts": total_accounts,
+            "active_accounts": active_accounts,
+            "total_equity": total_equity,
+            "total_allocated": total_allocated,
+            "total_profit": total_profit,
+            "total_brokers": len(brokers),
+            "brokers": list(brokers),
+            "accounts": all_mt5_accounts
+        }
     except Exception as e:
         logging.error(f"Get MT5 admin overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch MT5 admin overview")
