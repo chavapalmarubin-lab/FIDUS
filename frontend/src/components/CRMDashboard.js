@@ -751,7 +751,7 @@ const CRMDashboard = ({ user }) => {
                     <div className="flex justify-between">
                       <span className="text-gray-400">Total P&L:</span>
                       <span className={`font-medium ${clientMT5Data.positions.summary.total_profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {clientMT5Data.positions.summary.total_profit >= 0 ? '+' : ''}${clientMT5Data.positions.summary.total_profit.toFixed(2)}
+                        {(clientMT5Data.positions.summary.total_profit || 0) >= 0 ? '+' : ''}${(clientMT5Data.positions.summary.total_profit || 0).toFixed(2)}
                       </span>
                     </div>
                   </div>
