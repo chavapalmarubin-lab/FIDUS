@@ -401,9 +401,9 @@ const CRMDashboard = ({ user }) => {
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-gray-400">{crmData.funds.summary.total_funds} Funds</span>
+              <span className="text-gray-400">{crmData?.funds?.summary?.total_funds || 0} Funds</span>
               <span className="mx-2 text-gray-600">•</span>
-              <span className="text-gray-400">{crmData.funds.summary.total_investors} Investors</span>
+              <span className="text-gray-400">{crmData?.funds?.summary?.total_investors || 0} Investors</span>
             </div>
           </CardContent>
         </Card>
