@@ -60,9 +60,24 @@ const CashFlowManagement = () => {
       });
       
       if (cashFlowResponse.data.success) {
-        // Use proper fund accounting structure
-        setCashFlowData(cashFlowResponse.data.cash_flows || []);
-        setFundAccounting(cashFlowResponse.data.fund_accounting || {});
+        // Map API summary data to fund accounting structure
+        const summary = cashFlowResponse.data.summary || {};
+        const fundAccountingData = {
+          assets: {
+            mt5_trading_profits: summary.mt5_trading_profits || 0,
+            broker_rebates: summary.broker_rebates || 0,
+            total_inflows: summary.fund_revenue || 0
+          },
+          liabilities: {
+            client_obligations: summary.client_interest_obligations || 0,
+            fund_obligations: summary.fund_obligations || 0,
+            total_outflows: summary.fund_obligations || 0
+          },
+          net_profit: summary.net_profit || 0
+        };
+        
+        setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
+        setFundAccounting(fundAccountingData);
         setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
         setRebatesSummary(cashFlowResponse.data.rebates_summary || {});
         
