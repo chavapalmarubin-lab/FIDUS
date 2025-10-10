@@ -19881,3 +19881,231 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+# ===============================================================================
+# GOOGLE OAUTH SERVICE - CLEAN IMPLEMENTATION
+# ===============================================================================
+
+from google_oauth_service import get_google_oauth_service
+
+@api_router.get("/admin/google/oauth-url")
+async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
+    """Generate Google OAuth URL for admin authentication"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        oauth_url = google_service.generate_oauth_url(user_id)
+        
+        return {
+            'success': True,
+            'auth_url': oauth_url
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to generate OAuth URL: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate OAuth URL: {str(e)}")
+
+@api_router.get("/admin/google-callback")
+async def handle_google_oauth_callback(code: str = None, state: str = None, error: str = None):
+    """Handle Google OAuth callback (GET redirect from Google)"""
+    try:
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        
+        if error:
+            logging.error(f"❌ OAuth error from Google: {error}")
+            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error={error}")
+        
+        if not code or not state:
+            logging.error("❌ Missing code or state in OAuth callback")
+            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=missing_params")
+        
+        # Extract user_id from state
+        user_id = state.split(':')[0] if ':' in state else state
+        
+        # Exchange code for tokens
+        google_service = get_google_oauth_service(db)
+        await google_service.exchange_code_for_tokens(code, user_id)
+        
+        logging.info(f"✅ OAuth callback successful for user {user_id}")
+        
+        # Redirect back to admin with success
+        return RedirectResponse(url=f"{frontend_url}/admin?google_auth=success")
+        
+    except Exception as e:
+        logging.error(f"❌ OAuth callback failed: {str(e)}")
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=callback_failed")
+
+@api_router.get("/admin/google/status")
+async def check_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
+    """Check if admin has connected Google account"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        status = await google_service.check_connection_status(user_id)
+        
+        return {
+            'success': True,
+            **status
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to check Google status: {str(e)}")
+        return {
+            'success': False,
+            'connected': False,
+            'error': str(e)
+        }
+
+@api_router.post("/admin/google/disconnect")
+async def disconnect_google_account(current_user: dict = Depends(get_current_admin_user)):
+    """Disconnect Google account"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        success = await google_service.disconnect(user_id)
+        
+        return {
+            'success': success,
+            'message': 'Google account disconnected' if success else 'Failed to disconnect'
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to disconnect Google: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Gmail API
+@api_router.get("/admin/google/gmail/messages")
+async def get_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages for authenticated admin"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        gmail_service = await google_service.get_gmail_service(user_id)
+        
+        # Fetch messages
+        results = gmail_service.users().messages().list(userId='me', maxResults=10).execute()
+        messages = results.get('messages', [])
+        
+        # Fetch full message details
+        full_messages = []
+        for msg in messages[:10]:  # Limit to 10 for performance
+            message = gmail_service.users().messages().get(userId='me', id=msg['id'], format='full').execute()
+            full_messages.append(message)
+        
+        return {
+            'success': True,
+            'messages': full_messages
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to fetch Gmail messages: {str(e)}")
+        
+        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
+            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
+        
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail: {str(e)}")
+
+# Calendar API
+@api_router.get("/admin/google/calendar/events")
+async def get_calendar_events(current_user: dict = Depends(get_current_admin_user)):
+    """Get Calendar events for authenticated admin"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        calendar_service = await google_service.get_calendar_service(user_id)
+        
+        # Fetch upcoming events
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        
+        events_result = calendar_service.events().list(
+            calendarId='primary',
+            timeMin=now,
+            maxResults=10,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        
+        events = events_result.get('items', [])
+        
+        return {
+            'success': True,
+            'events': events
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to fetch Calendar events: {str(e)}")
+        
+        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
+            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
+        
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Calendar: {str(e)}")
+
+# Drive API
+@api_router.get("/admin/google/drive/files")
+async def get_drive_files(current_user: dict = Depends(get_current_admin_user)):
+    """Get Drive files for authenticated admin"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        drive_service = await google_service.get_drive_service(user_id)
+        
+        # Fetch files
+        results = drive_service.files().list(
+            pageSize=10,
+            fields="files(id, name, mimeType, modifiedTime, size)"
+        ).execute()
+        
+        files = results.get('files', [])
+        
+        return {
+            'success': True,
+            'files': files
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to fetch Drive files: {str(e)}")
+        
+        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
+            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
+        
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Drive: {str(e)}")
+
+# Sheets API
+@api_router.get("/admin/google/sheets/spreadsheets")
+async def get_sheets_spreadsheets(current_user: dict = Depends(get_current_admin_user)):
+    """Get Sheets spreadsheets for authenticated admin"""
+    try:
+        user_id = current_user.get('user_id') or current_user.get('id')
+        
+        google_service = get_google_oauth_service(db)
+        drive_service = await google_service.get_drive_service(user_id)
+        
+        # Query for spreadsheets using Drive API
+        results = drive_service.files().list(
+            q="mimeType='application/vnd.google-apps.spreadsheet'",
+            pageSize=10,
+            fields="files(id, name, modifiedTime)"
+        ).execute()
+        
+        spreadsheets = results.get('files', [])
+        
+        return {
+            'success': True,
+            'spreadsheets': spreadsheets
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to fetch Sheets: {str(e)}")
+        
+        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
+            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
+        
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Sheets: {str(e)}")
+
