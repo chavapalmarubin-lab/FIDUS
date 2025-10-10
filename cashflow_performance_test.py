@@ -227,20 +227,20 @@ class CashFlowPerformanceAnalysisTester:
             overview_data = overview_response.json()
             calendar_data = calendar_response.json()
             
-            # Extract key metrics for performance calculation
-            assets = overview_data.get("assets", {})
-            liabilities = overview_data.get("liabilities", {})
+            # Extract key metrics for performance calculation from actual API structure
+            summary = overview_data.get("summary", {})
+            calendar = calendar_data.get("calendar", {})
             
-            current_revenue = calendar_data.get("current_revenue", 0)
-            total_future_obligations = calendar_data.get("summary", {}).get("total_future_obligations", 0)
+            current_revenue = calendar.get("current_revenue", 0)
+            total_future_obligations = calendar.get("summary", {}).get("total_future_obligations", 0)
             
-            # Calculate performance metrics
-            mt5_profits = assets.get("mt5_trading_profits", 0)
-            separation_interest = assets.get("separation_interest", 0)
-            total_assets = assets.get("total_inflows", 0)
+            # Calculate performance metrics from overview summary
+            mt5_profits = summary.get("mt5_trading_profits", 0)
+            separation_interest = summary.get("separation_interest", 0)
+            fund_revenue = summary.get("fund_revenue", 0)
             
-            client_obligations = liabilities.get("client_obligations", 0)
-            total_liabilities = liabilities.get("total_outflows", 0)
+            client_obligations = summary.get("fund_obligations", 0)
+            net_profit = summary.get("net_profit", 0)
             
             # Calculate net position and performance ratios
             net_position = current_revenue - total_future_obligations
@@ -278,7 +278,10 @@ class CashFlowPerformanceAnalysisTester:
                         "performance_ratio": performance_ratio,
                         "net_position": net_position,
                         "current_revenue": current_revenue,
-                        "total_future_obligations": total_future_obligations
+                        "total_future_obligations": total_future_obligations,
+                        "mt5_profits": mt5_profits,
+                        "separation_interest": separation_interest,
+                        "net_profit": net_profit
                     }
                 )
                 return True
