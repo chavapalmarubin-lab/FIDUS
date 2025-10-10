@@ -1031,14 +1031,14 @@ class TradingAnalyticsPhase1BTestSuite:
 
 async def main():
     """Main test execution"""
-    test_suite = TradingAnalyticsTestSuite()
+    test_suite = TradingAnalyticsPhase1BTestSuite()
     
     try:
         results = await test_suite.run_all_tests()
         
         # Print detailed results
         print("\n" + "="*80)
-        print("TRADING ANALYTICS PHASE 1A TEST RESULTS")
+        print("TRADING ANALYTICS PHASE 1B MULTI-ACCOUNT TEST RESULTS")
         print("="*80)
         
         for result in results['results']:
