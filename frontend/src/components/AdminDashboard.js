@@ -320,9 +320,6 @@ const AdminDashboard = ({ user, onLogout }) => {
       case 'portfolio':
         exportPortfolioData();
         break;
-      case 'fund-performance':
-        exportFundVsMT5Data();
-        break;
       case 'cashflow':
         exportCashFlowData();
         break;
