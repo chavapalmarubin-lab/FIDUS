@@ -17052,19 +17052,68 @@ async def get_trading_analytics_overview(account: int = None, days: int = 30):
 async def get_daily_performance(days: int = 30, account: int = None):
     """Get daily performance data for calendar view"""
     try:
-        # Phase 1A: Default to account 886557 if not specified
-        if account is None:
-            account = 886557
-        
         end_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         start_date = end_date - timedelta(days=days)
         
-        daily_cursor = db.daily_performance.find({
-            "account": account,
-            "date": {"$gte": start_date, "$lt": end_date}
-        }).sort("date", -1)
-        
-        daily_data = await daily_cursor.to_list(length=None)
+        # Phase 1B: Support all accounts or specific account
+        if account is None or account == 0:  # 'all' accounts
+            # Aggregate daily performance across all accounts
+            pipeline = [
+                {"$match": {
+                    "account": {"$in": [886557, 886066, 886602, 885822]},
+                    "date": {"$gte": start_date, "$lt": end_date}
+                }},
+                {"$group": {
+                    "_id": "$date",
+                    "total_trades": {"$sum": "$total_trades"},
+                    "winning_trades": {"$sum": "$winning_trades"},
+                    "losing_trades": {"$sum": "$losing_trades"},
+                    "breakeven_trades": {"$sum": "$breakeven_trades"},
+                    "total_pnl": {"$sum": "$total_pnl"},
+                    "gross_profit": {"$sum": "$gross_profit"},
+                    "gross_loss": {"$sum": "$gross_loss"},
+                    "largest_win": {"$max": "$largest_win"},
+                    "largest_loss": {"$min": "$largest_loss"},
+                    "instruments_traded": {"$push": "$instruments_traded"}
+                }},
+                {"$addFields": {
+                    "date": "$_id",
+                    "win_rate": {"$cond": [
+                        {"$eq": ["$total_trades", 0]}, 
+                        0, 
+                        {"$multiply": [{"$divide": ["$winning_trades", "$total_trades"]}, 100]}
+                    ]},
+                    "profit_factor": {"$cond": [
+                        {"$eq": ["$gross_loss", 0]}, 
+                        999.99, 
+                        {"$abs": {"$divide": ["$gross_profit", "$gross_loss"]}}
+                    ]},
+                    "status": {"$cond": [
+                        {"$gt": ["$total_pnl", 0]}, "profitable",
+                        {"$lt": ["$total_pnl", 0]}, "loss",
+                        "breakeven"
+                    ]},
+                    "instruments_traded": {"$reduce": {
+                        "input": "$instruments_traded",
+                        "initialValue": [],
+                        "in": {"$setUnion": ["$$value", "$$this"]}
+                    }}
+                }},
+                {"$sort": {"date": -1}}
+            ]
+            
+            daily_data = await db.daily_performance.aggregate(pipeline).to_list(length=None)
+            account_display = "all"
+            
+        else:
+            # Single account query
+            daily_cursor = db.daily_performance.find({
+                "account": account,
+                "date": {"$gte": start_date, "$lt": end_date}
+            }).sort("date", -1)
+            
+            daily_data = await daily_cursor.to_list(length=None)
+            account_display = account
         
         # Convert MongoDB ObjectIds and dates to JSON serializable format
         for day in daily_data:
@@ -17080,7 +17129,7 @@ async def get_daily_performance(days: int = 30, account: int = None):
             "daily_performance": daily_data,
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
-            "account": account
+            "account": account_display
         }
         
     except Exception as e:
