@@ -1003,7 +1003,7 @@ class TradingAnalyticsPhase1BTestSuite:
         }
         
         # Log summary
-        logger.info("📊 Trading Analytics Test Summary:")
+        logger.info("📊 Trading Analytics Phase 1B Multi-Account Test Summary:")
         logger.info(f"   Total Tests: {summary['total_tests']}")
         logger.info(f"   Passed: {summary['passed']}")
         logger.info(f"   Failed: {summary['failed']}")
@@ -1017,8 +1017,9 @@ class TradingAnalyticsPhase1BTestSuite:
             'results': results,
             'test_parameters': {
                 'backend_url': self.backend_url,
-                'test_account': self.test_account,
-                'test_days': self.test_days
+                'all_accounts': self.all_accounts,
+                'test_days': self.test_days,
+                'phase': '1B Multi-Account'
             }
         }
     
