@@ -20198,3 +20198,48 @@ async def get_spreadsheets_service_account(
         logging.error(f"❌ Sheets service account error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch spreadsheets: {str(e)}")
 
+
+# ===============================================================================
+# ALIAS ENDPOINTS - Make old OAuth paths work with service account
+# ===============================================================================
+
+@api_router.get("/admin/google/gmail/messages")
+async def get_gmail_messages_alias(
+    max_results: int = 10,
+    query: str = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """ALIAS: Old endpoint now uses service account (no OAuth needed)"""
+    logging.info(f"📧 Gmail alias endpoint called - using service account")
+    return await get_gmail_messages_service_account(max_results, query, current_user)
+
+@api_router.get("/admin/google/calendar/events")
+async def get_calendar_events_alias(
+    max_results: int = 10,
+    time_min: str = None,
+    time_max: str = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """ALIAS: Old endpoint now uses service account (no OAuth needed)"""
+    logging.info(f"📅 Calendar alias endpoint called - using service account")
+    return await get_calendar_events_service_account(max_results, current_user)
+
+@api_router.get("/admin/google/drive/files")
+async def get_drive_files_alias(
+    folder_id: str,
+    max_results: int = 20,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """ALIAS: Old endpoint now uses service account (no OAuth needed)"""
+    logging.info(f"📁 Drive alias endpoint called - using service account")
+    return await get_drive_files_service_account(folder_id, max_results, current_user)
+
+@api_router.get("/admin/google/sheets/spreadsheets")
+async def get_sheets_alias(
+    folder_id: str,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """ALIAS: Old endpoint now uses service account (no OAuth needed)"""
+    logging.info(f"📊 Sheets alias endpoint called - using service account")
+    return await get_sheets_service_account(folder_id, current_user)
+
