@@ -20109,3 +20109,10 @@ async def get_sheets_spreadsheets(current_user: dict = Depends(get_current_admin
         
         raise HTTPException(status_code=500, detail=f"Failed to fetch Sheets: {str(e)}")
 
+
+# Legacy endpoint for compatibility with existing frontend
+@api_router.get("/auth/google/url")
+async def get_google_auth_url_legacy(current_user: dict = Depends(get_current_admin_user)):
+    """Legacy endpoint - redirects to new OAuth URL endpoint"""
+    return await get_google_oauth_url(current_user)
+
