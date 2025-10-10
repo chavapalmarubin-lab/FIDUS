@@ -416,12 +416,12 @@ const FullGoogleWorkspace = () => {
         setEvents(transformedEvents);
         console.log(`✅ Successfully loaded ${transformedEvents.length} events from your Google Calendar`);
       } else {
-        console.warn('⚠️ No events returned from Calendar API, using fallback');
-        // Fallback message for when no events are returned
+        // No upcoming events - this is normal, not an error
+        console.log('ℹ️ No upcoming calendar events');
         setEvents([{
           id: 'no-events',
-          title: '📅 Connect to Google Calendar to see your events',
-          description: 'Complete Google OAuth authentication to load your real calendar events',
+          title: '📅 No Upcoming Events',
+          description: 'Calendar is connected and working. No events scheduled.',
           start: new Date().toISOString(),
           end: new Date(Date.now() + 3600000).toISOString(), // 1 hour later
           attendees: [],
