@@ -406,10 +406,10 @@ class CashFlowPerformanceAnalysisTester:
                         "accessible": False
                     })
             
-            # Test that new consolidated endpoints work
+            # Test that new consolidated endpoints work (using authenticated session)
             new_endpoints = [
-                "/api/admin/cashflow/overview",
-                "/api/admin/cashflow/calendar"
+                "/admin/cashflow/overview",
+                "/admin/cashflow/calendar"
             ]
             
             new_endpoints_working = 0
