@@ -21,7 +21,7 @@ import os
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from config.database import get_database
-from integrations.mt5_bridge_client import MT5BridgeClient
+from mt5_bridge_client import MT5BridgeClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
