@@ -51,25 +51,25 @@ class MoneyManagersBackendTester:
         # Expected manager configurations after CRITICAL DATA INTEGRITY FIX
         # NOW: 4 managers with 1:1 account mapping (not 1:N)
         self.expected_managers = {
-            "CP Strategy": {
+            "manager_cp_strategy": {
                 "name": "CP Strategy",
                 "assigned_accounts": [885822],  # ONLY 1 account (1:1 mapping)
-                "profile_url": "MexAtlantic 3157",  # Has profile URL
+                "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social_platform_ratings",  # Has profile URL
                 "fund": "CORE"
             },
-            "TradingHub Gold": {
+            "manager_tradinghub_gold": {
                 "name": "TradingHub Gold", 
                 "assigned_accounts": [886557],  # ONLY 1 account (1:1 mapping)
                 "profile_url": None,  # Should be null (pending)
                 "fund": "BALANCE"
             },
-            "GoldenTrade": {
+            "manager_goldentrade": {
                 "name": "GoldenTrade",
                 "assigned_accounts": [886066],  # ONLY 1 account (1:1 mapping)
-                "profile_url": "MexAtlantic 5843",  # Has profile URL
+                "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/5843?widgetKey=social_platform_ratings",  # Has profile URL
                 "fund": "BALANCE"
             },
-            "UNO14": {
+            "manager_uno14": {
                 "name": "UNO14",
                 "assigned_accounts": [886602],  # ONLY 1 account (1:1 mapping)
                 "profile_url": None,  # Should be null (pending)
