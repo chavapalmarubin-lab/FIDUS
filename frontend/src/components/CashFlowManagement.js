@@ -300,6 +300,201 @@ const CashFlowManagement = () => {
     }
   };
 
+  // Performance Analysis Component
+  const PerformanceAnalysisSection = ({ fundAccounting, cashFlowCalendar }) => {
+    const metrics = calculatePerformanceMetrics();
+    
+    if (!metrics) {
+      return (
+        <div className="text-center py-8">
+          <AlertTriangle className="mx-auto h-12 w-12 mb-4 text-yellow-400 opacity-50" />
+          <p className="text-slate-400">Performance analysis will be available once investment data is loaded</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-6">
+        {/* Performance Grid: 3 cards side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Card 1: Required Performance */}
+          <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center mb-2">
+                🎯 Required Performance
+              </h3>
+              <p className="text-slate-400 text-sm">To meet all client obligations</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Total Required:</span>
+                <span className="text-white font-bold">{formatCurrency(metrics.required.totalNeeded)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Already Earned:</span>
+                <span className="text-green-400 font-medium">
+                  {formatCurrency(metrics.required.alreadyEarned)}
+                  <span className="text-xs ml-1">({metrics.required.percentComplete.toFixed(1)}%)</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Still Needed:</span>
+                <span className="text-red-400 font-medium">
+                  {formatCurrency(metrics.required.stillNeeded)}
+                  <span className="text-xs ml-1">({(100 - metrics.required.percentComplete).toFixed(1)}%)</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Days Remaining:</span>
+                <span className="text-white font-medium">{metrics.required.daysRemaining} days</span>
+              </div>
+              
+              <div className="border-t border-slate-600 pt-3 mt-4">
+                <h4 className="text-white font-medium text-sm mb-3">Performance Targets</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Required Daily:</span>
+                    <span className="text-cyan-400 font-medium">{formatCurrency(metrics.required.requiredDailyAvg)}/day</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Required Monthly:</span>
+                    <span className="text-cyan-400 font-medium">{formatCurrency(metrics.required.requiredMonthlyAvg)}/month</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 2: Actual Performance */}
+          <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center mb-2">
+                📈 Actual Performance
+              </h3>
+              <p className="text-slate-400 text-sm">Current earnings rate</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">MT5 Trading:</span>
+                <span className={`font-medium ${metrics.actual.mt5Trading >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(metrics.actual.mt5Trading)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Separation Interest:</span>
+                <span className="text-green-400 font-medium">
+                  {formatCurrency(metrics.actual.separationInterest)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Broker Rebates:</span>
+                <span className="text-cyan-400 font-medium">
+                  {formatCurrency(metrics.actual.brokerRebates)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Net Revenue:</span>
+                <span className="text-white font-bold">{formatCurrency(metrics.actual.netRevenue)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Days Active:</span>
+                <span className="text-white font-medium">{metrics.actual.daysElapsed} days</span>
+              </div>
+              
+              <div className="border-t border-slate-600 pt-3 mt-4">
+                <h4 className="text-white font-medium text-sm mb-3">Current Rate</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Daily Average:</span>
+                    <span className="text-cyan-400 font-medium">{formatCurrency(metrics.actual.actualDailyAvg)}/day</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Monthly Projection:</span>
+                    <span className="text-cyan-400 font-medium">{formatCurrency(metrics.actual.actualMonthlyProjection)}/month</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 3: Gap Analysis */}
+          <div className={`bg-slate-800/50 rounded-lg p-6 border-2 ${
+            metrics.gap.statusClass === 'success' ? 'border-green-600' :
+            metrics.gap.statusClass === 'warning' ? 'border-yellow-600' :
+            'border-red-600'
+          }`}>
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center mb-2">
+                📊 Gap Analysis
+              </h3>
+              <p className="text-slate-400 text-sm">Performance vs target</p>
+            </div>
+            
+            <div className={`mb-4 p-3 rounded text-center font-bold ${
+              metrics.gap.statusClass === 'success' ? 'bg-green-900/30 text-green-400' :
+              metrics.gap.statusClass === 'warning' ? 'bg-yellow-900/30 text-yellow-400' :
+              'bg-red-900/30 text-red-400'
+            }`}>
+              {metrics.gap.statusMessage}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Monthly Performance:</span>
+                <span className={`font-bold ${metrics.gap.monthlyGap >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {metrics.gap.monthlyGap >= 0 ? '+' : ''}{formatCurrency(metrics.gap.monthlyGap)}/month
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Performance Rate:</span>
+                <span className={`font-bold ${metrics.gap.performanceRate >= 100 ? 'text-green-400' : 'text-red-400'}`}>
+                  {metrics.gap.performanceRate.toFixed(0)}% of target
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Projected Total:</span>
+                <span className="text-white font-medium">{formatCurrency(metrics.gap.projectedTotal)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">
+                  {metrics.gap.projectedSurplusDeficit >= 0 ? 'Projected Surplus:' : 'Projected Deficit:'}
+                </span>
+                <span className={`font-bold ${metrics.gap.projectedSurplusDeficit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(Math.abs(metrics.gap.projectedSurplusDeficit))}
+                </span>
+              </div>
+            </div>
+            
+            <div className="border-t border-slate-600 pt-3 mt-4">
+              <h4 className="text-white font-medium text-sm mb-2">⚠️ Risk Assessment</h4>
+              <p className="text-slate-300 text-xs leading-relaxed">
+                {getRiskAssessmentMessage(metrics)}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Early Performance Warning */}
+        {metrics && metrics.timing.daysElapsed < 30 && (
+          <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4 flex items-start">
+            <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <strong className="text-yellow-400">Early Performance Notice</strong>
+              <p className="text-yellow-300 text-sm mt-1">
+                These projections are based on {metrics.timing.daysElapsed} days of fund performance. 
+                Performance metrics will become more accurate as the fund matures. 
+                Current high rate is influenced by initial separation interest accrual.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
