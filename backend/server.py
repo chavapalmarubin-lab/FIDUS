@@ -17206,6 +17206,120 @@ async def trigger_manual_sync():
         }
 
 # ===============================================================================
+# MONEY MANAGERS ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/money-managers")
+async def get_all_money_managers():
+    """Get all money managers with performance metrics"""
+    try:
+        from money_managers_service import MoneyManagersService
+        
+        service = MoneyManagersService(db)
+        managers = await service.get_all_managers()
+        
+        return {
+            "success": True,
+            "managers": managers,
+            "count": len(managers),
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Money managers error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get money managers: {str(e)}",
+            "managers": []
+        }
+
+@api_router.get("/admin/money-managers/{manager_id}")
+async def get_money_manager_details(manager_id: str):
+    """Get detailed information for a specific money manager"""
+    try:
+        from money_managers_service import MoneyManagersService
+        
+        service = MoneyManagersService(db)
+        manager = await service.get_manager_by_id(manager_id)
+        
+        if not manager:
+            return {
+                "success": False,
+                "error": f"Manager {manager_id} not found",
+                "manager": None
+            }
+        
+        return {
+            "success": True,
+            "manager": manager,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Money manager details error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get manager details: {str(e)}",
+            "manager": None
+        }
+
+@api_router.get("/admin/money-managers/compare")
+async def compare_money_managers(manager_ids: str):
+    """Compare multiple money managers side-by-side"""
+    try:
+        from money_managers_service import MoneyManagersService
+        
+        # Parse comma-separated manager IDs
+        manager_id_list = [mid.strip() for mid in manager_ids.split(",") if mid.strip()]
+        
+        if not manager_id_list:
+            return {
+                "success": False,
+                "error": "No manager IDs provided",
+                "comparison": None
+            }
+        
+        service = MoneyManagersService(db)
+        comparison = await service.get_managers_comparison(manager_id_list)
+        
+        return {
+            "success": True,
+            "comparison": comparison,
+            "manager_ids": manager_id_list,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Money managers comparison error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to compare managers: {str(e)}",
+            "comparison": None
+        }
+
+@api_router.post("/admin/money-managers/initialize")
+async def initialize_money_managers():
+    """Initialize money managers with default configurations"""
+    try:
+        from money_managers_service import MoneyManagersService
+        
+        service = MoneyManagersService(db)
+        result = await service.initialize_managers()
+        
+        return {
+            "success": result["success"],
+            "initialization": result
+        }
+        
+    except Exception as e:
+        logging.error(f"Money managers initialization error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to initialize managers: {str(e)}",
+            "initialization": None
+        }
+
+# ===============================================================================
 # CLIENT-SPECIFIC CALENDAR ENDPOINTS
 # ===============================================================================
 
