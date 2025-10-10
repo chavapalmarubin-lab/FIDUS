@@ -546,22 +546,22 @@ const AdminDashboard = ({ user, onLogout }) => {
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
-            <TabsTrigger value="users" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="users">
               <Users size={16} className="mr-2" />
               User Admin
             </TabsTrigger>
-            <TabsTrigger value="crm" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="crm">
               CRM Dashboard
             </TabsTrigger>
-            <TabsTrigger value="redemptions" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="redemptions">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="google" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="google">
               🌐 Google Workspace
             </TabsTrigger>
             {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
-            <TabsTrigger value="documents" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="documents">
               <FileText size={16} className="mr-2" />
               📄 App Documents
             </TabsTrigger>
