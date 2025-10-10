@@ -951,6 +951,91 @@ def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfig
     
     return next_redemption
 
+def generate_redemption_schedule(investment: FundInvestment, fund_config: FundConfiguration) -> list:
+    """Generate complete redemption schedule for the investment showing all payment dates"""
+    schedule = []
+    
+    # Start from interest start date (after 60-day incubation)
+    base_date = investment.interest_start_date
+    current_date = datetime.now(timezone.utc)
+    
+    # Determine redemption frequency in months
+    if fund_config.redemption_frequency == "monthly":
+        frequency_months = 1
+    elif fund_config.redemption_frequency == "quarterly":
+        frequency_months = 3
+    elif fund_config.redemption_frequency == "semi_annually":
+        frequency_months = 6
+    else:
+        frequency_months = 12
+    
+    # Calculate monthly interest rate
+    monthly_rate = fund_config.interest_rate / 100.0
+    
+    # Generate payment schedule from interest start to contract end (426 days from deposit)
+    payment_date = base_date
+    payment_number = 1
+    
+    # Contract ends 426 days after deposit (14 months)
+    contract_end_date = investment.minimum_hold_end_date
+    
+    while payment_date < contract_end_date:
+        # Calculate interest amount for this period
+        interest_amount = investment.principal_amount * monthly_rate * frequency_months
+        
+        # Determine if this payment is available now
+        is_available = payment_date <= current_date
+        days_until = (payment_date - current_date).days if not is_available else 0
+        
+        # Determine status
+        if is_available:
+            status = "available"
+        else:
+            status = "pending"
+        
+        schedule.append({
+            "payment_number": payment_number,
+            "date": payment_date.isoformat(),
+            "amount": round(interest_amount, 2),
+            "type": "interest",
+            "status": status,
+            "can_redeem": is_available,
+            "days_until": days_until,
+            "frequency": fund_config.redemption_frequency
+        })
+        
+        # Move to next payment date
+        if payment_date.month + frequency_months > 12:
+            payment_date = payment_date.replace(
+                year=payment_date.year + ((payment_date.month + frequency_months - 1) // 12),
+                month=((payment_date.month + frequency_months - 1) % 12) + 1
+            )
+        else:
+            payment_date = payment_date.replace(month=payment_date.month + frequency_months)
+        
+        payment_number += 1
+    
+    # Add final payment (principal + last interest) at contract end
+    final_interest = investment.principal_amount * monthly_rate * frequency_months
+    final_amount = investment.principal_amount + final_interest
+    is_final_available = contract_end_date <= current_date
+    days_until_final = (contract_end_date - current_date).days if not is_final_available else 0
+    
+    schedule.append({
+        "payment_number": payment_number,
+        "date": contract_end_date.isoformat(),
+        "amount": round(final_amount, 2),
+        "principal": investment.principal_amount,
+        "interest": round(final_interest, 2),
+        "type": "final",
+        "status": "available" if is_final_available else "pending",
+        "can_redeem": is_final_available,
+        "days_until": days_until_final,
+        "frequency": "contract_end"
+    })
+    
+    return schedule
+
 def calculate_redemption_value(investment: FundInvestment, fund_config: FundConfiguration) -> float:
     """Calculate current redemption value including accrued interest or performance sharing"""
     now = datetime.now(timezone.utc)
