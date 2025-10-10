@@ -429,6 +429,132 @@ class MoneyManagersBackendTester:
                 "error": str(e)
             }
     
+    async def test_critical_data_integrity_fix(self, managers_data: List[Dict]) -> Dict[str, Any]:
+        """Test CRITICAL DATA INTEGRITY FIX: 4 managers with 1:1 account mapping"""
+        test_name = "CRITICAL Data Integrity Fix Verification"
+        logger.info(f"🧪 Testing: {test_name}")
+        
+        try:
+            # CRITICAL REQUIREMENT 1: Exactly 4 managers
+            manager_count = len(managers_data)
+            exactly_4_managers = manager_count == 4
+            
+            # CRITICAL REQUIREMENT 2: Each manager has ONLY 1 assigned account (1:1 mapping)
+            one_to_one_mapping = True
+            mapping_violations = []
+            
+            for manager in managers_data:
+                manager_name = manager.get("name", "Unknown")
+                assigned_accounts = manager.get("assigned_accounts", [])
+                account_count = len(assigned_accounts)
+                
+                if account_count != 1:
+                    one_to_one_mapping = False
+                    mapping_violations.append({
+                        "manager": manager_name,
+                        "account_count": account_count,
+                        "accounts": assigned_accounts,
+                        "violation": f"Has {account_count} accounts instead of 1"
+                    })
+            
+            # CRITICAL REQUIREMENT 3: Verify specific manager-account mappings
+            manager_account_verification = {}
+            for manager in managers_data:
+                manager_name = manager.get("name", "Unknown")
+                assigned_accounts = manager.get("assigned_accounts", [])
+                
+                if manager_name in self.expected_managers:
+                    expected_accounts = self.expected_managers[manager_name]["assigned_accounts"]
+                    accounts_match = set(assigned_accounts) == set(expected_accounts)
+                    
+                    manager_account_verification[manager_name] = {
+                        "found": True,
+                        "expected_accounts": expected_accounts,
+                        "actual_accounts": assigned_accounts,
+                        "accounts_match": accounts_match,
+                        "account_count": len(assigned_accounts)
+                    }
+                else:
+                    manager_account_verification[manager_name] = {
+                        "found": False,
+                        "unexpected_manager": True
+                    }
+            
+            # CRITICAL REQUIREMENT 4: Verify profile URLs
+            profile_url_verification = {}
+            for manager in managers_data:
+                manager_name = manager.get("name", "Unknown")
+                profile_url = manager.get("profile_url")
+                
+                if manager_name in self.expected_managers:
+                    expected_profile = self.expected_managers[manager_name]["profile_url"]
+                    profile_matches = profile_url == expected_profile
+                    
+                    profile_url_verification[manager_name] = {
+                        "expected": expected_profile,
+                        "actual": profile_url,
+                        "matches": profile_matches
+                    }
+            
+            # CRITICAL REQUIREMENT 5: Verify account allocation amounts
+            allocation_verification = {}
+            for manager in managers_data:
+                manager_name = manager.get("name", "Unknown")
+                account_details = manager.get("account_details", [])
+                
+                for account_detail in account_details:
+                    account_number = account_detail.get("account")
+                    allocation = account_detail.get("allocation")
+                    
+                    if account_number in self.expected_allocations:
+                        expected_allocation = self.expected_allocations[account_number]["allocation"]
+                        allocation_matches = abs(allocation - expected_allocation) < 0.01  # Allow small floating point differences
+                        
+                        allocation_verification[account_number] = {
+                            "manager": manager_name,
+                            "expected_allocation": expected_allocation,
+                            "actual_allocation": allocation,
+                            "matches": allocation_matches,
+                            "fund": self.expected_allocations[account_number]["fund"]
+                        }
+            
+            # Calculate overall success
+            all_requirements_met = (
+                exactly_4_managers and 
+                one_to_one_mapping and
+                all(v["accounts_match"] for v in manager_account_verification.values() if v.get("found")) and
+                all(v["matches"] for v in profile_url_verification.values()) and
+                all(v["matches"] for v in allocation_verification.values())
+            )
+            
+            logger.info(f"✅ Critical data integrity fix verification completed")
+            
+            return {
+                "test": test_name,
+                "status": "PASS" if all_requirements_met else "FAIL",
+                "critical_requirements": {
+                    "exactly_4_managers": exactly_4_managers,
+                    "one_to_one_mapping": one_to_one_mapping,
+                    "all_mappings_correct": all(v["accounts_match"] for v in manager_account_verification.values() if v.get("found")),
+                    "all_profiles_correct": all(v["matches"] for v in profile_url_verification.values()),
+                    "all_allocations_correct": all(v["matches"] for v in allocation_verification.values())
+                },
+                "manager_count": manager_count,
+                "mapping_violations": mapping_violations,
+                "manager_account_verification": manager_account_verification,
+                "profile_url_verification": profile_url_verification,
+                "allocation_verification": allocation_verification,
+                "overall_success": all_requirements_met
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Critical data integrity test error: {str(e)}")
+            return {
+                "test": test_name,
+                "status": "ERROR",
+                "error": str(e)
+            }
+
     async def test_performance_calculation(self, managers_data: List[Dict]) -> Dict[str, Any]:
         """Test performance calculation across assigned accounts"""
         test_name = "Performance Calculation Testing"
