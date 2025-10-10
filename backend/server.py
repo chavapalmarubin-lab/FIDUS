@@ -13042,6 +13042,17 @@ async def get_client_redemptions(client_id: str):
             now = datetime.now(timezone.utc)
             principal_available = now >= investment.minimum_hold_end_date
             
+            # Generate full redemption schedule
+            redemption_schedule = generate_redemption_schedule(investment, fund_config)
+            
+            # Determine investment status
+            if now < investment.interest_start_date:
+                investment_status = "incubation"
+            elif now >= investment.minimum_hold_end_date:
+                investment_status = "completed"
+            else:
+                investment_status = "active"
+            
             redemption_info = {
                 "investment_id": investment.investment_id,
                 "fund_code": investment.fund_code,
@@ -13055,8 +13066,11 @@ async def get_client_redemptions(client_id: str):
                 "principal_message": f"Principal available in {(investment.minimum_hold_end_date - now).days} days" if not principal_available else "Principal redemption available",
                 "next_redemption_date": next_redemption.isoformat(),
                 "deposit_date": investment.deposit_date.isoformat(),
+                "interest_start_date": investment.interest_start_date.isoformat(),
                 "redemption_frequency": fund_config.redemption_frequency,
-                "principal_hold_end_date": investment.minimum_hold_end_date.isoformat()
+                "principal_hold_end_date": investment.minimum_hold_end_date.isoformat(),
+                "status": investment_status,
+                "redemption_schedule": redemption_schedule
             }
             
             available_redemptions.append(redemption_info)
