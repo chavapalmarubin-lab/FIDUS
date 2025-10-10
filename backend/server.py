@@ -19998,102 +19998,48 @@ async def get_gmail_messages(
 
 # Calendar API
 @api_router.get("/admin/google/calendar/events")
-async def get_calendar_events(current_user: dict = Depends(get_current_admin_user)):
-    """Get Calendar events for authenticated admin"""
+async def get_calendar_events(
+    max_results: int = 10,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Calendar events - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
     try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        calendar_service = await google_service.get_calendar_service(user_id)
-        
-        # Fetch upcoming events
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc).isoformat()
-        
-        events_result = calendar_service.events().list(
-            calendarId='primary',
-            timeMin=now,
-            maxResults=10,
-            singleEvents=True,
-            orderBy='startTime'
-        ).execute()
-        
-        events = events_result.get('items', [])
-        
-        return {
-            'success': True,
-            'events': events
-        }
-        
+        logging.info(f"📅 Fetching calendar events using service account")
+        events = await list_calendar_events(max_results)
+        return {'success': True, 'events': events, 'count': len(events)}
     except Exception as e:
         logging.error(f"❌ Failed to fetch Calendar events: {str(e)}")
-        
-        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
-            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
-        
         raise HTTPException(status_code=500, detail=f"Failed to fetch Calendar: {str(e)}")
 
 # Drive API
 @api_router.get("/admin/google/drive/files")
-async def get_drive_files(current_user: dict = Depends(get_current_admin_user)):
-    """Get Drive files for authenticated admin"""
+async def get_drive_files(
+    folder_id: str,
+    max_results: int = 20,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Drive files - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
     try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        drive_service = await google_service.get_drive_service(user_id)
-        
-        # Fetch files
-        results = drive_service.files().list(
-            pageSize=10,
-            fields="files(id, name, mimeType, modifiedTime, size)"
-        ).execute()
-        
-        files = results.get('files', [])
-        
-        return {
-            'success': True,
-            'files': files
-        }
-        
+        logging.info(f"📁 Fetching Drive files using service account")
+        files = await list_drive_files(folder_id, max_results)
+        return {'success': True, 'files': files, 'count': len(files)}
     except Exception as e:
         logging.error(f"❌ Failed to fetch Drive files: {str(e)}")
-        
-        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
-            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
-        
         raise HTTPException(status_code=500, detail=f"Failed to fetch Drive: {str(e)}")
 
 # Sheets API
 @api_router.get("/admin/google/sheets/spreadsheets")
-async def get_sheets_spreadsheets(current_user: dict = Depends(get_current_admin_user)):
-    """Get Sheets spreadsheets for authenticated admin"""
+async def get_sheets_spreadsheets(
+    folder_id: str,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Sheets - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
     try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        drive_service = await google_service.get_drive_service(user_id)
-        
-        # Query for spreadsheets using Drive API
-        results = drive_service.files().list(
-            q="mimeType='application/vnd.google-apps.spreadsheet'",
-            pageSize=10,
-            fields="files(id, name, modifiedTime)"
-        ).execute()
-        
-        spreadsheets = results.get('files', [])
-        
-        return {
-            'success': True,
-            'spreadsheets': spreadsheets
-        }
-        
+        logging.info(f"📊 Fetching spreadsheets using service account")
+        sheets = await list_spreadsheets_in_folder(folder_id)
+        return {'success': True, 'spreadsheets': sheets, 'count': len(sheets)}
     except Exception as e:
         logging.error(f"❌ Failed to fetch Sheets: {str(e)}")
-        
-        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
-            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
-        
         raise HTTPException(status_code=500, detail=f"Failed to fetch Sheets: {str(e)}")
 
 
