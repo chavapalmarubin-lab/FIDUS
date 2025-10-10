@@ -4015,3 +4015,19 @@ agent_communication:
         - working: true
           agent: "testing"
           comment: "✅ MONEY MANAGERS CRITICAL DATA INTEGRITY FIX VERIFIED - 100% SUCCESS RATE! Conducted comprehensive testing to verify the critical data integrity fix has been implemented correctly. CRITICAL VERIFICATION RESULTS: (1) ✅ MANAGER COUNT: Exactly 4 managers returned (CP Strategy, TradingHub Gold, GoldenTrade, UNO14) - not 3 as before. (2) ✅ 1:1 ACCOUNT MAPPING VERIFIED: Each manager has ONLY 1 assigned account (resolved 1:N issue) - CP Strategy: [885822] only ✅, TradingHub Gold: [886557] only ✅, GoldenTrade: [886066] only ✅, UNO14: [886602] only ✅. (3) ✅ SPECIFIC MAPPINGS CORRECT: All manager-account assignments match requirements exactly - CP Strategy → [885822] (CORE Fund), TradingHub Gold → [886557] (BALANCE Fund), GoldenTrade → [886066] (BALANCE Fund), UNO14 → [886602] (BALANCE Fund). (4) ✅ PROFILE URLs VERIFIED: CP Strategy has MexAtlantic 3157 URL ✅, TradingHub Gold is null (pending) ✅, GoldenTrade has MexAtlantic 5843 URL ✅, UNO14 is null (pending) ✅. (5) ✅ ACCOUNT ALLOCATIONS CORRECT: All amounts match exactly - 885822: $18,151.41 (CORE Fund) ✅, 886557: $80,000.00 (BALANCE Fund) ✅, 886066: $10,000.00 (BALANCE Fund) ✅, 886602: $10,000.00 (BALANCE Fund) ✅. (6) ✅ PERFORMANCE METRICS: All managers return calculated performance data from their assigned accounts. CONCLUSION: The Money Managers critical data integrity issue is COMPLETELY RESOLVED. Database was cleared of incorrect 3-manager configuration and re-initialized with correct 4-manager 1:1 mapping. All requirements from user's detailed specification have been met exactly. System ready for production with proper manager-account relationships."
+
+## backend:
+  - task: "Client Portal Redemptions Backend Fix - Phase 1"
+    implemented: true
+    working: "to_be_tested"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRITICAL CLIENT PORTAL ISSUE: Redemptions tab showing $NaN and Invalid Date. Root cause: Backend /api/redemptions/client/{client_id} endpoint not returning complete investment data (missing interest_start_date, principal_amount, deposit_date, redemption_schedule). User confirmed Option B - Complete Fix with Phase 1 priority on Redemptions, Calendar, and Profile endpoints."
+        - working: "to_be_tested"
+          agent: "main"
+          comment: "PHASE 1A IMPLEMENTED - Redemptions Backend Enhanced: (1) Created new generate_redemption_schedule() function to generate complete 14-month payment schedule showing all interest payment dates, amounts, and availability status. (2) Updated /api/redemptions/client/{client_id} endpoint to return full investment data including: principal_amount, deposit_date, interest_start_date, redemption_schedule[], status (incubation/active/completed), and all date calculations. (3) Schedule includes payment_number, date, amount, type (interest/final), status (available/pending), can_redeem boolean, and days_until counter. (4) Each payment shows if it's available now (date <= today) for the green button to appear. Ready for testing to verify $NaN and Invalid Date issues are resolved. Calendar and Profile endpoints already exist and appear functional - may need frontend fixes only."
