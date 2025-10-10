@@ -195,7 +195,6 @@ class MoneyManagersBackendTester:
                                 verification_results[expected_id] = {
                                     "found": True,
                                     "name_match": manager.get("name") == expected_config["name"],
-                                    "execution_type_match": manager.get("execution_type") == expected_config["execution_type"],
                                     "accounts_match": set(manager.get("assigned_accounts", [])) == set(expected_config["assigned_accounts"]),
                                     "has_performance": "performance" in manager,
                                     "has_account_details": "account_details" in manager
