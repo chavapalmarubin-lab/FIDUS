@@ -1,17 +1,97 @@
-/* FIDUS Tab Visibility Fix */
+/* FIDUS Admin Dashboard Tab Styling - Complete Redesign */
+
+/* Navigation Container */
+[role="tablist"] {
+    display: flex !important;
+    gap: 8px !important;
+    padding: 0 24px !important;
+    background-color: #1e293b !important;
+    border-bottom: 2px solid #475569 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    /* Remove grid layout */
+    grid-template-columns: none !important;
+}
+
+/* Individual Tab - Default/Inactive State */
+[role="tablist"] [role="tab"] {
+    /* Layout & Spacing - INCREASED HEIGHT */
+    padding: 16px 24px !important;
+    min-width: 140px !important;
+    text-align: center !important;
+    margin-right: 0 !important; /* gap handles spacing */
+    
+    /* Typography */
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #94a3b8 !important; /* Light gray for inactive tabs */
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    
+    /* Visual - Transparent background for inactive */
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    border-bottom: 3px solid transparent !important;
+    
+    /* Behavior */
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+/* Active Tab - WHITE BACKGROUND WITH DARK TEXT (READABLE!) */
 [role="tablist"] [role="tab"][data-state="active"] {
-    background-color: #0891b2 !important;
-    color: white !important;
-    font-weight: bold !important;
-    border: 2px solid #06b6d4 !important;
+    background-color: #ffffff !important; /* White background */
+    color: #1e293b !important; /* DARK TEXT - This is the critical fix! */
+    font-weight: 600 !important; /* Bold for emphasis */
+    border-bottom: 3px solid #3b82f6 !important; /* Blue underline indicator */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    /* Remove any conflicting borders */
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
 }
 
-[role="tablist"] [role="tab"]:not([data-state="active"]) {
-    background-color: #475569 !important;
-    color: white !important;
-}
-
+/* Hover State - Only for Inactive Tabs */
 [role="tablist"] [role="tab"]:hover:not([data-state="active"]) {
-    background-color: #64748b !important;
-    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Subtle highlight */
+    color: #cbd5e1 !important; /* Slightly brighter gray */
+    transform: translateY(-2px) !important; /* Subtle lift effect */
+}
+
+/* Focus State - For Keyboard Navigation */
+[role="tablist"] [role="tab"]:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+/* Tab Icons - Proper Spacing */
+[role="tablist"] [role="tab"] svg {
+    margin-right: 8px !important;
+    font-size: 16px !important;
+    vertical-align: middle !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    [role="tablist"] [role="tab"] {
+        padding: 12px 16px !important;
+        min-width: 120px !important;
+        font-size: 14px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    [role="tablist"] {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    [role="tablist"] [role="tab"] {
+        flex-shrink: 0 !important;
+    }
 }
