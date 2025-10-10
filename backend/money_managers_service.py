@@ -33,38 +33,54 @@ class MoneyManagersService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Initial manager configurations as specified
+        # CORRECTED: 4 managers with 1:1 account mapping as specified by client
         self.initial_managers = [
             {
-                "manager_id": "manager_3157",
-                "name": "MexAtlantic Manager 3157",
-                "display_name": "Strategy A Provider",
+                "manager_id": "manager_cp_strategy",
+                "name": "CP Strategy",
+                "display_name": "CP Strategy Provider",
                 "execution_type": "copy_trade",
                 "broker": "MEXAtlantic",
                 "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social_platform_ratings",
-                "assigned_accounts": [886557, 885822],
-                "strategy_name": "Trend Following Momentum",
-                "strategy_description": "Long-term trend following strategy focusing on major currency pairs during high-volatility sessions.",
+                "assigned_accounts": [885822],  # CORRECTED: Only 885822 (CORE $18K)
+                "strategy_name": "CP Strategy",
+                "strategy_description": "Copy trading strategy from CP Strategy provider",
                 "risk_profile": "medium",
                 "start_date": datetime(2025, 10, 1, tzinfo=timezone.utc),
                 "status": "active",
-                "notes": "Primary strategy provider, high volume trader",
+                "notes": "Copy trade strategy from CP provider",
                 "contact_info": None
             },
             {
-                "manager_id": "manager_5843",
-                "name": "MexAtlantic Manager 5843",
-                "display_name": "Strategy B Provider", 
+                "manager_id": "manager_tradinghub_gold",
+                "name": "TradingHub Gold",
+                "display_name": "TradingHub Gold Provider", 
+                "execution_type": "copy_trade",
+                "broker": "MEXAtlantic",
+                "profile_url": None,  # TO BE ADDED LATER
+                "assigned_accounts": [886557],  # CORRECTED: Only 886557 (BALANCE $80K)
+                "strategy_name": "TradingHub Gold",
+                "strategy_description": "Gold-focused trading strategy",
+                "risk_profile": "medium",
+                "start_date": datetime(2025, 10, 1, tzinfo=timezone.utc),
+                "status": "active",
+                "notes": "Profile link pending from client",
+                "contact_info": None
+            },
+            {
+                "manager_id": "manager_goldentrade",
+                "name": "GoldenTrade",
+                "display_name": "GoldenTrade Provider",
                 "execution_type": "copy_trade",
                 "broker": "MEXAtlantic",
                 "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/5843?widgetKey=social_platform_ratings",
-                "assigned_accounts": [886066],
-                "strategy_name": "Scalping Strategy",
-                "strategy_description": "High-frequency scalping strategy targeting small price movements with quick execution.",
+                "assigned_accounts": [886066],  # CORRECTED: Only 886066 (BALANCE $10K)
+                "strategy_name": "GoldenTrade",
+                "strategy_description": "Copy trading strategy from GoldenTrade provider",
                 "risk_profile": "high",
                 "start_date": datetime(2025, 10, 1, tzinfo=timezone.utc),
                 "status": "active",
-                "notes": "Scalping specialist, monitor during low liquidity periods",
+                "notes": "Copy trade strategy from GoldenTrade provider",
                 "contact_info": None
             },
             {
@@ -73,14 +89,14 @@ class MoneyManagersService:
                 "display_name": "UNO14 MAM Manager",
                 "execution_type": "mam",
                 "broker": "MEXAtlantic", 
-                "profile_url": None,
-                "assigned_accounts": [886602],
+                "profile_url": None,  # TO BE ADDED LATER
+                "assigned_accounts": [886602],  # CORRECTED: Only 886602 (BALANCE $10K)
                 "strategy_name": "UNO14 MAM Strategy",
-                "strategy_description": "Multi-Account Manager strategy with diversified approach across multiple instruments.",
+                "strategy_description": "Multi-Account Manager (MAM) execution strategy",
                 "risk_profile": "medium",
                 "start_date": datetime(2025, 10, 1, tzinfo=timezone.utc),
                 "status": "active",
-                "notes": "MAM provider, consistent performance track record",
+                "notes": "MAM execution type - profile link pending from client",
                 "contact_info": None
             }
         ]
