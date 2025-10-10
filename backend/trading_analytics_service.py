@@ -222,16 +222,16 @@ class TradingAnalyticsService:
                 trade_doc = self.transform_mt5_trade(trade, account_number)
                 
                 # Upsert operation to avoid duplicates
-                bulk_operations.append({
-                    "updateOne": {
-                        "filter": {
+                bulk_operations.append(
+                    UpdateOne(
+                        filter={
                             "ticket": trade_doc["ticket"],
                             "account": trade_doc["account"]
                         },
-                        "update": {"$set": trade_doc},
-                        "upsert": True
-                    }
-                })
+                        update={"$set": trade_doc},
+                        upsert=True
+                    )
+                )
             
             # Execute bulk write
             if bulk_operations:
