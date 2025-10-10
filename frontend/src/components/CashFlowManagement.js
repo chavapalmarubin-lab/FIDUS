@@ -509,7 +509,7 @@ const CashFlowManagement = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white flex items-center">
           <TrendingUp className="mr-3 h-8 w-8 text-cyan-400" />
-          Cash Flow Management
+          Cash Flow & Performance Analysis
         </h2>
         <div className="flex gap-3">
           <select
