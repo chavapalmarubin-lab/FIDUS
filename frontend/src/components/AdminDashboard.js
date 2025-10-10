@@ -647,12 +647,20 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="mt5" className="mt-6">
-            <MT5Management />
-          </TabsContent>
-
-          <TabsContent value="mt5-dashboard" className="mt-6">
-            <MT5Dashboard />
+          <TabsContent value="mt5-accounts" className="mt-6">
+            <div className="space-y-6">
+              {/* MT5 Account Management */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-4">MT5 Account Management</h2>
+                <MT5Management />
+              </div>
+              
+              {/* MT5 Trading Dashboard */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold text-white mb-4">MT5 Trading Dashboard</h2>
+                <MT5Dashboard />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="redemptions" className="mt-6">
