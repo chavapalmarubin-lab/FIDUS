@@ -460,15 +460,17 @@ class MoneyManagersBackendTester:
             # CRITICAL REQUIREMENT 3: Verify specific manager-account mappings
             manager_account_verification = {}
             for manager in managers_data:
+                manager_id = manager.get("manager_id", "Unknown")
                 manager_name = manager.get("name", "Unknown")
                 assigned_accounts = manager.get("assigned_accounts", [])
                 
-                if manager_name in self.expected_managers:
-                    expected_accounts = self.expected_managers[manager_name]["assigned_accounts"]
+                if manager_id in self.expected_managers:
+                    expected_accounts = self.expected_managers[manager_id]["assigned_accounts"]
                     accounts_match = set(assigned_accounts) == set(expected_accounts)
                     
                     manager_account_verification[manager_name] = {
                         "found": True,
+                        "manager_id": manager_id,
                         "expected_accounts": expected_accounts,
                         "actual_accounts": assigned_accounts,
                         "accounts_match": accounts_match,
@@ -477,17 +479,19 @@ class MoneyManagersBackendTester:
                 else:
                     manager_account_verification[manager_name] = {
                         "found": False,
+                        "manager_id": manager_id,
                         "unexpected_manager": True
                     }
             
             # CRITICAL REQUIREMENT 4: Verify profile URLs
             profile_url_verification = {}
             for manager in managers_data:
+                manager_id = manager.get("manager_id", "Unknown")
                 manager_name = manager.get("name", "Unknown")
                 profile_url = manager.get("profile_url")
                 
-                if manager_name in self.expected_managers:
-                    expected_profile = self.expected_managers[manager_name]["profile_url"]
+                if manager_id in self.expected_managers:
+                    expected_profile = self.expected_managers[manager_id]["profile_url"]
                     profile_matches = profile_url == expected_profile
                     
                     profile_url_verification[manager_name] = {
