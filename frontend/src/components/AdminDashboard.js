@@ -359,19 +359,6 @@ const AdminDashboard = ({ user, onLogout }) => {
     exportToExcel(fundData, 'FIDUS_Fund_Portfolio_Management', 'Portfolio Summary');
   }
 
-  function exportFundVsMT5Data() {
-    // Export fund vs MT5 comparison data
-    const comparisonData = [{
-      'Export Date': new Date().toLocaleDateString(),
-      'Fund Performance': 'TBD - Awaiting investment data',
-      'MT5 Trading': '$0 (No trading activity)',
-      'Variance': '$0',
-      'Note': 'Data will populate after investment entry'
-    }];
-    
-    exportToExcel(comparisonData, 'FIDUS_Fund_vs_MT5', 'Fund vs MT5');
-  }
-
   function exportCashFlowData() {
     // Export cash flow management data
     const cashFlowData = [{
