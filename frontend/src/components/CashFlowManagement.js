@@ -182,6 +182,124 @@ const CashFlowManagement = () => {
     }).format(amount || 0);
   };
 
+  // Performance Analysis Helper Functions
+  const calculatePerformanceMetrics = () => {
+    if (!fundAccounting?.assets || !fundAccounting?.liabilities || !cashFlowCalendar?.summary) {
+      return null;
+    }
+
+    // Get current fund data
+    const totalObligations = cashFlowCalendar.summary.total_future_obligations || 0;
+    const currentRevenue = cashFlowCalendar.current_revenue || fundAccounting.assets.total_inflows || 0;
+    const investmentStartDate = new Date('2025-10-01');
+    const contractEndDate = new Date('2026-12-01');
+    const today = new Date();
+    
+    // Calculate time periods
+    const totalContractDays = Math.ceil((contractEndDate - investmentStartDate) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.max(1, Math.ceil((today - investmentStartDate) / (1000 * 60 * 60 * 24)));
+    const daysRemaining = Math.max(1, Math.ceil((contractEndDate - today) / (1000 * 60 * 60 * 24)));
+    
+    // Required Performance Metrics
+    const stillNeeded = Math.max(0, totalObligations - currentRevenue);
+    const percentComplete = totalObligations > 0 ? (currentRevenue / totalObligations) * 100 : 0;
+    const requiredDailyAvg = stillNeeded / daysRemaining;
+    const requiredMonthlyAvg = requiredDailyAvg * 30;
+    
+    // Actual Performance Metrics
+    const mt5Trading = fundAccounting.assets.mt5_trading_profits || 0;
+    const separationInterest = fundAccounting.assets.separation_interest || 0;
+    const brokerRebates = fundAccounting.assets.broker_rebates || 0;
+    const netRevenue = currentRevenue;
+    const actualDailyAvg = netRevenue / daysElapsed;
+    const actualMonthlyProjection = actualDailyAvg * 30;
+    
+    // Gap Analysis
+    const monthlyGap = actualMonthlyProjection - requiredMonthlyAvg;
+    const performanceRate = requiredMonthlyAvg > 0 ? (actualMonthlyProjection / requiredMonthlyAvg) * 100 : 0;
+    const projectedTotal = actualDailyAvg * totalContractDays;
+    const projectedSurplusDeficit = projectedTotal - totalObligations;
+    
+    // Status determination
+    let status, statusClass, statusMessage;
+    if (performanceRate >= 100) {
+      status = 'on_track';
+      statusClass = 'success';
+      statusMessage = '✅ ON TRACK';
+    } else if (performanceRate >= 80) {
+      status = 'at_risk';
+      statusClass = 'warning';
+      statusMessage = '⚠️ AT RISK';
+    } else {
+      status = 'behind';
+      statusClass = 'danger';
+      statusMessage = '🚨 BEHIND SCHEDULE';
+    }
+    
+    return {
+      required: {
+        totalNeeded: totalObligations,
+        alreadyEarned: currentRevenue,
+        stillNeeded: stillNeeded,
+        percentComplete: percentComplete,
+        requiredDailyAvg: requiredDailyAvg,
+        requiredMonthlyAvg: requiredMonthlyAvg,
+        daysRemaining: daysRemaining
+      },
+      actual: {
+        mt5Trading: mt5Trading,
+        separationInterest: separationInterest,
+        brokerRebates: brokerRebates,
+        netRevenue: netRevenue,
+        daysElapsed: daysElapsed,
+        actualDailyAvg: actualDailyAvg,
+        actualMonthlyProjection: actualMonthlyProjection
+      },
+      gap: {
+        monthlyGap: monthlyGap,
+        performanceRate: performanceRate,
+        projectedTotal: projectedTotal,
+        projectedSurplusDeficit: projectedSurplusDeficit,
+        status: status,
+        statusClass: statusClass,
+        statusMessage: statusMessage
+      },
+      timing: {
+        totalContractDays: totalContractDays,
+        daysElapsed: daysElapsed,
+        daysRemaining: daysRemaining,
+        investmentStartDate: investmentStartDate,
+        contractEndDate: contractEndDate
+      }
+    };
+  };
+
+  const getRiskAssessmentMessage = (metrics) => {
+    if (!metrics) return "Performance analysis not available";
+    
+    const { gap, actual, timing } = metrics;
+    
+    if (timing.daysElapsed < 30) {
+      // Early stage assessment
+      if (gap.performanceRate >= 100) {
+        return `Fund is currently exceeding performance targets. Monitor over longer period to confirm sustainability. Current high rate driven by separation interest (${formatCurrency(actual.separationInterest)}) offsetting MT5 losses (${formatCurrency(actual.mt5Trading)}).`;
+      } else {
+        return `Fund performance is below target in early stages. Monitor closely over next 30 days. Focus on improving MT5 trading performance to supplement separation interest.`;
+      }
+    } else {
+      // Mature assessment
+      if (gap.performanceRate >= 120) {
+        return `Fund is significantly exceeding targets with ${gap.performanceRate.toFixed(0)}% of required performance. Current trajectory projects ${formatCurrency(gap.projectedSurplusDeficit)} surplus by contract end. Consider strategies for deploying excess returns.`;
+      } else if (gap.performanceRate >= 100) {
+        return `Fund is on track to meet all obligations with ${gap.performanceRate.toFixed(0)}% of required performance. Continue monitoring to maintain current trajectory. Projected surplus: ${formatCurrency(gap.projectedSurplusDeficit)}.`;
+      } else if (gap.performanceRate >= 80) {
+        return `⚠️ Fund is at risk of falling short of obligations. Currently achieving ${gap.performanceRate.toFixed(0)}% of required performance. Immediate action needed to improve returns by ${formatCurrency(Math.abs(gap.monthlyGap))}/month. Projected deficit: ${formatCurrency(Math.abs(gap.projectedSurplusDeficit))}.`;
+      } else {
+        return `🚨 Fund is significantly behind required performance at ${gap.performanceRate.toFixed(0)}% of target. Urgent intervention required to avoid defaulting on client obligations. Projected deficit: ${formatCurrency(Math.abs(gap.projectedSurplusDeficit))}. Review MT5 strategies immediately.`;
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
