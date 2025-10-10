@@ -196,95 +196,141 @@ class TradingAnalyticsPhase1BTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_daily_performance_endpoint(self) -> Dict[str, Any]:
-        """Test GET /api/admin/trading/analytics/daily endpoint"""
-        test_name = "Daily Performance Endpoint"
+    async def test_multi_account_daily_performance(self) -> Dict[str, Any]:
+        """Test GET /api/admin/trading/analytics/daily with multi-account aggregation"""
+        test_name = "Multi-Account Daily Performance"
         logger.info(f"🧪 Testing {test_name}")
         
+        validation_results = []
+        
         try:
-            # Test with default parameters
-            url = f"{self.backend_url}/admin/trading/analytics/daily"
-            
-            async with self.session.get(url) as response:
+            # Test 1: All accounts aggregation (account=0)
+            url_all = f"{self.backend_url}/admin/trading/analytics/daily?account=0&days=7"
+            async with self.session.get(url_all) as response:
                 status_code = response.status
                 response_data = await response.json()
                 
-                success = response_data.get('success', False)
-                daily_performance = response_data.get('daily_performance', [])
-                period_start = response_data.get('period_start')
-                period_end = response_data.get('period_end')
-                account = response_data.get('account')
-                
-                validation_results = []
+                if status_code == 200:
+                    validation_results.append("✅ All accounts daily aggregation returns HTTP 200")
+                    
+                    daily_performance = response_data.get('daily_performance', [])
+                    account = response_data.get('account')
+                    
+                    if account == "all":
+                        validation_results.append("✅ Account field correctly shows 'all' for aggregation")
+                    else:
+                        validation_results.append(f"❌ Account field incorrect: {account} (expected 'all')")
+                    
+                    if isinstance(daily_performance, list):
+                        validation_results.append(f"✅ Aggregated daily data is list ({len(daily_performance)} entries)")
+                        
+                        # Check aggregated data structure
+                        if daily_performance:
+                            sample_entry = daily_performance[0]
+                            required_fields = ['date', 'total_trades', 'winning_trades', 'losing_trades', 'total_pnl', 'win_rate']
+                            missing_fields = [field for field in required_fields if field not in sample_entry]
+                            
+                            if not missing_fields:
+                                validation_results.append("✅ Aggregated daily entry structure valid")
+                                logger.info(f"   Sample aggregated entry - Trades: {sample_entry.get('total_trades', 0)}, P&L: ${sample_entry.get('total_pnl', 0):.2f}")
+                            else:
+                                validation_results.append(f"❌ Missing aggregated fields: {missing_fields}")
+                        else:
+                            validation_results.append("⚠️ No aggregated daily data (may be expected)")
+                    else:
+                        validation_results.append("❌ Aggregated daily data is not a list")
+                else:
+                    validation_results.append(f"❌ All accounts daily endpoint failed: HTTP {status_code}")
+            
+            # Test 2: Specific account daily performance (886557)
+            url_specific = f"{self.backend_url}/admin/trading/analytics/daily?account=886557&days=7"
+            async with self.session.get(url_specific) as response:
+                status_code = response.status
+                response_data = await response.json()
                 
                 if status_code == 200:
-                    validation_results.append("✅ HTTP 200 OK response")
-                else:
-                    validation_results.append(f"❌ HTTP {status_code} (expected 200)")
-                
-                if success:
-                    validation_results.append("✅ Success flag is True")
-                else:
-                    validation_results.append("❌ Success flag is False")
-                
-                if isinstance(daily_performance, list):
-                    validation_results.append(f"✅ Daily performance data is list ({len(daily_performance)} entries)")
+                    validation_results.append("✅ Specific account daily performance returns HTTP 200")
                     
-                    # Check data structure if entries exist
-                    if daily_performance:
-                        sample_entry = daily_performance[0]
-                        required_fields = [
-                            'date', 'account', 'total_trades', 'winning_trades',
-                            'losing_trades', 'total_pnl', 'win_rate', 'status'
-                        ]
+                    daily_performance = response_data.get('daily_performance', [])
+                    account = response_data.get('account')
+                    
+                    if account == 886557:
+                        validation_results.append(f"✅ Account field correctly shows {account}")
+                    else:
+                        validation_results.append(f"❌ Account field incorrect: {account} (expected 886557)")
+                    
+                    if isinstance(daily_performance, list):
+                        validation_results.append(f"✅ Account-specific daily data is list ({len(daily_performance)} entries)")
                         
-                        missing_fields = [field for field in required_fields if field not in sample_entry]
-                        if not missing_fields:
-                            validation_results.append("✅ Daily performance entry structure valid")
+                        # Check account-specific data
+                        if daily_performance:
+                            sample_entry = daily_performance[0]
+                            if sample_entry.get('account') == 886557:
+                                validation_results.append("✅ Daily entries correctly filtered by account")
+                            else:
+                                validation_results.append(f"❌ Daily entries not filtered correctly: account {sample_entry.get('account')}")
                         else:
-                            validation_results.append(f"❌ Missing daily performance fields: {missing_fields}")
+                            validation_results.append("⚠️ No account-specific daily data")
                     else:
-                        validation_results.append("⚠️ No daily performance data (may be expected for new system)")
+                        validation_results.append("❌ Account-specific daily data is not a list")
                 else:
-                    validation_results.append("❌ Daily performance data is not a list")
+                    validation_results.append(f"❌ Specific account daily endpoint failed: HTTP {status_code}")
+            
+            # Test 3: Compare aggregation vs individual accounts
+            # Get all accounts data and individual account data to verify aggregation logic
+            all_accounts_data = None
+            individual_totals = {"total_trades": 0, "total_pnl": 0.0}
+            
+            # Get aggregated data
+            url_all_compare = f"{self.backend_url}/admin/trading/analytics/daily?account=0&days=1"
+            async with self.session.get(url_all_compare) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    all_accounts_data = data.get('daily_performance', [])
+            
+            # Get individual account data and sum manually
+            for account_num in self.all_accounts:
+                url_individual = f"{self.backend_url}/admin/trading/analytics/daily?account={account_num}&days=1"
+                async with self.session.get(url_individual) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        daily_data = data.get('daily_performance', [])
+                        for day in daily_data:
+                            individual_totals["total_trades"] += day.get('total_trades', 0)
+                            individual_totals["total_pnl"] += day.get('total_pnl', 0.0)
+            
+            # Compare aggregation accuracy
+            if all_accounts_data and len(all_accounts_data) > 0:
+                aggregated_day = all_accounts_data[0]
+                agg_trades = aggregated_day.get('total_trades', 0)
+                agg_pnl = aggregated_day.get('total_pnl', 0.0)
                 
-                if period_start and period_end:
-                    validation_results.append("✅ Period information present")
+                if agg_trades == individual_totals["total_trades"]:
+                    validation_results.append("✅ Trade count aggregation is accurate")
                 else:
-                    validation_results.append("❌ Missing period information")
+                    validation_results.append(f"❌ Trade count aggregation mismatch: {agg_trades} vs {individual_totals['total_trades']}")
                 
-                if account == self.test_account:
-                    validation_results.append(f"✅ Correct account returned ({account})")
+                if abs(agg_pnl - individual_totals["total_pnl"]) < 0.01:  # Allow small floating point differences
+                    validation_results.append("✅ P&L aggregation is accurate")
                 else:
-                    validation_results.append(f"❌ Wrong account returned ({account}, expected {self.test_account})")
-                
-                # Test with custom parameters
-                url_with_params = f"{self.backend_url}/admin/trading/analytics/daily?days=7&account={self.test_account}"
-                async with self.session.get(url_with_params) as param_response:
-                    if param_response.status == 200:
-                        validation_results.append("✅ Custom parameters accepted")
-                    else:
-                        validation_results.append("❌ Custom parameters rejected")
-                
-                logger.info(f"   Response Status: {status_code}")
-                logger.info(f"   Success: {success}")
-                logger.info(f"   Daily Entries: {len(daily_performance)}")
-                logger.info(f"   Account: {account}")
-                logger.info(f"   Period: {period_start} to {period_end}")
-                
-                return {
-                    'test_name': test_name,
-                    'status': 'PASS' if status_code == 200 and success else 'FAIL',
-                    'status_code': status_code,
-                    'response_data': response_data,
-                    'validation_results': validation_results,
-                    'details': {
-                        'endpoint': url,
-                        'method': 'GET',
-                        'daily_entries_count': len(daily_performance),
-                        'account_tested': account
-                    }
+                    validation_results.append(f"❌ P&L aggregation mismatch: ${agg_pnl:.2f} vs ${individual_totals['total_pnl']:.2f}")
+            else:
+                validation_results.append("⚠️ Could not verify aggregation accuracy (no data)")
+            
+            # Determine overall status
+            failed_checks = [result for result in validation_results if result.startswith("❌")]
+            overall_status = 'PASS' if len(failed_checks) == 0 else 'FAIL'
+            
+            return {
+                'test_name': test_name,
+                'status': overall_status,
+                'validation_results': validation_results,
+                'details': {
+                    'accounts_tested': self.all_accounts,
+                    'failed_checks': len(failed_checks),
+                    'aggregation_verified': all_accounts_data is not None
                 }
+            }
                 
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
