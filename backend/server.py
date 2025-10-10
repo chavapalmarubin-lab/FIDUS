@@ -17018,22 +17018,25 @@ async def get_cash_flow_calendar():
 # ===============================================================================
 
 @api_router.get("/admin/trading/analytics/overview")
-async def get_trading_analytics_overview():
+async def get_trading_analytics_overview(account: int = None, days: int = 30):
     """Get trading analytics overview for admin dashboard"""
     try:
         from trading_analytics_service import TradingAnalyticsService
         
         service = TradingAnalyticsService(db)
         
-        # Phase 1A: Start with account 886557
-        # Phase 1B: Expand to all accounts
-        account_numbers = [886557]  # BALANCE Fund account for testing
+        # Phase 1B: Support account filtering
+        if account is None or account == 0:  # 'all' accounts
+            account_numbers = [886557, 886066, 886602, 885822]  # All accounts
+        else:
+            account_numbers = [account]  # Specific account
         
-        analytics_data = await service.get_analytics_overview(account_numbers, days=30)
+        analytics_data = await service.get_analytics_overview(account_numbers, days)
         
         return {
             "success": True,
             "analytics": analytics_data,
+            "accounts_included": account_numbers,
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
