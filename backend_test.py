@@ -961,12 +961,13 @@ class TradingAnalyticsPhase1BTestSuite:
                 'results': []
             }
         
-        # Run all tests
+        # Run all Phase 1B multi-account tests
         tests = [
-            self.test_analytics_overview_endpoint,
-            self.test_daily_performance_endpoint,
-            self.test_recent_trades_endpoint,
-            self.test_manual_sync_endpoint,
+            self.test_multi_account_overview_endpoint,
+            self.test_multi_account_daily_performance,
+            self.test_multi_account_trades_endpoint,
+            self.test_multi_account_sync_endpoint,
+            self.test_mock_data_variation,
             self.test_database_collections,
             self.test_error_handling
         ]
