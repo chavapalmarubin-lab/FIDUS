@@ -19,6 +19,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 import os
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo import UpdateOne
 
 from config.database import get_database
 from mt5_bridge_client import MT5BridgeClient
