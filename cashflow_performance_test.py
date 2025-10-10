@@ -418,8 +418,23 @@ class CashFlowPerformanceAnalysisTester:
                     response = self.session.get(f"{BACKEND_URL}{endpoint}")
                     if response.status_code == 200:
                         new_endpoints_working += 1
-                except Exception:
-                    pass
+                        endpoint_results.append({
+                            "endpoint": endpoint,
+                            "status": response.status_code,
+                            "accessible": True
+                        })
+                    else:
+                        endpoint_results.append({
+                            "endpoint": endpoint,
+                            "status": response.status_code,
+                            "accessible": False
+                        })
+                except Exception as e:
+                    endpoint_results.append({
+                        "endpoint": endpoint,
+                        "status": f"ERROR: {str(e)}",
+                        "accessible": False
+                    })
             
             consolidation_success = new_endpoints_working == len(new_endpoints)
             
