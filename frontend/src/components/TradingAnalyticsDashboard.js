@@ -29,14 +29,13 @@ const TradingAnalyticsDashboard = () => {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Account options for Phase 1A (start with 886557), Phase 1B (all accounts)
+  // Phase 1B: All 4 MT5 accounts
   const MT5_ACCOUNTS = [
-    { id: 'all', name: 'All Accounts', number: null },
-    { id: '886557', name: 'BALANCE Fund (886557)', number: 886557 },
-    // Phase 1B: Add other accounts
-    // { id: '886066', name: 'CORE Fund A (886066)', number: 886066 },
-    // { id: '886602', name: 'CORE Fund B (886602)', number: 886602 },
-    // { id: '885822', name: 'DYNAMIC Fund (885822)', number: 885822 }
+    { id: 'all', name: 'All Accounts', number: 0 },
+    { id: '886557', name: '886557 - BALANCE ($80K)', number: 886557 },
+    { id: '886066', name: '886066 - BALANCE ($10K)', number: 886066 },
+    { id: '886602', name: '886602 - BALANCE ($10K)', number: 886602 },
+    { id: '885822', name: '885822 - CORE ($18K)', number: 885822 }
   ];
 
   useEffect(() => {
