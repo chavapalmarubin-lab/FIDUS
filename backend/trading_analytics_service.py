@@ -37,18 +37,13 @@ class TradingAnalyticsService:
         self.db = db
         self.mt5_client = MT5BridgeClient()
         
-        # Phase 1A: Start with one account for testing
+        # Phase 1B: All 4 MT5 accounts active
         self.mt5_accounts = [
-            {"number": 886557, "name": "BALANCE Fund", "fund_type": "BALANCE"}
+            {"number": 886557, "name": "BALANCE Fund ($80K)", "fund_type": "BALANCE"},
+            {"number": 886066, "name": "BALANCE Fund ($10K)", "fund_type": "BALANCE"},
+            {"number": 886602, "name": "BALANCE Fund ($10K)", "fund_type": "BALANCE"},
+            {"number": 885822, "name": "CORE Fund ($18K)", "fund_type": "CORE"}
         ]
-        
-        # Phase 1B: Expand to all accounts
-        # self.mt5_accounts = [
-        #     {"number": 886557, "name": "BALANCE Fund", "fund_type": "BALANCE"},
-        #     {"number": 886066, "name": "CORE Fund A", "fund_type": "CORE"},
-        #     {"number": 886602, "name": "CORE Fund B", "fund_type": "CORE"},
-        #     {"number": 885822, "name": "DYNAMIC Fund", "fund_type": "DYNAMIC"}
-        # ]
     
     async def ensure_indexes(self):
         """
