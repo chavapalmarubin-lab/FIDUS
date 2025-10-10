@@ -494,9 +494,9 @@ class TradingAnalyticsPhase1BTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_manual_sync_endpoint(self) -> Dict[str, Any]:
-        """Test POST /api/admin/trading/analytics/sync endpoint"""
-        test_name = "Manual Sync Endpoint"
+    async def test_multi_account_sync_endpoint(self) -> Dict[str, Any]:
+        """Test POST /api/admin/trading/analytics/sync for all 4 accounts"""
+        test_name = "Multi-Account Sync Endpoint"
         logger.info(f"🧪 Testing {test_name}")
         
         try:
@@ -536,12 +536,28 @@ class TradingAnalyticsPhase1BTestSuite:
                     else:
                         validation_results.append(f"❌ Missing sync result fields: {missing_fields}")
                     
-                    # Check if sync processed the test account
+                    # Phase 1B: Check if all 4 accounts were processed
                     accounts_processed = sync_result.get('accounts_processed', 0)
-                    if accounts_processed > 0:
-                        validation_results.append(f"✅ Accounts processed ({accounts_processed})")
+                    if accounts_processed == 4:
+                        validation_results.append(f"✅ All 4 accounts processed ({accounts_processed})")
+                    elif accounts_processed > 0:
+                        validation_results.append(f"⚠️ Partial accounts processed ({accounts_processed}/4)")
                     else:
-                        validation_results.append("⚠️ No accounts processed (may be expected)")
+                        validation_results.append("❌ No accounts processed")
+                    
+                    # Check trades synced
+                    total_trades_synced = sync_result.get('total_trades_synced', 0)
+                    if total_trades_synced > 0:
+                        validation_results.append(f"✅ Trades synced across accounts ({total_trades_synced})")
+                    else:
+                        validation_results.append("⚠️ No trades synced (may be expected for new data)")
+                    
+                    # Check daily summaries created
+                    daily_summaries = sync_result.get('daily_summaries_created', 0)
+                    if daily_summaries > 0:
+                        validation_results.append(f"✅ Daily summaries created ({daily_summaries})")
+                    else:
+                        validation_results.append("⚠️ No daily summaries created")
                     
                     # Check for errors
                     errors = sync_result.get('errors', [])
@@ -551,6 +567,13 @@ class TradingAnalyticsPhase1BTestSuite:
                         validation_results.append(f"⚠️ Sync errors reported: {len(errors)}")
                         for error in errors[:3]:  # Show first 3 errors
                             validation_results.append(f"   - {error}")
+                    
+                    # Check sync duration
+                    duration = sync_result.get('duration_seconds', 0)
+                    if duration > 0:
+                        validation_results.append(f"✅ Sync completed in {duration:.2f} seconds")
+                    else:
+                        validation_results.append("⚠️ No duration information")
                             
                 else:
                     validation_results.append("❌ Sync result data missing or invalid")
@@ -558,10 +581,11 @@ class TradingAnalyticsPhase1BTestSuite:
                 logger.info(f"   Response Status: {status_code}")
                 logger.info(f"   Success: {success}")
                 if sync_result:
-                    logger.info(f"   Accounts Processed: {sync_result.get('accounts_processed', 0)}")
+                    logger.info(f"   Accounts Processed: {sync_result.get('accounts_processed', 0)}/4")
                     logger.info(f"   Trades Synced: {sync_result.get('total_trades_synced', 0)}")
                     logger.info(f"   Daily Summaries: {sync_result.get('daily_summaries_created', 0)}")
                     logger.info(f"   Errors: {len(sync_result.get('errors', []))}")
+                    logger.info(f"   Duration: {sync_result.get('duration_seconds', 0):.2f}s")
                 
                 return {
                     'test_name': test_name,
@@ -573,7 +597,8 @@ class TradingAnalyticsPhase1BTestSuite:
                         'endpoint': url,
                         'method': 'POST',
                         'sync_success': sync_result.get('success') if sync_result else None,
-                        'accounts_processed': sync_result.get('accounts_processed') if sync_result else 0
+                        'accounts_processed': sync_result.get('accounts_processed') if sync_result else 0,
+                        'expected_accounts': 4
                     }
                 }
                 
