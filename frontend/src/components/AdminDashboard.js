@@ -20,6 +20,7 @@ import MT5Management from "./MT5Management";
 import MT5Dashboard from "./MT5Dashboard";
 import ApplicationDocuments from "./ApplicationDocuments";
 import TradingAnalyticsDashboard from "./TradingAnalyticsDashboard";
+import MoneyManagersDashboard from "./MoneyManagersDashboard";
 import UserAdministration from "./UserAdministration";
 // Clean imports - removed unused Google components
 import InvestmentDashboard from './InvestmentDashboard';
