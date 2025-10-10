@@ -520,29 +520,29 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-12 bg-slate-800 border-slate-600">
-            <TabsTrigger value="portfolio" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+          <TabsList className="w-full bg-slate-800">
+            <TabsTrigger value="portfolio">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="cashflow" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="cashflow">
               <DollarSign size={16} className="mr-2" />
               Cash Flow & Performance
             </TabsTrigger>
-            <TabsTrigger value="trading-analytics" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="trading-analytics">
               <TrendingUp size={16} className="mr-2" />
               Trading Analytics
             </TabsTrigger>
-            <TabsTrigger value="money-managers" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="money-managers">
               💼 Money Managers
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="investments">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5-accounts" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="mt5-accounts">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="clients" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
+            <TabsTrigger value="clients">
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
