@@ -270,18 +270,20 @@ const InvestmentCalendar = ({ user }) => {
   };
 
   const getEventsForDate = (date) => {
-    return calendarEvents.filter(event => {
+    if (!calendarData || !Array.isArray(calendarData)) return [];
+    return calendarData.filter(event => {
       const eventDate = new Date(event.date);
       return eventDate.toDateString() === date.toDateString();
     });
   };
 
   const getUpcomingEvents = () => {
+    if (!calendarData || !Array.isArray(calendarData)) return [];
     const today = new Date();
     const ninetyDaysFromNow = new Date();
     ninetyDaysFromNow.setDate(today.getDate() + 90);
     
-    return calendarEvents
+    return calendarData
       .filter(event => {
         const eventDate = new Date(event.date);
         return eventDate >= today && eventDate <= ninetyDaysFromNow;
@@ -290,15 +292,17 @@ const InvestmentCalendar = ({ user }) => {
   };
 
   const getNextInterestPayment = () => {
+    if (!calendarData || !Array.isArray(calendarData)) return null;
     const today = new Date();
-    return calendarEvents
+    return calendarData
       .filter(event => event.type === 'interest_payment' && new Date(event.date) >= today)
       .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
   };
 
   const getNextRedemption = () => {
+    if (!calendarData || !Array.isArray(calendarData)) return null;
     const today = new Date();
-    return calendarEvents
+    return calendarData
       .filter(event => event.type === 'interest_redemption' && new Date(event.date) >= today)
       .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
   };
