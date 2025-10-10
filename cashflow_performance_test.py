@@ -91,25 +91,16 @@ class CashFlowPerformanceAnalysisTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required data structure for performance calculations
-                required_fields = {
-                    "assets": ["mt5_trading_profits", "separation_interest", "broker_rebates", "total_inflows"],
-                    "liabilities": ["client_obligations", "total_outflows"]
-                }
+                # Check the actual API response structure (summary section contains the data)
+                summary = data.get("summary", {})
+                
+                # Check required fields in summary section for performance calculations
+                required_fields = ["mt5_trading_profits", "separation_interest", "broker_rebates", "fund_obligations", "fund_revenue", "net_profit"]
                 
                 missing_fields = []
-                
-                # Check assets section
-                assets = data.get("assets", {})
-                for field in required_fields["assets"]:
-                    if field not in assets:
-                        missing_fields.append(f"assets.{field}")
-                
-                # Check liabilities section
-                liabilities = data.get("liabilities", {})
-                for field in required_fields["liabilities"]:
-                    if field not in liabilities:
-                        missing_fields.append(f"liabilities.{field}")
+                for field in required_fields:
+                    if field not in summary:
+                        missing_fields.append(f"summary.{field}")
                 
                 if missing_fields:
                     self.log_test(
@@ -121,25 +112,25 @@ class CashFlowPerformanceAnalysisTester:
                     return False
                 else:
                     # Verify specific values for performance calculations
-                    mt5_profits = assets.get("mt5_trading_profits", 0)
-                    separation_interest = assets.get("separation_interest", 0)
-                    broker_rebates = assets.get("broker_rebates", 0)
-                    total_inflows = assets.get("total_inflows", 0)
+                    mt5_profits = summary.get("mt5_trading_profits", 0)
+                    separation_interest = summary.get("separation_interest", 0)
+                    broker_rebates = summary.get("broker_rebates", 0)
+                    fund_revenue = summary.get("fund_revenue", 0)
                     
-                    client_obligations = liabilities.get("client_obligations", 0)
-                    total_outflows = liabilities.get("total_outflows", 0)
+                    client_obligations = summary.get("fund_obligations", 0)
+                    net_profit = summary.get("net_profit", 0)
                     
                     self.log_test(
                         "Cash Flow Overview - Complete Data Structure",
                         True,
-                        f"MT5 Profits: ${mt5_profits}, Separation Interest: ${separation_interest}, Client Obligations: ${client_obligations}",
+                        f"MT5 Profits: ${mt5_profits}, Separation Interest: ${separation_interest}, Fund Revenue: ${fund_revenue}, Net Profit: ${net_profit}",
                         {
                             "mt5_trading_profits": mt5_profits,
                             "separation_interest": separation_interest,
                             "broker_rebates": broker_rebates,
-                            "total_inflows": total_inflows,
+                            "fund_revenue": fund_revenue,
                             "client_obligations": client_obligations,
-                            "total_outflows": total_outflows
+                            "net_profit": net_profit
                         }
                     )
                     return True
