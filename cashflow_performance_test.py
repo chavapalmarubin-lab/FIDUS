@@ -152,9 +152,16 @@ class CashFlowPerformanceAnalysisTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required data structure for performance calculations
+                # Check the actual API response structure (calendar section contains the data)
+                calendar = data.get("calendar", {})
+                
+                # Check required fields in calendar section for performance calculations
                 required_fields = ["current_revenue", "monthly_obligations", "summary"]
-                missing_fields = [field for field in required_fields if field not in data]
+                missing_fields = []
+                
+                for field in required_fields:
+                    if field not in calendar:
+                        missing_fields.append(f"calendar.{field}")
                 
                 if missing_fields:
                     self.log_test(
@@ -166,20 +173,20 @@ class CashFlowPerformanceAnalysisTester:
                     return False
                 
                 # Check summary section for total_future_obligations
-                summary = data.get("summary", {})
+                summary = calendar.get("summary", {})
                 if "total_future_obligations" not in summary:
                     self.log_test(
                         "Cash Flow Calendar - Summary Structure",
                         False,
-                        "Missing summary.total_future_obligations field",
+                        "Missing calendar.summary.total_future_obligations field",
                         data
                     )
                     return False
                 
                 # Verify calendar data structure
-                current_revenue = data.get("current_revenue", 0)
+                current_revenue = calendar.get("current_revenue", 0)
                 total_future_obligations = summary.get("total_future_obligations", 0)
-                monthly_obligations = data.get("monthly_obligations", [])
+                monthly_obligations = calendar.get("monthly_obligations", {})
                 
                 self.log_test(
                     "Cash Flow Calendar - Complete Data Structure",
