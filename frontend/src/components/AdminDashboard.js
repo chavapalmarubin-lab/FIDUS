@@ -394,6 +394,23 @@ const AdminDashboard = ({ user, onLogout }) => {
     exportToExcel(tradingData, 'FIDUS_Trading_Analytics', 'Trading Analytics');
   }
 
+  function exportMoneyManagersData() {
+    // Export money managers comparison data
+    const managersData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Manager Name': 'Sample Manager',
+      'Execution Type': 'Copy Trade',
+      'Allocated Amount': '$0',
+      'Total P&L': '$0',
+      'Win Rate': '0%',
+      'Profit Factor': '0',
+      'Assigned Accounts': '0',
+      'Note': 'Money managers data will be available after implementation'
+    }];
+    
+    exportToExcel(managersData, 'FIDUS_Money_Managers', 'Money Managers');
+  }
+
   function exportInvestmentsData() {
     // Export investments data - currently only Alejandro Mariscal ready
     const investmentsData = [{
