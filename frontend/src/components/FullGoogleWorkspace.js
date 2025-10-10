@@ -507,11 +507,11 @@ const FullGoogleWorkspace = () => {
         setDriveFiles(transformedFiles);
         console.log(`✅ Successfully loaded ${transformedFiles.length} files from your Google Drive`);
       } else {
-        console.warn('⚠️ No files returned from Drive API, using fallback');
-        // Fallback message for when no files are returned
+        // No files in folder - this is normal, not an error
+        console.log('ℹ️ Drive folder is empty (0 files)');
         setDriveFiles([{
           id: 'no-files',
-          name: '💾 Connect to Google Drive to see your files',
+          name: '💾 Folder is Empty',
           mimeType: 'text/plain',
           size: '—',
           createdTime: new Date().toISOString(),
