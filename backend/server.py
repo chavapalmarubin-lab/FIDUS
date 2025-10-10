@@ -19850,8 +19850,7 @@ async def test_routing():
     """Test endpoint to verify routing is working"""
     return {"success": True, "message": "Routing is working", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-# Include the API router in the main app (MUST be after all endpoints are defined)
-app.include_router(api_router)
+# Router will be included at the END of file after ALL endpoints are defined
 
 @app.on_event("startup")
 async def startup_event():
