@@ -2328,8 +2328,9 @@ async def update_client_photo(
         if photo.content_type not in allowed_types:
             raise HTTPException(status_code=400, detail="Invalid file type. Please upload JPEG, PNG, or WEBP image")
         
-        # Validate file size (max 5MB)
-        if photo.size > 5 * 1024 * 1024:
+        # Read file content to validate size
+        file_content = await photo.read()
+        if len(file_content) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB")
         
         # For demo purposes, we'll use a placeholder URL
