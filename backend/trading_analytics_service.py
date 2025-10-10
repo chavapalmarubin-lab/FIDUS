@@ -194,17 +194,17 @@ class TradingAnalyticsService:
             List of synced trades
         """
         try:
-            # Phase 1A: Mock MT5 data for testing
-            # TODO: Replace with actual MT5 bridge call in Phase 1B
+            # Phase 1B: Mock MT5 data for all 4 accounts
+            # TODO: Replace with actual MT5 bridge call after testing
             
-            # Simulate MT5 API call
+            # Simulate MT5 API call for real integration
             # trades = await self.mt5_client.get_closed_trades(
             #     account_number, 
             #     target_date, 
             #     target_date + timedelta(days=1)
             # )
             
-            # Mock trades for Phase 1A testing
+            # Mock trades for Phase 1B testing (varies by account)
             trades = self.generate_mock_trades(account_number, target_date)
             
             if not trades:
