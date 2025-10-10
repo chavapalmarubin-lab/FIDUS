@@ -2254,6 +2254,38 @@ async def change_password(change_request: dict):
         logging.error(f"Password change error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to change password")
 
+@api_router.get("/client/profile")
+async def get_client_profile(current_user: dict = Depends(get_current_user)):
+    """Get current client profile information"""
+    try:
+        username = current_user.get("username")
+        
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid user session")
+        
+        # Get current user from MongoDB
+        user_doc = await db.users.find_one({"username": username})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "success": True,
+            "user": {
+                "id": user_doc["user_id"],
+                "username": user_doc["username"],
+                "name": user_doc.get("name", ""),
+                "email": user_doc.get("email", ""),
+                "phone": user_doc.get("phone", ""),
+                "profile_picture": user_doc.get("profile_picture", "")
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Profile fetch error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch profile")
+
 @api_router.put("/client/profile")
 async def update_client_profile(profile_update: dict, current_user: dict = Depends(get_current_user)):
     """Update client profile information"""
