@@ -316,30 +316,40 @@ class CashFlowPerformanceAnalysisTester:
                 return False
             
             data = response.json()
+            calendar = data.get("calendar", {})
             
-            # Check for risk assessment indicators in monthly obligations
-            monthly_obligations = data.get("monthly_obligations", [])
+            # Check for risk assessment indicators in monthly obligations (dict format)
+            monthly_obligations = calendar.get("monthly_obligations", {})
             
             risk_indicators = []
-            for month_data in monthly_obligations:
-                running_balance = month_data.get("running_balance_after_payment", 0)
-                if running_balance < 0:
+            for month_key, month_data in monthly_obligations.items():
+                running_balance = month_data.get("running_balance_after", 0)
+                status = month_data.get("status", "unknown")
+                
+                if running_balance < 0 or status in ["warning", "critical"]:
                     risk_indicators.append({
-                        "month": month_data.get("month", "Unknown"),
-                        "shortfall": abs(running_balance)
+                        "month": month_key,
+                        "shortfall": abs(running_balance) if running_balance < 0 else 0,
+                        "status": status
                     })
             
-            # Generate risk assessment messages
+            # Generate risk assessment messages based on status indicators
+            critical_months = [r for r in risk_indicators if r["status"] == "critical"]
+            warning_months = [r for r in risk_indicators if r["status"] == "warning"]
+            
             if not risk_indicators:
                 risk_message = "Fund is ON TRACK - sufficient revenue to meet all obligations"
                 risk_level = "LOW"
-            elif len(risk_indicators) <= 3:
-                risk_message = f"Fund AT RISK - {len(risk_indicators)} months with shortfalls"
+            elif len(critical_months) > 0:
+                total_shortfall = sum(indicator["shortfall"] for indicator in critical_months)
+                risk_message = f"Fund BEHIND SCHEDULE - {len(critical_months)} critical months with ${total_shortfall:,.2f} total shortfall"
+                risk_level = "HIGH"
+            elif len(warning_months) > 0:
+                risk_message = f"Fund AT RISK - {len(warning_months)} months with warnings"
                 risk_level = "MEDIUM"
             else:
-                total_shortfall = sum(indicator["shortfall"] for indicator in risk_indicators)
-                risk_message = f"Fund BEHIND SCHEDULE - {len(risk_indicators)} months with ${total_shortfall:,.2f} total shortfall"
-                risk_level = "HIGH"
+                risk_message = "Fund status unclear - mixed indicators"
+                risk_level = "MEDIUM"
             
             self.log_test(
                 "Risk Assessment Messages - Generated",
@@ -348,8 +358,10 @@ class CashFlowPerformanceAnalysisTester:
                 {
                     "risk_level": risk_level,
                     "risk_message": risk_message,
-                    "risk_indicators_count": len(risk_indicators),
-                    "months_with_shortfall": [indicator["month"] for indicator in risk_indicators[:3]]  # First 3 months
+                    "total_risk_indicators": len(risk_indicators),
+                    "critical_months": len(critical_months),
+                    "warning_months": len(warning_months),
+                    "sample_months": list(monthly_obligations.keys())[:3]  # First 3 months
                 }
             )
             return True
