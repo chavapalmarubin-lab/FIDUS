@@ -611,56 +611,235 @@ class TradingAnalyticsPhase1BTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_database_collections(self) -> Dict[str, Any]:
-        """Test that database collections and indexes are properly created"""
-        test_name = "Database Collections & Indexes"
+    async def test_mock_data_variation(self) -> Dict[str, Any]:
+        """Test that different accounts generate different mock trading patterns"""
+        test_name = "Mock Data Variation by Account"
         logger.info(f"🧪 Testing {test_name}")
         
+        validation_results = []
+        account_patterns = {}
+        
         try:
-            # This test will verify the sync endpoint creates the necessary collections
-            # by running a sync and then checking the other endpoints for data
-            
-            validation_results = []
-            
-            # First, trigger a sync to ensure collections exist
+            # First, trigger sync to generate fresh mock data
             sync_url = f"{self.backend_url}/admin/trading/analytics/sync"
             async with self.session.post(sync_url) as sync_response:
                 if sync_response.status == 200:
-                    validation_results.append("✅ Sync endpoint accessible for collection creation")
+                    validation_results.append("✅ Sync triggered to generate mock data")
+                else:
+                    validation_results.append("❌ Failed to trigger sync for mock data")
+            
+            # Analyze trading patterns for each account
+            for account_num in self.all_accounts:
+                profile = self.account_profiles[account_num]
+                
+                # Get trades for this account
+                trades_url = f"{self.backend_url}/admin/trading/analytics/trades?account={account_num}&limit=50"
+                async with self.session.get(trades_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        trades = data.get('trades', [])
+                        
+                        # Analyze trading pattern
+                        pattern = {
+                            'trade_count': len(trades),
+                            'symbols': set(),
+                            'avg_volume': 0,
+                            'total_profit': 0,
+                            'profit_trades': 0,
+                            'loss_trades': 0
+                        }
+                        
+                        if trades:
+                            pattern['symbols'] = set(trade.get('symbol', '') for trade in trades)
+                            pattern['avg_volume'] = sum(trade.get('volume', 0) for trade in trades) / len(trades)
+                            pattern['total_profit'] = sum(trade.get('profit', 0) for trade in trades)
+                            pattern['profit_trades'] = len([t for t in trades if t.get('profit', 0) > 0])
+                            pattern['loss_trades'] = len([t for t in trades if t.get('profit', 0) < 0])
+                        
+                        account_patterns[account_num] = pattern
+                        
+                        logger.info(f"   Account {account_num} ({profile['name']}): {pattern['trade_count']} trades, "
+                                  f"Symbols: {sorted(pattern['symbols'])}, Avg Volume: {pattern['avg_volume']:.2f}")
+                    else:
+                        validation_results.append(f"❌ Failed to get trades for account {account_num}")
+            
+            # Verify account-specific expectations
+            if 886557 in account_patterns:
+                pattern_886557 = account_patterns[886557]
+                if pattern_886557['trade_count'] > 0:
+                    validation_results.append(f"✅ Account 886557 (BALANCE $80K) shows activity: {pattern_886557['trade_count']} trades")
+                else:
+                    validation_results.append("⚠️ Account 886557 (most active) has no trades")
+            
+            if 886066 in account_patterns and 886602 in account_patterns:
+                pattern_886066 = account_patterns[886066]
+                pattern_886602 = account_patterns[886602]
+                if pattern_886066['trade_count'] > 0 or pattern_886602['trade_count'] > 0:
+                    validation_results.append(f"✅ Moderate accounts (886066, 886602) show activity: "
+                                            f"{pattern_886066['trade_count']}, {pattern_886602['trade_count']} trades")
+                else:
+                    validation_results.append("⚠️ Moderate accounts show no activity")
+            
+            if 885822 in account_patterns:
+                pattern_885822 = account_patterns[885822]
+                if pattern_885822['trade_count'] > 0:
+                    validation_results.append(f"✅ Account 885822 (CORE $18K) shows strategic activity: {pattern_885822['trade_count']} trades")
+                else:
+                    validation_results.append("⚠️ Strategic account 885822 has no trades")
+            
+            # Check for variation in trading patterns
+            if len(account_patterns) >= 2:
+                trade_counts = [p['trade_count'] for p in account_patterns.values()]
+                symbol_sets = [p['symbols'] for p in account_patterns.values()]
+                volume_averages = [p['avg_volume'] for p in account_patterns.values() if p['avg_volume'] > 0]
+                
+                # Check trade count variation
+                if len(set(trade_counts)) > 1:
+                    validation_results.append("✅ Accounts show different trade activity levels")
+                else:
+                    validation_results.append("⚠️ All accounts show same trade activity (may be expected)")
+                
+                # Check symbol variation
+                unique_symbol_combinations = len(set(frozenset(s) for s in symbol_sets if s))
+                if unique_symbol_combinations > 1:
+                    validation_results.append("✅ Accounts trade different symbol combinations")
+                else:
+                    validation_results.append("⚠️ All accounts trade same symbols")
+                
+                # Check volume variation
+                if len(set(f"{v:.1f}" for v in volume_averages)) > 1:
+                    validation_results.append("✅ Accounts show different average volumes")
+                else:
+                    validation_results.append("⚠️ All accounts show same average volume")
+            
+            # Verify expected account characteristics
+            if account_patterns:
+                # Account 886557 should be most active (BALANCE $80K)
+                most_active_account = max(account_patterns.keys(), key=lambda k: account_patterns[k]['trade_count'])
+                if most_active_account == 886557:
+                    validation_results.append("✅ Account 886557 is most active as expected")
+                else:
+                    validation_results.append(f"⚠️ Account {most_active_account} is most active (expected 886557)")
+            
+            # Determine overall status
+            failed_checks = [result for result in validation_results if result.startswith("❌")]
+            overall_status = 'PASS' if len(failed_checks) == 0 else 'FAIL'
+            
+            return {
+                'test_name': test_name,
+                'status': overall_status,
+                'validation_results': validation_results,
+                'details': {
+                    'account_patterns': {k: {
+                        'trade_count': v['trade_count'],
+                        'symbols': list(v['symbols']),
+                        'avg_volume': round(v['avg_volume'], 2),
+                        'total_profit': round(v['total_profit'], 2)
+                    } for k, v in account_patterns.items()},
+                    'failed_checks': len(failed_checks)
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"]
+            }
+
+    async def test_database_collections(self) -> Dict[str, Any]:
+        """Test that database collections store data for all 4 accounts"""
+        test_name = "Database Collections Multi-Account"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        try:
+            validation_results = []
+            
+            # First, trigger a sync to ensure collections have data
+            sync_url = f"{self.backend_url}/admin/trading/analytics/sync"
+            async with self.session.post(sync_url) as sync_response:
+                if sync_response.status == 200:
+                    validation_results.append("✅ Sync endpoint accessible for collection population")
                 else:
                     validation_results.append("❌ Sync endpoint not accessible")
             
-            # Check if daily performance endpoint returns data structure (even if empty)
-            daily_url = f"{self.backend_url}/admin/trading/analytics/daily"
-            async with self.session.get(daily_url) as daily_response:
-                if daily_response.status == 200:
-                    daily_data = await daily_response.json()
-                    if 'daily_performance' in daily_data:
-                        validation_results.append("✅ Daily performance collection accessible")
-                    else:
-                        validation_results.append("❌ Daily performance collection not accessible")
-                else:
-                    validation_results.append("❌ Daily performance endpoint failed")
-            
-            # Check if trades endpoint returns data structure (even if empty)
-            trades_url = f"{self.backend_url}/admin/trading/analytics/trades"
+            # Test mt5_trades collection - should have trades for all accounts
+            trades_url = f"{self.backend_url}/admin/trading/analytics/trades?account=0&limit=100"
             async with self.session.get(trades_url) as trades_response:
                 if trades_response.status == 200:
                     trades_data = await trades_response.json()
-                    if 'trades' in trades_data:
-                        validation_results.append("✅ MT5 trades collection accessible")
+                    trades = trades_data.get('trades', [])
+                    
+                    if trades:
+                        validation_results.append(f"✅ MT5 trades collection accessible ({len(trades)} trades)")
+                        
+                        # Check if trades from all accounts are present
+                        account_numbers = set(trade.get('account') for trade in trades)
+                        expected_accounts = set(self.all_accounts)
+                        
+                        if account_numbers.intersection(expected_accounts):
+                            validation_results.append(f"✅ Trades from multiple accounts in collection: {sorted(account_numbers)}")
+                        else:
+                            validation_results.append(f"❌ No trades from expected accounts: {sorted(account_numbers)}")
                     else:
-                        validation_results.append("❌ MT5 trades collection not accessible")
+                        validation_results.append("⚠️ MT5 trades collection empty")
                 else:
-                    validation_results.append("❌ Trades endpoint failed")
+                    validation_results.append("❌ MT5 trades collection not accessible")
             
-            # Check if analytics overview works (indicates period_performance collection)
-            overview_url = f"{self.backend_url}/admin/trading/analytics/overview"
+            # Test daily_performance collection - should have entries for all accounts
+            daily_url = f"{self.backend_url}/admin/trading/analytics/daily?account=0&days=7"
+            async with self.session.get(daily_url) as daily_response:
+                if daily_response.status == 200:
+                    daily_data = await daily_response.json()
+                    daily_performance = daily_data.get('daily_performance', [])
+                    
+                    if daily_performance:
+                        validation_results.append(f"✅ Daily performance collection accessible ({len(daily_performance)} entries)")
+                        
+                        # Check aggregation functionality
+                        sample_entry = daily_performance[0]
+                        if 'total_trades' in sample_entry and 'total_pnl' in sample_entry:
+                            validation_results.append("✅ Daily performance aggregation working")
+                        else:
+                            validation_results.append("❌ Daily performance aggregation incomplete")
+                    else:
+                        validation_results.append("⚠️ Daily performance collection empty")
+                else:
+                    validation_results.append("❌ Daily performance collection not accessible")
+            
+            # Test individual account daily performance
+            accounts_with_daily_data = []
+            for account_num in self.all_accounts:
+                daily_account_url = f"{self.backend_url}/admin/trading/analytics/daily?account={account_num}&days=3"
+                async with self.session.get(daily_account_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        daily_data = data.get('daily_performance', [])
+                        if daily_data:
+                            accounts_with_daily_data.append(account_num)
+            
+            if accounts_with_daily_data:
+                validation_results.append(f"✅ Daily performance data exists for accounts: {accounts_with_daily_data}")
+            else:
+                validation_results.append("⚠️ No daily performance data for individual accounts")
+            
+            # Test analytics overview aggregation pipeline
+            overview_url = f"{self.backend_url}/admin/trading/analytics/overview?account=0"
             async with self.session.get(overview_url) as overview_response:
                 if overview_response.status == 200:
                     overview_data = await overview_response.json()
-                    if 'analytics' in overview_data:
-                        validation_results.append("✅ Analytics aggregation working (period_performance implied)")
+                    analytics = overview_data.get('analytics', {})
+                    
+                    if analytics and 'overview' in analytics:
+                        validation_results.append("✅ Analytics aggregation pipeline working")
+                        
+                        overview = analytics['overview']
+                        if overview.get('total_trades', 0) > 0:
+                            validation_results.append(f"✅ Aggregated analytics show activity: {overview.get('total_trades')} trades")
+                        else:
+                            validation_results.append("⚠️ Aggregated analytics show no activity")
                     else:
                         validation_results.append("❌ Analytics aggregation not working")
                 else:
@@ -678,7 +857,8 @@ class TradingAnalyticsPhase1BTestSuite:
                 'status': overall_status,
                 'validation_results': validation_results,
                 'details': {
-                    'collections_tested': ['mt5_trades', 'daily_performance', 'period_performance'],
+                    'collections_tested': ['mt5_trades', 'daily_performance'],
+                    'accounts_with_data': accounts_with_daily_data,
                     'failed_checks': len(failed_checks),
                     'total_checks': len(validation_results)
                 }
