@@ -48,32 +48,39 @@ class MoneyManagersBackendTester:
         self.jwt_token = None
         self.test_results = []
         
-        # Expected manager configurations from Phase 1 requirements
+        # Expected manager configurations after CRITICAL DATA INTEGRITY FIX
+        # NOW: 4 managers with 1:1 account mapping (not 1:N)
         self.expected_managers = {
-            "manager_3157": {
-                "name": "MexAtlantic Manager 3157",
-                "execution_type": "copy_trade",
-                "assigned_accounts": [886557, 885822],
-                "broker": "MEXAtlantic"
+            "CP Strategy": {
+                "name": "CP Strategy",
+                "assigned_accounts": [885822],  # ONLY 1 account (1:1 mapping)
+                "profile_url": "MexAtlantic 3157",  # Has profile URL
+                "fund": "CORE"
             },
-            "manager_5843": {
-                "name": "MexAtlantic Manager 5843", 
-                "execution_type": "copy_trade",
-                "assigned_accounts": [886066],
-                "broker": "MEXAtlantic"
+            "TradingHub Gold": {
+                "name": "TradingHub Gold", 
+                "assigned_accounts": [886557],  # ONLY 1 account (1:1 mapping)
+                "profile_url": None,  # Should be null (pending)
+                "fund": "BALANCE"
             },
-            "manager_uno14": {
+            "GoldenTrade": {
+                "name": "GoldenTrade",
+                "assigned_accounts": [886066],  # ONLY 1 account (1:1 mapping)
+                "profile_url": "MexAtlantic 5843",  # Has profile URL
+                "fund": "BALANCE"
+            },
+            "UNO14": {
                 "name": "UNO14",
-                "execution_type": "mam",
-                "assigned_accounts": [886602],
-                "broker": "MEXAtlantic"
+                "assigned_accounts": [886602],  # ONLY 1 account (1:1 mapping)
+                "profile_url": None,  # Should be null (pending)
+                "fund": "BALANCE"
             }
         }
         
-        # Expected account allocations
+        # Expected account allocations after fix
         self.expected_allocations = {
-            886557: {"fund": "BALANCE", "allocation": 80000},
             885822: {"fund": "CORE", "allocation": 18151.41},
+            886557: {"fund": "BALANCE", "allocation": 80000},
             886066: {"fund": "BALANCE", "allocation": 10000},
             886602: {"fund": "BALANCE", "allocation": 10000}
         }
