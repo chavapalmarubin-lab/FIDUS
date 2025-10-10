@@ -149,15 +149,32 @@ const ClientDashboard = ({ user, onLogout }) => {
     }
   };
 
-  // Initialize profile data when user data loads
+  // Initialize profile data when user data loads - fetch fresh from backend
   useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || ''
-      });
-    }
+    const fetchCurrentProfile = async () => {
+      try {
+        // Get fresh user data from backend instead of using cached session data
+        const response = await apiAxios.get('/client/profile');
+        if (response.data.success && response.data.user) {
+          setProfileData({
+            name: response.data.user.name || '',
+            email: response.data.user.email || '',
+            phone: response.data.user.phone || ''
+          });
+        }
+      } catch (error) {
+        // Fallback to session user data if API call fails
+        if (user) {
+          setProfileData({
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || ''
+          });
+        }
+      }
+    };
+    
+    fetchCurrentProfile();
   }, [user]);
 
   const applyFilters = () => {
