@@ -376,6 +376,20 @@ const AdminDashboard = ({ user, onLogout }) => {
     exportToExcel(cashFlowData, 'FIDUS_Cash_Flow', 'Cash Flow');
   }
 
+  function exportTradingAnalyticsData() {
+    // Export trading analytics data
+    const tradingData = [{
+      'Export Date': new Date().toLocaleDateString(),
+      'Total P&L': '$0',
+      'Win Rate': '0%',
+      'Profit Factor': '0',
+      'Total Trades': '0',
+      'Note': 'Trading analytics data will be available after Phase 1 implementation'
+    }];
+    
+    exportToExcel(tradingData, 'FIDUS_Trading_Analytics', 'Trading Analytics');
+  }
+
   function exportInvestmentsData() {
     // Export investments data - currently only Alejandro Mariscal ready
     const investmentsData = [{
