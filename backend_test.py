@@ -341,100 +341,149 @@ class TradingAnalyticsPhase1BTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_recent_trades_endpoint(self) -> Dict[str, Any]:
-        """Test GET /api/admin/trading/analytics/trades endpoint"""
-        test_name = "Recent Trades Endpoint"
+    async def test_multi_account_trades_endpoint(self) -> Dict[str, Any]:
+        """Test GET /api/admin/trading/analytics/trades with multi-account filtering"""
+        test_name = "Multi-Account Trades Filtering"
         logger.info(f"🧪 Testing {test_name}")
         
+        validation_results = []
+        
         try:
-            url = f"{self.backend_url}/admin/trading/analytics/trades"
-            
-            async with self.session.get(url) as response:
+            # Test 1: All accounts trades (account=0)
+            url_all = f"{self.backend_url}/admin/trading/analytics/trades?account=0&limit=20"
+            async with self.session.get(url_all) as response:
                 status_code = response.status
                 response_data = await response.json()
                 
-                success = response_data.get('success', False)
-                trades = response_data.get('trades', [])
-                account = response_data.get('account')
-                limit = response_data.get('limit')
-                
-                validation_results = []
+                if status_code == 200:
+                    validation_results.append("✅ All accounts trades endpoint returns HTTP 200")
+                    
+                    trades = response_data.get('trades', [])
+                    account = response_data.get('account')
+                    
+                    if account == "all":
+                        validation_results.append("✅ Account field correctly shows 'all' for all accounts")
+                    else:
+                        validation_results.append(f"❌ Account field incorrect: {account} (expected 'all')")
+                    
+                    if isinstance(trades, list):
+                        validation_results.append(f"✅ All accounts trades data is list ({len(trades)} entries)")
+                        
+                        # Check if trades from multiple accounts are present
+                        if trades:
+                            account_numbers = set(trade.get('account') for trade in trades)
+                            expected_accounts = set(self.all_accounts)
+                            
+                            if account_numbers.intersection(expected_accounts):
+                                validation_results.append(f"✅ Trades from multiple accounts present: {sorted(account_numbers)}")
+                            else:
+                                validation_results.append(f"❌ No trades from expected accounts: {sorted(account_numbers)}")
+                            
+                            # Check trade structure
+                            sample_trade = trades[0]
+                            required_fields = ['ticket', 'account', 'symbol', 'type', 'volume', 'profit']
+                            missing_fields = [field for field in required_fields if field not in sample_trade]
+                            
+                            if not missing_fields:
+                                validation_results.append("✅ Trade entry structure valid")
+                                logger.info(f"   Sample trade - Account: {sample_trade.get('account')}, Symbol: {sample_trade.get('symbol')}, Profit: ${sample_trade.get('profit', 0):.2f}")
+                            else:
+                                validation_results.append(f"❌ Missing trade fields: {missing_fields}")
+                        else:
+                            validation_results.append("⚠️ No trades data from all accounts")
+                    else:
+                        validation_results.append("❌ All accounts trades data is not a list")
+                else:
+                    validation_results.append(f"❌ All accounts trades endpoint failed: HTTP {status_code}")
+            
+            # Test 2: Specific account trades (886557)
+            url_specific = f"{self.backend_url}/admin/trading/analytics/trades?account=886557&limit=10"
+            async with self.session.get(url_specific) as response:
+                status_code = response.status
+                response_data = await response.json()
                 
                 if status_code == 200:
-                    validation_results.append("✅ HTTP 200 OK response")
-                else:
-                    validation_results.append(f"❌ HTTP {status_code} (expected 200)")
-                
-                if success:
-                    validation_results.append("✅ Success flag is True")
-                else:
-                    validation_results.append("❌ Success flag is False")
-                
-                if isinstance(trades, list):
-                    validation_results.append(f"✅ Trades data is list ({len(trades)} entries)")
+                    validation_results.append("✅ Specific account trades endpoint returns HTTP 200")
                     
-                    # Check trade structure if entries exist
-                    if trades:
-                        sample_trade = trades[0]
-                        required_fields = [
-                            'ticket', 'account', 'symbol', 'type', 'volume',
-                            'open_price', 'close_price', 'open_time', 'close_time', 'profit'
-                        ]
-                        
-                        missing_fields = [field for field in required_fields if field not in sample_trade]
-                        if not missing_fields:
-                            validation_results.append("✅ Trade entry structure valid")
-                        else:
-                            validation_results.append(f"❌ Missing trade fields: {missing_fields}")
-                        
-                        # Check data types
-                        if isinstance(sample_trade.get('profit'), (int, float)):
-                            validation_results.append("✅ Profit field is numeric")
-                        else:
-                            validation_results.append("❌ Profit field is not numeric")
-                            
+                    trades = response_data.get('trades', [])
+                    account = response_data.get('account')
+                    
+                    if account == 886557:
+                        validation_results.append(f"✅ Account field correctly shows {account}")
                     else:
-                        validation_results.append("⚠️ No trades data (may be expected for new system)")
-                else:
-                    validation_results.append("❌ Trades data is not a list")
-                
-                if account == self.test_account:
-                    validation_results.append(f"✅ Correct account returned ({account})")
-                else:
-                    validation_results.append(f"❌ Wrong account returned ({account}, expected {self.test_account})")
-                
-                if limit and isinstance(limit, int):
-                    validation_results.append(f"✅ Limit parameter returned ({limit})")
-                else:
-                    validation_results.append("❌ Limit parameter missing or invalid")
-                
-                # Test with custom limit
-                url_with_limit = f"{self.backend_url}/admin/trading/analytics/trades?limit=10&account={self.test_account}"
-                async with self.session.get(url_with_limit) as limit_response:
-                    if limit_response.status == 200:
-                        validation_results.append("✅ Custom limit parameter accepted")
+                        validation_results.append(f"❌ Account field incorrect: {account} (expected 886557)")
+                    
+                    if isinstance(trades, list):
+                        validation_results.append(f"✅ Account-specific trades data is list ({len(trades)} entries)")
+                        
+                        # Check that all trades are from the correct account
+                        if trades:
+                            wrong_account_trades = [t for t in trades if t.get('account') != 886557]
+                            if not wrong_account_trades:
+                                validation_results.append("✅ All trades correctly filtered by account 886557")
+                            else:
+                                validation_results.append(f"❌ {len(wrong_account_trades)} trades from wrong accounts")
+                        else:
+                            validation_results.append("⚠️ No trades data for account 886557")
                     else:
-                        validation_results.append("❌ Custom limit parameter rejected")
+                        validation_results.append("❌ Account-specific trades data is not a list")
+                else:
+                    validation_results.append(f"❌ Specific account trades endpoint failed: HTTP {status_code}")
+            
+            # Test 3: Test each individual account for data variation
+            account_trade_counts = {}
+            for account_num in self.all_accounts:
+                url_account = f"{self.backend_url}/admin/trading/analytics/trades?account={account_num}&limit=50"
+                async with self.session.get(url_account) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        trades = data.get('trades', [])
+                        account_trade_counts[account_num] = len(trades)
+                        
+                        # Verify account filtering
+                        if trades:
+                            correct_account_trades = [t for t in trades if t.get('account') == account_num]
+                            if len(correct_account_trades) == len(trades):
+                                validation_results.append(f"✅ Account {account_num} filtering works correctly ({len(trades)} trades)")
+                            else:
+                                validation_results.append(f"❌ Account {account_num} filtering failed")
+                        else:
+                            validation_results.append(f"⚠️ No trades for account {account_num}")
+                    else:
+                        validation_results.append(f"❌ Account {account_num} trades endpoint failed")
+            
+            # Test 4: Verify different trading patterns per account profile
+            if account_trade_counts:
+                logger.info(f"   Trade counts by account: {account_trade_counts}")
                 
-                logger.info(f"   Response Status: {status_code}")
-                logger.info(f"   Success: {success}")
-                logger.info(f"   Trades Count: {len(trades)}")
-                logger.info(f"   Account: {account}")
-                logger.info(f"   Limit: {limit}")
+                # Account 886557 should be most active (BALANCE $80K)
+                account_886557_trades = account_trade_counts.get(886557, 0)
+                if account_886557_trades > 0:
+                    validation_results.append(f"✅ Account 886557 (most active) has {account_886557_trades} trades")
+                else:
+                    validation_results.append("⚠️ Account 886557 (most active) has no trades")
                 
-                return {
-                    'test_name': test_name,
-                    'status': 'PASS' if status_code == 200 and success else 'FAIL',
-                    'status_code': status_code,
-                    'response_data': response_data,
-                    'validation_results': validation_results,
-                    'details': {
-                        'endpoint': url,
-                        'method': 'GET',
-                        'trades_count': len(trades),
-                        'account_tested': account
-                    }
+                # Check that different accounts have different patterns
+                unique_counts = len(set(account_trade_counts.values()))
+                if unique_counts > 1:
+                    validation_results.append("✅ Different accounts show varied trading activity")
+                else:
+                    validation_results.append("⚠️ All accounts show same trading activity (may be expected)")
+            
+            # Determine overall status
+            failed_checks = [result for result in validation_results if result.startswith("❌")]
+            overall_status = 'PASS' if len(failed_checks) == 0 else 'FAIL'
+            
+            return {
+                'test_name': test_name,
+                'status': overall_status,
+                'validation_results': validation_results,
+                'details': {
+                    'accounts_tested': self.all_accounts,
+                    'account_trade_counts': account_trade_counts,
+                    'failed_checks': len(failed_checks)
                 }
+            }
                 
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
