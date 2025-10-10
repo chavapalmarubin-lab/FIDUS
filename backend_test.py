@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Trading Analytics System Phase 1A Testing
-Testing the new Trading Analytics API endpoints and infrastructure
+Trading Analytics System Phase 1B Multi-Account Testing
+Testing the expanded Trading Analytics API endpoints with multi-account support
 """
 
 import asyncio
@@ -17,8 +17,8 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class TradingAnalyticsTestSuite:
-    """Comprehensive test suite for Trading Analytics Phase 1A"""
+class TradingAnalyticsPhase1BTestSuite:
+    """Comprehensive test suite for Trading Analytics Phase 1B Multi-Account"""
     
     def __init__(self):
         # Get backend URL from environment
@@ -30,13 +30,19 @@ class TradingAnalyticsTestSuite:
         self.admin_token = None
         self.test_results = []
         
-        # Phase 1A testing parameters
-        self.test_account = 886557  # BALANCE Fund account
+        # Phase 1B testing parameters - All 4 accounts
+        self.all_accounts = [886557, 886066, 886602, 885822]
+        self.account_profiles = {
+            886557: {"name": "BALANCE Fund ($80K)", "fund_type": "BALANCE", "expected_activity": "high"},
+            886066: {"name": "BALANCE Fund ($10K)", "fund_type": "BALANCE", "expected_activity": "moderate"},
+            886602: {"name": "BALANCE Fund ($10K)", "fund_type": "BALANCE", "expected_activity": "moderate"},
+            885822: {"name": "CORE Fund ($18K)", "fund_type": "CORE", "expected_activity": "strategic"}
+        }
         self.test_days = 30
         
-        logger.info(f"🚀 Trading Analytics Test Suite initialized")
+        logger.info(f"🚀 Trading Analytics Phase 1B Multi-Account Test Suite initialized")
         logger.info(f"   Backend URL: {self.backend_url}")
-        logger.info(f"   Test Account: {self.test_account}")
+        logger.info(f"   All Accounts: {self.all_accounts}")
         logger.info(f"   Test Period: {self.test_days} days")
     
     async def setup(self):
