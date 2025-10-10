@@ -29,6 +29,7 @@ const InvestmentCalendar = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState('timeline'); // timeline, upcoming, month
+  const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
 
   useEffect(() => {
     fetchCalendarData();
