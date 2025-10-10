@@ -266,16 +266,27 @@ const TradingAnalyticsDashboard = () => {
         </div>
       )}
 
-      {/* Phase 1A Development Notice */}
+      {/* Phase 1B Multi-Account Status */}
       <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-4">
-        <div className="flex items-center">
-          <Activity className="h-5 w-5 text-blue-400 mr-2" />
-          <div>
-            <p className="text-blue-400 font-medium">Phase 1A: Core Analytics Development</p>
-            <p className="text-blue-300 text-sm mt-1">
-              Currently displaying mock data for testing. Real MT5 data integration in progress.
-              Testing with account 886557 (BALANCE Fund).
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Activity className="h-5 w-5 text-blue-400 mr-2" />
+            <div>
+              <p className="text-blue-400 font-medium">Phase 1B: Multi-Account Analytics Active</p>
+              <p className="text-blue-300 text-sm mt-1">
+                {selectedAccount === 'all' ? 
+                  'Displaying aggregated data from all 4 MT5 accounts (886557, 886066, 886602, 885822)' :
+                  `Displaying data for account ${selectedAccount} only`
+                }
+              </p>
+            </div>
+          </div>
+          
+          <div className="text-right text-sm">
+            <div className="text-blue-400 font-medium">Account Status</div>
+            <div className="text-blue-300">
+              {analyticsData?.accounts_included?.length || 4} accounts active
+            </div>
           </div>
         </div>
       </div>
