@@ -952,31 +952,44 @@ def get_next_redemption_date(investment: FundInvestment, fund_config: FundConfig
     return next_redemption
 
 def generate_redemption_schedule(investment: FundInvestment, fund_config: FundConfiguration) -> list:
-    """Generate complete redemption schedule for the investment showing all payment dates"""
+    """
+    Generate complete redemption schedule for the investment showing all payment dates
+    
+    CORRECT CALCULATION LOGIC per user specs:
+    - Incubation: 60 days after investment start (no interest)
+    - CORE (monthly): First payment 30 days AFTER incubation ends
+    - BALANCE (quarterly): First payment 90 days AFTER incubation ends  
+    - DYNAMIC (semi-annual): First payment 180 days AFTER incubation ends
+    """
     schedule = []
     
     # Start from interest start date (after 60-day incubation)
-    base_date = investment.interest_start_date
+    incubation_end = investment.interest_start_date
     current_date = datetime.now(timezone.utc)
     
-    # Determine redemption frequency in months
+    # Determine payment frequency in days (AFTER incubation ends)
     if fund_config.redemption_frequency == "monthly":
+        frequency_days = 30  # 30 days
         frequency_months = 1
     elif fund_config.redemption_frequency == "quarterly":
+        frequency_days = 90  # 90 days
         frequency_months = 3
     elif fund_config.redemption_frequency == "semi_annually":
+        frequency_days = 180  # 180 days
         frequency_months = 6
     else:
+        frequency_days = 365  # Annual
         frequency_months = 12
     
     # Calculate monthly interest rate
     monthly_rate = fund_config.interest_rate / 100.0
     
-    # Generate payment schedule from interest start to contract end (426 days from deposit)
-    payment_date = base_date
+    # IMPORTANT: First payment is frequency_days AFTER incubation ends
+    # NOT immediately at incubation end!
+    payment_date = incubation_end + timedelta(days=frequency_days)
     payment_number = 1
     
-    # Contract ends 426 days after deposit (14 months)
+    # Contract ends 426 days after deposit (12 months after incubation ends)
     contract_end_date = investment.minimum_hold_end_date
     
     while payment_date < contract_end_date:
@@ -1004,15 +1017,8 @@ def generate_redemption_schedule(investment: FundInvestment, fund_config: FundCo
             "frequency": fund_config.redemption_frequency
         })
         
-        # Move to next payment date
-        if payment_date.month + frequency_months > 12:
-            payment_date = payment_date.replace(
-                year=payment_date.year + ((payment_date.month + frequency_months - 1) // 12),
-                month=((payment_date.month + frequency_months - 1) % 12) + 1
-            )
-        else:
-            payment_date = payment_date.replace(month=payment_date.month + frequency_months)
-        
+        # Move to next payment date by adding frequency_days
+        payment_date = payment_date + timedelta(days=frequency_days)
         payment_number += 1
     
     # Add final payment (principal + last interest) at contract end
