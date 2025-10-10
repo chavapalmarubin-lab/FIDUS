@@ -20116,3 +20116,85 @@ async def get_google_auth_url_legacy(current_user: dict = Depends(get_current_ad
     """Legacy endpoint - redirects to new OAuth URL endpoint"""
     return await get_google_oauth_url(current_user)
 
+
+# ===============================================================================
+# GOOGLE SERVICE ACCOUNT ENDPOINTS - NO OAUTH NEEDED!
+# ===============================================================================
+
+from google_service_account import (
+    list_gmail_messages,
+    list_calendar_events,
+    list_drive_files,
+    list_spreadsheets_in_folder
+)
+
+@api_router.get("/api/admin/google/service-account/gmail/messages")
+async def get_gmail_messages_service_account(
+    max_results: int = 10,
+    query: str = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Gmail messages using service account - NO OAUTH NEEDED!"""
+    try:
+        messages = await list_gmail_messages(max_results, query)
+        return {
+            "success": True,
+            "messages": messages,
+            "count": len(messages)
+        }
+    except Exception as e:
+        logging.error(f"❌ Gmail service account error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail: {str(e)}")
+
+@api_router.get("/api/admin/google/service-account/calendar/events")
+async def get_calendar_events_service_account(
+    max_results: int = 10,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get calendar events using service account - NO OAUTH NEEDED!"""
+    try:
+        events = await list_calendar_events(max_results)
+        return {
+            "success": True,
+            "events": events,
+            "count": len(events)
+        }
+    except Exception as e:
+        logging.error(f"❌ Calendar service account error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch calendar: {str(e)}")
+
+@api_router.get("/api/admin/google/service-account/drive/files")
+async def get_drive_files_service_account(
+    folder_id: str,
+    max_results: int = 20,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Drive files using service account - NO OAUTH NEEDED!"""
+    try:
+        files = await list_drive_files(folder_id, max_results)
+        return {
+            "success": True,
+            "files": files,
+            "count": len(files)
+        }
+    except Exception as e:
+        logging.error(f"❌ Drive service account error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Drive files: {str(e)}")
+
+@api_router.get("/api/admin/google/service-account/sheets")
+async def get_spreadsheets_service_account(
+    folder_id: str,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get spreadsheets using service account - NO OAUTH NEEDED!"""
+    try:
+        sheets = await list_spreadsheets_in_folder(folder_id)
+        return {
+            "success": True,
+            "spreadsheets": sheets,
+            "count": len(sheets)
+        }
+    except Exception as e:
+        logging.error(f"❌ Sheets service account error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch spreadsheets: {str(e)}")
+
