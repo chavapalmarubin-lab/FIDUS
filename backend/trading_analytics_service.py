@@ -244,7 +244,7 @@ class TradingAnalyticsService:
     
     def generate_mock_trades(self, account_number: int, target_date: datetime) -> List[Dict]:
         """
-        Generate mock trading data for Phase 1A testing
+        Generate mock trading data for Phase 1B testing (varies by account)
         
         Args:
             account_number: MT5 account number
@@ -255,14 +255,31 @@ class TradingAnalyticsService:
         """
         import random
         
-        # Simulate realistic trading patterns
-        if random.random() < 0.3:  # 30% chance of no trading
+        # Account-specific trading patterns for Phase 1B
+        account_profiles = {
+            886557: {"activity": 0.8, "skill": 0.6, "volume_range": (0.5, 3.0), "symbols": ['EURUSD', 'GBPUSD', 'USDJPY']},
+            886066: {"activity": 0.5, "skill": 0.4, "volume_range": (0.1, 1.0), "symbols": ['EURUSD', 'AUDUSD']},
+            886602: {"activity": 0.6, "skill": 0.5, "volume_range": (0.2, 1.5), "symbols": ['GBPUSD', 'USDCHF']},
+            885822: {"activity": 0.7, "skill": 0.7, "volume_range": (1.0, 5.0), "symbols": ['EURUSD', 'GBPUSD', 'USDJPY', 'GOLD']}
+        }
+        
+        profile = account_profiles.get(account_number, account_profiles[886557])
+        
+        # Trading probability based on account activity level
+        if random.random() > profile["activity"]:
             return []
         
-        symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCHF']
-        num_trades = random.randint(1, 8)  # 1-8 trades per day
-        trades = []
+        # Number of trades varies by account
+        if account_number == 886557:  # BALANCE $80K - Most active
+            num_trades = random.randint(2, 8)
+        elif account_number in [886066, 886602]:  # BALANCE $10K - Moderate
+            num_trades = random.randint(1, 4)
+        elif account_number == 885822:  # CORE $18K - Strategic
+            num_trades = random.randint(1, 5)
+        else:
+            num_trades = random.randint(1, 3)
         
+        trades = []
         base_time = target_date.replace(hour=8, minute=0)  # Market open
         
         for i in range(num_trades):
@@ -276,13 +293,23 @@ class TradingAnalyticsService:
                 minutes=random.randint(5, 300)  # 5 minutes to 5 hours
             )
             
-            # Simulate realistic P&L (slightly positive bias for fund)
-            profit = round(random.uniform(-500, 750), 2)  # -$500 to +$750
-            volume = round(random.uniform(0.1, 2.0), 2)  # 0.1 to 2.0 lots
+            # Account-specific P&L simulation
+            skill_factor = profile["skill"]
+            base_range = 500
+            
+            if skill_factor > 0.6:  # Skilled accounts
+                profit = round(random.uniform(-base_range * 0.6, base_range * 1.4), 2)
+            elif skill_factor > 0.4:  # Average accounts  
+                profit = round(random.uniform(-base_range * 0.8, base_range * 1.2), 2)
+            else:  # Less skilled accounts
+                profit = round(random.uniform(-base_range * 1.2, base_range * 0.8), 2)
+            
+            # Account size affects volume
+            volume = round(random.uniform(*profile["volume_range"]), 2)
             
             trade = {
-                "ticket": 123456000 + (account_number % 1000) * 1000 + i,
-                "symbol": random.choice(symbols),
+                "ticket": 123456000 + (account_number % 1000) * 1000 + i + int(target_date.timestamp() % 1000),
+                "symbol": random.choice(profile["symbols"]),
                 "type": random.choice([0, 1]),  # 0=BUY, 1=SELL
                 "volume": volume,
                 "price_open": round(random.uniform(1.0500, 1.0900), 5),
@@ -292,7 +319,7 @@ class TradingAnalyticsService:
                 "profit": profit,
                 "commission": round(random.uniform(-5, -1), 2),
                 "swap": round(random.uniform(-2, 1), 2),
-                "comment": f"Mock trade #{i+1}"
+                "comment": f"Account {account_number} - Trade #{i+1}"
             }
             
             trades.append(trade)
