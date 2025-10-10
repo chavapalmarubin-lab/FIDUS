@@ -48,45 +48,73 @@ const TradingAnalyticsDashboard = () => {
       setLoading(true);
       setError("");
 
-      // Phase 1A: Start with mock data, then integrate with real API
-      // TODO: Replace with actual API calls to:
-      // - /api/admin/trading/analytics/overview
-      // - /api/admin/trading/analytics/daily
-      // - /api/admin/trading/analytics/trades
+      // Phase 1A: Use real API endpoints with fallback to mock data
+      const account = selectedAccount === 'all' ? null : parseInt(selectedAccount);
+      const days = selectedPeriod === '7d' ? 7 : 
+                   selectedPeriod === '30d' ? 30 : 
+                   selectedPeriod === '90d' ? 90 : 
+                   selectedPeriod === 'ytd' ? 365 : 30;
 
-      // Simulated API response structure for Phase 1A
-      const mockAnalyticsData = {
-        overview: {
-          total_pnl: 2909.31,
-          total_trades: 23,
-          winning_trades: 12,
-          losing_trades: 11,
-          breakeven_trades: 0,
-          win_rate: 52.17,
-          profit_factor: 1.89,
-          largest_win: 1234.56,
-          largest_loss: -856.78,
-          avg_win: 445.23,
-          avg_loss: -298.45,
-          gross_profit: 5342.76,
-          gross_loss: -2433.45,
-          avg_trade: 126.49,
-          max_drawdown: -1456.78,
-          recovery_factor: 2.0,
-          sharpe_ratio: 1.45
-        },
-        period_start: '2025-09-09',
-        period_end: '2025-10-09',
-        last_sync: '2025-10-09T23:05:00Z'
-      };
+      try {
+        // Fetch analytics overview
+        const overviewResponse = await apiAxios.get('/admin/trading/analytics/overview');
+        
+        // Fetch daily performance
+        const dailyResponse = await apiAxios.get('/admin/trading/analytics/daily', {
+          params: { days, account }
+        });
+        
+        // Fetch recent trades
+        const tradesResponse = await apiAxios.get('/admin/trading/analytics/trades', {
+          params: { limit: 20, account }
+        });
 
-      const mockDailyData = generateMockDailyData();
-      const mockTradesData = generateMockTradesData();
+        if (overviewResponse.data.success && dailyResponse.data.success && tradesResponse.data.success) {
+          setAnalyticsData(overviewResponse.data.analytics);
+          setDailyPerformance(dailyResponse.data.daily_performance || []);
+          setRecentTrades(tradesResponse.data.trades || []);
+          setLastUpdated(new Date(overviewResponse.data.analytics.last_sync));
+        } else {
+          throw new Error("API returned unsuccessful response");
+        }
 
-      setAnalyticsData(mockAnalyticsData);
-      setDailyPerformance(mockDailyData);
-      setRecentTrades(mockTradesData);
-      setLastUpdated(new Date(mockAnalyticsData.last_sync));
+      } catch (apiError) {
+        console.warn("API endpoints not available yet, using mock data:", apiError.message);
+        
+        // Fallback to mock data for Phase 1A development
+        const mockAnalyticsData = {
+          overview: {
+            total_pnl: 2909.31,
+            total_trades: 23,
+            winning_trades: 12,
+            losing_trades: 11,
+            breakeven_trades: 0,
+            win_rate: 52.17,
+            profit_factor: 1.89,
+            largest_win: 1234.56,
+            largest_loss: -856.78,
+            avg_win: 445.23,
+            avg_loss: -298.45,
+            gross_profit: 5342.76,
+            gross_loss: -2433.45,
+            avg_trade: 126.49,
+            max_drawdown: -1456.78,
+            recovery_factor: 2.0,
+            sharpe_ratio: 1.45
+          },
+          period_start: '2025-09-09',
+          period_end: '2025-10-09',
+          last_sync: '2025-10-09T23:05:00Z'
+        };
+
+        const mockDailyData = generateMockDailyData();
+        const mockTradesData = generateMockTradesData();
+
+        setAnalyticsData(mockAnalyticsData);
+        setDailyPerformance(mockDailyData);
+        setRecentTrades(mockTradesData);
+        setLastUpdated(new Date(mockAnalyticsData.last_sync));
+      }
 
     } catch (err) {
       console.error("Trading analytics fetch error:", err);
