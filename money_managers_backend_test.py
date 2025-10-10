@@ -647,12 +647,17 @@ class MoneyManagersBackendTester:
         compare_result = await self.test_compare_managers(manager_ids_list)
         test_results.append(compare_result)
         
-        # Test 5: Manager Configuration Verification
+        # Test 5: CRITICAL Data Integrity Fix Verification
+        if managers_data:
+            critical_result = await self.test_critical_data_integrity_fix(managers_data)
+            test_results.append(critical_result)
+        
+        # Test 6: Manager Configuration Verification
         if managers_data:
             config_result = await self.test_manager_configuration(managers_data)
             test_results.append(config_result)
         
-        # Test 6: Performance Calculation Testing
+        # Test 7: Performance Calculation Testing
         if managers_data:
             perf_result = await self.test_performance_calculation(managers_data)
             test_results.append(perf_result)
