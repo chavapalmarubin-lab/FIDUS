@@ -47,23 +47,25 @@ const TradingAnalyticsDashboard = () => {
       setLoading(true);
       setError("");
 
-      // Phase 1A: Use real API endpoints with fallback to mock data
-      const account = selectedAccount === 'all' ? null : parseInt(selectedAccount);
+      // Phase 1B: Support all accounts with proper parameter handling
+      const account = selectedAccount === 'all' ? 0 : parseInt(selectedAccount);
       const days = selectedPeriod === '7d' ? 7 : 
                    selectedPeriod === '30d' ? 30 : 
                    selectedPeriod === '90d' ? 90 : 
                    selectedPeriod === 'ytd' ? 365 : 30;
 
       try {
-        // Fetch analytics overview
-        const overviewResponse = await apiAxios.get('/admin/trading/analytics/overview');
+        // Fetch analytics overview with account filter
+        const overviewResponse = await apiAxios.get('/admin/trading/analytics/overview', {
+          params: { account, days }
+        });
         
-        // Fetch daily performance
+        // Fetch daily performance with account filter
         const dailyResponse = await apiAxios.get('/admin/trading/analytics/daily', {
           params: { days, account }
         });
         
-        // Fetch recent trades
+        // Fetch recent trades with account filter
         const tradesResponse = await apiAxios.get('/admin/trading/analytics/trades', {
           params: { limit: 20, account }
         });
