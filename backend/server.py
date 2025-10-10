@@ -50,6 +50,14 @@ from google_admin_service import GoogleAdminService
 from google_social_auth import google_social_auth
 from document_signing_service import document_signing_service
 
+# Import Google Service Account (NO OAUTH NEEDED!)
+from google_service_account import (
+    list_gmail_messages,
+    list_calendar_events,
+    list_drive_files,
+    list_spreadsheets_in_folder
+)
+
 # Import MT5 Service
 from services.mt5_service import mt5_service
 from models.mt5_account import BrokerCode
