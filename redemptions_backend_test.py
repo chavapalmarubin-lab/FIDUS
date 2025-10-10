@@ -97,7 +97,7 @@ class RedemptionsTester:
         
         try:
             response = requests.post(f"{API_BASE}/auth/login", json={
-                "username": "alejandro",
+                "username": "alejandro_mariscal",
                 "password": "password123",
                 "user_type": "client"
             }, timeout=10)
