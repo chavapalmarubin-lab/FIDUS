@@ -1,27 +1,21 @@
 #!/usr/bin/env python3
 """
-URGENT DEBUG: Frontend Data Visibility Testing
-Testing specific endpoints that frontend should be calling but user reports no data visible.
-
-Focus Areas:
-1. Admin Authentication 
-2. Investment Admin Overview (dashboard totals)
-3. Ready Clients (investment dropdown)
-4. Client Investments (Alejandro's data)
-5. MT5 Accounts (Alejandro's accounts)
-6. Google Connection Status
-
-Context: User reports no investments, MT5 accounts, or Google email functionality visible in frontend.
-Need to verify these specific endpoints are returning correct data for frontend consumption.
+Trading Analytics System Phase 1A Testing
+Testing the new Trading Analytics API endpoints and infrastructure
 """
 
-import requests
+import asyncio
+import aiohttp
 import json
+import logging
+from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Any
+import os
 import sys
-from datetime import datetime
 
-# Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://fidus-integration.preview.emergentagent.com/api"
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class FrontendDataVisibilityTester:
     def __init__(self):
