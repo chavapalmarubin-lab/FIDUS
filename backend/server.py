@@ -20176,3 +20176,10 @@ async def get_sheets_alias(
     logging.info(f"📊 Sheets alias endpoint called - using service account")
     return await get_sheets_service_account(folder_id, current_user)
 
+
+# ===============================================================================
+# INCLUDE ROUTER - MUST BE LAST!
+# ===============================================================================
+# Include the API router in the main app AFTER all endpoints are defined
+app.include_router(api_router)
+
