@@ -17014,6 +17014,145 @@ async def get_cash_flow_calendar():
         }
 
 # ===============================================================================
+# TRADING ANALYTICS ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/trading/analytics/overview")
+async def get_trading_analytics_overview():
+    """Get trading analytics overview for admin dashboard"""
+    try:
+        from trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        
+        # Phase 1A: Start with account 886557
+        # Phase 1B: Expand to all accounts
+        account_numbers = [886557]  # BALANCE Fund account for testing
+        
+        analytics_data = await service.get_analytics_overview(account_numbers, days=30)
+        
+        return {
+            "success": True,
+            "analytics": analytics_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Trading analytics overview error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get trading analytics: {str(e)}",
+            "analytics": None
+        }
+
+@api_router.get("/admin/trading/analytics/daily")
+async def get_daily_performance(days: int = 30, account: int = None):
+    """Get daily performance data for calendar view"""
+    try:
+        # Phase 1A: Default to account 886557 if not specified
+        if account is None:
+            account = 886557
+        
+        end_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date = end_date - timedelta(days=days)
+        
+        daily_cursor = db.daily_performance.find({
+            "account": account,
+            "date": {"$gte": start_date, "$lt": end_date}
+        }).sort("date", -1)
+        
+        daily_data = await daily_cursor.to_list(length=None)
+        
+        # Convert MongoDB ObjectIds and dates to JSON serializable format
+        for day in daily_data:
+            if "_id" in day:
+                del day["_id"]
+            if isinstance(day.get("date"), datetime):
+                day["date"] = day["date"].isoformat()
+            if isinstance(day.get("calculated_at"), datetime):
+                day["calculated_at"] = day["calculated_at"].isoformat()
+        
+        return {
+            "success": True,
+            "daily_performance": daily_data,
+            "period_start": start_date.isoformat(),
+            "period_end": end_date.isoformat(),
+            "account": account
+        }
+        
+    except Exception as e:
+        logging.error(f"Daily performance error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get daily performance: {str(e)}",
+            "daily_performance": []
+        }
+
+@api_router.get("/admin/trading/analytics/trades")
+async def get_recent_trades(limit: int = 50, account: int = None):
+    """Get recent trades for display"""
+    try:
+        # Phase 1A: Default to account 886557 if not specified
+        if account is None:
+            account = 886557
+        
+        trades_cursor = db.mt5_trades.find({
+            "account": account
+        }).sort("close_time", -1).limit(limit)
+        
+        trades = await trades_cursor.to_list(length=None)
+        
+        # Convert MongoDB ObjectIds and dates to JSON serializable format
+        for trade in trades:
+            if "_id" in trade:
+                del trade["_id"]
+            if isinstance(trade.get("open_time"), datetime):
+                trade["open_time"] = trade["open_time"].isoformat()
+            if isinstance(trade.get("close_time"), datetime):
+                trade["close_time"] = trade["close_time"].isoformat()
+            if isinstance(trade.get("created_at"), datetime):
+                trade["created_at"] = trade["created_at"].isoformat()
+        
+        return {
+            "success": True,
+            "trades": trades,
+            "account": account,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        logging.error(f"Recent trades error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get recent trades: {str(e)}",
+            "trades": []
+        }
+
+@api_router.post("/admin/trading/analytics/sync")
+async def trigger_manual_sync():
+    """Manually trigger trading analytics sync for testing"""
+    try:
+        from trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        
+        # Run sync for yesterday by default
+        result = await service.daily_sync_job()
+        
+        return {
+            "success": result["success"],
+            "sync_result": result
+        }
+        
+    except Exception as e:
+        logging.error(f"Manual sync error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Manual sync failed: {str(e)}",
+            "sync_result": None
+        }
+
+# ===============================================================================
 # CLIENT-SPECIFIC CALENDAR ENDPOINTS
 # ===============================================================================
 
