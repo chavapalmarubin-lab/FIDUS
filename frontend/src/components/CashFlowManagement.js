@@ -400,6 +400,25 @@ const CashFlowManagement = () => {
         </CardContent>
       </Card>
 
+      {/* PERFORMANCE ANALYSIS SECTION - NEW */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
+            📊 Fund Performance Analysis
+          </CardTitle>
+          <p className="text-slate-400 text-sm mt-1">
+            Track actual fund performance against required returns to meet all client obligations
+          </p>
+        </CardHeader>
+        <CardContent>
+          <PerformanceAnalysisSection 
+            fundAccounting={fundAccounting}
+            cashFlowCalendar={cashFlowCalendar}
+          />
+        </CardContent>
+      </Card>
+
       {/* REBATES COMMISSION BREAKDOWN */}
       <Card className="dashboard-card">
         <CardHeader>
