@@ -19978,35 +19978,22 @@ async def disconnect_google_account(current_user: dict = Depends(get_current_adm
 
 # Gmail API
 @api_router.get("/admin/google/gmail/messages")
-async def get_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
-    """Get Gmail messages for authenticated admin"""
+async def get_gmail_messages(
+    max_results: int = 10,
+    query: str = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Gmail messages - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
     try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        gmail_service = await google_service.get_gmail_service(user_id)
-        
-        # Fetch messages
-        results = gmail_service.users().messages().list(userId='me', maxResults=10).execute()
-        messages = results.get('messages', [])
-        
-        # Fetch full message details
-        full_messages = []
-        for msg in messages[:10]:  # Limit to 10 for performance
-            message = gmail_service.users().messages().get(userId='me', id=msg['id'], format='full').execute()
-            full_messages.append(message)
-        
+        logging.info(f"📧 Fetching Gmail messages using service account")
+        messages = await list_gmail_messages(max_results, query)
         return {
             'success': True,
-            'messages': full_messages
+            'messages': messages,
+            'count': len(messages)
         }
-        
     except Exception as e:
         logging.error(f"❌ Failed to fetch Gmail messages: {str(e)}")
-        
-        if "invalid_grant" in str(e) or "Token has been expired" in str(e):
-            raise HTTPException(status_code=401, detail="Google authentication expired. Please reconnect.")
-        
         raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail: {str(e)}")
 
 # Calendar API
