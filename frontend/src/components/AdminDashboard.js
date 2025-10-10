@@ -326,6 +326,9 @@ const AdminDashboard = ({ user, onLogout }) => {
       case 'trading-analytics':
         exportTradingAnalyticsData();
         break;
+      case 'money-managers':
+        exportMoneyManagersData();
+        break;
       case 'investments':
         exportInvestmentsData();
         break;
