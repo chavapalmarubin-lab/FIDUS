@@ -17144,14 +17144,15 @@ async def get_daily_performance(days: int = 30, account: int = None):
 async def get_recent_trades(limit: int = 50, account: int = None):
     """Get recent trades for display"""
     try:
-        # Phase 1A: Default to account 886557 if not specified
-        if account is None:
-            account = 886557
+        # Phase 1B: Support all accounts or specific account
+        if account is None or account == 0:  # 'all' accounts
+            query_filter = {"account": {"$in": [886557, 886066, 886602, 885822]}}
+            account_display = "all"
+        else:
+            query_filter = {"account": account}
+            account_display = account
         
-        trades_cursor = db.mt5_trades.find({
-            "account": account
-        }).sort("close_time", -1).limit(limit)
-        
+        trades_cursor = db.mt5_trades.find(query_filter).sort("close_time", -1).limit(limit)
         trades = await trades_cursor.to_list(length=None)
         
         # Convert MongoDB ObjectIds and dates to JSON serializable format
@@ -17168,7 +17169,7 @@ async def get_recent_trades(limit: int = 50, account: int = None):
         return {
             "success": True,
             "trades": trades,
-            "account": account,
+            "account": account_display,
             "limit": limit
         }
         
