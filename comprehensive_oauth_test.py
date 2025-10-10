@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://fidus-integration.preview.emergentagent.com/api"
-FRONTEND_URL = "https://fidus-integration.preview.emergentagent.com"
+BACKEND_URL = "https://tradingteam-setup.preview.emergentagent.com/api"
+FRONTEND_URL = "https://tradingteam-setup.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

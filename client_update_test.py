@@ -27,7 +27,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use correct backend URL from frontend/.env
-BACKEND_URL = "https://fidus-integration.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradingteam-setup.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
