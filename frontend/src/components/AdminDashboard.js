@@ -498,16 +498,13 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-12 bg-slate-800 border-slate-600">
+          <TabsList className="grid w-full grid-cols-11 bg-slate-800 border-slate-600">
             <TabsTrigger value="portfolio" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="fund-performance" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
-              📊 Fund vs MT5
-            </TabsTrigger>
             <TabsTrigger value="cashflow" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               <DollarSign size={16} className="mr-2" />
-              Cash Flow
+              Cash Flow & Performance
             </TabsTrigger>
             <TabsTrigger value="investments" className="text-white hover:bg-slate-700 data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:border data-[state=active]:border-cyan-400">
               <TrendingUp size={16} className="mr-2" />
