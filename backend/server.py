@@ -10103,19 +10103,49 @@ async def create_google_meet(meeting_data: dict, current_user: dict = Depends(ge
 @api_router.get("/google/gmail/real-messages")
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using individual OAuth system"""
-    return {
-        "success": True,
-        "messages": [{
-            "id": "test_gmail",
-            "subject": "🔥 TEST - NEW INDIVIDUAL OAUTH ENDPOINT WORKING",
-            "sender": "Individual OAuth System",
-            "snippet": "This proves the new endpoint is being called",
-            "body": "New individual OAuth endpoint is working correctly",
-            "error": False
-        }],
-        "source": "NEW_INDIVIDUAL_OAUTH_SUCCESS",
-        "count": 1
-    }
+    try:
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
+        
+        # Use individual OAuth system to get Gmail messages
+        tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
+        
+        if not tokens:
+            return {
+                "success": False,
+                "error": "Google authentication required. Please connect your Google account first.",
+                "auth_required": True,
+                "messages": [],
+                "source": "no_google_auth"
+            }
+        
+        # Call Gmail API using individual OAuth tokens
+        messages = await get_gmail_messages_with_individual_oauth(tokens, max_results=20)
+        
+        logging.info(f"Retrieved {len(messages)} Gmail messages for user: {current_user['username']}")
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "source": "individual_oauth_gmail_api",
+            "count": len(messages)
+        }
+        
+    except Exception as e:
+        logging.error(f"Real Gmail messages error: {str(e)}")
+        return {
+            "success": False,
+            "error": "Google authentication required. Please connect your Google account first.",
+            "auth_required": True,
+            "messages": [],
+            "source": "no_google_auth"
+        }
 
 @api_router.get("/admin/gmail/messages")
 async def get_admin_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
