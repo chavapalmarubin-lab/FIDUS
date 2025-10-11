@@ -10715,7 +10715,7 @@ async def force_mt5_refresh(mt5_login: str):
 # MT5 AUTO-SYNC SERVICE ENDPOINTS
 # ================================
 
-@api_router.post("/mt5/force-sync/{mt5_login}")
+@api_router.post("/api/mt5/force-sync/{mt5_login}")
 async def force_sync_single_account(mt5_login: str, current_user: dict = Depends(get_current_admin_user)):
     """Force immediate sync for specific MT5 account - Addresses $521.88 discrepancy"""
     try:
