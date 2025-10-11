@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-FIDUS Platform Architecture Audit - Backend Endpoint Testing
-Testing current working endpoints to document path patterns and responses
+FIDUS Platform Critical Endpoint Testing - NEW Render Production URLs
+Testing 5 critical endpoints after environment file updates to Render URLs
 """
 
 import asyncio
@@ -17,25 +17,23 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class FIDUSArchitectureAuditTestSuite:
-    """FIDUS Platform Architecture Audit - Backend Endpoint Testing Suite"""
+class FIDUSCriticalEndpointTestSuite:
+    """FIDUS Platform Critical Endpoint Testing Suite - NEW Render Production URLs"""
     
     def __init__(self):
-        # Get backend URL from frontend environment
-        self.frontend_backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://k8s-to-render.preview.emergentagent.com')
-        self.backend_url = self.frontend_backend_url
-        if not self.backend_url.endswith('/api'):
-            self.backend_url = f"{self.backend_url}/api"
+        # Use NEW Render production URLs
+        self.render_backend_url = "https://fidus-investment-platform.onrender.com"
+        self.backend_url = f"{self.render_backend_url}/api"
         
         self.session = None
         self.admin_token = None
         self.test_results = []
         self.endpoint_documentation = []
         
-        logger.info(f"🏗️ FIDUS Platform Architecture Audit Test Suite initialized")
-        logger.info(f"   Frontend Backend URL: {self.frontend_backend_url}")
+        logger.info(f"🚀 FIDUS Critical Endpoint Test Suite initialized")
+        logger.info(f"   NEW Render Backend URL: {self.render_backend_url}")
         logger.info(f"   API Base URL: {self.backend_url}")
-        logger.info(f"   Purpose: Document working endpoint patterns and responses")
+        logger.info(f"   Purpose: Test 5 critical endpoints with NEW Render production URLs")
     
     async def setup(self):
         """Setup test environment"""
