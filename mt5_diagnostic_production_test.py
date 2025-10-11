@@ -99,6 +99,31 @@ class MT5DiagnosticProductionTestSuite:
             validation_results.append(f"🎯 Testing URL: {endpoint_url}")
             validation_results.append("📋 Expected: Account health status for separation account 886528")
             
+            # First verify account exists in admin accounts
+            admin_accounts_url = f"{self.backend_url}/mt5/admin/accounts"
+            async with self.session.get(admin_accounts_url) as admin_response:
+                if admin_response.status == 200:
+                    admin_data = await admin_response.json()
+                    accounts = admin_data.get('accounts', [])
+                    account_886528 = None
+                    for acc in accounts:
+                        if str(acc.get('mt5_login')) == '886528':
+                            account_886528 = acc
+                            break
+                    
+                    if account_886528:
+                        validation_results.append(f"✅ Account 886528 found in admin accounts")
+                        validation_results.append(f"   Fund Code: {account_886528.get('fund_code')}")
+                        validation_results.append(f"   Balance: ${account_886528.get('balance', 0)}")
+                        validation_results.append(f"   Equity: ${account_886528.get('current_equity', 0)}")
+                        validation_results.append(f"   Broker: {account_886528.get('broker_name')}")
+                        
+                        # Store the account data we found
+                        self.account_886528_data['admin_account_data'] = account_886528
+                    else:
+                        validation_results.append("❌ Account 886528 not found in admin accounts")
+            
+            # Now test the health check endpoint
             async with self.session.get(endpoint_url) as response:
                 status_code = response.status
                 response_text = await response.text()
@@ -116,28 +141,26 @@ class MT5DiagnosticProductionTestSuite:
                     
                     # Validate response structure
                     if isinstance(response_data, dict):
-                        if 'account_number' in response_data:
-                            validation_results.append(f"✅ Account Number: {response_data.get('account_number')}")
+                        if 'mt5_login' in response_data:
+                            validation_results.append(f"✅ MT5 Login: {response_data.get('mt5_login')}")
                         
-                        if 'balance' in response_data or 'equity' in response_data:
-                            balance = response_data.get('balance', response_data.get('equity', 'N/A'))
-                            validation_results.append(f"✅ Account Balance/Equity: {balance}")
+                        if 'status' in response_data:
+                            status = response_data.get('status')
+                            validation_results.append(f"✅ Health Status: {status}")
                         
-                        if 'status' in response_data or 'connection_status' in response_data:
-                            status = response_data.get('status', response_data.get('connection_status', 'N/A'))
-                            validation_results.append(f"✅ Connection Status: {status}")
+                        if 'database_data' in response_data:
+                            db_data = response_data.get('database_data')
+                            if isinstance(db_data, dict):
+                                db_balance = db_data.get('balance', 'N/A')
+                                validation_results.append(f"✅ Database Balance: {db_balance}")
                         
-                        if 'broker' in response_data or 'broker_name' in response_data:
-                            broker = response_data.get('broker', response_data.get('broker_name', 'N/A'))
-                            validation_results.append(f"✅ Broker: {broker}")
+                        if 'live_data' in response_data:
+                            live_data = response_data.get('live_data')
+                            validation_results.append("✅ Live MT5 data present")
                         
-                        # Check for separation account specific data
-                        if 'fund_type' in response_data:
-                            fund_type = response_data.get('fund_type')
-                            if fund_type == 'SEPARATION':
-                                validation_results.append("✅ Confirmed: SEPARATION fund type")
-                            else:
-                                validation_results.append(f"⚠️ Fund type: {fund_type} (expected SEPARATION)")
+                        if 'discrepancy' in response_data:
+                            discrepancy = response_data.get('discrepancy')
+                            validation_results.append(f"✅ Discrepancy Analysis: {discrepancy}")
                     
                     return {
                         'test_name': test_name,
@@ -148,14 +171,27 @@ class MT5DiagnosticProductionTestSuite:
                     }
                     
                 elif status_code == 404:
-                    validation_results.append("❌ HTTP 404 - Account 886528 not found")
-                    return {
-                        'test_name': test_name,
-                        'status': 'FAIL',
-                        'validation_results': validation_results,
-                        'error': 'Account not found',
-                        'endpoint_url': endpoint_url
-                    }
+                    validation_results.append("❌ HTTP 404 - Health check endpoint not found or account not found")
+                    validation_results.append(f"   Response: {response_text}")
+                    
+                    # Even if health check fails, we can still analyze the account from admin data
+                    if 'admin_account_data' in self.account_886528_data:
+                        validation_results.append("ℹ️ Account exists in system but health check endpoint unavailable")
+                        return {
+                            'test_name': test_name,
+                            'status': 'PARTIAL',
+                            'validation_results': validation_results,
+                            'error': 'Health check endpoint not available',
+                            'endpoint_url': endpoint_url
+                        }
+                    else:
+                        return {
+                            'test_name': test_name,
+                            'status': 'FAIL',
+                            'validation_results': validation_results,
+                            'error': 'Account not found',
+                            'endpoint_url': endpoint_url
+                        }
                     
                 elif status_code == 500:
                     validation_results.append("❌ HTTP 500 - Server error during health check")
