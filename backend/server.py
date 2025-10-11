@@ -10496,7 +10496,14 @@ async def mt5_account_health_check(mt5_login: str, current_user: dict = Depends(
     """
     try:
         # Get account from database
-        db_account = await db.mt5_accounts.find_one({"login": mt5_login})
+        # Try both login and mt5_login fields for compatibility
+        db_account = await db.mt5_accounts.find_one({
+            "$or": [
+                {"login": mt5_login},
+                {"mt5_login": int(mt5_login)},
+                {"mt5_login": mt5_login}
+            ]
+        })
         
         if not db_account:
             return {
