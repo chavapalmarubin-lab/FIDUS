@@ -497,11 +497,11 @@ const FullGoogleWorkspace = () => {
       // Call the OAuth Google Drive API endpoint
       const response = await apiAxios.get('/admin/google/drive/files');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} real drive files`);
+      if (response.data.success && response.data.files && Array.isArray(response.data.files)) {
+        console.log(`✅ Loaded ${response.data.files.length} drive files via OAuth API`);
         
-        // Transform real Drive data to our format
-        const transformedFiles = response.data.map(file => ({
+        // Transform OAuth Drive data to our format
+        const transformedFiles = response.data.files.map(file => ({
           id: file.id,
           name: file.name,
           mimeType: file.mimeType || 'application/octet-stream',
