@@ -9883,12 +9883,22 @@ async def create_google_meet(meeting_data: dict, current_user: dict = Depends(ge
 
 @api_router.get("/google/gmail/real-messages")
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
-    """Get real Gmail messages using Google Gmail API"""
+    """Get real Gmail messages using OAuth 2.0"""
     try:
-        # Get user's Google OAuth tokens
-        token_data = await get_google_session_token(current_user["user_id"])
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        messages = await list_gmail_messages(admin_user_id, db, max_results=20)
         
-        if not token_data:
+        logging.info(f"Retrieved {len(messages)} Gmail messages for user: {current_user['username']}")
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "source": "oauth_gmail_api",
+            "count": len(messages)
+        }
+        
+    except Exception as e:
+        if "Google authentication required" in str(e):
             return {
                 "success": False,
                 "error": "Google authentication required. Please connect your Google account first.",
@@ -9897,19 +9907,6 @@ async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin
                 "source": "no_google_auth"
             }
         
-        # Get Gmail messages using Google APIs service
-        messages = await google_apis_service.get_gmail_messages(token_data, max_results=20)
-        
-        logging.info(f"Retrieved {len(messages)} Gmail messages for user: {current_user['username']}")
-        
-        return {
-            "success": True,
-            "messages": messages,
-            "source": "real_gmail_api",
-            "count": len(messages)
-        }
-        
-    except Exception as e:
         logging.error(f"Real Gmail messages error: {str(e)}")
         return {
             "success": False,
