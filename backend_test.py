@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-FIDUS Platform Critical Endpoint Testing - NEW Render Production URLs
-Testing 5 critical endpoints after environment file updates to Render URLs
+FIDUS Platform MT5 Auto-Sync Endpoint Testing - Render Production URLs
+Testing MT5 Auto-Sync endpoints to resolve $521.88 discrepancy in account 886528
+PRIORITY 1: Force sync account 886528 from $3,405.53 to $3,927.41
 """
 
 import asyncio
