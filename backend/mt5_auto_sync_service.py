@@ -461,7 +461,7 @@ class MT5AutoSyncService:
             current_time = datetime.now(timezone.utc)
             
             for account in accounts:
-                mt5_login = str(account.get('mt5_login') or account.get('login', ''))
+                mt5_login = str(account.get('account') or account.get('mt5_login') or account.get('login', ''))
                 last_updated = account.get('updated_at') or account.get('last_sync_timestamp')
                 
                 # Calculate age of last sync
