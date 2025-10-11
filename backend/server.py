@@ -16573,7 +16573,7 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
             "notes": "Timeline-based performance assessment. Fund performing {:.2f}x required daily rate.".format(performance_multiplier)
         }
         
-        logging.info(f"✅ Corrected fund performance: Net ${net_position:+,.2f}")
+        logging.info(f"✅ Fund performance: {performance_multiplier:.2f}x required pace, projected surplus ${projected_surplus:+,.2f}")
         return fund_performance
         
     except Exception as e:
