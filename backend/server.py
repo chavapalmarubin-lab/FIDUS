@@ -1334,6 +1334,8 @@ class IndividualGoogleOAuth:
     async def get_admin_google_tokens(self, admin_user_id: str) -> Optional[Dict]:
         """Get Google OAuth tokens for specific admin user"""
         try:
+            logging.info(f"🔍 [INDIVIDUAL OAUTH] Getting tokens for admin: {admin_user_id}")
+            
             # Get admin-specific Google OAuth tokens from database
             session_doc = await db.admin_google_sessions.find_one(
                 {"admin_user_id": admin_user_id}, 
@@ -1341,8 +1343,12 @@ class IndividualGoogleOAuth:
             )
             
             if session_doc and session_doc.get('google_tokens'):
+                logging.info(f"🔍 [INDIVIDUAL OAUTH] Found session doc for admin: {admin_user_id}")
+                
                 # Check if tokens are still valid
                 expires_at = session_doc['google_tokens'].get('expires_at')
+                logging.info(f"🔍 [INDIVIDUAL OAUTH] Token expires_at: {expires_at}")
+                
                 if expires_at:
                     try:
                         # Handle different datetime formats with robust parsing
@@ -1354,18 +1360,34 @@ class IndividualGoogleOAuth:
                             # Assume it's a naive datetime, make it timezone aware
                             expiry_time = datetime.fromisoformat(expires_at).replace(tzinfo=timezone.utc)
                         
+                        logging.info(f"🔍 [INDIVIDUAL OAUTH] Parsed expiry_time: {expiry_time}")
+                        logging.info(f"🔍 [INDIVIDUAL OAUTH] Current time: {datetime.now(timezone.utc)}")
+                        logging.info(f"🔍 [INDIVIDUAL OAUTH] Token expired: {expiry_time <= datetime.now(timezone.utc)}")
+                        
                         if expiry_time > datetime.now(timezone.utc):
+                            logging.info(f"✅ [INDIVIDUAL OAUTH] Returning valid tokens for admin: {admin_user_id}")
                             return session_doc['google_tokens']
+                        else:
+                            logging.info(f"🔄 [INDIVIDUAL OAUTH] Token expired, attempting refresh for admin: {admin_user_id}")
+                            return await self.refresh_admin_tokens(admin_user_id, session_doc['google_tokens'])
+                            
                     except ValueError as e:
-                        logging.warning(f"⚠️ Invalid expires_at format '{expires_at}' for admin {admin_user_id}: {e}")
+                        logging.warning(f"⚠️ [INDIVIDUAL OAUTH] Invalid expires_at format '{expires_at}' for admin {admin_user_id}: {e}")
                         # Treat as expired if can't parse
+                        return await self.refresh_admin_tokens(admin_user_id, session_doc['google_tokens'])
                 else:
-                    # Try to refresh expired tokens
+                    # No expiry time - try to refresh
+                    logging.info(f"🔄 [INDIVIDUAL OAUTH] No expiry time, attempting refresh for admin: {admin_user_id}")
                     return await self.refresh_admin_tokens(admin_user_id, session_doc['google_tokens'])
+            else:
+                logging.warning(f"❌ [INDIVIDUAL OAUTH] No tokens found for admin: {admin_user_id}")
+                
             return None
             
         except Exception as e:
-            logging.error(f"Error getting Google tokens for admin {admin_user_id}: {str(e)}")
+            logging.error(f"❌ [INDIVIDUAL OAUTH] Error getting Google tokens for admin {admin_user_id}: {str(e)}")
+            import traceback
+            logging.error(f"❌ [INDIVIDUAL OAUTH] Full traceback: {traceback.format_exc()}")
             return None
 
     async def store_admin_google_tokens(self, admin_user_id: str, token_data: Dict, admin_email: str) -> bool:
