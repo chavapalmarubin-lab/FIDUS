@@ -10,6 +10,24 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
+// Import custom node components
+import ApplicationNode from './nodes/ApplicationNode';
+import DatabaseNode from './nodes/DatabaseNode';
+import ServiceNode from './nodes/ServiceNode';
+import IntegrationNode from './nodes/IntegrationNode';
+import InfrastructureNode from './nodes/InfrastructureNode';
+import GitHubNode from './nodes/GitHubNode';
+
+// Define custom node types
+const nodeTypes = {
+  application: ApplicationNode,
+  database: DatabaseNode,
+  service: ServiceNode,
+  integration: IntegrationNode,
+  infrastructure: InfrastructureNode,
+  github: GitHubNode,
+};
+
 /**
  * ArchitectureDiagram - Interactive System Architecture Visualization
  * Phase 2: Visual diagram with draggable nodes, zoom controls, and real-time status
