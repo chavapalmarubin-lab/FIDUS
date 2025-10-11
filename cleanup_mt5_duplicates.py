@@ -32,7 +32,7 @@ class MT5AccountCleanup:
             raise
         
         # API configuration
-        self.base_url = "https://tradingteam-setup.preview.emergentagent.com"
+        self.base_url = "https://finance-dashboard-158.preview.emergentagent.com"
         self.admin_token = None
         
         # Real MT5 trading data from the screenshot

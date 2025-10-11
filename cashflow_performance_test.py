@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://tradingteam-setup.preview.emergentagent.com/api"
+BACKEND_URL = "https://finance-dashboard-158.preview.emergentagent.com/api"
 
 class CashFlowPerformanceAnalysisTester:
     def __init__(self):

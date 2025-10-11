@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://tradingteam-setup.preview.emergentagent.com`
+`https://finance-dashboard-158.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

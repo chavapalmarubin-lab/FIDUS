@@ -22,7 +22,7 @@ import random
 import statistics
 
 class ScalabilityValidationTester:
-    def __init__(self, base_url="https://tradingteam-setup.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-dashboard-158.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
