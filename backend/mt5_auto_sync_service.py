@@ -105,16 +105,23 @@ class MT5AutoSyncService:
                     return result
                     
             except Exception as e:
+                import traceback
                 last_error = str(e)
+                logger.error(f"MT5 fetch attempt {attempt + 1}/{self.retry_attempts} failed for {mt5_login}")
+                logger.error(f"Error type: {type(e).__name__}")
+                logger.error(f"Error message: {str(e)}")
+                logger.error(f"Full traceback:\n{traceback.format_exc()}")
+                
                 if attempt < self.retry_attempts - 1:
                     wait_time = self.retry_delay * (2 ** attempt)
-                    logger.warning(f"MT5 fetch attempt {attempt + 1}/{self.retry_attempts} failed for {mt5_login}: {e}")
-                    logger.info(f"Retrying in {wait_time} seconds...")
+                    logger.warning(f"Retrying in {wait_time} seconds...")
                     await asyncio.sleep(wait_time)
                     continue
         
         # All attempts failed
         logger.error(f"❌ All MT5 fetch attempts failed for {mt5_login}: {last_error}")
+        logger.error(f"Bridge URL: {self.bridge_url}")
+        logger.error(f"API Key configured: {'Yes' if self.api_key else 'No'}")
         raise Exception(f"Failed to fetch MT5 data after {self.retry_attempts} attempts: {last_error}")
     
     async def _fetch_via_bridge(self, mt5_login: str) -> Dict[str, Any]:
