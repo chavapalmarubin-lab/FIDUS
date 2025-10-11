@@ -281,6 +281,51 @@ const FullGoogleWorkspace = () => {
     }
   };
 
+  // Handle Google OAuth disconnection
+  const handleDisconnectGoogle = async () => {
+    if (!window.confirm('Are you sure you want to disconnect your Google account? You will need to reconnect to access Gmail, Calendar, and Drive.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🔌 Disconnecting Google account...');
+      
+      const response = await apiAxios.post('/admin/google/individual-disconnect');
+      
+      if (response.data.success) {
+        console.log('✅ Successfully disconnected Google account');
+        
+        // Reset connection status
+        setConnectionStatus({
+          success: false,
+          connected: false,
+          overall_status: 'disconnected',
+          message: 'Google account disconnected successfully'
+        });
+        
+        // Clear data
+        setEmails([]);
+        setEvents([]);
+        setDriveFiles([]);
+        
+        alert('✅ Google account disconnected successfully. You can now connect with a different account.');
+        
+        // Refresh connection status
+        testConnectionQuick();
+        
+      } else {
+        throw new Error(response.data.message || 'Failed to disconnect Google account');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to disconnect Google account:', error);
+      alert('❌ Failed to disconnect Google account: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ==================== GMAIL FUNCTIONS ====================
   
   const loadEmails = async () => {
