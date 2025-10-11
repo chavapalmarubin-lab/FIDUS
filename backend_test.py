@@ -21,8 +21,8 @@ class FIDUSCriticalEndpointTestSuite:
     """FIDUS Platform Critical Endpoint Testing Suite - NEW Render Production URLs"""
     
     def __init__(self):
-        # Use NEW Render production URLs
-        self.render_backend_url = "https://fidus-investment-platform.onrender.com"
+        # Use CORRECT Render backend API URL (not frontend URL)
+        self.render_backend_url = "https://fidus-api.onrender.com"
         self.backend_url = f"{self.render_backend_url}/api"
         
         self.session = None
