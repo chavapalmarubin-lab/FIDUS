@@ -10485,7 +10485,7 @@ async def check_mt5_sync_status():
             "checked_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.post("/api/debug/mt5/force-refresh/{mt5_login}")
+@api_router.post("/debug/mt5/force-refresh/{mt5_login}")
 async def force_mt5_refresh(mt5_login: str):
     """Force immediate refresh of MT5 data for specific account"""
     try:
