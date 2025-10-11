@@ -325,7 +325,7 @@ class MT5AutoSyncService:
             failed_syncs = 0
             
             for account in accounts:
-                mt5_login = str(account.get('mt5_login') or account.get('login', ''))
+                mt5_login = str(account.get('account') or account.get('mt5_login') or account.get('login', ''))
                 if mt5_login and mt5_login != 'None':
                     result = await self.sync_single_account(mt5_login)
                     sync_results.append(result)
