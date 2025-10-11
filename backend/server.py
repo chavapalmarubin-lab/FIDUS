@@ -10297,7 +10297,7 @@ async def debug_connection_flow():
 # ===============================================================================
 
 @api_router.get("/debug/test")
-async def test_debug_endpoint():
+async def test_debug_endpoint(current_user: dict = Depends(get_current_admin_user)):
     """Simple test endpoint to verify debug routing works"""
     return {
         "status": "working", 
