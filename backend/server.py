@@ -1343,8 +1343,22 @@ class IndividualGoogleOAuth:
             if session_doc and session_doc.get('google_tokens'):
                 # Check if tokens are still valid
                 expires_at = session_doc['google_tokens'].get('expires_at')
-                if expires_at and datetime.fromisoformat(expires_at) > datetime.now(timezone.utc):
-                    return session_doc['google_tokens']
+                if expires_at:
+                    try:
+                        # Handle different datetime formats with robust parsing
+                        if expires_at.endswith('Z'):
+                            expiry_time = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                        elif '+' in expires_at or expires_at.endswith('00:00'):
+                            expiry_time = datetime.fromisoformat(expires_at)
+                        else:
+                            # Assume it's a naive datetime, make it timezone aware
+                            expiry_time = datetime.fromisoformat(expires_at).replace(tzinfo=timezone.utc)
+                        
+                        if expiry_time > datetime.now(timezone.utc):
+                            return session_doc['google_tokens']
+                    except ValueError as e:
+                        logging.warning(f"⚠️ Invalid expires_at format '{expires_at}' for admin {admin_user_id}: {e}")
+                        # Treat as expired if can't parse
                 else:
                     # Try to refresh expired tokens
                     return await self.refresh_admin_tokens(admin_user_id, session_doc['google_tokens'])
