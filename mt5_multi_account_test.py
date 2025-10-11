@@ -5,7 +5,7 @@ Testing the new multi-account MT5 endpoints that solve the single-session limita
 
 Review Request: TEST MULTI-ACCOUNT MT5 SOLUTION
 Authentication: admin/password123
-Backend: https://finance-dashboard-158.preview.emergentagent.com/api
+Backend: https://k8s-to-render.preview.emergentagent.com/api
 
 MULTI-ACCOUNT TESTS:
 1. Test MT5 Initialization: GET /api/mt5/multi-account/test-init
@@ -29,7 +29,7 @@ from datetime import datetime
 import time
 
 # Backend URL from review request
-BACKEND_URL = "https://finance-dashboard-158.preview.emergentagent.com/api"
+BACKEND_URL = "https://k8s-to-render.preview.emergentagent.com/api"
 
 class MT5MultiAccountTester:
     def __init__(self):

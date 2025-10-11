@@ -31,7 +31,7 @@ class DetailedMoneyManagersTester:
     """Detailed Money Managers Profile System Tester"""
     
     def __init__(self):
-        self.base_url = "https://finance-dashboard-158.preview.emergentagent.com"
+        self.base_url = "https://k8s-to-render.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         self.admin_credentials = {

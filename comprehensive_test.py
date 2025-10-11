@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://finance-dashboard-158.preview.emergentagent.com/api'
+BACKEND_URL = 'https://k8s-to-render.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://finance-dashboard-158.preview.emergentagent.com`
+`https://k8s-to-render.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
