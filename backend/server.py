@@ -10305,7 +10305,7 @@ async def test_debug_endpoint():
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
-@api_router.get("/api/debug/mt5/connection-test")
+@api_router.get("/debug/mt5/connection-test")
 async def test_mt5_connection():
     """Test if MT5 API is reachable and responding"""
     try:
