@@ -92,34 +92,35 @@ const FullGoogleWorkspace = () => {
     }
   }, [connectionStatus, activeTab]);
 
-  // Quick connection test using new OAuth 2.0 service
+  // Quick connection test using individual OAuth system
   const testConnectionQuick = async () => {
     try {
-      const response = await apiAxios.get('/admin/google/status');
+      const response = await apiAxios.get('/admin/google/individual-status');
       console.log('🔍 Google connection status:', response.data);
       
-      // Update connection status based on OAuth response
-      const status = response.data.status;
-      const isConnected = status.connected && !status.is_expired;
+      // Update connection status based on individual OAuth response
+      const isConnected = response.data.connected && response.data.success;
       
       const statusData = {
-        success: isConnected,
-        connected: status.connected,
-        is_expired: status.is_expired,
+        success: response.data.success,
+        connected: response.data.connected,
+        is_expired: response.data.is_expired || false,
         overall_status: isConnected ? 'fully_connected' : 'disconnected',
-        scopes: status.scopes || [],
+        scopes: response.data.scopes || [],
+        google_info: response.data.google_info,
+        admin_info: response.data.admin_info,
         services: {
           gmail: { 
-            status: status.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
           },
           calendar: { 
-            status: status.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
           },
           drive: { 
-            status: status.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
           },
           sheets: { 
-            status: status.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
+            status: response.data.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
           }
         }
       };
