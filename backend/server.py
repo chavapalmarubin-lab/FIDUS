@@ -10793,7 +10793,7 @@ async def sync_all_mt5_accounts(current_user: dict = Depends(get_current_admin_u
             "attempted_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.get("/mt5/sync-dashboard")
+@api_router.get("/api/mt5/sync-dashboard")
 async def get_mt5_sync_dashboard(current_user: dict = Depends(get_current_admin_user)):
     """Get comprehensive MT5 sync status dashboard"""
     try:
