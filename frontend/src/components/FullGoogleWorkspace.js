@@ -776,15 +776,36 @@ const FullGoogleWorkspace = () => {
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
-              <div className="flex items-center gap-2">
-                {connectionStatus.success ? (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" />
-                ) : (
-                  <XCircle className="h-5 w-5" />
+                  <span className="font-medium">
+                    {connectionStatus.success ? '✅ Google APIs Connected' : '❌ Connection Failed'}
+                  </span>
+                </div>
+                
+                {/* Always show disconnect button when connected */}
+                {connectionStatus.success && connectionStatus.connected && (
+                  <Button
+                    onClick={handleDisconnectGoogle}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50 ml-4"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        Disconnecting...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Disconnect Google
+                      </>
+                    )}
+                  </Button>
                 )}
-                <span className="font-medium">
-                  {connectionStatus.success ? '✅ Google APIs Connected' : '❌ Connection Failed'}
-                </span>
               </div>
               
               {/* Connected Account Details */}
