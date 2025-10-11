@@ -489,27 +489,65 @@ async def list_calendar_events(admin_user_id: str, db: AsyncIOMotorDatabase, max
 async def list_drive_files(admin_user_id: str, db: AsyncIOMotorDatabase, folder_id: str = None, max_results: int = 20) -> List[Dict]:
     """List Drive files using OAuth"""
     try:
+        logger.info(f"🔍 [DRIVE DEBUG] Starting Drive API call for user: {admin_user_id}")
+        
         service_instance = get_google_oauth_service(db)
         drive_service = await service_instance.get_drive_service(admin_user_id)
         
-        # Build query
-        query = "trashed=false"
+        logger.info(f"🔍 [DRIVE DEBUG] Drive service initialized successfully")
+        
+        # Build query - if no folder_id, get all files from My Drive
         if folder_id:
-            query += f" and '{folder_id}' in parents"
+            query = f"trashed=false and '{folder_id}' in parents"
+            logger.info(f"🔍 [DRIVE DEBUG] Searching in specific folder: {folder_id}")
+        else:
+            query = "trashed=false"
+            logger.info(f"🔍 [DRIVE DEBUG] Searching all Drive files (no folder specified)")
+        
+        logger.info(f"🔍 [DRIVE DEBUG] Drive query: {query}")
+        logger.info(f"🔍 [DRIVE DEBUG] Calling Drive API with pageSize={max_results}")
         
         results = drive_service.files().list(
             q=query,
             pageSize=max_results,
-            fields="files(id, name, mimeType, modifiedTime, size, webViewLink)"
+            fields="files(id, name, mimeType, modifiedTime, size, webViewLink, parents)"
         ).execute()
         
-        files = results.get('files', [])
+        logger.info(f"🔍 [DRIVE DEBUG] Raw Drive API response: {results}")
         
-        logger.info(f"✅ Retrieved {len(files)} drive files via OAuth")
+        files = results.get('files', [])
+        logger.info(f"🔍 [DRIVE DEBUG] Found {len(files)} files in response")
+        
+        if not files:
+            # Try to get Drive about info to verify access
+            try:
+                about = drive_service.about().get(fields="storageQuota, user").execute()
+                logger.info(f"🔍 [DRIVE DEBUG] Drive access verified - User: {about.get('user', {}).get('emailAddress')}")
+                logger.info(f"🔍 [DRIVE DEBUG] Storage quota: {about.get('storageQuota', {})}")
+                
+                # Try broader search
+                test_results = drive_service.files().list(
+                    pageSize=5,
+                    fields="files(id, name, mimeType)"
+                ).execute()
+                test_files = test_results.get('files', [])
+                logger.info(f"🔍 [DRIVE DEBUG] Test search found {len(test_files)} files total")
+                
+            except Exception as about_error:
+                logger.error(f"❌ [DRIVE DEBUG] Failed to get Drive about info: {about_error}")
+        
+        # Log file details
+        for i, file in enumerate(files):
+            logger.info(f"🔍 [DRIVE DEBUG] File {i+1}: {file.get('name')} (ID: {file.get('id')}) - {file.get('mimeType')}")
+        
+        logger.info(f"✅ [DRIVE DEBUG] Successfully retrieved {len(files)} drive files via OAuth")
         return files
         
     except Exception as e:
-        logger.error(f"❌ Failed to list drive files: {str(e)}")
+        logger.error(f"❌ [DRIVE DEBUG] Failed to list drive files: {str(e)}")
+        logger.error(f"❌ [DRIVE DEBUG] Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"❌ [DRIVE DEBUG] Full traceback: {traceback.format_exc()}")
         return []
 
 
