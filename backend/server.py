@@ -16424,11 +16424,12 @@ async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
 @api_router.get("/fund-performance/corrected")
 async def get_corrected_fund_performance(current_user: dict = Depends(get_current_admin_user)):
     """
-    Get corrected fund performance including separation account balance
+    Get corrected fund performance using EQUITY (not BALANCE) for all accounts
+    CRITICAL: EQUITY = Balance + Floating P&L (real-time account value)
     Addresses Priority 2: Net Fund Profitability Calculations
     """
     try:
-        logging.info("🏦 Getting corrected fund performance calculation")
+        logging.info("🏦 Getting corrected fund performance calculation using EQUITY")
         
         # Get all MT5 accounts
         mt5_cursor = db.mt5_accounts.find({})
@@ -16441,22 +16442,24 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         
         for acc in mt5_accounts:
             account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
-            equity = float(acc.get("current_equity", acc.get("equity", acc.get("balance", 0))))
-            pnl = float(acc.get("profit_loss", 0))
+            # CRITICAL FIX: Use EQUITY only (never BALANCE)
+            # EQUITY = Balance + Unrealized P&L (real-time account value)
+            equity = float(acc.get("equity", 0))
+            pnl = float(acc.get("profit", 0))
             
             if str(account_num) == "886528" or account_num == 886528:
-                # Separation account - represents earned interest
+                # Separation account - EQUITY shows real-time interest earned
                 separation_equity = equity
-                logging.info(f"   💰 Separation Interest (886528): ${equity:.2f}")
+                logging.info(f"   💰 Separation Interest (886528) EQUITY: ${equity:.2f}")
             else:
-                # Trading accounts - use equity for accurate fund value
+                # Trading accounts - EQUITY includes floating P&L
                 trading_accounts.append({
                     "account": account_num,
                     "equity": equity,
                     "pnl": pnl
                 })
                 total_trading_equity += equity
-                logging.info(f"   📈 Trading Account {account_num}: Equity ${equity:.2f}, P&L ${pnl:.2f}")
+                logging.info(f"   📈 Trading Account {account_num} EQUITY: ${equity:.2f}, P&L: ${pnl:.2f}")
         
         # Total fund assets = separation interest + trading equity
         total_fund_assets = separation_equity + total_trading_equity
