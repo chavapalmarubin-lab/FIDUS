@@ -1493,6 +1493,92 @@ class IndividualGoogleOAuth:
 individual_google_oauth = IndividualGoogleOAuth()
 # MOCK_USERS REMOVED - MongoDB is the ONLY database used by FIDUS application
 
+
+async def get_gmail_messages_with_individual_oauth(tokens: Dict, max_results: int = 10) -> List[Dict]:
+    """Get Gmail messages using individual OAuth tokens"""
+    try:
+        from google.oauth2.credentials import Credentials
+        from googleapiclient.discovery import build
+        
+        logging.info(f"🔍 [GMAIL INDIVIDUAL] Getting Gmail messages with individual OAuth tokens")
+        
+        # Create credentials from individual OAuth tokens
+        credentials = Credentials(
+            token=tokens['access_token'],
+            refresh_token=tokens.get('refresh_token'),
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=tokens.get('client_id', individual_google_oauth.google_client_id),
+            client_secret=tokens.get('client_secret', individual_google_oauth.google_client_secret),
+            scopes=tokens.get('scopes', [])
+        )
+        
+        logging.info(f"🔍 [GMAIL INDIVIDUAL] Created credentials with scopes: {credentials.scopes}")
+        
+        # Build Gmail service
+        gmail_service = build('gmail', 'v1', credentials=credentials)
+        
+        logging.info(f"🔍 [GMAIL INDIVIDUAL] Built Gmail service, calling users().messages().list()")
+        
+        # Get message list
+        results = gmail_service.users().messages().list(
+            userId='me',
+            maxResults=max_results
+        ).execute()
+        
+        logging.info(f"🔍 [GMAIL INDIVIDUAL] Gmail API response: {results}")
+        
+        messages = results.get('messages', [])
+        logging.info(f"🔍 [GMAIL INDIVIDUAL] Found {len(messages)} message IDs")
+        
+        if not messages:
+            # Check user profile to verify access
+            try:
+                profile = gmail_service.users().getProfile(userId='me').execute()
+                logging.info(f"🔍 [GMAIL INDIVIDUAL] Profile check: {profile.get('messagesTotal', 'unknown')} total messages")
+            except Exception as profile_error:
+                logging.error(f"❌ [GMAIL INDIVIDUAL] Profile check failed: {profile_error}")
+        
+        # Get detailed message info
+        detailed_messages = []
+        for i, msg in enumerate(messages):
+            try:
+                logging.info(f"🔍 [GMAIL INDIVIDUAL] Fetching message {i+1}/{len(messages)}: {msg['id']}")
+                
+                message = gmail_service.users().messages().get(
+                    userId='me',
+                    id=msg['id'],
+                    format='full'
+                ).execute()
+                
+                # Parse headers
+                headers = {h['name']: h['value'] for h in message['payload'].get('headers', [])}
+                
+                detailed_message = {
+                    'id': message['id'],
+                    'threadId': message['threadId'],
+                    'subject': headers.get('Subject', 'No Subject'),
+                    'sender': headers.get('From', 'Unknown Sender'),
+                    'date': headers.get('Date', ''),
+                    'snippet': message.get('snippet', ''),
+                    'labels': message.get('labelIds', [])
+                }
+                
+                detailed_messages.append(detailed_message)
+                logging.info(f"🔍 [GMAIL INDIVIDUAL] Message {i+1}: {detailed_message['subject'][:50]}")
+                
+            except Exception as e:
+                logging.error(f"❌ [GMAIL INDIVIDUAL] Failed to fetch message {msg['id']}: {e}")
+        
+        logging.info(f"✅ [GMAIL INDIVIDUAL] Successfully retrieved {len(detailed_messages)} Gmail messages")
+        return detailed_messages
+        
+    except Exception as e:
+        logging.error(f"❌ [GMAIL INDIVIDUAL] Failed to get Gmail messages: {str(e)}")
+        import traceback
+        logging.error(f"❌ [GMAIL INDIVIDUAL] Full traceback: {traceback.format_exc()}")
+        return []
+
+
 def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     """Generate mock transaction data"""
     transactions = []
