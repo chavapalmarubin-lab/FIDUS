@@ -13508,7 +13508,10 @@ async def get_total_mt5_profits() -> float:
         return 0.0  # Return 0 if calculation fails
 
 async def get_separation_account_interest() -> float:
-    """Get total interest from separation accounts"""
+    """
+    Get total interest from separation accounts
+    SPECIAL HANDLING: After emergency manual update, use BALANCE field for account 886528
+    """
     try:
         # Get separation accounts
         separation_cursor = db.mt5_accounts.find({
@@ -13519,8 +13522,15 @@ async def get_separation_account_interest() -> float:
         total_interest = 0.0
         
         for account in separation_accounts:
-            equity = account.get('equity', 0)  # Use equity as the separation account value
-            total_interest += float(equity) if equity else 0.0
+            account_num = account.get('account')
+            # SPECIAL CASE: Account 886528 had emergency manual update to BALANCE field
+            # Use BALANCE for this account until MT5 bridge sync updates equity field
+            if account_num == 886528 or str(account_num) == "886528":
+                value = account.get('balance', account.get('equity', 0))
+                logging.info(f"📊 Using BALANCE for account {account_num}: ${float(value):.2f}")
+            else:
+                value = account.get('equity', 0)
+            total_interest += float(value) if value else 0.0
         
         logging.info(f"📊 Separation account interest calculated: ${total_interest:.2f}")
         return total_interest
