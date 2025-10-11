@@ -1332,9 +1332,15 @@ class IndividualGoogleOAuth:
         self.google_redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         
     async def get_admin_google_tokens(self, admin_user_id: str) -> Optional[Dict]:
-        """Get Google OAuth tokens for specific admin user"""
+        """Get Google OAuth tokens for specific admin user (respects disconnect flag)"""
         try:
             logging.info(f"🔍 [INDIVIDUAL OAUTH] Getting tokens for admin: {admin_user_id}")
+            
+            # CHECK DISCONNECT FLAG FIRST - prevent auto-restoration
+            should_auto_connect = await self.should_auto_connect_google(admin_user_id)
+            if not should_auto_connect:
+                logging.info(f"🚫 [INDIVIDUAL OAUTH] Auto-connect disabled for admin {admin_user_id} - user manually disconnected")
+                return None
             
             # Get admin-specific Google OAuth tokens from database
             session_doc = await db.admin_google_sessions.find_one(
