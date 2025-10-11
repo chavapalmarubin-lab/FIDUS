@@ -544,14 +544,14 @@ class FIDUSCriticalEndpointTestSuite:
 
 async def main():
     """Main test execution"""
-    test_suite = FIDUSArchitectureAuditTestSuite()
+    test_suite = FIDUSCriticalEndpointTestSuite()
     
     try:
         results = await test_suite.run_all_tests()
         
         # Print detailed results
         print("\n" + "="*80)
-        print("FIDUS PLATFORM ARCHITECTURE AUDIT RESULTS")
+        print("FIDUS PLATFORM CRITICAL ENDPOINT TESTING - NEW RENDER URLs")
         print("="*80)
         
         for result in results['results']:
@@ -566,7 +566,7 @@ async def main():
         
         # Print endpoint documentation
         if results.get('endpoint_documentation'):
-            print(f"\n📋 ENDPOINT DOCUMENTATION:")
+            print(f"\n📋 CRITICAL ENDPOINT VERIFICATION:")
             print("="*50)
             for i, endpoint in enumerate(results['endpoint_documentation'], 1):
                 print(f"\n{i}. {endpoint.get('path_pattern', 'Unknown Path')}")
@@ -581,7 +581,7 @@ async def main():
         print(f"   Overall Status: {results['summary']['overall_status']}")
         print(f"   Success Rate: {results['summary']['success_rate']}%")
         print(f"   Tests: {results['summary']['passed']}/{results['summary']['total_tests']} passed")
-        print(f"   Backend URL: {results['test_parameters']['frontend_backend_url']}")
+        print(f"   NEW Render Backend URL: {results['test_parameters']['render_backend_url']}")
         
         if results['summary']['failed'] > 0:
             print(f"   Failed Tests: {results['summary']['failed']}")
