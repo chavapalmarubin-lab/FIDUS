@@ -88,8 +88,8 @@ class FIDUSCriticalEndpointTestSuite:
             return False
     
     async def test_admin_login_endpoint(self) -> Dict[str, Any]:
-        """Test Admin Login Endpoint - /api/auth/login"""
-        test_name = "Admin Login Endpoint"
+        """Test Admin Login Endpoint - POST https://fidus-investment-platform.onrender.com/api/auth/login"""
+        test_name = "1. Admin Login Endpoint"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
@@ -97,14 +97,19 @@ class FIDUSCriticalEndpointTestSuite:
             'url': f"{self.backend_url}/auth/login",
             'method': 'POST',
             'path_pattern': '/api/auth/login',
-            'purpose': 'Admin authentication'
+            'purpose': 'Admin authentication with NEW Render URL'
         }
         
         try:
+            # Use exact payload format from review request
             login_data = {
-                "email": "admin",
-                "password": "password123"
+                "username": "admin",
+                "password": "password123",
+                "user_type": "admin"
             }
+            
+            validation_results.append(f"🎯 Testing URL: {endpoint_info['url']}")
+            validation_results.append(f"📋 Payload: {login_data}")
             
             async with self.session.post(endpoint_info['url'], json=login_data) as response:
                 status_code = response.status
@@ -122,7 +127,7 @@ class FIDUSCriticalEndpointTestSuite:
                 })
                 
                 if status_code == 200:
-                    validation_results.append("✅ Admin login endpoint returns HTTP 200")
+                    validation_results.append("✅ EXPECTED: HTTP 200 with JWT token - SUCCESS")
                     
                     if 'token' in response_data:
                         validation_results.append("✅ JWT token returned in response")
@@ -140,7 +145,7 @@ class FIDUSCriticalEndpointTestSuite:
                         validation_results.append("⚠️ Limited user information in response")
                         
                 else:
-                    validation_results.append(f"❌ Admin login failed: HTTP {status_code}")
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
                     validation_results.append(f"   Response: {response_text[:200]}")
             
             self.endpoint_documentation.append(endpoint_info)
