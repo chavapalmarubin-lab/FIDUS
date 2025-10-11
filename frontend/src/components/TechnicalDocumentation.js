@@ -241,49 +241,94 @@ export default function TechnicalDocumentation() {
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            All Components ({categoryCounts.all || 0})
-          </button>
-          
-          {Object.keys(components).map((category) => (
+        {/* View Toggle */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                selectedCategory === category
+              onClick={() => setViewMode('diagram')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                viewMode === 'diagram'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
-              {category} ({categoryCounts[category] || 0})
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Architecture Diagram
             </button>
-          ))}
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                viewMode === 'grid'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              Grid View
+            </button>
+          </div>
         </div>
 
-        {/* Components Grid */}
-        {filteredComponents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredComponents.map((component) => (
-              <ComponentCard
-                key={component.id}
-                component={component}
-                health={healthData[component.id]}
-              />
-            ))}
-          </div>
+        {/* Conditional View Rendering */}
+        {viewMode === 'diagram' ? (
+          /* Architecture Diagram View */
+          <ArchitectureDiagram 
+            components={components}
+            healthData={healthData}
+            connections={connections}
+          />
         ) : (
-          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
-            <p className="text-gray-500">No components found in this category</p>
-          </div>
+          /* Grid View */
+          <>
+            {/* Category Filter */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedCategory === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                All Components ({categoryCounts.all || 0})
+              </button>
+              
+              {Object.keys(components).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+                    selectedCategory === category
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  {category} ({categoryCounts[category] || 0})
+                </button>
+              ))}
+            </div>
+
+            {/* Components Grid */}
+            {filteredComponents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredComponents.map((component) => (
+                  <ComponentCard
+                    key={component.id}
+                    component={component}
+                    health={healthData[component.id]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+                <p className="text-gray-500">No components found in this category</p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Footer Info */}
