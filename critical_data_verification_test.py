@@ -4,7 +4,7 @@ CRITICAL DATA VERIFICATION TEST
 Testing all fixed endpoints after critical data corrections
 
 Authentication: admin/password123
-Backend: https://mt5-data-bridge.preview.emergentagent.com/api
+Backend: https://fidus-techdocs.preview.emergentagent.com/api
 
 CRITICAL TESTS AFTER FIXES:
 1. Admin Overview (Should show correct totals)
@@ -19,7 +19,7 @@ from datetime import datetime
 import sys
 
 # Configuration
-BACKEND_URL = "https://mt5-data-bridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-techdocs.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

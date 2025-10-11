@@ -29,7 +29,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://mt5-data-bridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-techdocs.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

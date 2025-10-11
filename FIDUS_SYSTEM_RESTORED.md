@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://mt5-data-bridge.preview.emergentagent.com`
+`https://fidus-techdocs.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

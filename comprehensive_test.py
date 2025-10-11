@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://mt5-data-bridge.preview.emergentagent.com/api'
+BACKEND_URL = 'https://fidus-techdocs.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

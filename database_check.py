@@ -6,7 +6,7 @@ Database Check for Alejandro Mariscal Production Setup
 import requests
 import json
 
-BACKEND_URL = "https://mt5-data-bridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-techdocs.preview.emergentagent.com/api"
 
 def authenticate():
     """Get admin token"""
