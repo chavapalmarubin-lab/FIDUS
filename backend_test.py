@@ -649,8 +649,8 @@ class FIDUSCriticalEndpointTestSuite:
     # Architecture audit tests completed above
     
     async def run_all_tests(self) -> Dict[str, Any]:
-        """Run all FIDUS Architecture Audit tests"""
-        logger.info("🏗️ Starting FIDUS Platform Architecture Audit")
+        """Run all 5 Critical Endpoint tests with NEW Render production URLs"""
+        logger.info("🚀 Starting FIDUS Platform Critical Endpoint Testing - NEW Render URLs")
         
         if not await self.setup():
             return {
@@ -659,13 +659,13 @@ class FIDUSCriticalEndpointTestSuite:
                 'results': []
             }
         
-        # Run architecture audit tests
+        # Run 5 critical endpoint tests as specified in review request
         tests = [
-            self.test_backend_url_verification,
             self.test_admin_login_endpoint,
             self.test_health_check_endpoint,
-            self.test_mt5_endpoints,
-            self.test_path_pattern_analysis
+            self.test_mt5_status_endpoint,
+            self.test_mt5_admin_accounts_endpoint,
+            self.test_debug_test_endpoint
         ]
         
         results = []
