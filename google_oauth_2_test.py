@@ -33,7 +33,7 @@ class GoogleOAuth2TestSuite:
         
         # Expected OAuth configuration
         self.expected_client_id = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-        self.expected_redirect_uri = "https://fidus-invest.emergent.host/api/auth/google/callback"
+        self.expected_redirect_uri = "https://fidus-invest.emergent.host/admin/google-callback"
         self.expected_scopes = ["gmail.readonly", "gmail.send", "calendar", "drive", "spreadsheets"]
         
         logger.info(f"🚀 Google OAuth 2.0 Test Suite initialized")
