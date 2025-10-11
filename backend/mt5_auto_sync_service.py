@@ -21,7 +21,7 @@ import aiohttp
 import os
 from dataclasses import dataclass
 
-from mongodb_integration import mongodb_manager
+# Database connection will be imported in initialize method
 
 logger = logging.getLogger(__name__)
 
