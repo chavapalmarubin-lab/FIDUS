@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://k8s-to-render.preview.emergentagent.com`
+`https://mt5-data-bridge.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

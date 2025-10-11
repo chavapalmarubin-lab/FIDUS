@@ -24,7 +24,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://k8s-to-render.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-data-bridge.preview.emergentagent.com/api"
 
 # CORRECTED CLIENT ID
 CORRECTED_CLIENT_ID = "client_alejandro_mariscal"

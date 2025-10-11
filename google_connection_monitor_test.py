@@ -16,7 +16,7 @@ load_dotenv('/app/backend/.env')
 load_dotenv('/app/frontend/.env')
 
 # Get backend URL from frontend environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://k8s-to-render.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://mt5-data-bridge.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class GoogleConnectionMonitorTester:

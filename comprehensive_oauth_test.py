@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://k8s-to-render.preview.emergentagent.com/api"
-FRONTEND_URL = "https://k8s-to-render.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-data-bridge.preview.emergentagent.com/api"
+FRONTEND_URL = "https://mt5-data-bridge.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

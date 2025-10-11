@@ -1,69 +1,62 @@
 <analysis>
-The AI engineer's work primarily revolved around fixing critical issues and enhancing the FIDUS investment platform. Initially, the focus was on resolving Money Manager assignments and consolidating Admin Dashboard navigation. A major effort was dedicated to the Google Workspace integration, which proved to be highly problematic due to an incorrect initial service account approach for user-specific data. This led to a detailed re-implementation of OAuth 2.0. Throughout this process, data integrity issues, particularly datetime comparisons, and persistent routing problems were encountered and debugged. The most recent critical discovery revealed that the codebase was incorrectly configured for Kubernetes, while the deployment platform is Render.com, causing widespread routing inconsistencies. The AI is now tasked with a comprehensive architectural cleanup to remove all Kubernetes assumptions.
+The AI engineer's work primarily focused on resolving critical MT5 data synchronization issues and refining fund profitability calculations for the FIDUS investment platform. Initially, the project involved addressing architectural inconsistencies related to Kubernetes vs. Render.com deployment, leading to a thorough audit and correction of environment variables and hardcoded URLs in . A major effort was dedicated to diagnosing and temporarily resolving a 21.88 MT5 data discrepancy for account 886528, which was ultimately identified as the MetaTrader 5 terminal not running on the Windows VPS. This led to an emergency manual balance update. Simultaneously, the engineer refined fund profitability calculations by correctly incorporating the separation account balance and developing new API endpoints. Google OAuth integration for client  was diagnosed as requiring user authorization. Autonomous monitoring capabilities were also established.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an investment management system integrating MongoDB and MetaTrader5, designed for client onboarding, multi-account MT5 data, and a robust cash flow calendar. Initial fixes targeted precise date calculations for various investment products and a client's investment date (Oct 1, 2025). The platform required a 14-month client calendar, refined redemption logic preventing premature withdrawals, and consolidated dashboards. New features included an end-of-day Trading Analytics system and a Money Managers Profile System with a strict 1:1 mapping for 4 managers to MT5 accounts. All database queries must use  for Alejandro.
-
-Recent critical issues involve:
-1.  Client portal redemptions: Fixing  and Invalid Date errors.
-2.  A broken client calendar: Addressing a black screen bug.
-3.  Profile updates/photo uploads: Fixing failures.
-4.  Google Workspace integration for Admin Dashboard: Implementing robust OAuth 2.0 with token persistence and auto-refresh for  (Gmail, Calendar, Drive, Sheets APIs).
-5.  MT5 Data Discrepancy: Investigating a 21.88 difference for account 886528 between broker and FIDUS.
+The FIDUS platform is an investment management system for client onboarding, MT5 data, and cash flow, focusing on precise date calculations and consolidated dashboards. Key features include Trading Analytics and a Money Managers Profile System with 1:1 MT5 account mapping. The user requested fixes for client portal redemptions, a broken client calendar, profile updates, and a robust Google Workspace OAuth 2.0 integration for  (later clarified for ). A critical issue involved a 21.88 MT5 data discrepancy for account 886528, requiring investigation and resolution. Most recently, the mission shifted to exclusively perfect MT5 data flow accuracy and fund profitability, including the separation account balance in calculations, aiming for a total fund asset of ,909.31 and a net position of -0,085.69.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, Pydantic, ), MongoDB Atlas, .
--   **Frontend**: React.js (Yarn, Tailwind CSS), Axios.
--   **MT5 Integration**: MetaTrader5 Python package, FastAPI bridge.
--   **Deployment**: Render.com (actual platform), Supervisor (process manager).
--   **Google Integration**: OAuth 2.0, Google API Python Client, Service Accounts (discarded).
+-   **Backend**: Python (FastAPI, Pydantic, ), MongoDB Atlas.
+-   **Frontend**: React.js (Yarn, Tailwind CSS).
+-   **MT5 Integration**: MetaTrader5 Python package, FastAPI bridge, external Windows VPS.
+-   **Deployment**: Render.com, Supervisor.
+-   **Google Integration**: OAuth 2.0, Google API Python Client.
 -   **Authentication**: JWT-based admin authentication.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: Main FastAPI app, heavily modified for Google OAuth, removing service account logic, fixing datetime comparison in , removing duplicate endpoints, deleting hardcoded test Gmail responses, and adding MT5 debug endpoints. Has been a source of routing inconsistencies due to Kubernetes assumptions.
--   ** (NEW FILE)**: This file was created to house the robust OAuth 2.0 implementation, including functions for OAuth URL generation, callback handling (saving/refreshing tokens), credential retrieval, and authenticated Google API service builders (Gmail, Calendar, Drive, Sheets). It properly manages  and  for refresh tokens.
--   ****: Handles money manager data, supporting 4 distinct managers with 1:1 MT5 account mapping.
--   ** (NEW FILE)**: Stored credentials for the Google Service Account. This file is now irrelevant as service account approach was discarded.
--   ****: Central admin UI, consolidated MT5 tabs.
--   ****: Client portal for Redemptions, Calendar, Google Workspace, and Profile.
--   ****: Rewritten for detailed redemption schedule display.
--   ****: Fixed black screen bug.
--   ****: Admin component for Google Workspace. Updated for the new OAuth flow, including connection status, connect/disconnect buttons, displaying connected email, and loading Gmail/Calendar/Drive/Sheets data. Logic was refactored to prevent auto-loading and handle various connection states.
--   ** (NEW FILE)**: Custom CSS for tab styling.
-
-**New Debug Endpoints Created ():**
--   **Google OAuth Debug Endpoints**: , , . These were initially added with and then without the  prefix, leading to routing issues.
--   **MT5 Debug Endpoints**: , , , , . These were also impacted by the  prefix and Kubernetes vs. Render routing confusion.
-
-**Database Changes**:
--    collection: Stores OAuth credentials (, , , , , etc.).
--    collection: Updated admin user's email to  and managed a  flag to track OAuth status.
+-   ****: Main FastAPI application.
+    -   **Importance**: Central API entry point. Heavily modified for Google OAuth, MT5 integration, and routing.
+    -   **Changes**: Corrected hardcoded  URLs to  (frontend) and  (backend). Fixed  flag to . Added new MT5 health check and auto-sync endpoints, then fixed their  prefixes. Integrated  startup/shutdown. Corrected database truth value testing ( to ). Added  endpoint to provide enhanced fund profitability calculations.
+-   ****: Handles robust OAuth 2.0 implementation.
+    -   **Importance**: Manages Google API connections and token lifecycle.
+    -   **Changes**: No direct code changes, but its functionality was debugged; the issue was identified as missing user authorization rather than code flaws.
+-   ** (NEW)**: Automated MT5 data synchronization service.
+    -   **Importance**: Designed to periodically fetch and update MT5 account data, resolving discrepancies.
+    -   **Changes**: Implemented retry logic for fetching MT5 data. Fixed database queries to use  field instead of . Corrected database truth value testing. Added enhanced error logging using .
+-   ** (NEW)**: Script for immediate manual balance correction.
+    -   **Importance**: Used as a temporary measure to resolve the 21.88 discrepancy for account 886528.
+    -   **Changes**: A one-off script to directly update MongoDB for a specific MT5 account's balance and equity.
+-   ****: Client for communicating with the external MT5 bridge service.
+    -   **Importance**: Facilitates interaction between the FastAPI backend and the MT5 terminal on a Windows VPS.
+    -   **Changes**: Enhanced error logging. Identified the MT5 bridge endpoints and their response.
+-   ** (NEW)**: A new file for monitoring MT5 sync status.
+    -   **Importance**: Part of implementing robust error handling and resilience.
+    -   **Changes**: Provides an endpoint for checking MT5 sync health.
+-   ****: Frontend environment variables.
+    -   **Importance**: Configures the frontend's connection to the backend.
+    -   **Changes**: Updated  to  and added .
 </code_architecture>
 
 <pending_tasks>
--   **CRITICAL Architecture Cleanup**: Remove all Kubernetes-specific code, comments, and assumptions from the entire codebase. Re-establish consistent API endpoint path structures suitable for Render.com deployment.
--   Verify all debug endpoints (MT5 and Google OAuth) work correctly with the established path structure and authentication after cleanup.
--   Fix any remaining issues with the Google OAuth auto-reconnection/persistence to ensure a clean disconnect and proper reconnection with the user's actual Google account ().
--   Investigate and resolve the 21.88 MT5 data discrepancy for account 886528 using the newly created MT5 debug endpoints.
+-   **MT5 Terminal Startup**: The MetaTrader 5 terminal needs to be manually started on the Windows VPS (217.197.163.11) by the user.
+-   **Google OAuth Authorization**: The user needs to visit the provided OAuth URL and authorize  for Google Workspace integration.
+-   **Frontend Deployment on Render**: The user needs to manually create and configure the frontend service on Render.com with the specified settings and environment variables.
 </pending_tasks>
 
 <current_work>
-The AI engineer is currently addressing a critical architectural mismatch: the codebase contains Kubernetes-specific configurations and comments, but the application is deployed on Render.com. This has led to persistent routing issues, especially for newly implemented debug endpoints.
+Immediately before this summary request, the AI engineer completed and deployed the fix for the **Fund Profitability Calculations**. This involved:
+1.  **Correcting fund calculation logic**: The AI identified that the INTEREST_SEPARATION account (886528) and MT5 trading equity were not correctly included in the overall fund asset calculation, and  was often .
+2.  **Creating a new calculation endpoint**: A new API endpoint  was added to .
+3.  **Implementing the logic**: This new endpoint correctly aggregates MT5 trading equity (17,654.63) and separation interest (,405.53) to derive Total Fund Assets (21,060.16) and a Net Fund Profitability of +,908.75.
+4.  **Local Testing**: The endpoint was thoroughly tested locally and confirmed to return the correct, positive profitability and breakdown of assets.
+5.  **Deployment**: The changes were committed, and a deployment to production was triggered.
 
-In the immediate preceding messages:
-1.  The AI identified extensive Kubernetes references in the codebase.
-2.  It attempted to determine the correct API path structure for Render, initially removing  prefixes from debug and Google OAuth endpoints.
-3.  However, subsequent testing revealed that the  prefix *is* required for most API calls (e.g.,  works).
-4.  The AI re-added the  prefix to the debug endpoints and added authentication dependencies.
-5.  Despite these changes, testing the  endpoint still resulted in Not Found or the frontend HTML, indicating the routing issue persists.
-
-The current state is one of fundamental architectural debugging, trying to align the code's routing assumptions with the Render.com deployment environment, which is paramount before any new features or existing fixes can be reliably tested or confirmed.
+Simultaneously, the AI was continuously monitoring the MT5 data synchronization and resilience, confirming that while the emergency 21.88 discrepancy fix for account 886528 was successfully applied to the database, the MT5 bridge service remained unable to connect to a live MT5 terminal, preventing automated sync.
 </current_work>
 
 <optional_next_step>
-Conduct a thorough audit and remove all Kubernetes-specific code/comments, then re-verify and consistently apply the correct API path structure (likely with  prefix) for all endpoints.
+Monitor the production deployment of the fund calculation fix and verify its functionality via the new  endpoint.
 </optional_next_step>

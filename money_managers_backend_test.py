@@ -35,7 +35,7 @@ class MoneyManagersBackendTester:
     
     def __init__(self):
         # Use the correct backend URL from frontend/.env
-        self.base_url = "https://k8s-to-render.preview.emergentagent.com"
+        self.base_url = "https://mt5-data-bridge.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         # Test credentials
