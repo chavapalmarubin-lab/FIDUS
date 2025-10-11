@@ -9921,7 +9921,7 @@ async def get_admin_gmail_messages(current_user: dict = Depends(get_current_admi
 
 @api_router.post("/google/gmail/real-send")
 async def send_real_gmail_message(request: Request, current_user: dict = Depends(get_current_admin_user)):
-    """Send email via real Gmail API"""
+    """Send email via OAuth 2.0 Gmail API"""
     try:
         data = await request.json()
         
@@ -9929,7 +9929,6 @@ async def send_real_gmail_message(request: Request, current_user: dict = Depends
         to = data.get('to')
         subject = data.get('subject')
         body = data.get('body')
-        html_body = data.get('html_body')
         
         if not all([to, subject, body]):
             return {
@@ -9937,35 +9936,27 @@ async def send_real_gmail_message(request: Request, current_user: dict = Depends
                 "error": "Missing required fields: to, subject, body"
             }
         
-        # Get user's Google OAuth tokens
-        token_data = await get_google_session_token(current_user["user_id"])
-        
-        if not token_data:
-            return {
-                "success": False,
-                "error": "Google authentication required. Please connect your Google account first.",
-                "auth_required": True
-            }
-        
-        # Send email using Gmail API
-        result = await google_apis_service.send_gmail_message(
-            token_data=token_data,
-            to=to,
-            subject=subject,
-            body=body,
-            html_body=html_body
-        )
+        # Send email using OAuth
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        result = await send_gmail_message(admin_user_id, db, to, subject, body)
         
         logging.info(f"Gmail email sent by user: {current_user['username']} to: {to}")
         
         return result
         
     except Exception as e:
+        if "Google authentication required" in str(e):
+            return {
+                "success": False,
+                "error": "Google authentication required. Please connect your Google account first.",
+                "auth_required": True
+            }
+        
         logging.error(f"Real Gmail send error: {str(e)}")
         return {
             "success": False,
             "error": str(e),
-            "api_used": "gmail_api"
+            "api_used": "oauth_gmail_api"
         }
 
 @api_router.get("/google/calendar/real-events")
