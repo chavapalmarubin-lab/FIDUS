@@ -263,14 +263,23 @@ class GoogleOAuthService:
                     'message': 'Not connected to Google'
                 }
             
-            # Parse expiry
+            # Parse expiry with robust datetime handling
             expiry_str = token_doc.get('expiry')
             is_expired = True
             if expiry_str:
                 try:
-                    expiry_time = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+                    # Handle different datetime formats
+                    if expiry_str.endswith('Z'):
+                        expiry_time = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+                    elif '+' in expiry_str or expiry_str.endswith('00:00'):
+                        expiry_time = datetime.fromisoformat(expiry_str)
+                    else:
+                        # Assume it's a naive datetime, make it timezone aware
+                        expiry_time = datetime.fromisoformat(expiry_str).replace(tzinfo=timezone.utc)
+                    
                     is_expired = expiry_time <= datetime.now(timezone.utc)
-                except:
+                except Exception as e:
+                    logger.warning(f"⚠️ Error parsing expiry '{expiry_str}': {e}")
                     is_expired = True
             
             return {
