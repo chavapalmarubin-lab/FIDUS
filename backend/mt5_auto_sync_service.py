@@ -78,7 +78,8 @@ class MT5AutoSyncService:
             )
             
             # Get database connection
-            self.db = await mongodb_manager.get_database()
+            from config.database import get_database
+            self.db = await get_database()
             
             logger.info("✅ MT5 Auto-Sync Service initialized")
             return True
