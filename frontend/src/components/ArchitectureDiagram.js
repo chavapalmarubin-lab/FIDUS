@@ -209,6 +209,30 @@ export default function ArchitectureDiagram({ components, healthData, connection
     [setEdges]
   );
 
+  // Save node positions to localStorage when they change
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const positions = {};
+      nodes.forEach(node => {
+        positions[node.id] = node.position;
+      });
+      localStorage.setItem('fidus_node_positions', JSON.stringify(positions));
+    }
+  }, [nodes]);
+
+  // Load saved positions on mount
+  useEffect(() => {
+    const savedPositions = localStorage.getItem('fidus_node_positions');
+    if (savedPositions && nodes.length > 0) {
+      const positions = JSON.parse(savedPositions);
+      const updatedNodes = nodes.map(node => ({
+        ...node,
+        position: positions[node.id] || node.position
+      }));
+      setNodes(updatedNodes);
+    }
+  }, []); // Only run once on mount
+
   return (
     <div className="relative w-full h-[800px] bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
       <ReactFlow
@@ -218,10 +242,15 @@ export default function ArchitectureDiagram({ components, healthData, connection
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        nodeTypes={nodeTypes}
         fitView
         attributionPosition="bottom-right"
         minZoom={0.2}
         maxZoom={2}
+        defaultEdgeOptions={{
+          animated: true,
+          style: { strokeWidth: 2 }
+        }}
       >
         <Background 
           color="#9CA3AF" 
