@@ -10828,7 +10828,7 @@ async def get_mt5_sync_dashboard(current_user: dict = Depends(get_current_admin_
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.post("/mt5/start-background-sync")
+@api_router.post("/api/mt5/start-background-sync")
 async def start_mt5_background_sync(current_user: dict = Depends(get_current_admin_user)):
     """Start automated MT5 background sync (every 2 minutes)"""
     try:
