@@ -425,9 +425,10 @@ class MT5AutoSyncService:
                         logger.error(f"❌ Account 886528 sync failed: {account_886528_result.get('error', 'Unknown error')}")
                 
                 # Alert if sync success rate is low
-                if result.get('success_rate', 0) < 80:
-                    logger.warning(f"⚠️ Low sync success rate: {result['success_rate']:.1f}%")
-                    await self._send_alert(f"MT5 sync success rate low: {result['success_rate']:.1f}%")
+                success_rate = result.get('success_rate', 0)
+                if success_rate < 80 and result.get('total_accounts', 0) > 0:
+                    logger.warning(f"⚠️ Low sync success rate: {success_rate:.1f}%")
+                    await self._send_alert(f"MT5 sync success rate low: {success_rate:.1f}%")
                 
             except Exception as e:
                 logger.error(f"❌ Background sync error: {str(e)}")
