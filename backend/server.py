@@ -10308,7 +10308,7 @@ async def test_debug_endpoint(current_user: dict = Depends(get_current_admin_use
     }
 
 @api_router.get("/debug/mt5/connection-test")
-async def test_mt5_connection():
+async def test_mt5_connection(current_user: dict = Depends(get_current_admin_user)):
     """Test if MT5 API is reachable and responding"""
     try:
         from services.mt5_service import mt5_service
