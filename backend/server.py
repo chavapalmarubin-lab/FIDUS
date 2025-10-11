@@ -16541,11 +16541,11 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 "trading_accounts": trading_accounts,
                 "total_accounts": len(mt5_accounts)
             },
-            "calculation_method": "corrected_autonomous_v1",
-            "priority_issue_resolved": "Added separation account balance to fund calculations"
+            "calculation_method": "corrected_autonomous_v2_with_initial_deposits",
+            "priority_issue_resolved": "Fixed to calculate actual P&L (equity - initial deposits)"
         }
         
-        logging.info(f"✅ Corrected fund performance: Net ${net_profitability:+,.2f}")
+        logging.info(f"✅ Corrected fund performance: Net ${net_position:+,.2f}")
         return fund_performance
         
     except Exception as e:
