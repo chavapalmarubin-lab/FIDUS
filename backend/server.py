@@ -16446,15 +16446,14 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         
         for acc in mt5_accounts:
             account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
-            # CRITICAL FIX: Use EQUITY only (never BALANCE)
-            # EQUITY = Balance + Unrealized P&L (real-time account value)
-            equity = float(acc.get("equity", 0))
-            pnl = float(acc.get("profit", 0))
             
             if str(account_num) == "886528" or account_num == 886528:
-                # Separation account - EQUITY shows real-time interest earned
-                separation_equity = equity
-                logging.info(f"   💰 Separation Interest (886528) EQUITY: ${equity:.2f}")
+                # SPECIAL CASE: Separation account (886528)
+                # After emergency manual update, use BALANCE field as it has the correct value
+                # Balance field contains the actual accumulated interest: $3,927.41
+                separation_equity = float(acc.get("balance", acc.get("equity", 0)))
+                logging.info(f"   💰 Separation Interest (886528) BALANCE: ${separation_equity:.2f}")
+                logging.info(f"      (Using BALANCE field due to emergency update - equity field is stale)")
             else:
                 # Trading accounts - EQUITY includes floating P&L
                 trading_accounts.append({
