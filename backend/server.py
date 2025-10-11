@@ -9413,7 +9413,14 @@ async def process_individual_google_callback(request: Request):
 async def get_individual_google_status(current_user: dict = Depends(get_current_admin_user)):
     """Get individual Google connection status for current admin"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         
         # Get admin's Google tokens
         tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
@@ -9466,7 +9473,14 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
 async def disconnect_individual_google(current_user: dict = Depends(get_current_admin_user)):
     """Disconnect Google account for current admin"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         admin_username = current_user["username"]
         
         # Disconnect admin's Google account
@@ -9885,7 +9899,14 @@ async def create_google_meet(meeting_data: dict, current_user: dict = Depends(ge
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using OAuth 2.0"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         messages = await list_gmail_messages(admin_user_id, db, max_results=20)
         
         logging.info(f"Retrieved {len(messages)} Gmail messages for user: {current_user['username']}")
@@ -9937,7 +9958,14 @@ async def send_real_gmail_message(request: Request, current_user: dict = Depends
             }
         
         # Send email using OAuth
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         result = await send_gmail_message(admin_user_id, db, to, subject, body)
         
         logging.info(f"Gmail email sent by user: {current_user['username']} to: {to}")
@@ -13589,7 +13617,14 @@ async def test_google_connections_automatic(current_user: dict = Depends(get_cur
     try:
         logging.info("🔍 DEBUG: Connection monitor endpoint called")
         # Get admin's individual Google OAuth tokens
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
         
         if not tokens:
@@ -15013,7 +15048,14 @@ async def process_emergent_google_callback(request: Request, current_user: dict 
             raise HTTPException(status_code=400, detail=result.get('error', 'Session exchange failed'))
         
         # Get admin user ID
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         
         # Store session token in database
         user_data = result['user_data']
@@ -15044,7 +15086,14 @@ async def process_emergent_google_callback(request: Request, current_user: dict 
 async def get_emergent_google_status(current_user: dict = Depends(get_current_admin_user)):
     """Get Emergent Google authentication status for admin user"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         
         # Get user info from stored session
         user_info = await emergent_google_auth.get_user_info(admin_user_id)
@@ -15077,7 +15126,14 @@ async def get_emergent_google_status(current_user: dict = Depends(get_current_ad
 async def get_emergent_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get Gmail messages using Emergent authentication"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         
         # Get session token
         session_token = await emergent_google_auth.get_session_token(admin_user_id)
@@ -15113,7 +15169,14 @@ async def get_emergent_gmail_messages(current_user: dict = Depends(get_current_a
 async def emergent_google_logout(current_user: dict = Depends(get_current_admin_user)):
     """Logout from Emergent Google authentication"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         
         # Logout user (delete session from database)
         success = await emergent_google_auth.logout_user(admin_user_id)
@@ -15223,7 +15286,14 @@ async def check_google_connection_status(current_user: dict = Depends(get_curren
 async def disconnect_google_account(current_user: dict = Depends(get_current_admin_user)):
     """Revoke Google OAuth tokens and disconnect"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         success = await google_oauth.disconnect(admin_user_id)
         
         if success:
@@ -15249,7 +15319,14 @@ async def disconnect_google_account(current_user: dict = Depends(get_current_adm
 async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admin_user)):
     """Get Gmail messages using OAuth"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         messages = await list_gmail_messages(admin_user_id, db, max_results=10)
         
         return {
@@ -15269,7 +15346,14 @@ async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admi
 async def get_calendar_events_oauth(current_user: dict = Depends(get_current_admin_user)):
     """Get Calendar events using OAuth"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         events = await list_calendar_events(admin_user_id, db, max_results=10)
         
         return {
@@ -15292,7 +15376,14 @@ async def get_drive_files_oauth(
 ):
     """Get Drive files using OAuth"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         files = await list_drive_files(admin_user_id, db, folder_id=folder_id, max_results=20)
         
         return {
@@ -15324,7 +15415,14 @@ async def send_gmail_message_oauth(
         if not all([to, subject, body]):
             raise HTTPException(status_code=400, detail="Missing required fields: to, subject, body")
         
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         result = await send_gmail_message(admin_user_id, db, to, subject, body)
         
         return result
@@ -20075,7 +20173,14 @@ async def get_gmail_messages_alias(
 ):
     """Get Gmail messages using OAuth 2.0"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         messages = await list_gmail_messages(admin_user_id, db, max_results=max_results)
         
         return {
@@ -20106,7 +20211,14 @@ async def get_calendar_events_alias(
 ):
     """Get calendar events using OAuth 2.0"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         events = await list_calendar_events(admin_user_id, db, max_results=max_results)
         
         return {
@@ -20136,7 +20248,14 @@ async def get_drive_files_alias(
 ):
     """Get Drive files using OAuth 2.0"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
         files = await list_drive_files(admin_user_id, db, folder_id=folder_id, max_results=max_results)
         
         return {
