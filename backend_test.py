@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class FIDUSCriticalEndpointTestSuite:
-    """FIDUS Platform Critical Endpoint Testing Suite - NEW Render Production URLs"""
+    """FIDUS Platform MT5 Auto-Sync Endpoint Testing Suite - Render Production URLs"""
     
     def __init__(self):
         # Use CORRECT Render backend API URL (not frontend URL)
