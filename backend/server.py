@@ -10296,7 +10296,7 @@ async def debug_connection_flow():
 # MT5 DATA VERIFICATION AND DEBUG ENDPOINTS
 # ===============================================================================
 
-@api_router.get("/debug/mt5/connection-test")
+@api_router.get("/api/debug/mt5/connection-test")
 async def test_mt5_connection():
     """Test if MT5 API is reachable and responding"""
     try:
