@@ -404,8 +404,8 @@ const FullGoogleWorkspace = () => {
     try {
       console.log('📅 Loading REAL Google Calendar events from API...');
       
-      // Call the REAL Google Calendar API endpoint
-      const response = await apiAxios.get('/google/calendar/events');
+      // Call the OAuth Google Calendar API endpoint
+      const response = await apiAxios.get('/admin/google/calendar/events');
       
       if (response.data && Array.isArray(response.data)) {
         console.log(`✅ Loaded ${response.data.length} real calendar events`);
