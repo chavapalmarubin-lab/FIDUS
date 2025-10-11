@@ -10754,7 +10754,7 @@ async def force_sync_single_account(mt5_login: str, current_user: dict = Depends
             "attempted_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.post("/mt5/sync-all-accounts")
+@api_router.post("/api/mt5/sync-all-accounts")
 async def sync_all_mt5_accounts(current_user: dict = Depends(get_current_admin_user)):
     """Sync all active MT5 accounts immediately"""
     try:
