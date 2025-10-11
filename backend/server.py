@@ -10300,9 +10300,11 @@ async def debug_connection_flow():
 async def test_debug_endpoint():
     """Simple test endpoint to verify debug routing works"""
     return {
-        "status": "working",
-        "message": "Debug endpoint is accessible",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "status": "working", 
+        "message": "Debug endpoint is accessible - RENDER DEPLOYMENT",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "deployment": "render.com",
+        "no_kubernetes": True
     }
 
 @api_router.get("/debug/mt5/connection-test")
