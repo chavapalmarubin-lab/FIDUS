@@ -10067,7 +10067,7 @@ async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin
                 "body": f"Gmail integration error: {str(e)}",
                 "error": True
             }],
-            "source": "error",
+            "source": "NEW_INDIVIDUAL_OAUTH_ERROR",
             "count": 1
         }
 @api_router.get("/admin/gmail/messages")
