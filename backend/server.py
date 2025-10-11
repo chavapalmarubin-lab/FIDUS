@@ -10434,7 +10434,7 @@ async def compare_mt5_data(mt5_login: str):
             "compared_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.get("/api/debug/mt5/sync-status")
+@api_router.get("/debug/mt5/sync-status")
 async def check_mt5_sync_status():
     """Check MT5 data sync status and timing"""
     try:
