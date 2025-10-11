@@ -95,14 +95,25 @@ class MT5AutoSyncService:
         for attempt in range(self.retry_attempts):
             try:
                 # Method 1: MT5 Bridge API (primary)
+                logger.info(f"🔗 Attempt {attempt + 1}: Trying MT5 Bridge for {mt5_login}")
                 result = await self._fetch_via_bridge(mt5_login)
                 if result.get('success') and 'balance' in result:
+                    logger.info(f"✅ Bridge success for {mt5_login}: Balance = ${result['balance']}")
                     return result
+                else:
+                    logger.warning(f"⚠️ Bridge failed for {mt5_login}: {result.get('error', 'Unknown error')}")
                     
                 # Method 2: Direct broker API (fallback)
+                logger.info(f"🔗 Attempt {attempt + 1}: Trying Direct API for {mt5_login}")
                 result = await self._fetch_via_direct_api(mt5_login)
                 if result.get('success') and 'balance' in result:
+                    logger.info(f"✅ Direct API success for {mt5_login}: Balance = ${result['balance']}")
                     return result
+                else:
+                    logger.warning(f"⚠️ Direct API failed for {mt5_login}: {result.get('error', 'Unknown error')}")
+                    
+                # Both methods failed for this attempt
+                last_error = f"Bridge: {result.get('error', 'Unknown')} | Direct API: Direct broker API not implemented yet"
                     
             except Exception as e:
                 import traceback
