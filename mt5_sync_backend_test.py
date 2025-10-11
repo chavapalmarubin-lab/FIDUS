@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MT5 Auto-Sync Service Critical Testing - Addresses $521.88 Discrepancy
-Testing newly implemented MT5 sync endpoints for account 886528 data integrity
+MT5 Auto-Sync Service FINAL TEST - Critical $521.88 Discrepancy Resolution
+Testing MT5 sync endpoints with CORRECT routing (no double /api prefix)
 """
 
 import asyncio
@@ -16,19 +16,20 @@ import os
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class MT5SyncServiceTestSuite:
-    """Critical MT5 Auto-Sync Service Testing Suite"""
+class MT5SyncServiceFinalTestSuite:
+    """FINAL MT5 Auto-Sync Service Testing Suite - $521.88 Discrepancy Resolution"""
     
     def __init__(self):
-        # Use production backend URL from environment
+        # Use CORRECT backend URL without double /api prefix
         self.backend_url = "https://fidus-api.onrender.com/api"
         self.session = None
         self.admin_token = None
         self.test_results = []
         
-        logger.info(f"🚀 MT5 Auto-Sync Service Test Suite initialized")
+        logger.info(f"🚀 MT5 Auto-Sync Service FINAL TEST Suite initialized")
         logger.info(f"   Backend URL: {self.backend_url}")
-        logger.info(f"   Target Account: 886528 (Critical $521.88 discrepancy)")
+        logger.info(f"   CRITICAL TARGET: Account 886528 ($521.88 discrepancy)")
+        logger.info(f"   GOAL: Update balance from $3,405.53 to $3,927.41")
     
     async def setup(self):
         """Setup test environment"""
