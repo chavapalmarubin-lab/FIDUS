@@ -16455,7 +16455,9 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 logging.info(f"   💰 Separation Interest (886528) BALANCE: ${separation_equity:.2f}")
                 logging.info(f"      (Using BALANCE field due to emergency update - equity field is stale)")
             else:
-                # Trading accounts - EQUITY includes floating P&L
+                # Trading accounts - Use EQUITY (Balance + Floating P/L)
+                equity = float(acc.get("equity", 0))
+                pnl = float(acc.get("profit", 0))
                 trading_accounts.append({
                     "account": account_num,
                     "equity": equity,
