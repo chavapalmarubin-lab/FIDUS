@@ -31,7 +31,8 @@ import {
   Trash2,
   Wifi,
   WifiOff,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 import googleCRMIntegration from '../services/googleCRMIntegration';
 import apiAxios from '../utils/apiAxios';
