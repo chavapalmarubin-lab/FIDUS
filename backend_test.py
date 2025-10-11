@@ -172,71 +172,75 @@ class FIDUSCriticalEndpointTestSuite:
             }
     
     async def test_health_check_endpoint(self) -> Dict[str, Any]:
-        """Test Health Check or Simple GET Endpoint"""
-        test_name = "Health Check Endpoint"
+        """Test Health Check Endpoint - GET https://fidus-investment-platform.onrender.com/api/health"""
+        test_name = "2. Health Check Endpoint"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
-        health_endpoints = [
-            f"{self.backend_url}/health",
-            f"{self.backend_url}/status", 
-            f"{self.backend_url}/ping",
-            f"{self.backend_url}/"
-        ]
+        endpoint_url = f"{self.backend_url}/health"
         
-        working_endpoint = None
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/health',
+            'purpose': 'System status verification with NEW Render URL'
+        }
         
         try:
-            for endpoint_url in health_endpoints:
-                try:
-                    async with self.session.get(endpoint_url) as response:
-                        status_code = response.status
-                        response_text = await response.text()
-                        
-                        endpoint_info = {
-                            'url': endpoint_url,
-                            'method': 'GET',
-                            'path_pattern': endpoint_url.replace(self.backend_url, '/api'),
-                            'purpose': 'Health check / Status verification',
-                            'status_code': status_code,
-                            'response_sample': response_text[:200] if response_text else "Empty response"
-                        }
-                        
-                        if status_code == 200:
-                            validation_results.append(f"✅ Health endpoint found: {endpoint_url}")
-                            validation_results.append(f"   Status: HTTP {status_code}")
-                            validation_results.append(f"   Response: {response_text[:100]}...")
-                            working_endpoint = endpoint_info
-                            self.endpoint_documentation.append(endpoint_info)
-                            break
-                        else:
-                            validation_results.append(f"⚠️ {endpoint_url}: HTTP {status_code}")
-                            
-                except Exception as e:
-                    validation_results.append(f"❌ {endpoint_url}: {str(e)}")
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with system status")
             
-            if not working_endpoint:
-                validation_results.append("❌ No working health check endpoint found")
-                return {
-                    'test_name': test_name,
-                    'status': 'FAIL',
-                    'validation_results': validation_results
-                }
-            
-            return {
-                'test_name': test_name,
-                'status': 'PASS',
-                'validation_results': validation_results,
-                'endpoint_info': working_endpoint
-            }
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
                 
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_text[:200] if response_text else "Empty response"
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with system status - SUCCESS")
+                    validation_results.append(f"   Response: {response_text[:100]}...")
+                    
+                    # Check for status information
+                    if 'status' in response_data or 'health' in response_data or 'backend' in response_data:
+                        validation_results.append("✅ System status information present")
+                    else:
+                        validation_results.append("⚠️ Limited status information")
+                        
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
             return {
                 'test_name': test_name,
                 'status': 'ERROR',
                 'error': str(e),
-                'validation_results': [f"❌ Exception: {str(e)}"]
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
             }
     
     async def test_mt5_endpoints(self) -> Dict[str, Any]:
