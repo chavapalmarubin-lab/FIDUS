@@ -402,7 +402,7 @@ const FullGoogleWorkspace = () => {
 
     setLoading(true);
     try {
-      const response = await apiAxios.post('/admin/google/gmail/send', {
+      const response = await apiAxios.post('/api/admin/google/gmail/send', {
         to: composeData.to,
         subject: composeData.subject,
         body: composeData.body
