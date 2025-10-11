@@ -15863,7 +15863,7 @@ async def disconnect_google_account(current_user: dict = Depends(get_current_adm
 # GOOGLE API SERVICE ENDPOINTS - Using OAuth
 # ===============================================================================
 
-@api_router.get("/api/admin/google/gmail/messages")
+@api_router.get("/admin/google/gmail/messages")
 async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admin_user)):
     """Get Gmail messages using OAuth"""
     try:
