@@ -46,11 +46,15 @@ class GoogleOAuthService:
         self.redirect_uri = self.client_config["web"]["redirect_uris"][0]
         
         # OAuth scopes for Google Workspace integration
+        # Using comprehensive scopes to ensure full access
         self.scopes = [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/gmail.send',
-            'https://www.googleapis.com/auth/calendar',
-            'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/calendar.events',
+            'https://www.googleapis.com/auth/drive.readonly',
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/spreadsheets.readonly',
             'https://www.googleapis.com/auth/spreadsheets'
         ]
     
