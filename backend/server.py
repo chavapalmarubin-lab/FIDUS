@@ -9744,7 +9744,7 @@ async def get_google_login_url():
     """Get Google login URL using Emergent Social Login"""
     try:
         # Set redirect URL to main app dashboard
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://k8s-to-render.preview.emergentagent.com')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         redirect_url = f"{frontend_url}/dashboard"  # Redirect to dashboard after login
         
         # Generate Google login URL using Emergent OAuth
