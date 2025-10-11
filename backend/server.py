@@ -15890,7 +15890,7 @@ async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admi
         logger.error(f"❌ Gmail API error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/api/admin/google/calendar/events")
+@api_router.get("/admin/google/calendar/events")
 async def get_calendar_events_oauth(current_user: dict = Depends(get_current_admin_user)):
     """Get Calendar events using OAuth"""
     try:
