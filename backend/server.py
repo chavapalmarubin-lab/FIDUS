@@ -10891,7 +10891,7 @@ async def send_document_notification(document_id: str, request: Request, current
                 <p>Dear {data.get('recipient_name', 'Valued Client')},</p>
                 <p>You have a document that requires your electronic signature.</p>
                 <p><strong>Document:</strong> {data.get('document_name', 'Investment Document')}</p>
-                <p><a href="{data.get('signing_url', 'https://k8s-to-render.preview.emergentagent.com/documents/sign')}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review and Sign Document</a></p>
+                <p><a href="{data.get('signing_url', f'{os.environ.get("FRONTEND_URL", "https://fidus-investment-platform.onrender.com")}/documents/sign')}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review and Sign Document</a></p>
                 <p>Best regards,<br>FIDUS Investment Management Team</p>
             </body>
             </html>
