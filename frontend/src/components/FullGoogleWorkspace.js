@@ -543,19 +543,33 @@ const FullGoogleWorkspace = () => {
         }]);
       }
     } catch (error) {
-      console.error('❌ Failed to load real Drive files:', error);
+      console.error('❌ Failed to load Drive files:', error);
       
-      // Show error message instead of mock data
-      setDriveFiles([{
-        id: 'error-drive',
-        name: '⚠️ Drive API Connection Error',
-        mimeType: 'text/plain',
-        size: '—',
-        createdTime: new Date().toISOString(),
-        modifiedTime: new Date().toISOString(),
-        shared: false,
-        isFolder: false
-      }]);
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.response?.data?.auth_required) {
+        setDriveFiles([{
+          id: 'auth-required',
+          name: '🔐 Google Authentication Required',
+          mimeType: 'text/plain',
+          size: '—',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString(),
+          shared: false,
+          isFolder: false
+        }]);
+      } else {
+        // Show error message instead of mock data
+        setDriveFiles([{
+          id: 'error-drive',
+          name: '⚠️ Drive API Connection Error',
+          mimeType: 'text/plain',
+          size: '—',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString(),
+          shared: false,
+          isFolder: false
+        }]);
+      }
     } finally {
       setLoading(false);
     }
