@@ -16492,20 +16492,36 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         # Total fund REVENUE (not assets!) = trading P&L + separation interest
         total_fund_revenue = mt5_trading_pnl + separation_equity
         
-        # Get client obligations (interest owed)
-        # TODO: Calculate actual client interest obligations from contracts
-        # For now using placeholder - needs proper calculation from investment terms
-        client_interest_obligations = 32995.00  # This should come from actual calculations
+        # CONTRACT DETAILS
+        contract_start = datetime(2025, 10, 1, tzinfo=timezone.utc)
+        contract_end = datetime(2026, 12, 1, tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
         
-        # Net position = total revenue - obligations  
-        net_position = total_fund_revenue - client_interest_obligations
+        total_contract_days = (contract_end - contract_start).days
+        days_active = (now - contract_start).days
+        days_remaining = (contract_end - now).days
         
-        # Calculate performance metrics
-        performance_pct = (net_position / total_initial_deposits * 100) if total_initial_deposits > 0 else 0
+        # TOTAL INTEREST OBLIGATIONS (for full contract)
+        # CORE: $18,151.41 × 1.5% × 12 months
+        # BALANCE: $100,000 × 2.5% × 12 months
+        core_interest = 18151.41 * 0.015 * 12  # $3,267.25
+        balance_interest = 100000.00 * 0.025 * 12  # $30,000.00
+        total_interest_obligation = core_interest + balance_interest  # $33,267.25
+        
+        # PERFORMANCE ANALYSIS
+        required_daily = total_interest_obligation / days_remaining if days_remaining > 0 else 0
+        actual_daily = total_fund_revenue / days_active if days_active > 0 else 0
+        performance_multiplier = actual_daily / required_daily if required_daily > 0 else 0
+        
+        # PROJECTION
+        projected_total_revenue = total_fund_revenue + (actual_daily * days_remaining)
+        projected_surplus = projected_total_revenue - total_interest_obligation
         
         logging.info(f"   📊 Fund Revenue: ${total_fund_revenue:.2f}")
-        logging.info(f"   📊 Client Obligations: ${client_interest_obligations:.2f}")
-        logging.info(f"   📊 Net Position: ${net_position:+.2f}")
+        logging.info(f"   📊 Total Interest Obligation (full contract): ${total_interest_obligation:.2f}")
+        logging.info(f"   📊 Required Daily: ${required_daily:.2f}/day")
+        logging.info(f"   📊 Actual Daily: ${actual_daily:.2f}/day")
+        logging.info(f"   📊 Performance: {performance_multiplier:.2f}x target")
         
         fund_performance = {
             "success": True,
