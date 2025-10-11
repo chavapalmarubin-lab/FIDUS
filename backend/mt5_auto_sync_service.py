@@ -139,26 +139,47 @@ class MT5AutoSyncService:
         """Fetch data via MT5 Bridge API"""
         try:
             url = f"{self.bridge_url}/api/mt5/account/{mt5_login}/info"
+            logger.info(f"🔗 Connecting to MT5 Bridge: {url}")
+            logger.info(f"🔑 API Key configured: {'Yes' if self.api_key else 'No'}")
+            logger.info(f"⏱️  Timeout: {self.timeout}s")
+            
+            if not self.session:
+                logger.error("❌ HTTP session not initialized!")
+                return {'success': False, 'error': 'HTTP session not initialized'}
             
             async with self.session.get(url) as response:
+                logger.info(f"📡 Bridge response status: {response.status}")
+                
                 if response.status == 200:
-                    data = await response.json()
-                    return {
-                        'success': True,
-                        'balance': float(data.get('balance', 0)),
-                        'equity': float(data.get('equity', 0)),
-                        'profit': float(data.get('profit', 0)),
-                        'margin': float(data.get('margin', 0)),
-                        'data_source': 'mt5_bridge'
-                    }
+                    try:
+                        data = await response.json()
+                        logger.info(f"✅ Bridge returned data keys: {list(data.keys())}")
+                        return {
+                            'success': True,
+                            'balance': float(data.get('balance', 0)),
+                            'equity': float(data.get('equity', 0)),
+                            'profit': float(data.get('profit', 0)),
+                            'margin': float(data.get('margin', 0)),
+                            'data_source': 'mt5_bridge'
+                        }
+                    except Exception as json_error:
+                        error_text = await response.text()
+                        logger.error(f"❌ Bridge JSON parse error: {str(json_error)}")
+                        logger.error(f"Raw response: {error_text[:500]}")
+                        return {'success': False, 'error': f"JSON parse error: {str(json_error)}"}
                 else:
                     error_text = await response.text()
+                    logger.error(f"❌ Bridge HTTP error {response.status}: {error_text[:500]}")
                     return {
                         'success': False,
                         'error': f"HTTP {response.status}: {error_text}"
                     }
                     
         except Exception as e:
+            import traceback
+            logger.error(f"❌ Bridge connection exception: {type(e).__name__}")
+            logger.error(f"Exception message: {str(e)}")
+            logger.error(f"Full traceback:\n{traceback.format_exc()}")
             return {
                 'success': False,
                 'error': f"Bridge connection error: {str(e)}"
