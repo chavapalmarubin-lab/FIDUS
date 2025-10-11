@@ -10361,7 +10361,7 @@ async def get_raw_mt5_data(mt5_login: str):
             "fetched_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.get("/debug/mt5/data-comparison/{mt5_login}")
+@api_router.get("/api/debug/mt5/data-comparison/{mt5_login}")
 async def compare_mt5_data(mt5_login: str):
     """Compare what's in our database vs what MT5 API returns now"""
     try:
