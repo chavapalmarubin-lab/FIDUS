@@ -10021,6 +10021,7 @@ async def create_google_meet(meeting_data: dict, current_user: dict = Depends(ge
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using individual OAuth system"""
     try:
+        logging.info("🔥 [DEBUG] Gmail endpoint called - INDIVIDUAL OAUTH VERSION")
         # Try multiple ways to get admin user ID consistently  
         admin_user_id = (
             current_user.get("user_id") or 
