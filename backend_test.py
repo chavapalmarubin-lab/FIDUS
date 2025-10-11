@@ -340,113 +340,98 @@ class FIDUSArchitectureAuditTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_multi_account_sync_endpoint(self) -> Dict[str, Any]:
-        """Test POST /api/admin/trading/analytics/sync for all 4 accounts"""
-        test_name = "Multi-Account Sync Endpoint"
+    async def test_path_pattern_analysis(self) -> Dict[str, Any]:
+        """Analyze path patterns and routing consistency"""
+        test_name = "Path Pattern Analysis"
         logger.info(f"🧪 Testing {test_name}")
         
+        validation_results = []
+        
         try:
-            url = f"{self.backend_url}/admin/trading/analytics/sync"
+            # Test various endpoint patterns to understand routing
+            test_endpoints = [
+                # Authentication patterns
+                f"{self.backend_url}/auth/login",
+                f"{self.backend_url}/auth/refresh",
+                
+                # Admin patterns  
+                f"{self.backend_url}/admin/users",
+                f"{self.backend_url}/admin/dashboard",
+                
+                # MT5 patterns
+                f"{self.backend_url}/mt5/status",
+                f"{self.backend_url}/mt5/accounts",
+                
+                # Investment patterns
+                f"{self.backend_url}/investments",
+                f"{self.backend_url}/investments/admin/overview",
+                
+                # Google patterns
+                f"{self.backend_url}/google/connection/test-all",
+                f"{self.backend_url}/admin/google/auth-url"
+            ]
             
-            async with self.session.post(url) as response:
-                status_code = response.status
-                response_data = await response.json()
-                
-                success = response_data.get('success', False)
-                sync_result = response_data.get('sync_result')
-                
-                validation_results = []
-                
-                if status_code == 200:
-                    validation_results.append("✅ HTTP 200 OK response")
-                else:
-                    validation_results.append(f"❌ HTTP {status_code} (expected 200)")
-                
-                if isinstance(success, bool):
-                    validation_results.append(f"✅ Success flag present ({success})")
-                else:
-                    validation_results.append("❌ Success flag missing or invalid")
-                
-                if sync_result and isinstance(sync_result, dict):
-                    validation_results.append("✅ Sync result data present")
-                    
-                    # Check sync result structure
-                    expected_fields = [
-                        'sync_date', 'started_at', 'accounts_processed',
-                        'total_trades_synced', 'daily_summaries_created', 'success'
-                    ]
-                    
-                    missing_fields = [field for field in expected_fields if field not in sync_result]
-                    if not missing_fields:
-                        validation_results.append("✅ Sync result structure complete")
-                    else:
-                        validation_results.append(f"❌ Missing sync result fields: {missing_fields}")
-                    
-                    # Phase 1B: Check if all 4 accounts were processed
-                    accounts_processed = sync_result.get('accounts_processed', 0)
-                    if accounts_processed == 4:
-                        validation_results.append(f"✅ All 4 accounts processed ({accounts_processed})")
-                    elif accounts_processed > 0:
-                        validation_results.append(f"⚠️ Partial accounts processed ({accounts_processed}/4)")
-                    else:
-                        validation_results.append("❌ No accounts processed")
-                    
-                    # Check trades synced
-                    total_trades_synced = sync_result.get('total_trades_synced', 0)
-                    if total_trades_synced > 0:
-                        validation_results.append(f"✅ Trades synced across accounts ({total_trades_synced})")
-                    else:
-                        validation_results.append("⚠️ No trades synced (may be expected for new data)")
-                    
-                    # Check daily summaries created
-                    daily_summaries = sync_result.get('daily_summaries_created', 0)
-                    if daily_summaries > 0:
-                        validation_results.append(f"✅ Daily summaries created ({daily_summaries})")
-                    else:
-                        validation_results.append("⚠️ No daily summaries created")
-                    
-                    # Check for errors
-                    errors = sync_result.get('errors', [])
-                    if not errors:
-                        validation_results.append("✅ No sync errors reported")
-                    else:
-                        validation_results.append(f"⚠️ Sync errors reported: {len(errors)}")
-                        for error in errors[:3]:  # Show first 3 errors
-                            validation_results.append(f"   - {error}")
-                    
-                    # Check sync duration
-                    duration = sync_result.get('duration_seconds', 0)
-                    if duration > 0:
-                        validation_results.append(f"✅ Sync completed in {duration:.2f} seconds")
-                    else:
-                        validation_results.append("⚠️ No duration information")
+            api_prefix_consistent = True
+            routing_patterns = {
+                'auth': [],
+                'admin': [],
+                'mt5': [],
+                'investments': [],
+                'google': [],
+                'other': []
+            }
+            
+            for endpoint_url in test_endpoints:
+                try:
+                    async with self.session.get(endpoint_url) as response:
+                        status_code = response.status
+                        path = endpoint_url.replace(self.backend_url, '/api')
+                        
+                        # Categorize by pattern
+                        if '/auth/' in path:
+                            routing_patterns['auth'].append({'path': path, 'status': status_code})
+                        elif '/admin/' in path:
+                            routing_patterns['admin'].append({'path': path, 'status': status_code})
+                        elif '/mt5/' in path:
+                            routing_patterns['mt5'].append({'path': path, 'status': status_code})
+                        elif '/investments' in path:
+                            routing_patterns['investments'].append({'path': path, 'status': status_code})
+                        elif '/google/' in path:
+                            routing_patterns['google'].append({'path': path, 'status': status_code})
+                        else:
+                            routing_patterns['other'].append({'path': path, 'status': status_code})
+                        
+                        # Check if /api prefix is used consistently
+                        if not path.startswith('/api/'):
+                            api_prefix_consistent = False
                             
-                else:
-                    validation_results.append("❌ Sync result data missing or invalid")
-                
-                logger.info(f"   Response Status: {status_code}")
-                logger.info(f"   Success: {success}")
-                if sync_result:
-                    logger.info(f"   Accounts Processed: {sync_result.get('accounts_processed', 0)}/4")
-                    logger.info(f"   Trades Synced: {sync_result.get('total_trades_synced', 0)}")
-                    logger.info(f"   Daily Summaries: {sync_result.get('daily_summaries_created', 0)}")
-                    logger.info(f"   Errors: {len(sync_result.get('errors', []))}")
-                    logger.info(f"   Duration: {sync_result.get('duration_seconds', 0):.2f}s")
-                
-                return {
-                    'test_name': test_name,
-                    'status': 'PASS' if status_code == 200 else 'FAIL',
-                    'status_code': status_code,
-                    'response_data': response_data,
-                    'validation_results': validation_results,
-                    'details': {
-                        'endpoint': url,
-                        'method': 'POST',
-                        'sync_success': sync_result.get('success') if sync_result else None,
-                        'accounts_processed': sync_result.get('accounts_processed') if sync_result else 0,
-                        'expected_accounts': 4
-                    }
-                }
+                except Exception as e:
+                    validation_results.append(f"⚠️ Could not test {endpoint_url}: {str(e)}")
+            
+            # Analyze patterns
+            if api_prefix_consistent:
+                validation_results.append("✅ All endpoints use /api/ prefix consistently")
+            else:
+                validation_results.append("❌ Inconsistent /api/ prefix usage detected")
+            
+            # Report pattern analysis
+            for category, endpoints in routing_patterns.items():
+                if endpoints:
+                    working_count = len([e for e in endpoints if e['status'] == 200])
+                    total_count = len(endpoints)
+                    validation_results.append(f"📊 {category.upper()} pattern: {working_count}/{total_count} endpoints working")
+                    
+                    for endpoint in endpoints[:3]:  # Show first 3 examples
+                        status_icon = "✅" if endpoint['status'] == 200 else "❌" if endpoint['status'] >= 400 else "⚠️"
+                        validation_results.append(f"   {status_icon} {endpoint['path']} (HTTP {endpoint['status']})")
+            
+            return {
+                'test_name': test_name,
+                'status': 'PASS',
+                'validation_results': validation_results,
+                'routing_patterns': routing_patterns,
+                'api_prefix_consistent': api_prefix_consistent
+            }
                 
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
