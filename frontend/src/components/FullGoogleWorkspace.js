@@ -907,7 +907,7 @@ const FullGoogleWorkspace = () => {
               Google Workspace Connection Required
             </h3>
             <p className="text-orange-700 mb-4">
-              Connect your Google account to access Gmail, Calendar, Drive, and Sheets functionality
+              Connect your Google account (chavapalmarubin@gmail.com) to access Gmail, Calendar, Drive, and Sheets functionality
             </p>
             <Button 
               onClick={handleConnectToGoogle}
