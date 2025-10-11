@@ -23,7 +23,7 @@ class MT5AutoSyncTestSuite:
     
     def __init__(self):
         # Use correct backend URL from frontend/.env
-        self.backend_url = "https://fidus-api.onrender.com/api"
+        self.backend_url = "https://fidus-api.onrender.com"
         
         self.session = None
         self.admin_token = None
