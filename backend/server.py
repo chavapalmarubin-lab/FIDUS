@@ -10292,6 +10292,238 @@ async def debug_connection_flow():
             "message": str(e)
         }
 
+# ===============================================================================
+# MT5 DATA VERIFICATION AND DEBUG ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/debug/mt5/connection-test")
+async def test_mt5_connection():
+    """Test if MT5 API is reachable and responding"""
+    try:
+        from services.mt5_service import mt5_service
+        import time
+        
+        start_time = time.time()
+        
+        # Test MT5 service connection
+        if hasattr(mt5_service, 'test_connection'):
+            connection_result = await mt5_service.test_connection()
+        else:
+            connection_result = {"status": "MT5 service available", "method": "service_exists"}
+        
+        response_time = round((time.time() - start_time) * 1000, 2)
+        
+        return {
+            "status": "connected",
+            "response_time_ms": response_time,
+            "mt5_service_status": "available",
+            "connection_test": connection_result,
+            "tested_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "tested_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.get("/debug/mt5/raw-account-data/{mt5_login}")
+async def get_raw_mt5_data(mt5_login: str):
+    """Get raw data directly from MT5 API for specific account"""
+    try:
+        from services.mt5_service import mt5_service
+        
+        logging.info(f"🔍 [MT5 DEBUG] Fetching raw data for account: {mt5_login}")
+        
+        # Get raw MT5 account data
+        if hasattr(mt5_service, 'get_account_info'):
+            raw_data = await mt5_service.get_account_info(mt5_login)
+        else:
+            # Try alternative method
+            raw_data = {"error": "get_account_info method not available"}
+        
+        return {
+            "mt5_login": mt5_login,
+            "raw_mt5_response": raw_data,
+            "data_source": "mt5_api_direct",
+            "fetched_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 DEBUG] Error fetching raw data for {mt5_login}: {str(e)}")
+        return {
+            "mt5_login": mt5_login,
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "fetched_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.get("/debug/mt5/data-comparison/{mt5_login}")
+async def compare_mt5_data(mt5_login: str):
+    """Compare what's in our database vs what MT5 API returns now"""
+    try:
+        logging.info(f"🔍 [MT5 DEBUG] Comparing database vs live data for: {mt5_login}")
+        
+        # Get data from database
+        db_account = await db.mt5_accounts.find_one({"login": mt5_login})
+        
+        # Get live data from MT5 API
+        from services.mt5_service import mt5_service
+        
+        if hasattr(mt5_service, 'get_account_info'):
+            live_data = await mt5_service.get_account_info(mt5_login)
+        else:
+            live_data = {"error": "MT5 service method not available"}
+        
+        # Calculate discrepancies
+        balance_diff = 0
+        equity_diff = 0
+        
+        if db_account and isinstance(live_data, dict) and 'balance' in live_data:
+            db_balance = float(db_account.get('balance', 0))
+            db_equity = float(db_account.get('equity', 0))
+            live_balance = float(live_data.get('balance', 0))
+            live_equity = float(live_data.get('equity', 0))
+            
+            balance_diff = live_balance - db_balance
+            equity_diff = live_equity - db_equity
+        
+        return {
+            "mt5_login": mt5_login,
+            "database_data": {
+                "balance": db_account.get('balance') if db_account else None,
+                "equity": db_account.get('equity') if db_account else None,
+                "last_updated": db_account.get('updated_at') if db_account else None,
+                "found_in_db": bool(db_account)
+            },
+            "mt5_live_data": {
+                "balance": live_data.get('balance') if isinstance(live_data, dict) else None,
+                "equity": live_data.get('equity') if isinstance(live_data, dict) else None,
+                "raw_response": live_data,
+                "fetched_at": datetime.now(timezone.utc).isoformat()
+            },
+            "discrepancy_analysis": {
+                "balance_difference": balance_diff,
+                "equity_difference": equity_diff,
+                "balance_diff_usd": f"${balance_diff:,.2f}",
+                "equity_diff_usd": f"${equity_diff:,.2f}",
+                "significant_difference": abs(balance_diff) > 100 or abs(equity_diff) > 100
+            },
+            "comparison_performed_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 DEBUG] Error comparing data for {mt5_login}: {str(e)}")
+        return {
+            "mt5_login": mt5_login,
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "compared_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.get("/debug/mt5/sync-status")
+async def check_mt5_sync_status():
+    """Check MT5 data sync status and timing"""
+    try:
+        # Get all MT5 accounts from database
+        mt5_accounts = await db.mt5_accounts.find({}).to_list(length=100)
+        
+        sync_status = []
+        for account in mt5_accounts:
+            last_updated = account.get('updated_at')
+            
+            # Calculate time since last update
+            if last_updated:
+                if isinstance(last_updated, str):
+                    try:
+                        last_update_time = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                    except:
+                        last_update_time = datetime.now(timezone.utc) - timedelta(days=999)
+                else:
+                    last_update_time = last_updated
+                
+                time_diff = datetime.now(timezone.utc) - last_update_time
+                hours_since_update = time_diff.total_seconds() / 3600
+            else:
+                hours_since_update = 999
+                last_update_time = None
+            
+            sync_status.append({
+                "login": account.get('login'),
+                "balance": account.get('balance'),
+                "equity": account.get('equity'),
+                "last_updated": last_updated,
+                "hours_since_update": round(hours_since_update, 2),
+                "status": "stale" if hours_since_update > 24 else "recent" if hours_since_update < 1 else "moderate"
+            })
+        
+        return {
+            "total_accounts": len(mt5_accounts),
+            "sync_status": sync_status,
+            "overall_status": "healthy" if all(s["hours_since_update"] < 24 for s in sync_status) else "stale_data_detected",
+            "checked_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "checked_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.post("/debug/mt5/force-refresh/{mt5_login}")
+async def force_mt5_refresh(mt5_login: str):
+    """Force immediate refresh of MT5 data for specific account"""
+    try:
+        from services.mt5_service import mt5_service
+        
+        logging.info(f"🔄 [MT5 DEBUG] Force refreshing account: {mt5_login}")
+        
+        # Force refresh from MT5 API
+        if hasattr(mt5_service, 'sync_account_data'):
+            refresh_result = await mt5_service.sync_account_data(mt5_login)
+        elif hasattr(mt5_service, 'get_account_info'):
+            # Get fresh data and update database
+            fresh_data = await mt5_service.get_account_info(mt5_login)
+            
+            if isinstance(fresh_data, dict) and 'balance' in fresh_data:
+                # Update database with fresh data
+                await db.mt5_accounts.update_one(
+                    {"login": mt5_login},
+                    {"$set": {
+                        "balance": fresh_data.get('balance'),
+                        "equity": fresh_data.get('equity'),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }},
+                    upsert=True
+                )
+                refresh_result = {"status": "updated", "data": fresh_data}
+            else:
+                refresh_result = {"status": "error", "message": "Invalid MT5 response"}
+        else:
+            refresh_result = {"status": "error", "message": "MT5 sync method not available"}
+        
+        return {
+            "mt5_login": mt5_login,
+            "refresh_result": refresh_result,
+            "refreshed_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 DEBUG] Error force refreshing {mt5_login}: {str(e)}")
+        return {
+            "mt5_login": mt5_login,
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "attempted_at": datetime.now(timezone.utc).isoformat()
+        }
+
 # Duplicate disconnect endpoint removed - using existing one at line 9636
 
 @api_router.get("/google/calendar/real-events")
