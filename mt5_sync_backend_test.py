@@ -85,7 +85,7 @@ class MT5SyncServiceFinalTestSuite:
 
     async def test_mt5_sync_dashboard(self) -> Dict[str, Any]:
         """Test MT5 Sync Dashboard - GET /api/mt5/sync-dashboard"""
-        test_name = "1. MT5 Sync Dashboard"
+        test_name = "2. MT5 Sync Dashboard"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
@@ -93,7 +93,7 @@ class MT5SyncServiceFinalTestSuite:
         
         try:
             validation_results.append(f"🎯 Testing URL: {endpoint_url}")
-            validation_results.append("📋 Expected: HTTP 200 with dashboard showing all MT5 accounts and sync status")
+            validation_results.append("📋 Expected: HTTP 200 showing all MT5 accounts with sync status")
             
             async with self.session.get(endpoint_url) as response:
                 status_code = response.status
@@ -105,7 +105,7 @@ class MT5SyncServiceFinalTestSuite:
                     response_data = {"raw_response": response_text}
                 
                 if status_code == 200:
-                    validation_results.append("✅ EXPECTED: HTTP 200 with sync dashboard - SUCCESS")
+                    validation_results.append("✅ SUCCESS: HTTP 200 - MT5 Sync Dashboard accessible")
                     
                     # Check for dashboard components
                     if 'accounts' in response_data or 'mt5_accounts' in response_data:
@@ -143,7 +143,9 @@ class MT5SyncServiceFinalTestSuite:
                         'response_data': response_data
                     }
                 else:
-                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"❌ FAILED: Expected HTTP 200, got HTTP {status_code}")
+                    if status_code == 404:
+                        validation_results.append("❌ ROUTING ISSUE: Endpoint not found - check double /api prefix")
                     validation_results.append(f"   Response: {response_text[:200]}")
                     
                     return {
