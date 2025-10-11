@@ -428,6 +428,21 @@ class FIDUSCriticalEndpointTestSuite:
                     validation_results.append("✅ EXPECTED: HTTP 200 with debug message - SUCCESS")
                     validation_results.append(f"   Response: {response_text[:100]}...")
                     
+                    # SPECIAL VERIFICATION: Check for "render_deployment": true flag
+                    if isinstance(response_data, dict):
+                        if response_data.get("render_deployment") is True:
+                            validation_results.append("✅ CRITICAL: 'render_deployment': true flag CONFIRMED")
+                        elif response_data.get("render_deployment") is False:
+                            validation_results.append("❌ CRITICAL: 'render_deployment': false (should be true)")
+                        else:
+                            validation_results.append("⚠️ CRITICAL: 'render_deployment' flag not found in response")
+                        
+                        # Check that old flag is NOT present
+                        if response_data.get("no_kubernetes") is True:
+                            validation_results.append("❌ CRITICAL: Old 'no_kubernetes': true flag still present (should be removed)")
+                        else:
+                            validation_results.append("✅ VERIFIED: Old 'no_kubernetes' flag not present")
+                    
                     # Check for debug message
                     if 'debug' in response_data or 'test' in response_data or 'message' in response_data:
                         validation_results.append("✅ Debug message information present")
