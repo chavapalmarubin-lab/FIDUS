@@ -16526,39 +16526,51 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         fund_performance = {
             "success": True,
             "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
+            "contract_info": {
+                "start_date": "2025-10-01",
+                "end_date": "2026-12-01",
+                "total_days": total_contract_days,
+                "days_active": days_active,
+                "days_remaining": days_remaining,
+                "percent_complete": round((days_active / total_contract_days * 100), 2)
+            },
             "fund_revenue": {
                 "mt5_trading_pnl": round(mt5_trading_pnl, 2),
                 "separation_interest": round(separation_equity, 2),
                 "broker_rebates": 0.0,
-                "total_revenue": round(total_fund_revenue, 2)
+                "total_revenue_to_date": round(total_fund_revenue, 2)
             },
-            "fund_obligations": {
-                "client_interest_owed": round(client_interest_obligations, 2),
-                "management_fees": 0.0,
-                "total_obligations": round(client_interest_obligations, 2)
+            "obligations": {
+                "core_interest_12mo": round(core_interest, 2),
+                "balance_interest_12mo": round(balance_interest, 2),
+                "total_interest_obligation": round(total_interest_obligation, 2),
+                "principal_to_return": round(total_initial_deposits, 2)
             },
-            "net_position": {
-                "net_profitability": round(net_position, 2),
-                "performance_percentage": round(performance_pct, 4),
-                "status": "profitable" if net_position > 0 else "deficit",
-                "gap_analysis": {
-                    "total_revenue": round(total_fund_revenue, 2),
-                    "total_obligations": round(client_interest_obligations, 2),
-                    "gap": round(net_position, 2)
-                }
+            "performance_analysis": {
+                "required_daily_rate": round(required_daily, 2),
+                "actual_daily_rate": round(actual_daily, 2),
+                "performance_multiplier": round(performance_multiplier, 2),
+                "status": "ahead_of_pace" if performance_multiplier > 1 else "behind_pace"
+            },
+            "projection": {
+                "revenue_to_date": round(total_fund_revenue, 2),
+                "projected_total_revenue": round(projected_total_revenue, 2),
+                "projected_vs_obligation": round(projected_surplus, 2),
+                "projected_status": "surplus" if projected_surplus > 0 else "deficit"
             },
             "trading_details": {
                 "initial_deposits": round(total_initial_deposits, 2),
                 "current_equity": round(total_current_equity, 2),
-                "trading_pnl": round(mt5_trading_pnl, 2)
+                "trading_pnl": round(mt5_trading_pnl, 2),
+                "trading_return_pct": round((mt5_trading_pnl / total_initial_deposits * 100), 4) if total_initial_deposits > 0 else 0
             },
             "account_breakdown": {
                 "separation_accounts": [{"account": 886528, "balance": separation_equity}],
                 "trading_accounts": trading_accounts,
                 "total_accounts": len(mt5_accounts)
             },
-            "calculation_method": "corrected_autonomous_v2_with_initial_deposits",
-            "priority_issue_resolved": "Fixed to calculate actual P&L (equity - initial deposits)"
+            "calculation_method": "corrected_v3_with_timeline_analysis",
+            "notes": "Timeline-based performance assessment. Fund performing {:.2f}x required daily rate.".format(performance_multiplier)
         }
         
         logging.info(f"✅ Corrected fund performance: Net ${net_position:+,.2f}")
