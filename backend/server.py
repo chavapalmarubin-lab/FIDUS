@@ -10296,6 +10296,15 @@ async def debug_connection_flow():
 # MT5 DATA VERIFICATION AND DEBUG ENDPOINTS
 # ===============================================================================
 
+@api_router.get("/api/debug/test")
+async def test_debug_endpoint():
+    """Simple test endpoint to verify debug routing works"""
+    return {
+        "status": "working",
+        "message": "Debug endpoint is accessible",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 @api_router.get("/api/debug/mt5/connection-test")
 async def test_mt5_connection():
     """Test if MT5 API is reachable and responding"""
