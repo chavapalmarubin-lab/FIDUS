@@ -275,58 +275,13 @@ export default function ArchitectureDiagram({ components, healthData, connection
         />
       </ReactFlow>
 
-      {/* Selected Node Details Panel (will be enhanced in later steps) */}
+      {/* Enhanced Details Panel */}
       {selectedNode && (
-        <div className="absolute top-0 right-0 w-96 h-full bg-white border-l border-gray-200 shadow-xl overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {selectedNode.name}
-              </h3>
-              <button
-                onClick={() => setSelectedNode(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Type</p>
-                <p className="text-base font-medium text-gray-900">{selectedNode.type}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Platform</p>
-                <p className="text-base font-medium text-gray-900">{selectedNode.platform}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Description</p>
-                <p className="text-sm text-gray-700">{selectedNode.description}</p>
-              </div>
-
-              {selectedNode.url && (
-                <div>
-                  <a
-                    href={selectedNode.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    View Component
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ComponentDetailsPanel
+          component={selectedNode}
+          health={healthData?.[selectedNode.id]}
+          onClose={() => setSelectedNode(null)}
+        />
       )}
     </div>
   );
