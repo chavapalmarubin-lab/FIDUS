@@ -10304,7 +10304,7 @@ async def test_debug_endpoint(current_user: dict = Depends(get_current_admin_use
         "message": "Debug endpoint is accessible - RENDER DEPLOYMENT",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "deployment": "render.com",
-        "no_kubernetes": True
+        "render_deployment": True
     }
 
 @api_router.get("/debug/mt5/connection-test")
