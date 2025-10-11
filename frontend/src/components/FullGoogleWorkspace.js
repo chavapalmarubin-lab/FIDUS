@@ -789,21 +789,42 @@ const FullGoogleWorkspace = () => {
               {/* Connected Account Details */}
               {connectionStatus.success && connectionStatus.connected && connectionStatus.google_info && (
                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {connectionStatus.google_info.name?.charAt(0) || 'U'}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {connectionStatus.google_info.name?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <div className="font-medium text-green-900">
+                          Connected as {connectionStatus.google_info.name || 'Google User'}
+                        </div>
+                        <div className="text-sm text-green-700">
+                          {connectionStatus.google_info.email || 'No email available'}
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          Admin: {connectionStatus.admin_info?.admin_username || 'Unknown'}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-green-900">
-                        Connected as {connectionStatus.google_info.name || 'Google User'}
-                      </div>
-                      <div className="text-sm text-green-700">
-                        {connectionStatus.google_info.email || 'No email available'}
-                      </div>
-                      <div className="text-xs text-green-600 mt-1">
-                        Admin: {connectionStatus.admin_info?.admin_username || 'Unknown'}
-                      </div>
-                    </div>
+                    <Button
+                      onClick={handleDisconnectGoogle}
+                      disabled={loading}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Disconnecting...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Disconnect
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}
