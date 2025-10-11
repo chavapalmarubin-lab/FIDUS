@@ -725,8 +725,8 @@ class FIDUSArchitectureAuditTestSuite:
             }
     
     async def run_all_tests(self) -> Dict[str, Any]:
-        """Run all Trading Analytics tests"""
-        logger.info("🚀 Starting Trading Analytics Phase 1A Test Suite")
+        """Run all FIDUS Architecture Audit tests"""
+        logger.info("🏗️ Starting FIDUS Platform Architecture Audit")
         
         if not await self.setup():
             return {
@@ -735,15 +735,13 @@ class FIDUSArchitectureAuditTestSuite:
                 'results': []
             }
         
-        # Run all Phase 1B multi-account tests
+        # Run architecture audit tests
         tests = [
-            self.test_multi_account_overview_endpoint,
-            self.test_multi_account_daily_performance,
-            self.test_multi_account_trades_endpoint,
-            self.test_multi_account_sync_endpoint,
-            self.test_mock_data_variation,
-            self.test_database_collections,
-            self.test_error_handling
+            self.test_backend_url_verification,
+            self.test_admin_login_endpoint,
+            self.test_health_check_endpoint,
+            self.test_mt5_endpoints,
+            self.test_path_pattern_analysis
         ]
         
         results = []
@@ -777,7 +775,7 @@ class FIDUSArchitectureAuditTestSuite:
         }
         
         # Log summary
-        logger.info("📊 Trading Analytics Phase 1B Multi-Account Test Summary:")
+        logger.info("📊 FIDUS Architecture Audit Summary:")
         logger.info(f"   Total Tests: {summary['total_tests']}")
         logger.info(f"   Passed: {summary['passed']}")
         logger.info(f"   Failed: {summary['failed']}")
@@ -789,11 +787,11 @@ class FIDUSArchitectureAuditTestSuite:
             'success': summary['overall_status'] == 'PASS',
             'summary': summary,
             'results': results,
+            'endpoint_documentation': self.endpoint_documentation,
             'test_parameters': {
                 'backend_url': self.backend_url,
-                'all_accounts': self.all_accounts,
-                'test_days': self.test_days,
-                'phase': '1B Multi-Account'
+                'frontend_backend_url': self.frontend_backend_url,
+                'audit_type': 'Architecture Audit'
             }
         }
     
