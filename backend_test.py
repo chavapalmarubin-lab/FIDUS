@@ -392,8 +392,8 @@ class FIDUSCriticalEndpointTestSuite:
             }
 
     async def test_debug_test_endpoint(self) -> Dict[str, Any]:
-        """Test Debug Test Endpoint - GET https://fidus-investment-platform.onrender.com/api/debug/test"""
-        test_name = "5. Debug Test Endpoint"
+        """Test Debug Test Endpoint - GET https://fidus-api.onrender.com/api/debug/test (PRIORITY - Check for new flag)"""
+        test_name = "5. Debug Test Endpoint (PRIORITY)"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
@@ -403,7 +403,7 @@ class FIDUSCriticalEndpointTestSuite:
             'url': endpoint_url,
             'method': 'GET',
             'path_pattern': '/api/debug/test',
-            'purpose': 'Debug message verification with NEW Render URL'
+            'purpose': 'PRIORITY: Verify render_deployment: true flag (not no_kubernetes: true)'
         }
         
         try:
