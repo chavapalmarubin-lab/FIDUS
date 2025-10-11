@@ -250,7 +250,7 @@ class MT5AutoSyncTestSuite:
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
-        endpoint_url = f"{self.backend_url}/api/mt5/account-health-check/886528"
+        endpoint_url = f"{self.backend_url}/api/api/mt5/account-health-check/886528"
         
         try:
             validation_results.append(f"🎯 Testing URL: {endpoint_url}")
