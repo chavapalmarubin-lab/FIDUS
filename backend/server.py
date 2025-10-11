@@ -10020,6 +10020,22 @@ async def create_google_meet(meeting_data: dict, current_user: dict = Depends(ge
 @api_router.get("/google/gmail/real-messages")
 async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin_user)):
     """Get real Gmail messages using individual OAuth system"""
+    return {
+        "success": True,
+        "messages": [{
+            "id": "test_gmail",
+            "subject": "🔥 TEST - NEW INDIVIDUAL OAUTH ENDPOINT WORKING",
+            "sender": "Individual OAuth System",
+            "snippet": "This proves the new endpoint is being called",
+            "body": "New individual OAuth endpoint is working correctly",
+            "error": False
+        }],
+        "source": "NEW_INDIVIDUAL_OAUTH_SUCCESS",
+        "count": 1
+    }
+    
+    # Old implementation (temporarily disabled for testing)
+    old_implementation = """
     try:
         logging.info("🔥 [DEBUG] Gmail endpoint called - INDIVIDUAL OAUTH VERSION")
         # Try multiple ways to get admin user ID consistently  
