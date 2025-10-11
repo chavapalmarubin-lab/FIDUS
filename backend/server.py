@@ -10507,7 +10507,7 @@ async def mt5_account_health_check(mt5_login: str, current_user: dict = Depends(
             ]
         })
         
-        if not db_account:
+        if db_account is None:
             return {
                 "status": "error",
                 "message": f"Account {mt5_login} not found in database",
