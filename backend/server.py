@@ -16421,6 +16421,93 @@ async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
     except Exception as e:
         logging.error(f"Update fund real-time data error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update real-time data")
+@api_router.get("/fund-performance/corrected")
+async def get_corrected_fund_performance(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get corrected fund performance including separation account balance
+    Addresses Priority 2: Net Fund Profitability Calculations
+    """
+    try:
+        logging.info("🏦 Getting corrected fund performance calculation")
+        
+        # Get all MT5 accounts
+        mt5_cursor = db.mt5_accounts.find({})
+        mt5_accounts = await mt5_cursor.to_list(length=None)
+        
+        # Account 886528 is the separation/interest account
+        separation_balance = 0
+        trading_balances = []
+        total_trading_balance = 0
+        
+        for acc in mt5_accounts:
+            account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
+            balance = float(acc.get("balance", 0))
+            
+            if str(account_num) == "886528" or account_num == 886528:
+                # Separation account - represents earned interest
+                separation_balance = balance
+                logging.info(f"   💰 Separation Interest (886528): ${balance:.2f}")
+            else:
+                # Trading accounts
+                trading_balances.append({
+                    "account": account_num,
+                    "balance": balance
+                })
+                total_trading_balance += balance
+                logging.info(f"   📈 Trading Account {account_num}: ${balance:.2f}")
+        
+        # Total fund assets = separation interest + trading balances
+        total_fund_assets = separation_balance + total_trading_balance
+        
+        # Get client obligations from investments
+        investments_cursor = db.investments.find({})
+        all_investments = await investments_cursor.to_list(length=None)
+        total_obligations = sum(float(inv.get("principal_amount", 0)) for inv in all_investments)
+        
+        # Net position = assets - obligations  
+        net_profitability = total_fund_assets - total_obligations
+        
+        # Calculate performance metrics
+        performance_pct = (net_profitability / total_obligations * 100) if total_obligations > 0 else 0
+        
+        fund_performance = {
+            "success": True,
+            "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
+            "fund_assets": {
+                "separation_interest": round(separation_balance, 2),
+                "trading_balances": round(total_trading_balance, 2),
+                "total_assets": round(total_fund_assets, 2)
+            },
+            "fund_liabilities": {
+                "client_obligations": round(total_obligations, 2),
+                "management_fees": 0.0,  # Could be calculated if needed
+                "total_liabilities": round(total_obligations, 2)
+            },
+            "net_position": {
+                "net_profitability": round(net_profitability, 2),
+                "performance_percentage": round(performance_pct, 4),
+                "status": "profitable" if net_profitability > 0 else "loss",
+                "gap_analysis": {
+                    "earned_revenue": round(total_fund_assets, 2),
+                    "promised_returns": round(total_obligations, 2),
+                    "gap": round(net_profitability, 2)
+                }
+            },
+            "account_breakdown": {
+                "separation_accounts": [{"account": 886528, "balance": separation_balance}],
+                "trading_accounts": trading_balances,
+                "total_accounts": len(mt5_accounts)
+            },
+            "calculation_method": "corrected_autonomous_v1",
+            "priority_issue_resolved": "Added separation account balance to fund calculations"
+        }
+        
+        logging.info(f"✅ Corrected fund performance: Net ${net_profitability:+,.2f}")
+        return fund_performance
+        
+    except Exception as e:
+        logging.error(f"❌ Error calculating corrected fund performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fund performance calculation failed: {str(e)}")
 
 # In-memory rebate storage
 fund_rebates = []  # List of rebate entries
