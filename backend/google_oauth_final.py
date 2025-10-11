@@ -185,10 +185,21 @@ class GoogleOAuthService:
             if not token_doc:
                 raise Exception("Google authentication required. Please connect your Google account first.")
             
-            # Parse expiry time
+            # Parse expiry time with robust datetime handling
             expiry_str = token_doc.get('expiry')
             if expiry_str:
-                expiry_time = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+                try:
+                    # Handle different datetime formats
+                    if expiry_str.endswith('Z'):
+                        expiry_time = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+                    elif '+' in expiry_str or expiry_str.endswith('00:00'):
+                        expiry_time = datetime.fromisoformat(expiry_str)
+                    else:
+                        # Assume it's a naive datetime, make it timezone aware
+                        expiry_time = datetime.fromisoformat(expiry_str).replace(tzinfo=timezone.utc)
+                except ValueError as e:
+                    logger.warning(f"⚠️ Invalid expiry format '{expiry_str}', treating as expired: {e}")
+                    expiry_time = datetime.now(timezone.utc) - timedelta(minutes=1)
             else:
                 # If no expiry, assume expired
                 expiry_time = datetime.now(timezone.utc) - timedelta(minutes=1)
