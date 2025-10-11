@@ -15144,10 +15144,23 @@ async def emergent_google_logout(current_user: dict = Depends(get_current_admin_
 async def start_google_oauth(current_user: dict = Depends(get_current_admin_user)):
     """Start OAuth flow - Generate Google OAuth authorization URL"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Debug the current_user structure
+        logger.info(f"🔍 [USER DEBUG] OAuth start - current user: {current_user}")
+        
+        # Try multiple ways to get admin user ID
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            "admin"  # fallback
+        )
+        
+        logger.info(f"🔍 [USER DEBUG] OAuth start - using admin_user_id: {admin_user_id}")
+        
         auth_url = google_oauth.get_oauth_url(admin_user_id)
         
-        logger.info(f"✅ Generated OAuth URL for admin {current_user.get('username')}")
+        logger.info(f"✅ Generated OAuth URL for admin {current_user.get('username', admin_user_id)}")
         
         return {
             "success": True,
