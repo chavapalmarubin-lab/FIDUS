@@ -40,6 +40,13 @@ export default function TechnicalDocumentation() {
       }
       const statusData = await statusResponse.json();
       
+      // Fetch connections
+      const connectionsResponse = await fetch(`${backendUrl}/api/system/connections`);
+      if (connectionsResponse.ok) {
+        const connectionsData = await connectionsResponse.json();
+        setConnections(connectionsData.connections || []);
+      }
+      
       setComponents(componentsData.components);
       setHealthData(statusData.components);
       setOverallStatus(statusData.overall_status);
