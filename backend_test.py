@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Trading Analytics System Phase 1B Multi-Account Testing
-Testing the expanded Trading Analytics API endpoints with multi-account support
+FIDUS Platform Architecture Audit - Backend Endpoint Testing
+Testing current working endpoints to document path patterns and responses
 """
 
 import asyncio
@@ -17,7 +17,7 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class TradingAnalyticsPhase1BTestSuite:
+class FIDUSArchitectureAuditTestSuite:
     """Comprehensive test suite for Trading Analytics Phase 1B Multi-Account"""
     
     def __init__(self):
