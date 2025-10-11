@@ -10711,6 +10711,187 @@ async def force_mt5_refresh(mt5_login: str):
             "attempted_at": datetime.now(timezone.utc).isoformat()
         }
 
+# ================================
+# MT5 AUTO-SYNC SERVICE ENDPOINTS
+# ================================
+
+@api_router.post("/mt5/force-sync/{mt5_login}")
+async def force_sync_single_account(mt5_login: str, current_user: dict = Depends(get_current_admin_user)):
+    """Force immediate sync for specific MT5 account - Addresses $521.88 discrepancy"""
+    try:
+        from mt5_auto_sync_service import mt5_sync_service
+        
+        logging.info(f"🔄 [MT5 SYNC] Manual force sync requested for account {mt5_login}")
+        
+        # Initialize service if needed
+        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+            await mt5_sync_service.initialize()
+        
+        # Perform sync
+        sync_result = await mt5_sync_service.sync_single_account(mt5_login)
+        
+        return {
+            "status": "synced" if sync_result.success else "failed",
+            "mt5_login": mt5_login,
+            "old_balance": round(sync_result.old_balance, 2),
+            "new_balance": round(sync_result.new_balance, 2),
+            "balance_change": round(sync_result.balance_change, 2),
+            "balance_change_usd": f"${sync_result.balance_change:+,.2f}",
+            "sync_timestamp": sync_result.sync_timestamp.isoformat(),
+            "data_source": sync_result.data_source,
+            "error": sync_result.error_message,
+            "discrepancy_resolved": sync_result.success and mt5_login == "886528" and abs(sync_result.balance_change) > 500,
+            "success": sync_result.success
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 SYNC] Error force syncing {mt5_login}: {str(e)}")
+        return {
+            "status": "error",
+            "mt5_login": mt5_login,
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "attempted_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.post("/mt5/sync-all-accounts")
+async def sync_all_mt5_accounts(current_user: dict = Depends(get_current_admin_user)):
+    """Sync all active MT5 accounts immediately"""
+    try:
+        from mt5_auto_sync_service import mt5_sync_service
+        
+        logging.info("🔄 [MT5 SYNC] Manual sync all accounts requested")
+        
+        # Initialize service if needed
+        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+            await mt5_sync_service.initialize()
+        
+        # Perform full sync
+        result = await mt5_sync_service.sync_all_accounts()
+        
+        return {
+            "status": result.get('overall_status', 'unknown'),
+            "total_accounts": result.get('total_accounts', 0),
+            "successful_syncs": result.get('successful_syncs', 0),
+            "failed_syncs": result.get('failed_syncs', 0),
+            "success_rate": result.get('success_rate', 0),
+            "sync_timestamp": result.get('sync_timestamp'),
+            "accounts_synced": [r for r in result.get('sync_results', []) if r['success']],
+            "accounts_failed": [r for r in result.get('sync_results', []) if not r['success']],
+            "account_886528_status": next(
+                (r for r in result.get('sync_results', []) if r['mt5_login'] == '886528'), 
+                {"status": "not_found", "message": "Account 886528 not in sync results"}
+            )
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 SYNC] Error syncing all accounts: {str(e)}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "attempted_at": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.get("/mt5/sync-dashboard")
+async def get_mt5_sync_dashboard(current_user: dict = Depends(get_current_admin_user)):
+    """Get comprehensive MT5 sync status dashboard"""
+    try:
+        from mt5_auto_sync_service import mt5_sync_service
+        
+        # Initialize service if needed
+        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+            await mt5_sync_service.initialize()
+        
+        dashboard = await mt5_sync_service.get_sync_dashboard()
+        
+        # Add service health information
+        dashboard['service_health'] = {
+            'background_sync_running': mt5_sync_service.sync_running,
+            'sync_interval_seconds': mt5_sync_service.sync_interval,
+            'last_sync_time': mt5_sync_service.sync_stats.get('last_sync_time'),
+            'total_background_syncs': mt5_sync_service.sync_stats.get('total_syncs', 0),
+            'background_success_rate': (
+                (mt5_sync_service.sync_stats.get('successful_syncs', 0) / 
+                 max(mt5_sync_service.sync_stats.get('total_syncs', 1), 1)) * 100
+            ) if mt5_sync_service.sync_stats.get('total_syncs', 0) > 0 else 0
+        }
+        
+        return dashboard
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 SYNC] Error getting sync dashboard: {str(e)}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.post("/mt5/start-background-sync")
+async def start_mt5_background_sync(current_user: dict = Depends(get_current_admin_user)):
+    """Start automated MT5 background sync (every 2 minutes)"""
+    try:
+        from mt5_auto_sync_service import mt5_sync_service
+        
+        if mt5_sync_service.sync_running:
+            return {
+                "status": "already_running",
+                "message": "Background sync is already running",
+                "sync_interval": mt5_sync_service.sync_interval
+            }
+        
+        # Initialize service if needed
+        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+            await mt5_sync_service.initialize()
+        
+        # Start background sync
+        asyncio.create_task(mt5_sync_service.start_background_sync())
+        
+        return {
+            "status": "started",
+            "message": f"Background sync started (every {mt5_sync_service.sync_interval} seconds)",
+            "sync_interval": mt5_sync_service.sync_interval,
+            "accounts_to_sync": len(mt5_sync_service.sync_stats.get('accounts_synced', set())),
+            "started_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 SYNC] Error starting background sync: {str(e)}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
+@api_router.post("/mt5/stop-background-sync")
+async def stop_mt5_background_sync(current_user: dict = Depends(get_current_admin_user)):
+    """Stop automated MT5 background sync"""
+    try:
+        from mt5_auto_sync_service import mt5_sync_service
+        
+        if not mt5_sync_service.sync_running:
+            return {
+                "status": "not_running",
+                "message": "Background sync is not currently running"
+            }
+        
+        mt5_sync_service.stop_background_sync()
+        
+        return {
+            "status": "stopped",
+            "message": "Background sync stopped",
+            "stopped_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MT5 SYNC] Error stopping background sync: {str(e)}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
 # Duplicate disconnect endpoint removed - using existing one at line 9636
 
 @api_router.get("/google/calendar/real-events")
