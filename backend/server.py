@@ -10864,7 +10864,7 @@ async def start_mt5_background_sync(current_user: dict = Depends(get_current_adm
             "error_type": type(e).__name__
         }
 
-@api_router.post("/api/mt5/stop-background-sync")
+@api_router.post("/mt5/stop-background-sync")
 async def stop_mt5_background_sync(current_user: dict = Depends(get_current_admin_user)):
     """Stop automated MT5 background sync"""
     try:
