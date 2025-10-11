@@ -10879,7 +10879,7 @@ async def send_document_notification(document_id: str, request: Request, current
             Document: {data.get('document_name', 'Investment Document')}
             
             Please click the link below to review and sign the document:
-            {data.get('signing_url', 'https://k8s-to-render.preview.emergentagent.com/documents/sign')}
+            {data.get('signing_url', f'{os.environ.get("FRONTEND_URL", "https://fidus-investment-platform.onrender.com")}/documents/sign')}
             
             Best regards,
             FIDUS Investment Management Team
