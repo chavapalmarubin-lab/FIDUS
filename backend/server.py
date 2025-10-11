@@ -10724,7 +10724,7 @@ async def force_sync_single_account(mt5_login: str, current_user: dict = Depends
         logging.info(f"🔄 [MT5 SYNC] Manual force sync requested for account {mt5_login}")
         
         # Initialize service if needed
-        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+        if not hasattr(mt5_sync_service, 'db') or mt5_sync_service.db is None:
             await mt5_sync_service.initialize()
         
         # Perform sync
@@ -10763,7 +10763,7 @@ async def sync_all_mt5_accounts(current_user: dict = Depends(get_current_admin_u
         logging.info("🔄 [MT5 SYNC] Manual sync all accounts requested")
         
         # Initialize service if needed
-        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+        if not hasattr(mt5_sync_service, 'db') or mt5_sync_service.db is None:
             await mt5_sync_service.initialize()
         
         # Perform full sync
@@ -10800,7 +10800,7 @@ async def get_mt5_sync_dashboard(current_user: dict = Depends(get_current_admin_
         from mt5_auto_sync_service import mt5_sync_service
         
         # Initialize service if needed
-        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+        if not hasattr(mt5_sync_service, 'db') or mt5_sync_service.db is None:
             await mt5_sync_service.initialize()
         
         dashboard = await mt5_sync_service.get_sync_dashboard()
@@ -10842,7 +10842,7 @@ async def start_mt5_background_sync(current_user: dict = Depends(get_current_adm
             }
         
         # Initialize service if needed
-        if not hasattr(mt5_sync_service, 'db') or not mt5_sync_service.db:
+        if not hasattr(mt5_sync_service, 'db') or mt5_sync_service.db is None:
             await mt5_sync_service.initialize()
         
         # Start background sync
