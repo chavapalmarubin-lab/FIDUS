@@ -243,108 +243,224 @@ class FIDUSCriticalEndpointTestSuite:
                 'endpoint_info': endpoint_info
             }
     
-    async def test_mt5_endpoints(self) -> Dict[str, Any]:
-        """Test MT5 Endpoints - /api/mt5/status and /api/mt5/admin/accounts"""
-        test_name = "MT5 Endpoints"
+    async def test_mt5_status_endpoint(self) -> Dict[str, Any]:
+        """Test MT5 Status Endpoint - GET https://fidus-investment-platform.onrender.com/api/mt5/status"""
+        test_name = "3. MT5 Status Endpoint"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
-        mt5_endpoints = [
-            {
-                'url': f"{self.backend_url}/mt5/status",
-                'path_pattern': '/api/mt5/status',
-                'purpose': 'MT5 service status check'
-            },
-            {
-                'url': f"{self.backend_url}/mt5/admin/accounts",
-                'path_pattern': '/api/mt5/admin/accounts', 
-                'purpose': 'MT5 admin accounts listing'
-            },
-            {
-                'url': f"{self.backend_url}/mt5/dashboard/overview",
-                'path_pattern': '/api/mt5/dashboard/overview',
-                'purpose': 'MT5 dashboard overview'
-            }
-        ]
+        endpoint_url = f"{self.backend_url}/mt5/status"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/mt5/status',
+            'purpose': 'MT5 bridge health status with NEW Render URL'
+        }
         
         try:
-            for endpoint in mt5_endpoints:
-                try:
-                    async with self.session.get(endpoint['url']) as response:
-                        status_code = response.status
-                        response_text = await response.text()
-                        
-                        try:
-                            response_data = json.loads(response_text)
-                        except:
-                            response_data = {"raw_response": response_text}
-                        
-                        endpoint_info = {
-                            **endpoint,
-                            'method': 'GET',
-                            'status_code': status_code,
-                            'response_format': type(response_data).__name__,
-                            'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
-                        }
-                        
-                        if status_code == 200:
-                            validation_results.append(f"✅ {endpoint['path_pattern']}: HTTP 200")
-                            
-                            # Specific validation for MT5 status
-                            if 'status' in endpoint['path_pattern']:
-                                if 'status' in response_data or 'bridge_status' in response_data:
-                                    validation_results.append("   ✅ Status information present")
-                                else:
-                                    validation_results.append("   ⚠️ Limited status information")
-                            
-                            # Specific validation for MT5 accounts
-                            elif 'accounts' in endpoint['path_pattern']:
-                                if 'accounts' in response_data or isinstance(response_data, list):
-                                    accounts = response_data.get('accounts', response_data if isinstance(response_data, list) else [])
-                                    validation_results.append(f"   ✅ Accounts data present ({len(accounts)} accounts)")
-                                else:
-                                    validation_results.append("   ⚠️ No accounts data found")
-                            
-                            self.endpoint_documentation.append(endpoint_info)
-                            
-                        elif status_code == 401:
-                            validation_results.append(f"🔒 {endpoint['path_pattern']}: HTTP 401 (Authentication required)")
-                            endpoint_info['requires_auth'] = True
-                            self.endpoint_documentation.append(endpoint_info)
-                            
-                        elif status_code == 404:
-                            validation_results.append(f"❌ {endpoint['path_pattern']}: HTTP 404 (Not found)")
-                            
-                        elif status_code == 500:
-                            validation_results.append(f"⚠️ {endpoint['path_pattern']}: HTTP 500 (Server error)")
-                            validation_results.append(f"   Response: {response_text[:100]}")
-                            
-                        else:
-                            validation_results.append(f"⚠️ {endpoint['path_pattern']}: HTTP {status_code}")
-                            validation_results.append(f"   Response: {response_text[:100]}")
-                            
-                except Exception as e:
-                    validation_results.append(f"❌ {endpoint['path_pattern']}: Exception - {str(e)}")
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with bridge health status")
             
-            # Determine overall status
-            working_endpoints = [result for result in validation_results if "✅" in result and "HTTP 200" in result]
-            overall_status = 'PASS' if len(working_endpoints) > 0 else 'FAIL'
-            
-            return {
-                'test_name': test_name,
-                'status': overall_status,
-                'validation_results': validation_results,
-                'working_endpoints': len(working_endpoints),
-                'total_endpoints': len(mt5_endpoints)
-            }
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
                 
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with bridge health status - SUCCESS")
+                    
+                    # Check for bridge status information
+                    if 'status' in response_data or 'bridge_status' in response_data or 'bridge' in response_data:
+                        validation_results.append("✅ Bridge health status information present")
+                    else:
+                        validation_results.append("⚠️ Limited bridge status information")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
             return {
                 'test_name': test_name,
                 'status': 'ERROR',
                 'error': str(e),
-                'validation_results': [f"❌ Exception: {str(e)}"]
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+
+    async def test_mt5_admin_accounts_endpoint(self) -> Dict[str, Any]:
+        """Test MT5 Admin Accounts - GET https://fidus-investment-platform.onrender.com/api/mt5/admin/accounts"""
+        test_name = "4. MT5 Admin Accounts Endpoint"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/mt5/admin/accounts"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/mt5/admin/accounts',
+            'purpose': 'MT5 admin accounts listing with NEW Render URL'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with 5 MT5 accounts")
+            
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with 5 MT5 accounts - SUCCESS")
+                    
+                    # Check for accounts data
+                    if 'accounts' in response_data or isinstance(response_data, list):
+                        accounts = response_data.get('accounts', response_data if isinstance(response_data, list) else [])
+                        validation_results.append(f"✅ MT5 accounts data present ({len(accounts)} accounts)")
+                        
+                        if len(accounts) == 5:
+                            validation_results.append("✅ Expected 5 MT5 accounts found")
+                        else:
+                            validation_results.append(f"⚠️ Expected 5 accounts, found {len(accounts)}")
+                    else:
+                        validation_results.append("❌ No MT5 accounts data found")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+
+    async def test_debug_test_endpoint(self) -> Dict[str, Any]:
+        """Test Debug Test Endpoint - GET https://fidus-investment-platform.onrender.com/api/debug/test"""
+        test_name = "5. Debug Test Endpoint"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/debug/test"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/debug/test',
+            'purpose': 'Debug message verification with NEW Render URL'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with debug message")
+            
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with debug message - SUCCESS")
+                    validation_results.append(f"   Response: {response_text[:100]}...")
+                    
+                    # Check for debug message
+                    if 'debug' in response_data or 'test' in response_data or 'message' in response_data:
+                        validation_results.append("✅ Debug message information present")
+                    else:
+                        validation_results.append("⚠️ Limited debug message information")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
             }
     
     async def test_path_pattern_analysis(self) -> Dict[str, Any]:
