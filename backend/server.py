@@ -16508,14 +16508,21 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         balance_interest = 100000.00 * 0.025 * 12  # $30,000.00
         total_interest_obligation = core_interest + balance_interest  # $33,267.25
         
+        # SEPARATION ACCOUNT IS A RESERVE (already set aside for client payments)
+        interest_reserve = separation_equity  # $3,927.41 already accumulated
+        remaining_to_generate = total_interest_obligation - interest_reserve
+        
         # PERFORMANCE ANALYSIS
-        required_daily = total_interest_obligation / days_remaining if days_remaining > 0 else 0
+        # We only need to generate what's NOT already reserved
+        required_daily = remaining_to_generate / days_remaining if days_remaining > 0 else 0
         actual_daily = total_fund_revenue / days_active if days_active > 0 else 0
         performance_multiplier = actual_daily / required_daily if required_daily > 0 else 0
         
         # PROJECTION
-        projected_total_revenue = total_fund_revenue + (actual_daily * days_remaining)
-        projected_surplus = projected_total_revenue - total_interest_obligation
+        # Project how much MORE we'll generate (excluding what's already in reserve)
+        projected_additional_revenue = actual_daily * days_remaining
+        projected_total_available = total_fund_revenue + projected_additional_revenue
+        projected_surplus = projected_total_available - total_interest_obligation
         
         logging.info(f"   📊 Fund Revenue: ${total_fund_revenue:.2f}")
         logging.info(f"   📊 Total Interest Obligation (full contract): ${total_interest_obligation:.2f}")
