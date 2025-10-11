@@ -15947,7 +15947,7 @@ async def get_drive_files_oauth(
         logger.error(f"❌ Drive API error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/api/admin/google/gmail/send")
+@api_router.post("/admin/google/gmail/send")
 async def send_gmail_message_oauth(
     request: Request,
     current_user: dict = Depends(get_current_admin_user)
