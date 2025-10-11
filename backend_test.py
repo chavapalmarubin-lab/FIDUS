@@ -18,32 +18,24 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class FIDUSArchitectureAuditTestSuite:
-    """Comprehensive test suite for Trading Analytics Phase 1B Multi-Account"""
+    """FIDUS Platform Architecture Audit - Backend Endpoint Testing Suite"""
     
     def __init__(self):
-        # Get backend URL from environment
-        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://k8s-to-render.preview.emergentagent.com')
+        # Get backend URL from frontend environment
+        self.frontend_backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://k8s-to-render.preview.emergentagent.com')
+        self.backend_url = self.frontend_backend_url
         if not self.backend_url.endswith('/api'):
             self.backend_url = f"{self.backend_url}/api"
         
         self.session = None
         self.admin_token = None
         self.test_results = []
+        self.endpoint_documentation = []
         
-        # Phase 1B testing parameters - All 4 accounts
-        self.all_accounts = [886557, 886066, 886602, 885822]
-        self.account_profiles = {
-            886557: {"name": "BALANCE Fund ($80K)", "fund_type": "BALANCE", "expected_activity": "high"},
-            886066: {"name": "BALANCE Fund ($10K)", "fund_type": "BALANCE", "expected_activity": "moderate"},
-            886602: {"name": "BALANCE Fund ($10K)", "fund_type": "BALANCE", "expected_activity": "moderate"},
-            885822: {"name": "CORE Fund ($18K)", "fund_type": "CORE", "expected_activity": "strategic"}
-        }
-        self.test_days = 30
-        
-        logger.info(f"🚀 Trading Analytics Phase 1B Multi-Account Test Suite initialized")
-        logger.info(f"   Backend URL: {self.backend_url}")
-        logger.info(f"   All Accounts: {self.all_accounts}")
-        logger.info(f"   Test Period: {self.test_days} days")
+        logger.info(f"🏗️ FIDUS Platform Architecture Audit Test Suite initialized")
+        logger.info(f"   Frontend Backend URL: {self.frontend_backend_url}")
+        logger.info(f"   API Base URL: {self.backend_url}")
+        logger.info(f"   Purpose: Document working endpoint patterns and responses")
     
     async def setup(self):
         """Setup test environment"""
