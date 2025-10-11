@@ -16553,17 +16553,21 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 "core_interest_12mo": round(core_interest, 2),
                 "balance_interest_12mo": round(balance_interest, 2),
                 "total_interest_obligation": round(total_interest_obligation, 2),
+                "interest_reserve_set_aside": round(interest_reserve, 2),
+                "remaining_to_generate": round(remaining_to_generate, 2),
                 "principal_to_return": round(total_initial_deposits, 2)
             },
             "performance_analysis": {
                 "required_daily_rate": round(required_daily, 2),
                 "actual_daily_rate": round(actual_daily, 2),
                 "performance_multiplier": round(performance_multiplier, 2),
-                "status": "ahead_of_pace" if performance_multiplier > 1 else "behind_pace"
+                "status": "ahead_of_pace" if performance_multiplier > 1 else "behind_pace",
+                "note": "Reserve account already holds ${:.2f} toward obligations".format(interest_reserve)
             },
             "projection": {
                 "revenue_to_date": round(total_fund_revenue, 2),
-                "projected_total_revenue": round(projected_total_revenue, 2),
+                "projected_additional": round(projected_additional_revenue, 2),
+                "projected_total_available": round(projected_total_available, 2),
                 "projected_vs_obligation": round(projected_surplus, 2),
                 "projected_status": "surplus" if projected_surplus > 0 else "deficit"
             },
