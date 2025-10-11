@@ -16476,8 +16476,8 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
             "success": True,
             "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
             "fund_assets": {
-                "separation_interest": round(separation_balance, 2),
-                "trading_equity": round(total_trading_balance, 2),
+                "separation_interest": round(separation_equity, 2),
+                "trading_equity": round(total_trading_equity, 2), 
                 "total_assets": round(total_fund_assets, 2)
             },
             "fund_liabilities": {
