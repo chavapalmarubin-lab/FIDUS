@@ -15181,7 +15181,20 @@ async def google_oauth_callback(code: str, state: str):
 async def check_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
     """Check if user has valid Google connection"""
     try:
-        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        # Debug the current_user structure
+        logger.info(f"🔍 [USER DEBUG] Current user structure: {current_user}")
+        
+        # Try multiple ways to get admin user ID
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            "admin"  # fallback
+        )
+        
+        logger.info(f"🔍 [USER DEBUG] Using admin_user_id: {admin_user_id}")
+        
         status = await google_oauth.get_connection_status(admin_user_id)
         
         return {
