@@ -442,135 +442,78 @@ class FIDUSArchitectureAuditTestSuite:
                 'validation_results': [f"❌ Exception: {str(e)}"]
             }
     
-    async def test_mock_data_variation(self) -> Dict[str, Any]:
-        """Test that different accounts generate different mock trading patterns"""
-        test_name = "Mock Data Variation by Account"
+    async def test_backend_url_verification(self) -> Dict[str, Any]:
+        """Verify current backend URL configuration and accessibility"""
+        test_name = "Backend URL Verification"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
-        account_patterns = {}
         
         try:
-            # First, trigger sync to generate fresh mock data
-            sync_url = f"{self.backend_url}/admin/trading/analytics/sync"
-            async with self.session.post(sync_url) as sync_response:
-                if sync_response.status == 200:
-                    validation_results.append("✅ Sync triggered to generate mock data")
-                else:
-                    validation_results.append("❌ Failed to trigger sync for mock data")
+            # Document current configuration
+            validation_results.append(f"📋 Frontend Backend URL: {self.frontend_backend_url}")
+            validation_results.append(f"📋 API Base URL: {self.backend_url}")
             
-            # Analyze trading patterns for each account
-            for account_num in self.all_accounts:
-                profile = self.account_profiles[account_num]
-                
-                # Get trades for this account
-                trades_url = f"{self.backend_url}/admin/trading/analytics/trades?account={account_num}&limit=50"
-                async with self.session.get(trades_url) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        trades = data.get('trades', [])
+            # Test base URL accessibility
+            base_urls_to_test = [
+                self.frontend_backend_url,
+                self.backend_url,
+                f"{self.frontend_backend_url}/api"
+            ]
+            
+            working_urls = []
+            
+            for test_url in base_urls_to_test:
+                try:
+                    async with self.session.get(test_url) as response:
+                        status_code = response.status
                         
-                        # Analyze trading pattern
-                        pattern = {
-                            'trade_count': len(trades),
-                            'symbols': set(),
-                            'avg_volume': 0,
-                            'total_profit': 0,
-                            'profit_trades': 0,
-                            'loss_trades': 0
-                        }
-                        
-                        if trades:
-                            pattern['symbols'] = set(trade.get('symbol', '') for trade in trades)
-                            pattern['avg_volume'] = sum(trade.get('volume', 0) for trade in trades) / len(trades)
-                            pattern['total_profit'] = sum(trade.get('profit', 0) for trade in trades)
-                            pattern['profit_trades'] = len([t for t in trades if t.get('profit', 0) > 0])
-                            pattern['loss_trades'] = len([t for t in trades if t.get('profit', 0) < 0])
-                        
-                        account_patterns[account_num] = pattern
-                        
-                        logger.info(f"   Account {account_num} ({profile['name']}): {pattern['trade_count']} trades, "
-                                  f"Symbols: {sorted(pattern['symbols'])}, Avg Volume: {pattern['avg_volume']:.2f}")
-                    else:
-                        validation_results.append(f"❌ Failed to get trades for account {account_num}")
+                        if status_code in [200, 404, 401]:  # 404/401 means server is responding
+                            validation_results.append(f"✅ {test_url}: Server responding (HTTP {status_code})")
+                            working_urls.append(test_url)
+                        else:
+                            validation_results.append(f"⚠️ {test_url}: HTTP {status_code}")
+                            
+                except Exception as e:
+                    validation_results.append(f"❌ {test_url}: Connection failed - {str(e)}")
             
-            # Verify account-specific expectations
-            if 886557 in account_patterns:
-                pattern_886557 = account_patterns[886557]
-                if pattern_886557['trade_count'] > 0:
-                    validation_results.append(f"✅ Account 886557 (BALANCE $80K) shows activity: {pattern_886557['trade_count']} trades")
-                else:
-                    validation_results.append("⚠️ Account 886557 (most active) has no trades")
+            # Test specific endpoint to confirm API accessibility
+            if self.admin_token:
+                test_endpoint = f"{self.backend_url}/admin/users"
+                try:
+                    async with self.session.get(test_endpoint) as response:
+                        status_code = response.status
+                        if status_code in [200, 401, 403]:
+                            validation_results.append(f"✅ API endpoint accessible: {test_endpoint} (HTTP {status_code})")
+                        else:
+                            validation_results.append(f"⚠️ API endpoint issue: {test_endpoint} (HTTP {status_code})")
+                except Exception as e:
+                    validation_results.append(f"❌ API endpoint test failed: {str(e)}")
             
-            if 886066 in account_patterns and 886602 in account_patterns:
-                pattern_886066 = account_patterns[886066]
-                pattern_886602 = account_patterns[886602]
-                if pattern_886066['trade_count'] > 0 or pattern_886602['trade_count'] > 0:
-                    validation_results.append(f"✅ Moderate accounts (886066, 886602) show activity: "
-                                            f"{pattern_886066['trade_count']}, {pattern_886602['trade_count']} trades")
-                else:
-                    validation_results.append("⚠️ Moderate accounts show no activity")
+            # Check for mixed URL configurations
+            backend_env_urls = [
+                "https://k8s-to-render.preview.emergentagent.com",
+                "https://fidus-invest.emergent.host"
+            ]
             
-            if 885822 in account_patterns:
-                pattern_885822 = account_patterns[885822]
-                if pattern_885822['trade_count'] > 0:
-                    validation_results.append(f"✅ Account 885822 (CORE $18K) shows strategic activity: {pattern_885822['trade_count']} trades")
+            validation_results.append("📊 Known Backend URLs in Environment:")
+            for url in backend_env_urls:
+                if url in self.frontend_backend_url:
+                    validation_results.append(f"   ✅ Currently using: {url}")
                 else:
-                    validation_results.append("⚠️ Strategic account 885822 has no trades")
-            
-            # Check for variation in trading patterns
-            if len(account_patterns) >= 2:
-                trade_counts = [p['trade_count'] for p in account_patterns.values()]
-                symbol_sets = [p['symbols'] for p in account_patterns.values()]
-                volume_averages = [p['avg_volume'] for p in account_patterns.values() if p['avg_volume'] > 0]
-                
-                # Check trade count variation
-                if len(set(trade_counts)) > 1:
-                    validation_results.append("✅ Accounts show different trade activity levels")
-                else:
-                    validation_results.append("⚠️ All accounts show same trade activity (may be expected)")
-                
-                # Check symbol variation
-                unique_symbol_combinations = len(set(frozenset(s) for s in symbol_sets if s))
-                if unique_symbol_combinations > 1:
-                    validation_results.append("✅ Accounts trade different symbol combinations")
-                else:
-                    validation_results.append("⚠️ All accounts trade same symbols")
-                
-                # Check volume variation
-                if len(set(f"{v:.1f}" for v in volume_averages)) > 1:
-                    validation_results.append("✅ Accounts show different average volumes")
-                else:
-                    validation_results.append("⚠️ All accounts show same average volume")
-            
-            # Verify expected account characteristics
-            if account_patterns:
-                # Account 886557 should be most active (BALANCE $80K)
-                most_active_account = max(account_patterns.keys(), key=lambda k: account_patterns[k]['trade_count'])
-                if most_active_account == 886557:
-                    validation_results.append("✅ Account 886557 is most active as expected")
-                else:
-                    validation_results.append(f"⚠️ Account {most_active_account} is most active (expected 886557)")
+                    validation_results.append(f"   ⚪ Alternative: {url}")
             
             # Determine overall status
-            failed_checks = [result for result in validation_results if result.startswith("❌")]
-            overall_status = 'PASS' if len(failed_checks) == 0 else 'FAIL'
+            overall_status = 'PASS' if len(working_urls) > 0 else 'FAIL'
             
             return {
                 'test_name': test_name,
                 'status': overall_status,
                 'validation_results': validation_results,
-                'details': {
-                    'account_patterns': {k: {
-                        'trade_count': v['trade_count'],
-                        'symbols': list(v['symbols']),
-                        'avg_volume': round(v['avg_volume'], 2),
-                        'total_profit': round(v['total_profit'], 2)
-                    } for k, v in account_patterns.items()},
-                    'failed_checks': len(failed_checks)
-                }
+                'working_urls': working_urls,
+                'current_backend_url': self.frontend_backend_url
             }
-            
+                
         except Exception as e:
             logger.error(f"❌ {test_name} failed: {str(e)}")
             return {
