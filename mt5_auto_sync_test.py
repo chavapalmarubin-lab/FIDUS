@@ -467,9 +467,9 @@ class MT5AutoSyncTestSuite:
             
             # Try multiple endpoints to get account state
             endpoints_to_check = [
-                f"{self.backend_url}/mt5/admin/accounts",
-                f"{self.backend_url}/mt5/dashboard/overview",
-                f"{self.backend_url}/mt5/status"
+                f"{self.backend_url}/api/mt5/admin/accounts",
+                f"{self.backend_url}/api/mt5/dashboard/overview",
+                f"{self.backend_url}/api/mt5/status"
             ]
             
             account_found = False
