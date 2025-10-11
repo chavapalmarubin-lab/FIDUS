@@ -221,7 +221,7 @@ class GoogleOAuth2TestSuite:
             }
     
     async def test_connection_status(self) -> Dict[str, Any]:
-        """Phase 2: Test GET /admin/google/status (requires admin JWT auth)"""
+        """Phase 2: Test GET /admin/google/individual-status (requires admin JWT auth)"""
         test_name = "Connection Status"
         logger.info(f"🧪 Testing {test_name}")
         
@@ -229,7 +229,7 @@ class GoogleOAuth2TestSuite:
         
         try:
             # Test connection status endpoint
-            url = f"{self.backend_url}/admin/google/status"
+            url = f"{self.backend_url}/admin/google/individual-status"
             async with self.session.get(url) as response:
                 status_code = response.status
                 
