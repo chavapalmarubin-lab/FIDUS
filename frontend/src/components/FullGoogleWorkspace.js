@@ -494,8 +494,8 @@ const FullGoogleWorkspace = () => {
     try {
       console.log('💾 Loading REAL Google Drive files from API...');
       
-      // Call the REAL Google Drive API endpoint
-      const response = await apiAxios.get('/google/drive/real-files');
+      // Call the OAuth Google Drive API endpoint
+      const response = await apiAxios.get('/admin/google/drive/files');
       
       if (response.data && Array.isArray(response.data)) {
         console.log(`✅ Loaded ${response.data.length} real drive files`);
