@@ -334,9 +334,9 @@ class GoogleOAuth2TestSuite:
         
         # List of Google API endpoints to test
         endpoints_to_test = [
-            ("/admin/google/gmail/messages", "Gmail Messages"),
-            ("/admin/google/calendar/events", "Calendar Events"),
-            ("/admin/google/drive/files", "Drive Files")
+            ("/google/gmail/real-messages", "Gmail Messages"),
+            ("/google/calendar/events", "Calendar Events"),
+            ("/google/drive/files", "Drive Files")
         ]
         
         try:
