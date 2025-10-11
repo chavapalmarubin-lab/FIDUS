@@ -20943,8 +20943,21 @@ async def startup_event():
     logging.info("✅ FIDUS Server startup completed successfully")
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
+async def shutdown_services():
+    """Application shutdown tasks"""
+    logging.info("🛑 FIDUS Server shutting down...")
+    
+    # Shutdown MT5 Auto-Sync Service
+    try:
+        from mt5_auto_sync_service import stop_mt5_sync_service
+        await stop_mt5_sync_service()
+        logging.info("🔄 MT5 Auto-Sync Service stopped")
+    except Exception as e:
+        logging.error(f"❌ Error stopping MT5 Auto-Sync Service: {e}")
+    
+    # Close MongoDB client
     client.close()
+    logging.info("✅ FIDUS Server shutdown completed")
 # ===============================================================================
 # GOOGLE OAUTH SERVICE - CLEAN IMPLEMENTATION
 # ===============================================================================
