@@ -402,22 +402,26 @@ const FullGoogleWorkspace = () => {
 
     setLoading(true);
     try {
-      const result = await googleCRMIntegration.sendClientEmail(
-        composeData.to,
-        composeData.subject,
-        composeData.body
-      );
+      const response = await apiAxios.post('/admin/google/gmail/send', {
+        to: composeData.to,
+        subject: composeData.subject,
+        body: composeData.body
+      });
       
-      if (result.success) {
+      if (response.data.success) {
         alert('✅ Email sent successfully!');
         setComposeOpen(false);
         setComposeData({ to: '', subject: '', body: '' });
         loadEmails(); // Refresh email list
       } else {
-        alert('❌ Failed to send email: ' + result.error);
+        alert('❌ Failed to send email: ' + response.data.error);
       }
     } catch (error) {
-      alert('❌ Error sending email: ' + error.message);
+      if (error.response?.status === 401) {
+        alert('❌ Google authentication required. Please connect your Google account first.');
+      } else {
+        alert('❌ Error sending email: ' + error.message);
+      }
     } finally {
       setLoading(false);
     }
