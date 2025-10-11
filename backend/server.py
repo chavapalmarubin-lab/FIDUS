@@ -140,6 +140,9 @@ client = AsyncIOMotorClient(
 )
 db = client[os.environ.get('DB_NAME', 'fidus_production')]
 
+# Initialize Google OAuth Service
+google_oauth = get_google_oauth_service(db)
+
 # JWT and Password Security Configuration
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
 JWT_ALGORITHM = "HS256"
