@@ -562,9 +562,9 @@ const AdminDashboard = ({ user, onLogout }) => {
               🌐 Google Workspace
             </TabsTrigger>
             {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
-            <TabsTrigger value="documents">
+            <TabsTrigger value="technical-docs">
               <FileText size={16} className="mr-2" />
-              📄 App Documents
+              📡 Tech Documentation
             </TabsTrigger>
           </TabsList>
 
