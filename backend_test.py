@@ -31,9 +31,9 @@ class FIDUSCriticalEndpointTestSuite:
         self.endpoint_documentation = []
         
         logger.info(f"🚀 FIDUS Critical Endpoint Test Suite initialized")
-        logger.info(f"   NEW Render Backend URL: {self.render_backend_url}")
+        logger.info(f"   CORRECT Render Backend URL: {self.render_backend_url}")
         logger.info(f"   API Base URL: {self.backend_url}")
-        logger.info(f"   Purpose: Test 5 critical endpoints with NEW Render production URLs")
+        logger.info(f"   Purpose: Test 5 critical endpoints with CORRECT Render backend URLs")
     
     async def setup(self):
         """Setup test environment"""
