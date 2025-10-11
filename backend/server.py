@@ -16458,8 +16458,8 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 total_trading_equity += equity
                 logging.info(f"   📈 Trading Account {account_num}: Equity ${equity:.2f}, P&L ${pnl:.2f}")
         
-        # Total fund assets = separation interest + trading balances
-        total_fund_assets = separation_balance + total_trading_balance
+        # Total fund assets = separation interest + trading equity
+        total_fund_assets = separation_equity + total_trading_equity
         
         # Get client obligations from investments
         investments_cursor = db.investments.find({})
