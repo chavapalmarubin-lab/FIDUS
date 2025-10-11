@@ -407,11 +407,11 @@ const FullGoogleWorkspace = () => {
       // Call the OAuth Google Calendar API endpoint
       const response = await apiAxios.get('/admin/google/calendar/events');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} real calendar events`);
+      if (response.data.success && response.data.events && Array.isArray(response.data.events)) {
+        console.log(`✅ Loaded ${response.data.events.length} calendar events via OAuth API`);
         
-        // Transform real Calendar data to our format
-        const transformedEvents = response.data.map(event => ({
+        // Transform OAuth Calendar data to our format
+        const transformedEvents = response.data.events.map(event => ({
           id: event.id,
           title: event.summary || event.title || 'No Title',
           description: event.description || 'No description available',
