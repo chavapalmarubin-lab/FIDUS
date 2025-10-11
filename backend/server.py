@@ -16524,8 +16524,10 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         projected_total_available = total_fund_revenue + projected_additional_revenue
         projected_surplus = projected_total_available - total_interest_obligation
         
-        logging.info(f"   📊 Fund Revenue: ${total_fund_revenue:.2f}")
-        logging.info(f"   📊 Total Interest Obligation (full contract): ${total_interest_obligation:.2f}")
+        logging.info(f"   📊 Total Fund Assets: ${total_fund_revenue:.2f}")
+        logging.info(f"   💰 Interest Reserve (already set aside): ${interest_reserve:.2f}")
+        logging.info(f"   📊 Total Interest Obligation: ${total_interest_obligation:.2f}")
+        logging.info(f"   📊 Remaining to Generate: ${remaining_to_generate:.2f}")
         logging.info(f"   📊 Required Daily: ${required_daily:.2f}/day")
         logging.info(f"   📊 Actual Daily: ${actual_daily:.2f}/day")
         logging.info(f"   📊 Performance: {performance_multiplier:.2f}x target")
