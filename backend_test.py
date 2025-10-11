@@ -878,13 +878,18 @@ class FIDUSCriticalEndpointTestSuite:
                 'results': []
             }
         
-        # Run 5 critical endpoint tests as specified in review request
+        # Run critical endpoint tests + MT5 Auto-Sync tests as specified in review request
         tests = [
             self.test_admin_login_endpoint,
             self.test_health_check_endpoint,
             self.test_mt5_status_endpoint,
             self.test_mt5_admin_accounts_endpoint,
-            self.test_debug_test_endpoint
+            self.test_debug_test_endpoint,
+            # MT5 Auto-Sync Service Tests (PRIORITY)
+            self.test_mt5_force_sync_account_886528,
+            self.test_mt5_sync_dashboard,
+            self.test_mt5_account_health_check_886528,
+            self.test_mt5_start_background_sync
         ]
         
         results = []
