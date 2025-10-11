@@ -10128,6 +10128,41 @@ async def send_real_gmail_message(request: Request, current_user: dict = Depends
             "api_used": "oauth_gmail_api"
         }
 
+@api_router.post("/admin/google/individual-disconnect")
+async def disconnect_individual_google_oauth(current_user: dict = Depends(get_current_admin_user)):
+    """Disconnect individual Google OAuth connection"""
+    try:
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
+        
+        logging.info(f"🔌 Disconnecting individual Google OAuth for admin: {admin_user_id}")
+        
+        success = await individual_google_oauth.disconnect_admin_google(admin_user_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Google account disconnected successfully. You can now connect with a different account."
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to disconnect Google account. Please try again."
+            }
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to disconnect individual Google OAuth: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Error disconnecting Google account: {str(e)}"
+        }
+
 @api_router.get("/google/calendar/real-events")
 async def get_real_calendar_events(request: Request):
     """Get real Calendar events using Google Calendar API"""
