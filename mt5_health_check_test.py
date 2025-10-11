@@ -129,8 +129,10 @@ class MT5HealthCheckTestSuite:
                             live_data = response_data['mt5_live']
                             discrepancy = response_data.get('discrepancy', {})
                             
-                            validation_results.append(f"📊 Database Balance: ${db_data.get('balance', 0):,.2f}")
-                            validation_results.append(f"📊 Live MT5 Balance: ${live_data.get('balance', 0):,.2f}")
+                            db_balance = db_data.get('balance', 0)
+                            live_balance = live_data.get('balance', 0)
+                            validation_results.append(f"📊 Database Balance: ${db_balance:,.2f}" if db_balance is not None else "📊 Database Balance: N/A")
+                            validation_results.append(f"📊 Live MT5 Balance: ${live_balance:,.2f}" if live_balance is not None else "📊 Live MT5 Balance: N/A")
                             validation_results.append(f"📊 Balance Difference: {discrepancy.get('balance_diff_usd', '$0.00')}")
                             
                             # Store discrepancy data for analysis
