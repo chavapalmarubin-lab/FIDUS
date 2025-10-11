@@ -89,80 +89,63 @@ class FIDUSArchitectureAuditTestSuite:
             logger.error(f"❌ Authentication error: {str(e)}")
             return False
     
-    async def test_multi_account_overview_endpoint(self) -> Dict[str, Any]:
-        """Test GET /api/admin/trading/analytics/overview with multi-account support"""
-        test_name = "Multi-Account Analytics Overview"
+    async def test_admin_login_endpoint(self) -> Dict[str, Any]:
+        """Test Admin Login Endpoint - /api/auth/login"""
+        test_name = "Admin Login Endpoint"
         logger.info(f"🧪 Testing {test_name}")
         
         validation_results = []
+        endpoint_info = {
+            'url': f"{self.backend_url}/auth/login",
+            'method': 'POST',
+            'path_pattern': '/api/auth/login',
+            'purpose': 'Admin authentication'
+        }
         
         try:
-            # Test 1: All accounts (account=0)
-            url_all = f"{self.backend_url}/admin/trading/analytics/overview?account=0"
-            async with self.session.get(url_all) as response:
+            login_data = {
+                "email": "admin",
+                "password": "password123"
+            }
+            
+            async with self.session.post(endpoint_info['url'], json=login_data) as response:
                 status_code = response.status
-                response_data = await response.json()
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_format': type(response_data).__name__,
+                    'response_sample': response_data if len(str(response_data)) < 500 else str(response_data)[:500] + "..."
+                })
                 
                 if status_code == 200:
-                    validation_results.append("✅ All accounts endpoint (account=0) returns HTTP 200")
+                    validation_results.append("✅ Admin login endpoint returns HTTP 200")
                     
-                    accounts_included = response_data.get('accounts_included', [])
-                    if set(accounts_included) == set(self.all_accounts):
-                        validation_results.append(f"✅ All 4 accounts included: {accounts_included}")
+                    if 'token' in response_data:
+                        validation_results.append("✅ JWT token returned in response")
+                        self.admin_token = response_data['token']
+                        # Update session headers
+                        self.session.headers.update({
+                            'Authorization': f'Bearer {self.admin_token}'
+                        })
                     else:
-                        validation_results.append(f"❌ Wrong accounts included: {accounts_included} (expected {self.all_accounts})")
+                        validation_results.append("❌ No JWT token in response")
                     
-                    analytics = response_data.get('analytics', {})
-                    if analytics and 'overview' in analytics:
-                        overview = analytics['overview']
-                        validation_results.append(f"✅ Aggregated overview data present")
-                        logger.info(f"   All Accounts - Total P&L: ${overview.get('total_pnl', 0):.2f}")
-                        logger.info(f"   All Accounts - Total Trades: {overview.get('total_trades', 0)}")
-                        logger.info(f"   All Accounts - Win Rate: {overview.get('win_rate', 0):.2f}%")
+                    if 'user' in response_data or 'id' in response_data:
+                        validation_results.append("✅ User information returned")
                     else:
-                        validation_results.append("❌ Missing aggregated analytics data")
+                        validation_results.append("⚠️ Limited user information in response")
+                        
                 else:
-                    validation_results.append(f"❌ All accounts endpoint failed: HTTP {status_code}")
+                    validation_results.append(f"❌ Admin login failed: HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
             
-            # Test 2: Specific account (886557 - most active)
-            url_specific = f"{self.backend_url}/admin/trading/analytics/overview?account=886557"
-            async with self.session.get(url_specific) as response:
-                status_code = response.status
-                response_data = await response.json()
-                
-                if status_code == 200:
-                    validation_results.append("✅ Specific account endpoint (886557) returns HTTP 200")
-                    
-                    accounts_included = response_data.get('accounts_included', [])
-                    if accounts_included == [886557]:
-                        validation_results.append(f"✅ Correct single account included: {accounts_included}")
-                    else:
-                        validation_results.append(f"❌ Wrong account filter: {accounts_included} (expected [886557])")
-                    
-                    analytics = response_data.get('analytics', {})
-                    if analytics and 'overview' in analytics:
-                        overview = analytics['overview']
-                        validation_results.append(f"✅ Account-specific overview data present")
-                        logger.info(f"   Account 886557 - Total P&L: ${overview.get('total_pnl', 0):.2f}")
-                        logger.info(f"   Account 886557 - Total Trades: {overview.get('total_trades', 0)}")
-                    else:
-                        validation_results.append("❌ Missing account-specific analytics data")
-                else:
-                    validation_results.append(f"❌ Specific account endpoint failed: HTTP {status_code}")
-            
-            # Test 3: Test each individual account
-            for account_num in self.all_accounts:
-                url_account = f"{self.backend_url}/admin/trading/analytics/overview?account={account_num}"
-                async with self.session.get(url_account) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        accounts_included = data.get('accounts_included', [])
-                        if accounts_included == [account_num]:
-                            validation_results.append(f"✅ Account {account_num} filtering works correctly")
-                        else:
-                            validation_results.append(f"❌ Account {account_num} filtering failed")
-                    else:
-                        validation_results.append(f"❌ Account {account_num} endpoint failed: HTTP {response.status}")
+            self.endpoint_documentation.append(endpoint_info)
             
             # Determine overall status
             failed_checks = [result for result in validation_results if result.startswith("❌")]
@@ -172,11 +155,7 @@ class FIDUSArchitectureAuditTestSuite:
                 'test_name': test_name,
                 'status': overall_status,
                 'validation_results': validation_results,
-                'details': {
-                    'accounts_tested': self.all_accounts,
-                    'failed_checks': len(failed_checks),
-                    'total_checks': len(validation_results)
-                }
+                'endpoint_info': endpoint_info
             }
                 
         except Exception as e:
@@ -185,7 +164,8 @@ class FIDUSArchitectureAuditTestSuite:
                 'test_name': test_name,
                 'status': 'ERROR',
                 'error': str(e),
-                'validation_results': [f"❌ Exception: {str(e)}"]
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
             }
     
     async def test_multi_account_daily_performance(self) -> Dict[str, Any]:
