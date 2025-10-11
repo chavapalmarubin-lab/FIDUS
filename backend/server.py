@@ -43,6 +43,17 @@ from path_utils import get_base_path, get_upload_path, get_credentials_path, ens
 # MongoDB Integration
 from mongodb_integration import mongodb_manager
 
+# System Registry and Health Checks (Phase 1: Technical Documentation)
+from system_registry import (
+    SYSTEM_COMPONENTS, 
+    COMPONENT_CONNECTIONS,
+    get_all_components,
+    get_component_by_id,
+    get_component_count,
+    get_connections
+)
+from health_checks import perform_all_health_checks, calculate_overall_status
+
 # AML/KYC Service Integration
 from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
