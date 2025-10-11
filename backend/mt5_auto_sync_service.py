@@ -195,7 +195,8 @@ class MT5AutoSyncService:
             # Get current account data from database
             current_account = await self.db.mt5_accounts.find_one({
                 "$or": [
-                    {"login": mt5_login},
+                    {"account": int(mt5_login) if mt5_login.isdigit() else mt5_login},
+                    {"account": mt5_login},
                     {"mt5_login": int(mt5_login) if mt5_login.isdigit() else mt5_login},
                     {"mt5_login": mt5_login}
                 ]
