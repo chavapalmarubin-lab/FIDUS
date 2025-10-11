@@ -10394,7 +10394,7 @@ async def compare_mt5_data(mt5_login: str):
         balance_diff = 0
         equity_diff = 0
         
-        if db_account and isinstance(live_data, dict) and 'balance' in live_data:
+        if db_account is not None and isinstance(live_data, dict) and 'balance' in live_data:
             db_balance = float(db_account.get('balance', 0))
             db_equity = float(db_account.get('equity', 0))
             live_balance = float(live_data.get('balance', 0))
