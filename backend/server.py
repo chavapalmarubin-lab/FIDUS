@@ -16434,27 +16434,29 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         mt5_cursor = db.mt5_accounts.find({})
         mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        # Account 886528 is the separation/interest account
-        separation_balance = 0
-        trading_balances = []
-        total_trading_balance = 0
+        # Account 886528 is the separation/interest account  
+        separation_equity = 0
+        trading_accounts = []
+        total_trading_equity = 0
         
         for acc in mt5_accounts:
             account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
-            balance = float(acc.get("balance", 0))
+            equity = float(acc.get("current_equity", acc.get("equity", acc.get("balance", 0))))
+            pnl = float(acc.get("profit_loss", 0))
             
             if str(account_num) == "886528" or account_num == 886528:
                 # Separation account - represents earned interest
-                separation_balance = balance
-                logging.info(f"   💰 Separation Interest (886528): ${balance:.2f}")
+                separation_equity = equity
+                logging.info(f"   💰 Separation Interest (886528): ${equity:.2f}")
             else:
-                # Trading accounts
-                trading_balances.append({
+                # Trading accounts - use equity for accurate fund value
+                trading_accounts.append({
                     "account": account_num,
-                    "balance": balance
+                    "equity": equity,
+                    "pnl": pnl
                 })
-                total_trading_balance += balance
-                logging.info(f"   📈 Trading Account {account_num}: ${balance:.2f}")
+                total_trading_equity += equity
+                logging.info(f"   📈 Trading Account {account_num}: Equity ${equity:.2f}, P&L ${pnl:.2f}")
         
         # Total fund assets = separation interest + trading balances
         total_fund_assets = separation_balance + total_trading_balance
