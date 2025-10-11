@@ -1389,6 +1389,48 @@ class IndividualGoogleOAuth:
             import traceback
             logging.error(f"❌ [INDIVIDUAL OAUTH] Full traceback: {traceback.format_exc()}")
             return None
+    
+    async def disconnect_admin_google(self, admin_user_id: str) -> bool:
+        """Disconnect and revoke Google OAuth tokens for admin user"""
+        try:
+            logging.info(f"🔌 [INDIVIDUAL OAUTH] Disconnecting Google for admin: {admin_user_id}")
+            
+            # Get current tokens to revoke them
+            session_doc = await db.admin_google_sessions.find_one(
+                {"admin_user_id": admin_user_id}, 
+                sort=[("created_at", -1)]
+            )
+            
+            revoked = False
+            if session_doc and session_doc.get('google_tokens'):
+                tokens = session_doc['google_tokens']
+                access_token = tokens.get('access_token')
+                
+                # Revoke tokens with Google
+                if access_token:
+                    try:
+                        import requests
+                        revoke_url = f"https://oauth2.googleapis.com/revoke?token={access_token}"
+                        response = requests.post(revoke_url)
+                        if response.status_code == 200:
+                            logging.info(f"✅ [INDIVIDUAL OAUTH] Successfully revoked Google tokens for admin: {admin_user_id}")
+                            revoked = True
+                        else:
+                            logging.warning(f"⚠️ [INDIVIDUAL OAUTH] Failed to revoke Google tokens (status: {response.status_code})")
+                    except Exception as revoke_error:
+                        logging.error(f"❌ [INDIVIDUAL OAUTH] Error revoking tokens: {revoke_error}")
+            
+            # Delete tokens from database regardless of revoke success
+            result = await db.admin_google_sessions.delete_many({"admin_user_id": admin_user_id})
+            deleted_count = result.deleted_count
+            
+            logging.info(f"✅ [INDIVIDUAL OAUTH] Deleted {deleted_count} Google sessions for admin: {admin_user_id}")
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"❌ [INDIVIDUAL OAUTH] Error disconnecting Google for admin {admin_user_id}: {str(e)}")
+            return False
 
     async def store_admin_google_tokens(self, admin_user_id: str, token_data: Dict, admin_email: str) -> bool:
         """Store Google OAuth tokens for specific admin user"""
