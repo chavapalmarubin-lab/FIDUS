@@ -17,6 +17,7 @@ import ServiceNode from './nodes/ServiceNode';
 import IntegrationNode from './nodes/IntegrationNode';
 import InfrastructureNode from './nodes/InfrastructureNode';
 import GitHubNode from './nodes/GitHubNode';
+import ComponentDetailsPanel from './ComponentDetailsPanel';
 
 // Define custom node types
 const nodeTypes = {
