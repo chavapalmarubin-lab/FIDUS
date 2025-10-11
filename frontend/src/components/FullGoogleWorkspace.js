@@ -91,37 +91,34 @@ const FullGoogleWorkspace = () => {
     }
   }, [connectionStatus, activeTab]);
 
-  // Quick connection test for status display
+  // Quick connection test using new OAuth 2.0 service
   const testConnectionQuick = async () => {
     try {
-      const response = await apiAxios.get('/admin/google/individual-status');
+      const response = await apiAxios.get('/admin/google/status');
       console.log('🔍 Google connection status:', response.data);
       
-      // Update connection status based on Google Auth response
-      const isConnected = response.data.overall_status === 'fully_connected' || 
-                          response.data.overall_status === 'partial' ||
-                          (response.data.success && response.data.overall_status !== 'disconnected');
-      const isExpired = response.data.is_expired || false;
+      // Update connection status based on OAuth response
+      const status = response.data.status;
+      const isConnected = status.connected && !status.is_expired;
       
       const statusData = {
-        success: isConnected && !isExpired,
-        connected: isConnected,
-        overall_status: isConnected && !isExpired ? 'fully_connected' : 'disconnected',
-        google_info: response.data.google_info,
-        admin_info: response.data.admin_info,
-        scopes: response.data.scopes,
-        services: response.data.services || {
+        success: isConnected,
+        connected: status.connected,
+        is_expired: status.is_expired,
+        overall_status: isConnected ? 'fully_connected' : 'disconnected',
+        scopes: status.scopes || [],
+        services: {
           gmail: { 
-            status: response.data.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
+            status: status.scopes?.includes('https://www.googleapis.com/auth/gmail.readonly') ? 'connected' : 'disconnected' 
           },
           calendar: { 
-            status: response.data.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
+            status: status.scopes?.includes('https://www.googleapis.com/auth/calendar') ? 'connected' : 'disconnected' 
           },
           drive: { 
-            status: response.data.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
+            status: status.scopes?.includes('https://www.googleapis.com/auth/drive') ? 'connected' : 'disconnected' 
           },
           sheets: { 
-            status: response.data.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
+            status: status.scopes?.includes('https://www.googleapis.com/auth/spreadsheets') ? 'connected' : 'disconnected' 
           }
         }
       };
@@ -129,8 +126,8 @@ const FullGoogleWorkspace = () => {
       setConnectionStatus(statusData);
       
       // Auto-load data if connected
-      if (statusData.connected && !isExpired) {
-        console.log('✅ Google connected - auto-loading Gmail data');
+      if (isConnected) {
+        console.log('✅ Google connected - auto-loading data');
         if (activeTab === 'gmail') {
           loadEmails();
         } else if (activeTab === 'calendar') {
