@@ -491,11 +491,11 @@ class GoogleOAuth2TestSuite:
         
         # List of endpoints that previously might have had service account issues
         endpoints_to_test = [
-            ("/auth/google/authorize", "OAuth URL Generation"),
+            ("/auth/google/url", "OAuth URL Generation"),
             ("/admin/google/status", "Connection Status"),
-            ("/admin/google/gmail/messages", "Gmail Messages"),
-            ("/admin/google/calendar/events", "Calendar Events"),
-            ("/admin/google/drive/files", "Drive Files"),
+            ("/google/gmail/real-messages", "Gmail Messages"),
+            ("/google/calendar/events", "Calendar Events"),
+            ("/google/drive/files", "Drive Files"),
             ("/google/gmail/real-messages", "Legacy Gmail")
         ]
         
