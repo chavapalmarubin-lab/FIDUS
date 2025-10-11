@@ -10488,7 +10488,7 @@ async def check_mt5_sync_status():
             "checked_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.get("/mt5/account-health-check/{mt5_login}")
+@api_router.get("/api/mt5/account-health-check/{mt5_login}")
 async def mt5_account_health_check(mt5_login: str, current_user: dict = Depends(get_current_admin_user)):
     """
     Simple health check showing MT5 data sync status
