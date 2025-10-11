@@ -699,7 +699,7 @@ class FIDUSCriticalEndpointTestSuite:
         }
         
         # Log summary
-        logger.info("📊 FIDUS Architecture Audit Summary:")
+        logger.info("📊 FIDUS Critical Endpoint Testing Summary:")
         logger.info(f"   Total Tests: {summary['total_tests']}")
         logger.info(f"   Passed: {summary['passed']}")
         logger.info(f"   Failed: {summary['failed']}")
@@ -714,8 +714,8 @@ class FIDUSCriticalEndpointTestSuite:
             'endpoint_documentation': self.endpoint_documentation,
             'test_parameters': {
                 'backend_url': self.backend_url,
-                'frontend_backend_url': self.frontend_backend_url,
-                'audit_type': 'Architecture Audit'
+                'render_backend_url': self.render_backend_url,
+                'test_type': 'Critical Endpoint Testing - NEW Render URLs'
             }
         }
     
