@@ -313,7 +313,7 @@ class MT5AutoSyncService:
             })
             accounts = await accounts_cursor.to_list(length=100)
             
-            if not accounts:
+            if accounts is None or len(accounts) == 0:
                 logger.warning("⚠️ No active MT5 accounts found for sync")
                 return {
                     'total_accounts': 0,
