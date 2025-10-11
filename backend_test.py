@@ -478,6 +478,393 @@ class FIDUSCriticalEndpointTestSuite:
                 'endpoint_info': endpoint_info
             }
     
+    async def test_mt5_force_sync_account_886528(self) -> Dict[str, Any]:
+        """Test MT5 Force Sync for Account 886528 - PRIORITY 1: Resolve $521.88 discrepancy"""
+        test_name = "6. MT5 Force Sync Account 886528 (CRITICAL)"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/mt5/force-sync/886528"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'POST',
+            'path_pattern': '/api/mt5/force-sync/886528',
+            'purpose': 'CRITICAL: Force sync account 886528 to resolve $521.88 discrepancy'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with sync results for account 886528")
+            validation_results.append("💰 Target: Resolve $521.88 discrepancy (from $3,405.53 to $3,927.41)")
+            
+            async with self.session.post(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 500 else str(response_data)[:500] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with sync results - SUCCESS")
+                    
+                    # Check for sync status
+                    if 'status' in response_data:
+                        sync_status = response_data.get('status')
+                        validation_results.append(f"✅ Sync status: {sync_status}")
+                        
+                        if sync_status == 'synced':
+                            validation_results.append("✅ Account 886528 successfully synced")
+                        elif sync_status == 'failed':
+                            validation_results.append(f"❌ Account 886528 sync failed: {response_data.get('error', 'Unknown error')}")
+                    
+                    # Check balance information
+                    if 'old_balance' in response_data and 'new_balance' in response_data:
+                        old_balance = response_data.get('old_balance', 0)
+                        new_balance = response_data.get('new_balance', 0)
+                        balance_change = response_data.get('balance_change', 0)
+                        
+                        validation_results.append(f"💰 Balance Update: ${old_balance:.2f} → ${new_balance:.2f}")
+                        validation_results.append(f"💰 Balance Change: ${balance_change:+.2f}")
+                        
+                        # Check if discrepancy is resolved
+                        if 'discrepancy_resolved' in response_data:
+                            if response_data['discrepancy_resolved']:
+                                validation_results.append("🎉 CRITICAL SUCCESS: $521.88 discrepancy RESOLVED!")
+                            else:
+                                validation_results.append("⚠️ Discrepancy not fully resolved")
+                        
+                        # Check if we got the expected balance
+                        if abs(new_balance - 3927.41) < 1.0:  # Within $1 of target
+                            validation_results.append("✅ Target balance achieved: ~$3,927.41")
+                        elif abs(old_balance - 3405.53) < 1.0:  # Still at old balance
+                            validation_results.append("⚠️ Balance unchanged from $3,405.53")
+                    
+                    # Check for error information
+                    if response_data.get('error'):
+                        validation_results.append(f"⚠️ Sync error: {response_data['error']}")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    # Determine overall status based on sync success
+                    sync_success = response_data.get('success', False) or response_data.get('status') == 'synced'
+                    overall_status = 'PASS' if sync_success else 'FAIL'
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': overall_status,
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info,
+                        'sync_data': response_data
+                    }
+                    
+                elif status_code == 404:
+                    validation_results.append("❌ CRITICAL: HTTP 404 - Endpoint not accessible (routing issue)")
+                    validation_results.append("🔧 This indicates the routing fix has not been applied correctly")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info,
+                        'critical_issue': 'routing_not_fixed'
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+
+    async def test_mt5_sync_dashboard(self) -> Dict[str, Any]:
+        """Test MT5 Sync Dashboard - PRIORITY 2: Verify sync status monitoring"""
+        test_name = "7. MT5 Sync Dashboard"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/mt5/sync-dashboard"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/mt5/sync-dashboard',
+            'purpose': 'Monitor MT5 sync status and account health'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with sync dashboard data")
+            
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with dashboard data - SUCCESS")
+                    
+                    # Check for dashboard components
+                    if 'service_status' in response_data:
+                        service_status = response_data.get('service_status')
+                        validation_results.append(f"✅ Service status: {service_status}")
+                    
+                    if 'total_accounts' in response_data:
+                        total_accounts = response_data.get('total_accounts', 0)
+                        validation_results.append(f"✅ Total accounts monitored: {total_accounts}")
+                    
+                    # Check for account 886528 specifically
+                    if 'accounts_detail' in response_data:
+                        accounts = response_data['accounts_detail']
+                        account_886528 = next((acc for acc in accounts if acc.get('mt5_login') == '886528'), None)
+                        
+                        if account_886528:
+                            validation_results.append("✅ Account 886528 found in dashboard")
+                            validation_results.append(f"   Balance: ${account_886528.get('balance', 0):.2f}")
+                            validation_results.append(f"   Status: {account_886528.get('status', 'unknown')}")
+                        else:
+                            validation_results.append("⚠️ Account 886528 not found in dashboard")
+                    
+                    # Check for critical accounts
+                    if 'critical_accounts' in response_data:
+                        critical_count = len(response_data['critical_accounts'])
+                        validation_results.append(f"⚠️ Critical accounts: {critical_count}")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+                elif status_code == 404:
+                    validation_results.append("❌ HTTP 404 - Endpoint not accessible (routing issue)")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info,
+                        'critical_issue': 'routing_not_fixed'
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+
+    async def test_mt5_account_health_check_886528(self) -> Dict[str, Any]:
+        """Test MT5 Health Check for Account 886528 - PRIORITY 2: Verify account status"""
+        test_name = "8. MT5 Health Check Account 886528"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/mt5/account-health-check/886528"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'GET',
+            'path_pattern': '/api/mt5/account-health-check/886528',
+            'purpose': 'Check health status of account 886528'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with health status for account 886528")
+            
+            async with self.session.get(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with health status - SUCCESS")
+                    
+                    # Check for health status information
+                    if 'health_status' in response_data:
+                        health_status = response_data.get('health_status')
+                        validation_results.append(f"✅ Health status: {health_status}")
+                    
+                    if 'last_sync' in response_data:
+                        last_sync = response_data.get('last_sync')
+                        validation_results.append(f"✅ Last sync: {last_sync}")
+                    
+                    if 'balance' in response_data:
+                        balance = response_data.get('balance')
+                        validation_results.append(f"💰 Current balance: ${balance:.2f}")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+
+    async def test_mt5_start_background_sync(self) -> Dict[str, Any]:
+        """Test MT5 Start Background Sync - PRIORITY 2: Verify sync control"""
+        test_name = "9. MT5 Start Background Sync"
+        logger.info(f"🧪 Testing {test_name}")
+        
+        validation_results = []
+        endpoint_url = f"{self.backend_url}/mt5/start-background-sync"
+        
+        endpoint_info = {
+            'url': endpoint_url,
+            'method': 'POST',
+            'path_pattern': '/api/mt5/start-background-sync',
+            'purpose': 'Start automated MT5 background sync service'
+        }
+        
+        try:
+            validation_results.append(f"🎯 Testing URL: {endpoint_url}")
+            validation_results.append("📋 Expected: HTTP 200 with sync start confirmation")
+            
+            async with self.session.post(endpoint_url) as response:
+                status_code = response.status
+                response_text = await response.text()
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {"raw_response": response_text}
+                
+                endpoint_info.update({
+                    'status_code': status_code,
+                    'response_sample': response_data if len(str(response_data)) < 300 else str(response_data)[:300] + "..."
+                })
+                
+                if status_code == 200:
+                    validation_results.append("✅ EXPECTED: HTTP 200 with start confirmation - SUCCESS")
+                    
+                    # Check for start status
+                    if 'status' in response_data:
+                        start_status = response_data.get('status')
+                        validation_results.append(f"✅ Start status: {start_status}")
+                        
+                        if start_status in ['started', 'already_running']:
+                            validation_results.append("✅ Background sync is operational")
+                    
+                    if 'sync_interval' in response_data:
+                        interval = response_data.get('sync_interval')
+                        validation_results.append(f"✅ Sync interval: {interval} seconds")
+                    
+                    self.endpoint_documentation.append(endpoint_info)
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'PASS',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+                elif status_code == 404:
+                    validation_results.append("❌ HTTP 404 - Endpoint not accessible (routing issue)")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info,
+                        'critical_issue': 'routing_not_fixed'
+                    }
+                else:
+                    validation_results.append(f"❌ EXPECTED HTTP 200, GOT HTTP {status_code}")
+                    validation_results.append(f"   Response: {response_text[:200]}")
+                    
+                    return {
+                        'test_name': test_name,
+                        'status': 'FAIL',
+                        'validation_results': validation_results,
+                        'endpoint_info': endpoint_info
+                    }
+                    
+        except Exception as e:
+            logger.error(f"❌ {test_name} failed: {str(e)}")
+            return {
+                'test_name': test_name,
+                'status': 'ERROR',
+                'error': str(e),
+                'validation_results': [f"❌ Exception: {str(e)}"],
+                'endpoint_info': endpoint_info
+            }
+    
     # Critical endpoint tests completed above
     
     async def run_all_tests(self) -> Dict[str, Any]:
