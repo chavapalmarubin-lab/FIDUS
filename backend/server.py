@@ -50,12 +50,13 @@ from google_admin_service import GoogleAdminService
 from google_social_auth import google_social_auth
 from document_signing_service import document_signing_service
 
-# Import Google Service Account (NO OAUTH NEEDED!)
-from google_service_account import (
+# Import Google OAuth Service (PROPER OAUTH IMPLEMENTATION!)
+from google_oauth_final import (
+    get_google_oauth_service,
     list_gmail_messages,
     list_calendar_events,
     list_drive_files,
-    list_spreadsheets_in_folder
+    send_gmail_message
 )
 
 # Import MT5 Service
