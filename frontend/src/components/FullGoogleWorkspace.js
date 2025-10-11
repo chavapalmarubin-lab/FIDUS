@@ -338,31 +338,57 @@ const FullGoogleWorkspace = () => {
         }]);
       }
     } catch (error) {
-      console.error('❌ Failed to load real Gmail messages:', error);
+      console.error('❌ Failed to load Gmail messages:', error);
       
-      // Show error message instead of mock data
-      setEmails([{
-        id: 'error-gmail',
-        subject: '⚠️ Gmail API Connection Error',
-        sender: 'FIDUS System',
-        snippet: `Error loading Gmail: ${error.message}. Please check your Google OAuth connection.`,
-        date: new Date().toISOString(),
-        read: false,
-        starred: false,
-        body: `
-          <div style="padding: 20px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;">
-            <h3 style="color: #dc2626;">Gmail Connection Error</h3>
-            <p><strong>Error:</strong> ${error.message}</p>
-            <p><strong>Solution:</strong></p>
-            <ol>
-              <li>Click "Connect Google Workspace" button</li>
-              <li>Complete Google OAuth authentication</li>
-              <li>Grant Gmail permissions to FIDUS</li>
-              <li>Refresh this page</li>
-            </ol>
-          </div>
-        `
-      }]);
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.response?.data?.auth_required) {
+        setEmails([{
+          id: 'auth-required',
+          subject: '🔐 Google Authentication Required',
+          sender: 'FIDUS System',
+          snippet: 'Please connect your Google account to access Gmail.',
+          date: new Date().toISOString(),
+          read: false,
+          starred: false,
+          body: `
+            <div style="padding: 20px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+              <h3 style="color: #d97706;">Google Authentication Required</h3>
+              <p>To access your Gmail messages, please connect your Google account.</p>
+              <p><strong>Steps to connect:</strong></p>
+              <ol>
+                <li>Click "Connect Google Workspace" button above</li>
+                <li>Sign in with your Google account</li>
+                <li>Grant Gmail permissions to FIDUS</li>
+                <li>Your messages will appear here</li>
+              </ol>
+            </div>
+          `
+        }]);
+      } else {
+        // Show error message instead of mock data
+        setEmails([{
+          id: 'error-gmail',
+          subject: '⚠️ Gmail API Connection Error',
+          sender: 'FIDUS System',
+          snippet: `Error loading Gmail: ${error.message}. Please check your Google OAuth connection.`,
+          date: new Date().toISOString(),
+          read: false,
+          starred: false,
+          body: `
+            <div style="padding: 20px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;">
+              <h3 style="color: #dc2626;">Gmail Connection Error</h3>
+              <p><strong>Error:</strong> ${error.message}</p>
+              <p><strong>Solution:</strong></p>
+              <ol>
+                <li>Click "Connect Google Workspace" button</li>
+                <li>Complete Google OAuth authentication</li>
+                <li>Grant Gmail permissions to FIDUS</li>
+                <li>Refresh this page</li>
+              </ol>
+            </div>
+          `
+        }]);
+      }
     } finally {
       setLoading(false);
     }
