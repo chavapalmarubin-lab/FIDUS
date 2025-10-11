@@ -31,10 +31,10 @@ class FIDUSCriticalEndpointTestSuite:
         self.test_results = []
         self.endpoint_documentation = []
         
-        logger.info(f"🚀 FIDUS Critical Endpoint Test Suite initialized")
+        logger.info(f"🚀 FIDUS MT5 Auto-Sync Test Suite initialized")
         logger.info(f"   CORRECT Render Backend URL: {self.render_backend_url}")
         logger.info(f"   API Base URL: {self.backend_url}")
-        logger.info(f"   Purpose: Test 5 critical endpoints with CORRECT Render backend URLs")
+        logger.info(f"   Purpose: Test MT5 Auto-Sync endpoints to resolve $521.88 discrepancy")
     
     async def setup(self):
         """Setup test environment"""
