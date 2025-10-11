@@ -438,18 +438,31 @@ const FullGoogleWorkspace = () => {
         }]);
       }
     } catch (error) {
-      console.error('❌ Failed to load real Calendar events:', error);
+      console.error('❌ Failed to load Calendar events:', error);
       
-      // Show error message instead of mock data
-      setEvents([{
-        id: 'error-calendar',
-        title: '⚠️ Calendar API Connection Error',
-        description: `Error loading Calendar: ${error.message}. Please check your Google OAuth connection.`,
-        start: new Date().toISOString(),
-        end: new Date(Date.now() + 3600000).toISOString(),
-        attendees: [],
-        meetLink: null
-      }]);
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.response?.data?.auth_required) {
+        setEvents([{
+          id: 'auth-required',
+          title: '🔐 Google Authentication Required',
+          description: 'Please connect your Google account to access Calendar.',
+          start: new Date().toISOString(),
+          end: new Date(Date.now() + 3600000).toISOString(),
+          attendees: [],
+          meetLink: null
+        }]);
+      } else {
+        // Show error message instead of mock data
+        setEvents([{
+          id: 'error-calendar',
+          title: '⚠️ Calendar API Connection Error',
+          description: `Error loading Calendar: ${error.message}. Please check your Google OAuth connection.`,
+          start: new Date().toISOString(),
+          end: new Date(Date.now() + 3600000).toISOString(),
+          attendees: [],
+          meetLink: null
+        }]);
+      }
     } finally {
       setLoading(false);
     }
