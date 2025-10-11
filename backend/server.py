@@ -10488,6 +10488,172 @@ async def check_mt5_sync_status():
             "checked_at": datetime.now(timezone.utc).isoformat()
         }
 
+@api_router.get("/mt5/account-health-check/{mt5_login}")
+async def mt5_account_health_check(mt5_login: str, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Simple health check showing MT5 data sync status
+    Compares database vs live MT5 API data for specific account
+    """
+    try:
+        # Get account from database
+        db_account = await db.mt5_accounts.find_one({"login": mt5_login})
+        
+        if not db_account:
+            return {
+                "status": "error",
+                "message": f"Account {mt5_login} not found in database",
+                "mt5_login": mt5_login,
+                "found_in_db": False
+            }
+        
+        # Get live data from MT5 API using existing service
+        from services.mt5_service import mt5_service
+        
+        mt5_live_data = {}
+        if hasattr(mt5_service, 'get_account_info'):
+            try:
+                mt5_live_response = await mt5_service.get_account_info(mt5_login)
+                if isinstance(mt5_live_response, dict) and not mt5_live_response.get('error'):
+                    mt5_live_data = mt5_live_response
+                else:
+                    mt5_live_data = {"error": mt5_live_response.get('error', 'Unknown MT5 API error')}
+            except Exception as api_error:
+                mt5_live_data = {"error": f"MT5 API call failed: {str(api_error)}"}
+        else:
+            # Try bridge client directly
+            from mt5_bridge_client import mt5_bridge
+            try:
+                mt5_live_data = await mt5_bridge.get_account_info(mt5_login)
+            except Exception as bridge_error:
+                mt5_live_data = {"error": f"MT5 Bridge error: {str(bridge_error)}"}
+        
+        # Extract values safely
+        db_balance = float(db_account.get('balance', 0))
+        db_equity = float(db_account.get('equity', 0)) 
+        db_profit = float(db_account.get('profit', 0))
+        db_margin = float(db_account.get('margin', 0))
+        
+        # Handle MT5 live data - account for various response formats
+        live_balance = 0
+        live_equity = 0
+        live_profit = 0
+        live_margin = 0
+        live_data_available = False
+        
+        if isinstance(mt5_live_data, dict) and not mt5_live_data.get('error'):
+            live_balance = float(mt5_live_data.get('balance', 0))
+            live_equity = float(mt5_live_data.get('equity', 0))
+            live_profit = float(mt5_live_data.get('profit', 0))
+            live_margin = float(mt5_live_data.get('margin', 0))
+            live_data_available = True
+        
+        # Calculate discrepancies only if live data is available
+        if live_data_available:
+            balance_diff = live_balance - db_balance
+            equity_diff = live_equity - db_balance
+            profit_diff = live_profit - db_profit
+            
+            # Determine sync status
+            is_synced = abs(balance_diff) < 0.01 and abs(equity_diff) < 0.01
+            
+            # Determine severity based on balance difference (main indicator)
+            if abs(balance_diff) < 1:
+                severity = "none"
+            elif abs(balance_diff) < 10:
+                severity = "minor"
+            elif abs(balance_diff) < 100:
+                severity = "moderate"
+            else:
+                severity = "critical"
+                
+            status = "synced" if is_synced else "out_of_sync"
+            
+        else:
+            # No live data available
+            balance_diff = 0
+            equity_diff = 0
+            profit_diff = 0
+            severity = "unknown"
+            status = "no_live_data"
+            
+        # Generate recommendation
+        def get_sync_recommendation(balance_diff, live_data_available):
+            if not live_data_available:
+                return "Cannot connect to MT5 - check bridge service and account credentials"
+            elif abs(balance_diff) < 0.01:
+                return "Data is current - no action needed"
+            elif abs(balance_diff) < 10:
+                return "Minor discrepancy - monitor next sync"
+            elif abs(balance_diff) < 100:
+                return "Moderate discrepancy - force refresh recommended"
+            else:
+                return "Critical discrepancy - immediate investigation required"
+        
+        # Calculate time since last database update
+        last_updated = db_account.get('updated_at')
+        time_since_sync = None
+        if last_updated:
+            if isinstance(last_updated, str):
+                try:
+                    last_updated_dt = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                except:
+                    last_updated_dt = datetime.now(timezone.utc)
+            else:
+                last_updated_dt = last_updated
+            
+            time_diff = datetime.now(timezone.utc) - last_updated_dt
+            time_since_sync = str(time_diff)
+        
+        response = {
+            "mt5_login": mt5_login,
+            "status": status,
+            "severity": severity,
+            "live_data_available": live_data_available,
+            "database": {
+                "balance": round(db_balance, 2),
+                "equity": round(db_equity, 2),
+                "profit": round(db_profit, 2),
+                "margin": round(db_margin, 2),
+                "last_updated": str(last_updated) if last_updated else None,
+                "fund_code": db_account.get('fund_code'),
+                "broker_name": db_account.get('broker_name'),
+                "account_id": db_account.get('account_id')
+            },
+            "mt5_live": {
+                "balance": round(live_balance, 2) if live_data_available else None,
+                "equity": round(live_equity, 2) if live_data_available else None,
+                "profit": round(live_profit, 2) if live_data_available else None,
+                "margin": round(live_margin, 2) if live_data_available else None,
+                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "data_source": "mt5_bridge" if live_data_available else "unavailable",
+                "error": mt5_live_data.get('error') if isinstance(mt5_live_data, dict) else None
+            },
+            "discrepancy": {
+                "balance_diff": round(balance_diff, 2),
+                "equity_diff": round(equity_diff, 2), 
+                "profit_diff": round(profit_diff, 2),
+                "balance_diff_usd": f"${balance_diff:+,.2f}",
+                "equity_diff_usd": f"${equity_diff:+,.2f}",
+                "balance_diff_pct": round((balance_diff / db_balance * 100), 2) if db_balance else 0,
+                "equity_diff_pct": round((equity_diff / db_equity * 100), 2) if db_equity else 0
+            },
+            "recommendation": get_sync_recommendation(balance_diff, live_data_available),
+            "last_sync": str(last_updated) if last_updated else None,
+            "time_since_sync": time_since_sync,
+            "checked_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return response
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "mt5_login": mt5_login,
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "checked_at": datetime.now(timezone.utc).isoformat()
+        }
+
 @api_router.post("/debug/mt5/force-refresh/{mt5_login}")
 async def force_mt5_refresh(mt5_login: str):
     """Force immediate refresh of MT5 data for specific account"""
