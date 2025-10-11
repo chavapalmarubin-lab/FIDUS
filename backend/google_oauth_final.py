@@ -356,21 +356,41 @@ def get_google_oauth_service(db: AsyncIOMotorDatabase) -> GoogleOAuthService:
 async def list_gmail_messages(admin_user_id: str, db: AsyncIOMotorDatabase, max_results: int = 10) -> List[Dict]:
     """List Gmail messages using OAuth"""
     try:
+        logger.info(f"🔍 [GMAIL DEBUG] Starting Gmail API call for user: {admin_user_id}")
+        
         service_instance = get_google_oauth_service(db)
         gmail_service = await service_instance.get_gmail_service(admin_user_id)
         
-        # Get message list
+        logger.info(f"🔍 [GMAIL DEBUG] Gmail service initialized successfully")
+        
+        # Get message list with debug logging
+        logger.info(f"🔍 [GMAIL DEBUG] Calling Gmail API: users().messages().list(userId='me', maxResults={max_results})")
+        
         results = gmail_service.users().messages().list(
             userId='me',
             maxResults=max_results
         ).execute()
         
+        logger.info(f"🔍 [GMAIL DEBUG] Raw Gmail API response: {results}")
+        
         messages = results.get('messages', [])
+        logger.info(f"🔍 [GMAIL DEBUG] Found {len(messages)} message IDs in response")
+        
+        if not messages:
+            logger.warning(f"⚠️ [GMAIL DEBUG] No messages found - checking if inbox is empty or API issue")
+            # Try to get user profile to verify API access
+            try:
+                profile = gmail_service.users().getProfile(userId='me').execute()
+                logger.info(f"🔍 [GMAIL DEBUG] User profile check: {profile.get('messagesTotal', 'unknown')} total messages")
+            except Exception as profile_error:
+                logger.error(f"❌ [GMAIL DEBUG] Failed to get user profile: {profile_error}")
         
         # Get detailed message info
         detailed_messages = []
-        for msg in messages:
+        for i, msg in enumerate(messages):
             try:
+                logger.info(f"🔍 [GMAIL DEBUG] Fetching details for message {i+1}/{len(messages)}: {msg['id']}")
+                
                 message = gmail_service.users().messages().get(
                     userId='me',
                     id=msg['id'],
@@ -380,24 +400,30 @@ async def list_gmail_messages(admin_user_id: str, db: AsyncIOMotorDatabase, max_
                 # Parse message for frontend
                 headers = {h['name']: h['value'] for h in message['payload'].get('headers', [])}
                 
-                detailed_messages.append({
+                detailed_message = {
                     'id': message['id'],
                     'threadId': message['threadId'],
-                    'subject': headers.get('Subject', ''),
-                    'sender': headers.get('From', ''),
+                    'subject': headers.get('Subject', 'No Subject'),
+                    'sender': headers.get('From', 'Unknown Sender'),
                     'date': headers.get('Date', ''),
                     'snippet': message.get('snippet', ''),
                     'labels': message.get('labelIds', [])
-                })
+                }
+                
+                detailed_messages.append(detailed_message)
+                logger.info(f"🔍 [GMAIL DEBUG] Message {i+1} processed: {detailed_message['subject'][:50]}")
                 
             except Exception as e:
-                logger.error(f"Failed to fetch message {msg['id']}: {e}")
+                logger.error(f"❌ [GMAIL DEBUG] Failed to fetch message {msg['id']}: {e}")
         
-        logger.info(f"✅ Retrieved {len(detailed_messages)} Gmail messages via OAuth")
+        logger.info(f"✅ [GMAIL DEBUG] Successfully retrieved {len(detailed_messages)} Gmail messages via OAuth")
         return detailed_messages
         
     except Exception as e:
-        logger.error(f"❌ Failed to list Gmail messages: {str(e)}")
+        logger.error(f"❌ [GMAIL DEBUG] Failed to list Gmail messages: {str(e)}")
+        logger.error(f"❌ [GMAIL DEBUG] Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"❌ [GMAIL DEBUG] Full traceback: {traceback.format_exc()}")
         return []
 
 
