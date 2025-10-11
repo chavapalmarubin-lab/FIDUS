@@ -12442,7 +12442,7 @@ async def update_investment_from_mt5_history(investment_id: str, current_user: d
                 matching_account = account
                 break
         
-        if not matching_account:
+        if matching_account is None:
             raise HTTPException(status_code=404, detail="No MT5 account found for this investment")
         
         # Get MT5 account history to find actual deposit date
@@ -12512,7 +12512,7 @@ async def validate_investment_mt5_mapping(investment_id: str, current_user: dict
                 matching_account = account
                 break
         
-        if not matching_account:
+        if matching_account is None:
             raise HTTPException(status_code=404, detail="No MT5 account found for this investment")
         
         # Perform comprehensive MT5 validation
