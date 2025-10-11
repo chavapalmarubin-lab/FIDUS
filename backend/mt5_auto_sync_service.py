@@ -201,7 +201,7 @@ class MT5AutoSyncService:
                 ]
             })
             
-            if not current_account:
+            if current_account is None:
                 return MT5SyncResult(
                     mt5_login=mt5_login,
                     success=False,
