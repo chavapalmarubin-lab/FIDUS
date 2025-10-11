@@ -217,6 +217,28 @@ const FullGoogleWorkspace = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Disconnect Button - Always visible when any connection exists */}
+          {(connectionStatus.connected || emails.length > 0 || events.length > 0 || driveFiles.length > 0) && (
+            <Button
+              onClick={handleDisconnectGoogle}
+              disabled={loading}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white mr-3"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Disconnecting...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Disconnect Google
+                </>
+              )}
+            </Button>
+          )}
+          
           {/* Service Status Indicators */}
           {connectionStatus.services && (
             <div className="flex items-center gap-1 mr-4">
