@@ -10199,6 +10199,99 @@ async def send_real_gmail_message(request: Request, current_user: dict = Depends
             "api_used": "oauth_gmail_api"
         }
 
+# MANUAL DISCONNECT AND DEBUG ENDPOINTS FOR USER TESTING
+
+@api_router.get("/admin/google/force-disconnect")
+async def force_disconnect_google():
+    """MANUALLY force complete Google disconnect - for testing"""
+    try:
+        # Delete ALL Google OAuth tokens/sessions from database
+        result1 = await db.admin_google_sessions.delete_many({})
+        result2 = await db.google_tokens.delete_many({})
+        
+        # Clear admin Google connection flags
+        await db.users.update_many(
+            {},
+            {"$set": {
+                "google_connected": False,
+                "google_manual_disconnect": True,
+                "google_auto_connect_disabled": True,
+                "google_tokens_cleared_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "status": "completely_disconnected",
+            "message": "All tokens deleted",
+            "deleted_sessions": result1.deleted_count,
+            "deleted_tokens": result2.deleted_count,
+            "admin_flags_set": "google_connected=False"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@api_router.get("/admin/google/debug-tokens")
+async def debug_google_tokens():
+    """DEBUG: Show what Google tokens exist in database"""
+    try:
+        # Check admin_google_sessions collection
+        sessions = await db.admin_google_sessions.find({}).to_list(length=100)
+        
+        # Check google_tokens collection
+        tokens = await db.google_tokens.find({}).to_list(length=100)
+        
+        # Check admin users for Google flags
+        admin = await db.users.find_one({"username": "admin"})
+        
+        return {
+            "sessions_count": len(sessions),
+            "sessions_sample": sessions[:3] if sessions else [],
+            "tokens_count": len(tokens),
+            "tokens_sample": tokens[:3] if tokens else [],
+            "admin_email": admin.get("email") if admin else "Not found",
+            "admin_google_connected": admin.get("google_connected") if admin else None,
+            "admin_google_manual_disconnect": admin.get("google_manual_disconnect") if admin else None,
+            "admin_google_auto_connect_disabled": admin.get("google_auto_connect_disabled") if admin else None
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@api_router.get("/admin/google/connection-debug")
+async def debug_connection_flow():
+    """DEBUG: Show what happens when checking connection"""
+    try:
+        # Simulate the connection check process
+        admin = await db.users.find_one({"username": "admin"})
+        admin_user_id = admin.get("id", "admin_001") if admin else "admin_001"
+        
+        # Check if should auto-connect
+        should_auto = await individual_google_oauth.should_auto_connect_google(admin_user_id)
+        
+        # Check for tokens
+        tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
+        
+        return {
+            "admin_user_id": admin_user_id,
+            "admin_email": admin.get("email") if admin else "Not found",
+            "should_auto_connect": should_auto,
+            "has_tokens": bool(tokens),
+            "tokens_preview": str(tokens)[:100] + "..." if tokens else None
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 # Duplicate disconnect endpoint removed - using existing one at line 9636
 
 @api_router.get("/google/calendar/real-events")
