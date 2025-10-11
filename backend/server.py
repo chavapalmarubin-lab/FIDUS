@@ -15917,7 +15917,7 @@ async def get_calendar_events_oauth(current_user: dict = Depends(get_current_adm
         logger.error(f"❌ Calendar API error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/api/admin/google/drive/files")
+@api_router.get("/admin/google/drive/files")
 async def get_drive_files_oauth(
     folder_id: str = None, 
     current_user: dict = Depends(get_current_admin_user)
