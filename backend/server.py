@@ -2439,6 +2439,115 @@ async def health_metrics():
             }
         )
 
+# =====================================================================
+# SYSTEM REGISTRY & DOCUMENTATION ENDPOINTS (Phase 1)
+# Interactive Technical Documentation System
+# =====================================================================
+
+@api_router.get("/system/components")
+async def get_system_components():
+    """
+    Get all system components from the registry
+    Returns the complete inventory of all platform components
+    """
+    try:
+        components = get_all_components()
+        total_count = get_component_count()
+        
+        return {
+            "success": True,
+            "total_components": total_count,
+            "components": components,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching system components: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch components: {str(e)}")
+
+@api_router.get("/system/status")
+async def get_system_status():
+    """
+    Get overall system health status by performing health checks on all components
+    Returns real-time health information for all system components
+    """
+    try:
+        # Perform health checks on all components
+        health_results = await perform_all_health_checks(client, db)
+        
+        # Calculate overall system status
+        overall_status = calculate_overall_status(health_results)
+        
+        # Count component statuses
+        statuses = [result['status'] for result in health_results.values()]
+        online_count = sum(1 for s in statuses if s == 'online')
+        total_count = len(statuses)
+        
+        return {
+            "success": True,
+            "overall_status": overall_status,
+            "health_summary": f"{online_count}/{total_count} components online",
+            "components": health_results,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching system status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch system status: {str(e)}")
+
+@api_router.get("/system/components/{component_id}")
+async def get_component_details(component_id: str):
+    """
+    Get details for a specific component by ID
+    Includes component metadata and current health status
+    """
+    try:
+        # Get component details from registry
+        component = get_component_by_id(component_id)
+        
+        if not component:
+            raise HTTPException(status_code=404, detail=f"Component '{component_id}' not found")
+        
+        # Get real-time health status for this component
+        health_results = await perform_all_health_checks(client, db)
+        component_health = health_results.get(component_id, {
+            'status': 'unknown',
+            'error': 'Health check not available for this component'
+        })
+        
+        return {
+            "success": True,
+            "component": component,
+            "health": component_health,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching component details for {component_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch component details: {str(e)}")
+
+@api_router.get("/system/connections")
+async def get_system_connections():
+    """
+    Get all component connections/dependencies
+    Returns the architecture connections between components
+    """
+    try:
+        connections = get_connections()
+        
+        return {
+            "success": True,
+            "total_connections": len(connections),
+            "connections": connections,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching system connections: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch connections: {str(e)}")
+
+# =====================================================================
+# END SYSTEM REGISTRY ENDPOINTS
+# =====================================================================
+
 @api_router.post("/auth/change-password")
 async def change_password(change_request: dict):
     """Change user password from temporary to permanent"""
