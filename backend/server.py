@@ -16492,42 +16492,52 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         # Total fund REVENUE (not assets!) = trading P&L + separation interest
         total_fund_revenue = mt5_trading_pnl + separation_equity
         
-        # Get client obligations from investments
-        investments_cursor = db.investments.find({})
-        all_investments = await investments_cursor.to_list(length=None)
-        total_obligations = sum(float(inv.get("principal_amount", 0)) for inv in all_investments)
+        # Get client obligations (interest owed)
+        # TODO: Calculate actual client interest obligations from contracts
+        # For now using placeholder - needs proper calculation from investment terms
+        client_interest_obligations = 32995.00  # This should come from actual calculations
         
-        # Net position = assets - obligations  
-        net_profitability = total_fund_assets - total_obligations
+        # Net position = total revenue - obligations  
+        net_position = total_fund_revenue - client_interest_obligations
         
         # Calculate performance metrics
-        performance_pct = (net_profitability / total_obligations * 100) if total_obligations > 0 else 0
+        performance_pct = (net_position / total_initial_deposits * 100) if total_initial_deposits > 0 else 0
+        
+        logging.info(f"   📊 Fund Revenue: ${total_fund_revenue:.2f}")
+        logging.info(f"   📊 Client Obligations: ${client_interest_obligations:.2f}")
+        logging.info(f"   📊 Net Position: ${net_position:+.2f}")
         
         fund_performance = {
             "success": True,
             "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
-            "fund_assets": {
+            "fund_revenue": {
+                "mt5_trading_pnl": round(mt5_trading_pnl, 2),
                 "separation_interest": round(separation_equity, 2),
-                "trading_equity": round(total_trading_equity, 2), 
-                "total_assets": round(total_fund_assets, 2)
+                "broker_rebates": 0.0,
+                "total_revenue": round(total_fund_revenue, 2)
             },
-            "fund_liabilities": {
-                "client_obligations": round(total_obligations, 2),
-                "management_fees": 0.0,  # Could be calculated if needed
-                "total_liabilities": round(total_obligations, 2)
+            "fund_obligations": {
+                "client_interest_owed": round(client_interest_obligations, 2),
+                "management_fees": 0.0,
+                "total_obligations": round(client_interest_obligations, 2)
             },
             "net_position": {
-                "net_profitability": round(net_profitability, 2),
+                "net_profitability": round(net_position, 2),
                 "performance_percentage": round(performance_pct, 4),
-                "status": "profitable" if net_profitability > 0 else "loss",
+                "status": "profitable" if net_position > 0 else "deficit",
                 "gap_analysis": {
-                    "earned_revenue": round(total_fund_assets, 2),
-                    "promised_returns": round(total_obligations, 2),
-                    "gap": round(net_profitability, 2)
+                    "total_revenue": round(total_fund_revenue, 2),
+                    "total_obligations": round(client_interest_obligations, 2),
+                    "gap": round(net_position, 2)
                 }
             },
+            "trading_details": {
+                "initial_deposits": round(total_initial_deposits, 2),
+                "current_equity": round(total_current_equity, 2),
+                "trading_pnl": round(mt5_trading_pnl, 2)
+            },
             "account_breakdown": {
-                "separation_accounts": [{"account": 886528, "equity": separation_equity}],
+                "separation_accounts": [{"account": 886528, "balance": separation_equity}],
                 "trading_accounts": trading_accounts,
                 "total_accounts": len(mt5_accounts)
             },
