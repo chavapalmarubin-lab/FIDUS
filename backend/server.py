@@ -16454,6 +16454,10 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         trading_accounts = []
         total_trading_equity = 0
         
+        # CRITICAL: Track initial deposits to calculate actual P&L
+        total_initial_deposits = 0
+        total_current_equity = 0
+        
         for acc in mt5_accounts:
             account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
             
@@ -16465,19 +16469,28 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 logging.info(f"   💰 Separation Interest (886528) BALANCE: ${separation_equity:.2f}")
                 logging.info(f"      (Using BALANCE field due to emergency update - equity field is stale)")
             else:
-                # Trading accounts - Use EQUITY (Balance + Floating P/L)
-                equity = float(acc.get("equity", 0))
-                pnl = float(acc.get("profit", 0))
+                # Trading accounts - Calculate actual P&L
+                initial_deposit = float(acc.get("target_amount", 0))  # Initial principal
+                current_equity = float(acc.get("equity", 0))  # Current value
+                actual_pnl = current_equity - initial_deposit  # Real profit/loss
+                
+                total_initial_deposits += initial_deposit
+                total_current_equity += current_equity
+                
                 trading_accounts.append({
                     "account": account_num,
-                    "equity": equity,
-                    "pnl": pnl
+                    "initial_deposit": initial_deposit,
+                    "current_equity": current_equity,
+                    "pnl": actual_pnl
                 })
-                total_trading_equity += equity
-                logging.info(f"   📈 Trading Account {account_num} EQUITY: ${equity:.2f}, P&L: ${pnl:.2f}")
+                logging.info(f"   📈 Account {account_num}: Deposit ${initial_deposit:.2f} → Equity ${current_equity:.2f} = P&L ${actual_pnl:+.2f}")
         
-        # Total fund assets = separation interest + trading equity
-        total_fund_assets = separation_equity + total_trading_equity
+        # Calculate ACTUAL trading P&L (not total equity!)
+        mt5_trading_pnl = total_current_equity - total_initial_deposits
+        logging.info(f"   💵 Total MT5 Trading P&L: ${mt5_trading_pnl:+.2f}")
+        
+        # Total fund REVENUE (not assets!) = trading P&L + separation interest
+        total_fund_revenue = mt5_trading_pnl + separation_equity
         
         # Get client obligations from investments
         investments_cursor = db.investments.find({})
