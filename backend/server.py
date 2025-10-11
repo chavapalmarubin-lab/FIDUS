@@ -1391,9 +1391,9 @@ class IndividualGoogleOAuth:
             return None
     
     async def disconnect_admin_google(self, admin_user_id: str) -> bool:
-        """Disconnect and revoke Google OAuth tokens for admin user"""
+        """PERMANENTLY disconnect and revoke Google OAuth tokens for admin user"""
         try:
-            logging.info(f"🔌 [INDIVIDUAL OAUTH] Disconnecting Google for admin: {admin_user_id}")
+            logging.info(f"🔌 [INDIVIDUAL OAUTH] PERMANENTLY disconnecting Google for admin: {admin_user_id}")
             
             # Get current tokens to revoke them
             session_doc = await db.admin_google_sessions.find_one(
@@ -1420,16 +1420,51 @@ class IndividualGoogleOAuth:
                     except Exception as revoke_error:
                         logging.error(f"❌ [INDIVIDUAL OAUTH] Error revoking tokens: {revoke_error}")
             
-            # Delete tokens from database regardless of revoke success
+            # DELETE ALL Google sessions for this admin - PERMANENT DISCONNECT
             result = await db.admin_google_sessions.delete_many({"admin_user_id": admin_user_id})
             deleted_count = result.deleted_count
             
-            logging.info(f"✅ [INDIVIDUAL OAUTH] Deleted {deleted_count} Google sessions for admin: {admin_user_id}")
+            # SET PERMANENT DISCONNECTED FLAG - prevents auto-restoration
+            await db.admin_users.update_one(
+                {"user_id": admin_user_id},
+                {"$set": {
+                    "google_connected": False,
+                    "google_disconnected_at": datetime.now(timezone.utc).isoformat(),
+                    "google_manual_disconnect": True
+                }},
+                upsert=True
+            )
+            
+            logging.info(f"✅ [INDIVIDUAL OAUTH] PERMANENTLY deleted {deleted_count} Google sessions for admin: {admin_user_id}")
+            logging.info(f"✅ [INDIVIDUAL OAUTH] Set google_connected=False flag to prevent auto-restoration")
             
             return True
             
         except Exception as e:
             logging.error(f"❌ [INDIVIDUAL OAUTH] Error disconnecting Google for admin {admin_user_id}: {str(e)}")
+            return False
+    
+    async def should_auto_connect_google(self, admin_user_id: str) -> bool:
+        """Check if admin should auto-connect to Google (hasn't manually disconnected)"""
+        try:
+            admin_doc = await db.admin_users.find_one({"user_id": admin_user_id})
+            
+            if admin_doc:
+                # If user manually disconnected, do NOT auto-connect
+                if admin_doc.get("google_manual_disconnect", False):
+                    logging.info(f"🚫 [INDIVIDUAL OAUTH] Admin {admin_user_id} manually disconnected - skipping auto-connect")
+                    return False
+                    
+                # If google_connected is explicitly False, do NOT auto-connect
+                if admin_doc.get("google_connected", False) is False:
+                    logging.info(f"🚫 [INDIVIDUAL OAUTH] Admin {admin_user_id} has google_connected=False - skipping auto-connect")
+                    return False
+            
+            # Default: allow auto-connect if tokens exist
+            return True
+            
+        except Exception as e:
+            logging.error(f"❌ [INDIVIDUAL OAUTH] Error checking auto-connect for admin {admin_user_id}: {str(e)}")
             return False
 
     async def store_admin_google_tokens(self, admin_user_id: str, token_data: Dict, admin_email: str) -> bool:
