@@ -20221,72 +20221,7 @@ async def handle_google_oauth_callback(code: str = None, state: str = None, erro
 
 # Duplicate endpoint removed - using the OAuth 2.0 version above
 
-# Gmail API
-@api_router.get("/admin/google/gmail/messages")
-async def get_gmail_messages(
-    max_results: int = 10,
-    query: str = None,
-    current_user: dict = Depends(get_current_admin_user)
-):
-    """Get Gmail messages - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
-    try:
-        logging.info(f"📧 Fetching Gmail messages using service account")
-        messages = await list_gmail_messages(max_results, query)
-        return {
-            'success': True,
-            'messages': messages,
-            'count': len(messages)
-        }
-    except Exception as e:
-        logging.error(f"❌ Failed to fetch Gmail messages: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail: {str(e)}")
-
-# Calendar API
-@api_router.get("/admin/google/calendar/events")
-async def get_calendar_events(
-    max_results: int = 10,
-    current_user: dict = Depends(get_current_admin_user)
-):
-    """Get Calendar events - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
-    try:
-        logging.info(f"📅 Fetching calendar events using service account")
-        events = await list_calendar_events(max_results)
-        return {'success': True, 'events': events, 'count': len(events)}
-    except Exception as e:
-        logging.error(f"❌ Failed to fetch Calendar events: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Calendar: {str(e)}")
-
-# Drive API
-@api_router.get("/admin/google/drive/files")
-async def get_drive_files(
-    folder_id: str,
-    max_results: int = 20,
-    current_user: dict = Depends(get_current_admin_user)
-):
-    """Get Drive files - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
-    try:
-        logging.info(f"📁 Fetching Drive files using service account")
-        files = await list_drive_files(folder_id, max_results)
-        return {'success': True, 'files': files, 'count': len(files)}
-    except Exception as e:
-        logging.error(f"❌ Failed to fetch Drive files: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Drive: {str(e)}")
-
-# Sheets API
-@api_router.get("/admin/google/sheets/spreadsheets")
-async def get_sheets_spreadsheets(
-    folder_id: str,
-    current_user: dict = Depends(get_current_admin_user)
-):
-    """Get Sheets - NOW USES SERVICE ACCOUNT (no OAuth needed!)"""
-    try:
-        logging.info(f"📊 Fetching spreadsheets using service account")
-        sheets = await list_spreadsheets_in_folder(folder_id)
-        return {'success': True, 'spreadsheets': sheets, 'count': len(sheets)}
-    except Exception as e:
-        logging.error(f"❌ Failed to fetch Sheets: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Sheets: {str(e)}")
-
+# Duplicate service account endpoints removed - using individual OAuth system instead
 
 # Legacy endpoint for compatibility with existing frontend
 @api_router.get("/auth/google/url")
