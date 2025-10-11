@@ -22,8 +22,8 @@ class MT5HealthCheckTestSuite:
     """MT5 Health Check and Debug Endpoint Testing Suite for Account 886528"""
     
     def __init__(self):
-        # Use backend URL from environment configuration
-        self.backend_url = "https://fidus-api.onrender.com/api"
+        # Use local backend URL for testing (as specified in review request)
+        self.backend_url = "http://localhost:8001/api"
         
         self.session = None
         self.admin_token = None
