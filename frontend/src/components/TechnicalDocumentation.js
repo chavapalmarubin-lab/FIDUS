@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import ComponentCard from './ComponentCard';
+import ArchitectureDiagram from './ArchitectureDiagram';
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
  * Phase 1: Component Registry and Live Health Monitoring
+ * Phase 2: Interactive Architecture Diagram
  */
 export default function TechnicalDocumentation() {
   const [components, setComponents] = useState({});
   const [healthData, setHealthData] = useState({});
+  const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [overallStatus, setOverallStatus] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [viewMode, setViewMode] = useState('diagram'); // 'grid' or 'diagram'
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
