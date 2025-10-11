@@ -62,7 +62,7 @@ class MT5AutoSyncTestSuite:
                 "user_type": "admin"
             }
             
-            async with self.session.post(f"{self.backend_url}/auth/login", json=login_data) as response:
+            async with self.session.post(f"{self.backend_url}/api/auth/login", json=login_data) as response:
                 if response.status == 200:
                     data = await response.json()
                     self.admin_token = data.get('token')
