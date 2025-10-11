@@ -10329,7 +10329,7 @@ async def test_mt5_connection():
             "tested_at": datetime.now(timezone.utc).isoformat()
         }
 
-@api_router.get("/debug/mt5/raw-account-data/{mt5_login}")
+@api_router.get("/api/debug/mt5/raw-account-data/{mt5_login}")
 async def get_raw_mt5_data(mt5_login: str):
     """Get raw data directly from MT5 API for specific account"""
     try:
