@@ -19961,45 +19961,7 @@ async def handle_google_oauth_callback(code: str = None, state: str = None, erro
         frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
         return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=callback_failed")
 
-@api_router.get("/admin/google/status")
-async def check_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
-    """Check if admin has connected Google account"""
-    try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        status = await google_service.check_connection_status(user_id)
-        
-        return {
-            'success': True,
-            **status
-        }
-        
-    except Exception as e:
-        logging.error(f"❌ Failed to check Google status: {str(e)}")
-        return {
-            'success': False,
-            'connected': False,
-            'error': str(e)
-        }
-
-@api_router.post("/admin/google/disconnect")
-async def disconnect_google_account(current_user: dict = Depends(get_current_admin_user)):
-    """Disconnect Google account"""
-    try:
-        user_id = current_user.get('user_id') or current_user.get('id')
-        
-        google_service = get_google_oauth_service(db)
-        success = await google_service.disconnect(user_id)
-        
-        return {
-            'success': success,
-            'message': 'Google account disconnected' if success else 'Failed to disconnect'
-        }
-        
-    except Exception as e:
-        logging.error(f"❌ Failed to disconnect Google: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Duplicate endpoint removed - using the OAuth 2.0 version above
 
 # Gmail API
 @api_router.get("/admin/google/gmail/messages")
