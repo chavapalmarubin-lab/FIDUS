@@ -292,24 +292,37 @@ const FullGoogleWorkspace = () => {
       const response = await apiAxios.get('/google/gmail/real-messages');
       
       if (response.data.success && response.data.messages && Array.isArray(response.data.messages)) {
-        console.log(`✅ Loaded ${response.data.messages.length} Gmail messages via Google API`);
+        console.log(`✅ Loaded ${response.data.messages.length} Gmail messages via OAuth API`);
         
-        // Transform Gmail API data to our format
+        // Transform OAuth Gmail API data to our format
         const transformedEmails = response.data.messages.map(email => ({
-          id: email.gmail_id || email.id,
+          id: email.id,
           subject: email.subject || 'No Subject',
-          sender: email.sender || email.from || 'Unknown Sender',
-          recipient: email.to || email.recipient || '',
-          date: email.date || email.internal_date || new Date().toISOString(),
-          snippet: email.snippet || email.body?.substring(0, 150) + '...' || 'No preview available',
+          sender: email.sender || 'Unknown Sender',
+          recipient: email.to || '',
+          date: email.date || new Date().toISOString(),
+          snippet: email.snippet || 'No preview available',
           read: !email.labels?.includes('UNREAD'),
           starred: email.labels?.includes('STARRED') || false,
           body: email.body || '<p>Message content not available</p>',
-          real_gmail_api: true
+          oauth_gmail_api: true
         }));
         
         setEmails(transformedEmails);
         console.log(`✅ Successfully loaded ${transformedEmails.length} emails from your Gmail`);
+      } else if (response.data.auth_required) {
+        // Google authentication required
+        console.log('🔐 Google authentication required');
+        setEmails([{
+          id: 'auth-required',
+          subject: '🔐 Google Authentication Required',
+          sender: 'FIDUS System',
+          snippet: 'Please connect your Google account to access Gmail.',
+          date: new Date().toISOString(),
+          read: true,
+          starred: false,
+          body: '<div style="padding: 20px; text-align: center;"><h3>Gmail Integration Ready</h3><p>Please click "Connect Google Workspace" to authenticate.</p></div>'
+        }]);
       } else {
         // No emails in inbox - this is normal, not an error
         console.log('ℹ️ Gmail inbox is empty (0 messages)');
@@ -321,7 +334,7 @@ const FullGoogleWorkspace = () => {
           date: new Date().toISOString(),
           read: true,
           starred: false,
-          body: '<div style="padding: 20px; text-align: center;"><h3>Gmail Integration Ready</h3><p>Complete Google OAuth to see your real emails here.</p></div>'
+          body: '<div style="padding: 20px; text-align: center;"><h3>Gmail Integration Ready</h3><p>Your inbox is currently empty.</p></div>'
         }]);
       }
     } catch (error) {
