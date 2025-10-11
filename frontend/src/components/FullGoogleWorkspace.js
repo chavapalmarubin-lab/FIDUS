@@ -873,7 +873,7 @@ const FullGoogleWorkspace = () => {
                 Connect Google Workspace
               </h3>
               <p className="text-gray-600 mb-6">
-                Connect your Google account to access Gmail, Calendar, and Drive functionality
+                Connect your Google account (chavapalmarubin@gmail.com) to access Gmail, Calendar, and Drive functionality
               </p>
               <Button 
                 onClick={handleConnectToGoogle}
