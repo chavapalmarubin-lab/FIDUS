@@ -408,7 +408,7 @@ class FIDUSCriticalEndpointTestSuite:
         
         try:
             validation_results.append(f"🎯 Testing URL: {endpoint_url}")
-            validation_results.append("📋 Expected: HTTP 200 with debug message")
+            validation_results.append("📋 Expected: HTTP 200 with 'render_deployment': true (not 'no_kubernetes': true)")
             
             async with self.session.get(endpoint_url) as response:
                 status_code = response.status
