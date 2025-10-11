@@ -16496,8 +16496,8 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 }
             },
             "account_breakdown": {
-                "separation_accounts": [{"account": 886528, "balance": separation_balance}],
-                "trading_accounts": trading_balances,
+                "separation_accounts": [{"account": 886528, "equity": separation_equity}],
+                "trading_accounts": trading_accounts,
                 "total_accounts": len(mt5_accounts)
             },
             "calculation_method": "corrected_autonomous_v1",
