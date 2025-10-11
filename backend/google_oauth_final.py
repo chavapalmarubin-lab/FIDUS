@@ -430,27 +430,59 @@ async def list_gmail_messages(admin_user_id: str, db: AsyncIOMotorDatabase, max_
 async def list_calendar_events(admin_user_id: str, db: AsyncIOMotorDatabase, max_results: int = 10) -> List[Dict]:
     """List Calendar events using OAuth"""
     try:
+        logger.info(f"🔍 [CALENDAR DEBUG] Starting Calendar API call for user: {admin_user_id}")
+        
         service_instance = get_google_oauth_service(db)
         calendar_service = await service_instance.get_calendar_service(admin_user_id)
         
-        # Get events from primary calendar
-        now = datetime.utcnow().isoformat() + 'Z'
+        logger.info(f"🔍 [CALENDAR DEBUG] Calendar service initialized successfully")
+        
+        # Get events from primary calendar - expand date range to get more events
+        from datetime import datetime, timezone, timedelta
+        
+        # Look for events in past 30 days and next 90 days 
+        time_min = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        time_max = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
+        
+        logger.info(f"🔍 [CALENDAR DEBUG] Calling Calendar API with timeMin={time_min}, timeMax={time_max}, maxResults={max_results}")
         
         events_result = calendar_service.events().list(
             calendarId='primary',
-            timeMin=now,
+            timeMin=time_min,
+            timeMax=time_max,
             maxResults=max_results,
             singleEvents=True,
             orderBy='startTime'
         ).execute()
         
-        events = events_result.get('items', [])
+        logger.info(f"🔍 [CALENDAR DEBUG] Raw Calendar API response: {events_result}")
         
-        logger.info(f"✅ Retrieved {len(events)} calendar events via OAuth")
+        events = events_result.get('items', [])
+        logger.info(f"🔍 [CALENDAR DEBUG] Found {len(events)} events in response")
+        
+        if not events:
+            # Try to get calendar list to verify access
+            try:
+                calendar_list = calendar_service.calendarList().list().execute()
+                calendars = calendar_list.get('items', [])
+                logger.info(f"🔍 [CALENDAR DEBUG] User has access to {len(calendars)} calendars")
+                for cal in calendars:
+                    logger.info(f"🔍 [CALENDAR DEBUG] Calendar: {cal.get('summary')} (ID: {cal.get('id')})")
+            except Exception as cal_error:
+                logger.error(f"❌ [CALENDAR DEBUG] Failed to get calendar list: {cal_error}")
+        
+        # Log event details
+        for i, event in enumerate(events):
+            logger.info(f"🔍 [CALENDAR DEBUG] Event {i+1}: {event.get('summary', 'No title')} - {event.get('start', {}).get('dateTime', 'No start time')}")
+        
+        logger.info(f"✅ [CALENDAR DEBUG] Successfully retrieved {len(events)} calendar events via OAuth")
         return events
         
     except Exception as e:
-        logger.error(f"❌ Failed to list calendar events: {str(e)}")
+        logger.error(f"❌ [CALENDAR DEBUG] Failed to list calendar events: {str(e)}")
+        logger.error(f"❌ [CALENDAR DEBUG] Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"❌ [CALENDAR DEBUG] Full traceback: {traceback.format_exc()}")
         return []
 
 
