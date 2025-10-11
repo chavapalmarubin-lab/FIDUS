@@ -15148,152 +15148,178 @@ async def emergent_google_logout(current_user: dict = Depends(get_current_admin_
             "error": str(e)
         }
 
-# ==================== REAL GOOGLE OAUTH ENDPOINTS ====================
+# ===============================================================================
+# GOOGLE OAUTH 2.0 ENDPOINTS - PROPER IMPLEMENTATION
+# ===============================================================================
 
-@api_router.get("/auth/google/url")
-async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
-    """Get the REAL Google OAuth URL that redirects to accounts.google.com"""
+@api_router.get("/auth/google/authorize")
+async def start_google_oauth(current_user: dict = Depends(get_current_admin_user)):
+    """Start OAuth flow - Generate Google OAuth authorization URL"""
     try:
         admin_user_id = current_user.get("user_id") or current_user.get("id")
-        auth_url = hybrid_google_service.get_oauth_url(admin_user_id)
+        auth_url = google_oauth.get_oauth_url(admin_user_id)
+        
+        logger.info(f"✅ Generated OAuth URL for admin {current_user.get('username')}")
+        
         return {
             "success": True,
             "auth_url": auth_url,
-            "message": "REAL Google OAuth URL - redirects to accounts.google.com"
+            "message": "Please visit the auth_url to grant permissions"
         }
+        
     except Exception as e:
-        logging.error(f"Failed to generate Google OAuth URL: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ Failed to generate OAuth URL: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
-@api_router.get("/google/test-connection")
-async def test_google_connection():
-    """Test Google API connectivity"""
+@api_router.get("/auth/google/callback")
+async def google_oauth_callback(code: str, state: str):
+    """Handle OAuth callback from Google - Exchange code for tokens"""
     try:
-        result = hybrid_google_service.test_connection()
-        return result
+        # Handle the OAuth callback
+        success = await google_oauth.handle_oauth_callback(code, state)
+        
+        if success:
+            logger.info("✅ OAuth callback processed successfully")
+            return RedirectResponse(url="/admin?google_connected=true")
+        else:
+            logger.error("❌ OAuth callback processing failed")
+            return RedirectResponse(url="/admin?google_error=true")
+            
     except Exception as e:
-        logging.error(f"Google connection test failed: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ OAuth callback error: {str(e)}")
+        return RedirectResponse(url="/admin?google_error=true")
 
-@api_router.post("/google/send-email")
-async def send_google_email(request: dict):
-    """Send email via Gmail API"""
+@api_router.get("/admin/google/status")
+async def check_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
+    """Check if user has valid Google connection"""
     try:
-        required_fields = ['to_email', 'subject', 'body']
-        for field in required_fields:
-            if field not in request:
-                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        status = await google_oauth.get_connection_status(admin_user_id)
         
-        result = real_google_api.send_real_email(
-            to_email=request['to_email'],
-            subject=request['subject'],
-            body=request['body'],
-            from_email=request.get('from_email')
-        )
-        
-        return result
+        return {
+            "success": True,
+            "status": status
+        }
         
     except Exception as e:
-        logging.error(f"Send email failed: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ Failed to check connection status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to check connection status")
 
-@api_router.get("/google/emails")
-async def get_google_emails(max_results: int = 10):
-    """Get emails from Gmail API"""
+@api_router.post("/admin/google/disconnect")
+async def disconnect_google_account(current_user: dict = Depends(get_current_admin_user)):
+    """Revoke Google OAuth tokens and disconnect"""
     try:
-        result = real_google_api.get_real_emails(max_results=max_results)
-        return result
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        success = await google_oauth.disconnect(admin_user_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Google account disconnected successfully"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to disconnect Google account"
+            }
+            
     except Exception as e:
-        logging.error(f"Get emails failed: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ Failed to disconnect Google: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to disconnect Google account")
 
-@api_router.post("/google/upload-file")
-async def upload_google_file(request: dict):
-    """Upload file to Google Drive"""
-    try:
-        required_fields = ['file_name', 'file_content']
-        for field in required_fields:
-            if field not in request:
-                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-        
-        result = real_google_api.upload_file(
-            file_name=request['file_name'],
-            file_content=request['file_content'],
-            mime_type=request.get('mime_type', 'application/pdf')
-        )
-        
-        return result
-        
-    except Exception as e:
-        logging.error(f"Upload file failed: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+# ===============================================================================
+# GOOGLE API SERVICE ENDPOINTS - Using OAuth
+# ===============================================================================
 
-@api_router.get("/google/drive-files")
-async def get_google_drive_files(max_results: int = 10):
-    """Get files from Google Drive"""
+@api_router.get("/api/admin/google/gmail/messages")
+async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admin_user)):
+    """Get Gmail messages using OAuth"""
     try:
-        result = real_google_api.get_real_drive_files(max_results=max_results)
-        return result
-    except Exception as e:
-        logging.error(f"Get drive files failed: {str(e)}")
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        messages = await list_gmail_messages(admin_user_id, db, max_results=10)
+        
         return {
-            "success": False,
-            "error": str(e)
+            "success": True,
+            "messages": messages,
+            "count": len(messages),
+            "source": "oauth_gmail_api"
         }
+        
+    except Exception as e:
+        if "Google authentication required" in str(e):
+            raise HTTPException(status_code=401, detail="Google not connected. Please authorize.")
+        logger.error(f"❌ Gmail API error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/google/create-meeting")
-async def create_google_meeting(request: dict):
-    """Create Google Calendar meeting with Meet link"""
+@api_router.get("/api/admin/google/calendar/events")
+async def get_calendar_events_oauth(current_user: dict = Depends(get_current_admin_user)):
+    """Get Calendar events using OAuth"""
     try:
-        required_fields = ['title', 'description', 'attendee_emails', 'start_time', 'end_time']
-        for field in required_fields:
-            if field not in request:
-                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        events = await list_calendar_events(admin_user_id, db, max_results=10)
         
-        result = real_google_api.create_meeting(
-            title=request['title'],
-            description=request['description'],
-            attendee_emails=request['attendee_emails'],
-            start_time=request['start_time'],
-            end_time=request['end_time']
-        )
-        
-        return result
+        return {
+            "success": True,
+            "events": events,
+            "count": len(events),
+            "source": "oauth_calendar_api"
+        }
         
     except Exception as e:
-        logging.error(f"Create meeting failed: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        if "Google authentication required" in str(e):
+            raise HTTPException(status_code=401, detail="Google not connected. Please authorize.")
+        logger.error(f"❌ Calendar API error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/google/calendar-events")
-async def get_google_calendar_events(max_results: int = 10):
-    """Get calendar events from Google Calendar"""
+@api_router.get("/api/admin/google/drive/files")
+async def get_drive_files_oauth(
+    folder_id: str = None, 
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get Drive files using OAuth"""
     try:
-        result = real_google_api.get_calendar_events(max_results=max_results)
-        return result
-    except Exception as e:
-        logging.error(f"Get calendar events failed: {str(e)}")
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        files = await list_drive_files(admin_user_id, db, folder_id=folder_id, max_results=20)
+        
         return {
-            "success": False,
-            "error": str(e)
+            "success": True,
+            "files": files,
+            "count": len(files),
+            "source": "oauth_drive_api"
         }
+        
+    except Exception as e:
+        if "Google authentication required" in str(e):
+            raise HTTPException(status_code=401, detail="Google not connected. Please authorize.")
+        logger.error(f"❌ Drive API error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/api/admin/google/gmail/send")
+async def send_gmail_message_oauth(
+    request: Request,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Send Gmail message using OAuth"""
+    try:
+        data = await request.json()
+        
+        to = data.get('to')
+        subject = data.get('subject')
+        body = data.get('body')
+        
+        if not all([to, subject, body]):
+            raise HTTPException(status_code=400, detail="Missing required fields: to, subject, body")
+        
+        admin_user_id = current_user.get("user_id") or current_user.get("id")
+        result = await send_gmail_message(admin_user_id, db, to, subject, body)
+        
+        return result
+        
+    except Exception as e:
+        if "Google authentication required" in str(e):
+            raise HTTPException(status_code=401, detail="Google not connected. Please authorize.")
+        logger.error(f"❌ Send Gmail error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
