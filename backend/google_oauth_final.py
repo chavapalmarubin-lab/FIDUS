@@ -179,11 +179,19 @@ class GoogleOAuthService:
             Exception if no tokens found or refresh fails
         """
         try:
+            logger.info(f"🔍 [OAUTH DEBUG] Getting credentials for admin user: {admin_user_id}")
+            
             # Get tokens from database
             token_doc = await self.db.google_tokens.find_one({'admin_user_id': admin_user_id})
             
             if not token_doc:
+                logger.error(f"❌ [OAUTH DEBUG] No OAuth tokens found for user: {admin_user_id}")
                 raise Exception("Google authentication required. Please connect your Google account first.")
+            
+            logger.info(f"🔍 [OAUTH DEBUG] Found OAuth tokens in database for user: {admin_user_id}")
+            logger.info(f"🔍 [OAUTH DEBUG] Stored scopes: {token_doc.get('scopes', [])}")
+            logger.info(f"🔍 [OAUTH DEBUG] Has refresh token: {bool(token_doc.get('refresh_token'))}")
+            logger.info(f"🔍 [OAUTH DEBUG] Token expiry: {token_doc.get('expiry')}")
             
             # Parse expiry time with robust datetime handling
             expiry_str = token_doc.get('expiry')
@@ -198,10 +206,11 @@ class GoogleOAuthService:
                         # Assume it's a naive datetime, make it timezone aware
                         expiry_time = datetime.fromisoformat(expiry_str).replace(tzinfo=timezone.utc)
                 except ValueError as e:
-                    logger.warning(f"⚠️ Invalid expiry format '{expiry_str}', treating as expired: {e}")
+                    logger.warning(f"⚠️ [OAUTH DEBUG] Invalid expiry format '{expiry_str}', treating as expired: {e}")
                     expiry_time = datetime.now(timezone.utc) - timedelta(minutes=1)
             else:
                 # If no expiry, assume expired
+                logger.warning(f"⚠️ [OAUTH DEBUG] No expiry time found, treating as expired")
                 expiry_time = datetime.now(timezone.utc) - timedelta(minutes=1)
             
             # Create credentials object
@@ -215,14 +224,19 @@ class GoogleOAuthService:
                 expiry=expiry_time
             )
             
+            logger.info(f"🔍 [OAUTH DEBUG] Created credentials object with {len(credentials.scopes or [])} scopes")
+            logger.info(f"🔍 [OAUTH DEBUG] Credentials expired: {credentials.expired}")
+            
             # Check if token is expired or will expire soon
             now = datetime.now(timezone.utc)
             if credentials.expired and credentials.refresh_token:
-                logger.info(f"🔄 Token expired for admin {admin_user_id}, refreshing...")
+                logger.info(f"🔄 [OAUTH DEBUG] Token expired for admin {admin_user_id}, refreshing...")
                 
                 # Refresh the token
                 from google.auth.transport.requests import Request
                 credentials.refresh(Request())
+                
+                logger.info(f"✅ [OAUTH DEBUG] Token refresh successful - new token: {credentials.token[:20]}...")
                 
                 # Update database with new access token
                 new_expiry = credentials.expiry.isoformat() if credentials.expiry else None
@@ -235,12 +249,16 @@ class GoogleOAuthService:
                     }}
                 )
                 
-                logger.info(f"✅ Token refreshed successfully for admin {admin_user_id}")
+                logger.info(f"✅ [OAUTH DEBUG] Token refreshed successfully for admin {admin_user_id}")
+            else:
+                logger.info(f"✅ [OAUTH DEBUG] Using existing valid token for admin {admin_user_id}")
             
             return credentials
             
         except Exception as e:
-            logger.error(f"❌ Failed to get valid credentials for admin {admin_user_id}: {str(e)}")
+            logger.error(f"❌ [OAUTH DEBUG] Failed to get valid credentials for admin {admin_user_id}: {str(e)}")
+            import traceback
+            logger.error(f"❌ [OAUTH DEBUG] Full traceback: {traceback.format_exc()}")
             raise
     
     async def get_connection_status(self, admin_user_id: str) -> Dict[str, Any]:
