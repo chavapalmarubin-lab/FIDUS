@@ -94,7 +94,7 @@ class GoogleOAuth2TestSuite:
             return False
     
     async def test_oauth_url_generation(self) -> Dict[str, Any]:
-        """Phase 1: Test GET /auth/google/authorize (requires admin JWT auth)"""
+        """Phase 1: Test GET /auth/google/url (requires admin JWT auth)"""
         test_name = "OAuth URL Generation"
         logger.info(f"🧪 Testing {test_name}")
         
@@ -102,7 +102,7 @@ class GoogleOAuth2TestSuite:
         
         try:
             # Test OAuth URL generation endpoint
-            url = f"{self.backend_url}/auth/google/authorize"
+            url = f"{self.backend_url}/auth/google/url"
             async with self.session.get(url) as response:
                 status_code = response.status
                 
