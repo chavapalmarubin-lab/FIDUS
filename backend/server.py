@@ -20932,6 +20932,14 @@ async def startup_event():
     # Individual Google OAuth - no automatic startup needed
     logging.info("💡 Individual Google OAuth system ready")
     
+    # Initialize MT5 Auto-Sync Service
+    try:
+        from mt5_auto_sync_service import start_mt5_sync_service
+        await start_mt5_sync_service()
+        logging.info("🔄 MT5 Auto-Sync Service initialized and background sync started")
+    except Exception as e:
+        logging.error(f"❌ MT5 Auto-Sync Service initialization failed: {e}")
+    
     logging.info("✅ FIDUS Server startup completed successfully")
 
 @app.on_event("shutdown")
