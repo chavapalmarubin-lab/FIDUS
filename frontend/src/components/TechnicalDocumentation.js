@@ -333,7 +333,10 @@ export default function TechnicalDocumentation() {
         </div>
 
         {/* Conditional View Rendering */}
-        {viewMode === 'health' ? (
+        {viewMode === 'actions' ? (
+          /* Quick Actions Panel View */
+          <QuickActionsPanel />
+        ) : viewMode === 'health' ? (
           /* System Health Dashboard View */
           <SystemHealthDashboard />
         ) : viewMode === 'api' ? (
