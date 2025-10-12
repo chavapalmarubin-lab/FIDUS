@@ -14651,34 +14651,44 @@ async def get_total_mt5_profits() -> float:
 
 async def get_separation_account_interest() -> float:
     """
-    Get total interest from separation accounts
-    SPECIAL HANDLING: After emergency manual update, use BALANCE field for account 886528
+    Get ONLY the broker interest from separation accounts (NOT the full balance)
+    PHASE 3 FIX: Separation balance = profit withdrawals + broker interest
+    We only want to return the broker interest part!
     """
     try:
-        # Get separation accounts
-        separation_cursor = db.mt5_accounts.find({
-            'fund_type': {'$in': ['INTEREST_SEPARATION', 'GAINS_SEPARATION', 'SEPARATION']}
-        })
-        separation_accounts = await separation_cursor.to_list(length=None)
+        # Get total profit withdrawals from all trading accounts
+        mt5_cursor = db.mt5_accounts.find({})
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        total_interest = 0.0
+        total_profit_withdrawals = 0.0
+        separation_balance = 0.0
         
-        for account in separation_accounts:
-            account_num = account.get('account')
-            # SPECIAL CASE: Account 886528 had emergency manual update to BALANCE field
-            # Use BALANCE for this account until MT5 bridge sync updates equity field
-            if account_num == 886528 or str(account_num) == "886528":
-                value = account.get('balance', account.get('equity', 0))
-                logging.info(f"📊 Using BALANCE for account {account_num}: ${float(value):.2f}")
+        # Calculate total profit withdrawals
+        for account in all_mt5_accounts:
+            if account.get('fund_type') not in ['INTEREST_SEPARATION', 'GAINS_SEPARATION', 'SEPARATION']:
+                # Trading account
+                profit_withdrawals = float(account.get('profit_withdrawals', 0))
+                total_profit_withdrawals += profit_withdrawals
             else:
-                value = account.get('equity', 0)
-            total_interest += float(value) if value else 0.0
+                # Separation account
+                account_num = account.get('account')
+                if account_num == 886528 or str(account_num) == "886528":
+                    value = account.get('balance', account.get('equity', 0))
+                else:
+                    value = account.get('equity', 0)
+                separation_balance += float(value) if value else 0.0
         
-        logging.info(f"📊 Separation account interest calculated: ${total_interest:.2f}")
-        return total_interest
+        # CRITICAL FIX: Broker interest = Separation Balance - Profit Withdrawals
+        broker_interest = separation_balance - total_profit_withdrawals
+        
+        logging.info(f"📊 Separation Account Breakdown:")
+        logging.info(f"   Separation Balance: ${separation_balance:.2f}")
+        logging.info(f"   Profit Withdrawals: ${total_profit_withdrawals:.2f}")
+        logging.info(f"   Broker Interest ONLY: ${broker_interest:.2f}")
+        return broker_interest
         
     except Exception as e:
-        logging.error(f"Error calculating separation account interest: {str(e)}")
+        logging.error(f"Error calculating broker interest: {str(e)}")
         return 0.0
 
 def add_days(date_obj, days):
