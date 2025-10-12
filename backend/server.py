@@ -14615,41 +14615,38 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
 
 async def get_total_mt5_profits() -> float:
     """
-    Get total MT5 TRADING P&L from trading accounts (excluding separation accounts)
-    CRITICAL: Returns actual P&L = Current Equity - Initial Principal
-    NOT just equity! That would be counting principal as profit.
+    Get total MT5 TRADING TRUE P&L from trading accounts (excluding separation accounts)
+    PHASE 3 FIX: Now uses TRUE P&L which includes profit withdrawals!
     """
     try:
         # Get all MT5 accounts directly from MongoDB using the working collection
         mt5_cursor = db.mt5_accounts.find({})
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        total_pnl = 0.0
-        total_initial = 0.0
+        total_true_pnl = 0.0
+        total_withdrawals = 0.0
         total_equity = 0.0
         
         for account in all_mt5_accounts:
             # Exclude separation accounts from MT5 trading P&L
             if account.get('fund_type') not in ['INTEREST_SEPARATION', 'GAINS_SEPARATION', 'SEPARATION']:
-                # Get initial principal (target_amount) and current equity
-                initial_deposit = float(account.get('target_amount', 0))
+                # PHASE 3 FIX: Use TRUE P&L instead of calculating from equity
+                true_pnl = float(account.get('true_pnl', 0))
+                profit_withdrawals = float(account.get('profit_withdrawals', 0))
                 current_equity = float(account.get('equity', 0))
                 
-                # CRITICAL: Calculate actual P&L = Current - Initial
-                account_pnl = current_equity - initial_deposit
-                
-                total_initial += initial_deposit
+                total_true_pnl += true_pnl
+                total_withdrawals += profit_withdrawals
                 total_equity += current_equity
-                total_pnl += account_pnl
         
-        logging.info(f"📊 MT5 Trading Performance:")
-        logging.info(f"   Initial Principal: ${total_initial:,.2f}")
+        logging.info(f"📊 MT5 Trading Performance (CORRECTED):")
         logging.info(f"   Current Equity: ${total_equity:,.2f}")
-        logging.info(f"   Trading P&L: ${total_pnl:+,.2f}")
-        return total_pnl
+        logging.info(f"   Profit Withdrawals: ${total_withdrawals:,.2f}")
+        logging.info(f"   TRUE P&L: ${total_true_pnl:+,.2f}")
+        return total_true_pnl
         
     except Exception as e:
-        logging.error(f"Error calculating MT5 trading P&L: {str(e)}")
+        logging.error(f"Error calculating MT5 trading TRUE P&L: {str(e)}")
         return 0.0  # Return 0 if calculation fails
 
 async def get_separation_account_interest() -> float:
