@@ -55,6 +55,9 @@ const CashFlowManagement = () => {
       setLoading(true);
       setError("");
       
+      // PHASE 3 FIX: Fetch corrected MT5 data with TRUE P&L
+      const mt5CorrectedResponse = await apiAxios.get(`/mt5/fund-performance/corrected`);
+      
       // Fetch fund accounting cash flow data
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
@@ -68,20 +71,37 @@ const CashFlowManagement = () => {
       if (cashFlowResponse.data.success) {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
+        
+        // PHASE 3 FIX: Use corrected MT5 data if available
+        let mt5TradingProfits = summary.mt5_trading_profits || 0;
+        let separationInterest = summary.separation_interest || 0;
+        
+        if (mt5CorrectedResponse.data.success) {
+          mt5TradingProfits = mt5CorrectedResponse.data.fund_assets.mt5_trading_pnl || 0;
+          separationInterest = mt5CorrectedResponse.data.fund_assets.separation_interest || 0;
+          console.log("✅ Using CORRECTED MT5 data:", {
+            mt5_trading_pnl: mt5TradingProfits,
+            separation_interest: separationInterest,
+            verification: mt5CorrectedResponse.data.verification
+          });
+        }
+        
         const fundAccountingData = {
           assets: {
-            mt5_trading_profits: summary.mt5_trading_profits || 0,
-            separation_interest: summary.separation_interest || 0,  // New separation account line item
+            mt5_trading_profits: mt5TradingProfits,  // TRUE P&L with profit withdrawals
+            separation_interest: separationInterest,  // Separation account balance
             broker_rebates: summary.broker_rebates || 0,
-            total_inflows: summary.fund_revenue || 0
+            total_inflows: mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)
           },
           liabilities: {
             client_obligations: summary.client_interest_obligations || 0,
             fund_obligations: summary.fund_obligations || 0,
             total_outflows: summary.fund_obligations || 0
           },
-          net_profit: summary.net_profit || 0,
-          net_fund_profitability: summary.net_profit || 0  // Map to expected field name
+          net_profit: (mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
+          net_fund_profitability: (mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
+          // Store corrected MT5 data for display
+          mt5_corrected_data: mt5CorrectedResponse.data
         };
         
         setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
