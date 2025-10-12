@@ -68,6 +68,35 @@ const FundPortfolioManagement = () => {
     const interval = setInterval(fetchFundPortfolioData, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
+  // Load detailed performance for a specific fund
+  const loadFundPerformance = async (fundCode) => {
+    try {
+      const response = await apiAxios.get(`/funds/${fundCode}/performance`);
+      if (response.data.success) {
+        setFundPerformanceDetails(prev => ({
+          ...prev,
+          [fundCode]: response.data
+        }));
+      }
+    } catch (err) {
+      console.error(`Error loading performance for ${fundCode}:`, err);
+    }
+  };
+  
+  // Toggle fund expansion
+  const toggleFundExpansion = async (fundCode) => {
+    const isExpanded = expandedFunds[fundCode];
+    
+    setExpandedFunds(prev => ({
+      ...prev,
+      [fundCode]: !isExpanded
+    }));
+    
+    // Load performance details if expanding and not already loaded
+    if (!isExpanded && !fundPerformanceDetails[fundCode]) {
+      await loadFundPerformance(fundCode);
+    }
+  };
 
   const fetchFundPortfolioData = async () => {
     try {
