@@ -19,7 +19,7 @@ const QuickActionsPanel = () => {
     try {
       const response = await fetch(`${backendUrl}/api/actions/recent?limit=10`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`
         }
       });
 
