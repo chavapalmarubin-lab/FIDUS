@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * ApplicationNode - Custom node for application components (Frontend, Backend)
  * Blue gradient with tech stack and response time
  */
-export default function ApplicationNode({ data }) {
+function ApplicationNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
