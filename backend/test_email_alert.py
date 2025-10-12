@@ -8,9 +8,16 @@ import asyncio
 import sys
 import os
 from datetime import datetime, timezone
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Add backend directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+backend_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(backend_dir))
+
+# Load environment variables from .env file
+env_path = backend_dir / '.env'
+load_dotenv(env_path)
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from alert_service import AlertService
