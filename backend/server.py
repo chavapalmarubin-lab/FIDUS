@@ -3162,10 +3162,12 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
             'success': True,
             'fund_assets': {
                 'mt5_trading_pnl': round(mt5_trading_pnl, 2),
-                'separation_interest': round(separation_interest, 2),
+                'broker_interest': round(broker_interest, 2),  # CORRECTED: Only interest, not full balance
+                'separation_interest': round(separation_balance, 2),  # Keep for reference/display
                 'broker_rebates': round(broker_rebates, 2),
                 'total': round(total_fund_assets, 2)
             },
+            'summary': mt5_data['totals'],  # Include full summary for calculations
             'account_breakdown': mt5_data['accounts'],
             'verification': mt5_data['verification'],
             'data_source': 'vps_mt5_bridge_corrected',
