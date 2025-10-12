@@ -21466,16 +21466,21 @@ async def shutdown_services():
 # GOOGLE OAUTH SERVICE - CLEAN IMPLEMENTATION
 # ===============================================================================
 
-from google_oauth_service import get_google_oauth_service
-
 @api_router.get("/admin/google/oauth-url")
 async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_user)):
     """Generate Google OAuth URL for admin authentication"""
     try:
-        user_id = current_user.get('user_id') or current_user.get('id')
+        # Use consistent admin_user_id extraction
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            "admin"  # fallback
+        )
         
-        google_service = get_google_oauth_service(db)
-        oauth_url = google_service.generate_oauth_url(user_id)
+        # Use google_oauth from google_oauth_final.py
+        oauth_url = google_oauth.get_oauth_url(admin_user_id)
         
         return {
             'success': True,
@@ -21488,7 +21493,7 @@ async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_us
 
 @api_router.get("/admin/google-callback")
 async def handle_google_oauth_callback(code: str = None, state: str = None, error: str = None):
-    """Handle Google OAuth callback (GET redirect from Google)"""
+    """Handle Google OAuth callback (GET redirect from Google) - Uses google_oauth_final.py"""
     try:
         frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
         
@@ -21500,17 +21505,15 @@ async def handle_google_oauth_callback(code: str = None, state: str = None, erro
             logging.error("❌ Missing code or state in OAuth callback")
             return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=missing_params")
         
-        # Extract user_id from state
-        user_id = state.split(':')[0] if ':' in state else state
+        # Use google_oauth.handle_oauth_callback from google_oauth_final.py
+        success = await google_oauth.handle_oauth_callback(code, state)
         
-        # Exchange code for tokens
-        google_service = get_google_oauth_service(db)
-        await google_service.exchange_code_for_tokens(code, user_id)
-        
-        logging.info(f"✅ OAuth callback successful for user {user_id}")
-        
-        # Redirect back to admin with success
-        return RedirectResponse(url=f"{frontend_url}/admin?google_auth=success")
+        if success:
+            logging.info(f"✅ OAuth callback successful")
+            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=success")
+        else:
+            logging.error("❌ OAuth callback processing failed")
+            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=callback_failed")
         
     except Exception as e:
         logging.error(f"❌ OAuth callback failed: {str(e)}")
