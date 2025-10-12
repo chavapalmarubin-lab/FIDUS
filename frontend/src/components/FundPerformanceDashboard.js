@@ -49,16 +49,16 @@ const FundPerformanceDashboard = () => {
                 if (correctedResponse.data.success) {
                     const corrected = correctedResponse.data;
                     
-                    // Update MT5 metrics with corrected TRUE P&L
-                    dashboardData.total_mt5_pnl = corrected.fund_assets.mt5_trading_pnl;
-                    dashboardData.separation_interest = corrected.fund_assets.separation_interest;
-                    dashboardData.total_fund_revenue = corrected.fund_assets.total_fund_assets;
+                    // Update MT5 metrics with corrected TRUE P&L (with null safety)
+                    dashboardData.total_mt5_pnl = corrected?.fund_assets?.mt5_trading_pnl || 0;
+                    dashboardData.separation_interest = corrected?.fund_assets?.separation_interest || 0;
+                    dashboardData.total_fund_revenue = corrected?.fund_assets?.total_fund_assets || 0;
                     
                     console.log('✅ Using CORRECTED fund performance data:', {
-                        mt5_trading_pnl: corrected.fund_assets.mt5_trading_pnl,
-                        separation_interest: corrected.fund_assets.separation_interest,
-                        total_profit_withdrawals: corrected.summary.total_profit_withdrawals,
-                        verified: corrected.verification.verified
+                        mt5_trading_pnl: corrected?.fund_assets?.mt5_trading_pnl || 0,
+                        separation_interest: corrected?.fund_assets?.separation_interest || 0,
+                        total_profit_withdrawals: corrected?.summary?.total_profit_withdrawals || 0,
+                        verified: corrected?.verification?.verified || false
                     });
                 }
                 
