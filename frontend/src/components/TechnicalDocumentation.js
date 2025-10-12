@@ -3,6 +3,7 @@ import ComponentCard from './ComponentCard';
 import ArchitectureDiagram from './ArchitectureDiagram';
 import CredentialsVault from './CredentialsVault';
 import ApiDocumentation from './ApiDocumentation';
+import SystemHealthDashboard from './SystemHealthDashboard';
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
