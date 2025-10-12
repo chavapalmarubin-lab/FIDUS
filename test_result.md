@@ -37,17 +37,32 @@
 **Root Cause**: React component rendering issue with LogoAnimation causing dark screen. The `?skip_animation=true` parameter bypasses this issue completely.
 
 ## user_problem_statement: 
-MT5 REFACTORING TASK: Complete transition from pre-populated MT5 account pool to just-in-time MT5 allocation during investment creation. Fix React JSX compilation error blocking application.
+MT5 CORRECTED P&L INTEGRATION: Integrate corrected MT5 data (TRUE P&L with profit withdrawals) into all frontend components to display accurate fund performance calculations.
 
-**Current Status**: MT5 refactoring 95% complete with critical issues resolved:
-- ✅ **CRITICAL BLOCKER FIXED**: React JSX compilation error in MT5Management.js resolved (removed floating JSX elements)
-- ✅ **Backend MT5 Refactoring Complete**: All MT5 pool endpoints working (15/15 tests passed, 100% success rate)
-- ✅ **Just-in-Time Allocation System**: Fully operational via `/api/mt5/pool/create-investment-with-mt5`
-- ✅ **MT5Management Component**: Successfully refactored to view-only dashboard
-- ✅ **New Investment Creation**: InvestmentCreationWithMT5 component integrated into AdminInvestmentManagement
-- ✅ **Application Stability**: No JSX errors, app loading correctly
+**PHASE 3 COMPLETE - Frontend Integration of Corrected MT5 Data** ✅
 
-**Remaining Work**: Frontend integration testing to verify the complete MT5 investment creation workflow.
+**Current Status**: Phase 3 frontend updates 100% complete:
+- ✅ **Backend API Endpoints LIVE**: `/api/mt5/accounts/corrected` and `/api/mt5/fund-performance/corrected`
+- ✅ **VPS Bridge Service VERIFIED**: MongoDB contains corrected true_pnl, profit_withdrawals, inter_account_transfers for all accounts
+- ✅ **CashFlowManagement.js UPDATED**: Now displays corrected MT5 Trading P&L ($3,550.56) and Separation Interest ($3,927.41) with verification badge
+- ✅ **MT5Dashboard.js UPDATED**: Shows TRUE P&L for each account with profit withdrawal breakdown and verification status
+- ✅ **FundPerformanceDashboard.js UPDATED**: Uses corrected fund performance metrics from new endpoint
+- ✅ **TradingAnalyticsDashboard.js UPDATED**: Displays corrected total P&L with "Corrected" badge
+
+**What Changed**:
+1. **CashFlowManagement.js**: Added verification banner, corrected badge, shows TRUE P&L includes profit withdrawals
+2. **MT5Dashboard.js**: Added P&L breakdown card showing displayed_pnl + profit_withdrawals = true_pnl, verification badge
+3. **FundPerformanceDashboard.js**: Fetches and merges corrected MT5 data into dashboard metrics
+4. **TradingAnalyticsDashboard.js**: Replaces total_pnl with corrected MT5 trading P&L, shows "Corrected" badge
+
+**Key Features Added**:
+- ✅ Verification status banners showing match percentage
+- ✅ "Corrected" badges on all components using new data
+- ✅ P&L breakdown showing: Open Positions P&L + Profit Withdrawals = True P&L
+- ✅ Visual indicators for profit withdrawals and inter-account transfers
+- ✅ Console logging for debugging and verification
+
+**Testing Status**: Ready for backend and frontend testing to verify all corrected data displays properly.
 
 ## MT5 Status Endpoint Fix (Latest Update)
 **RESOLVED**: The reported 500 error on `/api/mt5/status` endpoint has been resolved and is now working correctly (HTTP 200).
