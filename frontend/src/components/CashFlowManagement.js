@@ -103,6 +103,15 @@ const CashFlowManagement = () => {
           });
         }
         
+        console.log("🔍 Fund Accounting Data before setState:", {
+          mt5TruePnl,
+          brokerInterest,
+          brokerRebates: summary.broker_rebates || 0,
+          totalInflows: mt5TruePnl + brokerInterest + (summary.broker_rebates || 0),
+          separationBalance,
+          profitWithdrawals
+        });
+
         const fundAccountingData = {
           assets: {
             mt5_trading_profits: mt5TruePnl,  // TRUE P&L (already includes profit withdrawals)
