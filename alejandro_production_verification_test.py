@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://fidus-techdocs.preview.emergentagent.com/api"
+BACKEND_URL = "https://fintech-dashboard-33.preview.emergentagent.com/api"
 
 class AlejandroProductionVerifier:
     def __init__(self):
