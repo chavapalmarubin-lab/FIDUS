@@ -112,5 +112,8 @@ function InfrastructureNode({ data }) {
     </div>
   );
 
+  );
+}
+
 // Memoize component for performance
 export default React.memo(InfrastructureNode);

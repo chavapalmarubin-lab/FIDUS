@@ -113,5 +113,8 @@ function ServiceNode({ data }) {
     </div>
   );
 
+  );
+}
+
 // Memoize component for performance
 export default React.memo(ServiceNode);
