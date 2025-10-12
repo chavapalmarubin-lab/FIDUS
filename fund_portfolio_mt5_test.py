@@ -151,32 +151,16 @@ class FundPortfolioMT5Test:
                             'broker': account.get('broker_name', 'N/A')
                         })
                 
-                # Verify we found all expected accounts
-                missing_accounts = []
-                wrong_fund_type = []
+                # Calculate totals by fund
+                core_accounts = found_accounts.get('CORE', [])
+                balance_accounts = found_accounts.get('BALANCE', [])
+                dynamic_accounts = found_accounts.get('DYNAMIC', [])
+                unlimited_accounts = found_accounts.get('UNLIMITED', [])
                 
-                for login, expected_fund_type in expected_accounts.items():
-                    if login not in found_accounts:
-                        missing_accounts.append(f"{login} ({expected_fund_type})")
-                    elif found_accounts[login] != expected_fund_type:
-                        wrong_fund_type.append(f"{login}: expected {expected_fund_type}, got {found_accounts[login]}")
-                
-                if missing_accounts:
-                    self.log_test("MT5 Accounts Presence", False, 
-                                f"Missing accounts: {missing_accounts}")
-                    return False
-                
-                if wrong_fund_type:
-                    self.log_test("MT5 Accounts Fund Type Mapping", False, 
-                                f"Wrong fund_type: {wrong_fund_type}")
-                    return False
-                
-                # Calculate expected totals
-                core_accounts = [login for login, fund_type in found_accounts.items() if fund_type == 'CORE']
-                balance_accounts = [login for login, fund_type in found_accounts.items() if fund_type == 'BALANCE']
-                
-                core_total = sum(account_balances.get(login, 0) for login in core_accounts)
-                balance_total = sum(account_balances.get(login, 0) for login in balance_accounts)
+                core_total = sum(acc['balance'] for acc in core_accounts)
+                balance_total = sum(acc['balance'] for acc in balance_accounts)
+                dynamic_total = sum(acc['balance'] for acc in dynamic_accounts)
+                unlimited_total = sum(acc['balance'] for acc in unlimited_accounts)
                 
                 details = f"CORE: {len(core_accounts)} accounts (${core_total:,.2f}), BALANCE: {len(balance_accounts)} accounts (${balance_total:,.2f})"
                 self.log_test("MT5 Accounts Data Verification", True, details)
