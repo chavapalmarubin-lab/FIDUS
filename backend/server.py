@@ -3039,6 +3039,134 @@ async def mark_all_notifications_read(current_user: dict = Depends(get_current_a
 # CRITICAL FIX: ENHANCED MT5 SYNC WITH TRANSFER CLASSIFICATION
 # =====================================================================
 
+@api_router.get("/mt5/accounts/corrected")
+async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_user)):
+    """
+    Get all MT5 accounts with TRUE P&L (including profit withdrawals)
+    
+    This endpoint reads from the mt5_accounts collection which is updated
+    every 15 minutes by the VPS MT5 Bridge service with corrected data.
+    
+    Returns:
+    - All 5 accounts with true_pnl, profit_withdrawals, deal_history
+    - Total fund metrics
+    - Verification that profit withdrawals = separation balance
+    """
+    try:
+        # Get all MT5 accounts
+        accounts = await db.mt5_accounts.find({
+            'account': {'$in': [886557, 886066, 886602, 885822, 886528]}
+        }).to_list(length=10)
+        
+        # Separate trading accounts from separation account
+        trading_accounts = [a for a in accounts if a.get('account') != 886528]
+        separation_account = next((a for a in accounts if a.get('account') == 886528), None)
+        
+        # Calculate totals
+        total_true_pnl = sum(a.get('true_pnl', 0) for a in trading_accounts)
+        total_profit_withdrawals = sum(a.get('profit_withdrawals', 0) for a in trading_accounts)
+        total_inter_account = sum(a.get('inter_account_transfers', 0) for a in trading_accounts)
+        total_equity = sum(a.get('equity', 0) for a in trading_accounts)
+        
+        separation_balance = separation_account.get('balance', 0) if separation_account else 0
+        
+        # Verification check
+        difference = abs(total_profit_withdrawals - separation_balance)
+        verification_match = difference < 100  # Allow $100 difference for broker interest
+        
+        # Format account data for response
+        formatted_accounts = []
+        for acc in trading_accounts:
+            formatted_accounts.append({
+                'account_number': acc.get('account'),
+                'account_name': f"Account {acc.get('account')}",
+                'balance': round(acc.get('balance', 0), 2),
+                'equity': round(acc.get('equity', 0), 2),
+                'displayed_pnl': round(acc.get('displayed_pnl', 0), 2),
+                'profit_withdrawals': round(acc.get('profit_withdrawals', 0), 2),
+                'inter_account_transfers': round(acc.get('inter_account_transfers', 0), 2),
+                'true_pnl': round(acc.get('true_pnl', 0), 2),
+                'needs_review': acc.get('needs_review', False),
+                'last_updated': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else acc.get('updated_at')
+            })
+        
+        return {
+            'success': True,
+            'accounts': formatted_accounts,
+            'separation_account': {
+                'account_number': 886528,
+                'balance': round(separation_balance, 2),
+                'name': 'Separation Account'
+            },
+            'totals': {
+                'total_equity': round(total_equity, 2),
+                'total_true_pnl': round(total_true_pnl, 2),
+                'total_profit_withdrawals': round(total_profit_withdrawals, 2),
+                'total_inter_account_transfers': round(total_inter_account, 2),
+                'separation_balance': round(separation_balance, 2)
+            },
+            'verification': {
+                'total_profit_withdrawals': round(total_profit_withdrawals, 2),
+                'separation_balance': round(separation_balance, 2),
+                'difference': round(difference, 2),
+                'match': verification_match,
+                'status': '✅ VERIFIED' if verification_match else '⚠️ MISMATCH'
+            },
+            'data_source': 'vps_mt5_bridge_corrected',
+            'last_sync': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting corrected MT5 accounts: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/mt5/fund-performance/corrected")
+async def get_corrected_fund_performance(current_user: dict = Depends(get_current_user)):
+    """
+    Get corrected fund performance using TRUE P&L calculations
+    
+    This replaces the old fund performance calculation with accurate data
+    that includes profit withdrawals from the MT5 Bridge service.
+    
+    Returns:
+    - Fund assets (MT5 true P&L + separation interest)
+    - Account breakdown with profit withdrawals
+    - Verification metrics
+    """
+    try:
+        # Get corrected MT5 data
+        mt5_data = await get_corrected_mt5_accounts(current_user)
+        
+        if not mt5_data['success']:
+            raise HTTPException(status_code=500, detail="Failed to get MT5 data")
+        
+        # Calculate fund assets
+        mt5_trading_pnl = mt5_data['totals']['total_true_pnl']
+        separation_interest = mt5_data['totals']['separation_balance']
+        broker_rebates = 0  # Placeholder for future
+        
+        total_fund_assets = mt5_trading_pnl + separation_interest + broker_rebates
+        
+        return {
+            'success': True,
+            'fund_assets': {
+                'mt5_trading_pnl': round(mt5_trading_pnl, 2),
+                'separation_interest': round(separation_interest, 2),
+                'broker_rebates': round(broker_rebates, 2),
+                'total': round(total_fund_assets, 2)
+            },
+            'account_breakdown': mt5_data['accounts'],
+            'verification': mt5_data['verification'],
+            'data_source': 'vps_mt5_bridge_corrected',
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting corrected fund performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/mt5/sync-enhanced")
 async def sync_mt5_enhanced(current_user: dict = Depends(get_current_admin_user)):
     """
