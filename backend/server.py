@@ -17510,6 +17510,7 @@ async def send_gmail_message_oauth(
 async def get_fund_portfolio_overview():
     """Get fund portfolio overview for the dashboard - With WEIGHTED PERFORMANCE"""
     try:
+        logging.info("🔍 DEBUG: fund-portfolio/overview endpoint called - NEW VERSION WITH MT5 COUNTS")
         # Import the fund performance calculator
         from fund_performance_calculator import get_all_funds_performance, calculate_fund_weighted_performance
         
