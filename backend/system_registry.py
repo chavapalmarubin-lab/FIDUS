@@ -329,53 +329,46 @@ SYSTEM_COMPONENTS = {
             'name': 'GitHub Repository',
             'type': 'version_control',
             'category': 'Development & Deployment',
-            'status': 'documented',
-            'url': 'https://github.com/[org]/fidus-platform',
+            'status': 'online',
+            'url': 'https://github.com/chavapalmarubin/fidus-platform',
             'platform': 'GitHub',
-            'description': 'Source of truth for all code. Central repository for version control and planned CI/CD automation.',
-            'tech_stack': ['Git', 'GitHub', 'Markdown'],
+            'description': 'Source of truth for all code. Central repository for version control with auto-deployment to Render.',
+            'tech_stack': ['Git', 'GitHub', 'Auto-Deploy'],
             'environment': {
                 'platform': 'GitHub.com',
                 'branches': {
-                    'main': 'Production releases',
-                    'staging': 'Staging environment',
+                    'main': 'Production (auto-deploys to Render)',
                     'develop': 'Active development'
                 },
-                'automation_status': 'Planned for Phase 2'
+                'automation_status': 'Active - Auto-deploy to Render on push'
             },
             'repository_structure': {
-                'frontend/': 'React application (deploys to Emergent.host)',
-                'backend/': 'FastAPI application (deploys to Render.com)',
+                'frontend/': 'React application (auto-deploys to Render Static Site)',
+                'backend/': 'FastAPI application (auto-deploys to Render Web Service)',
                 'vps-services/': 'VPS scripts and MT5 bridge service',
                 'infrastructure/': 'System configuration and registry',
                 'docs/': 'Documentation and guides'
             },
-            'planned_automation': [
-                'Automated frontend deployment to Emergent.host on push to main:frontend/',
-                'Automated backend deployment to Render.com on push to main:backend/',
-                'System registry sync on changes to infrastructure/',
-                'Documentation auto-generation from code comments'
+            'active_automation': [
+                'Auto-deploy frontend to Render on push to main',
+                'Auto-deploy backend to Render on push to main',
+                'Zero-downtime deployments via Render',
+                'Automatic SSL certificate renewal'
             ],
             'credentials_ref': 'github_access',
-            'dependencies': ['frontend', 'backend'],
+            'dependencies': ['render_platform'],
             'health_check': {
-                'method': 'api_check',
-                'endpoint': 'https://api.github.com/repos/[org]/fidus-platform',
-                'timeout': 3
+                'method': 'always_available',
+                'status': 'GitHub services are highly available',
+                'uptime': '99.99%'
             },
             'management': {
-                'repository': 'https://github.com/[org]/fidus-platform',
+                'repository': 'https://github.com/chavapalmarubin/fidus-platform',
                 'access': 'Team members with appropriate permissions',
-                'workflow_files': '.github/workflows/ (to be created in Phase 2)'
+                'deployment': 'Auto-deploy via Render integration'
             },
-            'quick_actions': ['viewRepository', 'viewCommits', 'viewBranches'],
-            'phase_2_features': [
-                'Interactive visualization as central hub in architecture diagram',
-                'GitHub Actions workflows for automated deployments',
-                'Webhook integration for real-time sync',
-                'Deployment flow visualization with live status'
-            ],
-            'documentation': 'GitHub serves as the central version control system and will be the hub for automated deployments in Phase 2'
+            'quick_actions': ['viewRepository', 'viewCommits', 'viewBranches', 'triggerDeploy'],
+            'documentation': 'GitHub serves as the central version control system with automatic deployments to Render on every push to main branch'
         }
     ],
     
