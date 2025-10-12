@@ -217,8 +217,8 @@ const MT5Dashboard = () => {
                   {accountsData.summary.verification.verified ? 'P&L Calculations Verified' : 'Verification Pending'}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Total Profit Withdrawals: {formatCurrency(accountsData.summary.verification.total_profit_withdrawals)} | 
-                  Separation Balance: {formatCurrency(accountsData.summary.verification.separation_account_balance)}
+                  Total Profit Withdrawals: {formatCurrency(accountsData?.summary?.verification?.total_profit_withdrawals || 0)} | 
+                  Separation Balance: {formatCurrency(accountsData?.summary?.verification?.separation_account_balance || 0)}
                 </p>
               </div>
             </div>
