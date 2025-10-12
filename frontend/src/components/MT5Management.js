@@ -58,13 +58,16 @@ const MT5Management = () => {
 
     const fetchMT5Data = async () => {
         try {
-            const response = await apiAxios.get('/mt5/admin/accounts');
+            // PHASE 3 FIX: Use CORRECTED endpoint with TRUE P&L
+            const response = await apiAxios.get('/mt5/accounts/corrected');
             
             if (response.data && response.data.success) {
                 const data = response.data;
+                console.log('✅ MT5Management: Using CORRECTED data', data);
+                
                 // Group accounts by broker for display
                 const accountsByBroker = {};
-                let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0 };
+                let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0, total_profit_loss: 0 };
                 
                 // Access the accounts array from the API response
                 const accounts = data.accounts || [];
@@ -78,24 +81,49 @@ const MT5Management = () => {
                                 stats: {
                                     account_count: 0,
                                     total_allocated: 0,
-                                    total_equity: 0
+                                    total_equity: 0,
+                                    total_true_pnl: 0
                                 }
                             };
                         }
-                        accountsByBroker[broker].accounts.push(account);
+                        
+                        // ✅ Map corrected fields to component fields
+                        const transformedAccount = {
+                            ...account,
+                            account_id: account.account || account.account_id,
+                            mt5_login: account.account,
+                            total_allocated: account.balance || 0,
+                            current_equity: account.equity || 0,
+                            profit_loss: account.true_pnl || 0,  // ✅ USE TRUE P&L!
+                            profit_loss_percentage: account.balance > 0 ? ((account.true_pnl / account.balance) * 100) : 0,
+                            // Keep corrected data for details view
+                            displayed_pnl: account.displayed_pnl || 0,
+                            profit_withdrawals: account.profit_withdrawals || 0,
+                            inter_account_transfers: account.inter_account_transfers || 0,
+                            deal_history: account.deal_history || null,
+                            needs_review: account.needs_review || false
+                        };
+                        
+                        accountsByBroker[broker].accounts.push(transformedAccount);
                         accountsByBroker[broker].stats.account_count += 1;
-                        accountsByBroker[broker].stats.total_allocated += account.total_allocated || 0;
-                        accountsByBroker[broker].stats.total_equity += account.current_equity || 0;
+                        accountsByBroker[broker].stats.total_allocated += transformedAccount.total_allocated;
+                        accountsByBroker[broker].stats.total_equity += transformedAccount.current_equity;
+                        accountsByBroker[broker].stats.total_true_pnl += transformedAccount.profit_loss;
                     });
                 }
                 
-                // Use summary data from API instead of calculating manually
+                // Use summary data from API with CORRECTED TRUE P&L
                 const summary = data.summary || {};
                 const apiTotalStats = {
                     total_accounts: summary.total_accounts || 0,
-                    total_balance: summary.total_allocated || 0,  // Use allocated amount
-                    total_equity: summary.total_equity || 0
+                    total_balance: summary.total_balance || 0,
+                    total_equity: summary.total_equity || 0,
+                    total_profit_loss: summary.total_true_pnl || 0,  // ✅ USE TRUE P&L!
+                    total_profit_withdrawals: summary.total_profit_withdrawals || 0,
+                    verification: data.verification || null
                 };
+                
+                console.log('✅ Total TRUE P&L:', apiTotalStats.total_profit_loss);
                 
                 setAccountsByBroker(accountsByBroker);
                 setTotalStats(apiTotalStats);
