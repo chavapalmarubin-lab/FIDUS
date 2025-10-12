@@ -567,14 +567,56 @@ const CashFlowManagement = () => {
         </div>
       )}
 
+      {/* ✅ Verification Status Banner */}
+      {fundAccounting?.mt5_corrected_data?.verification && (
+        <div className={`rounded-lg p-4 border ${
+          fundAccounting.mt5_corrected_data.verification.verified 
+            ? 'bg-green-900/20 border-green-600' 
+            : 'bg-yellow-900/20 border-yellow-600'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{fundAccounting.mt5_corrected_data.verification.verified ? '✅' : '⚠️'}</span>
+              <div>
+                <p className={`font-semibold ${
+                  fundAccounting.mt5_corrected_data.verification.verified ? 'text-green-400' : 'text-yellow-400'
+                }`}>
+                  {fundAccounting.mt5_corrected_data.verification.verified 
+                    ? 'Cash Flow Data Verified - Using Corrected MT5 P&L' 
+                    : 'Verification Pending'
+                  }
+                </p>
+                <p className="text-sm text-slate-300">
+                  MT5 Trading P&L: {formatCurrency(fundAccounting.mt5_corrected_data.fund_assets.mt5_trading_pnl)} | 
+                  Separation Interest: {formatCurrency(fundAccounting.mt5_corrected_data.fund_assets.separation_interest)} | 
+                  Total Profit Withdrawals: {formatCurrency(fundAccounting.mt5_corrected_data.summary.total_profit_withdrawals)}
+                </p>
+              </div>
+            </div>
+            {fundAccounting.mt5_corrected_data.verification.verified && (
+              <Badge className="bg-green-600 text-white">
+                Match: {fundAccounting.mt5_corrected_data.verification.match_percentage}%
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* FUND ACCOUNTING OVERVIEW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* FUND ASSETS (What Fund Owns) */}
         <Card className="dashboard-card">
           <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <ArrowUpCircle className="mr-2 h-5 w-5 text-green-400" />
-              Fund Assets (Income Sources)
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center">
+                <ArrowUpCircle className="mr-2 h-5 w-5 text-green-400" />
+                Fund Assets (Income Sources)
+              </div>
+              {fundAccounting?.mt5_corrected_data && (
+                <Badge className="bg-green-600 text-white text-xs">
+                  ✓ Corrected
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
