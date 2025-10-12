@@ -1,24 +1,37 @@
 #!/usr/bin/env python3
 """
-FIDUS Platform MT5 Auto-Sync Endpoint Testing - Render Production URLs
-Testing MT5 Auto-Sync endpoints to resolve $521.88 discrepancy in account 886528
-PRIORITY 1: Force sync account 886528 from $3,405.53 to $3,927.41
+Backend Testing for Fund Portfolio Management - Weighted Performance Endpoint Fix
+Testing the newly fixed weighted performance endpoint after bug fix in fund_performance_calculator.py
+Changed query from 'fund_code' to 'fund_type' to match MT5 accounts database structure.
+
+Test Objectives:
+1. Test /api/funds/CORE/performance - Should return weighted performance for CORE fund
+2. Test /api/funds/BALANCE/performance - Should return weighted performance for BALANCE fund  
+3. Test /api/funds/DYNAMIC/performance - Should return empty (no accounts yet)
+4. Test /api/funds/performance/all - Should return all funds performance
+5. Test /api/fund-portfolio/overview - Should now show NON-ZERO weighted returns
+
+Expected MT5 Accounts:
+- Account 885822: CORE fund, balance=$18,151.41, true_pnl=$-112.94
+- Account 886557: BALANCE fund, balance=$80,000, true_pnl=$2,829.69
+- Account 886066: BALANCE fund, balance=$9,901.59, true_pnl=$656.07
+- Account 886602: BALANCE fund, balance=$10,740.53, true_pnl=$177.74
+- Account 886528: SEPARATION, balance=$3,927.41, true_pnl=$0
 """
 
-import asyncio
-import aiohttp
+import requests
 import json
-import logging
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any
-import os
 import sys
+from datetime import datetime
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# Backend URL from environment
+BACKEND_URL = "https://truepnl-tracker.preview.emergentagent.com"
 
-class FIDUSCriticalEndpointTestSuite:
+# Admin credentials
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
+
+class FundPerformanceTest:
     """FIDUS Platform MT5 Auto-Sync Endpoint Testing Suite - Render Production URLs"""
     
     def __init__(self):
