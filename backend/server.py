@@ -2558,6 +2558,105 @@ async def get_system_connections():
         logger.error(f"Error fetching system connections: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch connections: {str(e)}")
 
+
+# ============================================================================
+# API DOCUMENTATION ENDPOINTS (Phase 4)
+# ============================================================================
+
+@api_router.get("/system/api-docs")
+async def get_api_documentation():
+    """
+    Get complete API documentation registry
+    Returns all API categories, endpoints, authentication requirements, and examples
+    Phase 4: API Documentation & Testing Interface
+    """
+    try:
+        registry = get_api_registry()
+        
+        return {
+            "success": True,
+            "documentation": registry,
+            "total_categories": len(registry["categories"]),
+            "total_endpoints": sum(len(cat["endpoints"]) for cat in registry["categories"]),
+            "version": "1.0.0",
+            "base_url": os.environ.get('REACT_APP_BACKEND_URL', 'https://fidus-invest.emergent.host/api'),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching API documentation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch API documentation: {str(e)}")
+
+@api_router.get("/system/api-docs/categories/{category_id}")
+async def get_api_category(category_id: str):
+    """
+    Get specific API category with all its endpoints
+    """
+    try:
+        category = get_category(category_id)
+        
+        if not category:
+            raise HTTPException(status_code=404, detail=f"Category '{category_id}' not found")
+        
+        return {
+            "success": True,
+            "category": category,
+            "endpoints_count": len(category["endpoints"]),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching API category {category_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch category: {str(e)}")
+
+@api_router.get("/system/api-docs/endpoints/{endpoint_id}")
+async def get_api_endpoint(endpoint_id: str):
+    """
+    Get specific endpoint details with request/response examples
+    """
+    try:
+        endpoint = get_endpoint(endpoint_id)
+        
+        if not endpoint:
+            raise HTTPException(status_code=404, detail=f"Endpoint '{endpoint_id}' not found")
+        
+        return {
+            "success": True,
+            "endpoint": endpoint,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching endpoint {endpoint_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch endpoint: {str(e)}")
+
+@api_router.get("/system/api-docs/search")
+async def search_api_endpoints(query: str):
+    """
+    Search API endpoints by keyword
+    Searches in: path, summary, description, tags
+    """
+    try:
+        if not query or len(query) < 2:
+            raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
+        
+        results = search_endpoints(query)
+        
+        return {
+            "success": True,
+            "query": query,
+            "total_results": len(results),
+            "results": results,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching endpoints with query '{query}': {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to search endpoints: {str(e)}")
+
+
 # =====================================================================
 # END SYSTEM REGISTRY ENDPOINTS
 # =====================================================================
