@@ -1530,6 +1530,7 @@ test_plan:
   current_focus:
     - "Cash Flow Obligations Calendar Verification - COMPLETED"
     - "Trading Analytics System Phase 1A Testing - COMPLETED"
+    - "Quick Actions API Endpoints Testing (Phase 6) - COMPLETED"
   stuck_tasks:
     - "MT5 Components Final Verification (All Tabs)"
   test_all: false
