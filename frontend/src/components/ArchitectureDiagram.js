@@ -146,7 +146,7 @@ export default function ArchitectureDiagram({ components, healthData, connection
     });
 
     setNodes(initialNodes);
-  }, [components, healthData]);
+  }, [components, healthData, viewMode]); // Re-render when view mode changes
 
   // Initialize edges from connections data
   useEffect(() => {
