@@ -3036,6 +3036,73 @@ async def mark_all_notifications_read(current_user: dict = Depends(get_current_a
 
 
 # =====================================================================
+# CRITICAL FIX: ENHANCED MT5 SYNC WITH TRANSFER CLASSIFICATION
+# =====================================================================
+
+@api_router.post("/mt5/sync-enhanced")
+async def sync_mt5_enhanced(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Enhanced MT5 sync with transfer classification
+    CRITICAL FIX: Tracks profit withdrawals vs inter-account transfers
+    """
+    try:
+        from mt5_enhanced_sync import EnhancedMT5Sync
+        
+        sync_service = EnhancedMT5Sync()
+        results = await sync_service.sync_all_accounts()
+        
+        success_count = sum(1 for r in results.values() if r is not None)
+        
+        return {
+            "success": True,
+            "message": f"Enhanced sync completed: {success_count}/5 accounts synced",
+            "results": results
+        }
+    except Exception as e:
+        logger.error(f"Error in enhanced MT5 sync: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/fund-performance/unified")
+async def get_unified_fund_performance(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get unified fund performance (SINGLE SOURCE OF TRUTH)
+    Includes true P&L with profit withdrawals
+    """
+    try:
+        from mt5_enhanced_sync import EnhancedMT5Sync
+        
+        sync_service = EnhancedMT5Sync()
+        performance = await sync_service.get_unified_fund_performance()
+        
+        return performance
+    except Exception as e:
+        logger.error(f"Error getting unified fund performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/fund-performance/verify")
+async def verify_fund_data(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Verify data consistency between profit withdrawals and separation account
+    """
+    try:
+        from mt5_enhanced_sync import EnhancedMT5Sync
+        
+        sync_service = EnhancedMT5Sync()
+        performance = await sync_service.get_unified_fund_performance()
+        
+        return {
+            "status": "verified" if performance['verification']['match'] else "mismatch",
+            "verification": performance['verification'],
+            "last_check": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error verifying fund data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================================
 # PHASE 6: QUICK ACTIONS & ADMIN TOOLS ENDPOINTS
 # =====================================================================
 
