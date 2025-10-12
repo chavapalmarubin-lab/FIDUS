@@ -413,54 +413,172 @@ const FundPortfolioManagement = () => {
                       {formatCurrency(fund.total_rebates || 0)}
                     </span>
                   </div>
-
-                {/* Real-time Data Entry */}
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-sm text-slate-300 mb-3 flex items-center">
-                    <Activity className="w-4 h-4 mr-2" />
-                    Real-time Data Entry
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Current NAV"
-                        value={realTimeData[fundCode].current_nav}
-                        onChange={(e) => setRealTimeData(prev => ({
-                          ...prev,
-                          [fundCode]: { ...prev[fundCode], current_nav: e.target.value }
-                        }))}
-                        className="bg-slate-700 border-slate-600 text-white text-sm"
-                      />
+                  
+                  {/* MT5 Accounts Info */}
+                  {fund.mt5_accounts_count > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-600">
+                      <button
+                        onClick={() => toggleFundExpansion(fund.fund_code)}
+                        className="flex items-center text-sm text-blue-400 hover:text-blue-300"
+                      >
+                        {expandedFunds[fund.fund_code] ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Hide Account Breakdown
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            Show Account Breakdown ({fund.mt5_accounts_count} accounts)
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <div>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Today's %"
-                        value={realTimeData[fundCode].performance_today}
-                        onChange={(e) => setRealTimeData(prev => ({
-                          ...prev,
-                          [fundCode]: { ...prev[fundCode], performance_today: e.target.value }
-                        }))}
-                        className="bg-slate-700 border-slate-600 text-white text-sm"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => updateRealTimeData(fundCode)}
-                    className="w-full mt-3 bg-cyan-600 hover:bg-cyan-700 text-sm"
-                    disabled={!realTimeData[fundCode].current_nav || !realTimeData[fundCode].performance_today}
-                  >
-                    Update Real-time Data
-                  </Button>
+                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                
+                {/* Expandable Account Breakdown */}
+                {expandedFunds[fund.fund_code] && fundPerformanceDetails[fund.fund_code] && (
+                  <div className="mt-4 p-4 bg-slate-800/50 rounded-lg border border-slate-600">
+                    <h4 className="text-white font-semibold mb-3 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
+                      Account Performance Breakdown
+                    </h4>
+                    
+                    {fundPerformanceDetails[fund.fund_code].accounts?.length > 0 ? (
+                      <div className="space-y-3">
+                        {fundPerformanceDetails[fund.fund_code].accounts.map((account, idx) => (
+                          <div key={account.account_id} className="p-3 bg-slate-700/50 rounded border border-slate-600">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-white font-medium">Account {account.account_id}</span>
+                                  <Badge className={`text-xs ${
+                                    account.status === 'excellent' ? 'bg-green-600' :
+                                    account.status === 'positive' ? 'bg-blue-600' :
+                                    account.status === 'underperforming' ? 'bg-yellow-600' :
+                                    'bg-red-600'
+                                  } text-white`}>
+                                    {account.status === 'excellent' ? '🟢 Excellent' :
+                                     account.status === 'positive' ? '🟢 Positive' :
+                                     account.status === 'underperforming' ? '🟡 Underperforming' :
+                                     '🔴 Poor'}
+                                  </Badge>
+                                </div>
+                                <div className="text-sm text-slate-400 mt-1">{account.manager_name}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className={`text-lg font-bold ${account.return_pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {account.return_pct >= 0 ? '+' : ''}{account.return_pct.toFixed(2)}%
+                                </div>
+                                <div className="text-xs text-slate-400">Return</div>
+                              </div>
+                            </div>
+                            
+                            {/* Weight Bar */}
+                            <div className="mb-3">
+                              <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                                <span>Weight in Fund</span>
+                                <span className="font-medium">{account.weight.toFixed(1)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-600 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full ${account.contribution >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                                  style={{ width: `${account.weight}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                            
+                            {/* Account Metrics Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              <div>
+                                <div className="text-slate-400 text-xs">Allocation</div>
+                                <div className="text-white font-medium">{formatCurrency(account.initial_deposit)}</div>
+                              </div>
+                              <div>
+                                <div className="text-slate-400 text-xs">Current Equity</div>
+                                <div className="text-cyan-400 font-medium">{formatCurrency(account.current_equity)}</div>
+                              </div>
+                              <div>
+                                <div className="text-slate-400 text-xs">TRUE P&L</div>
+                                <div className={`font-bold ${account.true_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {account.true_pnl >= 0 ? '+' : ''}{formatCurrency(account.true_pnl)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-slate-400 text-xs">Contribution to Fund</div>
+                                <div className={`font-bold ${account.contribution >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {account.contribution >= 0 ? '+' : ''}{account.contribution.toFixed(2)}%
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Withdrawals info */}
+                            {account.profit_withdrawals > 0 && (
+                              <div className="mt-2 text-xs text-blue-400 bg-blue-900/20 p-2 rounded">
+                                ✓ Includes ${account.profit_withdrawals.toLocaleString()} in profit withdrawals
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        
+                        {/* Performance Attribution Summary */}
+                        {fundPerformanceDetails[fund.fund_code].best_performer && (
+                          <div className="mt-4 p-3 bg-slate-700/30 rounded border border-slate-600">
+                            <h5 className="text-white font-medium mb-2">Performance Attribution</h5>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                              <div className="flex items-center space-x-2">
+                                <TrendingUp className="h-4 w-4 text-green-400" />
+                                <div>
+                                  <div className="text-slate-400 text-xs">Best Performer</div>
+                                  <div className="text-white">
+                                    Account {fundPerformanceDetails[fund.fund_code].best_performer.account_id}
+                                    <span className="text-green-400 ml-1">
+                                      (+{fundPerformanceDetails[fund.fund_code].best_performer.return_pct.toFixed(2)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <TrendingDown className="h-4 w-4 text-red-400" />
+                                <div>
+                                  <div className="text-slate-400 text-xs">Worst Performer</div>
+                                  <div className="text-white">
+                                    Account {fundPerformanceDetails[fund.fund_code].worst_performer.account_id}
+                                    <span className="text-red-400 ml-1">
+                                      ({fundPerformanceDetails[fund.fund_code].worst_performer.return_pct.toFixed(2)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Activity className="h-4 w-4 text-blue-400" />
+                                <div>
+                                  <div className="text-slate-400 text-xs">Largest Contributor</div>
+                                  <div className="text-white">
+                                    Account {fundPerformanceDetails[fund.fund_code].largest_contributor.account_id}
+                                    <span className="text-blue-400 ml-1">
+                                      ({fundPerformanceDetails[fund.fund_code].largest_contributor.contribution >= 0 ? '+' : ''}
+                                      {fundPerformanceDetails[fund.fund_code].largest_contributor.contribution.toFixed(2)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center text-slate-400 py-4">
+                        No account data available
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
       {/* Performance Chart */}
       <Card className="dashboard-card">
