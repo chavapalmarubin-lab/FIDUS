@@ -388,6 +388,8 @@ class MoneyManagersService:
         """Return empty performance metrics"""
         return {
             "total_allocated": 0,
+            "current_equity": 0,  # NEW
+            "total_withdrawals": 0,  # NEW
             "total_pnl": 0,
             "total_trades": 0,
             "winning_trades": 0,
