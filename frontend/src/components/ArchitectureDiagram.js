@@ -100,16 +100,24 @@ export default function ArchitectureDiagram({ components, healthData, connection
     // Get positions based on view mode
     const currentPositions = viewMode === 'simple' ? positions.simple : positions.detailed;
 
+    // Core components for simple view
+    const coreComponents = ['frontend', 'backend', 'mongodb', 'mt5_bridge', 'github'];
+    
     // Flatten all components from categories
     Object.entries(components).forEach(([category, categoryComponents]) => {
       categoryComponents.forEach((component) => {
+        // In simple view, only show core components
+        if (viewMode === 'simple' && !coreComponents.includes(component.id)) {
+          return; // Skip non-core components
+        }
+        
         const health = healthData?.[component.id] || {};
-        const position = positions[component.id] || { 
+        const position = currentPositions[component.id] || { 
           x: Math.random() * 800 + 100, 
           y: yOffset 
         };
         
-        yOffset += 150;
+        yOffset += 200; // Increased from 150 for better spacing
 
         // Determine node type based on category
         let nodeType = 'default';
