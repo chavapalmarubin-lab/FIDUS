@@ -276,6 +276,19 @@ export default function TechnicalDocumentation() {
               Credentials Vault
             </button>
             <button
+              onClick={() => setViewMode('health')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                viewMode === 'health'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              System Health
+            </button>
+            <button
               onClick={() => setViewMode('api')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
                 viewMode === 'api'
