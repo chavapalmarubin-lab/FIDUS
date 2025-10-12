@@ -587,15 +587,15 @@ const CashFlowManagement = () => {
                   }
                 </p>
                 <p className="text-sm text-slate-300">
-                  MT5 Trading P&L: {formatCurrency(fundAccounting.mt5_corrected_data.fund_assets.mt5_trading_pnl)} | 
-                  Separation Interest: {formatCurrency(fundAccounting.mt5_corrected_data.fund_assets.separation_interest)} | 
-                  Total Profit Withdrawals: {formatCurrency(fundAccounting.mt5_corrected_data.summary.total_profit_withdrawals)}
+                  MT5 Trading P&L: {formatCurrency(fundAccounting?.mt5_corrected_data?.fund_assets?.mt5_trading_pnl || 0)} | 
+                  Separation Interest: {formatCurrency(fundAccounting?.mt5_corrected_data?.fund_assets?.separation_interest || 0)} | 
+                  Total Profit Withdrawals: {formatCurrency(fundAccounting?.mt5_corrected_data?.summary?.total_profit_withdrawals || 0)}
                 </p>
               </div>
             </div>
-            {fundAccounting.mt5_corrected_data.verification.verified && (
+            {fundAccounting?.mt5_corrected_data?.verification?.verified && (
               <Badge className="bg-green-600 text-white">
-                Match: {fundAccounting.mt5_corrected_data.verification.match_percentage}%
+                Match: {fundAccounting?.mt5_corrected_data?.verification?.match_percentage || 0}%
               </Badge>
             )}
           </div>
