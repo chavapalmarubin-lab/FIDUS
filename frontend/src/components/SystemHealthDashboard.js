@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HealthMetricCard from './HealthMetricCard';
+import LoadingSpinner from './LoadingSpinner';
 import { RefreshCw, Activity, AlertCircle, CheckCircle, Clock, Pause, Play } from 'lucide-react';
+import { BUTTONS, GRIDS, SPACING } from '../constants/uiConstants';
 
 const SystemHealthDashboard = () => {
   const [healthData, setHealthData] = useState(null);
