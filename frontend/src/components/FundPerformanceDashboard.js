@@ -36,43 +36,38 @@ const FundPerformanceDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            setError('');
+            setLoading(true);
             
-            const token = JSON.parse(localStorage.getItem('fidus_user')).token;
-            const headers = {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-
-            // Fetch fund performance dashboard
-            const dashboardResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/fund-performance/dashboard`, {
-                headers
-            });
-
-            // Fetch performance gaps
-            const gapsResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/fund-performance/gaps`, {
-                headers
-            });
-
-            // Fetch fund commitments
-            const commitmentsResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/fund-commitments`, {
-                headers
-            });
-
-            if (dashboardResponse.ok && gapsResponse.ok && commitmentsResponse.ok) {
-                const dashboardData = await dashboardResponse.json();
-                const gapsData = await gapsResponse.json();
-                const commitmentsData = await commitmentsResponse.json();
-
-                setDashboardData(dashboardData.dashboard);
-                setPerformanceGaps(gapsData.performance_gaps || []);
-                setFundCommitments(commitmentsData.fund_commitments || {});
-            } else {
-                setError('Failed to load fund performance data');
+            // PHASE 3 FIX: Fetch corrected MT5 fund performance
+            const correctedResponse = await apiAxios.get('/mt5/fund-performance/corrected');
+            const dashboardResponse = await apiAxios.get('/admin/fund-performance/dashboard');
+            
+            if (dashboardResponse.data.success) {
+                const dashboardData = dashboardResponse.data.dashboard;
+                
+                // ✅ Merge corrected MT5 data into dashboard
+                if (correctedResponse.data.success) {
+                    const corrected = correctedResponse.data;
+                    
+                    // Update MT5 metrics with corrected TRUE P&L
+                    dashboardData.total_mt5_pnl = corrected.fund_assets.mt5_trading_pnl;
+                    dashboardData.separation_interest = corrected.fund_assets.separation_interest;
+                    dashboardData.total_fund_revenue = corrected.fund_assets.total_fund_assets;
+                    
+                    console.log('✅ Using CORRECTED fund performance data:', {
+                        mt5_trading_pnl: corrected.fund_assets.mt5_trading_pnl,
+                        separation_interest: corrected.fund_assets.separation_interest,
+                        total_profit_withdrawals: corrected.summary.total_profit_withdrawals,
+                        verified: corrected.verification.verified
+                    });
+                }
+                
+                setDashboardData(dashboardData);
+                setPerformanceGaps(dashboardData.performance_gaps);
+                setFundCommitments(dashboardData.fund_commitments);
             }
         } catch (err) {
-            setError('Error connecting to fund performance API');
-            console.error('Fund performance fetch error:', err);
+            console.error('❌ Fund performance dashboard error:', err);
         } finally {
             setLoading(false);
         }
