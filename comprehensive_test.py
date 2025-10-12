@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://fintech-dashboard-33.preview.emergentagent.com/api'
+BACKEND_URL = 'https://apiview.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

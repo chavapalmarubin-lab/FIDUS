@@ -8,7 +8,7 @@ import json
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://fintech-dashboard-33.preview.emergentagent.com"
+BACKEND_URL = "https://apiview.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def login_as_alejandro():
