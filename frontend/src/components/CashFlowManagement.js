@@ -93,8 +93,13 @@ const CashFlowManagement = () => {
             mt5_true_pnl: mt5TruePnl,
             profit_withdrawals: profitWithdrawals,
             separation_balance: separationBalance,
+            broker_interest_calculation: `${separationBalance} - ${profitWithdrawals} = ${brokerInterest}`,
             broker_interest_only: brokerInterest,
-            correct_total: mt5TruePnl + brokerInterest
+            correct_total: mt5TruePnl + brokerInterest,
+            verification: {
+              should_be_3755: mt5TruePnl + brokerInterest,
+              not_7478: mt5TruePnl + separationBalance
+            }
           });
         }
         
