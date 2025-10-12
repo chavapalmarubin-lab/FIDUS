@@ -381,72 +381,59 @@ SYSTEM_COMPONENTS = {
     
     'infrastructure': [
         {
-            'id': 'load_balancer',
-            'name': 'Load Balancer',
+            'id': 'render_platform',
+            'name': 'Render Hosting Platform',
             'type': 'infrastructure',
             'category': 'Infrastructure',
             'status': 'online',
-            'url': 'Managed by Emergent.host',
-            'platform': 'Emergent.host',
-            'description': 'Automatic load balancing and traffic distribution',
-            'tech_stack': ['Nginx', 'Kubernetes Ingress'],
+            'url': 'https://dashboard.render.com',
+            'platform': 'Render.com',
+            'description': 'Cloud hosting platform with built-in SSL, CDN, load balancing, and auto-deploy',
+            'tech_stack': ['Docker', 'Git Auto-Deploy', 'Built-in SSL/TLS', 'Global CDN', 'Load Balancing'],
             'environment': {
-                'platform': 'Emergent.host Kubernetes',
-                'type': 'Managed Service',
-                'auto_scaling': True
+                'platform': 'Render.com',
+                'type': 'Managed Cloud Platform',
+                'regions': 'US East (Backend), Global CDN (Frontend)'
+            },
+            'services': {
+                'backend_api': {
+                    'name': 'FIDUS Backend API',
+                    'url': 'https://fidus-api.onrender.com',
+                    'type': 'Web Service',
+                    'auto_deploy': True
+                },
+                'frontend_app': {
+                    'name': 'FIDUS Frontend',
+                    'url': 'https://fidus-investment-platform.onrender.com',
+                    'type': 'Static Site',
+                    'auto_deploy': True,
+                    'cdn_enabled': True
+                }
             },
             'features': {
-                'ssl_termination': True,
+                'auto_deploy_from_github': True,
+                'zero_downtime_deploys': True,
+                'built_in_ssl': True,
+                'built_in_cdn': True,
+                'built_in_load_balancing': True,
                 'health_checks': True,
-                'auto_scaling': True,
-                'ddos_protection': True
+                'ddos_protection': True,
+                'automatic_ssl_renewal': True
             },
-            'credentials_ref': None,
-            'dependencies': ['frontend'],
+            'credentials_ref': 'render_api_token',
+            'dependencies': [],
             'health_check': {
-                'method': 'implicit',
-                'monitored_by': 'Emergent.host'
+                'method': 'platform_monitoring',
+                'monitored_by': 'Render Platform'
             },
             'management': {
-                'dashboard': 'https://app.emergent.host',
-                'configuration': 'Managed automatically by Emergent.host'
+                'dashboard': 'https://dashboard.render.com',
+                'logs': 'Real-time logs in Render dashboard',
+                'deploy': 'Auto-deploy on git push',
+                'configuration': 'render.yaml or dashboard'
             },
-            'quick_actions': ['viewMetrics', 'viewTraffic'],
-            'documentation': 'Load balancer distributes traffic and provides automatic scaling for the frontend application'
-        },
-        {
-            'id': 'cdn',
-            'name': 'Content Delivery Network',
-            'type': 'infrastructure',
-            'category': 'Infrastructure',
-            'status': 'online',
-            'url': 'Global Edge Network',
-            'platform': 'Emergent.host / Cloudflare',
-            'description': 'Global CDN for static assets and edge caching',
-            'tech_stack': ['Edge Servers', 'HTTP/2', 'Caching'],
-            'environment': {
-                'platform': 'Global Edge Network',
-                'regions': 'Worldwide',
-                'cache_strategy': 'Intelligent caching'
-            },
-            'features': {
-                'global_distribution': True,
-                'auto_cache': True,
-                'image_optimization': True,
-                'http2': True
-            },
-            'credentials_ref': None,
-            'dependencies': ['frontend'],
-            'health_check': {
-                'method': 'implicit',
-                'monitored_by': 'Platform'
-            },
-            'management': {
-                'dashboard': 'https://app.emergent.host',
-                'cache_control': 'Automatic'
-            },
-            'quick_actions': ['viewCacheStats', 'purgeCache'],
-            'documentation': 'CDN serves static assets globally with automatic caching and optimization'
+            'quick_actions': ['viewDashboard', 'viewLogs', 'viewMetrics', 'triggerDeploy'],
+            'documentation': 'Render platform hosts both frontend and backend with built-in SSL, CDN, load balancing, and auto-deploy from GitHub. No separate load balancer or CDN configuration needed.'
         }
     ]
 }
