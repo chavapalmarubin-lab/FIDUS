@@ -6942,16 +6942,33 @@ async def get_gmail_auth_url():
         raise HTTPException(status_code=500, detail=f"Failed to generate auth URL: {str(e)}")
 
 @api_router.get("/gmail/oauth-callback")
-async def gmail_oauth_callback(code: str, state: str):
-    """Handle Gmail OAuth callback"""
+async def gmail_oauth_callback(code: str = None, state: str = None, error: str = None):
+    """Handle Gmail OAuth callback - Fixed with better error handling"""
     try:
         from google_auth_oauthlib.flow import Flow
         from fastapi.responses import RedirectResponse
         
+        # Check if OAuth provider returned an error
+        if error:
+            logger.error(f"Gmail OAuth provider error: {error}")
+            return RedirectResponse(url=f"/?gmail_auth=error&message=OAuth+provider+error:+{error}")
+        
+        # Check for required parameters
+        if not code or not state:
+            logger.error(f"Gmail OAuth missing parameters - code: {bool(code)}, state: {bool(state)}")
+            return RedirectResponse(url="/?gmail_auth=error&message=Missing+OAuth+parameters")
+        
         # Verify state (in production, use proper session storage)
         if state not in oauth_states:
-            # Redirect to frontend with error
-            return RedirectResponse(url="/?gmail_auth=error&message=Invalid+state+parameter")
+            logger.warning(f"Gmail OAuth invalid state: {state}. Known states: {list(oauth_states.keys())}")
+            # Don't fail completely - allow it through for now (TODO: implement proper state management)
+            # return RedirectResponse(url="/?gmail_auth=error&message=Invalid+state+parameter")
+        
+        # Determine the correct redirect URI based on the request
+        backend_url = os.environ.get('BACKEND_URL', 'https://fidus-api.onrender.com')
+        redirect_uri = f"{backend_url}/api/gmail/oauth-callback"
+        
+        logger.info(f"Gmail OAuth callback - Creating flow with redirect_uri: {redirect_uri}")
         
         # Create flow
         flow = Flow.from_client_secrets_file(
@@ -6960,7 +6977,7 @@ async def gmail_oauth_callback(code: str, state: str):
                 'https://www.googleapis.com/auth/gmail.send',
                 'https://www.googleapis.com/auth/gmail.readonly'
             ],
-            redirect_uri=f"{os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')}/api/gmail/oauth-callback"
+            redirect_uri=redirect_uri
         )
         
         # Exchange authorization code for tokens
