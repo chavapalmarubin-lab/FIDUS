@@ -72,36 +72,50 @@ const CashFlowManagement = () => {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
-        // PHASE 3 FIX: Use corrected MT5 data if available
-        let mt5TradingProfits = summary.mt5_trading_profits || 0;
-        let separationInterest = summary.separation_interest || 0;
+        // PHASE 3 FIX: Use corrected MT5 data and avoid double counting
+        let mt5TruePnl = summary.mt5_trading_profits || 0;
+        let brokerInterest = 0;
+        let separationBalance = 0;
+        let profitWithdrawals = 0;
         
         if (mt5CorrectedResponse.data.success) {
-          mt5TradingProfits = mt5CorrectedResponse.data.fund_assets.mt5_trading_pnl || 0;
-          separationInterest = mt5CorrectedResponse.data.fund_assets.separation_interest || 0;
-          console.log("✅ Using CORRECTED MT5 data:", {
-            mt5_trading_pnl: mt5TradingProfits,
-            separation_interest: separationInterest,
-            verification: mt5CorrectedResponse.data.verification
+          const corrected = mt5CorrectedResponse.data;
+          // TRUE P&L already includes profit withdrawals!
+          mt5TruePnl = corrected.fund_assets?.mt5_trading_pnl || 0;
+          separationBalance = corrected.fund_assets?.separation_interest || 0;
+          profitWithdrawals = corrected.summary?.total_profit_withdrawals || 0;
+          
+          // CRITICAL FIX: Calculate ONLY the broker interest (not the full separation balance)
+          // Broker Interest = Separation Balance - Profit Withdrawals
+          brokerInterest = separationBalance - profitWithdrawals;
+          
+          console.log("✅ CORRECTED calculation (NO DOUBLE COUNTING):", {
+            mt5_true_pnl: mt5TruePnl,
+            profit_withdrawals: profitWithdrawals,
+            separation_balance: separationBalance,
+            broker_interest_only: brokerInterest,
+            correct_total: mt5TruePnl + brokerInterest
           });
         }
         
         const fundAccountingData = {
           assets: {
-            mt5_trading_profits: mt5TradingProfits,  // TRUE P&L with profit withdrawals
-            separation_interest: separationInterest,  // Separation account balance
+            mt5_trading_profits: mt5TruePnl,  // TRUE P&L (already includes profit withdrawals)
+            broker_interest: brokerInterest,   // ONLY the interest earned (NOT full separation balance)
             broker_rebates: summary.broker_rebates || 0,
-            total_inflows: mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)
+            total_inflows: mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)  // CORRECT: No double counting
           },
           liabilities: {
             client_obligations: summary.client_interest_obligations || 0,
             fund_obligations: summary.fund_obligations || 0,
             total_outflows: summary.fund_obligations || 0
           },
-          net_profit: (mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
-          net_fund_profitability: (mt5TradingProfits + separationInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
-          // Store corrected MT5 data for display
-          mt5_corrected_data: mt5CorrectedResponse.data
+          net_profit: (mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
+          net_fund_profitability: (mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
+          // Store corrected MT5 data and breakdown for display
+          mt5_corrected_data: mt5CorrectedResponse.data,
+          separation_balance: separationBalance,
+          profit_withdrawals: profitWithdrawals
         };
         
         setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
