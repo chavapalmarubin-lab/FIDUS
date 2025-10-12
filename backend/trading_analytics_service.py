@@ -515,19 +515,33 @@ class TradingAnalyticsService:
     ) -> Dict[str, Any]:
         """
         Get analytics overview for dashboard display
+        PHASE 3 FIX: Now uses TRUE P&L from corrected mt5_accounts
         
         Args:
             account_numbers: List of account numbers to include
             days: Number of days to analyze
             
         Returns:
-            Analytics overview data
+            Analytics overview data with corrected TRUE P&L
         """
         try:
             end_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
             start_date = end_date - timedelta(days=days)
             
-            # Query daily performance data
+            # PHASE 3 FIX: Get TRUE P&L from corrected mt5_accounts collection
+            # This includes profit withdrawals!
+            total_true_pnl = 0.0
+            
+            for account_num in account_numbers:
+                account_data = await self.db.mt5_accounts.find_one({"account": account_num})
+                if account_data:
+                    true_pnl = float(account_data.get("true_pnl", 0))
+                    total_true_pnl += true_pnl
+                    logger.info(f"Account {account_num}: TRUE P&L = ${true_pnl:,.2f}")
+            
+            logger.info(f"✅ Total TRUE P&L for accounts {account_numbers}: ${total_true_pnl:,.2f}")
+            
+            # Query daily performance data for trade statistics
             query_filter = {
                 "account": {"$in": account_numbers},
                 "date": {"$gte": start_date, "$lt": end_date}
@@ -535,28 +549,24 @@ class TradingAnalyticsService:
             
             daily_data = await self.db.daily_performance.find(query_filter).to_list(length=None)
             
-            if not daily_data:
-                return self.get_empty_analytics_overview()
-            
-            # Aggregate metrics
-            total_trades = sum(day["total_trades"] for day in daily_data)
-            winning_trades = sum(day["winning_trades"] for day in daily_data)
-            losing_trades = sum(day["losing_trades"] for day in daily_data)
-            total_pnl = sum(day["total_pnl"] for day in daily_data)
-            gross_profit = sum(day["gross_profit"] for day in daily_data)
-            gross_loss = sum(day["gross_loss"] for day in daily_data)
+            # Aggregate trade statistics (win rate, profit factor, etc.)
+            total_trades = sum(day["total_trades"] for day in daily_data) if daily_data else 0
+            winning_trades = sum(day["winning_trades"] for day in daily_data) if daily_data else 0
+            losing_trades = sum(day["losing_trades"] for day in daily_data) if daily_data else 0
+            gross_profit = sum(day["gross_profit"] for day in daily_data) if daily_data else 0
+            gross_loss = sum(day["gross_loss"] for day in daily_data) if daily_data else 0
             
             win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
             profit_factor = abs(gross_profit / gross_loss) if gross_loss != 0 else 999.99
-            avg_trade = total_pnl / total_trades if total_trades > 0 else 0
+            avg_trade = total_true_pnl / total_trades if total_trades > 0 else 0
             
             # Find largest win/loss
-            largest_win = max((day["largest_win"] for day in daily_data), default=0)
-            largest_loss = min((day["largest_loss"] for day in daily_data), default=0)
+            largest_win = max((day["largest_win"] for day in daily_data), default=0) if daily_data else 0
+            largest_loss = min((day["largest_loss"] for day in daily_data), default=0) if daily_data else 0
             
             return {
                 "overview": {
-                    "total_pnl": round(total_pnl, 2),
+                    "total_pnl": round(total_true_pnl, 2),  # ✅ CORRECTED: Now uses TRUE P&L!
                     "total_trades": total_trades,
                     "winning_trades": winning_trades,
                     "losing_trades": losing_trades,
@@ -571,11 +581,12 @@ class TradingAnalyticsService:
                     "avg_loss": round(gross_loss / losing_trades, 2) if losing_trades > 0 else 0,
                     "max_drawdown": 0,  # TODO: Calculate from daily equity curve
                     "recovery_factor": 0,  # TODO: Calculate
-                    "sharpe_ratio": 0  # TODO: Calculate
+                    "sharpe_ratio": 0,  # TODO: Calculate
+                    "corrected_data_used": True  # Flag to show this is using corrected data
                 },
                 "period_start": start_date.isoformat(),
                 "period_end": end_date.isoformat(),
-                "last_sync": max((day["calculated_at"] for day in daily_data), default=datetime.now(timezone.utc)).isoformat()
+                "last_sync": max((day["calculated_at"] for day in daily_data), default=datetime.now(timezone.utc)).isoformat() if daily_data else datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
