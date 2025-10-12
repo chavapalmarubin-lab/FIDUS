@@ -26,8 +26,9 @@ async def calculate_fund_weighted_performance(db, fund_code: str) -> Dict[str, A
         logger.info(f"📊 Calculating weighted performance for {fund_code} fund")
         
         # Get all MT5 accounts for this fund
+        # Note: MT5 accounts use 'fund_type' field, not 'fund_code'
         mt5_cursor = db.mt5_accounts.find({
-            'fund_code': fund_code
+            'fund_type': fund_code
         })
         accounts = await mt5_cursor.to_list(length=None)
         
