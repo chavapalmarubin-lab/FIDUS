@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import ComponentCard from './ComponentCard';
 import ArchitectureDiagram from './ArchitectureDiagram';
+import CredentialsVault from './CredentialsVault';
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
  * Phase 1: Component Registry and Live Health Monitoring
  * Phase 2: Interactive Architecture Diagram
+ * Phase 3: Secure Credentials Vault
  */
 export default function TechnicalDocumentation() {
   const [components, setComponents] = useState({});
@@ -17,7 +19,7 @@ export default function TechnicalDocumentation() {
   const [overallStatus, setOverallStatus] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [viewMode, setViewMode] = useState('diagram'); // 'grid' or 'diagram'
+  const [viewMode, setViewMode] = useState('diagram'); // 'grid', 'diagram', or 'credentials'
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
