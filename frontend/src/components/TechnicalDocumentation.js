@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ComponentCard from './ComponentCard';
 import ArchitectureDiagram from './ArchitectureDiagram';
 import CredentialsVault from './CredentialsVault';
+import ApiDocumentation from './ApiDocumentation';
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
