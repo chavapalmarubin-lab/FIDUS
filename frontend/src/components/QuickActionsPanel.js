@@ -134,7 +134,7 @@ const QuickActionsPanel = () => {
           <Rocket className="w-5 h-5 text-blue-600" />
           <span>Deployment</span>
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={GRIDS.cards}>
           <ActionCard
             icon="🌐"
             title="Deploy Frontend"
