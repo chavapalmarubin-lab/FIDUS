@@ -624,13 +624,21 @@ const CashFlowManagement = () => {
               {/* MT5 Trading Profits */}
               <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-slate-400">MT5 Trading Profits</p>
-                  <p className="text-xs text-slate-500">Fund's investment performance</p>
+                  <p className="text-sm text-slate-400">MT5 Trading Profits (TRUE P&L)</p>
+                  <p className="text-xs text-slate-500">
+                    {fundAccounting?.mt5_corrected_data 
+                      ? '✓ Includes profit withdrawals to separation account'
+                      : 'Fund\'s investment performance'
+                    }
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className={`text-lg font-bold ${(fundAccounting?.assets?.mt5_trading_profits || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
                   </p>
+                  {fundAccounting?.mt5_corrected_data && (
+                    <p className="text-xs text-green-400 mt-1">✓ Corrected</p>
+                  )}
                 </div>
               </div>
               
