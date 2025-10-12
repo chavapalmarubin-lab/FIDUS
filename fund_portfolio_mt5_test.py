@@ -138,13 +138,18 @@ class FundPortfolioMT5Test:
                 account_balances = {}
                 
                 for account in accounts:
-                    login = str(account.get('login', ''))
-                    fund_type = account.get('fund_type', account.get('fund_code', ''))
+                    # MT5 accounts use fund_code field, not fund_type
+                    fund_code = account.get('fund_code', '')
                     balance = account.get('balance', 0)
                     
-                    if login in expected_accounts:
-                        found_accounts[login] = fund_type
-                        account_balances[login] = balance
+                    # Count accounts by fund_code
+                    if fund_code in ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED', 'SEPARATION']:
+                        if fund_code not in found_accounts:
+                            found_accounts[fund_code] = []
+                        found_accounts[fund_code].append({
+                            'balance': balance,
+                            'broker': account.get('broker_name', 'N/A')
+                        })
                 
                 # Verify we found all expected accounts
                 missing_accounts = []
