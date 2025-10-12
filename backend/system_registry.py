@@ -15,31 +15,32 @@ SYSTEM_COMPONENTS = {
             'type': 'application',
             'category': 'Application Layer',
             'status': 'online',
-            'url': 'https://fidus-invest.emergent.host',
-            'platform': 'Emergent.host Kubernetes',
+            'url': 'https://fidus-investment-platform.onrender.com',
+            'platform': 'Render Static Site',
             'description': 'React-based client portal for investors and administrators',
             'tech_stack': ['React 19.0+', 'Tailwind CSS', 'Yarn', 'JavaScript/JSX'],
             'environment': {
-                'platform': 'Emergent.host',
-                'deployment': 'Kubernetes Container',
+                'platform': 'Render.com',
+                'deployment': 'Static Site (Built-in CDN)',
                 'auto_scaling': True,
-                'region': 'Global Edge'
+                'region': 'Global (Render CDN)'
             },
-            'credentials_ref': 'emergent_frontend',
-            'dependencies': ['backend', 'cdn'],
+            'credentials_ref': 'render_frontend',
+            'dependencies': ['backend'],
             'health_check': {
-                'endpoint': 'https://fidus-invest.emergent.host',
+                'endpoint': 'https://fidus-investment-platform.onrender.com',
                 'method': 'GET',
                 'expected_status': 200,
                 'timeout': 5
             },
             'management': {
-                'dashboard': 'https://app.emergent.host',
-                'logs': 'Available via Emergent.host console',
-                'restart': 'Via Emergent.host dashboard or API'
+                'dashboard': 'https://dashboard.render.com',
+                'logs': 'Available via Render dashboard',
+                'restart': 'Auto-deploy on git push',
+                'features': ['Built-in SSL/TLS', 'Built-in CDN', 'Auto-deploy from GitHub', 'Zero-downtime deploys']
             },
-            'quick_actions': ['viewLogs', 'restart', 'deploy', 'viewMetrics'],
-            'documentation': 'Frontend serves the investor portal with responsive design'
+            'quick_actions': ['viewLogs', 'deploy', 'viewMetrics'],
+            'documentation': 'Frontend serves the investor portal with responsive design. Hosted on Render with built-in CDN and SSL.'
         },
         {
             'id': 'backend',
