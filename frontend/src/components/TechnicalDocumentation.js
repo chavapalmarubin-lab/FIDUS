@@ -404,8 +404,8 @@ export default function TechnicalDocumentation() {
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Phase 1 & 2: Component Registry • Live Health Monitoring • Interactive Architecture Diagram</p>
-          <p className="mt-1">Credentials Vault • API Documentation • Enhanced Monitoring coming in Phase 3-7</p>
+          <p>Phase 1-6: Component Registry • Live Health Monitoring • Interactive Architecture Diagram</p>
+          <p className="mt-1">Credentials Vault • API Documentation • System Health Dashboard • Quick Actions ⚡</p>
         </div>
       </div>
     </div>
