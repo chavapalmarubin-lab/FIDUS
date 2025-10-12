@@ -84,7 +84,7 @@ const ActionCard = ({
       <button
         onClick={onClick}
         disabled={loading}
-        className={`w-full py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+        className={`w-full py-3 rounded-lg font-medium button-press-effect flex items-center justify-center space-x-2 ${
           loading
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
             : success
