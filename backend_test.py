@@ -35,19 +35,9 @@ class FundPerformanceTest:
     """FIDUS Platform MT5 Auto-Sync Endpoint Testing Suite - Render Production URLs"""
     
     def __init__(self):
-        # Use CORRECT Render backend API URL (not frontend URL)
-        self.render_backend_url = "https://fidus-api.onrender.com"
-        self.backend_url = f"{self.render_backend_url}/api"
-        
-        self.session = None
-        self.admin_token = None
+        self.session = requests.Session()
+        self.token = None
         self.test_results = []
-        self.endpoint_documentation = []
-        
-        logger.info(f"🚀 FIDUS MT5 Auto-Sync Test Suite initialized")
-        logger.info(f"   CORRECT Render Backend URL: {self.render_backend_url}")
-        logger.info(f"   API Base URL: {self.backend_url}")
-        logger.info(f"   Purpose: Test MT5 Auto-Sync endpoints to resolve $521.88 discrepancy")
     
     async def setup(self):
         """Setup test environment"""
