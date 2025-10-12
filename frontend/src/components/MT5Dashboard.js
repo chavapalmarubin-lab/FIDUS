@@ -200,6 +200,37 @@ const MT5Dashboard = () => {
         </div>
       </div>
 
+      {/* ✅ Verification Badge */}
+      {accountsData?.summary?.verification && (
+        <div className={`rounded-lg p-4 border ${
+          accountsData.summary.verification.verified 
+            ? 'bg-green-50 border-green-200' 
+            : 'bg-yellow-50 border-yellow-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{accountsData.summary.verification.verified ? '✅' : '⚠️'}</span>
+              <div>
+                <p className={`font-semibold ${
+                  accountsData.summary.verification.verified ? 'text-green-800' : 'text-yellow-800'
+                }`}>
+                  {accountsData.summary.verification.verified ? 'P&L Calculations Verified' : 'Verification Pending'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Total Profit Withdrawals: {formatCurrency(accountsData.summary.verification.total_profit_withdrawals)} | 
+                  Separation Balance: {formatCurrency(accountsData.summary.verification.separation_account_balance)}
+                </p>
+              </div>
+            </div>
+            {accountsData.summary.verification.verified && (
+              <Badge className="bg-green-600 text-white">
+                Match: {accountsData.summary.verification.match_percentage}%
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -225,7 +256,7 @@ const MT5Dashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total P&L</p>
+                <p className="text-sm text-gray-600">Total P&L (TRUE)</p>
                 <p className={`text-2xl font-bold ${getPerformanceColor(dashboard.total_profit)}`}>
                   {formatCurrency(dashboard.total_profit)}
                 </p>
@@ -239,8 +270,8 @@ const MT5Dashboard = () => {
               </div>
             </div>
             <div className="mt-2">
-              <span className="text-sm text-gray-600">
-                vs {formatCurrency(dashboard.total_allocated)} allocated
+              <span className="text-xs text-green-600">
+                ✓ Includes profit withdrawals
               </span>
             </div>
           </CardContent>
