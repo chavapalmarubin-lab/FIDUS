@@ -784,7 +784,7 @@ const MT5Management = () => {
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 text-sm text-green-400 font-semibold">
-                                                    Total Profit Withdrawals: {formatCurrency(selectedAccountDetails.deal_history.total_profit_withdrawals)}
+                                                    Total Profit Withdrawals: {formatCurrency(selectedAccountDetails?.deal_history?.total_profit_withdrawals || 0)}
                                                 </div>
                                             </div>
                                         )}
