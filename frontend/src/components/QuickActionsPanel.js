@@ -262,9 +262,8 @@ const QuickActionsPanel = () => {
 
         <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
           {loadingRecent ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading recent actions...</p>
+            <div className="p-8">
+              <LoadingSpinner size="md" message="Loading recent actions..." />
             </div>
           ) : recentActions.length === 0 ? (
             <div className="p-8 text-center">
