@@ -32,17 +32,7 @@ const FundPerformanceDashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
-        
-        // Auto-refresh every 30 seconds if enabled
-        let interval;
-        if (autoRefresh) {
-            interval = setInterval(fetchDashboardData, 30000);
-        }
-        
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [autoRefresh]);
+    }, []);
 
     const fetchDashboardData = async () => {
         try {
