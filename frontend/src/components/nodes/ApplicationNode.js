@@ -102,3 +102,6 @@ function ApplicationNode({ data }) {
     </div>
   );
 }
+
+// Memoize component for performance
+export default React.memo(ApplicationNode);
