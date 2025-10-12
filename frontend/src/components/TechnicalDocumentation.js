@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import ComponentCard from './ComponentCard';
-import ArchitectureDiagram from './ArchitectureDiagram';
-import CredentialsVault from './CredentialsVault';
-import ApiDocumentation from './ApiDocumentation';
-import SystemHealthDashboard from './SystemHealthDashboard';
-import QuickActionsPanel from './QuickActionsPanel';
+import LoadingSpinner from './LoadingSpinner';
+
+// Lazy load heavy components for better performance (Phase 7)
+const ArchitectureDiagram = lazy(() => import('./ArchitectureDiagram'));
+const CredentialsVault = lazy(() => import('./CredentialsVault'));
+const ApiDocumentation = lazy(() => import('./ApiDocumentation'));
+const SystemHealthDashboard = lazy(() => import('./SystemHealthDashboard'));
+const QuickActionsPanel = lazy(() => import('./QuickActionsPanel'));
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
