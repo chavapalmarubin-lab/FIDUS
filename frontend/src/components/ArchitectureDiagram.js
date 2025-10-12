@@ -39,6 +39,7 @@ export default function ArchitectureDiagram({ components, healthData, connection
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [viewMode, setViewMode] = useState('simple'); // 'simple' or 'detailed'
   const [diagramSettings, setDiagramSettings] = useState(() => {
     const saved = localStorage.getItem('fidus_diagram_settings');
     return saved ? JSON.parse(saved) : {
