@@ -457,9 +457,11 @@ const MoneyManagersDashboard = () => {
                       <th className="text-left text-slate-400 font-medium py-3">Execution</th>
                       <th className="text-right text-slate-400 font-medium py-3">Accounts</th>
                       <th className="text-right text-slate-400 font-medium py-3">Allocated</th>
-                      <th className="text-right text-slate-400 font-medium py-3">P&L</th>
+                      <th className="text-right text-slate-400 font-medium py-3">Equity</th>
+                      <th className="text-right text-slate-400 font-medium py-3">Withdrawals</th>
+                      <th className="text-right text-slate-400 font-medium py-3">TRUE P&L</th>
                       <th className="text-right text-slate-400 font-medium py-3">Win Rate</th>
-                      <th className="text-right text-slate-400 font-medium py-3">Profit Factor</th>
+                      <th className="text-right text-slate-400 font-medium py-3">PF</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -493,6 +495,12 @@ const MoneyManagersDashboard = () => {
                           </td>
                           <td className="py-4 text-right text-white font-medium">
                             {formatCurrency(performance.total_allocated)}
+                          </td>
+                          <td className="py-4 text-right text-cyan-400 font-medium">
+                            {formatCurrency(performance.current_equity || 0)}
+                          </td>
+                          <td className="py-4 text-right text-blue-400 font-medium">
+                            {formatCurrency(performance.total_withdrawals || 0)}
                           </td>
                           <td className={`py-4 text-right font-medium ${
                             performance.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'
