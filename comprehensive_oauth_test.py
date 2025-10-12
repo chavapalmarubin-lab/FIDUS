@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://apiview.preview.emergentagent.com/api"
-FRONTEND_URL = "https://apiview.preview.emergentagent.com"
+BACKEND_URL = "https://transfer-classifier.preview.emergentagent.com/api"
+FRONTEND_URL = "https://transfer-classifier.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

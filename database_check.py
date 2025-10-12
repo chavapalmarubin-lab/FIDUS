@@ -6,7 +6,7 @@ Database Check for Alejandro Mariscal Production Setup
 import requests
 import json
 
-BACKEND_URL = "https://apiview.preview.emergentagent.com/api"
+BACKEND_URL = "https://transfer-classifier.preview.emergentagent.com/api"
 
 def authenticate():
     """Get admin token"""

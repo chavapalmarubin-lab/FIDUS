@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import sys
 
 # Configuration
-BACKEND_URL = "https://apiview.preview.emergentagent.com/api"
+BACKEND_URL = "https://transfer-classifier.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

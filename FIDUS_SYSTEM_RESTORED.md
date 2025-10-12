@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://apiview.preview.emergentagent.com`
+`https://transfer-classifier.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

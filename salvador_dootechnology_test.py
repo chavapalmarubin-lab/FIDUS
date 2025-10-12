@@ -10,7 +10,7 @@ from datetime import datetime
 import sys
 
 class SalvadorDooTechnologyTester:
-    def __init__(self, base_url="https://apiview.preview.emergentagent.com"):
+    def __init__(self, base_url="https://transfer-classifier.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
