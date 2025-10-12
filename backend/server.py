@@ -54,6 +54,19 @@ from system_registry import (
 )
 from health_checks import perform_all_health_checks, calculate_overall_status
 
+# Credentials Management (Phase 3: Secure Credentials Vault)
+from credentials_registry import (
+    CREDENTIALS_REGISTRY,
+    CREDENTIAL_CATEGORIES,
+    CREDENTIAL_STATUSES,
+    get_all_credentials,
+    get_credential_by_id as get_credential_metadata_by_id,
+    get_credentials_by_category,
+    get_credentials_by_status,
+    get_credentials_summary
+)
+from credentials_service import CredentialsService
+
 # AML/KYC Service Integration
 from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
