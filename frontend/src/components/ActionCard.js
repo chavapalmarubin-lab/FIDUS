@@ -41,7 +41,7 @@ const ActionCard = ({
   const statusStyle = getStatusStyle();
 
   return (
-    <div className={`${statusStyle.bg} border-2 ${statusStyle.border} rounded-lg p-5 hover:shadow-lg transition-all duration-200`}>
+    <div className={`${statusStyle.bg} border-2 ${statusStyle.border} rounded-lg p-5 card-hover-effect animate-fadeIn`}>
       {/* Icon and Badge */}
       <div className="flex items-start justify-between mb-4">
         <span className="text-4xl">{icon}</span>
