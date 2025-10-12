@@ -17587,6 +17587,39 @@ async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
         if fund_code not in FIDUS_FUND_CONFIG:
             raise HTTPException(status_code=404, detail="Fund not found")
         
+
+
+@api_router.get("/funds/{fund_code}/performance")
+async def get_fund_performance(fund_code: str, current_user: dict = Depends(get_current_admin_user)):
+    """Get detailed weighted performance for a specific fund"""
+    try:
+        from fund_performance_calculator import calculate_fund_weighted_performance
+        
+        if fund_code not in ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']:
+            raise HTTPException(status_code=404, detail="Fund not found")
+        
+        performance = await calculate_fund_weighted_performance(db, fund_code)
+        return performance
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get fund performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch fund performance")
+
+@api_router.get("/funds/performance/all")
+async def get_all_funds_performance_endpoint(current_user: dict = Depends(get_current_admin_user)):
+    """Get weighted performance for all funds"""
+    try:
+        from fund_performance_calculator import get_all_funds_performance
+        
+        performance = await get_all_funds_performance(db)
+        return performance
+        
+    except Exception as e:
+        logging.error(f"Get all funds performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch funds performance")
+
         # Store real-time data (in production this would update the database)
         # For now, we'll just acknowledge the update
         logging.info(f"Real-time data updated for {fund_code}: {realtime_data}")
