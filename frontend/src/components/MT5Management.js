@@ -751,7 +751,85 @@ const MT5Management = () => {
                                 <CardTitle className="text-white">Account Activity</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {accountActivity.length === 0 ? (
+                                {/* ✅ Show deal history if available */}
+                                {selectedAccountDetails.deal_history && (selectedAccountDetails.deal_history.profit_withdrawals?.length > 0 || selectedAccountDetails.deal_history.inter_account_transfers?.length > 0) ? (
+                                    <div className="space-y-4">
+                                        {/* Profit Withdrawals */}
+                                        {selectedAccountDetails.deal_history.profit_withdrawals?.length > 0 && (
+                                            <div>
+                                                <h4 className="text-white font-semibold mb-3">
+                                                    💰 Profit Withdrawals to Separation Account ({selectedAccountDetails.deal_history.profit_withdrawals.length})
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {selectedAccountDetails.deal_history.profit_withdrawals.map((withdrawal, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between p-3 bg-green-900/20 border border-green-600 rounded-lg">
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-600">
+                                                                    <DollarSign size={14} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-white font-medium">
+                                                                        Withdrawal #{withdrawal.ticket}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-400">
+                                                                        {new Date(withdrawal.time).toLocaleString()} → Account {withdrawal.classification.destination}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-green-400 font-bold">
+                                                                +{formatCurrency(Math.abs(withdrawal.amount))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-2 text-sm text-green-400 font-semibold">
+                                                    Total Profit Withdrawals: {formatCurrency(selectedAccountDetails.deal_history.total_profit_withdrawals)}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Inter-Account Transfers */}
+                                        {selectedAccountDetails.deal_history.inter_account_transfers?.length > 0 && (
+                                            <div>
+                                                <h4 className="text-white font-semibold mb-3">
+                                                    🔄 Inter-Account Transfers ({selectedAccountDetails.deal_history.inter_account_transfers.length})
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {selectedAccountDetails.deal_history.inter_account_transfers.map((transfer, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-cyan-600">
+                                                                    <Activity size={14} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-white font-medium">
+                                                                        Transfer #{transfer.ticket}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-400">
+                                                                        {new Date(transfer.time).toLocaleString()} → Account {transfer.classification.destination}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-500">
+                                                                        Excluded from P&L (not profit/loss)
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-cyan-400 font-medium">
+                                                                {formatCurrency(Math.abs(transfer.amount))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-2 text-sm text-slate-400">
+                                                    Total Inter-Account Transfers: {formatCurrency(selectedAccountDetails.deal_history.total_inter_account)}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="text-xs text-slate-500 bg-slate-800 p-3 rounded">
+                                            Last synced: {selectedAccountDetails.deal_history.last_sync ? new Date(selectedAccountDetails.deal_history.last_sync).toLocaleString() : 'N/A'}
+                                        </div>
+                                    </div>
+                                ) : accountActivity.length === 0 ? (
                                     <div className="text-center py-8">
                                         <Activity className="h-12 w-12 text-slate-500 mx-auto mb-4" />
                                         <p className="text-slate-400">No activity recorded</p>
