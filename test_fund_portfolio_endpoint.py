@@ -17,8 +17,15 @@ async def test_fund_portfolio_endpoint():
         print("✅ Successfully imported fund_performance_calculator")
         
         # Import database connection
-        from config.database import db
-        print("✅ Successfully imported database connection")
+        import os
+        from motor.motor_asyncio import AsyncIOMotorClient
+        from dotenv import load_dotenv
+        
+        load_dotenv('/app/backend/.env')
+        mongo_url = os.environ['MONGO_URL']
+        client = AsyncIOMotorClient(mongo_url)
+        db = client[os.environ.get('DB_NAME', 'fidus_production')]
+        print("✅ Successfully created database connection")
         
         # Test database connection
         investments_cursor = db.investments.find({})
