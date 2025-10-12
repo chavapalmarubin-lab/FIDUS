@@ -2669,6 +2669,147 @@ async def search_api_endpoints(query: str):
         raise HTTPException(status_code=500, detail=f"Failed to search endpoints: {str(e)}")
 
 
+
+# ============================================================================
+# SYSTEM HEALTH MONITORING ENDPOINTS (Phase 5)
+# ============================================================================
+
+@api_router.get("/system/health/all")
+async def get_all_health_status():
+    """
+    Get aggregated health status of all system components
+    Phase 5: System Health Dashboard
+    """
+    try:
+        health_data = await check_all_components(db)
+        
+        # Store health history for tracking
+        await store_health_history(db, health_data)
+        
+        return {
+            "success": True,
+            **health_data
+        }
+    except Exception as e:
+        logger.error(f"Error checking system health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to check system health: {str(e)}")
+
+@api_router.get("/system/health/frontend")
+async def get_frontend_health():
+    """Check frontend service health"""
+    try:
+        health = await check_frontend_health()
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking frontend health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/backend")
+async def get_backend_health():
+    """Check backend service health"""
+    try:
+        health = await check_backend_health(db)
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking backend health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/database")
+async def get_database_health():
+    """Check MongoDB database health"""
+    try:
+        health = await check_database_health(db)
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking database health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/mt5-bridge")
+async def get_mt5_bridge_health():
+    """Check MT5 Bridge VPS service health"""
+    try:
+        health = await check_mt5_bridge_health()
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking MT5 bridge health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/google-apis")
+async def get_google_apis_health():
+    """Check Google Workspace APIs health"""
+    try:
+        health = await check_google_apis_health(db)
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking Google APIs health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/github")
+async def get_github_health():
+    """Check GitHub repository health"""
+    try:
+        health = await check_github_health()
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking GitHub health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/render-platform")
+async def get_render_platform_health():
+    """Check Render platform services health"""
+    try:
+        health = await check_render_platform_health()
+        return {"success": True, **health}
+    except Exception as e:
+        logger.error(f"Error checking Render platform health: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/history")
+async def get_health_history(hours: int = 24):
+    """Get historical health data for the specified time period"""
+    try:
+        cutoff_time = datetime.now(timezone.utc).timestamp() - (hours * 60 * 60)
+        
+        history = await db.system_health_history.find({
+            "timestamp": {"$gte": datetime.fromtimestamp(cutoff_time, tz=timezone.utc)}
+        }).sort("timestamp", 1).to_list(length=None)
+        
+        return {
+            "success": True,
+            "hours": hours,
+            "records_count": len(history),
+            "history": [
+                {
+                    "timestamp": record["timestamp"].isoformat(),
+                    "overall_status": record.get("overall_status"),
+                    "health_percentage": record.get("health_percentage"),
+                    "components": record.get("components", [])
+                }
+                for record in history
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error fetching health history: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/health/uptime/{component}")
+async def get_component_uptime(component: str, hours: int = 24):
+    """Get uptime percentage for a specific component"""
+    try:
+        uptime = await calculate_uptime_percentage(db, component, hours)
+        
+        return {
+            "success": True,
+            "component": component,
+            "hours": hours,
+            "uptime_percentage": uptime
+        }
+    except Exception as e:
+        logger.error(f"Error calculating uptime for {component}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 # =====================================================================
 # END SYSTEM REGISTRY ENDPOINTS
 # =====================================================================
