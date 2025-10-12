@@ -318,7 +318,10 @@ export default function TechnicalDocumentation() {
         </div>
 
         {/* Conditional View Rendering */}
-        {viewMode === 'api' ? (
+        {viewMode === 'health' ? (
+          /* System Health Dashboard View */
+          <SystemHealthDashboard />
+        ) : viewMode === 'api' ? (
           /* API Documentation View */
           <ApiDocumentation />
         ) : viewMode === 'diagram' ? (
