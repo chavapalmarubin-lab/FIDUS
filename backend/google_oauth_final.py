@@ -31,12 +31,15 @@ class GoogleOAuthService:
         self.db = db
         
         # OAuth credentials - using exact credentials provided by user
-        # CRITICAL: Using /admin/google-callback to match gmail_credentials.json
+        # CRITICAL: Must match one of the redirect URIs in gmail_credentials.json
         self.client_config = {
             "web": {
                 "client_id": "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com",
                 "client_secret": "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",
-                "redirect_uris": ["https://fidus-invest.emergent.host/api/admin/google-callback"],
+                "redirect_uris": [
+                    "https://fidus-invest.emergent.host/api/auth/google/callback",
+                    "https://fidus-invest.emergent.host/api/admin/google-callback"
+                ],
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token"
             }
