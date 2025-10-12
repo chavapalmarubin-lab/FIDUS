@@ -3035,6 +3035,129 @@ async def mark_all_notifications_read(current_user: dict = Depends(get_current_a
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# =====================================================================
+# PHASE 6: QUICK ACTIONS & ADMIN TOOLS ENDPOINTS
+# =====================================================================
+
+@api_router.post("/actions/restart-backend")
+async def restart_backend_action(current_user: dict = Depends(get_current_admin_user)):
+    """Restart backend service"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.restart_backend(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error restarting backend: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/restart-frontend")
+async def restart_frontend_action(current_user: dict = Depends(get_current_admin_user)):
+    """Restart frontend service"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.restart_frontend(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error restarting frontend: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/restart-all")
+async def restart_all_services_action(current_user: dict = Depends(get_current_admin_user)):
+    """Restart all services"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.restart_all_services(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error restarting all services: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/sync-mt5")
+async def sync_mt5_data_action(current_user: dict = Depends(get_current_admin_user)):
+    """Trigger immediate MT5 data sync"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.sync_mt5_data(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error syncing MT5 data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/refresh-performance")
+async def refresh_fund_performance_action(current_user: dict = Depends(get_current_admin_user)):
+    """Refresh fund performance calculations"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.refresh_fund_performance(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error refreshing fund performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/backup-database")
+async def backup_database_action(current_user: dict = Depends(get_current_admin_user)):
+    """Create database backup"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.backup_database(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error backing up database: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/test-integrations")
+async def test_integrations_action(current_user: dict = Depends(get_current_admin_user)):
+    """Test all system integrations"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.test_all_integrations(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error testing integrations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/actions/generate-report")
+async def generate_system_report_action(current_user: dict = Depends(get_current_admin_user)):
+    """Generate comprehensive system report"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.generate_system_report(current_user['id'])
+        return result
+    except Exception as e:
+        logger.error(f"Error generating system report: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/actions/recent")
+async def get_recent_actions(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get recent quick actions"""
+    try:
+        quick_actions = QuickActionsService(db)
+        actions = await quick_actions.get_recent_actions(limit=limit)
+        return {
+            "success": True,
+            "total": len(actions),
+            "actions": actions
+        }
+    except Exception as e:
+        logger.error(f"Error fetching recent actions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/actions/logs")
+async def get_system_logs_action(
+    limit: int = 100,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """View system logs"""
+    try:
+        quick_actions = QuickActionsService(db)
+        result = await quick_actions.view_system_logs(current_user['id'], limit=limit)
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching system logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # =====================================================================
