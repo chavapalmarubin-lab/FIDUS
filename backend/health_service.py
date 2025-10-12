@@ -359,8 +359,12 @@ async def check_render_platform_health() -> Dict[str, Any]:
     }
 
 
-async def check_all_components(db) -> Dict[str, Any]:
+async def check_all_components(db, trigger_alerts: bool = True) -> Dict[str, Any]:
     """Run health checks on all components and return aggregated status"""
+    
+    # Import AlertService
+    from alert_service import AlertService
+    alert_service = AlertService(db) if trigger_alerts else None
     
     # Run all health checks concurrently
     frontend_health = await check_frontend_health()
@@ -370,6 +374,16 @@ async def check_all_components(db) -> Dict[str, Any]:
     google_apis_health = await check_google_apis_health(db)
     github_health = await check_github_health()
     render_platform_health = await check_render_platform_health()
+    
+    # Check for alerts if enabled
+    if alert_service:
+        await alert_service.check_and_alert("frontend", "FIDUS Frontend", frontend_health["status"], frontend_health)
+        await alert_service.check_and_alert("backend", "FIDUS Backend API", backend_health["status"], backend_health)
+        await alert_service.check_and_alert("database", "MongoDB Atlas", database_health["status"], database_health)
+        await alert_service.check_and_alert("mt5_bridge", "MT5 Bridge Service", mt5_bridge_health["status"], mt5_bridge_health)
+        await alert_service.check_and_alert("google_apis", "Google Workspace APIs", google_apis_health["status"], google_apis_health)
+        await alert_service.check_and_alert("github", "GitHub Repository", github_health["status"], github_health)
+        await alert_service.check_and_alert("render_platform", "Render Hosting Platform", render_platform_health["status"], render_platform_health)
     
     components = [
         frontend_health,
