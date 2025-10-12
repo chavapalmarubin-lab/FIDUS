@@ -2561,6 +2561,176 @@ async def get_system_connections():
 # END SYSTEM REGISTRY ENDPOINTS
 # =====================================================================
 
+# =====================================================================
+# CREDENTIALS MANAGEMENT ENDPOINTS (Phase 3)
+# Secure credential management with audit logging
+# =====================================================================
+
+@api_router.get("/credentials/registry")
+async def get_credentials_registry():
+    """
+    Get all credential metadata (NO ACTUAL CREDENTIALS)
+    Returns only references and status information
+    """
+    try:
+        credentials = get_all_credentials()
+        summary = get_credentials_summary()
+        
+        return {
+            "success": True,
+            "credentials": credentials,
+            "summary": summary,
+            "categories": CREDENTIAL_CATEGORIES,
+            "statuses": CREDENTIAL_STATUSES,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching credentials registry: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch credentials: {str(e)}")
+
+@api_router.get("/credentials/{credential_id}")
+async def get_credential_info(credential_id: str):
+    """
+    Get metadata for a specific credential
+    Returns configuration status but NO ACTUAL CREDENTIALS
+    """
+    try:
+        credential = get_credential_metadata_by_id(credential_id)
+        
+        if not credential:
+            raise HTTPException(status_code=404, detail=f"Credential '{credential_id}' not found")
+        
+        # Check if credential is configured
+        creds_service = CredentialsService(client, db)
+        status = await creds_service.get_credential_status(credential_id)
+        
+        return {
+            "success": True,
+            "credential": credential,
+            "status": status,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching credential {credential_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch credential: {str(e)}")
+
+@api_router.get("/credentials/category/{category}")
+async def get_credentials_by_category_endpoint(category: str):
+    """
+    Get all credentials in a specific category
+    Returns metadata only
+    """
+    try:
+        credentials = get_credentials_by_category(category)
+        
+        if not credentials:
+            raise HTTPException(status_code=404, detail=f"Category '{category}' not found or empty")
+        
+        return {
+            "success": True,
+            "category": category,
+            "credentials": credentials,
+            "count": len(credentials),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching credentials for category {category}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch credentials: {str(e)}")
+
+@api_router.post("/credentials/test/{credential_id}")
+async def test_credential_connection(credential_id: str):
+    """
+    Test if a credential is working
+    Does NOT expose the actual credential values
+    Requires admin authentication
+    """
+    try:
+        creds_service = CredentialsService(client, db)
+        
+        # Get test result based on credential type
+        if credential_id == 'mongodb_atlas':
+            result = await creds_service.test_mongodb_connection()
+        elif credential_id == 'google_oauth':
+            result = await creds_service.test_google_oauth()
+        elif credential_id == 'smtp_email':
+            result = await creds_service.test_smtp_connection()
+        elif credential_id == 'render_api':
+            result = await creds_service.test_render_api()
+        else:
+            result = await creds_service.check_credential_configured(credential_id)
+        
+        # Log the test action
+        await creds_service.log_credential_access(
+            user_email='system',
+            action='test_connection',
+            credential_id=credential_id,
+            details={'result': result}
+        )
+        
+        return {
+            "success": True,
+            "credential_id": credential_id,
+            "test_result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error testing credential {credential_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to test credential: {str(e)}")
+
+@api_router.get("/credentials/test/all")
+async def test_all_credentials():
+    """
+    Test all configured credentials
+    Returns status for each without exposing values
+    """
+    try:
+        creds_service = CredentialsService(client, db)
+        results = await creds_service.test_all_credentials()
+        
+        # Log the test action
+        await creds_service.log_credential_access(
+            user_email='system',
+            action='test_all_connections',
+            credential_id='all',
+            details={'results': results['summary']}
+        )
+        
+        return {
+            "success": True,
+            "test_results": results,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error testing all credentials: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to test credentials: {str(e)}")
+
+@api_router.get("/credentials/audit-log")
+async def get_credential_audit_log(limit: int = 50):
+    """
+    Get credential access audit log
+    Requires admin authentication
+    """
+    try:
+        logs = await db.credential_audit_log.find().sort('timestamp', -1).limit(limit).to_list(length=limit)
+        
+        return {
+            "success": True,
+            "audit_log": logs,
+            "count": len(logs),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching audit log: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch audit log: {str(e)}")
+
+# =====================================================================
+# END CREDENTIALS MANAGEMENT ENDPOINTS
+# =====================================================================
+
 @api_router.post("/auth/change-password")
 async def change_password(change_request: dict):
     """Change user password from temporary to permanent"""
