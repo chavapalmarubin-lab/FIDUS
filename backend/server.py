@@ -54,6 +54,18 @@ from system_registry import (
 )
 from health_checks import perform_all_health_checks, calculate_overall_status
 from api_registry import get_api_registry, get_category, get_endpoint, search_endpoints
+from health_service import (
+    check_all_components, 
+    check_frontend_health,
+    check_backend_health,
+    check_database_health,
+    check_mt5_bridge_health,
+    check_google_apis_health,
+    check_github_health,
+    check_render_platform_health,
+    store_health_history,
+    calculate_uptime_percentage
+)
 
 # Credentials Management (Phase 3: Secure Credentials Vault)
 from credentials_registry import (
