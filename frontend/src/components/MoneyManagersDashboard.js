@@ -335,14 +335,30 @@ const MoneyManagersDashboard = () => {
                       {/* Performance Metrics */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 text-sm">Total Allocated:</span>
+                          <span className="text-slate-400 text-sm">Initial Allocation:</span>
                           <span className="text-white font-bold">
                             {formatCurrency(performance.total_allocated)}
                           </span>
                         </div>
                         
+                        {/* NEW: Current Equity */}
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 text-sm">Total P&L:</span>
+                          <span className="text-slate-400 text-sm">Current Equity:</span>
+                          <span className="text-cyan-400 font-medium">
+                            {formatCurrency(performance.current_equity || 0)}
+                          </span>
+                        </div>
+                        
+                        {/* NEW: Withdrawals */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">Withdrawals:</span>
+                          <span className="text-blue-400 font-medium">
+                            {formatCurrency(performance.total_withdrawals || 0)}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">TRUE P&L:</span>
                           <span className={`font-bold flex items-center ${
                             performance.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'
                           }`}>
@@ -356,6 +372,10 @@ const MoneyManagersDashboard = () => {
                               ({performance.return_percentage >= 0 ? '+' : ''}{formatPercentage(performance.return_percentage)})
                             </span>
                           </span>
+                        </div>
+                        
+                        <div className="text-xs text-slate-500 bg-slate-800/50 p-2 rounded">
+                          ✓ Corrected: Equity ({formatCurrency(performance.current_equity || 0)}) + Withdrawals ({formatCurrency(performance.total_withdrawals || 0)})
                         </div>
                         
                         <div className="flex items-center justify-between">
