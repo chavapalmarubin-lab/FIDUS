@@ -104,8 +104,6 @@ function IntegrationNode({ data }) {
     </div>
   );
 
-  );
-}
 
 // Memoize component for performance
 export default React.memo(IntegrationNode);
