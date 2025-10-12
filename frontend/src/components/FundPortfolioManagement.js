@@ -34,6 +34,8 @@ const FundPortfolioManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [expandedFunds, setExpandedFunds] = useState({});
+  const [fundPerformanceDetails, setFundPerformanceDetails] = useState({});
 
   // Real-time data entry states
   const [realTimeData, setRealTimeData] = useState({
