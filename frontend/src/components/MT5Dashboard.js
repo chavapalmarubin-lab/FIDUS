@@ -23,32 +23,81 @@ const MT5Dashboard = () => {
         'Content-Type': 'application/json'
       };
 
-      // Fetch dashboard overview
+      // PHASE 3 FIX: Fetch CORRECTED MT5 data with TRUE P&L
+      const correctedResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/mt5/accounts/corrected`,
+        { headers }
+      );
+
+      // Fetch dashboard overview (for additional metrics)
       const dashboardResponse = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/mt5/dashboard/overview`,
         { headers }
       );
 
-      // Fetch Alejandro's accounts (assuming client_alejandro)
-      const accountsResponse = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/mt5/accounts/client_alejandro`,
-        { headers }
-      );
-
-      if (!dashboardResponse.ok || !accountsResponse.ok) {
-        throw new Error('Failed to fetch MT5 data');
+      if (!correctedResponse.ok) {
+        throw new Error('Failed to fetch corrected MT5 data');
       }
 
-      const dashboardResult = await dashboardResponse.json();
-      const accountsResult = await accountsResponse.json();
+      const correctedResult = await correctedResponse.json();
+      const dashboardResult = dashboardResponse.ok ? await dashboardResponse.json() : null;
 
-      setDashboardData(dashboardResult);
-      setAccountsData(accountsResult);
+      console.log('✅ CORRECTED MT5 Data loaded:', correctedResult);
+      console.log('📊 Verification:', correctedResult.verification);
+
+      // Transform corrected data into dashboard format
+      const transformedData = {
+        dashboard: {
+          total_equity: correctedResult.summary?.total_equity || 0,
+          total_profit: correctedResult.summary?.total_true_pnl || 0,
+          total_allocated: correctedResult.summary?.total_balance || 0,
+          total_accounts: correctedResult.accounts?.length || 0,
+          total_positions: correctedResult.accounts?.reduce((sum, acc) => sum + (acc.open_positions || 0), 0) || 0,
+          overall_return_percent: correctedResult.summary?.total_balance > 0 
+            ? ((correctedResult.summary.total_true_pnl / correctedResult.summary.total_balance) * 100) 
+            : 0,
+          data_quality: {
+            live_accounts: correctedResult.accounts?.filter(acc => acc.connection_status === 'active').length || 0
+          },
+          by_fund: {},
+          performance_summary: {
+            profitable_accounts: correctedResult.accounts?.filter(acc => (acc.true_pnl || 0) > 0).length || 0,
+            losing_accounts: correctedResult.accounts?.filter(acc => (acc.true_pnl || 0) < 0).length || 0,
+            break_even_accounts: correctedResult.accounts?.filter(acc => (acc.true_pnl || 0) === 0).length || 0,
+          }
+        }
+      };
+
+      // Transform accounts data with corrected P&L
+      const transformedAccounts = {
+        accounts: correctedResult.accounts?.map(acc => ({
+          mt5_login: acc.account,
+          fund_code: acc.fund_code || 'UNKNOWN',
+          allocated_amount: acc.balance || 0,
+          current_equity: acc.equity || 0,
+          profit_loss: acc.true_pnl || 0, // ✅ USE TRUE P&L
+          return_percent: acc.balance > 0 ? ((acc.true_pnl / acc.balance) * 100) : 0,
+          open_positions: acc.open_positions || 0,
+          margin_used: acc.margin || 0,
+          margin_free: acc.margin_free || 0,
+          data_source: acc.connection_status === 'active' ? 'live' : 'stored',
+          last_sync: acc.updated_at || null,
+          // ✅ NEW FIELDS: Show corrected data breakdown
+          displayed_pnl: acc.displayed_pnl || 0,
+          profit_withdrawals: acc.profit_withdrawals || 0,
+          inter_account_transfers: acc.inter_account_transfers || 0,
+          needs_review: acc.needs_review || false
+        })) || [],
+        summary: correctedResult.summary || {}
+      };
+
+      setDashboardData(transformedData);
+      setAccountsData(transformedAccounts);
       setLastRefresh(new Date());
 
     } catch (err) {
       setError(err.message);
-      console.error('MT5 data fetch error:', err);
+      console.error('❌ MT5 data fetch error:', err);
     } finally {
       setLoading(false);
     }
