@@ -316,6 +316,13 @@ export default function ArchitectureDiagram({ components, healthData, connection
           onClose={() => setSelectedNode(null)}
         />
       )}
+
+      {/* Settings Modal */}
+      <DiagramSettings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onSave={handleSettingsSave}
+      />
     </div>
   );
 }
