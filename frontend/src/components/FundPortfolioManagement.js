@@ -407,16 +407,12 @@ const FundPortfolioManagement = () => {
                   </div>
                 </div>
 
-                {/* FIDUS Profitability */}
-                <div className="bg-slate-700/50 rounded-lg p-3">
-                  <div className="text-sm text-slate-300 mb-2">FIDUS Monthly Profit:</div>
-                  <div className="text-lg font-bold text-green-400">
-                    {formatCurrency(calculateFidusProfit(fund))}
+                  <div>
+                    <span className="text-slate-400">FIDUS Monthly Profit:</span>
+                    <span className="text-white ml-2">
+                      {formatCurrency(fund.total_rebates || 0)}
+                    </span>
                   </div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Performance - Client Interest + Rebates
-                  </div>
-                </div>
 
                 {/* Real-time Data Entry */}
                 <div className="bg-slate-800/50 rounded-lg p-3">
