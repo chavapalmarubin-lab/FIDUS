@@ -441,15 +441,14 @@ SYSTEM_COMPONENTS = {
 # Component connections/dependencies map
 COMPONENT_CONNECTIONS = [
     {'from': 'frontend', 'to': 'backend', 'type': 'REST API', 'protocol': 'HTTPS'},
-    {'from': 'frontend', 'to': 'cdn', 'type': 'Asset Delivery', 'protocol': 'HTTPS'},
     {'from': 'backend', 'to': 'mongodb', 'type': 'Database', 'protocol': 'MongoDB Protocol'},
     {'from': 'backend', 'to': 'google_workspace', 'type': 'API Integration', 'protocol': 'REST/OAuth'},
     {'from': 'backend', 'to': 'email_service', 'type': 'SMTP', 'protocol': 'SMTP/TLS'},
     {'from': 'mt5_bridge', 'to': 'mt5_terminal', 'type': 'Data Sync', 'protocol': 'MetaTrader5 API'},
     {'from': 'mt5_bridge', 'to': 'mongodb', 'type': 'Database', 'protocol': 'MongoDB Protocol'},
-    {'from': 'load_balancer', 'to': 'frontend', 'type': 'Traffic Distribution', 'protocol': 'HTTP/HTTPS'},
-    {'from': 'github', 'to': 'frontend', 'type': 'Deployment', 'protocol': 'Git/HTTPS'},
-    {'from': 'github', 'to': 'backend', 'type': 'Deployment', 'protocol': 'Git/HTTPS'},
+    {'from': 'render_platform', 'to': 'frontend', 'type': 'Hosting & CDN', 'protocol': 'HTTPS'},
+    {'from': 'render_platform', 'to': 'backend', 'type': 'Hosting & Load Balancing', 'protocol': 'HTTPS'},
+    {'from': 'github', 'to': 'render_platform', 'type': 'Auto-Deploy', 'protocol': 'Git/HTTPS'},
 ]
 
 def get_all_components() -> Dict[str, List[Dict[str, Any]]]:
