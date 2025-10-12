@@ -39,6 +39,7 @@ async def calculate_fund_weighted_performance(db, fund_code: str) -> Dict[str, A
                 'fund_code': fund_code,
                 'total_aum': 0,
                 'weighted_return': 0,
+                'total_true_pnl': 0,
                 'account_count': 0,
                 'accounts': [],
                 'message': 'No accounts allocated yet'
