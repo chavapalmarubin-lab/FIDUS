@@ -125,14 +125,8 @@ class FundPortfolioMT5Test:
                 
                 accounts = data['accounts']
                 
-                # Expected accounts with fund_type
-                expected_accounts = {
-                    '885822': 'CORE',
-                    '886557': 'BALANCE', 
-                    '886066': 'BALANCE',
-                    '886602': 'BALANCE',
-                    '886528': 'SEPARATION'  # This should NOT count for any fund
-                }
+                # We expect to find accounts with fund_code fields
+                # SEPARATION accounts should NOT count for any fund in the portfolio overview
                 
                 found_accounts = {}
                 account_balances = {}
