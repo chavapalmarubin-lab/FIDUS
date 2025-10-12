@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from './LoadingSpinner';
 import { Search, ChevronDown, ChevronRight, Play, Copy, Check, AlertCircle, Code } from 'lucide-react';
 
 const ApiDocumentation = () => {
