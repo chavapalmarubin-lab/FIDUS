@@ -656,16 +656,26 @@ const CashFlowManagement = () => {
                 </div>
               </div>
               
-              {/* Separation Interest */}
+              {/* Broker Interest (NOT full separation balance to avoid double counting) */}
               <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-slate-400">Separation Interest</p>
-                  <p className="text-xs text-slate-500">Interest earned in separation accounts</p>
+                  <p className="text-sm text-slate-400">Broker Interest Earned</p>
+                  <p className="text-xs text-slate-500">
+                    {fundAccounting?.mt5_corrected_data 
+                      ? '✓ Interest only (withdrawals already in TRUE P&L)'
+                      : 'Interest earned in separation accounts'
+                    }
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-400">
-                    {formatCurrency(fundAccounting?.assets?.separation_interest || 0)}
+                    {formatCurrency(fundAccounting?.assets?.broker_interest || 0)}
                   </p>
+                  {fundAccounting?.mt5_corrected_data && (
+                    <p className="text-xs text-yellow-400 mt-1">
+                      Separation balance: {formatCurrency(fundAccounting?.separation_balance || 0)}
+                    </p>
+                  )}
                 </div>
               </div>
               
