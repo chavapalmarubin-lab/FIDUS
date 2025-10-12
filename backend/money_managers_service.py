@@ -274,13 +274,14 @@ class MoneyManagersService:
     ) -> Dict[str, Any]:
         """
         Calculate performance metrics for a money manager across all assigned accounts
+        PHASE 3 FIX: Now uses TRUE P&L from corrected MT5 accounts data
         
         Args:
             manager_id: Manager identifier
             detailed: Whether to include detailed metrics
             
         Returns:
-            Performance metrics dictionary
+            Performance metrics dictionary with TRUE P&L
         """
         try:
             # Get manager document
@@ -294,7 +295,31 @@ class MoneyManagersService:
             if not assigned_accounts:
                 return self.get_empty_performance()
             
-            # Get all trades from assigned accounts (last 30 days for performance)
+            # PHASE 3 FIX: Get corrected MT5 account data with TRUE P&L
+            total_allocated = 0
+            total_equity = 0
+            total_withdrawals = 0
+            total_true_pnl = 0
+            
+            for account_num in assigned_accounts:
+                # Get corrected data from mt5_accounts collection
+                account_data = await self.db.mt5_accounts.find_one({"account": account_num})
+                
+                if account_data:
+                    # Use corrected TRUE P&L that includes profit withdrawals
+                    true_pnl = account_data.get("true_pnl", 0)
+                    equity = account_data.get("equity", 0)
+                    profit_withdrawals = account_data.get("profit_withdrawals", 0)
+                    balance = account_data.get("balance", 0)
+                    
+                    total_allocated += balance  # Current balance is the allocation
+                    total_equity += equity
+                    total_withdrawals += profit_withdrawals
+                    total_true_pnl += true_pnl
+                    
+                    logger.info(f"Account {account_num}: TRUE P&L={true_pnl}, Equity={equity}, Withdrawals={profit_withdrawals}")
+            
+            # Get all trades from assigned accounts (last 30 days for trade statistics)
             end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(days=30)
             
@@ -304,43 +329,27 @@ class MoneyManagersService:
             })
             trades = await trades_cursor.to_list(length=None)
             
-            # Get daily performance from assigned accounts  
-            daily_perf_cursor = self.db.daily_performance.find({
-                "account": {"$in": assigned_accounts},
-                "date": {"$gte": start_date.replace(hour=0, minute=0, second=0, microsecond=0)}
-            })
-            daily_perf = await daily_perf_cursor.to_list(length=None)
-            
-            if not trades and not daily_perf:
-                return self.get_empty_performance()
-            
-            # Calculate basic metrics
+            # Calculate trade statistics (win rate, profit factor, etc.)
             total_trades = len(trades)
             winning_trades = [t for t in trades if t["profit"] > 0]
             losing_trades = [t for t in trades if t["profit"] < 0]
             
-            total_pnl = sum(t["profit"] for t in trades)
             gross_profit = sum(t["profit"] for t in winning_trades)
             gross_loss = sum(t["profit"] for t in losing_trades)
             
             win_rate = (len(winning_trades) / total_trades * 100) if total_trades > 0 else 0
             profit_factor = abs(gross_profit / gross_loss) if gross_loss != 0 else 999.99
-            avg_trade = total_pnl / total_trades if total_trades > 0 else 0
+            avg_trade = sum(t["profit"] for t in trades) / total_trades if total_trades > 0 else 0
             
-            # Calculate total allocated amount
-            total_allocated = 0
-            for account in assigned_accounts:
-                # Get account allocation from your account mapping
-                if account == 886557:
-                    total_allocated += 80000  # BALANCE $80K
-                elif account in [886066, 886602]:
-                    total_allocated += 10000  # BALANCE $10K each
-                elif account == 885822:
-                    total_allocated += 18151.41  # CORE $18K
+            logger.info(f"Manager {manager_id} Performance: "
+                       f"TRUE P&L={total_true_pnl}, Allocated={total_allocated}, "
+                       f"Equity={total_equity}, Withdrawals={total_withdrawals}")
             
             performance = {
-                "total_allocated": total_allocated,
-                "total_pnl": round(total_pnl, 2),
+                "total_allocated": round(total_allocated, 2),
+                "current_equity": round(total_equity, 2),  # NEW: Current equity in accounts
+                "total_withdrawals": round(total_withdrawals, 2),  # NEW: Profit withdrawals
+                "total_pnl": round(total_true_pnl, 2),  # FIXED: Now uses TRUE P&L
                 "total_trades": total_trades,
                 "winning_trades": len(winning_trades),
                 "losing_trades": len(losing_trades),
@@ -349,7 +358,7 @@ class MoneyManagersService:
                 "avg_trade": round(avg_trade, 2),
                 "gross_profit": round(gross_profit, 2),
                 "gross_loss": round(gross_loss, 2),
-                "return_percentage": round((total_pnl / total_allocated * 100), 2) if total_allocated > 0 else 0
+                "return_percentage": round((total_true_pnl / total_allocated * 100), 2) if total_allocated > 0 else 0
             }
             
             if detailed:
