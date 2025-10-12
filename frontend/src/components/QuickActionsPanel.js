@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ActionCard from './ActionCard';
+import LoadingSpinner from './LoadingSpinner';
 import { Rocket, Database, Wrench, Clock, Activity, RefreshCw } from 'lucide-react';
+import { GRIDS, TYPOGRAPHY, SPACING } from '../constants/uiConstants';
 
 const QuickActionsPanel = () => {
   const [loading, setLoading] = useState({});
