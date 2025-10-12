@@ -76,16 +76,16 @@ const TradingAnalyticsDashboard = () => {
         if (overviewResponse.data.success && dailyResponse.data.success && tradesResponse.data.success) {
           const analytics = overviewResponse.data.analytics;
           
-          // ✅ Replace total_pnl with corrected TRUE P&L
+          // ✅ Replace total_pnl with corrected TRUE P&L (with null safety)
           if (correctedResponse.data.success) {
             const corrected = correctedResponse.data;
-            analytics.overview.total_pnl = corrected.fund_assets.mt5_trading_pnl;
+            analytics.overview.total_pnl = corrected?.fund_assets?.mt5_trading_pnl || 0;
             analytics.overview.corrected_data_used = true;
             
             console.log('✅ Using CORRECTED Trading Analytics P&L:', {
-              corrected_pnl: corrected.fund_assets.mt5_trading_pnl,
-              profit_withdrawals: corrected.summary.total_profit_withdrawals,
-              verified: corrected.verification.verified
+              corrected_pnl: corrected?.fund_assets?.mt5_trading_pnl || 0,
+              profit_withdrawals: corrected?.summary?.total_profit_withdrawals || 0,
+              verified: corrected?.verification?.verified || false
             });
           }
           
