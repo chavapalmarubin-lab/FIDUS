@@ -17587,7 +17587,23 @@ async def update_fund_realtime_data(fund_code: str, realtime_data: dict):
         if fund_code not in FIDUS_FUND_CONFIG:
             raise HTTPException(status_code=404, detail="Fund not found")
         
-
+        # Store real-time data in database
+        await db.fund_realtime_data.update_one(
+            {"fund_code": fund_code},
+            {"$set": {
+                **realtime_data,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        return {"success": True, "message": "Real-time data updated"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Update realtime data error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update real-time data")
 
 @api_router.get("/funds/{fund_code}/performance")
 async def get_fund_performance(fund_code: str, current_user: dict = Depends(get_current_admin_user)):
