@@ -409,7 +409,7 @@ const FundPortfolioManagement = () => {
 
                 {/* FIDUS Profitability */}
                 <div className="bg-slate-700/50 rounded-lg p-3">
-                  <div className="text-sm text-slate-300 mb-2">FIDUS Monthly Profit</div>
+                  <div className="text-sm text-slate-300 mb-2">FIDUS Monthly Profit:</div>
                   <div className="text-lg font-bold text-green-400">
                     {formatCurrency(calculateFidusProfit(fund))}
                   </div>
