@@ -112,18 +112,19 @@ const MT5Management = () => {
                     });
                 }
                 
-                // Use summary data from API with CORRECTED TRUE P&L
-                const summary = data.summary || {};
+                // Use totals data from API with CORRECTED TRUE P&L
+                const totals = data.totals || {};
                 const apiTotalStats = {
-                    total_accounts: summary.total_accounts || 0,
-                    total_balance: summary.total_balance || 0,
-                    total_equity: summary.total_equity || 0,
-                    total_profit_loss: summary.total_true_pnl || 0,  // ✅ USE TRUE P&L!
-                    total_profit_withdrawals: summary.total_profit_withdrawals || 0,
+                    total_accounts: accounts.length || 0,
+                    total_balance: totals.total_equity || 0,
+                    total_equity: totals.total_equity || 0,
+                    total_profit_loss: totals.total_true_pnl || 0,  // ✅ USE TRUE P&L FROM TOTALS!
+                    total_profit_withdrawals: totals.total_profit_withdrawals || 0,
                     verification: data.verification || null
                 };
                 
-                console.log('✅ Total TRUE P&L:', apiTotalStats.total_profit_loss);
+                console.log('✅ Total TRUE P&L from corrected endpoint:', apiTotalStats.total_profit_loss);
+                console.log('✅ Full totals object:', totals);
                 
                 setAccountsByBroker(accountsByBroker);
                 setTotalStats(apiTotalStats);
