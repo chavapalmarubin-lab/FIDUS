@@ -3141,12 +3141,22 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         if not mt5_data['success']:
             raise HTTPException(status_code=500, detail="Failed to get MT5 data")
         
-        # Calculate fund assets
-        mt5_trading_pnl = mt5_data['totals']['total_true_pnl']
-        separation_interest = mt5_data['totals']['separation_balance']
+        # Calculate fund assets - CRITICAL FIX: Avoid double counting!
+        # TRUE P&L already includes profit withdrawals, so we can't add full separation balance
+        mt5_trading_pnl = mt5_data['totals']['total_true_pnl']  # Already includes withdrawals
+        separation_balance = mt5_data['totals']['separation_balance']  # Full balance
+        total_profit_withdrawals = mt5_data['totals']['total_profit_withdrawals']  # Already in TRUE P&L
+        
+        # ONLY add the broker interest (not the full separation balance)
+        broker_interest = separation_balance - total_profit_withdrawals  # Interest earned by broker
         broker_rebates = 0  # Placeholder for future
         
-        total_fund_assets = mt5_trading_pnl + separation_interest + broker_rebates
+        # CORRECT calculation: TRUE P&L + broker interest (NO double counting)
+        total_fund_assets = mt5_trading_pnl + broker_interest + broker_rebates
+        
+        logger.info(f"✅ Fund Assets Calculation (NO DOUBLE COUNTING): "
+                   f"TRUE P&L={mt5_trading_pnl} + Broker Interest={broker_interest} "
+                   f"= Total={total_fund_assets}")
         
         return {
             'success': True,
