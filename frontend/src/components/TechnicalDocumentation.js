@@ -4,6 +4,7 @@ import ArchitectureDiagram from './ArchitectureDiagram';
 import CredentialsVault from './CredentialsVault';
 import ApiDocumentation from './ApiDocumentation';
 import SystemHealthDashboard from './SystemHealthDashboard';
+import QuickActionsPanel from './QuickActionsPanel';
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
