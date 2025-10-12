@@ -821,7 +821,7 @@ const MT5Management = () => {
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 text-sm text-slate-400">
-                                                    Total Inter-Account Transfers: {formatCurrency(selectedAccountDetails.deal_history.total_inter_account)}
+                                                    Total Inter-Account Transfers: {formatCurrency(selectedAccountDetails?.deal_history?.total_inter_account || 0)}
                                                 </div>
                                             </div>
                                         )}
