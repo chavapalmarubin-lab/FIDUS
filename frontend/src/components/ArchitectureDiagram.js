@@ -38,6 +38,16 @@ export default function ArchitectureDiagram({ components, healthData, connection
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [diagramSettings, setDiagramSettings] = useState(() => {
+    const saved = localStorage.getItem('fidus_diagram_settings');
+    return saved ? JSON.parse(saved) : {
+      showMiniMap: true,
+      showLabels: true,
+      showGrid: true,
+      enableFlowAnimation: true,
+    };
+  });
 
   // Initialize nodes from components data
   useEffect(() => {
