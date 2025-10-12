@@ -256,51 +256,95 @@ async def check_google_apis_health(db) -> Dict[str, Any]:
 
 
 async def check_github_health() -> Dict[str, Any]:
-    """Check GitHub repository status"""
+    """
+    Check GitHub repository status
+    Phase 7: Adjusted thresholds for external service (more lenient)
+    """
     start = time.time()
     repo_url = "https://api.github.com/repos/chavapalmarubin/fidus-platform"
+    github_token = os.getenv('GITHUB_TOKEN')
     
     try:
+        headers = {'Accept': 'application/vnd.github.v3+json'}
+        
+        # Add authentication if token available (increases rate limit from 60 to 5000/hour)
+        if github_token:
+            headers['Authorization'] = f'Bearer {github_token}'
+        
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 repo_url,
-                timeout=5.0,
-                headers={'Accept': 'application/vnd.github.v3+json'}
+                timeout=10.0,  # Increased from 5.0 for external API
+                headers=headers
             )
         response_time = (time.time() - start) * 1000
         
+        # More lenient thresholds for external service (Phase 7 fix)
+        # GitHub is external and naturally slower than internal services
+        if response_time < 2000:  # < 2s
+            status = "healthy"
+        elif response_time < 5000:  # 2-5s
+            status = "degraded"
+        else:  # > 5s
+            status = "slow"
+        
         if response.status_code == 200:
             data = response.json()
+            rate_limit_remaining = response.headers.get('X-RateLimit-Remaining', 'Unknown')
+            rate_limit = response.headers.get('X-RateLimit-Limit', 'Unknown')
             
             return {
                 "component": "github",
                 "name": "GitHub Repository",
-                "status": "healthy",
+                "status": status,  # Use calculated status based on response time
                 "response_time": round(response_time, 2),
                 "default_branch": data.get('default_branch', 'main'),
                 "last_commit": data.get('pushed_at', 'Unknown'),
                 "open_issues": data.get('open_issues_count', 0),
                 "repo_size": data.get('size', 0),
                 "url": "https://github.com/chavapalmarubin/fidus-platform",
+                "rate_limit": f"{rate_limit_remaining}/{rate_limit}",
                 "last_check": datetime.now(timezone.utc).isoformat(),
-                "message": "Repository accessible"
+                "message": f"Repository accessible ({round(response_time)}ms)" if status == "healthy" else f"Slow response: {round(response_time)}ms"
+            }
+        elif response.status_code == 403:
+            # Rate limit exceeded
+            return {
+                "component": "github",
+                "name": "GitHub Repository",
+                "status": "degraded",  # Not critical, just rate limited
+                "status_code": response.status_code,
+                "last_check": datetime.now(timezone.utc).isoformat(),
+                "message": "GitHub API rate limit exceeded (add GITHUB_TOKEN to .env for higher limit)"
             }
         else:
             return {
                 "component": "github",
                 "name": "GitHub Repository",
-                "status": "degraded",
+                "status": "degraded",  # Not offline, just HTTP error
                 "status_code": response.status_code,
                 "last_check": datetime.now(timezone.utc).isoformat(),
                 "message": f"API returned {response.status_code}"
             }
-    except Exception as e:
+    except httpx.TimeoutException:
+        # GitHub timeout is degraded, not offline (external service)
         return {
             "component": "github",
             "name": "GitHub Repository",
-            "status": "error",
+            "status": "degraded",
+            "error": "Request timeout",
+            "last_check": datetime.now(timezone.utc).isoformat(),
+            "message": "GitHub API timeout (external service experiencing delays)"
+        }
+    except Exception as e:
+        # GitHub being unreachable is degraded, not critical (external dependency)
+        return {
+            "component": "github",
+            "name": "GitHub Repository",
+            "status": "degraded",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
+            "message": "Unable to reach GitHub API (external service issue)"
         }
 
 
