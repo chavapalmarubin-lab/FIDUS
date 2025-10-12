@@ -2810,6 +2810,230 @@ async def get_component_uptime(component: str, hours: int = 24):
 
 
 
+# ============================================================================
+# ALERT MANAGEMENT ENDPOINTS (Phase 5)
+# ============================================================================
+
+@api_router.get("/system/alerts")
+async def get_alerts(
+    severity: Optional[str] = None,
+    component: Optional[str] = None,
+    acknowledged: Optional[bool] = None,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get system alerts with optional filters
+    Phase 5: Alert & Notification System
+    """
+    try:
+        # Build query
+        query = {}
+        if severity:
+            query["severity"] = severity
+        if component:
+            query["component"] = component
+        if acknowledged is not None:
+            query["acknowledged"] = acknowledged
+        
+        # Get alerts
+        alerts = await db.system_alerts.find(query).sort("timestamp", -1).limit(limit).to_list(length=limit)
+        
+        # Format alerts
+        formatted_alerts = []
+        for alert in alerts:
+            formatted_alerts.append({
+                "id": str(alert["_id"]),
+                "component": alert.get("component"),
+                "component_name": alert.get("component_name"),
+                "severity": alert.get("severity"),
+                "status": alert.get("status"),
+                "message": alert.get("message"),
+                "details": alert.get("details", {}),
+                "timestamp": alert.get("timestamp").isoformat() if alert.get("timestamp") else None,
+                "acknowledged": alert.get("acknowledged", False),
+                "acknowledged_at": alert.get("acknowledged_at").isoformat() if alert.get("acknowledged_at") else None,
+                "acknowledged_by": alert.get("acknowledged_by"),
+                "resolved": alert.get("resolved", False),
+                "resolved_at": alert.get("resolved_at").isoformat() if alert.get("resolved_at") else None
+            })
+        
+        return {
+            "success": True,
+            "total": len(formatted_alerts),
+            "alerts": formatted_alerts
+        }
+    except Exception as e:
+        logger.error(f"Error fetching alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/system/alerts/unread")
+async def get_unread_alerts_count(current_user: dict = Depends(get_current_admin_user)):
+    """Get count of unread/unacknowledged alerts"""
+    try:
+        count = await db.system_alerts.count_documents({"acknowledged": False})
+        
+        return {
+            "success": True,
+            "count": count
+        }
+    except Exception as e:
+        logger.error(f"Error counting unread alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/system/alerts/{alert_id}/acknowledge")
+async def acknowledge_alert(alert_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Acknowledge an alert"""
+    try:
+        from bson import ObjectId
+        
+        result = await db.system_alerts.update_one(
+            {"_id": ObjectId(alert_id)},
+            {
+                "$set": {
+                    "acknowledged": True,
+                    "acknowledged_at": datetime.now(timezone.utc),
+                    "acknowledged_by": current_user.get("username", "admin")
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        return {
+            "success": True,
+            "message": "Alert acknowledged successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error acknowledging alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/system/alerts/{alert_id}/resolve")
+async def resolve_alert(alert_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Mark an alert as resolved"""
+    try:
+        from bson import ObjectId
+        
+        result = await db.system_alerts.update_one(
+            {"_id": ObjectId(alert_id)},
+            {
+                "$set": {
+                    "resolved": True,
+                    "resolved_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        return {
+            "success": True,
+            "message": "Alert resolved successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resolving alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/notifications")
+async def get_notifications(
+    read: Optional[bool] = None,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get in-app notifications"""
+    try:
+        # Build query
+        query = {}
+        if read is not None:
+            query["read"] = read
+        
+        # Get notifications
+        notifications = await db.notifications.find(query).sort("timestamp", -1).limit(limit).to_list(length=limit)
+        
+        # Format notifications
+        formatted_notifications = []
+        for notif in notifications:
+            formatted_notifications.append({
+                "id": str(notif["_id"]),
+                "alert_id": notif.get("alert_id"),
+                "component": notif.get("component"),
+                "component_name": notif.get("component_name"),
+                "severity": notif.get("severity"),
+                "message": notif.get("message"),
+                "timestamp": notif.get("timestamp").isoformat() if notif.get("timestamp") else None,
+                "read": notif.get("read", False),
+                "read_at": notif.get("read_at").isoformat() if notif.get("read_at") else None
+            })
+        
+        return {
+            "success": True,
+            "total": len(formatted_notifications),
+            "notifications": formatted_notifications
+        }
+    except Exception as e:
+        logger.error(f"Error fetching notifications: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: dict = Depends(get_current_admin_user)):
+    """Mark notification as read"""
+    try:
+        from bson import ObjectId
+        
+        result = await db.notifications.update_one(
+            {"_id": ObjectId(notification_id)},
+            {
+                "$set": {
+                    "read": True,
+                    "read_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        
+        return {
+            "success": True,
+            "message": "Notification marked as read"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking notification as read {notification_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/notifications/mark-all-read")
+async def mark_all_notifications_read(current_user: dict = Depends(get_current_admin_user)):
+    """Mark all notifications as read"""
+    try:
+        result = await db.notifications.update_many(
+            {"read": False},
+            {
+                "$set": {
+                    "read": True,
+                    "read_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": f"Marked {result.modified_count} notifications as read"
+        }
+    except Exception as e:
+        logger.error(f"Error marking all notifications as read: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
 # =====================================================================
 # END SYSTEM REGISTRY ENDPOINTS
 # =====================================================================
