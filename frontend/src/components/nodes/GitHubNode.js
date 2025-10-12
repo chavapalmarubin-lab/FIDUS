@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * GitHubNode - Special custom node for GitHub (Central Hub)
  * Gold gradient, larger size, deployment status lights
  */
-export default function GitHubNode({ data }) {
+function GitHubNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
@@ -119,4 +119,6 @@ export default function GitHubNode({ data }) {
       )}
     </div>
   );
-}
+
+// Memoize component for performance
+export default React.memo(GitHubNode);

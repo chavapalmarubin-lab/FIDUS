@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * ServiceNode - Custom node for service components (VPS, MT5)
  * Purple gradient with uptime and performance metrics
  */
-export default function ServiceNode({ data }) {
+function ServiceNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
@@ -112,4 +112,6 @@ export default function ServiceNode({ data }) {
       />
     </div>
   );
-}
+
+// Memoize component for performance
+export default React.memo(ServiceNode);

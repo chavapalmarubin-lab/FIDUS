@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * InfrastructureNode - Custom node for infrastructure components (Load Balancer, CDN)
  * Gray gradient with traffic and latency info
  */
-export default function InfrastructureNode({ data }) {
+function InfrastructureNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
@@ -111,4 +111,6 @@ export default function InfrastructureNode({ data }) {
       />
     </div>
   );
-}
+
+// Memoize component for performance
+export default React.memo(InfrastructureNode);

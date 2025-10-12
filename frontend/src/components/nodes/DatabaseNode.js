@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * DatabaseNode - Custom node for database components (MongoDB)
  * Green gradient with storage and collection info
  */
-export default function DatabaseNode({ data }) {
+function DatabaseNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
@@ -108,4 +108,6 @@ export default function DatabaseNode({ data }) {
       />
     </div>
   );
-}
+
+// Memoize component for performance
+export default React.memo(DatabaseNode);

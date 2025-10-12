@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
  * IntegrationNode - Custom node for integration components (Google, Email, etc.)
  * Orange gradient with API status and connection info
  */
-export default function IntegrationNode({ data }) {
+function IntegrationNode({ data }) {
   const component = data.component || {};
   const health = data.health || {};
   
@@ -103,4 +103,6 @@ export default function IntegrationNode({ data }) {
       />
     </div>
   );
-}
+
+// Memoize component for performance
+export default React.memo(IntegrationNode);
