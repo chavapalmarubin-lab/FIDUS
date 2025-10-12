@@ -57,31 +57,48 @@ export default function ArchitectureDiagram({ components, healthData, connection
     const initialNodes = [];
     let yOffset = 0;
     
-    // Define positions for each category (manual layout for now)
+    // Define positions for each category with INCREASED SPACING (Phase 7 fix)
     const positions = {
-      // GitHub at the top center
-      github: { x: 600, y: 50 },
+      // Core components only for simple view
+      simple: {
+        frontend: { x: 200, y: 200 },
+        backend: { x: 600, y: 200 },
+        mongodb: { x: 600, y: 450 },
+        mt5_bridge: { x: 1000, y: 350 },
+        github: { x: 600, y: 50 },
+      },
       
-      // Applications layer
-      frontend: { x: 300, y: 200 },
-      backend: { x: 600, y: 200 },
-      
-      // Databases
-      mongodb: { x: 600, y: 350 },
-      
-      // Services
-      vps: { x: 900, y: 200 },
-      mt5_bridge: { x: 1050, y: 350 },
-      mt5_terminal: { x: 1050, y: 500 },
-      
-      // Infrastructure
-      load_balancer: { x: 300, y: 500 },
-      cdn: { x: 150, y: 500 },
-      
-      // Integrations (bottom row)
-      google_workspace: { x: 200, y: 700 },
-      email_service: { x: 400, y: 700 },
+      // All components for detailed view - INCREASED SPACING
+      detailed: {
+        // GitHub at the top center
+        github: { x: 700, y: 50 },
+        
+        // Applications layer - More spacing
+        frontend: { x: 250, y: 250 },
+        backend: { x: 700, y: 250 },
+        
+        // Databases - Further down
+        mongodb: { x: 700, y: 500 },
+        
+        // Services - Spread out more
+        vps: { x: 1100, y: 250 },
+        mt5_bridge: { x: 1300, y: 400 },
+        mt5_terminal: { x: 1300, y: 650 },
+        
+        // Infrastructure - Lower and spread
+        load_balancer: { x: 250, y: 700 },
+        cdn: { x: 50, y: 700 },
+        render_platform: { x: 450, y: 700 },
+        
+        // Integrations (bottom row) - More spacing
+        google_workspace: { x: 200, y: 900 },
+        email_service: { x: 500, y: 900 },
+        google_apis: { x: 800, y: 900 },
+      }
     };
+    
+    // Get positions based on view mode
+    const currentPositions = viewMode === 'simple' ? positions.simple : positions.detailed;
 
     // Flatten all components from categories
     Object.entries(components).forEach(([category, categoryComponents]) => {
