@@ -335,27 +335,28 @@ export default function TechnicalDocumentation() {
           </div>
         </div>
 
-        {/* Conditional View Rendering */}
-        {viewMode === 'actions' ? (
-          /* Quick Actions Panel View */
-          <QuickActionsPanel />
-        ) : viewMode === 'health' ? (
-          /* System Health Dashboard View */
-          <SystemHealthDashboard />
-        ) : viewMode === 'api' ? (
-          /* API Documentation View */
-          <ApiDocumentation />
-        ) : viewMode === 'diagram' ? (
-          /* Architecture Diagram View */
-          <ArchitectureDiagram 
-            components={components}
-            healthData={healthData}
-            connections={connections}
-          />
-        ) : viewMode === 'credentials' ? (
-          /* Credentials Vault View */
-          <CredentialsVault />
-        ) : (
+        {/* Conditional View Rendering with Lazy Loading (Phase 7) */}
+        <Suspense fallback={<LoadingSpinner size="lg" message="Loading view..." fullPage />}>
+          {viewMode === 'actions' ? (
+            /* Quick Actions Panel View */
+            <QuickActionsPanel />
+          ) : viewMode === 'health' ? (
+            /* System Health Dashboard View */
+            <SystemHealthDashboard />
+          ) : viewMode === 'api' ? (
+            /* API Documentation View */
+            <ApiDocumentation />
+          ) : viewMode === 'diagram' ? (
+            /* Architecture Diagram View */
+            <ArchitectureDiagram 
+              components={components}
+              healthData={healthData}
+              connections={connections}
+            />
+          ) : viewMode === 'credentials' ? (
+            /* Credentials Vault View */
+            <CredentialsVault />
+          ) : (
           /* Grid View */
           <>
             {/* Category Filter */}
