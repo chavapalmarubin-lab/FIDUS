@@ -162,15 +162,15 @@ class FundPortfolioMT5Test:
                 dynamic_total = sum(acc['balance'] for acc in dynamic_accounts)
                 unlimited_total = sum(acc['balance'] for acc in unlimited_accounts)
                 
-                details = f"CORE: {len(core_accounts)} accounts (${core_total:,.2f}), BALANCE: {len(balance_accounts)} accounts (${balance_total:,.2f})"
+                details = f"CORE: {len(core_accounts)} accounts (${core_total:,.2f}), BALANCE: {len(balance_accounts)} accounts (${balance_total:,.2f}), DYNAMIC: {len(dynamic_accounts)} accounts, UNLIMITED: {len(unlimited_accounts)} accounts"
                 self.log_test("MT5 Accounts Data Verification", True, details)
                 
                 # Store for later comparison
                 self.expected_mt5_data = {
                     'CORE': {'count': len(core_accounts), 'total': core_total},
                     'BALANCE': {'count': len(balance_accounts), 'total': balance_total},
-                    'DYNAMIC': {'count': 0, 'total': 0},
-                    'UNLIMITED': {'count': 0, 'total': 0}
+                    'DYNAMIC': {'count': len(dynamic_accounts), 'total': dynamic_total},
+                    'UNLIMITED': {'count': len(unlimited_accounts), 'total': unlimited_total}
                 }
                 
                 return True
