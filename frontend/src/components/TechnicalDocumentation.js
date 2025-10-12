@@ -296,6 +296,9 @@ export default function TechnicalDocumentation() {
             healthData={healthData}
             connections={connections}
           />
+        ) : viewMode === 'credentials' ? (
+          /* Credentials Vault View */
+          <CredentialsVault />
         ) : (
           /* Grid View */
           <>
