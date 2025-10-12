@@ -53,6 +53,7 @@ from system_registry import (
     get_connections
 )
 from health_checks import perform_all_health_checks, calculate_overall_status
+from api_registry import get_api_registry, get_category, get_endpoint, search_endpoints
 
 # Credentials Management (Phase 3: Secure Credentials Vault)
 from credentials_registry import (
