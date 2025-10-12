@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://transfer-classifier.preview.emergentagent.com`
+`https://truepnl-tracker.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
