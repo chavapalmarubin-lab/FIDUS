@@ -103,6 +103,7 @@ function IntegrationNode({ data }) {
       />
     </div>
   );
+}
 
 
 // Memoize component for performance

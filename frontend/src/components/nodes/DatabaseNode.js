@@ -108,6 +108,7 @@ function DatabaseNode({ data }) {
       />
     </div>
   );
+}
 
 
 // Memoize component for performance

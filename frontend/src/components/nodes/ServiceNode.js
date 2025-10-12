@@ -112,6 +112,7 @@ function ServiceNode({ data }) {
       />
     </div>
   );
+}
 
 
 // Memoize component for performance

@@ -119,6 +119,7 @@ function GitHubNode({ data }) {
       )}
     </div>
   );
+}
 
 
 // Memoize component for performance
