@@ -317,9 +317,16 @@ const TradingAnalyticsDashboard = () => {
             {/* Total P&L Card */}
             <Card className="dashboard-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-white text-sm font-medium flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2 text-green-400" />
-                  Total P&L
+                <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
+                  <div className="flex items-center">
+                    <DollarSign className="h-4 w-4 mr-2 text-green-400" />
+                    Total P&L (TRUE)
+                  </div>
+                  {analyticsData.overview.corrected_data_used && (
+                    <Badge className="bg-green-600 text-white text-xs">
+                      ✓ Corrected
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -327,8 +334,8 @@ const TradingAnalyticsDashboard = () => {
                   {formatCurrency(analyticsData.overview.total_pnl)}
                 </div>
                 <div className="flex items-center mt-2">
-                  <div className="text-sm text-slate-400">
-                    Gross: {formatCurrency(analyticsData.overview.gross_profit)} / {formatCurrency(analyticsData.overview.gross_loss)}
+                  <div className="text-xs text-green-400">
+                    ✓ Includes profit withdrawals
                   </div>
                 </div>
               </CardContent>
