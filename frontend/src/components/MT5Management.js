@@ -696,6 +696,55 @@ const MT5Management = () => {
                             </CardContent>
                         </Card>
 
+                        {/* ✅ P&L Breakdown Section - NEW! */}
+                        {(selectedAccountDetails.profit_withdrawals > 0 || selectedAccountDetails.inter_account_transfers > 0) && (
+                            <Card className="bg-blue-900/20 border-blue-600 mb-6">
+                                <CardHeader>
+                                    <CardTitle className="text-white flex items-center">
+                                        📊 P&L Breakdown (TRUE P&L Calculation)
+                                        <Badge className="ml-2 bg-green-600 text-white">✓ Corrected</Badge>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div className="text-center p-4 bg-slate-700 rounded">
+                                            <div className="text-sm text-slate-400">Open Positions P&L</div>
+                                            <div className={`text-2xl font-bold ${selectedAccountDetails.displayed_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {formatCurrency(selectedAccountDetails.displayed_pnl)}
+                                            </div>
+                                            <div className="text-xs text-slate-400 mt-1">Current trades</div>
+                                        </div>
+                                        
+                                        <div className="text-center p-4 bg-slate-700 rounded">
+                                            <div className="text-sm text-slate-400">Profit Withdrawals</div>
+                                            <div className="text-2xl font-bold text-green-400">
+                                                +{formatCurrency(selectedAccountDetails.profit_withdrawals)}
+                                            </div>
+                                            <div className="text-xs text-slate-400 mt-1">To separation account</div>
+                                        </div>
+                                        
+                                        <div className="text-center p-4 bg-green-900/30 border border-green-600 rounded">
+                                            <div className="text-sm text-green-400">TRUE P&L</div>
+                                            <div className={`text-2xl font-bold ${selectedAccountDetails.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {formatCurrency(selectedAccountDetails.profit_loss)}
+                                            </div>
+                                            <div className="text-xs text-green-400 mt-1">✓ Corrected calculation</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="text-sm text-slate-300 bg-slate-800 p-3 rounded">
+                                        <strong>Calculation:</strong> TRUE P&L = Open Positions P&L ({formatCurrency(selectedAccountDetails.displayed_pnl)}) + Profit Withdrawals ({formatCurrency(selectedAccountDetails.profit_withdrawals)}) = {formatCurrency(selectedAccountDetails.profit_loss)}
+                                    </div>
+                                    
+                                    {selectedAccountDetails.inter_account_transfers > 0 && (
+                                        <div className="mt-3 text-sm text-slate-400 bg-slate-800 p-3 rounded">
+                                            <strong>Note:</strong> Inter-account transfers ({formatCurrency(selectedAccountDetails.inter_account_transfers)}) are excluded from P&L calculations (not profit/loss).
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Account Activity */}
                         <Card className="bg-slate-700 border-slate-600">
                             <CardHeader>
