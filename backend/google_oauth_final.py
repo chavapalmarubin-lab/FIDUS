@@ -312,7 +312,14 @@ class GoogleOAuthService:
                         # Assume it's a naive datetime, make it timezone aware
                         expiry_time = datetime.fromisoformat(expiry_str).replace(tzinfo=timezone.utc)
                     
-                    is_expired = expiry_time <= datetime.now(timezone.utc)
+                    # CRITICAL FIX: Ensure both datetimes have same timezone awareness
+                    # Convert to UTC naive for comparison to avoid offset-aware vs offset-naive error
+                    if expiry_time.tzinfo is not None:
+                        expiry_time_utc = expiry_time.astimezone(timezone.utc).replace(tzinfo=None)
+                    else:
+                        expiry_time_utc = expiry_time
+                    
+                    is_expired = expiry_time_utc <= datetime.utcnow()
                 except Exception as e:
                     logger.warning(f"⚠️ Error parsing expiry '{expiry_str}': {e}")
                     is_expired = True
