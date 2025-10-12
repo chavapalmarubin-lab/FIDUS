@@ -404,7 +404,8 @@ export default function TechnicalDocumentation() {
               </div>
             )}
           </>
-        )}
+          )}
+        </Suspense>
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-sm text-gray-500">
