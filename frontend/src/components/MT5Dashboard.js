@@ -311,6 +311,11 @@ const MT5Dashboard = () => {
                         <Badge className={getDataFreshnessColor(account.data_source)}>
                           {account.data_source}
                         </Badge>
+                        {account.profit_withdrawals > 0 && (
+                          <Badge className="bg-green-100 text-green-800">
+                            ✓ Corrected
+                          </Badge>
+                        )}
                       </div>
                       <div className={`font-semibold ${getPerformanceColor(account.profit_loss)}`}>
                         {formatCurrency(account.profit_loss)}
@@ -337,6 +342,38 @@ const MT5Dashboard = () => {
                         <p className="font-medium">{account.open_positions || 0}</p>
                       </div>
                     </div>
+                    
+                    {/* ✅ NEW: P&L Breakdown showing corrected calculations */}
+                    {(account.profit_withdrawals > 0 || account.inter_account_transfers > 0) && (
+                      <div className="mt-3 pt-3 border-t bg-blue-50 p-3 rounded">
+                        <h5 className="text-sm font-semibold text-blue-800 mb-2">📊 P&L Breakdown (Corrected)</h5>
+                        <div className="grid grid-cols-3 gap-3 text-xs">
+                          <div>
+                            <p className="text-gray-600">Open Positions P&L</p>
+                            <p className={`font-medium ${getPerformanceColor(account.displayed_pnl)}`}>
+                              {formatCurrency(account.displayed_pnl)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Profit Withdrawals</p>
+                            <p className="font-medium text-green-600">
+                              +{formatCurrency(account.profit_withdrawals)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">True P&L</p>
+                            <p className={`font-bold ${getPerformanceColor(account.profit_loss)}`}>
+                              {formatCurrency(account.profit_loss)}
+                            </p>
+                          </div>
+                        </div>
+                        {account.inter_account_transfers > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            Note: Inter-account transfers ({formatCurrency(account.inter_account_transfers)}) excluded from P&L
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {account.margin_used > 0 && (
                       <div className="mt-3 pt-3 border-t">
