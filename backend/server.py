@@ -67,6 +67,9 @@ from health_service import (
     calculate_uptime_percentage
 )
 
+# Quick Actions Service (Phase 6: Admin Shortcuts & Tools)
+from quick_actions_service import QuickActionsService
+
 # Credentials Management (Phase 3: Secure Credentials Vault)
 from credentials_registry import (
     CREDENTIALS_REGISTRY,
