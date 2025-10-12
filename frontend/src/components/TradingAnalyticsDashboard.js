@@ -55,6 +55,9 @@ const TradingAnalyticsDashboard = () => {
                    selectedPeriod === 'ytd' ? 365 : 30;
 
       try {
+        // PHASE 3 FIX: Fetch corrected MT5 data for accurate P&L
+        const correctedResponse = await apiAxios.get('/mt5/fund-performance/corrected');
+        
         // Fetch analytics overview with account filter
         const overviewResponse = await apiAxios.get('/admin/trading/analytics/overview', {
           params: { account, days }
@@ -71,10 +74,25 @@ const TradingAnalyticsDashboard = () => {
         });
 
         if (overviewResponse.data.success && dailyResponse.data.success && tradesResponse.data.success) {
-          setAnalyticsData(overviewResponse.data.analytics);
+          const analytics = overviewResponse.data.analytics;
+          
+          // ✅ Replace total_pnl with corrected TRUE P&L
+          if (correctedResponse.data.success) {
+            const corrected = correctedResponse.data;
+            analytics.overview.total_pnl = corrected.fund_assets.mt5_trading_pnl;
+            analytics.overview.corrected_data_used = true;
+            
+            console.log('✅ Using CORRECTED Trading Analytics P&L:', {
+              corrected_pnl: corrected.fund_assets.mt5_trading_pnl,
+              profit_withdrawals: corrected.summary.total_profit_withdrawals,
+              verified: corrected.verification.verified
+            });
+          }
+          
+          setAnalyticsData(analytics);
           setDailyPerformance(dailyResponse.data.daily_performance || []);
           setRecentTrades(tradesResponse.data.trades || []);
-          setLastUpdated(new Date(overviewResponse.data.analytics.last_sync));
+          setLastUpdated(new Date(analytics.last_sync));
         } else {
           throw new Error("API returned unsuccessful response");
         }
