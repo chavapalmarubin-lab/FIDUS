@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
+import apiAxios from '../utils/apiAxios';
 import { 
     TrendingUp, 
     TrendingDown, 
