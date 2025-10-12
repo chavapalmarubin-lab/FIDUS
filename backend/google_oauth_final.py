@@ -222,6 +222,13 @@ class GoogleOAuthService:
                 expiry_time = datetime.now(timezone.utc) - timedelta(minutes=1)
             
             # Create credentials object
+            # CRITICAL FIX: Google Credentials expects timezone-naive datetime for expiry
+            # Convert timezone-aware datetime to naive UTC datetime
+            if expiry_time.tzinfo is not None:
+                expiry_time_naive = expiry_time.replace(tzinfo=None)
+            else:
+                expiry_time_naive = expiry_time
+            
             credentials = Credentials(
                 token=token_doc['access_token'],
                 refresh_token=token_doc.get('refresh_token'),
@@ -229,14 +236,16 @@ class GoogleOAuthService:
                 client_id=token_doc['client_id'],
                 client_secret=token_doc['client_secret'],
                 scopes=token_doc['scopes'],
-                expiry=expiry_time
+                expiry=expiry_time_naive  # Use naive datetime for Credentials
             )
             
             logger.info(f"🔍 [OAUTH DEBUG] Created credentials object with {len(credentials.scopes or [])} scopes")
             logger.info(f"🔍 [OAUTH DEBUG] Credentials expired: {credentials.expired}")
+            logger.info(f"🔍 [OAUTH DEBUG] Expiry time passed to Credentials: {expiry_time_naive} (naive)")
             
             # Check if token is expired or will expire soon
-            now = datetime.now(timezone.utc)
+            # Compare using UTC naive datetimes to avoid timezone comparison errors
+            now_naive = datetime.utcnow()  # Use UTC naive datetime for comparison
             if credentials.expired and credentials.refresh_token:
                 logger.info(f"🔄 [OAUTH DEBUG] Token expired for admin {admin_user_id}, refreshing...")
                 
