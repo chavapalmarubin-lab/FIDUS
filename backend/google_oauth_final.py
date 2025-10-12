@@ -83,7 +83,8 @@ class GoogleOAuthService:
                 'scope': ' '.join(self.scopes),
                 'state': state,
                 'access_type': 'offline',      # REQUIRED for refresh token
-                'prompt': 'consent',           # REQUIRED to get refresh token
+                'prompt': 'select_account consent',  # Force account picker + consent
+                'login_hint': 'chavapalmarubin@gmail.com',  # Pre-select correct account
                 'include_granted_scopes': 'true'
             }
             
