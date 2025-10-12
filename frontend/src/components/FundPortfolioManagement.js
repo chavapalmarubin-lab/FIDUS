@@ -360,12 +360,17 @@ const FundPortfolioManagement = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400">YTD Return:</span>
-                    <span className={`ml-2 font-medium ${
+                    <span className="text-slate-400">Weighted Return:</span>
+                    <span className={`ml-2 font-bold ${
                       fund.performance_ytd >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
                       {formatPercentage(fund.performance_ytd)}
                     </span>
+                    {fund.performance_ytd !== 0 && (
+                      <Badge className="ml-2 bg-green-600 text-white text-xs">
+                        ✓ Corrected
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
