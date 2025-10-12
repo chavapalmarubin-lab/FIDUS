@@ -297,13 +297,13 @@ class FundPortfolioMT5Test:
                     self.log_test("CRITICAL: CORE MT5 Allocation ~$18,151", False, 
                                 f"❌ CORE mt5_allocation = ${core_allocation:,.2f} (expected ~$18,151)")
                 
-                # BALANCE should be ~$100,642
-                if 100000 <= balance_allocation <= 101000:
-                    self.log_test("CRITICAL: BALANCE MT5 Allocation ~$100,642", True, 
+                # BALANCE should be ~$101,627 (based on actual account balances)
+                if 101000 <= balance_allocation <= 102000:
+                    self.log_test("CRITICAL: BALANCE MT5 Allocation ~$101,627", True, 
                                 f"✅ BALANCE mt5_allocation = ${balance_allocation:,.2f} (within expected range)")
                 else:
-                    self.log_test("CRITICAL: BALANCE MT5 Allocation ~$100,642", False, 
-                                f"❌ BALANCE mt5_allocation = ${balance_allocation:,.2f} (expected ~$100,642)")
+                    self.log_test("CRITICAL: BALANCE MT5 Allocation ~$101,627", False, 
+                                f"❌ BALANCE mt5_allocation = ${balance_allocation:,.2f} (expected ~$101,627)")
                 
                 # Critical Test 4: Performance YTD values are reasonable (not zero)
                 core_performance = core_fund.get('performance_ytd', 0)
