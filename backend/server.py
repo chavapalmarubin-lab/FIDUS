@@ -17508,8 +17508,11 @@ async def send_gmail_message_oauth(
 
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
-    """Get fund portfolio overview for the dashboard - Direct MongoDB version"""
+    """Get fund portfolio overview for the dashboard - With WEIGHTED PERFORMANCE"""
     try:
+        # Import the fund performance calculator
+        from fund_performance_calculator import get_all_funds_performance, calculate_fund_weighted_performance
+        
         funds_overview = {}
         
         # Get all investments directly from MongoDB
@@ -17520,20 +17523,29 @@ async def get_fund_portfolio_overview():
         mt5_cursor = db.mt5_accounts.find({})
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
+        # Get weighted performance for all funds
+        all_performance = await get_all_funds_performance(db)
+        
         for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
             # Calculate fund AUM from investments
             fund_investments = [inv for inv in all_investments if inv.get('fund_code') == fund_code]
             fund_aum = sum(inv.get('principal_amount', 0) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Get MT5 allocations for this fund - Use MT5 Bridge field names
-            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]  # MT5 Bridge uses 'fund_type'
-            total_mt5_allocation = sum(mt5.get('target_amount', 0) for mt5 in fund_mt5_accounts)  # MT5 Bridge uses 'target_amount'
+            # Get MT5 allocations for this fund
+            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_code') == fund_code]
+            total_mt5_allocation = sum(mt5.get('balance', 0) for mt5 in fund_mt5_accounts)
             mt5_account_count = len(fund_mt5_accounts)
+            
+            # Get weighted performance for this fund
+            fund_performance = all_performance.get('funds', {}).get(fund_code, {})
+            weighted_return = fund_performance.get('weighted_return', 0.0)
+            total_true_pnl = fund_performance.get('total_true_pnl', 0.0)
             
             funds_overview[fund_code] = {
                 "fund_code": fund_code,
                 "fund_name": fund_config.name,
+                "fund_type": fund_code,
                 "aum": round(fund_aum, 2),
                 "total_investors": total_investors,
                 "interest_rate": fund_config.interest_rate,
@@ -17542,20 +17554,24 @@ async def get_fund_portfolio_overview():
                 "mt5_allocation": round(total_mt5_allocation, 2),
                 "mt5_accounts_count": mt5_account_count,
                 "allocation_match": abs(fund_aum - total_mt5_allocation) < 0.01,
-                "management_fee": 0.0,  # Would come from fund configuration
-                "performance_fee": 0.0,  # Would come from fund configuration
-                "total_rebates": 0.0     # Would come from rebate system
+                "performance_ytd": round(weighted_return, 2),  # CORRECTED: Weighted return!
+                "nav_per_share": round(1.0 + (weighted_return / 100), 4),  # Simple NAV calculation
+                "total_true_pnl": round(total_true_pnl, 2),
+                "management_fee": 0.0,
+                "performance_fee": 0.0,
+                "total_rebates": 0.0
             }
         
         total_aum = sum(fund["aum"] for fund in funds_overview.values())
         total_investors = sum(fund["total_investors"] for fund in funds_overview.values())
+        portfolio_weighted_return = all_performance.get('portfolio_totals', {}).get('weighted_return', 0.0)
         
         return {
             "success": True,
             "funds": funds_overview,
             "total_aum": round(total_aum, 2),
-            "aum": round(total_aum, 2),  # Frontend expects this field name
-            "ytd_return": 0.0,  # Frontend expects this field - would calculate from MT5 data
+            "aum": round(total_aum, 2),
+            "ytd_return": round(portfolio_weighted_return, 2),  # CORRECTED: Portfolio weighted return!
             "total_investors": total_investors,
             "fund_count": len([f for f in funds_overview.values() if f["aum"] > 0])
         }
