@@ -705,6 +705,61 @@ const CashFlowManagement = () => {
           </CardContent>
         </Card>
 
+        {/* CASH POSITION BREAKDOWN (Info Box) */}
+        {fundAccounting?.mt5_corrected_data && (
+          <Card className="bg-blue-900/20 border-blue-600">
+            <CardHeader>
+              <CardTitle className="text-white text-base flex items-center">
+                <span className="mr-2">ℹ️</span>
+                Fund Cash Position Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between p-2 bg-slate-800/50 rounded">
+                  <span className="text-slate-400">Cash in Trading Accounts (Displayed P&L):</span>
+                  <span className={`font-semibold ${(fundAccounting.mt5_corrected_data?.summary?.total_displayed_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(fundAccounting.mt5_corrected_data?.summary?.total_displayed_pnl || 0)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between p-2 bg-slate-800/50 rounded">
+                  <span className="text-slate-400">Profit Withdrawn to Separation Account:</span>
+                  <span className="font-semibold text-green-400">
+                    {formatCurrency(fundAccounting?.profit_withdrawals || 0)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between p-2 bg-slate-800/50 rounded">
+                  <span className="text-slate-400">Broker Interest on Separation Balance:</span>
+                  <span className="font-semibold text-cyan-400">
+                    +{formatCurrency(fundAccounting?.assets?.broker_interest || 0)}
+                  </span>
+                </div>
+                
+                <div className="border-t border-blue-600 pt-2 mt-2">
+                  <div className="flex justify-between p-2 bg-blue-900/30 rounded">
+                    <span className="text-white font-semibold">Total Separation Account Balance:</span>
+                    <span className="font-bold text-cyan-400">
+                      {formatCurrency(fundAccounting?.separation_balance || 0)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mt-3 text-xs text-slate-400 bg-slate-800 p-3 rounded">
+                  <p className="font-semibold text-slate-300 mb-1">📝 Accounting Note:</p>
+                  <p>
+                    TRUE P&L ({formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}) already includes 
+                    the profit withdrawals ({formatCurrency(fundAccounting?.profit_withdrawals || 0)}). 
+                    We only add the broker interest ({formatCurrency(fundAccounting?.assets?.broker_interest || 0)}) 
+                    to avoid double counting.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* FUND LIABILITIES (What Fund Owes) */}
         <Card className="dashboard-card">
           <CardHeader>
