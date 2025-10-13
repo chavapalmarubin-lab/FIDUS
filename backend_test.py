@@ -69,7 +69,7 @@ class MT5DashboardInvestigation:
             self.db = self.mongo_client['fidus_production']
             
             # Test connection
-            self.db.admin.command('ping')
+            self.mongo_client.admin.command('ping')
             self.log_test("MongoDB Connection", True, "Successfully connected to MongoDB")
             return True
             
