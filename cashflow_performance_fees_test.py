@@ -93,7 +93,7 @@ class CashFlowPerformanceFeesTest:
                 "user_type": "admin"
             }
             
-            response = self.session.post(auth_url)
+            response = self.session.post(auth_url, json=payload)
             
             if response.status_code == 200:
                 data = response.json()
