@@ -667,42 +667,49 @@ class CashFlowBrokerRebatesTest:
         
         # Overall assessment
         if success_rate >= 90:
-            print("🎉 OVERALL RESULT: EXCELLENT - Fund performance endpoints working correctly!")
+            print("🎉 OVERALL RESULT: EXCELLENT - Broker rebates fix working correctly!")
         elif success_rate >= 75:
-            print("✅ OVERALL RESULT: GOOD - Most fund performance functionality working")
+            print("✅ OVERALL RESULT: GOOD - Most broker rebates functionality working")
         elif success_rate >= 50:
-            print("⚠️ OVERALL RESULT: PARTIAL - Some fund performance issues need attention")
+            print("⚠️ OVERALL RESULT: PARTIAL - Some broker rebates issues need attention")
         else:
-            print("❌ OVERALL RESULT: CRITICAL - Major fund performance issues detected")
+            print("❌ OVERALL RESULT: CRITICAL - Major broker rebates issues detected")
         
         print()
         print("🔍 KEY FINDINGS:")
         
         # Check if the main fix is working
-        core_working = any(r['success'] and 'CORE' in r['test'] and 'Performance' in r['test'] 
-                          for r in self.test_results)
-        balance_working = any(r['success'] and 'BALANCE' in r['test'] and 'Performance' in r['test'] 
-                             for r in self.test_results)
+        rebates_fix_working = any(r['success'] and 'Broker Rebates Fix' in r['test'] 
+                                 for r in self.test_results)
         
-        if core_working and balance_working:
-            print("   ✅ Fund performance calculation fix is working - CORE and BALANCE funds returning data")
+        if rebates_fix_working:
+            print("   ✅ Broker rebates fix is working - endpoint no longer returns hardcoded 0.0")
         else:
-            print("   ❌ Fund performance calculation fix may not be working - missing CORE/BALANCE data")
+            print("   ❌ Broker rebates fix may not be working - still returning hardcoded 0.0")
         
-        # Check if weighted returns are non-zero
-        non_zero_returns = any(r['success'] and 'Performance YTD' in r['test'] and 'non-zero' in r['details'] 
-                              for r in self.test_results)
+        # Check if values are consistent
+        consistency_working = any(r['success'] and 'Consistency' in r['test'] 
+                                 for r in self.test_results)
         
-        if non_zero_returns:
-            print("   ✅ Weighted returns are NON-ZERO - calculation fix successful")
+        if consistency_working:
+            print("   ✅ Broker rebates values are consistent between endpoints")
         else:
-            print("   ⚠️ Need to verify weighted returns are non-zero")
+            print("   ⚠️ Need to verify broker rebates consistency between endpoints")
+        
+        # Check if response structure is correct
+        structure_working = any(r['success'] and 'Response Structure' in r['test'] 
+                               for r in self.test_results)
+        
+        if structure_working:
+            print("   ✅ Response structure includes rebates_summary object as expected")
+        else:
+            print("   ⚠️ Response structure may be missing required rebates fields")
         
         print()
 
 def main():
     """Main test execution"""
-    tester = FundPerformanceTest()
+    tester = CashFlowBrokerRebatesTest()
     success = tester.run_all_tests()
     
     # Exit with appropriate code
