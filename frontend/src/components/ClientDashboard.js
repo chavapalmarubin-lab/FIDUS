@@ -533,6 +533,131 @@ const ClientDashboard = ({ user, onLogout }) => {
           </Card>
         </motion.div>
 
+        {/* Enhanced Fund Cards Section */}
+        {clientData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-8"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <DollarSign className="mr-2" size={24} />
+              Your Investment Funds
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* CORE Fund Card */}
+              <EnhancedFundCard
+                fundName="CORE FUND"
+                fundInfo={FUND_INFO.CORE}
+                balance={clientData.balance.core_balance}
+                isActive={clientData.balance.core_balance > 0}
+                monthlyEarnings={clientData.balance.core_balance * FUND_INFO.CORE.interestRate / 100}
+                formatCurrency={formatCurrency}
+                selectedCurrency={selectedCurrency}
+              />
+              
+              {/* BALANCE Fund Card */}
+              <EnhancedFundCard
+                fundName="BALANCE FUND"
+                fundInfo={FUND_INFO.BALANCE}
+                balance={clientData.balance.balance_balance}
+                isActive={clientData.balance.balance_balance > 0}
+                monthlyEarnings={clientData.balance.balance_balance * FUND_INFO.BALANCE.interestRate / 100}
+                formatCurrency={formatCurrency}
+                selectedCurrency={selectedCurrency}
+              />
+              
+              {/* DYNAMIC Fund Card */}
+              <EnhancedFundCard
+                fundName="DYNAMIC FUND"
+                fundInfo={FUND_INFO.DYNAMIC}
+                balance={clientData.balance.dynamic_balance}
+                isActive={clientData.balance.dynamic_balance > 0}
+                monthlyEarnings={clientData.balance.dynamic_balance * FUND_INFO.DYNAMIC.interestRate / 100}
+                formatCurrency={formatCurrency}
+                selectedCurrency={selectedCurrency}
+              />
+              
+              {/* UNLIMITED Fund Card */}
+              <EnhancedFundCard
+                fundName="UNLIMITED FUND"
+                fundInfo={FUND_INFO.UNLIMITED}
+                balance={clientData.balance.unlimited_balance}
+                isActive={clientData.balance.unlimited_balance > 0}
+                monthlyEarnings={clientData.balance.unlimited_balance * FUND_INFO.UNLIMITED.interestRate / 100}
+                formatCurrency={formatCurrency}
+                selectedCurrency={selectedCurrency}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Investment Opportunities Section - Show calculators for inactive funds */}
+        {clientData && (() => {
+          // Calculate current monthly earnings from active funds
+          const currentMonthlyEarnings = (
+            (clientData.balance.core_balance * FUND_INFO.CORE.interestRate / 100) +
+            (clientData.balance.balance_balance * FUND_INFO.BALANCE.interestRate / 100) +
+            (clientData.balance.dynamic_balance * FUND_INFO.DYNAMIC.interestRate / 100) +
+            (clientData.balance.unlimited_balance * FUND_INFO.UNLIMITED.interestRate / 100)
+          );
+          
+          // Get inactive funds (with zero balance)
+          const inactiveFunds = [];
+          if (clientData.balance.core_balance === 0) inactiveFunds.push({ type: 'CORE', info: FUND_INFO.CORE, name: 'CORE FUND' });
+          if (clientData.balance.balance_balance === 0) inactiveFunds.push({ type: 'BALANCE', info: FUND_INFO.BALANCE, name: 'BALANCE FUND' });
+          if (clientData.balance.dynamic_balance === 0) inactiveFunds.push({ type: 'DYNAMIC', info: FUND_INFO.DYNAMIC, name: 'DYNAMIC FUND' });
+          if (clientData.balance.unlimited_balance === 0) inactiveFunds.push({ type: 'UNLIMITED', info: FUND_INFO.UNLIMITED, name: 'UNLIMITED FUND' });
+          
+          if (inactiveFunds.length > 0) {
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="investment-opportunities bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-8 mb-8"
+              >
+                <div className="section-header text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">
+                    <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                      💰 Grow Your Earnings - Investment Opportunities
+                    </span>
+                  </h2>
+                  <p className="text-slate-400 text-base max-w-2xl mx-auto">
+                    See how much more you could earn by diversifying your investments across our other funds
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  {inactiveFunds.map(fund => (
+                    <InvestmentCalculator
+                      key={fund.type}
+                      fundName={fund.name}
+                      fundInfo={fund.info}
+                      currentMonthlyEarnings={currentMonthlyEarnings}
+                      userBalance={clientData.balance.total_balance}
+                    />
+                  ))}
+                </div>
+                
+                {/* Pro Tip */}
+                <div className="pro-tip flex items-start gap-4 p-5 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 border border-yellow-500/40 rounded-xl mt-8">
+                  <span className="icon text-3xl flex-shrink-0">💡</span>
+                  <div>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      <strong className="text-yellow-400">Pro Tip:</strong> Diversifying across multiple funds 
+                      reduces risk while maximizing returns. Our investment experts 
+                      can help you create the optimal portfolio mix.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Filters Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
