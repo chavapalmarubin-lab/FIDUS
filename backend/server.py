@@ -15154,9 +15154,16 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
                 "separation_interest": separation_interest,  # New line item for separation accounts
                 "broker_rebates": round(broker_rebates, 2),  # Real broker rebates from rebate calculator
                 "client_interest_obligations": round(total_client_obligations, 2),
+                "performance_fees_accrued": round(performance_fees_accrued, 2),  # Performance fees owed to managers
                 "fund_revenue": round(fund_revenue, 2),  # Total revenue including broker rebates
-                "fund_obligations": round(total_client_obligations, 2),
-                "net_profit": round(net_profit, 2)  # Enhanced calculation with broker rebates
+                "fund_obligations": round(total_client_obligations, 2),  # Client obligations only
+                "total_liabilities": round(total_liabilities, 2),  # Client obligations + performance fees
+                "net_profit": round(net_profit, 2)  # Enhanced calculation with broker rebates and performance fees
+            },
+            "performance_fees": {
+                "total_accrued": round(performance_fees_accrued, 2),
+                "managers_count": performance_fees_data.get('managers_count', 0),
+                "breakdown": performance_fees_data.get('breakdown', [])
             },
             "rebates_summary": {
                 "total_rebates": round(broker_rebates, 2),
