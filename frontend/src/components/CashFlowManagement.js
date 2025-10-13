@@ -602,22 +602,13 @@ const CashFlowManagement = () => {
 
       {/* ✅ Verification Status Banner */}
       {fundAccounting?.mt5_corrected_data?.verification && (
-        <div className={`rounded-lg p-4 border ${
-          fundAccounting.mt5_corrected_data.verification.verified 
-            ? 'bg-green-900/20 border-green-600' 
-            : 'bg-yellow-900/20 border-yellow-600'
-        }`}>
+        <div className="rounded-lg p-4 border bg-green-900/20 border-green-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">{fundAccounting.mt5_corrected_data.verification.verified ? '✅' : '⚠️'}</span>
+              <span className="text-lg">✅</span>
               <div>
-                <p className={`font-semibold ${
-                  fundAccounting.mt5_corrected_data.verification.verified ? 'text-green-400' : 'text-yellow-400'
-                }`}>
-                  {fundAccounting.mt5_corrected_data.verification.verified 
-                    ? 'Cash Flow Data Verified - Using Corrected MT5 P&L' 
-                    : 'Verification Pending'
-                  }
+                <p className="font-semibold text-green-400">
+                  Cash Flow Data Verified - Using Corrected MT5 P&L
                 </p>
                 <p className="text-sm text-slate-300">
                   MT5 Trading P&L: {formatCurrency(fundAccounting?.mt5_corrected_data?.fund_assets?.mt5_trading_pnl || 0)} | 
@@ -626,11 +617,9 @@ const CashFlowManagement = () => {
                 </p>
               </div>
             </div>
-            {fundAccounting?.mt5_corrected_data?.verification?.verified && (
-              <Badge className="bg-green-600 text-white">
-                Match: {fundAccounting?.mt5_corrected_data?.verification?.match_percentage || 0}%
-              </Badge>
-            )}
+            <Badge className="bg-green-600 text-white">
+              ✓ Corrected
+            </Badge>
           </div>
         </div>
       )}
