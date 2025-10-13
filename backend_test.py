@@ -107,7 +107,284 @@ class MT5DashboardInvestigation:
             self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_current_performance_fees(self):
+    def test_mt5_dashboard_endpoint(self):
+        """Test 1: Check MT5 Dashboard Endpoint - GET /api/mt5/dashboard/overview"""
+        try:
+            url = f"{BACKEND_URL}/api/mt5/dashboard/overview"
+            response = self.session.get(url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check response structure
+                required_fields = ['total_equity', 'total_profit', 'active_accounts', 'data_quality']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("MT5 Dashboard Structure", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                # Extract values
+                total_equity = data.get('total_equity', 0)
+                total_profit = data.get('total_profit', 0)
+                active_accounts = data.get('active_accounts', 0)
+                data_quality = data.get('data_quality', 0)
+                
+                # Expected values from review request
+                expected_equity_min = 100000  # Should be ~$121,000+
+                expected_profit = 3551  # Should be $3,551
+                expected_accounts = 4  # Should be 4 active accounts
+                
+                # Log current values
+                details = f"Total Equity: ${total_equity:,.2f}, Total P&L: ${total_profit:,.2f}, Active Accounts: {active_accounts}, Data Quality: {data_quality}"
+                
+                # Check if values are $0 (the problem)
+                if total_equity == 0 and total_profit == 0:
+                    self.log_test("MT5 Dashboard Values", False, f"❌ CONFIRMED ISSUE: {details} - All values are $0!")
+                    return False
+                elif total_equity >= expected_equity_min and abs(total_profit - expected_profit) < 100:
+                    self.log_test("MT5 Dashboard Values", True, f"✅ VALUES CORRECT: {details}")
+                    return True
+                else:
+                    self.log_test("MT5 Dashboard Values", False, f"⚠️ UNEXPECTED VALUES: {details}")
+                    return False
+                
+            else:
+                self.log_test("MT5 Dashboard Endpoint", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("MT5 Dashboard Endpoint", False, f"Exception: {str(e)}")
+            return False
+    
+    def investigate_mt5_data_sources(self):
+        """Test 2: Check MT5 Accounts Data Sources"""
+        if not self.db:
+            self.log_test("MT5 Data Sources Investigation", False, "MongoDB connection not available")
+            return False
+        
+        try:
+            collections_to_check = [
+                'mt5_accounts',
+                'mt5_accounts_corrected', 
+                'mt5_accounts_cache'
+            ]
+            
+            collection_data = {}
+            
+            for collection_name in collections_to_check:
+                try:
+                    collection = self.db[collection_name]
+                    
+                    # Check if collection exists and has data
+                    count = collection.count_documents({})
+                    
+                    if count > 0:
+                        # Get sample document
+                        sample_doc = collection.find_one({})
+                        
+                        # Check for required fields
+                        has_equity = 'equity' in sample_doc if sample_doc else False
+                        has_profit = any(field in sample_doc for field in ['profit', 'true_pnl', 'displayed_pnl']) if sample_doc else False
+                        has_balance = 'balance' in sample_doc if sample_doc else False
+                        
+                        # Get account numbers if available
+                        account_numbers = []
+                        if sample_doc and 'mt5_account_number' in sample_doc:
+                            # Get all account numbers
+                            accounts = list(collection.find({}, {'mt5_account_number': 1}))
+                            account_numbers = [str(acc.get('mt5_account_number', '')) for acc in accounts]
+                        
+                        collection_data[collection_name] = {
+                            'count': count,
+                            'has_equity': has_equity,
+                            'has_profit': has_profit,
+                            'has_balance': has_balance,
+                            'account_numbers': account_numbers,
+                            'sample_doc': sample_doc
+                        }
+                        
+                        details = f"Count: {count}, Equity: {has_equity}, Profit: {has_profit}, Balance: {has_balance}, Accounts: {account_numbers[:5]}"
+                        self.log_test(f"Collection {collection_name}", True, details)
+                    else:
+                        collection_data[collection_name] = {'count': 0}
+                        self.log_test(f"Collection {collection_name}", False, "Empty collection")
+                        
+                except Exception as e:
+                    self.log_test(f"Collection {collection_name}", False, f"Error: {str(e)}")
+                    collection_data[collection_name] = {'error': str(e)}
+            
+            # Determine which collection has the correct data
+            best_collection = None
+            best_score = 0
+            
+            for collection_name, data in collection_data.items():
+                if 'count' in data and data['count'] > 0:
+                    score = data['count']
+                    if data.get('has_equity'): score += 10
+                    if data.get('has_profit'): score += 10
+                    if data.get('has_balance'): score += 5
+                    
+                    # Check for expected account numbers
+                    expected_accounts = ['885822', '886557', '886066', '886602']
+                    account_numbers = data.get('account_numbers', [])
+                    matching_accounts = sum(1 for acc in expected_accounts if acc in account_numbers)
+                    score += matching_accounts * 5
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_collection = collection_name
+            
+            if best_collection:
+                self.log_test("Best Data Source Identified", True, f"Collection '{best_collection}' has the most complete data (score: {best_score})")
+                return best_collection, collection_data[best_collection]
+            else:
+                self.log_test("Best Data Source Identified", False, "No collection with adequate data found")
+                return None, None
+                
+        except Exception as e:
+            self.log_test("MT5 Data Sources Investigation", False, f"Exception: {str(e)}")
+            return None, None
+    
+    def verify_data_fields(self, collection_name, collection_data):
+        """Test 3: Verify Data Fields in the best collection"""
+        if not collection_name or not collection_data:
+            self.log_test("Data Fields Verification", False, "No valid collection data to verify")
+            return False
+        
+        try:
+            collection = self.db[collection_name]
+            
+            # Get all documents to analyze
+            all_docs = list(collection.find({}))
+            
+            if not all_docs:
+                self.log_test("Data Fields Verification", False, f"No documents found in {collection_name}")
+                return False
+            
+            # Check for expected account numbers
+            expected_accounts = ['885822', '886557', '886066', '886602']
+            found_accounts = []
+            total_equity = 0
+            total_profit = 0
+            
+            for doc in all_docs:
+                account_num = str(doc.get('mt5_account_number', ''))
+                if account_num in expected_accounts:
+                    found_accounts.append(account_num)
+                    
+                    # Sum equity
+                    equity = doc.get('equity', 0)
+                    if isinstance(equity, (int, float)):
+                        total_equity += equity
+                    
+                    # Sum profit (try different field names)
+                    profit = doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0)))
+                    if isinstance(profit, (int, float)):
+                        total_profit += profit
+            
+            # Verify expected accounts are present
+            missing_accounts = [acc for acc in expected_accounts if acc not in found_accounts]
+            
+            details = f"Found accounts: {found_accounts}, Missing: {missing_accounts}, Total Equity: ${total_equity:,.2f}, Total P&L: ${total_profit:,.2f}"
+            
+            if len(found_accounts) == 4 and not missing_accounts:
+                self.log_test("Expected Accounts Present", True, f"All 4 expected accounts found: {found_accounts}")
+            else:
+                self.log_test("Expected Accounts Present", False, f"Missing accounts: {missing_accounts}")
+            
+            # Check if totals match expected values
+            expected_equity_min = 100000  # ~$121,000+
+            expected_profit = 3551  # $3,551
+            
+            if total_equity >= expected_equity_min:
+                self.log_test("Total Equity Calculation", True, f"Total equity ${total_equity:,.2f} >= expected ${expected_equity_min:,.2f}")
+            else:
+                self.log_test("Total Equity Calculation", False, f"Total equity ${total_equity:,.2f} < expected ${expected_equity_min:,.2f}")
+            
+            if abs(total_profit - expected_profit) < 500:  # Allow some variance
+                self.log_test("Total P&L Calculation", True, f"Total P&L ${total_profit:,.2f} ≈ expected ${expected_profit:,.2f}")
+            else:
+                self.log_test("Total P&L Calculation", False, f"Total P&L ${total_profit:,.2f} ≠ expected ${expected_profit:,.2f}")
+            
+            self.log_test("Data Fields Verification", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Data Fields Verification", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_calculation_logic(self):
+        """Test 4: Test Calculation Logic by manually calculating totals"""
+        try:
+            # Get data from all possible collections and compare
+            collections = ['mt5_accounts', 'mt5_accounts_corrected', 'mt5_accounts_cache']
+            calculations = {}
+            
+            for collection_name in collections:
+                try:
+                    collection = self.db[collection_name]
+                    docs = list(collection.find({}))
+                    
+                    if docs:
+                        total_equity = sum(doc.get('equity', 0) for doc in docs if isinstance(doc.get('equity'), (int, float)))
+                        total_profit = sum(doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0))) for doc in docs if isinstance(doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0))), (int, float)))
+                        account_count = len([doc for doc in docs if doc.get('mt5_account_number')])
+                        
+                        calculations[collection_name] = {
+                            'total_equity': total_equity,
+                            'total_profit': total_profit,
+                            'account_count': account_count,
+                            'doc_count': len(docs)
+                        }
+                        
+                        details = f"Equity: ${total_equity:,.2f}, P&L: ${total_profit:,.2f}, Accounts: {account_count}"
+                        self.log_test(f"Manual Calculation - {collection_name}", True, details)
+                    
+                except Exception as e:
+                    self.log_test(f"Manual Calculation - {collection_name}", False, f"Error: {str(e)}")
+            
+            # Compare with dashboard endpoint
+            dashboard_url = f"{BACKEND_URL}/api/mt5/dashboard/overview"
+            dashboard_response = self.session.get(dashboard_url)
+            
+            if dashboard_response.status_code == 200:
+                dashboard_data = dashboard_response.json()
+                dashboard_equity = dashboard_data.get('total_equity', 0)
+                dashboard_profit = dashboard_data.get('total_profit', 0)
+                
+                # Find which collection matches dashboard (if any)
+                matching_collection = None
+                for collection_name, calc in calculations.items():
+                    if (abs(calc['total_equity'] - dashboard_equity) < 1 and 
+                        abs(calc['total_profit'] - dashboard_profit) < 1):
+                        matching_collection = collection_name
+                        break
+                
+                if matching_collection:
+                    self.log_test("Dashboard Data Source Match", True, f"Dashboard uses data from '{matching_collection}' collection")
+                else:
+                    self.log_test("Dashboard Data Source Match", False, f"Dashboard values (${dashboard_equity:,.2f}, ${dashboard_profit:,.2f}) don't match any collection")
+                
+                # Identify the issue
+                if dashboard_equity == 0 and dashboard_profit == 0:
+                    # Check if any collection has good data
+                    good_collections = [name for name, calc in calculations.items() 
+                                      if calc['total_equity'] > 100000 and abs(calc['total_profit'] - 3551) < 1000]
+                    
+                    if good_collections:
+                        self.log_test("Issue Identified", True, f"Dashboard shows $0 but collection(s) {good_collections} have correct data - API may be using wrong collection")
+                    else:
+                        self.log_test("Issue Identified", False, "No collection has the expected data - data may not be synced from VPS")
+                
+                return True
+            else:
+                self.log_test("Dashboard Comparison", False, f"Could not fetch dashboard data: HTTP {dashboard_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Calculation Logic Test", False, f"Exception: {str(e)}")
+            return False
         """Test GET /api/admin/performance-fees/current"""
         try:
             url = f"{BACKEND_URL}/api/admin/performance-fees/current"
