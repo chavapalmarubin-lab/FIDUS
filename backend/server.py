@@ -19795,7 +19795,7 @@ async def trigger_manual_sync():
 # DEBUG ENDPOINTS - VERIFY ACCOUNT DATA FROM VPS
 # ===============================================================================
 
-@api_router.get("/api/debug/verify-account-data/{account_id}")
+@api_router.get("/debug/verify-account-data/{account_id}")
 async def debug_verify_account(account_id: int, current_user: dict = Depends(get_current_admin_user)):
     """
     Debug endpoint to verify account data from VPS
