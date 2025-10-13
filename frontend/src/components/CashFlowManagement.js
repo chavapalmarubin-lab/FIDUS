@@ -667,7 +667,7 @@ const CashFlowManagement = () => {
               {/* Broker Interest (NOT full separation balance to avoid double counting) */}
               <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-slate-400">Broker Interest Earned</p>
+                  <p className="text-sm text-slate-400">Last Profits Moved to Separation Balance</p>
                   <p className="text-xs text-slate-500">
                     {fundAccounting?.mt5_corrected_data 
                       ? '✓ Interest only (withdrawals already in TRUE P&L)'
