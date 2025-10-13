@@ -20,9 +20,59 @@ import ClientGoogleWorkspace from "./ClientGoogleWorkspace";
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
 import ClientWallet from "./ClientWallet";
+import InvestmentCalculator from "./InvestmentCalculator";
+import EnhancedFundCard from "./EnhancedFundCard";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Fund information configuration
+const FUND_INFO = {
+  CORE: {
+    icon: '🛡️',
+    interestRate: 1.5,
+    annualReturn: 18,
+    riskLevel: 'Conservative',
+    description: 'Core strategy focused on capital preservation with steady, reliable returns',
+    minInvestment: 10000,
+    maxSuggested: 50000,
+    lockPeriod: 'None',
+    highlight: 'Safe and steady growth'
+  },
+  BALANCE: {
+    icon: '⚖️',
+    interestRate: 2.5,
+    annualReturn: 30,
+    riskLevel: 'Moderate',
+    description: 'Balanced risk/reward with monthly guaranteed returns',
+    minInvestment: 25000,
+    maxSuggested: 100000,
+    lockPeriod: 'None',
+    highlight: 'Best balance of safety and returns'
+  },
+  DYNAMIC: {
+    icon: '🎯',
+    interestRate: 3.5,
+    annualReturn: 42,
+    riskLevel: 'Moderate-High',
+    description: 'Dynamic allocation based on market conditions and opportunities',
+    minInvestment: 50000,
+    maxSuggested: 150000,
+    lockPeriod: '3 months',
+    highlight: 'Higher returns for active traders'
+  },
+  UNLIMITED: {
+    icon: '🚀',
+    interestRate: 4.0,
+    annualReturn: 48,
+    riskLevel: 'High',
+    description: 'Maximum returns for experienced investors with higher risk tolerance',
+    minInvestment: 100000,
+    maxSuggested: 250000,
+    lockPeriod: '6 months',
+    highlight: 'Premium returns for serious investors'
+  }
+};
 
 const ClientDashboard = ({ user, onLogout }) => {
   const [clientData, setClientData] = useState(null);
