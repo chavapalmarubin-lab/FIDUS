@@ -21,7 +21,7 @@ Document Content:
     return io.BytesIO(content.encode('utf-8'))
 
 def test_gmail_endpoints():
-    base_url = "https://financeflow-89.preview.emergentagent.com"
+    base_url = "https://cashflow-manager-35.preview.emergentagent.com"
     
     print("🚀 Testing Gmail Integration Endpoints...")
     print("=" * 60)

@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://financeflow-89.preview.emergentagent.com"
+BACKEND_URL = "https://cashflow-manager-35.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

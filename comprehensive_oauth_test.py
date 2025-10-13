@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://financeflow-89.preview.emergentagent.com/api"
-FRONTEND_URL = "https://financeflow-89.preview.emergentagent.com"
+BACKEND_URL = "https://cashflow-manager-35.preview.emergentagent.com/api"
+FRONTEND_URL = "https://cashflow-manager-35.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

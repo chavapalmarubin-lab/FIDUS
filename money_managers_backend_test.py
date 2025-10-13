@@ -35,7 +35,7 @@ class MoneyManagersBackendTester:
     
     def __init__(self):
         # Use the correct backend URL from frontend/.env
-        self.base_url = "https://financeflow-89.preview.emergentagent.com"
+        self.base_url = "https://cashflow-manager-35.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         # Test credentials

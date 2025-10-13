@@ -26,7 +26,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://financeflow-89.preview.emergentagent.com/api"
+BACKEND_URL = "https://cashflow-manager-35.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {
