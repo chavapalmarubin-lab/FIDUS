@@ -19755,7 +19755,7 @@ async def get_daily_performance(days: int = 30, account: int = None):
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
             "account": account_display,
-            "data_source": "VPS_deal_history"
+            "data_source": "mt5_trades_with_full_calendar"
         }
         
     except Exception as e:
