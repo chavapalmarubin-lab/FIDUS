@@ -19738,56 +19738,6 @@ async def get_daily_performance(days: int = 30, account: int = None):
             daily_data.append(day)
         
         logging.info(f"   ✅ Calculated {len(daily_data)} days from VPS deal_history (including {len([d for d in daily_data if d['total_trades'] == 0])} days with no trades)")
-            
-            if account is None or account == 0:
-                # Aggregate across accounts
-                pipeline = [
-                    {"$match": {
-                        "account": {"$in": account_list},
-                        "date": {"$gte": start_date, "$lt": end_date}
-                    }},
-                    {"$group": {
-                        "_id": "$date",
-                        "total_trades": {"$sum": "$total_trades"},
-                        "winning_trades": {"$sum": "$winning_trades"},
-                        "losing_trades": {"$sum": "$losing_trades"},
-                        "breakeven_trades": {"$sum": "$breakeven_trades"},
-                        "total_pnl": {"$sum": "$total_pnl"},
-                        "gross_profit": {"$sum": "$gross_profit"},
-                        "gross_loss": {"$sum": "$gross_loss"},
-                        "largest_win": {"$max": "$largest_win"},
-                        "largest_loss": {"$min": "$largest_loss"}
-                    }},
-                    {"$addFields": {
-                        "date": "$_id",
-                        "win_rate": {"$cond": [
-                            {"$eq": ["$total_trades", 0]}, 
-                            0, 
-                            {"$multiply": [{"$divide": ["$winning_trades", "$total_trades"]}, 100]}
-                        ]},
-                        "profit_factor": {"$cond": [
-                            {"$eq": ["$gross_loss", 0]}, 
-                            999.99, 
-                            {"$abs": {"$divide": ["$gross_profit", "$gross_loss"]}}
-                        ]},
-                        "status": {"$cond": [
-                            {"$gt": ["$total_pnl", 0]}, "profitable",
-                            {"$lt": ["$total_pnl", 0]}, "loss",
-                            "breakeven"
-                        ]}
-                    }},
-                    {"$sort": {"date": -1}}
-                ]
-                
-                daily_data = await db.daily_performance.aggregate(pipeline).to_list(length=None)
-            else:
-                # Single account
-                daily_cursor = db.daily_performance.find({
-                    "account": account,
-                    "date": {"$gte": start_date, "$lt": end_date}
-                }).sort("date", -1)
-                
-                daily_data = await daily_cursor.to_list(length=None)
         
         # Convert MongoDB ObjectIds and dates to JSON serializable format
         for day in daily_data:
