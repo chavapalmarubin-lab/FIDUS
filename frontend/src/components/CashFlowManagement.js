@@ -1130,8 +1130,23 @@ const CashFlowManagement = () => {
                           )}
                           {monthData.performance_fees > 0 && (
                             <div className="text-sm">
-                              <span className="text-slate-400">Performance Fees:</span>
-                              <span className="text-orange-400 ml-2 font-medium">{formatCurrency(monthData.performance_fees)}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-slate-400">
+                                  Performance Fees
+                                  {monthData.performance_fees_is_estimate && (
+                                    <span className="ml-2 px-2 py-0.5 text-[10px] font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded">
+                                      EST
+                                    </span>
+                                  )}:
+                                </span>
+                                <span className="text-orange-400 font-medium">
+                                  {monthData.performance_fees_is_estimate ? '~' : ''}
+                                  {formatCurrency(monthData.performance_fees)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 italic mt-1">
+                                {monthData.performance_fees_note || 'Varies by monthly performance'}
+                              </p>
                             </div>
                           )}
                           {monthData.principal_redemptions > 0 && (
