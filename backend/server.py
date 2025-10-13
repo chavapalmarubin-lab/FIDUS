@@ -15144,6 +15144,11 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
                 "fund_obligations": round(total_client_obligations, 2),
                 "net_profit": round(net_profit, 2)  # Enhanced calculation with broker rebates
             },
+            "rebates_summary": {
+                "total_rebates": round(broker_rebates, 2),
+                "total_volume": rebate_data.get('total_volume', 0),
+                "rebate_breakdown": rebate_data.get('breakdown_by_fund', {})
+            },
             "monthly_breakdown": sorted_monthly,
             "upcoming_redemptions": upcoming_redemptions[:5],  # Next 5 payments
             "total_obligations_period": round(total_client_obligations, 2)
