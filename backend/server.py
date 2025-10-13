@@ -2578,6 +2578,32 @@ async def get_system_connections():
         logger.error(f"Error fetching system connections: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch connections: {str(e)}")
 
+@api_router.get("/system/documentation")
+async def get_technical_documentation():
+    """
+    Get the complete technical documentation in markdown format
+    Returns the TECHNICAL_DOCUMENTATION.md file content
+    """
+    try:
+        docs_path = Path("/app/docs/TECHNICAL_DOCUMENTATION.md")
+        
+        if not docs_path.exists():
+            raise HTTPException(
+                status_code=404, 
+                detail="Documentation file not found. Please ensure /docs/TECHNICAL_DOCUMENTATION.md exists."
+            )
+        
+        with open(docs_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return Response(content=content, media_type="text/markdown")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching technical documentation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch documentation: {str(e)}")
+
 
 # ============================================================================
 # API DOCUMENTATION ENDPOINTS (Phase 4)
