@@ -19904,6 +19904,54 @@ async def debug_verify_total(current_user: dict = Depends(get_current_admin_user
             'error': str(e)
         }
 
+@api_router.get("/debug/daily-performance/{account_id}")
+async def debug_daily_performance(account_id: int, days: int = 30, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Debug endpoint to see daily performance data for an account
+    """
+    try:
+        from datetime import datetime, timedelta, timezone
+        
+        # Calculate date range
+        end_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date = end_date - timedelta(days=days)
+        
+        logging.info(f"🔍 DEBUG: Checking daily_performance collection for account {account_id}")
+        logging.info(f"   Date range: {start_date} to {end_date}")
+        
+        # Query daily_performance collection
+        daily_cursor = db.daily_performance.find({
+            'account': account_id,
+            'date': {'$gte': start_date, '$lt': end_date}
+        }).sort('date', 1)
+        
+        daily_data = await daily_cursor.to_list(length=None)
+        
+        # Convert dates for JSON
+        for day in daily_data:
+            if '_id' in day:
+                del day['_id']
+            if isinstance(day.get('date'), datetime):
+                day['date'] = day['date'].isoformat()
+        
+        logging.info(f"✅ Found {len(daily_data)} days in daily_performance collection")
+        
+        return {
+            'account_id': account_id,
+            'days_requested': days,
+            'start_date': start_date.isoformat(),
+            'end_date': end_date.isoformat(),
+            'days_found': len(daily_data),
+            'daily_data': daily_data,
+            'data_source': 'daily_performance collection'
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Debug daily performance error: {str(e)}")
+        return {
+            'error': str(e)
+        }
+
 # ===============================================================================
 # MONEY MANAGERS ENDPOINTS
 # ===============================================================================
