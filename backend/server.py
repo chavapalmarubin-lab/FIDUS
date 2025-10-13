@@ -19736,7 +19736,7 @@ async def get_daily_performance(days: int = 30, account: int = None):
             day['date'] = day['date'].isoformat()
             daily_data.append(day)
         
-        logging.info(f"   ✅ Calculated {len(daily_data)} days from VPS deal_history (including {len([d for d in daily_data if d['total_trades'] == 0])} days with no trades)")
+        logging.info(f"   ✅ Calculated {len(daily_data)} days from mt5_trades (including {len([d for d in daily_data if d['total_trades'] == 0])} days with no trades)")
         
         # Convert MongoDB ObjectIds and dates to JSON serializable format
         for day in daily_data:
