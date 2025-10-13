@@ -15110,18 +15110,39 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         # Sort by date
         upcoming_redemptions.sort(key=lambda x: x['date'])
         
+        # Get broker rebates from rebate service
+        from services.rebate_calculator import RebateCalculator
+        calculator = RebateCalculator(db)
+        
+        # Get rebates for current month (or last 30 days)
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=30)
+        
+        rebate_data = await calculator.get_rebates_for_cash_flow(start_date, end_date)
+        broker_rebates = rebate_data.get('total_rebates', 0)
+        
+        logging.info(f"💰 Cash Flow Overview - Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots")
+        
+        # Get MT5 profits
+        mt5_trading_profits = await get_total_mt5_profits()
+        separation_interest = await get_separation_account_interest()
+        
+        # Calculate fund revenue including broker rebates
+        fund_revenue = mt5_trading_profits + separation_interest + broker_rebates
+        net_profit = fund_revenue - total_client_obligations
+        
         return {
             "success": True,
             "timeframe": timeframe,
             "fund_filter": fund,
             "summary": {
-                "mt5_trading_profits": await get_total_mt5_profits(),  # Get real MT5 profit/loss (excluding separation)
-                "separation_interest": await get_separation_account_interest(),  # New line item for separation accounts
-                "broker_rebates": 0.0,       # Would come from broker reports
+                "mt5_trading_profits": mt5_trading_profits,  # Get real MT5 profit/loss (excluding separation)
+                "separation_interest": separation_interest,  # New line item for separation accounts
+                "broker_rebates": round(broker_rebates, 2),  # Real broker rebates from rebate calculator
                 "client_interest_obligations": round(total_client_obligations, 2),
-                "fund_revenue": await get_total_mt5_profits() + await get_separation_account_interest(),  # Total revenue including separation
+                "fund_revenue": round(fund_revenue, 2),  # Total revenue including broker rebates
                 "fund_obligations": round(total_client_obligations, 2),
-                "net_profit": round((await get_total_mt5_profits() + await get_separation_account_interest()) - total_client_obligations, 2)  # Enhanced calculation
+                "net_profit": round(net_profit, 2)  # Enhanced calculation with broker rebates
             },
             "monthly_breakdown": sorted_monthly,
             "upcoming_redemptions": upcoming_redemptions[:5],  # Next 5 payments
