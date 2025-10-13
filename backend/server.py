@@ -19756,7 +19756,7 @@ async def get_daily_performance(days: int = 30, account: int = None):
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
             "account": account_display,
-            "data_source": "calculated_from_trades" if daily_check < 10 else "daily_performance_collection"
+            "data_source": "VPS_deal_history"
         }
         
     except Exception as e:
