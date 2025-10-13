@@ -25,6 +25,9 @@ import requests
 import json
 import sys
 from datetime import datetime
+import pymongo
+from pymongo import MongoClient
+import os
 
 # Backend URL from environment
 BACKEND_URL = "https://financeflow-89.preview.emergentagent.com"
@@ -33,12 +36,16 @@ BACKEND_URL = "https://financeflow-89.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
-class PerformanceFeeEndpointsTest:
+# MongoDB connection
+MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+
+class MT5DashboardInvestigation:
     def __init__(self):
         self.session = requests.Session()
         self.token = None
         self.test_results = []
-        self.manager_ids = []  # Store manager IDs for testing
+        self.mongo_client = None
+        self.db = None
         
     def log_test(self, test_name, success, details):
         """Log test results"""
@@ -54,6 +61,21 @@ class PerformanceFeeEndpointsTest:
         if details:
             print(f"   Details: {details}")
         print()
+    
+    def connect_to_mongodb(self):
+        """Connect to MongoDB to investigate data sources"""
+        try:
+            self.mongo_client = MongoClient(MONGO_URL)
+            self.db = self.mongo_client['fidus_production']
+            
+            # Test connection
+            self.db.admin.command('ping')
+            self.log_test("MongoDB Connection", True, "Successfully connected to MongoDB")
+            return True
+            
+        except Exception as e:
+            self.log_test("MongoDB Connection", False, f"Failed to connect: {str(e)}")
+            return False
     
     def authenticate(self):
         """Authenticate as admin and get JWT token"""
