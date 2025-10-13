@@ -434,3 +434,96 @@ body {
 .animate-scale-in {
   animation: scale-in 0.3s ease-out;
 }
+
+
+/* ============================================
+   INVESTMENT CALCULATOR CUSTOM STYLES
+   ============================================ */
+
+/* Range Slider Webkit Styles */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.8);
+}
+
+/* Range Slider Firefox Styles */
+.slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.8);
+}
+
+/* Fund Card Hover Effects */
+.fund-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  transition: all 0.3s ease;
+}
+
+.fund-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Investment Calculator Card */
+.investment-calculator {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  transition: all 0.3s ease;
+}
+
+.investment-calculator:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .earnings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  .fund-details-compact {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .comparison-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  
+  .comparison-bar .arrow {
+    transform: rotate(90deg);
+  }
+  
+  .comparison-bar .increase {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  
+  .amount-display {
+    font-size: 36px !important;
+  }
+}
+
