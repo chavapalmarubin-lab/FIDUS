@@ -19663,62 +19663,81 @@ async def get_daily_performance(days: int = 30, account: int = None):
         
         deals = await deals_cursor.to_list(length=None)
         logging.info(f"   ✅ Found {len(deals)} deals in VPS deal_history")
+        
+        # Group deals by date
+        daily_map = {}
+        for deal in deals:
+            deal_time = deal.get('time')
+            if isinstance(deal_time, datetime):
+                deal_date = deal_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            elif isinstance(deal_time, str):
+                deal_date = datetime.fromisoformat(deal_time).replace(hour=0, minute=0, second=0, microsecond=0)
+            else:
+                continue
             
-            # Group trades by date
-            daily_map = {}
-            for trade in trades:
-                close_time = trade.get('close_time')
-                if isinstance(close_time, datetime):
-                    trade_date = close_time.replace(hour=0, minute=0, second=0, microsecond=0)
-                elif isinstance(close_time, str):
-                    trade_date = datetime.fromisoformat(close_time).replace(hour=0, minute=0, second=0, microsecond=0)
-                else:
-                    continue
-                
-                date_key = trade_date.isoformat()
-                
-                if date_key not in daily_map:
-                    daily_map[date_key] = {
-                        'date': trade_date,
-                        'total_trades': 0,
-                        'winning_trades': 0,
-                        'losing_trades': 0,
-                        'breakeven_trades': 0,
-                        'total_pnl': 0,
-                        'gross_profit': 0,
-                        'gross_loss': 0,
-                        'largest_win': 0,
-                        'largest_loss': 0
-                    }
-                
-                profit = float(trade.get('profit', 0))
-                daily_map[date_key]['total_trades'] += 1
-                daily_map[date_key]['total_pnl'] += profit
-                
-                if profit > 0:
-                    daily_map[date_key]['winning_trades'] += 1
-                    daily_map[date_key]['gross_profit'] += profit
-                    if profit > daily_map[date_key]['largest_win']:
-                        daily_map[date_key]['largest_win'] = profit
-                elif profit < 0:
-                    daily_map[date_key]['losing_trades'] += 1
-                    daily_map[date_key]['gross_loss'] += profit
-                    if profit < daily_map[date_key]['largest_loss']:
-                        daily_map[date_key]['largest_loss'] = profit
-                else:
-                    daily_map[date_key]['breakeven_trades'] += 1
+            date_key = deal_date.isoformat()
             
-            # Convert to list and add calculated fields
-            daily_data = []
-            for date_key in sorted(daily_map.keys(), reverse=True):
-                day = daily_map[date_key]
-                day['win_rate'] = (day['winning_trades'] / day['total_trades'] * 100) if day['total_trades'] > 0 else 0
-                day['profit_factor'] = abs(day['gross_profit'] / day['gross_loss']) if day['gross_loss'] != 0 else 999.99
-                day['status'] = 'profitable' if day['total_pnl'] > 0 else ('loss' if day['total_pnl'] < 0 else 'breakeven')
-                day['date'] = day['date'].isoformat()
-                daily_data.append(day)
+            if date_key not in daily_map:
+                daily_map[date_key] = {
+                    'date': deal_date,
+                    'total_trades': 0,
+                    'winning_trades': 0,
+                    'losing_trades': 0,
+                    'breakeven_trades': 0,
+                    'total_pnl': 0,
+                    'gross_profit': 0,
+                    'gross_loss': 0,
+                    'largest_win': 0,
+                    'largest_loss': 0
+                }
             
-            logging.info(f"   ✅ Calculated {len(daily_data)} days from trades")
+            profit = float(deal.get('profit', 0))
+            daily_map[date_key]['total_trades'] += 1
+            daily_map[date_key]['total_pnl'] += profit
+            
+            if profit > 0:
+                daily_map[date_key]['winning_trades'] += 1
+                daily_map[date_key]['gross_profit'] += profit
+                if profit > daily_map[date_key]['largest_win']:
+                    daily_map[date_key]['largest_win'] = profit
+            elif profit < 0:
+                daily_map[date_key]['losing_trades'] += 1
+                daily_map[date_key]['gross_loss'] += profit
+                if profit < daily_map[date_key]['largest_loss']:
+                    daily_map[date_key]['largest_loss'] = profit
+            else:
+                daily_map[date_key]['breakeven_trades'] += 1
+        
+        # Fill in missing days with $0 (days with no trading)
+        current_date = start_date
+        while current_date < end_date:
+            date_key = current_date.isoformat()
+            if date_key not in daily_map:
+                daily_map[date_key] = {
+                    'date': current_date,
+                    'total_trades': 0,
+                    'winning_trades': 0,
+                    'losing_trades': 0,
+                    'breakeven_trades': 0,
+                    'total_pnl': 0,
+                    'gross_profit': 0,
+                    'gross_loss': 0,
+                    'largest_win': 0,
+                    'largest_loss': 0
+                }
+            current_date += timedelta(days=1)
+        
+        # Convert to list and add calculated fields
+        daily_data = []
+        for date_key in sorted(daily_map.keys(), reverse=True):
+            day = daily_map[date_key]
+            day['win_rate'] = (day['winning_trades'] / day['total_trades'] * 100) if day['total_trades'] > 0 else 0
+            day['profit_factor'] = abs(day['gross_profit'] / day['gross_loss']) if day['gross_loss'] != 0 else 999.99
+            day['status'] = 'profitable' if day['total_pnl'] > 0 else ('loss' if day['total_pnl'] < 0 else 'breakeven')
+            day['date'] = day['date'].isoformat()
+            daily_data.append(day)
+        
+        logging.info(f"   ✅ Calculated {len(daily_data)} days from VPS deal_history (including {len([d for d in daily_data if d['total_trades'] == 0])} days with no trades)")
             
         else:
             # Use existing daily_performance data
