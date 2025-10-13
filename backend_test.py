@@ -159,7 +159,7 @@ class MT5DashboardInvestigation:
     
     def investigate_mt5_data_sources(self):
         """Test 2: Check MT5 Accounts Data Sources"""
-        if not self.db:
+        if self.db is None:
             self.log_test("MT5 Data Sources Investigation", False, "MongoDB connection not available")
             return False
         
