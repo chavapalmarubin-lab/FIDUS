@@ -584,8 +584,8 @@ class CashFlowBrokerRebatesTest:
             return False
     
     def run_all_tests(self):
-        """Run all fund performance tests"""
-        print("🎯 FUND PORTFOLIO MANAGEMENT - WEIGHTED PERFORMANCE ENDPOINT TESTING")
+        """Run all cash flow broker rebates tests"""
+        print("🎯 CASH FLOW BROKER REBATES FIX TESTING")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Testing Time: {datetime.now().isoformat()}")
@@ -596,27 +596,35 @@ class CashFlowBrokerRebatesTest:
             print("❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Step 2: Verify MT5 accounts have correct fund_type field
-        print("📋 STEP 1: Verifying MT5 Accounts Structure")
-        self.test_mt5_accounts_verification()
+        # Step 2: Test Cash Flow Overview Broker Rebates
+        print("📋 STEP 1: Testing Cash Flow Overview Broker Rebates Fix")
+        cashflow_success = self.test_cash_flow_overview_broker_rebates()
+        if cashflow_success:
+            # Store the broker rebates value for consistency check
+            try:
+                url = f"{BACKEND_URL}/api/admin/cashflow/overview"
+                params = {"timeframe": "12_months", "fund": "all"}
+                response = self.session.get(url, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    self.cashflow_broker_rebates = data.get('summary', {}).get('broker_rebates', 0)
+            except:
+                pass
         print()
         
-        # Step 3: Test individual fund performance endpoints
-        print("📋 STEP 2: Testing Individual Fund Performance Endpoints")
-        self.test_fund_performance_endpoint('CORE', expected_accounts=True)
-        self.test_fund_performance_endpoint('BALANCE', expected_accounts=True)
-        self.test_fund_performance_endpoint('DYNAMIC', expected_accounts=False)
-        self.test_fund_performance_endpoint('UNLIMITED', expected_accounts=False)
+        # Step 3: Test MT5 Fund Performance Consistency
+        print("📋 STEP 2: Testing MT5 Fund Performance Consistency")
+        self.test_mt5_fund_performance_consistency()
         print()
         
-        # Step 4: Test all funds performance endpoint
-        print("📋 STEP 3: Testing All Funds Performance Endpoint")
-        self.test_all_funds_performance()
+        # Step 4: Test Broker Rebates Consistency Between Endpoints
+        print("📋 STEP 3: Testing Broker Rebates Consistency")
+        self.test_broker_rebates_consistency()
         print()
         
-        # Step 5: Test fund portfolio overview (frontend endpoint)
-        print("📋 STEP 4: Testing Fund Portfolio Overview (Frontend Endpoint)")
-        self.test_fund_portfolio_overview()
+        # Step 5: Test Response Structure
+        print("📋 STEP 4: Testing Response Structure")
+        self.test_response_structure()
         print()
         
         # Summary
