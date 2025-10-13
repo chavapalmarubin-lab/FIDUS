@@ -122,10 +122,15 @@ const CashFlowManagement = () => {
           liabilities: {
             client_obligations: summary.client_interest_obligations || 0,
             fund_obligations: summary.fund_obligations || 0,
-            total_outflows: summary.fund_obligations || 0
+            total_outflows: summary.total_liabilities || summary.fund_obligations || 0  // Use total_liabilities if available
           },
-          net_profit: (mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
-          net_fund_profitability: (mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.fund_obligations || 0),
+          performance_fees: cashFlowResponse.data.performance_fees || {
+            total_accrued: 0,
+            managers_count: 0,
+            breakdown: []
+          },
+          net_profit: summary.net_profit || ((mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.total_liabilities || summary.fund_obligations || 0)),
+          net_fund_profitability: summary.net_profit || ((mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.total_liabilities || summary.fund_obligations || 0)),
           // Store corrected MT5 data and breakdown for display
           mt5_corrected_data: mt5CorrectedResponse.data,
           separation_balance: separationBalance,
