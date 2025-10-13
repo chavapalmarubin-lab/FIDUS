@@ -3153,9 +3153,21 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         
         # ONLY add the broker interest (not the full separation balance)
         broker_interest = separation_balance - total_profit_withdrawals  # Interest earned by broker
-        broker_rebates = 0  # Placeholder for future
         
-        # CORRECT calculation: TRUE P&L + broker interest (NO double counting)
+        # Get broker rebates from rebate service
+        from services.rebate_calculator import RebateCalculator
+        calculator = RebateCalculator(db)
+        
+        # Get rebates for current month (or last 30 days)
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=30)
+        
+        rebate_data = await calculator.get_rebates_for_cash_flow(start_date, end_date)
+        broker_rebates = rebate_data.get('total_rebates', 0)
+        
+        logging.info(f"💰 Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots")
+        
+        # CORRECT calculation: TRUE P&L + broker interest + broker rebates (NO double counting)
         total_fund_assets = mt5_trading_pnl + broker_interest + broker_rebates
         
         logger.info(f"✅ Fund Assets Calculation (NO DOUBLE COUNTING): "
