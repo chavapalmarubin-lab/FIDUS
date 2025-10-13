@@ -19651,18 +19651,17 @@ async def get_daily_performance(days: int = 30, account: int = None):
             account_list = [account]
             account_display = account
         
-        # CRITICAL FIX: Query VPS deal_history directly for complete historical data
-        logging.info(f"   🔍 Querying VPS deal_history for complete historical data...")
+        # CRITICAL FIX: Calculate from mt5_trades with full 30-day calendar
+        logging.info(f"   🔍 Calculating daily performance from mt5_trades...")
         
-        # Query VPS deal_history (has ALL historical data!)
-        deals_cursor = db.deal_history.find({
+        # Query mt5_trades collection
+        trades_cursor = db.mt5_trades.find({
             "account": {"$in": account_list},
-            "time": {"$gte": start_date, "$lt": end_date},
-            "entry": {"$in": [1, 2]}  # IN and OUT entries (actual trades)
-        }).sort("time", 1)
+            "close_time": {"$gte": start_date, "$lt": end_date}
+        }).sort("close_time", 1)
         
-        deals = await deals_cursor.to_list(length=None)
-        logging.info(f"   ✅ Found {len(deals)} deals in VPS deal_history")
+        trades = await trades_cursor.to_list(length=None)
+        logging.info(f"   ✅ Found {len(trades)} trades in mt5_trades")
         
         # Group deals by date
         daily_map = {}
