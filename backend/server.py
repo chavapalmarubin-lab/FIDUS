@@ -19690,7 +19690,7 @@ async def get_daily_performance(days: int = 30, account: int = None):
                     'largest_loss': 0
                 }
             
-            profit = float(deal.get('profit', 0))
+            profit = float(trade.get('profit', 0))
             daily_map[date_key]['total_trades'] += 1
             daily_map[date_key]['total_pnl'] += profit
             
