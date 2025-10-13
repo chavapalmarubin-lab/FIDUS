@@ -19641,65 +19641,146 @@ async def get_daily_performance(days: int = 30, account: int = None):
         end_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         start_date = end_date - timedelta(days=days)
         
+        logging.info(f"🔍 Daily performance requested: account={account}, days={days}")
+        
         # Phase 1B: Support all accounts or specific account
         if account is None or account == 0:  # 'all' accounts
-            # Aggregate daily performance across all accounts
-            pipeline = [
-                {"$match": {
-                    "account": {"$in": [886557, 886066, 886602, 885822]},
-                    "date": {"$gte": start_date, "$lt": end_date}
-                }},
-                {"$group": {
-                    "_id": "$date",
-                    "total_trades": {"$sum": "$total_trades"},
-                    "winning_trades": {"$sum": "$winning_trades"},
-                    "losing_trades": {"$sum": "$losing_trades"},
-                    "breakeven_trades": {"$sum": "$breakeven_trades"},
-                    "total_pnl": {"$sum": "$total_pnl"},
-                    "gross_profit": {"$sum": "$gross_profit"},
-                    "gross_loss": {"$sum": "$gross_loss"},
-                    "largest_win": {"$max": "$largest_win"},
-                    "largest_loss": {"$min": "$largest_loss"},
-                    "instruments_traded": {"$push": "$instruments_traded"}
-                }},
-                {"$addFields": {
-                    "date": "$_id",
-                    "win_rate": {"$cond": [
-                        {"$eq": ["$total_trades", 0]}, 
-                        0, 
-                        {"$multiply": [{"$divide": ["$winning_trades", "$total_trades"]}, 100]}
-                    ]},
-                    "profit_factor": {"$cond": [
-                        {"$eq": ["$gross_loss", 0]}, 
-                        999.99, 
-                        {"$abs": {"$divide": ["$gross_profit", "$gross_loss"]}}
-                    ]},
-                    "status": {"$cond": [
-                        {"$gt": ["$total_pnl", 0]}, "profitable",
-                        {"$lt": ["$total_pnl", 0]}, "loss",
-                        "breakeven"
-                    ]},
-                    "instruments_traded": {"$reduce": {
-                        "input": "$instruments_traded",
-                        "initialValue": [],
-                        "in": {"$setUnion": ["$$value", "$$this"]}
-                    }}
-                }},
-                {"$sort": {"date": -1}}
-            ]
-            
-            daily_data = await db.daily_performance.aggregate(pipeline).to_list(length=None)
+            account_list = [886557, 886066, 886602, 885822]
             account_display = "all"
+        else:
+            account_list = [account]
+            account_display = account
+        
+        # CRITICAL FIX: Check if daily_performance has data, if not, calculate from trades
+        daily_check = await db.daily_performance.count_documents({
+            "account": {"$in": account_list},
+            "date": {"$gte": start_date, "$lt": end_date}
+        })
+        
+        logging.info(f"   daily_performance collection has {daily_check} days")
+        
+        # If daily_performance is empty or has very few days, calculate from mt5_trades
+        if daily_check < 10:  # Less than 10 days means we should calculate from trades
+            logging.info(f"   ⚠️ Insufficient data in daily_performance, calculating from mt5_trades...")
+            
+            # Query trades directly from mt5_trades collection
+            trades_cursor = db.mt5_trades.find({
+                "account": {"$in": account_list},
+                "close_time": {"$gte": start_date, "$lt": end_date}
+            }).sort("close_time", 1)
+            
+            trades = await trades_cursor.to_list(length=None)
+            logging.info(f"   Found {len(trades)} trades to process")
+            
+            # Group trades by date
+            daily_map = {}
+            for trade in trades:
+                close_time = trade.get('close_time')
+                if isinstance(close_time, datetime):
+                    trade_date = close_time.replace(hour=0, minute=0, second=0, microsecond=0)
+                elif isinstance(close_time, str):
+                    trade_date = datetime.fromisoformat(close_time).replace(hour=0, minute=0, second=0, microsecond=0)
+                else:
+                    continue
+                
+                date_key = trade_date.isoformat()
+                
+                if date_key not in daily_map:
+                    daily_map[date_key] = {
+                        'date': trade_date,
+                        'total_trades': 0,
+                        'winning_trades': 0,
+                        'losing_trades': 0,
+                        'breakeven_trades': 0,
+                        'total_pnl': 0,
+                        'gross_profit': 0,
+                        'gross_loss': 0,
+                        'largest_win': 0,
+                        'largest_loss': 0
+                    }
+                
+                profit = float(trade.get('profit', 0))
+                daily_map[date_key]['total_trades'] += 1
+                daily_map[date_key]['total_pnl'] += profit
+                
+                if profit > 0:
+                    daily_map[date_key]['winning_trades'] += 1
+                    daily_map[date_key]['gross_profit'] += profit
+                    if profit > daily_map[date_key]['largest_win']:
+                        daily_map[date_key]['largest_win'] = profit
+                elif profit < 0:
+                    daily_map[date_key]['losing_trades'] += 1
+                    daily_map[date_key]['gross_loss'] += profit
+                    if profit < daily_map[date_key]['largest_loss']:
+                        daily_map[date_key]['largest_loss'] = profit
+                else:
+                    daily_map[date_key]['breakeven_trades'] += 1
+            
+            # Convert to list and add calculated fields
+            daily_data = []
+            for date_key in sorted(daily_map.keys(), reverse=True):
+                day = daily_map[date_key]
+                day['win_rate'] = (day['winning_trades'] / day['total_trades'] * 100) if day['total_trades'] > 0 else 0
+                day['profit_factor'] = abs(day['gross_profit'] / day['gross_loss']) if day['gross_loss'] != 0 else 999.99
+                day['status'] = 'profitable' if day['total_pnl'] > 0 else ('loss' if day['total_pnl'] < 0 else 'breakeven')
+                day['date'] = day['date'].isoformat()
+                daily_data.append(day)
+            
+            logging.info(f"   ✅ Calculated {len(daily_data)} days from trades")
             
         else:
-            # Single account query
-            daily_cursor = db.daily_performance.find({
-                "account": account,
-                "date": {"$gte": start_date, "$lt": end_date}
-            }).sort("date", -1)
+            # Use existing daily_performance data
+            logging.info(f"   ✅ Using existing daily_performance data")
             
-            daily_data = await daily_cursor.to_list(length=None)
-            account_display = account
+            if account is None or account == 0:
+                # Aggregate across accounts
+                pipeline = [
+                    {"$match": {
+                        "account": {"$in": account_list},
+                        "date": {"$gte": start_date, "$lt": end_date}
+                    }},
+                    {"$group": {
+                        "_id": "$date",
+                        "total_trades": {"$sum": "$total_trades"},
+                        "winning_trades": {"$sum": "$winning_trades"},
+                        "losing_trades": {"$sum": "$losing_trades"},
+                        "breakeven_trades": {"$sum": "$breakeven_trades"},
+                        "total_pnl": {"$sum": "$total_pnl"},
+                        "gross_profit": {"$sum": "$gross_profit"},
+                        "gross_loss": {"$sum": "$gross_loss"},
+                        "largest_win": {"$max": "$largest_win"},
+                        "largest_loss": {"$min": "$largest_loss"}
+                    }},
+                    {"$addFields": {
+                        "date": "$_id",
+                        "win_rate": {"$cond": [
+                            {"$eq": ["$total_trades", 0]}, 
+                            0, 
+                            {"$multiply": [{"$divide": ["$winning_trades", "$total_trades"]}, 100]}
+                        ]},
+                        "profit_factor": {"$cond": [
+                            {"$eq": ["$gross_loss", 0]}, 
+                            999.99, 
+                            {"$abs": {"$divide": ["$gross_profit", "$gross_loss"]}}
+                        ]},
+                        "status": {"$cond": [
+                            {"$gt": ["$total_pnl", 0]}, "profitable",
+                            {"$lt": ["$total_pnl", 0]}, "loss",
+                            "breakeven"
+                        ]}
+                    }},
+                    {"$sort": {"date": -1}}
+                ]
+                
+                daily_data = await db.daily_performance.aggregate(pipeline).to_list(length=None)
+            else:
+                # Single account
+                daily_cursor = db.daily_performance.find({
+                    "account": account,
+                    "date": {"$gte": start_date, "$lt": end_date}
+                }).sort("date", -1)
+                
+                daily_data = await daily_cursor.to_list(length=None)
         
         # Convert MongoDB ObjectIds and dates to JSON serializable format
         for day in daily_data:
@@ -19710,12 +19791,15 @@ async def get_daily_performance(days: int = 30, account: int = None):
             if isinstance(day.get("calculated_at"), datetime):
                 day["calculated_at"] = day["calculated_at"].isoformat()
         
+        logging.info(f"   ✅ Returning {len(daily_data)} days of performance data")
+        
         return {
             "success": True,
             "daily_performance": daily_data,
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
-            "account": account_display
+            "account": account_display,
+            "data_source": "calculated_from_trades" if daily_check < 10 else "daily_performance_collection"
         }
         
     except Exception as e:
