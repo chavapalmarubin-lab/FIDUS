@@ -19844,7 +19844,7 @@ async def debug_verify_account(account_id: int, current_user: dict = Depends(get
         }
 
 @api_router.get("/api/debug/verify-total-calculation")
-async def debug_verify_total():
+async def debug_verify_total(current_user: dict = Depends(get_current_admin_user)):
     """
     Verify that individual accounts sum to total
     """
