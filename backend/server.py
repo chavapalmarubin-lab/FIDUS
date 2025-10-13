@@ -19792,6 +19792,119 @@ async def trigger_manual_sync():
         }
 
 # ===============================================================================
+# DEBUG ENDPOINTS - VERIFY ACCOUNT DATA FROM VPS
+# ===============================================================================
+
+@api_router.get("/api/debug/verify-account-data/{account_id}")
+async def debug_verify_account(account_id: int):
+    """
+    Debug endpoint to verify account data from VPS
+    Shows RAW data from VPS MongoDB
+    """
+    try:
+        logging.info(f"🔍 DEBUG: Verifying account {account_id} from VPS MongoDB")
+        
+        # Query VPS MongoDB for THIS specific account
+        account = await db.mt5_accounts.find_one({"account": account_id})
+        
+        if not account:
+            logging.warning(f"❌ Account {account_id} NOT FOUND in VPS MongoDB")
+            return {
+                'found': False,
+                'account_id': account_id,
+                'message': 'Account not found in VPS MongoDB',
+                'collection': 'mt5_accounts'
+            }
+        
+        # Return RAW data from VPS
+        logging.info(f"✅ Found account {account_id} in VPS")
+        logging.info(f"   TRUE P&L: ${account.get('true_pnl', 0):,.2f}")
+        
+        return {
+            'found': True,
+            'account_id': account_id,
+            'collection': 'mt5_accounts',
+            'raw_data': {
+                'account_id': account.get('account'),
+                'fund_type': account.get('fund_type'),
+                'balance': account.get('balance'),
+                'equity': account.get('equity'),
+                'displayed_pnl': account.get('displayed_pnl'),
+                'profit_withdrawals': account.get('profit_withdrawals'),
+                'true_pnl': account.get('true_pnl'),
+                'last_sync': account.get('updated_at', str(datetime.now(timezone.utc)))
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Debug verify account error: {str(e)}")
+        return {
+            'found': False,
+            'error': str(e)
+        }
+
+@api_router.get("/api/debug/verify-total-calculation")
+async def debug_verify_total():
+    """
+    Verify that individual accounts sum to total
+    """
+    try:
+        logging.info(f"🔍 DEBUG: Verifying total calculation from VPS")
+        
+        account_ids = [886557, 886066, 886602, 885822]
+        
+        # Get ALL accounts from VPS
+        accounts_cursor = db.mt5_accounts.find({'account': {'$in': account_ids}})
+        accounts = await accounts_cursor.to_list(length=None)
+        
+        if not accounts:
+            return {'error': 'No accounts found in VPS'}
+        
+        # Calculate individual values
+        individual_values = []
+        for acc in accounts:
+            individual_values.append({
+                'account_id': acc['account'],
+                'fund_type': acc.get('fund_type'),
+                'true_pnl': acc.get('true_pnl', 0),
+                'displayed_pnl': acc.get('displayed_pnl', 0),
+                'withdrawals': acc.get('profit_withdrawals', 0)
+            })
+        
+        # Calculate total
+        total_true_pnl = sum(acc.get('true_pnl', 0) for acc in accounts)
+        total_displayed_pnl = sum(acc.get('displayed_pnl', 0) for acc in accounts)
+        total_withdrawals = sum(acc.get('profit_withdrawals', 0) for acc in accounts)
+        
+        # Verify formula
+        calculated_total = total_displayed_pnl + total_withdrawals
+        matches = abs(calculated_total - total_true_pnl) < 0.01
+        
+        logging.info(f"✅ Total TRUE P&L: ${total_true_pnl:,.2f}")
+        logging.info(f"✅ Formula matches: {matches}")
+        
+        return {
+            'individual_accounts': individual_values,
+            'totals': {
+                'total_true_pnl': round(total_true_pnl, 2),
+                'total_displayed_pnl': round(total_displayed_pnl, 2),
+                'total_withdrawals': round(total_withdrawals, 2),
+                'calculated_total': round(calculated_total, 2),
+                'formula_correct': matches
+            },
+            'verification': {
+                'all_accounts_unique': len(set(acc['true_pnl'] for acc in individual_values)) == len(individual_values),
+                'formula_matches': matches
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Debug verify total error: {str(e)}")
+        return {
+            'error': str(e)
+        }
+
+# ===============================================================================
 # MONEY MANAGERS ENDPOINTS
 # ===============================================================================
 
