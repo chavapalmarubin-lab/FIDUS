@@ -575,7 +575,7 @@ class TradingAnalyticsService:
             
             return {
                 "overview": {
-                    "total_pnl": round(total_true_pnl, 2),  # ✅ CORRECTED: Now uses TRUE P&L!
+                    "total_pnl": round(final_pnl, 2),  # ✅ FIX: Individual for single account, total for multiple!
                     "total_trades": total_trades,
                     "winning_trades": winning_trades,
                     "losing_trades": losing_trades,
