@@ -15124,13 +15124,26 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         
         logging.info(f"💰 Cash Flow Overview - Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots")
         
+        # Get performance fees from performance fee calculator
+        from services.performance_fee_calculator import PerformanceFeeCalculator
+        fee_calculator = PerformanceFeeCalculator(db)
+        performance_fees_data = await fee_calculator.get_performance_fees_for_cash_flow()
+        performance_fees_accrued = performance_fees_data.get('total_accrued', 0)
+        
+        logging.info(f"💰 Cash Flow Overview - Performance Fees Accrued: ${performance_fees_accrued:,.2f} from {performance_fees_data.get('managers_count', 0)} managers")
+        
         # Get MT5 profits
         mt5_trading_profits = await get_total_mt5_profits()
         separation_interest = await get_separation_account_interest()
         
         # Calculate fund revenue including broker rebates
         fund_revenue = mt5_trading_profits + separation_interest + broker_rebates
-        net_profit = fund_revenue - total_client_obligations
+        
+        # Calculate total liabilities (client obligations + performance fees)
+        total_liabilities = total_client_obligations + performance_fees_accrued
+        
+        # Calculate net profit with performance fees included
+        net_profit = fund_revenue - total_liabilities
         
         return {
             "success": True,
