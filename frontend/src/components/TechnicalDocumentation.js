@@ -90,6 +90,49 @@ export default function TechnicalDocumentation() {
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
+  // Fetch documentation when tab is active
+  useEffect(() => {
+    if (viewMode === 'documentation' && !documentation) {
+      setLoadingDocs(true);
+      setDocsError(null);
+      
+      // Try to fetch from local file first (for development)
+      fetch('/docs/TECHNICAL_DOCUMENTATION.md')
+        .then(res => {
+          if (!res.ok) {
+            // If local file not found, try GitHub
+            // User can update this URL with their GitHub repo
+            throw new Error('Local file not found, using fallback');
+          }
+          return res.text();
+        })
+        .then(text => {
+          setDocumentation(text);
+          setLoadingDocs(false);
+        })
+        .catch(err => {
+          console.log('Using embedded documentation');
+          // Fallback to embedded documentation
+          fetch(`${backendUrl}/api/system/documentation`)
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Documentation not available');
+              }
+              return res.text();
+            })
+            .then(text => {
+              setDocumentation(text);
+              setLoadingDocs(false);
+            })
+            .catch(finalErr => {
+              console.error('Error loading documentation:', finalErr);
+              setDocsError('Documentation could not be loaded. Please check the configuration.');
+              setLoadingDocs(false);
+            });
+        });
+    }
+  }, [viewMode, documentation, backendUrl]);
+
   // Get all components as a flat array
   const getAllComponents = () => {
     const allComponents = [];
