@@ -19663,14 +19663,14 @@ async def get_daily_performance(days: int = 30, account: int = None):
         trades = await trades_cursor.to_list(length=None)
         logging.info(f"   ✅ Found {len(trades)} trades in mt5_trades")
         
-        # Group deals by date
+        # Group trades by date
         daily_map = {}
-        for deal in deals:
-            deal_time = deal.get('time')
-            if isinstance(deal_time, datetime):
-                deal_date = deal_time.replace(hour=0, minute=0, second=0, microsecond=0)
-            elif isinstance(deal_time, str):
-                deal_date = datetime.fromisoformat(deal_time).replace(hour=0, minute=0, second=0, microsecond=0)
+        for trade in trades:
+            close_time = trade.get('close_time')
+            if isinstance(close_time, datetime):
+                trade_date = close_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            elif isinstance(close_time, str):
+                trade_date = datetime.fromisoformat(close_time).replace(hour=0, minute=0, second=0, microsecond=0)
             else:
                 continue
             
