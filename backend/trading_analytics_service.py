@@ -530,16 +530,25 @@ class TradingAnalyticsService:
             
             # PHASE 3 FIX: Get TRUE P&L from corrected mt5_accounts collection
             # This includes profit withdrawals!
+            # CRITICAL FIX: Return INDIVIDUAL P&L for single account, TOTAL for multiple
             total_true_pnl = 0.0
+            individual_pnls = {}
             
             for account_num in account_numbers:
                 account_data = await self.db.mt5_accounts.find_one({"account": account_num})
                 if account_data:
                     true_pnl = float(account_data.get("true_pnl", 0))
+                    individual_pnls[account_num] = true_pnl
                     total_true_pnl += true_pnl
                     logger.info(f"Account {account_num}: TRUE P&L = ${true_pnl:,.2f}")
             
-            logger.info(f"✅ Total TRUE P&L for accounts {account_numbers}: ${total_true_pnl:,.2f}")
+            # CRITICAL: If querying SINGLE account, use its individual P&L, not sum
+            if len(account_numbers) == 1:
+                final_pnl = individual_pnls.get(account_numbers[0], 0.0)
+                logger.info(f"✅ Individual account {account_numbers[0]} TRUE P&L: ${final_pnl:,.2f}")
+            else:
+                final_pnl = total_true_pnl
+                logger.info(f"✅ Total TRUE P&L for accounts {account_numbers}: ${total_true_pnl:,.2f}")
             
             # Query daily performance data for trade statistics
             query_filter = {
