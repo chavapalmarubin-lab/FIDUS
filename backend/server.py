@@ -19739,10 +19739,6 @@ async def get_daily_performance(days: int = 30, account: int = None):
         
         logging.info(f"   ✅ Calculated {len(daily_data)} days from VPS deal_history (including {len([d for d in daily_data if d['total_trades'] == 0])} days with no trades)")
             
-        else:
-            # Use existing daily_performance data
-            logging.info(f"   ✅ Using existing daily_performance data")
-            
             if account is None or account == 0:
                 # Aggregate across accounts
                 pipeline = [
