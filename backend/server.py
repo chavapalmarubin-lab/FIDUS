@@ -19997,6 +19997,217 @@ async def debug_daily_performance(account_id: int, days: int = 30, current_user:
         }
 
 # ===============================================================================
+# AUTOMATIC VPS SYNC SYSTEM
+# ===============================================================================
+
+@api_router.post("/admin/sync/from-vps")
+async def sync_from_vps(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Manually sync data from VPS MongoDB to Render MongoDB cache
+    Can also be triggered automatically by scheduler
+    """
+    try:
+        start_time = datetime.now(timezone.utc)
+        logging.info(f"🔄 Starting VPS → Render sync at {start_time.strftime('%H:%M:%S')}")
+        
+        # Sync MT5 accounts from VPS
+        vps_accounts_cursor = db.mt5_accounts.find()
+        vps_accounts = await vps_accounts_cursor.to_list(length=None)
+        
+        if not vps_accounts:
+            return {
+                'success': False,
+                'message': 'No accounts found in VPS MongoDB',
+                'timestamp': start_time.isoformat()
+            }
+        
+        # Update cache collection
+        accounts_synced = 0
+        for account in vps_accounts:
+            await db.mt5_accounts_cache.update_one(
+                {'account': account.get('account')},
+                {
+                    '$set': {
+                        **account,
+                        'cached_at': datetime.now(timezone.utc),
+                        'cache_source': 'VPS_MONGODB'
+                    }
+                },
+                upsert=True
+            )
+            del account['_id']  # Remove ObjectId for logging
+            accounts_synced += 1
+        
+        # Sync trades (last 30 days for daily calendar)
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=30)
+        
+        vps_trades_cursor = db.mt5_trades.find({
+            'close_time': {'$gte': start_date, '$lte': end_date}
+        })
+        vps_trades = await vps_trades_cursor.to_list(length=None)
+        
+        trades_synced = 0
+        if vps_trades:
+            # Clear old cached trades
+            await db.mt5_trades_cache.delete_many({})
+            # Insert fresh trades
+            for trade in vps_trades:
+                if '_id' in trade:
+                    del trade['_id']
+            await db.mt5_trades_cache.insert_many(vps_trades)
+            trades_synced = len(vps_trades)
+        
+        end_time = datetime.now(timezone.utc)
+        duration = (end_time - start_time).total_seconds()
+        
+        result = {
+            'success': True,
+            'accounts_synced': accounts_synced,
+            'trades_synced': trades_synced,
+            'duration_seconds': round(duration, 2),
+            'started_at': start_time.isoformat(),
+            'completed_at': end_time.isoformat()
+        }
+        
+        logging.info(f"✅ Sync complete: {accounts_synced} accounts, {trades_synced} trades in {duration:.2f}s")
+        
+        return result
+        
+    except Exception as e:
+        error_result = {
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        logging.error(f"❌ VPS sync error: {e}")
+        return error_result
+
+
+async def automatic_vps_sync():
+    """
+    Background job that runs automatically
+    Executes 1 minute after VPS bridge sync (every 5 minutes)
+    """
+    try:
+        logging.info(f"🔄 Auto-sync starting at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
+        
+        # Call the sync function without authentication (internal call)
+        start_time = datetime.now(timezone.utc)
+        
+        # Sync MT5 accounts from VPS
+        vps_accounts_cursor = db.mt5_accounts.find()
+        vps_accounts = await vps_accounts_cursor.to_list(length=None)
+        
+        if not vps_accounts:
+            logging.warning("⚠️ Auto-sync: No accounts found in VPS")
+            return
+        
+        # Update cache collection
+        accounts_synced = 0
+        for account in vps_accounts:
+            await db.mt5_accounts_cache.update_one(
+                {'account': account.get('account')},
+                {
+                    '$set': {
+                        **account,
+                        'cached_at': datetime.now(timezone.utc),
+                        'cache_source': 'VPS_MONGODB'
+                    }
+                },
+                upsert=True
+            )
+            accounts_synced += 1
+        
+        # Sync trades (last 30 days)
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=30)
+        
+        vps_trades_cursor = db.mt5_trades.find({
+            'close_time': {'$gte': start_date, '$lte': end_date}
+        })
+        vps_trades = await vps_trades_cursor.to_list(length=None)
+        
+        trades_synced = 0
+        if vps_trades:
+            await db.mt5_trades_cache.delete_many({})
+            for trade in vps_trades:
+                if '_id' in trade:
+                    del trade['_id']
+            await db.mt5_trades_cache.insert_many(vps_trades)
+            trades_synced = len(vps_trades)
+        
+        duration = (datetime.now(timezone.utc) - start_time).total_seconds()
+        
+        logging.info(f"✅ Auto-sync complete: {accounts_synced} accounts, {trades_synced} trades in {duration:.2f}s")
+            
+    except Exception as e:
+        logging.error(f"❌ Auto-sync exception: {e}")
+
+
+# Schedule automatic sync every 5 minutes (1 minute offset from VPS)
+# VPS syncs at: :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
+# This syncs at: :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56
+scheduler.add_job(
+    automatic_vps_sync,
+    'cron',
+    minute='1,6,11,16,21,26,31,36,41,46,51,56',
+    id='auto_vps_sync',
+    replace_existing=True
+)
+
+
+@api_router.get("/admin/sync/status")
+async def get_sync_status(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get current sync status and cache freshness
+    """
+    try:
+        # Get most recently cached account
+        latest_cursor = db.mt5_accounts_cache.find().sort('cached_at', -1).limit(1)
+        latest_list = await latest_cursor.to_list(length=1)
+        
+        if not latest_list:
+            return {
+                'cache_status': 'empty',
+                'message': 'No cached data - sync has not run yet',
+                'accounts_cached': 0,
+                'trades_cached': 0
+            }
+        
+        latest = latest_list[0]
+        cached_at = latest.get('cached_at')
+        age_seconds = (datetime.now(timezone.utc) - cached_at).total_seconds()
+        age_minutes = age_seconds / 60
+        
+        # Determine status
+        if age_minutes > 10:
+            status = 'stale'  # More than 2 missed syncs
+        elif age_minutes > 6:
+            status = 'warning'  # 1 missed sync
+        else:
+            status = 'fresh'
+        
+        accounts_count = await db.mt5_accounts_cache.count_documents({})
+        trades_count = await db.mt5_trades_cache.count_documents({})
+        
+        return {
+            'cache_status': status,
+            'last_sync': cached_at.isoformat(),
+            'age_minutes': round(age_minutes, 1),
+            'age_seconds': round(age_seconds, 0),
+            'accounts_cached': accounts_count,
+            'trades_cached': trades_count,
+            'next_sync_in_minutes': round(5 - (age_minutes % 5), 1)
+        }
+        
+    except Exception as e:
+        return {
+            'cache_status': 'error',
+            'error': str(e)
+        }
+
+# ===============================================================================
 # MONEY MANAGERS ENDPOINTS
 # ===============================================================================
 
