@@ -146,10 +146,10 @@ class PerformanceFeeEndpointsTest:
                 
                 # Expected manager fees from review request
                 expected_managers = {
-                    'TradingHub Gold': 848.91,
-                    'GoldenTrade': 98.41,
-                    'UNO14 MAM': 53.32,
-                    'CP Strategy': 0.0  # Loss, should have $0 fee
+                    'TradingHub Gold Provider': 848.91,
+                    'GoldenTrade Provider': 98.41,
+                    'UNO14 MAM Manager': 53.32,
+                    'CP Strategy Provider': 0.0  # Loss, should have $0 fee
                 }
                 
                 managers_verified = 0
