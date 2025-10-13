@@ -19651,26 +19651,18 @@ async def get_daily_performance(days: int = 30, account: int = None):
             account_list = [account]
             account_display = account
         
-        # CRITICAL FIX: Check if daily_performance has data, if not, calculate from trades
-        daily_check = await db.daily_performance.count_documents({
+        # CRITICAL FIX: Query VPS deal_history directly for complete historical data
+        logging.info(f"   🔍 Querying VPS deal_history for complete historical data...")
+        
+        # Query VPS deal_history (has ALL historical data!)
+        deals_cursor = db.deal_history.find({
             "account": {"$in": account_list},
-            "date": {"$gte": start_date, "$lt": end_date}
-        })
+            "time": {"$gte": start_date, "$lt": end_date},
+            "entry": {"$in": [1, 2]}  # IN and OUT entries (actual trades)
+        }).sort("time", 1)
         
-        logging.info(f"   daily_performance collection has {daily_check} days")
-        
-        # If daily_performance is empty or has very few days, calculate from mt5_trades
-        if daily_check < 10:  # Less than 10 days means we should calculate from trades
-            logging.info(f"   ⚠️ Insufficient data in daily_performance, calculating from mt5_trades...")
-            
-            # Query trades directly from mt5_trades collection
-            trades_cursor = db.mt5_trades.find({
-                "account": {"$in": account_list},
-                "close_time": {"$gte": start_date, "$lt": end_date}
-            }).sort("close_time", 1)
-            
-            trades = await trades_cursor.to_list(length=None)
-            logging.info(f"   Found {len(trades)} trades to process")
+        deals = await deals_cursor.to_list(length=None)
+        logging.info(f"   ✅ Found {len(deals)} deals in VPS deal_history")
             
             # Group trades by date
             daily_map = {}
