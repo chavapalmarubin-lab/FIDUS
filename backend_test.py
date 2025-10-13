@@ -136,8 +136,8 @@ class PerformanceFeeEndpointsTest:
                 # Check for specific managers and their fees
                 manager_fees = {}
                 for manager in managers:
-                    name = manager.get('name', 'Unknown')
-                    fee = manager.get('performance_fee', 0)
+                    name = manager.get('manager_name', 'Unknown')  # Use manager_name instead of name
+                    fee = manager.get('performance_fee_amount', 0)  # Use performance_fee_amount instead of performance_fee
                     manager_fees[name] = fee
                     
                     # Store manager ID for later tests
