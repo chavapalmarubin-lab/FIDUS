@@ -14897,6 +14897,26 @@ async def calculate_cash_flow_calendar():
                     'payment_type': payment['type']
                 })
         
+        # Add performance fees to all future months (even months without client payments)
+        # Generate next 12 months
+        for i in range(12):
+            future_date = current_date + timedelta(days=30 * (i + 1))
+            month_key = future_date.strftime('%Y-%m')
+            
+            if month_key not in monthly_obligations:
+                monthly_obligations[month_key] = {
+                    'date': future_date,
+                    'core_interest': 0,
+                    'balance_interest': 0,
+                    'dynamic_interest': 0,
+                    'performance_fees': monthly_performance_fee,
+                    'principal_redemptions': 0,
+                    'total_due': monthly_performance_fee,  # Only performance fees for this month
+                    'days_away': (future_date - current_date).days,
+                    'clients_due': [],
+                    'payments': []
+                }
+        
         # Calculate running balance
         running_balance = current_revenue
         sorted_months = sorted(monthly_obligations.keys())
