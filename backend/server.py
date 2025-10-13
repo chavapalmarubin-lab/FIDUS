@@ -258,6 +258,9 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Initialize APScheduler for automatic VPS sync
+scheduler = AsyncIOScheduler()
+
 # User Models
 class LoginRequest(BaseModel):
     username: str
