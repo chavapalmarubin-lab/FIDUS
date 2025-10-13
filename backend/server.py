@@ -22747,6 +22747,18 @@ async def startup_event():
     except Exception as e:
         logging.error(f"❌ MT5 Auto-Sync Service initialization failed: {e}")
     
+    # Start automatic VPS sync scheduler
+    try:
+        scheduler.start()
+        logging.info("✅ Automatic VPS sync scheduler started")
+        logging.info("   Schedule: Every 5 minutes at :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56")
+        
+        # Run initial sync on startup
+        logging.info("🔄 Running initial VPS→Render sync on startup...")
+        await automatic_vps_sync()
+    except Exception as e:
+        logging.error(f"❌ VPS sync scheduler initialization failed: {e}")
+    
     logging.info("✅ FIDUS Server startup completed successfully")
 
 @app.on_event("shutdown")
