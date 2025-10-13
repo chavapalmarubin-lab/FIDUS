@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Cash Flow Broker Rebates Fix
-Testing the fixed /api/admin/cashflow/overview endpoint after broker rebates integration.
-Previously hardcoded to return broker_rebates: 0.0, now fetches actual rebates from RebateCalculator.
+Backend Testing for Performance Fee Endpoints (Phase 3)
+Testing the 6 new performance fee endpoints added to the backend.
 
 Test Objectives:
-1. Test /api/admin/cashflow/overview - Should return broker_rebates = 291.44 (NOT 0.0)
-2. Test /api/mt5/fund-performance/corrected - Should return consistent broker_rebates value
-3. Verify rebates_summary object is present in response
-4. Verify fund_revenue and net_profit calculations include broker rebates
-5. Test response structure matches expected format
+1. GET /api/admin/performance-fees/current - Should return total of $1,000.64
+2. POST /api/admin/performance-fees/calculate-daily - Should calculate fees successfully
+3. GET /api/admin/performance-fees/summary - Should show correct period and totals
+4. GET /api/admin/performance-fees/transactions - Should work (even if empty)
+5. PUT /api/admin/money-managers/{manager_id}/performance-fee - Should update fee rate
+6. Verify all endpoints return HTTP 200 and expected data structure
 
 Expected Results:
-- summary.broker_rebates should be 291.44 (NOT 0.0)
-- rebates_summary.total_rebates should be 291.44
-- rebates_summary.total_volume should show trading volume in lots
-- summary.fund_revenue should include broker rebates in calculation
-- summary.net_profit should include broker rebates
-- Both endpoints should return consistent broker rebates values
+- Current fees total: $1,000.64
+- 3 managers with fees: TradingHub Gold ($848.91), GoldenTrade ($98.41), UNO14 MAM ($53.32)
+- CP Strategy should have $0 fee (loss)
+- Summary shows period "2025-10", accrued_fees: 1000.64, paid_fees: 0
+- Transactions endpoint works (empty array initially)
+- Manager fee update works correctly
 """
 
 import requests
