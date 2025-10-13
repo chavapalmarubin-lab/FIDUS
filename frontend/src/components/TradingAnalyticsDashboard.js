@@ -76,14 +76,25 @@ const TradingAnalyticsDashboard = () => {
         if (overviewResponse.data.success && dailyResponse.data.success && tradesResponse.data.success) {
           const analytics = overviewResponse.data.analytics;
           
-          // ✅ Replace total_pnl with corrected TRUE P&L (with null safety)
+          // ✅ CRITICAL FIX: Only use aggregate for "All Accounts", preserve individual for specific accounts
           if (correctedResponse.data.success) {
             const corrected = correctedResponse.data;
-            analytics.overview.total_pnl = corrected?.fund_assets?.mt5_trading_pnl || 0;
+            
+            // ONLY override with aggregate if viewing ALL accounts
+            if (selectedAccount === 0 || selectedAccount === '0' || selectedAccount === 'all') {
+              analytics.overview.total_pnl = corrected?.fund_assets?.mt5_trading_pnl || 0;
+              console.log('✅ Using AGGREGATE P&L for All Accounts:', corrected?.fund_assets?.mt5_trading_pnl);
+            } else {
+              // For individual accounts, keep the backend's individual P&L value (don't override!)
+              console.log(`✅ Using INDIVIDUAL P&L for Account ${selectedAccount}:`, analytics.overview.total_pnl);
+            }
+            
             analytics.overview.corrected_data_used = true;
             
-            console.log('✅ Using CORRECTED Trading Analytics P&L:', {
-              corrected_pnl: corrected?.fund_assets?.mt5_trading_pnl || 0,
+            console.log('Trading Analytics P&L:', {
+              selected_account: selectedAccount,
+              is_aggregate: selectedAccount === 0 || selectedAccount === '0' || selectedAccount === 'all',
+              total_pnl: analytics.overview.total_pnl,
               profit_withdrawals: corrected?.summary?.total_profit_withdrawals || 0,
               verified: corrected?.verification?.verified || false
             });
