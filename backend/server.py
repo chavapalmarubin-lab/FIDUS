@@ -14830,9 +14830,10 @@ async def calculate_cash_flow_calendar():
         from services.performance_fee_calculator import PerformanceFeeCalculator
         fee_calculator = PerformanceFeeCalculator(db)
         performance_fees_data = await fee_calculator.get_performance_fees_for_cash_flow()
-        monthly_performance_fee = performance_fees_data.get('total_accrued', 0)
+        current_month_performance_fee = performance_fees_data.get('total_accrued', 0)
         
-        logging.info(f"💰 Calendar: Including monthly performance fees of ${monthly_performance_fee:,.2f}")
+        logging.info(f"💰 Calendar: Current month's actual performance fees: ${current_month_performance_fee:,.2f}")
+        logging.info(f"⚠️  Future months will show this as ESTIMATE (fees vary based on monthly performance)")
         
         # Generate payment schedules for all investments
         all_schedules = []
@@ -14843,6 +14844,7 @@ async def calculate_cash_flow_calendar():
         # Group payments by month
         monthly_obligations = {}
         current_date = datetime.now()
+        month_counter = 0  # Track which month we're on
         
         for payment in all_schedules:
             # Only include future payments
@@ -14850,18 +14852,24 @@ async def calculate_cash_flow_calendar():
                 month_key = payment['date'].strftime('%Y-%m')
                 
                 if month_key not in monthly_obligations:
+                    # Determine if this is current/next month (actual) or future month (estimate)
+                    is_current_month = month_counter == 0
+                    
                     monthly_obligations[month_key] = {
                         'date': payment['date'],
                         'core_interest': 0,
                         'balance_interest': 0,
                         'dynamic_interest': 0,
-                        'performance_fees': monthly_performance_fee,  # Add performance fees to each month
+                        'performance_fees': current_month_performance_fee,  # Use current month's fees as base
+                        'performance_fees_is_estimate': not is_current_month,  # Flag if estimate
+                        'performance_fees_note': 'Current month accrued' if is_current_month else 'Estimated (varies by performance)',
                         'principal_redemptions': 0,
-                        'total_due': monthly_performance_fee,  # Initialize with performance fees
+                        'total_due': current_month_performance_fee,  # Initialize with performance fees
                         'days_away': (payment['date'] - current_date).days,
                         'clients_due': [],
                         'payments': []
                     }
+                    month_counter += 1
                 
                 # Add payment to month
                 monthly_obligations[month_key]['payments'].append(payment)
