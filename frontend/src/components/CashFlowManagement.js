@@ -1128,6 +1128,12 @@ const CashFlowManagement = () => {
                               <span className="text-purple-400 ml-2 font-medium">{formatCurrency(monthData.balance_interest)}</span>
                             </div>
                           )}
+                          {monthData.performance_fees > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">Performance Fees:</span>
+                              <span className="text-orange-400 ml-2 font-medium">{formatCurrency(monthData.performance_fees)}</span>
+                            </div>
+                          )}
                           {monthData.principal_redemptions > 0 && (
                             <div className="text-sm">
                               <span className="text-slate-400">Principal:</span>
