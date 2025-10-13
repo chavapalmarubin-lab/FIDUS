@@ -14912,14 +14912,19 @@ async def calculate_cash_flow_calendar():
             month_key = future_date.strftime('%Y-%m')
             
             if month_key not in monthly_obligations:
+                # First month (i=0) is current/actual, rest are estimates
+                is_current_month = i == 0
+                
                 monthly_obligations[month_key] = {
                     'date': future_date,
                     'core_interest': 0,
                     'balance_interest': 0,
                     'dynamic_interest': 0,
-                    'performance_fees': monthly_performance_fee,
+                    'performance_fees': current_month_performance_fee,  # Use current month as base
+                    'performance_fees_is_estimate': not is_current_month,  # Flag if estimate
+                    'performance_fees_note': 'Current month accrued' if is_current_month else 'Estimated (varies by performance)',
                     'principal_redemptions': 0,
-                    'total_due': monthly_performance_fee,  # Only performance fees for this month
+                    'total_due': current_month_performance_fee,  # Only performance fees for this month
                     'days_away': (future_date - current_date).days,
                     'clients_due': [],
                     'payments': []
