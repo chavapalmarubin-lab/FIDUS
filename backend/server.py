@@ -20208,6 +20208,383 @@ async def get_sync_status(current_user: dict = Depends(get_current_admin_user)):
         }
 
 # ===============================================================================
+# BROKER REBATES ENDPOINTS
+# ===============================================================================
+
+@api_router.post("/admin/rebates/config")
+async def create_rebate_config(
+    config_data: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Create or update broker rebate configuration
+    
+    Request body:
+    {
+        "broker_name": "MEX-Atlantic",
+        "broker_code": "MEX",
+        "rebate_per_lot": 5.05,
+        "effective_date": "2025-10-01"
+    }
+    """
+    try:
+        from datetime import datetime, timezone
+        
+        broker_name = config_data.get('broker_name')
+        broker_code = config_data.get('broker_code')
+        rebate_per_lot = float(config_data.get('rebate_per_lot', 0))
+        effective_date_str = config_data.get('effective_date')
+        
+        if not broker_name or not broker_code or rebate_per_lot <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing required fields: broker_name, broker_code, rebate_per_lot"
+            )
+        
+        # Parse effective date
+        if effective_date_str:
+            effective_date = datetime.fromisoformat(effective_date_str.replace('Z', '+00:00'))
+        else:
+            effective_date = datetime.now(timezone.utc)
+        
+        # Check if config already exists
+        existing = await db.broker_rebate_config.find_one({
+            "broker_code": broker_code,
+            "is_active": True
+        })
+        
+        if existing:
+            # Update existing config
+            await db.broker_rebate_config.update_one(
+                {"_id": existing["_id"]},
+                {
+                    "$set": {
+                        "broker_name": broker_name,
+                        "rebate_per_lot": rebate_per_lot,
+                        "effective_date": effective_date,
+                        "updated_at": datetime.now(timezone.utc)
+                    }
+                }
+            )
+            logging.info(f"✅ Updated rebate config for {broker_name}")
+        else:
+            # Create new config
+            new_config = {
+                "broker_name": broker_name,
+                "broker_code": broker_code,
+                "rebate_per_lot": rebate_per_lot,
+                "currency": "USD",
+                "effective_date": effective_date,
+                "end_date": None,
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.broker_rebate_config.insert_one(new_config)
+            logging.info(f"✅ Created rebate config for {broker_name}")
+        
+        return {
+            "success": True,
+            "message": f"Rebate config for {broker_name} saved successfully",
+            "broker_code": broker_code,
+            "rebate_per_lot": rebate_per_lot
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Create rebate config error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/rebates/config")
+async def get_rebate_configs(
+    broker_code: str = None,
+    active: bool = True,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get broker rebate configurations
+    
+    Query params:
+    - broker_code: Filter by specific broker (optional)
+    - active: Filter by active status (default: true)
+    """
+    try:
+        query = {}
+        if broker_code:
+            query["broker_code"] = broker_code
+        if active:
+            query["is_active"] = True
+        
+        configs_cursor = db.broker_rebate_config.find(query).sort("effective_date", -1)
+        configs = await configs_cursor.to_list(length=None)
+        
+        # Remove MongoDB _id for JSON serialization
+        for config in configs:
+            if '_id' in config:
+                config['_id'] = str(config['_id'])
+            if isinstance(config.get('effective_date'), datetime):
+                config['effective_date'] = config['effective_date'].isoformat()
+            if isinstance(config.get('created_at'), datetime):
+                config['created_at'] = config['created_at'].isoformat()
+            if isinstance(config.get('updated_at'), datetime):
+                config['updated_at'] = config['updated_at'].isoformat()
+        
+        return {
+            "success": True,
+            "configs": configs,
+            "count": len(configs)
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Get rebate configs error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/rebates/calculate")
+async def calculate_rebates(
+    calculation_data: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Calculate rebates for a specific period
+    
+    Request body:
+    {
+        "account_ids": ["8885089", "8885090"],  // Optional, all if empty
+        "start_date": "2025-10-01",
+        "end_date": "2025-10-13",
+        "auto_approve": false
+    }
+    """
+    try:
+        from datetime import datetime, timezone
+        from services.rebate_calculator import RebateCalculator
+        
+        start_date_str = calculation_data.get('start_date')
+        end_date_str = calculation_data.get('end_date')
+        account_ids = calculation_data.get('account_ids', [])
+        auto_approve = calculation_data.get('auto_approve', False)
+        
+        if not start_date_str or not end_date_str:
+            raise HTTPException(
+                status_code=400,
+                detail="start_date and end_date are required"
+            )
+        
+        # Parse dates
+        start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+        if not start_date.tzinfo:
+            start_date = start_date.replace(tzinfo=timezone.utc)
+        
+        end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+        if not end_date.tzinfo:
+            end_date = end_date.replace(tzinfo=timezone.utc)
+        
+        # Initialize calculator
+        calculator = RebateCalculator(db)
+        
+        # Calculate rebates
+        result = await calculator.calculate_rebates_for_period(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids if account_ids else None,
+            auto_approve=auto_approve
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Calculate rebates error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/rebates/transactions")
+async def get_rebate_transactions(
+    account_id: str = None,
+    status: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    page: int = 1,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    List all rebate transactions with filtering
+    
+    Query params:
+    - account_id: Filter by account
+    - status: Filter by status (calculated, verified, paid)
+    - start_date: Filter by period start date
+    - end_date: Filter by period end date
+    - page: Page number (default: 1)
+    - limit: Items per page (default: 50)
+    """
+    try:
+        from datetime import datetime, timezone
+        
+        query = {}
+        
+        if account_id:
+            query["account_id"] = account_id
+        
+        if status:
+            query["verification_status"] = status
+        
+        if start_date:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            query["period_start"] = {"$gte": start_dt}
+        
+        if end_date:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            query["period_end"] = {"$lte": end_dt}
+        
+        # Calculate skip for pagination
+        skip = (page - 1) * limit
+        
+        # Get total count
+        total_count = await db.rebate_transactions.count_documents(query)
+        
+        # Get transactions
+        transactions_cursor = db.rebate_transactions.find(query).sort("created_at", -1).skip(skip).limit(limit)
+        transactions = await transactions_cursor.to_list(length=limit)
+        
+        # Format dates for JSON
+        for txn in transactions:
+            if '_id' in txn:
+                txn['_id'] = str(txn['_id'])
+            for date_field in ['period_start', 'period_end', 'calculation_date', 'payment_date', 'created_at', 'updated_at']:
+                if isinstance(txn.get(date_field), datetime):
+                    txn[date_field] = txn[date_field].isoformat()
+        
+        return {
+            "success": True,
+            "transactions": transactions,
+            "total_count": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Get rebate transactions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/admin/rebates/transactions/{transaction_id}/status")
+async def update_rebate_transaction_status(
+    transaction_id: str,
+    status_data: dict,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Update rebate transaction status
+    
+    Request body:
+    {
+        "verification_status": "approved",  // pending, approved, rejected
+        "payment_status": "paid",           // unpaid, processing, paid
+        "payment_date": "2025-10-15",
+        "notes": "Verified and paid via wire transfer"
+    }
+    """
+    try:
+        from datetime import datetime, timezone
+        from bson import ObjectId
+        
+        # Parse transaction ID
+        try:
+            txn_id = ObjectId(transaction_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid transaction ID")
+        
+        # Build update document
+        update_fields = {
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        if 'verification_status' in status_data:
+            update_fields['verification_status'] = status_data['verification_status']
+        
+        if 'payment_status' in status_data:
+            update_fields['payment_status'] = status_data['payment_status']
+        
+        if 'payment_date' in status_data:
+            payment_date = datetime.fromisoformat(status_data['payment_date'].replace('Z', '+00:00'))
+            update_fields['payment_date'] = payment_date
+        
+        if 'notes' in status_data:
+            update_fields['notes'] = status_data['notes']
+        
+        # Update transaction
+        result = await db.rebate_transactions.update_one(
+            {"_id": txn_id},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        logging.info(f"✅ Updated rebate transaction {transaction_id}")
+        
+        return {
+            "success": True,
+            "message": "Transaction status updated successfully",
+            "transaction_id": transaction_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"❌ Update transaction status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/rebates/summary")
+async def get_rebate_summary(
+    period: str = "monthly",
+    year: int = None,
+    month: int = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get rebate summary statistics
+    
+    Query params:
+    - period: 'monthly', 'quarterly', 'yearly' (default: monthly)
+    - year: Year (default: current year)
+    - month: Month for monthly period (default: current month)
+    """
+    try:
+        from datetime import datetime, timezone
+        from services.rebate_calculator import RebateCalculator
+        
+        if year is None:
+            year = datetime.now(timezone.utc).year
+        
+        if month is None:
+            month = datetime.now(timezone.utc).month
+        
+        calculator = RebateCalculator(db)
+        summary = await calculator.get_rebate_summary(
+            period=period,
+            year=year,
+            month=month
+        )
+        
+        return {
+            "success": True,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ Get rebate summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===============================================================================
 # MONEY MANAGERS ENDPOINTS
 # ===============================================================================
 
