@@ -471,8 +471,8 @@ class PerformanceFeeEndpointsTest:
             return False
     
     def run_all_tests(self):
-        """Run all cash flow broker rebates tests"""
-        print("🎯 CASH FLOW BROKER REBATES FIX TESTING")
+        """Run all performance fee endpoint tests"""
+        print("🎯 PERFORMANCE FEE ENDPOINTS TESTING (Phase 3)")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Testing Time: {datetime.now().isoformat()}")
@@ -483,35 +483,29 @@ class PerformanceFeeEndpointsTest:
             print("❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Step 2: Test Cash Flow Overview Broker Rebates
-        print("📋 STEP 1: Testing Cash Flow Overview Broker Rebates Fix")
-        cashflow_success = self.test_cash_flow_overview_broker_rebates()
-        if cashflow_success:
-            # Store the broker rebates value for consistency check
-            try:
-                url = f"{BACKEND_URL}/api/admin/cashflow/overview"
-                params = {"timeframe": "12_months", "fund": "all"}
-                response = self.session.get(url, params=params)
-                if response.status_code == 200:
-                    data = response.json()
-                    self.cashflow_broker_rebates = data.get('summary', {}).get('broker_rebates', 0)
-            except:
-                pass
+        # Step 2: Test Current Performance Fees
+        print("📋 TEST 1: Get Current Performance Fees")
+        self.test_current_performance_fees()
         print()
         
-        # Step 3: Test MT5 Fund Performance Consistency
-        print("📋 STEP 2: Testing MT5 Fund Performance Consistency")
-        self.test_mt5_fund_performance_consistency()
+        # Step 3: Test Calculate Daily Performance Fees
+        print("📋 TEST 2: Calculate Daily Performance Fees")
+        self.test_calculate_daily_performance_fees()
         print()
         
-        # Step 4: Test Broker Rebates Consistency Between Endpoints
-        print("📋 STEP 3: Testing Broker Rebates Consistency")
-        self.test_broker_rebates_consistency()
+        # Step 4: Test Performance Fees Summary
+        print("📋 TEST 3: Get Performance Fees Summary")
+        self.test_performance_fees_summary()
         print()
         
-        # Step 5: Test Response Structure
-        print("📋 STEP 4: Testing Response Structure")
-        self.test_response_structure()
+        # Step 5: Test Performance Fees Transactions
+        print("📋 TEST 4: List Performance Fee Transactions")
+        self.test_performance_fees_transactions()
+        print()
+        
+        # Step 6: Test Update Manager Performance Fee
+        print("📋 TEST 6: Update Manager Performance Fee")
+        self.test_update_manager_performance_fee()
         print()
         
         # Summary
@@ -525,7 +519,7 @@ class PerformanceFeeEndpointsTest:
     def print_summary(self):
         """Print test summary"""
         print("=" * 80)
-        print("📊 TEST SUMMARY")
+        print("📊 PERFORMANCE FEE ENDPOINTS TEST SUMMARY")
         print("=" * 80)
         
         total_tests = len(self.test_results)
@@ -554,49 +548,73 @@ class PerformanceFeeEndpointsTest:
         
         # Overall assessment
         if success_rate >= 90:
-            print("🎉 OVERALL RESULT: EXCELLENT - Broker rebates fix working correctly!")
+            print("🎉 OVERALL RESULT: EXCELLENT - All performance fee endpoints working correctly!")
         elif success_rate >= 75:
-            print("✅ OVERALL RESULT: GOOD - Most broker rebates functionality working")
+            print("✅ OVERALL RESULT: GOOD - Most performance fee endpoints working")
         elif success_rate >= 50:
-            print("⚠️ OVERALL RESULT: PARTIAL - Some broker rebates issues need attention")
+            print("⚠️ OVERALL RESULT: PARTIAL - Some performance fee endpoints need attention")
         else:
-            print("❌ OVERALL RESULT: CRITICAL - Major broker rebates issues detected")
+            print("❌ OVERALL RESULT: CRITICAL - Major performance fee endpoint issues detected")
         
         print()
         print("🔍 KEY FINDINGS:")
         
-        # Check if the main fix is working
-        rebates_fix_working = any(r['success'] and 'Broker Rebates Fix' in r['test'] 
-                                 for r in self.test_results)
+        # Check specific success criteria from review request
+        current_fees_working = any(r['success'] and 'Current Performance Fees' in r['test'] 
+                                  for r in self.test_results)
         
-        if rebates_fix_working:
-            print("   ✅ Broker rebates fix is working - endpoint no longer returns hardcoded 0.0")
+        if current_fees_working:
+            print("   ✅ Current performance fees endpoint returns expected $1,000.64 total")
         else:
-            print("   ❌ Broker rebates fix may not be working - still returning hardcoded 0.0")
+            print("   ❌ Current performance fees endpoint may not be working correctly")
         
-        # Check if values are consistent
-        consistency_working = any(r['success'] and 'Consistency' in r['test'] 
-                                 for r in self.test_results)
-        
-        if consistency_working:
-            print("   ✅ Broker rebates values are consistent between endpoints")
-        else:
-            print("   ⚠️ Need to verify broker rebates consistency between endpoints")
-        
-        # Check if response structure is correct
-        structure_working = any(r['success'] and 'Response Structure' in r['test'] 
+        calculate_working = any(r['success'] and 'Calculate Daily Performance Fees' in r['test'] 
                                for r in self.test_results)
         
-        if structure_working:
-            print("   ✅ Response structure includes rebates_summary object as expected")
+        if calculate_working:
+            print("   ✅ Daily performance fees calculation working successfully")
         else:
-            print("   ⚠️ Response structure may be missing required rebates fields")
+            print("   ❌ Daily performance fees calculation may have issues")
+        
+        summary_working = any(r['success'] and 'Performance Fees Summary' in r['test'] 
+                             for r in self.test_results)
+        
+        if summary_working:
+            print("   ✅ Performance fees summary shows correct period and totals")
+        else:
+            print("   ❌ Performance fees summary may have issues")
+        
+        transactions_working = any(r['success'] and 'Performance Fees Transactions' in r['test'] 
+                                  for r in self.test_results)
+        
+        if transactions_working:
+            print("   ✅ Performance fees transactions endpoint working (even if empty)")
+        else:
+            print("   ❌ Performance fees transactions endpoint may have issues")
+        
+        manager_update_working = any(r['success'] and 'Update Manager Performance Fee' in r['test'] 
+                                    for r in self.test_results)
+        
+        if manager_update_working:
+            print("   ✅ Manager performance fee update working correctly")
+        else:
+            print("   ❌ Manager performance fee update may have issues")
+        
+        print()
+        print("🎯 SUCCESS CRITERIA VERIFICATION:")
+        print("   Expected Results:")
+        print("   • Current fees total: $1,000.64 ✓" if current_fees_working else "   • Current fees total: $1,000.64 ❌")
+        print("   • 3 managers with fees (TradingHub Gold, GoldenTrade, UNO14 MAM) ✓" if current_fees_working else "   • 3 managers with fees ❌")
+        print("   • CP Strategy shows $0 fee (loss) ✓" if current_fees_working else "   • CP Strategy shows $0 fee ❌")
+        print("   • Summary shows period '2025-10' and correct totals ✓" if summary_working else "   • Summary shows correct period and totals ❌")
+        print("   • Transactions endpoint works (empty initially) ✓" if transactions_working else "   • Transactions endpoint works ❌")
+        print("   • Manager fee update works ✓" if manager_update_working else "   • Manager fee update works ❌")
         
         print()
 
 def main():
     """Main test execution"""
-    tester = CashFlowBrokerRebatesTest()
+    tester = PerformanceFeeEndpointsTest()
     success = tester.run_all_tests()
     
     # Exit with appropriate code
