@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import ComponentCard from './ComponentCard';
 import LoadingSpinner from './LoadingSpinner';
+import ReactMarkdown from 'react-markdown';
 
 // Lazy load heavy components for better performance (Phase 7)
 const ArchitectureDiagram = lazy(() => import('./ArchitectureDiagram'));
