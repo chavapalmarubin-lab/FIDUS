@@ -14826,6 +14826,14 @@ async def calculate_cash_flow_calendar():
         # Get current fund revenue (real-time earnings)
         current_revenue = await get_total_mt5_profits() + await get_separation_account_interest()
         
+        # Get current month's performance fees (assumed to be paid monthly)
+        from services.performance_fee_calculator import PerformanceFeeCalculator
+        fee_calculator = PerformanceFeeCalculator(db)
+        performance_fees_data = await fee_calculator.get_performance_fees_for_cash_flow()
+        monthly_performance_fee = performance_fees_data.get('total_accrued', 0)
+        
+        logging.info(f"💰 Calendar: Including monthly performance fees of ${monthly_performance_fee:,.2f}")
+        
         # Generate payment schedules for all investments
         all_schedules = []
         for investment in all_investments:
@@ -14847,8 +14855,9 @@ async def calculate_cash_flow_calendar():
                         'core_interest': 0,
                         'balance_interest': 0,
                         'dynamic_interest': 0,
+                        'performance_fees': monthly_performance_fee,  # Add performance fees to each month
                         'principal_redemptions': 0,
-                        'total_due': 0,
+                        'total_due': monthly_performance_fee,  # Initialize with performance fees
                         'days_away': (payment['date'] - current_date).days,
                         'clients_due': [],
                         'payments': []
