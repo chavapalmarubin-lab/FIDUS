@@ -1080,6 +1080,17 @@ const CashFlowManagement = () => {
               <div className="space-y-3">
                 <h4 className="text-lg font-semibold text-white mb-4">📅 Monthly Obligations Timeline</h4>
                 
+                {/* Performance Fees Disclaimer */}
+                <div className="mb-4 p-3 bg-orange-900/20 border border-orange-500/30 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-orange-400 text-lg">ℹ️</span>
+                    <div className="text-sm">
+                      <strong className="text-orange-400">Performance Fees Note:</strong>
+                      <span className="text-slate-300"> Future performance fees are estimates based on current month's calculations. Actual fees will vary based on each month's manager performance. Managers only earn fees on profitable months.</span>
+                    </div>
+                  </div>
+                </div>
+                
                 {Object.entries(cashFlowCalendar.monthly_obligations || {})
                   .sort(([a], [b]) => a.localeCompare(b))
                   .slice(0, 12) // Show next 12 months
