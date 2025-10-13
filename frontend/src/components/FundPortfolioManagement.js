@@ -144,10 +144,17 @@ const FundPortfolioManagement = () => {
     const performanceHistory = dates.map((date, index) => {
       const dataPoint = { date };
       Object.keys(funds || {}).forEach(fundCode => {
-        // Simulate performance trends
-        const basePerformance = (funds && funds[fundCode] && funds[fundCode].performance_ytd) || 0;
-        const dailyVariation = (Math.random() - 0.5) * 2; // -1% to +1% daily variation
-        dataPoint[fundCode] = basePerformance + dailyVariation;
+        const fund = funds[fundCode];
+        // Only show performance trends for funds with actual investors and AUM
+        if (fund && fund.total_investors > 0 && fund.aum > 0) {
+          // Simulate performance trends
+          const basePerformance = fund.performance_ytd || 0;
+          const dailyVariation = (Math.random() - 0.5) * 2; // -1% to +1% daily variation
+          dataPoint[fundCode] = basePerformance + dailyVariation;
+        } else {
+          // Funds with no investors/AUM show flat line at 0
+          dataPoint[fundCode] = 0;
+        }
       });
       return dataPoint;
     });
