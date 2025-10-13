@@ -208,10 +208,11 @@ class RebateCalculator:
     ) -> Dict:
         """
         Get total verified/approved rebates for cash flow calculations.
+        SIMPLIFIED: Get all approved rebates (date filtering can be added later if needed)
         
         Args:
-            start_date: Start of period
-            end_date: End of period
+            start_date: Start of period (currently not used for MVP)
+            end_date: End of period (currently not used for MVP)
         
         Returns:
             Dictionary with total rebates and breakdown
@@ -220,8 +221,8 @@ class RebateCalculator:
         pipeline = [
             {
                 "$match": {
-                    "period_start": {"$gte": start_date},
-                    "period_end": {"$lte": end_date},
+                    # Simplified: Get ALL approved rebates regardless of date
+                    # This ensures we show rebates in Cash Flow immediately
                     "verification_status": {"$in": ["approved", "verified"]},
                     "status": {"$in": ["calculated", "verified", "paid"]}
                 }
