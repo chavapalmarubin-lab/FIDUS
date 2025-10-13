@@ -32,11 +32,12 @@ BACKEND_URL = "https://financeflow-89.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
-class CashFlowBrokerRebatesTest:
+class PerformanceFeeEndpointsTest:
     def __init__(self):
         self.session = requests.Session()
         self.token = None
         self.test_results = []
+        self.manager_ids = []  # Store manager IDs for testing
         
     def log_test(self, test_name, success, details):
         """Log test results"""
@@ -83,504 +84,390 @@ class CashFlowBrokerRebatesTest:
             self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_cash_flow_overview_broker_rebates(self):
-        """Test /api/admin/cashflow/overview endpoint for broker rebates fix"""
+    def test_current_performance_fees(self):
+        """Test GET /api/admin/performance-fees/current"""
         try:
-            url = f"{BACKEND_URL}/api/admin/cashflow/overview"
-            params = {
-                "timeframe": "12_months",
-                "fund": "all"
-            }
-            response = self.session.get(url, params=params)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check if response has summary section
-                if 'summary' not in data:
-                    self.log_test("Cash Flow Overview Structure", False, "Missing 'summary' key in response")
-                    return False
-                
-                summary = data['summary']
-                
-                # CRITICAL TEST: Check broker_rebates is NOT 0.0
-                broker_rebates = summary.get('broker_rebates', 0)
-                if broker_rebates == 0.0:
-                    self.log_test("Broker Rebates Fix", False, 
-                                f"broker_rebates is still hardcoded to 0.0 - fix not working")
-                    return False
-                
-                # Check if broker_rebates matches expected value (291.44)
-                expected_rebates = 291.44
-                if abs(broker_rebates - expected_rebates) < 0.01:
-                    self.log_test("Broker Rebates Value", True, 
-                                f"broker_rebates = ${broker_rebates:.2f} (matches expected ${expected_rebates:.2f})")
-                else:
-                    self.log_test("Broker Rebates Value", True, 
-                                f"broker_rebates = ${broker_rebates:.2f} (non-zero, different from expected ${expected_rebates:.2f})")
-                
-                # Check if rebates_summary object is present
-                if 'rebates_summary' not in data:
-                    self.log_test("Rebates Summary Object", False, "Missing 'rebates_summary' object in response")
-                    return False
-                
-                rebates_summary = data['rebates_summary']
-                
-                # Verify rebates_summary structure
-                required_rebate_fields = ['total_rebates', 'total_volume', 'rebate_breakdown']
-                missing_rebate_fields = [field for field in required_rebate_fields if field not in rebates_summary]
-                
-                if missing_rebate_fields:
-                    self.log_test("Rebates Summary Structure", False, 
-                                f"Missing fields in rebates_summary: {missing_rebate_fields}")
-                    return False
-                
-                # Check rebates_summary values
-                total_rebates = rebates_summary.get('total_rebates', 0)
-                total_volume = rebates_summary.get('total_volume', 0)
-                
-                if total_rebates != broker_rebates:
-                    self.log_test("Rebates Summary Consistency", False, 
-                                f"summary.broker_rebates (${broker_rebates:.2f}) != rebates_summary.total_rebates (${total_rebates:.2f})")
-                    return False
-                
-                # Check fund_revenue includes broker rebates
-                fund_revenue = summary.get('fund_revenue', 0)
-                if fund_revenue == 0:
-                    self.log_test("Fund Revenue Calculation", False, "fund_revenue is 0 - should include broker rebates")
-                    return False
-                
-                # Check net_profit calculation
-                net_profit = summary.get('net_profit', 0)
-                
-                details = (f"broker_rebates=${broker_rebates:.2f}, "
-                          f"total_rebates=${total_rebates:.2f}, "
-                          f"total_volume={total_volume:.2f} lots, "
-                          f"fund_revenue=${fund_revenue:.2f}, "
-                          f"net_profit=${net_profit:.2f}")
-                
-                self.log_test("Cash Flow Overview Broker Rebates", True, details)
-                return True
-                
-            else:
-                self.log_test("Cash Flow Overview Broker Rebates", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Cash Flow Overview Broker Rebates", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_mt5_fund_performance_consistency(self):
-        """Test /api/mt5/fund-performance/corrected for consistent broker rebates"""
-        try:
-            url = f"{BACKEND_URL}/api/mt5/fund-performance/corrected"
+            url = f"{BACKEND_URL}/api/admin/performance-fees/current"
             response = self.session.get(url)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if response has fund_assets section
-                if 'fund_assets' not in data:
-                    self.log_test("MT5 Fund Performance Structure", False, "Missing 'fund_assets' key in response")
+                # Check response structure
+                if 'totals' not in data:
+                    self.log_test("Current Performance Fees Structure", False, "Missing 'totals' key in response")
                     return False
                 
-                fund_assets = data['fund_assets']
-                
-                # Check broker_rebates in fund_assets
-                broker_rebates = fund_assets.get('broker_rebates', 0)
-                
-                if broker_rebates == 0.0:
-                    self.log_test("MT5 Fund Performance Broker Rebates", False, 
-                                f"broker_rebates is 0.0 in MT5 fund performance endpoint")
+                if 'managers' not in data:
+                    self.log_test("Current Performance Fees Structure", False, "Missing 'managers' key in response")
                     return False
                 
-                details = f"fund_assets.broker_rebates = ${broker_rebates:.2f}"
-                self.log_test("MT5 Fund Performance Broker Rebates", True, details)
+                totals = data['totals']
+                managers = data['managers']
                 
-                # Store for consistency check
-                self.mt5_broker_rebates = broker_rebates
-                return True
+                # Check totals structure
+                total_fees = totals.get('total_performance_fees', 0)
+                managers_with_fees = totals.get('managers_with_fees', 0)
                 
-            else:
-                self.log_test("MT5 Fund Performance Broker Rebates", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
+                # Expected values from review request
+                expected_total = 1000.64
+                expected_managers_count = 3
+                expected_total_managers = 4
                 
-        except Exception as e:
-            self.log_test("MT5 Fund Performance Broker Rebates", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_broker_rebates_consistency(self):
-        """Test consistency between both endpoints"""
-        if hasattr(self, 'mt5_broker_rebates') and hasattr(self, 'cashflow_broker_rebates'):
-            if abs(self.mt5_broker_rebates - self.cashflow_broker_rebates) < 0.01:
-                self.log_test("Broker Rebates Consistency", True, 
-                            f"Both endpoints return consistent broker_rebates: ${self.cashflow_broker_rebates:.2f}")
-                return True
-            else:
-                self.log_test("Broker Rebates Consistency", False, 
-                            f"Inconsistent values: Cash Flow=${self.cashflow_broker_rebates:.2f}, MT5=${self.mt5_broker_rebates:.2f}")
-                return False
-        else:
-            self.log_test("Broker Rebates Consistency", False, "Cannot compare - missing data from previous tests")
-            return False
-    
-    def test_response_structure(self):
-        """Test that response structure matches expected format"""
-        try:
-            url = f"{BACKEND_URL}/api/admin/cashflow/overview"
-            params = {"timeframe": "12_months", "fund": "all"}
-            response = self.session.get(url, params=params)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check top-level structure
-                required_top_level = ['summary', 'rebates_summary']
-                missing_top_level = [field for field in required_top_level if field not in data]
-                
-                if missing_top_level:
-                    self.log_test("Response Structure - Top Level", False, 
-                                f"Missing top-level fields: {missing_top_level}")
-                    return False
-                
-                # Check summary structure
-                summary = data['summary']
-                required_summary_fields = ['broker_rebates', 'fund_revenue', 'net_profit']
-                missing_summary_fields = [field for field in required_summary_fields if field not in summary]
-                
-                if missing_summary_fields:
-                    self.log_test("Response Structure - Summary", False, 
-                                f"Missing summary fields: {missing_summary_fields}")
-                    return False
-                
-                # Check rebates_summary structure
-                rebates_summary = data['rebates_summary']
-                required_rebates_fields = ['total_rebates', 'total_volume', 'rebate_breakdown']
-                missing_rebates_fields = [field for field in required_rebates_fields if field not in rebates_summary]
-                
-                if missing_rebates_fields:
-                    self.log_test("Response Structure - Rebates Summary", False, 
-                                f"Missing rebates_summary fields: {missing_rebates_fields}")
-                    return False
-                
-                # Check data types
-                if not isinstance(summary['broker_rebates'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"broker_rebates should be number, got {type(summary['broker_rebates'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['total_rebates'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"total_rebates should be number, got {type(rebates_summary['total_rebates'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['total_volume'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"total_volume should be number, got {type(rebates_summary['total_volume'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['rebate_breakdown'], dict):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"rebate_breakdown should be object, got {type(rebates_summary['rebate_breakdown'])}")
-                    return False
-                
-                self.log_test("Response Structure", True, "All required fields present with correct data types")
-                return True
-                
-            else:
-                self.log_test("Response Structure", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Response Structure", False, f"Exception: {str(e)}")
-            return False
-    def __init__(self):
-        self.session = requests.Session()
-        self.token = None
-        self.test_results = []
-        
-    def log_test(self, test_name, success, details):
-        """Log test results"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        self.test_results.append({
-            "test": test_name,
-            "status": status,
-            "success": success,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        })
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"   Details: {details}")
-        print()
-    
-    def authenticate(self):
-        """Authenticate as admin and get JWT token"""
-        try:
-            auth_url = f"{BACKEND_URL}/api/auth/login"
-            payload = {
-                "username": ADMIN_USERNAME,
-                "password": ADMIN_PASSWORD,
-                "user_type": "admin"
-            }
-            
-            response = self.session.post(auth_url, json=payload)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.token = data.get('token')
-                if self.token:
-                    self.session.headers.update({'Authorization': f'Bearer {self.token}'})
-                    self.log_test("Admin Authentication", True, f"Successfully authenticated as {ADMIN_USERNAME}")
-                    return True
+                # Validate total performance fees
+                if abs(total_fees - expected_total) < 0.01:
+                    self.log_test("Performance Fees Total", True, f"Total fees: ${total_fees:.2f} (matches expected ${expected_total:.2f})")
                 else:
-                    self.log_test("Admin Authentication", False, "No token in response")
+                    self.log_test("Performance Fees Total", False, f"Total fees: ${total_fees:.2f} (expected ${expected_total:.2f})")
                     return False
+                
+                # Validate managers with fees count
+                if managers_with_fees == expected_managers_count:
+                    self.log_test("Managers With Fees Count", True, f"Managers with fees: {managers_with_fees} (matches expected {expected_managers_count})")
+                else:
+                    self.log_test("Managers With Fees Count", False, f"Managers with fees: {managers_with_fees} (expected {expected_managers_count})")
+                
+                # Validate total managers count
+                if len(managers) == expected_total_managers:
+                    self.log_test("Total Managers Count", True, f"Total managers: {len(managers)} (matches expected {expected_total_managers})")
+                else:
+                    self.log_test("Total Managers Count", False, f"Total managers: {len(managers)} (expected {expected_total_managers})")
+                
+                # Check for specific managers and their fees
+                manager_fees = {}
+                for manager in managers:
+                    name = manager.get('name', 'Unknown')
+                    fee = manager.get('performance_fee', 0)
+                    manager_fees[name] = fee
+                    
+                    # Store manager ID for later tests
+                    if 'manager_id' in manager:
+                        self.manager_ids.append(manager['manager_id'])
+                
+                # Expected manager fees from review request
+                expected_managers = {
+                    'TradingHub Gold': 848.91,
+                    'GoldenTrade': 98.41,
+                    'UNO14 MAM': 53.32,
+                    'CP Strategy': 0.0  # Loss, should have $0 fee
+                }
+                
+                managers_verified = 0
+                for expected_name, expected_fee in expected_managers.items():
+                    found_manager = False
+                    for manager_name, actual_fee in manager_fees.items():
+                        if expected_name.lower() in manager_name.lower() or manager_name.lower() in expected_name.lower():
+                            found_manager = True
+                            if abs(actual_fee - expected_fee) < 0.01:
+                                self.log_test(f"Manager Fee - {expected_name}", True, f"${actual_fee:.2f} (matches expected ${expected_fee:.2f})")
+                                managers_verified += 1
+                            else:
+                                self.log_test(f"Manager Fee - {expected_name}", False, f"${actual_fee:.2f} (expected ${expected_fee:.2f})")
+                            break
+                    
+                    if not found_manager:
+                        self.log_test(f"Manager Presence - {expected_name}", False, f"Manager not found in response")
+                
+                details = f"Total: ${total_fees:.2f}, Managers with fees: {managers_with_fees}, Total managers: {len(managers)}, Verified: {managers_verified}/4"
+                self.log_test("Current Performance Fees", True, details)
+                return True
+                
             else:
-                self.log_test("Admin Authentication", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Current Performance Fees", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
+            self.log_test("Current Performance Fees", False, f"Exception: {str(e)}")
             return False
     
-    def test_fund_performance_endpoint(self, fund_type, expected_accounts=None, expected_non_zero=True):
-        """Test individual fund performance endpoint"""
+    def test_calculate_daily_performance_fees(self):
+        """Test POST /api/admin/performance-fees/calculate-daily"""
         try:
-            url = f"{BACKEND_URL}/api/funds/{fund_type}/performance"
+            url = f"{BACKEND_URL}/api/admin/performance-fees/calculate-daily"
+            response = self.session.post(url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check response structure
+                if 'success' not in data:
+                    self.log_test("Calculate Daily Fees Structure", False, "Missing 'success' key in response")
+                    return False
+                
+                if not data.get('success'):
+                    self.log_test("Calculate Daily Fees Success", False, f"success=false in response: {data}")
+                    return False
+                
+                # Check for data section
+                if 'data' in data and 'totals' in data['data']:
+                    totals = data['data']['totals']
+                    total_fees = totals.get('total_performance_fees', 0)
+                    
+                    # Should match expected total
+                    expected_total = 1000.64
+                    if abs(total_fees - expected_total) < 0.01:
+                        self.log_test("Calculate Daily Fees Total", True, f"Calculated total: ${total_fees:.2f} (matches expected ${expected_total:.2f})")
+                    else:
+                        self.log_test("Calculate Daily Fees Total", False, f"Calculated total: ${total_fees:.2f} (expected ${expected_total:.2f})")
+                
+                # Check for success message
+                message = data.get('message', '')
+                expected_message = "Daily performance fees calculated successfully"
+                if expected_message.lower() in message.lower():
+                    self.log_test("Calculate Daily Fees Message", True, f"Message: {message}")
+                else:
+                    self.log_test("Calculate Daily Fees Message", False, f"Unexpected message: {message}")
+                
+                details = f"success={data.get('success')}, message='{message}'"
+                self.log_test("Calculate Daily Performance Fees", True, details)
+                return True
+                
+            else:
+                self.log_test("Calculate Daily Performance Fees", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Calculate Daily Performance Fees", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_performance_fees_summary(self):
+        """Test GET /api/admin/performance-fees/summary"""
+        try:
+            # Test without parameters (current month)
+            url = f"{BACKEND_URL}/api/admin/performance-fees/summary"
             response = self.session.get(url)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required fields
-                required_fields = ['account_count', 'total_aum', 'weighted_return', 'total_true_pnl']
+                # Check response structure
+                required_fields = ['period', 'accrued_fees', 'paid_fees', 'pending_payment', 'statistics']
                 missing_fields = [field for field in required_fields if field not in data]
                 
                 if missing_fields:
-                    self.log_test(f"Fund {fund_type} Performance Structure", False, 
-                                f"Missing fields: {missing_fields}")
+                    self.log_test("Performance Fees Summary Structure", False, f"Missing fields: {missing_fields}")
                     return False
                 
-                # Check if we expect non-zero values
-                if expected_non_zero and fund_type in ['CORE', 'BALANCE']:
-                    if data['account_count'] == 0:
-                        self.log_test(f"Fund {fund_type} Performance Data", False, 
-                                    f"Expected accounts but got account_count=0")
-                        return False
-                    
-                    if data['total_aum'] == 0:
-                        self.log_test(f"Fund {fund_type} Performance Data", False, 
-                                    f"Expected non-zero AUM but got total_aum=0")
-                        return False
+                # Check expected values
+                period = data.get('period', '')
+                accrued_fees = data.get('accrued_fees', 0)
+                paid_fees = data.get('paid_fees', 0)
+                pending_payment = data.get('pending_payment', 0)
                 
-                # Log successful response
-                details = f"account_count={data['account_count']}, total_aum=${data['total_aum']:,.2f}, weighted_return={data['weighted_return']:.2f}%, total_true_pnl=${data['total_true_pnl']:,.2f}"
-                self.log_test(f"Fund {fund_type} Performance", True, details)
+                # Expected values from review request
+                expected_period = "2025-10"
+                expected_accrued = 1000.64
+                expected_paid = 0
+                expected_pending = 1000.64
                 
-                # Validate expected values for specific funds
-                if fund_type == 'CORE' and expected_accounts:
-                    expected_count = 1
-                    if data['account_count'] != expected_count:
-                        self.log_test(f"Fund {fund_type} Account Count", False, 
-                                    f"Expected {expected_count} accounts, got {data['account_count']}")
-                        return False
-                
-                elif fund_type == 'BALANCE' and expected_accounts:
-                    expected_count = 3
-                    if data['account_count'] != expected_count:
-                        self.log_test(f"Fund {fund_type} Account Count", False, 
-                                    f"Expected {expected_count} accounts, got {data['account_count']}")
-                        return False
-                
-                elif fund_type == 'DYNAMIC':
-                    # DYNAMIC should have no accounts yet
-                    if data['account_count'] != 0:
-                        self.log_test(f"Fund {fund_type} Account Count", False, 
-                                    f"Expected 0 accounts for DYNAMIC, got {data['account_count']}")
-                        return False
-                
-                return True
-                
-            else:
-                self.log_test(f"Fund {fund_type} Performance", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test(f"Fund {fund_type} Performance", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_all_funds_performance(self):
-        """Test /api/funds/performance/all endpoint"""
-        try:
-            url = f"{BACKEND_URL}/api/funds/performance/all"
-            response = self.session.get(url)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Should contain all 4 funds
-                expected_funds = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
-                
-                if 'funds' not in data:
-                    self.log_test("All Funds Performance Structure", False, "Missing 'funds' key in response")
-                    return False
-                
-                funds_data = data['funds']
-                found_funds = list(funds_data.keys()) if isinstance(funds_data, dict) else []
-                
-                missing_funds = [fund for fund in expected_funds if fund not in found_funds]
-                if missing_funds:
-                    self.log_test("All Funds Performance Coverage", False, 
-                                f"Missing funds: {missing_funds}. Found: {found_funds}")
-                    return False
-                
-                # Check portfolio totals
-                if 'portfolio_totals' in data:
-                    totals = data['portfolio_totals']
-                    details = f"Found {len(found_funds)} funds. Portfolio totals: total_accounts={totals.get('total_accounts', 'N/A')}, total_aum=${totals.get('total_aum', 0):,.2f}"
+                # Validate period
+                if expected_period in period:
+                    self.log_test("Summary Period", True, f"Period: {period} (contains expected {expected_period})")
                 else:
-                    details = f"Found {len(found_funds)} funds: {found_funds}"
+                    self.log_test("Summary Period", False, f"Period: {period} (expected to contain {expected_period})")
                 
-                self.log_test("All Funds Performance", True, details)
-                return True
+                # Validate accrued fees
+                if abs(accrued_fees - expected_accrued) < 0.01:
+                    self.log_test("Summary Accrued Fees", True, f"Accrued fees: ${accrued_fees:.2f} (matches expected ${expected_accrued:.2f})")
+                else:
+                    self.log_test("Summary Accrued Fees", False, f"Accrued fees: ${accrued_fees:.2f} (expected ${expected_accrued:.2f})")
                 
-            else:
-                self.log_test("All Funds Performance", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
+                # Validate paid fees
+                if paid_fees == expected_paid:
+                    self.log_test("Summary Paid Fees", True, f"Paid fees: ${paid_fees:.2f} (matches expected ${expected_paid:.2f})")
+                else:
+                    self.log_test("Summary Paid Fees", False, f"Paid fees: ${paid_fees:.2f} (expected ${expected_paid:.2f})")
                 
-        except Exception as e:
-            self.log_test("All Funds Performance", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_fund_portfolio_overview(self):
-        """Test /api/fund-portfolio/overview endpoint - should show NON-ZERO weighted returns"""
-        try:
-            url = f"{BACKEND_URL}/api/fund-portfolio/overview"
-            response = self.session.get(url)
-            
-            if response.status_code == 200:
-                data = response.json()
+                # Validate pending payment
+                if abs(pending_payment - expected_pending) < 0.01:
+                    self.log_test("Summary Pending Payment", True, f"Pending payment: ${pending_payment:.2f} (matches expected ${expected_pending:.2f})")
+                else:
+                    self.log_test("Summary Pending Payment", False, f"Pending payment: ${pending_payment:.2f} (expected ${expected_pending:.2f})")
                 
-                # Check for funds data
-                if 'funds' not in data:
-                    self.log_test("Fund Portfolio Overview Structure", False, "Missing 'funds' key in response")
-                    return False
-                
-                funds = data['funds']
-                
-                # Look for CORE and BALANCE funds with non-zero performance
-                core_found = False
-                balance_found = False
-                
-                for fund in funds:
-                    if fund.get('fund_code') == 'CORE':
-                        core_found = True
-                        performance_ytd = fund.get('performance_ytd', 0)
-                        if performance_ytd == 0:
-                            self.log_test("CORE Fund Performance YTD", False, 
-                                        f"Expected non-zero performance_ytd, got {performance_ytd}")
-                        else:
-                            self.log_test("CORE Fund Performance YTD", True, 
-                                        f"performance_ytd={performance_ytd}% (non-zero)")
+                # Check statistics
+                if 'statistics' in data:
+                    stats = data['statistics']
+                    profitable_managers = stats.get('profitable_managers', 0)
+                    expected_profitable = 3
                     
-                    elif fund.get('fund_code') == 'BALANCE':
-                        balance_found = True
-                        performance_ytd = fund.get('performance_ytd', 0)
-                        if performance_ytd == 0:
-                            self.log_test("BALANCE Fund Performance YTD", False, 
-                                        f"Expected non-zero performance_ytd, got {performance_ytd}")
-                        else:
-                            self.log_test("BALANCE Fund Performance YTD", True, 
-                                        f"performance_ytd={performance_ytd}% (non-zero)")
+                    if profitable_managers == expected_profitable:
+                        self.log_test("Summary Statistics", True, f"Profitable managers: {profitable_managers} (matches expected {expected_profitable})")
+                    else:
+                        self.log_test("Summary Statistics", False, f"Profitable managers: {profitable_managers} (expected {expected_profitable})")
                 
-                if not core_found:
-                    self.log_test("CORE Fund Presence", False, "CORE fund not found in portfolio overview")
+                details = f"Period: {period}, Accrued: ${accrued_fees:.2f}, Paid: ${paid_fees:.2f}, Pending: ${pending_payment:.2f}"
+                self.log_test("Performance Fees Summary", True, details)
                 
-                if not balance_found:
-                    self.log_test("BALANCE Fund Presence", False, "BALANCE fund not found in portfolio overview")
-                
-                # Overall success if we found the funds
-                details = f"Found {len(funds)} funds in portfolio overview"
-                self.log_test("Fund Portfolio Overview", True, details)
-                return True
+                # Test with specific month/year parameters
+                return self.test_performance_fees_summary_with_params()
                 
             else:
-                self.log_test("Fund Portfolio Overview", False, 
-                            f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Performance Fees Summary", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Fund Portfolio Overview", False, f"Exception: {str(e)}")
+            self.log_test("Performance Fees Summary", False, f"Exception: {str(e)}")
             return False
     
-    def test_mt5_accounts_verification(self):
-        """Verify MT5 accounts exist with correct fund_type field"""
+    def test_performance_fees_summary_with_params(self):
+        """Test GET /api/admin/performance-fees/summary with month/year parameters"""
         try:
-            url = f"{BACKEND_URL}/api/mt5/admin/accounts"
+            url = f"{BACKEND_URL}/api/admin/performance-fees/summary"
+            params = {"month": 10, "year": 2025}
+            response = self.session.get(url, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Should have same structure as before
+                period = data.get('period', '')
+                expected_period = "2025-10"
+                
+                if expected_period in period:
+                    self.log_test("Summary With Params", True, f"Period with params: {period} (contains expected {expected_period})")
+                    return True
+                else:
+                    self.log_test("Summary With Params", False, f"Period with params: {period} (expected to contain {expected_period})")
+                    return False
+                
+            else:
+                self.log_test("Summary With Params", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Summary With Params", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_performance_fees_transactions(self):
+        """Test GET /api/admin/performance-fees/transactions"""
+        try:
+            # Test without parameters
+            url = f"{BACKEND_URL}/api/admin/performance-fees/transactions"
             response = self.session.get(url)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                if 'accounts' not in data:
-                    self.log_test("MT5 Accounts Structure", False, "Missing 'accounts' key in response")
+                # Check response structure
+                required_fields = ['success', 'transactions', 'total']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Performance Fees Transactions Structure", False, f"Missing fields: {missing_fields}")
                     return False
                 
-                accounts = data['accounts']
+                # Check expected values
+                success = data.get('success', False)
+                transactions = data.get('transactions', [])
+                total = data.get('total', 0)
                 
-                # Expected accounts with fund_type
-                expected_accounts = {
-                    '885822': 'CORE',
-                    '886557': 'BALANCE', 
-                    '886066': 'BALANCE',
-                    '886602': 'BALANCE',
-                    '886528': 'SEPARATION'
-                }
-                
-                found_accounts = {}
-                for account in accounts:
-                    login = str(account.get('login', ''))
-                    fund_type = account.get('fund_type', account.get('fund_code', ''))
-                    if login in expected_accounts:
-                        found_accounts[login] = fund_type
-                
-                # Check if we found the expected accounts
-                missing_accounts = []
-                wrong_fund_type = []
-                
-                for login, expected_fund_type in expected_accounts.items():
-                    if login not in found_accounts:
-                        missing_accounts.append(f"{login} ({expected_fund_type})")
-                    elif found_accounts[login] != expected_fund_type:
-                        wrong_fund_type.append(f"{login}: expected {expected_fund_type}, got {found_accounts[login]}")
-                
-                if missing_accounts:
-                    self.log_test("MT5 Accounts Presence", False, 
-                                f"Missing accounts: {missing_accounts}")
+                # Expected values from review request (empty initially)
+                if not success:
+                    self.log_test("Transactions Success", False, f"success=false in response")
                     return False
                 
-                if wrong_fund_type:
-                    self.log_test("MT5 Accounts Fund Type", False, 
-                                f"Wrong fund_type: {wrong_fund_type}")
+                if not isinstance(transactions, list):
+                    self.log_test("Transactions Array", False, f"transactions should be array, got {type(transactions)}")
                     return False
                 
-                details = f"Found {len(found_accounts)} expected accounts with correct fund_type: {found_accounts}"
-                self.log_test("MT5 Accounts Verification", True, details)
-                return True
+                # Should be empty array initially (no finalized transactions yet)
+                if len(transactions) == 0 and total == 0:
+                    self.log_test("Transactions Empty State", True, f"Empty transactions array and total=0 as expected")
+                else:
+                    self.log_test("Transactions Content", True, f"Found {len(transactions)} transactions, total={total}")
+                
+                details = f"success={success}, transactions count={len(transactions)}, total={total}"
+                self.log_test("Performance Fees Transactions", True, details)
+                
+                # Test with limit/offset parameters
+                return self.test_performance_fees_transactions_with_params()
                 
             else:
-                self.log_test("MT5 Accounts Verification", False, 
-                            f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Performance Fees Transactions", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("MT5 Accounts Verification", False, f"Exception: {str(e)}")
+            self.log_test("Performance Fees Transactions", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_performance_fees_transactions_with_params(self):
+        """Test GET /api/admin/performance-fees/transactions with limit/offset"""
+        try:
+            url = f"{BACKEND_URL}/api/admin/performance-fees/transactions"
+            params = {"limit": 10, "offset": 0}
+            response = self.session.get(url, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                success = data.get('success', False)
+                if success:
+                    self.log_test("Transactions With Params", True, f"Transactions endpoint works with limit/offset parameters")
+                    return True
+                else:
+                    self.log_test("Transactions With Params", False, f"success=false with parameters")
+                    return False
+                
+            else:
+                self.log_test("Transactions With Params", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Transactions With Params", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_update_manager_performance_fee(self):
+        """Test PUT /api/admin/money-managers/{manager_id}/performance-fee"""
+        try:
+            # Skip if no manager IDs found
+            if not self.manager_ids:
+                self.log_test("Update Manager Performance Fee", False, "No manager IDs available for testing")
+                return False
+            
+            # Use first manager ID for testing
+            manager_id = self.manager_ids[0]
+            url = f"{BACKEND_URL}/api/admin/money-managers/{manager_id}/performance-fee"
+            
+            # Test data
+            payload = {
+                "performance_fee_rate": 0.35
+            }
+            
+            response = self.session.put(url, json=payload)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check response structure
+                if 'success' not in data:
+                    self.log_test("Update Manager Fee Structure", False, "Missing 'success' key in response")
+                    return False
+                
+                if not data.get('success'):
+                    self.log_test("Update Manager Fee Success", False, f"success=false in response: {data}")
+                    return False
+                
+                # Check for manager data
+                if 'manager' in data:
+                    manager = data['manager']
+                    updated_rate = manager.get('performance_fee_rate', 0)
+                    expected_rate = 0.35
+                    
+                    if abs(updated_rate - expected_rate) < 0.001:
+                        self.log_test("Manager Fee Rate Update", True, f"Updated rate: {updated_rate} (matches expected {expected_rate})")
+                    else:
+                        self.log_test("Manager Fee Rate Update", False, f"Updated rate: {updated_rate} (expected {expected_rate})")
+                
+                details = f"Manager ID: {manager_id}, success={data.get('success')}, rate=0.35"
+                self.log_test("Update Manager Performance Fee", True, details)
+                return True
+                
+            else:
+                self.log_test("Update Manager Performance Fee", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Update Manager Performance Fee", False, f"Exception: {str(e)}")
             return False
     
     def run_all_tests(self):
