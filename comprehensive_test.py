@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://truepnl-tracker.preview.emergentagent.com/api'
+BACKEND_URL = 'https://financeflow-89.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

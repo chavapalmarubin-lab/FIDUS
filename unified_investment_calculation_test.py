@@ -25,7 +25,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://truepnl-tracker.preview.emergentagent.com/api"
+BACKEND_URL = "https://financeflow-89.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

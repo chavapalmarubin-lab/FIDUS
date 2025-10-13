@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://truepnl-tracker.preview.emergentagent.com"
+        self.base_url = "https://financeflow-89.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

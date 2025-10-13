@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://truepnl-tracker.preview.emergentagent.com/api"
+BACKEND_URL = "https://financeflow-89.preview.emergentagent.com/api"
 
 class AlejandroCriticalTest:
     def __init__(self):

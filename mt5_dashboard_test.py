@@ -11,7 +11,7 @@ Focus Areas:
 5. Live data integration and freshness indicators
 
 Authentication: admin/password123
-Backend: https://truepnl-tracker.preview.emergentagent.com/api
+Backend: https://financeflow-89.preview.emergentagent.com/api
 """
 
 import requests
@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://truepnl-tracker.preview.emergentagent.com/api"
+BACKEND_URL = "https://financeflow-89.preview.emergentagent.com/api"
 
 class MT5DashboardTester:
     def __init__(self):

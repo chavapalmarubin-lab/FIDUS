@@ -12,7 +12,7 @@ async def detailed_verification():
     async with aiohttp.ClientSession() as session:
         # Login
         async with session.post(
-            "https://truepnl-tracker.preview.emergentagent.com/api/auth/login",
+            "https://financeflow-89.preview.emergentagent.com/api/auth/login",
             json={"username": "admin", "password": "password123", "user_type": "admin"}
         ) as response:
             if response.status == 200:
@@ -22,7 +22,7 @@ async def detailed_verification():
                 # Get managers
                 headers = {"Authorization": f"Bearer {token}"}
                 async with session.get(
-                    "https://truepnl-tracker.preview.emergentagent.com/api/admin/money-managers",
+                    "https://financeflow-89.preview.emergentagent.com/api/admin/money-managers",
                     headers=headers
                 ) as response:
                     if response.status == 200:

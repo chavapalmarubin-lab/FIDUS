@@ -53,7 +53,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://truepnl-tracker.preview.emergentagent.com"
+BACKEND_URL = "https://financeflow-89.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
