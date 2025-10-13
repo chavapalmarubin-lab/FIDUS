@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Performance Fee Endpoints (Phase 3)
-Testing the 6 new performance fee endpoints added to the backend.
+Backend Investigation - MT5 Dashboard Showing $0
 
-Test Objectives:
-1. GET /api/admin/performance-fees/current - Should return total of $1,000.64
-2. POST /api/admin/performance-fees/calculate-daily - Should calculate fees successfully
-3. GET /api/admin/performance-fees/summary - Should show correct period and totals
-4. GET /api/admin/performance-fees/transactions - Should work (even if empty)
-5. PUT /api/admin/money-managers/{manager_id}/performance-fee - Should update fee rate
-6. Verify all endpoints return HTTP 200 and expected data structure
+Context:
+The MT5 Trading Dashboard is showing $0 for all metrics when it should show real data:
+- Total Equity: $0 (should be ~$121,000+)
+- Total P&L: $0 (should be $3,551)
+- Data Quality: 0 (should be "4 live of 4 accounts")
 
-Expected Results:
-- Current fees total: $1,000.64
-- 3 managers with fees: TradingHub Gold ($848.91), GoldenTrade ($98.41), UNO14 MAM ($53.32)
-- CP Strategy should have $0 fee (loss)
-- Summary shows period "2025-10", accrued_fees: 1000.64, paid_fees: 0
-- Transactions endpoint works (empty array initially)
-- Manager fee update works correctly
+Investigation Required:
+1. Check MT5 Dashboard Endpoint: GET /api/mt5/dashboard/overview
+2. Check MT5 Accounts Data Source (mt5_accounts, mt5_accounts_corrected, mt5_accounts_cache)
+3. Verify Data Fields (equity, profit/true_pnl, balance)
+4. Test Calculation Logic
+
+Expected Findings:
+- Total Equity should be ~$121,000+ (sum of 4 accounts)
+- Total P&L should be ~$3,551 (matches Cash Flow)
+- 4 active accounts should be present
+- Data should be recent (within last 24 hours)
 """
 
 import requests
