@@ -810,6 +810,50 @@ const CashFlowManagement = () => {
                 </div>
               </div>
               
+              {/* Manager Performance Fees */}
+              <div className="p-3 bg-slate-800/50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-400">Manager Performance Fees</p>
+                    <p className="text-xs text-slate-500">Accrued fees owed to money managers</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-orange-400">
+                      {formatCurrency(fundAccounting?.performance_fees?.total_accrued || 0)}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Performance Fees Breakdown */}
+                {fundAccounting?.performance_fees?.breakdown && 
+                 fundAccounting.performance_fees.breakdown.length > 0 && (
+                  <div className="mt-3 pl-4 border-l-2 border-orange-500/30">
+                    <p className="text-xs text-slate-400 mb-2">
+                      Fee Breakdown ({fundAccounting.performance_fees.managers_count} managers)
+                    </p>
+                    <div className="space-y-2">
+                      {fundAccounting.performance_fees.breakdown.map((fee, index) => (
+                        <div key={index} className="flex justify-between items-center text-xs">
+                          <span className="text-slate-300">{fee.manager}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-orange-400 font-semibold">
+                              {formatCurrency(fee.fee)}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                              fee.status === 'accrued' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                              fee.status === 'approved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                              'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                              {fee.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               {/* Total Liabilities */}
               <div className="border-t border-slate-600 pt-3">
                 <div className="flex justify-between items-center">
