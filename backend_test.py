@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Fund Portfolio Management - Weighted Performance Endpoint Fix
-Testing the newly fixed weighted performance endpoint after bug fix in fund_performance_calculator.py
-Changed query from 'fund_code' to 'fund_type' to match MT5 accounts database structure.
+Backend Testing for Cash Flow Broker Rebates Fix
+Testing the fixed /api/admin/cashflow/overview endpoint after broker rebates integration.
+Previously hardcoded to return broker_rebates: 0.0, now fetches actual rebates from RebateCalculator.
 
 Test Objectives:
-1. Test /api/funds/CORE/performance - Should return weighted performance for CORE fund
-2. Test /api/funds/BALANCE/performance - Should return weighted performance for BALANCE fund  
-3. Test /api/funds/DYNAMIC/performance - Should return empty (no accounts yet)
-4. Test /api/funds/performance/all - Should return all funds performance
-5. Test /api/fund-portfolio/overview - Should now show NON-ZERO weighted returns
+1. Test /api/admin/cashflow/overview - Should return broker_rebates = 291.44 (NOT 0.0)
+2. Test /api/mt5/fund-performance/corrected - Should return consistent broker_rebates value
+3. Verify rebates_summary object is present in response
+4. Verify fund_revenue and net_profit calculations include broker rebates
+5. Test response structure matches expected format
 
-Expected MT5 Accounts:
-- Account 885822: CORE fund, balance=$18,151.41, true_pnl=$-112.94
-- Account 886557: BALANCE fund, balance=$80,000, true_pnl=$2,829.69
-- Account 886066: BALANCE fund, balance=$9,901.59, true_pnl=$656.07
-- Account 886602: BALANCE fund, balance=$10,740.53, true_pnl=$177.74
-- Account 886528: SEPARATION, balance=$3,927.41, true_pnl=$0
+Expected Results:
+- summary.broker_rebates should be 291.44 (NOT 0.0)
+- rebates_summary.total_rebates should be 291.44
+- rebates_summary.total_volume should show trading volume in lots
+- summary.fund_revenue should include broker rebates in calculation
+- summary.net_profit should include broker rebates
+- Both endpoints should return consistent broker rebates values
 """
 
 import requests
