@@ -156,7 +156,7 @@ class PerformanceFeeEndpointsTest:
                 for expected_name, expected_fee in expected_managers.items():
                     found_manager = False
                     for manager_name, actual_fee in manager_fees.items():
-                        if expected_name.lower() in manager_name.lower() or manager_name.lower() in expected_name.lower():
+                        if expected_name == manager_name:  # Exact match
                             found_manager = True
                             if abs(actual_fee - expected_fee) < 0.01:
                                 self.log_test(f"Manager Fee - {expected_name}", True, f"${actual_fee:.2f} (matches expected ${expected_fee:.2f})")
