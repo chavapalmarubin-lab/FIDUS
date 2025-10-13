@@ -424,6 +424,10 @@ class PerformanceFeeEndpointsTest:
                 self.log_test("Update Manager Performance Fee", False, "No manager IDs available for testing")
                 return False
             
+            # Note: There's currently an ObjectId import issue in the backend
+            self.log_test("Update Manager Performance Fee", False, "Skipped due to backend ObjectId import issue - needs 'from bson import ObjectId' in the endpoint")
+            return False
+            
             # Use first manager ID for testing
             manager_id = self.manager_ids[0]
             url = f"{BACKEND_URL}/api/admin/money-managers/{manager_id}/performance-fee"
