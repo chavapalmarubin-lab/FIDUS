@@ -19674,11 +19674,11 @@ async def get_daily_performance(days: int = 30, account: int = None):
             else:
                 continue
             
-            date_key = deal_date.isoformat()
+            date_key = trade_date.isoformat()
             
             if date_key not in daily_map:
                 daily_map[date_key] = {
-                    'date': deal_date,
+                    'date': trade_date,
                     'total_trades': 0,
                     'winning_trades': 0,
                     'losing_trades': 0,
