@@ -20736,6 +20736,318 @@ async def initialize_money_managers():
             "initialization": None
         }
 
+
+# ===============================================================================
+# PERFORMANCE FEE ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/performance-fees/current")
+async def get_current_performance_fees(current_user: dict = Depends(get_current_user)):
+    """
+    Get current accrued performance fees for all managers.
+    
+    Returns:
+        Dict with current fee calculations for all active managers
+    
+    Example Response:
+        {
+            "calculation_date": "2025-10-13T15:00:00Z",
+            "managers": [
+                {
+                    "manager_name": "TradingHub Gold Provider",
+                    "true_pnl": 2829.69,
+                    "performance_fee_amount": 848.91,
+                    "status": "PROFITABLE"
+                }
+            ],
+            "totals": {
+                "total_performance_fees": 1000.64,
+                "managers_with_fees": 3
+            }
+        }
+    """
+    try:
+        from services.performance_fee_calculator import PerformanceFeeCalculator
+        
+        calculator = PerformanceFeeCalculator(db)
+        result = await calculator.calculate_current_performance_fees()
+        
+        logging.info(f"✅ Performance fees calculated: ${result['totals']['total_performance_fees']:.2f}")
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error calculating performance fees: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/performance-fees/calculate-daily")
+async def calculate_daily_performance_fees(current_user: dict = Depends(get_current_user)):
+    """
+    Manually trigger daily performance fee calculation.
+    Updates all manager accruals and creates daily snapshots.
+    
+    Returns:
+        Success response with calculated fee data
+    """
+    try:
+        from services.performance_fee_calculator import PerformanceFeeCalculator
+        
+        calculator = PerformanceFeeCalculator(db)
+        result = await calculator.calculate_current_performance_fees()
+        
+        logging.info(f"📊 Daily performance fees calculated: ${result['totals']['total_performance_fees']:.2f} for {len(result['managers'])} managers")
+        
+        return {
+            "success": True,
+            "message": "Daily performance fees calculated successfully",
+            "data": result
+        }
+        
+    except Exception as e:
+        logging.error(f"Error in daily calculation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/performance-fees/summary")
+async def get_performance_fees_summary(
+    month: int = None,
+    year: int = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get performance fee summary for specified period.
+    If month/year not provided, returns current month.
+    
+    Query Parameters:
+        month: Month number 1-12 (optional)
+        year: Year YYYY (optional)
+    
+    Returns:
+        Dict with period summary and manager breakdowns
+    """
+    try:
+        from services.performance_fee_calculator import PerformanceFeeCalculator
+        
+        calculator = PerformanceFeeCalculator(db)
+        result = await calculator.get_performance_fees_summary(month, year)
+        
+        logging.info(f"📊 Fee summary for {result['period']}: ${result['accrued_fees']:.2f} accrued, ${result['paid_fees']:.2f} paid")
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error getting fee summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/performance-fees/transactions")
+async def list_performance_fee_transactions(
+    manager_id: str = None,
+    status: str = None,
+    limit: int = 50,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    List all performance fee transactions with optional filters.
+    
+    Query Parameters:
+        manager_id: Filter by manager ObjectId (optional)
+        status: Filter by fee_status (accrued, approved, paid) (optional)
+        limit: Max results (default: 50)
+        offset: Skip results (default: 0)
+    
+    Returns:
+        Dict with transactions list and pagination info
+    """
+    try:
+        query = {}
+        
+        if manager_id:
+            query["manager_id"] = ObjectId(manager_id)
+        
+        if status:
+            query["fee_status"] = status
+        
+        # Get total count
+        total = await db.performance_fee_transactions.count_documents(query)
+        
+        # Get transactions
+        transactions = await db.performance_fee_transactions.find(query)\
+            .sort("created_at", -1)\
+            .skip(offset)\
+            .limit(limit)\
+            .to_list(length=limit)
+        
+        # Convert ObjectIds to strings
+        for txn in transactions:
+            txn["_id"] = str(txn["_id"])
+            txn["manager_id"] = str(txn["manager_id"])
+        
+        logging.info(f"📊 Retrieved {len(transactions)} fee transactions (total: {total})")
+        
+        return {
+            "success": True,
+            "transactions": transactions,
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logging.error(f"Error listing transactions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/admin/performance-fees/transactions/{transaction_id}/status")
+async def update_transaction_status(
+    transaction_id: str,
+    status_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update performance fee transaction status.
+    
+    Path Parameters:
+        transaction_id: Transaction ObjectId
+    
+    Request Body:
+        {
+            "verification_status": "approved",  // pending, approved, rejected
+            "payment_status": "paid",          // unpaid, processing, paid
+            "payment_date": "2025-10-31",      // optional
+            "payment_method": "wire_transfer", // optional
+            "notes": "Payment processed"       // optional
+        }
+    
+    Returns:
+        Updated transaction data
+    """
+    try:
+        update_fields = {
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        if "verification_status" in status_data:
+            update_fields["verification_status"] = status_data["verification_status"]
+        
+        if "payment_status" in status_data:
+            update_fields["payment_status"] = status_data["payment_status"]
+            
+            if status_data["payment_status"] == "paid":
+                update_fields["fee_status"] = "paid"
+        
+        if "payment_date" in status_data:
+            update_fields["payment_date"] = datetime.fromisoformat(status_data["payment_date"])
+        
+        if "payment_method" in status_data:
+            update_fields["payment_method"] = status_data["payment_method"]
+        
+        if "notes" in status_data:
+            update_fields["notes"] = status_data["notes"]
+        
+        result = await db.performance_fee_transactions.update_one(
+            {"_id": ObjectId(transaction_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        # Get updated transaction
+        transaction = await db.performance_fee_transactions.find_one(
+            {"_id": ObjectId(transaction_id)}
+        )
+        transaction["_id"] = str(transaction["_id"])
+        transaction["manager_id"] = str(transaction["manager_id"])
+        
+        logging.info(f"✅ Updated transaction {transaction_id}: {update_fields}")
+        
+        return {
+            "success": True,
+            "message": "Transaction updated successfully",
+            "transaction": transaction
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating transaction: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/admin/money-managers/{manager_id}/performance-fee")
+async def update_manager_performance_fee(
+    manager_id: str,
+    fee_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Set or update performance fee rate for a manager.
+    
+    Path Parameters:
+        manager_id: Manager ObjectId
+    
+    Request Body:
+        {
+            "performance_fee_rate": 0.30,      // 30% as decimal (0.30)
+            "fee_calculation_method": "simple", // simple, high_water_mark
+            "effective_date": "2025-11-01"     // optional
+        }
+    
+    Returns:
+        Updated manager data
+    """
+    try:
+        update_fields = {
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        if "performance_fee_rate" in fee_data:
+            rate = fee_data["performance_fee_rate"]
+            if not 0 <= rate <= 1:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Fee rate must be between 0 and 1 (e.g., 0.30 for 30%)"
+                )
+            update_fields["performance_fee_rate"] = rate
+        
+        if "fee_calculation_method" in fee_data:
+            update_fields["fee_calculation_method"] = fee_data["fee_calculation_method"]
+        
+        if "effective_date" in fee_data:
+            update_fields["fee_effective_date"] = datetime.fromisoformat(fee_data["effective_date"])
+        
+        result = await db.money_managers.update_one(
+            {"_id": ObjectId(manager_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Manager not found")
+        
+        # Get updated manager
+        manager = await db.money_managers.find_one(
+            {"_id": ObjectId(manager_id)}
+        )
+        manager["_id"] = str(manager["_id"])
+        
+        logging.info(f"✅ Updated manager {manager_id} performance fee: {update_fields.get('performance_fee_rate', 'N/A')}")
+        
+        return {
+            "success": True,
+            "message": "Performance fee updated successfully",
+            "manager": manager
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating manager fee: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ===============================================================================
 # CLIENT-SPECIFIC CALENDAR ENDPOINTS
 # ===============================================================================
