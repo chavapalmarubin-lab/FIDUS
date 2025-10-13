@@ -28,7 +28,10 @@ export default function TechnicalDocumentation() {
   const [overallStatus, setOverallStatus] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [viewMode, setViewMode] = useState('diagram'); // 'grid', 'diagram', or 'credentials'
+  const [viewMode, setViewMode] = useState('diagram'); // 'grid', 'diagram', 'credentials', 'documentation'
+  const [documentation, setDocumentation] = useState('');
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [docsError, setDocsError] = useState(null);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
