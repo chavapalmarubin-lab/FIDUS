@@ -22766,6 +22766,13 @@ async def shutdown_services():
     """Application shutdown tasks"""
     logging.info("🛑 FIDUS Server shutting down...")
     
+    # Shutdown VPS sync scheduler
+    try:
+        scheduler.shutdown()
+        logging.info("🛑 Automatic VPS sync scheduler stopped")
+    except Exception as e:
+        logging.error(f"❌ VPS sync scheduler shutdown failed: {e}")
+    
     # Shutdown MT5 Auto-Sync Service
     try:
         from mt5_auto_sync_service import stop_mt5_sync_service
