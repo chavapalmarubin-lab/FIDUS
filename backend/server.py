@@ -19708,8 +19708,9 @@ async def get_daily_performance(days: int = 30, account: int = None):
                 daily_map[date_key]['breakeven_trades'] += 1
         
         # Fill in missing days with $0 (days with no trading)
-        current_date = start_date
-        while current_date < end_date:
+        # Create exactly 30 days from start_date
+        for i in range(days):
+            current_date = start_date + timedelta(days=i)
             date_key = current_date.isoformat()
             if date_key not in daily_map:
                 daily_map[date_key] = {
@@ -19724,7 +19725,6 @@ async def get_daily_performance(days: int = 30, account: int = None):
                     'largest_win': 0,
                     'largest_loss': 0
                 }
-            current_date += timedelta(days=1)
         
         # Convert to list and add calculated fields
         daily_data = []
