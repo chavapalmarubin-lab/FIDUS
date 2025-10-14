@@ -243,6 +243,9 @@ def get_current_admin_user(request: Request) -> dict:
     
     return payload
 
+# Initialize MT5 Config Management auth after get_current_admin_user is defined
+init_mt5_config_auth(get_current_admin_user)
+
 def get_current_user(request: Request) -> dict:
     """Get current authenticated user (admin or client) from JWT token"""
     auth_header = request.headers.get("Authorization")
