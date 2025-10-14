@@ -175,8 +175,8 @@ async def add_mt5_account(
         account_doc = account.dict()
         account_doc["created_at"] = now
         account_doc["updated_at"] = now
-        account_doc["created_by"] = current_user["email"]
-        account_doc["last_modified_by"] = current_user["email"]
+        account_doc["created_by"] = current_user.get("username", "admin")
+        account_doc["last_modified_by"] = current_user.get("username", "admin")
         
         # Insert into MongoDB
         result = await db.mt5_account_config.insert_one(account_doc)
