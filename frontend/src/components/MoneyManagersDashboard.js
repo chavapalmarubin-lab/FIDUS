@@ -140,7 +140,7 @@ const MoneyManagersDashboard = () => {
         display_name: "UNO14 MAM Manager",
         execution_type: "mam",
         broker: "MEXAtlantic",
-        profile_url: null,
+        profile_url: "https://ratings.multibankfx.com/widgets/ratings/1359?widgetKey=social_platform_ratings",
         assigned_accounts: [886602],
         strategy_name: "UNO14 MAM Strategy", 
         strategy_description: "Multi-Account Manager strategy with diversified approach.",
