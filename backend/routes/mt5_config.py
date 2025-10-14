@@ -4,7 +4,7 @@ Backend endpoints for managing MT5 account configurations
 NO MOCK DATA - All data from MongoDB
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -15,6 +15,18 @@ logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(prefix="/api/admin/mt5/config", tags=["MT5 Admin Config"])
+
+# ============================================
+# Import auth function from server
+# ============================================
+
+# This will be set during initialization
+get_current_admin_user = None
+
+def init_auth(auth_func):
+    """Initialize authentication function"""
+    global get_current_admin_user
+    get_current_admin_user = auth_func
 
 # ============================================
 # DATA MODELS
