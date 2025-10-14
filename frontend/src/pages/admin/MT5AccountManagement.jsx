@@ -159,7 +159,7 @@ const MT5AccountManagement = () => {
   const confirmDeactivate = async () => {
     if (!accountToDelete) return;
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('fidus_token');
       await axios.delete(`${BACKEND_URL}/api/admin/mt5/config/accounts/${accountToDelete.account}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
