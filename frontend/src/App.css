@@ -498,9 +498,112 @@ body {
 }
 
 /* Mobile Responsive Styles */
-@media (max-width: 768px) {
+
+/* Mobile First - Base styles for mobile (480px and below) */
+@media (max-width: 480px) {
+  /* Reduce padding on mobile */
+  .investment-opportunities {
+    padding: 16px !important;
+    margin: 20px 0 !important;
+  }
+  
+  .investment-calculator {
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .fund-card {
+    padding: 16px !important;
+  }
+  
+  /* Larger text for mobile readability */
+  .section-header h2 {
+    font-size: 20px !important;
+  }
+  
+  .calculator-header h3 {
+    font-size: 18px !important;
+  }
+  
+  .amount-display {
+    font-size: 28px !important;
+  }
+  
+  /* Stack fund details in single column */
+  .fund-details-compact {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Full width buttons with better spacing */
+  .calculator-actions,
+  .fund-actions {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100% !important;
+    padding: 16px !important;
+    font-size: 16px !important;
+  }
+  
+  /* Better slider on mobile */
+  .slider {
+    height: 12px !important;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* Earnings grid single column */
   .earnings-grid {
     grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  /* Comparison bar improvements */
+  .comparison-bar {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  
+  .comparison-bar .arrow {
+    transform: rotate(90deg) !important;
+    margin: 8px 0 !important;
+  }
+  
+  .comparison-bar .increase {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+  
+  .comparison-bar .badge {
+    display: block !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  
+  /* Pro tip adjustments */
+  .pro-tip {
+    flex-direction: column !important;
+    padding: 16px !important;
+  }
+}
+
+/* Tablet Portrait (481px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .earnings-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 16px;
   }
   
@@ -525,5 +628,43 @@ body {
   .amount-display {
     font-size: 36px !important;
   }
+}
+
+/* Tablet Landscape and Desktop (769px and above) */
+@media (min-width: 769px) {
+  .earnings-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .fund-details-compact {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* Touch-friendly elements */
+button,
+.slider,
+a {
+  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Prevent horizontal scroll */
+body,
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure images scale properly */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
