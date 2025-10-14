@@ -13,8 +13,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Create router
-router = APIRouter(prefix="/api/admin/mt5/config", tags=["MT5 Admin Config"])
+# Create router (prefix /admin/mt5/config - /api is added by main api_router)
+router = APIRouter(prefix="/admin/mt5/config", tags=["MT5 Admin Config"])
 
 # ============================================
 # Import auth function from server
