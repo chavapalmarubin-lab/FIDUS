@@ -64,7 +64,7 @@ const MT5AccountManagement = () => {
   const loadAccounts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('fidus_token');
       const response = await axios.get(
         `${BACKEND_URL}/api/admin/mt5/config/accounts`,
         { headers: { 'Authorization': `Bearer ${token}` } }
