@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://cashflow-manager-35.preview.emergentagent.com/api'
+BACKEND_URL = 'https://fidus-trade.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

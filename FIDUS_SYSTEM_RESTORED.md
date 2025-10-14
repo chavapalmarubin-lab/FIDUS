@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://cashflow-manager-35.preview.emergentagent.com`
+`https://fidus-trade.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

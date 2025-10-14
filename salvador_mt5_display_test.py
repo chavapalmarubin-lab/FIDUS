@@ -28,7 +28,7 @@ import json
 from typing import Dict, Any, List
 
 class SalvadorMT5DisplayTester:
-    def __init__(self, base_url="https://cashflow-manager-35.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-trade.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

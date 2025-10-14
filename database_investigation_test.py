@@ -9,7 +9,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://cashflow-manager-35.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-trade.preview.emergentagent.com/api"
 
 class DatabaseInvestigator:
     def __init__(self):
