@@ -39,7 +39,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../components/ui/badge";
 import { Plus, Edit, Trash2, CheckCircle, XCircle, RefreshCw, Loader2 } from "lucide-react";
 import axios from 'axios';
-import { useToast } from "../../components/ui/use-toast";
+import { useToast } from "../../hooks/use-toast";
 
 const MT5AccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
