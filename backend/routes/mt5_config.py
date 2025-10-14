@@ -82,17 +82,15 @@ class MT5AccountResponse(BaseModel):
 # DEPENDENCY: Require Admin Authentication
 # ============================================
 
-async def require_admin(current_user: dict = Depends(lambda: {"email": "admin@fidus.com", "role": "admin"})):
+def require_admin(request: Request):
     """
     Require admin authentication for all endpoints
-    TODO: Replace with actual auth dependency
+    Uses the get_current_admin_user function from server.py
     """
-    if not current_user or current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
-    return current_user
+    if get_current_admin_user is None:
+        raise RuntimeException("Authentication not initialized")
+    
+    return get_current_admin_user(request)
 
 # ============================================
 # Database instance - imported from server
