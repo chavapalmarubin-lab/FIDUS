@@ -83,12 +83,21 @@ async def require_admin(current_user: dict = Depends(lambda: {"email": "admin@fi
     return current_user
 
 # ============================================
-# Helper function to get database
+# Database instance - imported from server
 # ============================================
 
+db = None
+
+def init_db(database):
+    """Initialize database instance"""
+    global db
+    db = database
+
 def get_db():
-    """Get database instance from app state"""
-    from server import db  # Import from main server file
+    """Get database instance"""
+    global db
+    if db is None:
+        raise RuntimeError("Database not initialized. Call init_db() first.")
     return db
 
 # ============================================
