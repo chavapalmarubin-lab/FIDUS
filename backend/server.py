@@ -23519,6 +23519,13 @@ if mt5_pool_router:
 else:
     logging.error("❌ MT5 Pool router not available - skipping inclusion")
 
+# Include MT5 Config Management Router
+try:
+    api_router.include_router(mt5_config_router)
+    logging.info("✅ MT5 Config Management router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include MT5 Config Management router: {e}")
+
 # Test endpoint to verify routing
 @api_router.get("/test-routing")
 async def test_routing():
