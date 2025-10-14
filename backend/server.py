@@ -185,8 +185,9 @@ client = AsyncIOMotorClient(
 )
 db = client[os.environ.get('DB_NAME', 'fidus_production')]
 
-# Initialize MT5 Config Management routes with db
+# Initialize MT5 Config Management routes with db and auth
 init_mt5_config_db(db)
+init_mt5_config_auth(get_current_admin_user)
 
 # Initialize Google OAuth Service
 google_oauth = get_google_oauth_service(db)
