@@ -174,7 +174,7 @@ const MT5AccountManagement = () => {
 
   const handleActivateAccount = async (accountNumber) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('fidus_token');
       await axios.post(`${BACKEND_URL}/api/admin/mt5/config/accounts/${accountNumber}/activate`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
