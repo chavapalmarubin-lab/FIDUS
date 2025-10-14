@@ -668,6 +668,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          <TabsContent value="mt5-config" className="mt-6">
+            <MT5AccountManagement />
+          </TabsContent>
+
           <TabsContent value="redemptions" className="mt-6">
             <AdminRedemptionManagement />
           </TabsContent>
