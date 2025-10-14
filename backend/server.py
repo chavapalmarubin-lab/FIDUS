@@ -46,7 +46,7 @@ from path_utils import get_base_path, get_upload_path, get_credentials_path, ens
 from mongodb_integration import mongodb_manager
 
 # MT5 Config Management Routes
-from routes.mt5_config import router as mt5_config_router, init_db as init_mt5_config_db
+from routes.mt5_config import router as mt5_config_router, init_db as init_mt5_config_db, init_auth as init_mt5_config_auth
 
 # System Registry and Health Checks (Phase 1: Technical Documentation)
 from system_registry import (
