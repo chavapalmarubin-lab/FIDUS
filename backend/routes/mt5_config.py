@@ -224,7 +224,7 @@ async def update_mt5_account(
         # Build update document with only provided fields
         update_doc = {
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "last_modified_by": current_user["email"]
+            "last_modified_by": current_user.get("username", "admin")
         }
         
         # Add non-null fields from request
@@ -274,7 +274,7 @@ async def delete_mt5_account(
             {"$set": {
                 "is_active": False,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
-                "last_modified_by": current_user["email"]
+                "last_modified_by": current_user.get("username", "admin")
             }}
         )
         
@@ -319,7 +319,7 @@ async def activate_mt5_account(
             {"$set": {
                 "is_active": True,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
-                "last_modified_by": current_user["email"]
+                "last_modified_by": current_user.get("username", "admin")
             }}
         )
         
