@@ -28,15 +28,44 @@ const TradingAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [mt5Accounts, setMt5Accounts] = useState([
+    { id: 'all', name: 'All Accounts', number: 0 }
+  ]);
 
-  // Phase 1B: All 4 MT5 accounts
-  const MT5_ACCOUNTS = [
-    { id: 'all', name: 'All Accounts', number: 0 },
-    { id: '886557', name: '886557 - BALANCE ($80K)', number: 886557 },
-    { id: '886066', name: '886066 - BALANCE ($10K)', number: 886066 },
-    { id: '886602', name: '886602 - BALANCE ($10K)', number: 886602 },
-    { id: '885822', name: '885822 - CORE ($18K)', number: 885822 }
-  ];
+  // PHASE 1 FIX: Load MT5 accounts dynamically from database
+  useEffect(() => {
+    const loadMT5Accounts = async () => {
+      try {
+        const token = localStorage.getItem('fidus_token');
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/admin/mt5/config/accounts`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.accounts) {
+            const accountOptions = [
+              { id: 'all', name: 'All Accounts', number: 0 },
+              ...data.accounts
+                .filter(acc => acc.is_active)
+                .map(acc => ({
+                  id: acc.account.toString(),
+                  name: `${acc.account} - ${acc.fund_type} (${acc.name})`,
+                  number: acc.account
+                }))
+            ];
+            setMt5Accounts(accountOptions);
+            console.log('✅ Loaded', data.accounts.length, 'MT5 accounts for dropdown');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading MT5 accounts:', error);
+      }
+    };
+    
+    loadMT5Accounts();
+  }, []);
 
   useEffect(() => {
     fetchAnalyticsData();
