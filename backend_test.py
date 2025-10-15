@@ -641,9 +641,9 @@ class DataRestorationVerification:
         print()
 
 def main():
-    """Main investigation execution"""
-    investigator = MT5DashboardInvestigation()
-    success = investigator.run_investigation()
+    """Main verification execution"""
+    verifier = DataRestorationVerification()
+    success = verifier.run_verification()
     
     # Exit with appropriate code
     sys.exit(0 if success else 1)
