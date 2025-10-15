@@ -42,6 +42,10 @@ const TradingAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // PHASE 2: Chart data
+  const [equityHistory, setEquityHistory] = useState([]);
+  const [winLossData, setWinLossData] = useState(null);
   const [mt5Accounts, setMt5Accounts] = useState([
     { id: 'all', name: 'All Accounts', number: 0 }
   ]);
