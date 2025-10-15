@@ -266,6 +266,91 @@ const MoneyManagersDashboard = () => {
 
       {viewMode === 'overview' && (
         <>
+          {/* PHASE 2: Performance Comparison Bar Chart */}
+          <Card className="dashboard-card mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <BarChart3 className="mr-2 h-5 w-5 text-cyan-400" />
+                Manager Performance Comparison
+              </CardTitle>
+              <p className="text-slate-400 text-sm">TRUE P&L and return percentage by manager</p>
+            </CardHeader>
+            <CardContent>
+              {managers && managers.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={managers
+                      .map(manager => ({
+                        name: manager.manager_name || 'Unknown',
+                        true_pnl: manager.performance?.true_pnl || 0,
+                        return_pct: manager.performance?.return_pct || 0,
+                        win_rate: manager.performance?.win_rate || 0,
+                        manager_id: manager.manager_id
+                      }))
+                      .sort((a, b) => b.true_pnl - a.true_pnl)
+                    }
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis 
+                      type="number"
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8', fontSize: 12 }}
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    />
+                    <YAxis 
+                      type="category"
+                      dataKey="name"
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8', fontSize: 12 }}
+                      width={90}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1e293b', 
+                        border: '1px solid #334155',
+                        borderRadius: '6px',
+                        color: '#fff'
+                      }}
+                      formatter={(value, name) => {
+                        if (name === 'true_pnl') return [`$${value.toLocaleString()}`, 'TRUE P&L'];
+                        if (name === 'return_pct') return [`${value.toFixed(2)}%`, 'Return'];
+                        if (name === 'win_rate') return [`${value.toFixed(2)}%`, 'Win Rate'];
+                        return [value, name];
+                      }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ color: '#94a3b8' }}
+                      formatter={(value) => {
+                        if (value === 'true_pnl') return 'TRUE P&L';
+                        if (value === 'return_pct') return 'Return %';
+                        if (value === 'win_rate') return 'Win Rate %';
+                        return value;
+                      }}
+                    />
+                    <Bar 
+                      dataKey="true_pnl" 
+                      fill="#10b981"
+                      radius={[0, 8, 8, 0]}
+                    >
+                      {managers.map((manager, index) => (
+                        <Cell 
+                          key={`cell-${index}`}
+                          fill={manager.performance?.true_pnl >= 0 ? '#10b981' : '#ef4444'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[400px] text-slate-400">
+                  No manager data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Managers Overview Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {managers.map((manager) => {
