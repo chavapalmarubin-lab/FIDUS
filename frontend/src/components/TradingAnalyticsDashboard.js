@@ -18,6 +18,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import apiAxios from "../utils/apiAxios";
+import { useMT5Data } from "../hooks/useMT5Data";
+import MT5HealthIndicator from "./MT5HealthIndicator";
 import {
   LineChart,
   Line,
