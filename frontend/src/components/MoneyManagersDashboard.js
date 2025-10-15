@@ -86,6 +86,35 @@ const MoneyManagersDashboard = () => {
     }
   };
 
+  // PHASE 4A: Fetch MT5 Manager Performance by Magic Number
+  const fetchMT5Performance = async () => {
+    try {
+      setMt5Loading(true);
+      
+      const dateRange = mt5Service.getDateRangeForPeriod(mt5Period);
+      
+      const response = await mt5Service.getManagerPerformance({
+        start_date: dateRange.start_date,
+        end_date: dateRange.end_date
+      });
+      
+      if (response.success) {
+        setMt5Performance(response.managers);
+        console.log(`✅ [Phase 4A] Fetched MT5 performance for ${response.count} managers`);
+      }
+    } catch (error) {
+      console.error('❌ [Phase 4A] Error fetching MT5 manager performance:', error);
+    } finally {
+      setMt5Loading(false);
+    }
+  };
+
+  // PHASE 4A: Fetch MT5 performance when component mounts or period changes
+  useEffect(() => {
+    fetchMT5Performance();
+  }, [mt5Period]);
+
+
   // PHASE 3: Mock data generator REMOVED - using real API data only
 
   const formatCurrency = (amount) => {
