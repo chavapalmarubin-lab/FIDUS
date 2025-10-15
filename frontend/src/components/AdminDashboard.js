@@ -33,6 +33,7 @@ import AlejandroInvestmentDashboard from './AlejandroInvestmentDashboard';
 import RealGoogleWorkspace from './RealGoogleWorkspace';
 import SimpleIndividualGoogleWorkspace from './SimpleIndividualGoogleWorkspace';
 import TechnicalDocumentation from './TechnicalDocumentation';
+import Phase4Documentation from './Phase4Documentation';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
