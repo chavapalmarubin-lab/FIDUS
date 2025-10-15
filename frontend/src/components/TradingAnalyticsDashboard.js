@@ -32,6 +32,7 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
+import { ChartSkeleton, MetricCardSkeleton } from "./ui/skeleton";
 
 const TradingAnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
