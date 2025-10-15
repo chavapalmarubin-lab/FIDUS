@@ -19621,6 +19621,296 @@ async def get_mt5_system_status():
         logging.error(f"Get MT5 system status error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get system status")
 
+
+# ===============================================================================
+# MT5 DEAL HISTORY ENDPOINTS (Phase 4A: Deal History Collection)
+# ===============================================================================
+
+# Import MT5 Deals Service
+from services.mt5_deals_service import MT5DealsService
+
+# Initialize service
+mt5_deals_service = MT5DealsService(db)
+
+@api_router.get("/mt5/deals")
+async def get_mt5_deals(
+    account_number: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    symbol: Optional[str] = None,
+    deal_type: Optional[int] = None,
+    limit: int = 1000
+):
+    """
+    Get MT5 deal history with optional filters
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account (e.g., 886557)
+    - start_date: Filter from date (ISO format: 2025-01-01)
+    - end_date: Filter to date (ISO format: 2025-01-31)
+    - symbol: Filter by symbol (e.g., EURUSD)
+    - deal_type: Filter by type (0=buy, 1=sell, 2=balance operation)
+    - limit: Maximum deals to return (default: 1000)
+    
+    Returns:
+        List of deals with ticket, time, symbol, volume, profit, commission, etc.
+    """
+    try:
+        # Parse dates
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        # Get deals from service
+        deals = await mt5_deals_service.get_deals(
+            account_number=account_number,
+            start_date=start_dt,
+            end_date=end_dt,
+            symbol=symbol,
+            deal_type=deal_type,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "count": len(deals),
+            "deals": deals,
+            "filters": {
+                "account_number": account_number,
+                "start_date": start_date,
+                "end_date": end_date,
+                "symbol": symbol,
+                "deal_type": deal_type
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 deals error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch deals: {str(e)}")
+
+@api_router.get("/mt5/deals/summary")
+async def get_mt5_deals_summary(
+    account_number: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get aggregated MT5 deal statistics
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    
+    Returns:
+        {
+            "total_deals": 1234,
+            "total_volume": 156.5,
+            "total_profit": 5432.10,
+            "buy_deals": 567,
+            "sell_deals": 645,
+            "balance_operations": 22,
+            ...
+        }
+    """
+    try:
+        # Parse dates
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        # Get summary from service
+        summary = await mt5_deals_service.get_deals_summary(
+            account_number=account_number,
+            start_date=start_dt,
+            end_date=end_dt
+        )
+        
+        return {
+            "success": True,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Get MT5 deals summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch summary: {str(e)}")
+
+@api_router.get("/mt5/rebates")
+async def calculate_mt5_rebates(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    account_number: Optional[int] = None,
+    rebate_per_lot: float = 5.05
+):
+    """
+    Calculate broker rebates based on trading volume
+    
+    Formula: total_volume (lots) × rebate_per_lot ($5.05)
+    
+    Query Parameters:
+    - start_date: Calculate from date (ISO format)
+    - end_date: Calculate to date (ISO format)
+    - account_number: Filter by MT5 account
+    - rebate_per_lot: Rebate amount per lot (default: $5.05)
+    
+    Returns:
+        {
+            "total_volume": 156.5,
+            "total_rebates": 790.83,
+            "by_account": [...],
+            "by_symbol": [...]
+        }
+    """
+    try:
+        # Parse dates
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        # Calculate rebates from service
+        rebates = await mt5_deals_service.calculate_rebates(
+            start_date=start_dt,
+            end_date=end_dt,
+            account_number=account_number,
+            rebate_per_lot=rebate_per_lot
+        )
+        
+        return {
+            "success": True,
+            "rebates": rebates
+        }
+        
+    except Exception as e:
+        logging.error(f"Calculate rebates error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate rebates: {str(e)}")
+
+@api_router.get("/mt5/analytics/performance")
+async def get_manager_performance(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get money manager performance attribution
+    
+    Uses magic number to identify which manager executed each trade.
+    
+    Query Parameters:
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    
+    Returns:
+        [
+            {
+                "magic": 100234,
+                "manager_name": "TradingHub Gold",
+                "total_deals": 234,
+                "total_volume": 45.5,
+                "total_profit": 2345.67,
+                "win_rate": 66.67
+            },
+            ...
+        ]
+    """
+    try:
+        # Parse dates
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        # Get manager performance from service
+        performance = await mt5_deals_service.get_manager_performance(
+            start_date=start_dt,
+            end_date=end_dt
+        )
+        
+        return {
+            "success": True,
+            "managers": performance,
+            "count": len(performance)
+        }
+        
+    except Exception as e:
+        logging.error(f"Get manager performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch performance: {str(e)}")
+
+@api_router.get("/mt5/balance-operations")
+async def get_balance_operations(
+    account_number: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get balance operations for cash flow tracking
+    
+    Returns deals with type=2 (balance operations) which include:
+    - Profit withdrawals
+    - Deposits
+    - Inter-account transfers
+    - Interest payments
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    
+    Returns:
+        List of balance operations with classification
+    """
+    try:
+        # Parse dates
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        # Get balance operations from service
+        operations = await mt5_deals_service.get_balance_operations(
+            account_number=account_number,
+            start_date=start_dt,
+            end_date=end_dt
+        )
+        
+        return {
+            "success": True,
+            "count": len(operations),
+            "operations": operations
+        }
+        
+    except Exception as e:
+        logging.error(f"Get balance operations error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch operations: {str(e)}")
+
+@api_router.get("/mt5/daily-pnl")
+async def get_daily_pnl(
+    account_number: Optional[int] = None,
+    days: int = 30
+):
+    """
+    Get daily P&L for equity curve charting
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    - days: Number of days to include (default: 30)
+    
+    Returns:
+        [
+            {"date": "2025-01-15", "pnl": 234.56, "volume": 5.5, "deals": 12},
+            {"date": "2025-01-14", "pnl": -45.32, "volume": 3.2, "deals": 8},
+            ...
+        ]
+    """
+    try:
+        # Get daily P&L from service
+        daily_data = await mt5_deals_service.get_daily_pnl(
+            account_number=account_number,
+            days=days
+        )
+        
+        return {
+            "success": True,
+            "days": len(daily_data),
+            "data": daily_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Get daily P&L error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch daily P&L: {str(e)}")
+
+
 # ===============================================================================
 # FUND PERFORMANCE vs MT5 REALITY MANAGEMENT SYSTEM
 # ===============================================================================
