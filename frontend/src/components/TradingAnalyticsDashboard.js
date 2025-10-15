@@ -337,10 +337,30 @@ const TradingAnalyticsDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-white text-xl flex items-center">
-          <RefreshCw className="animate-spin mr-2" />
-          Loading trading analytics...
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="animate-spin h-6 w-6 text-cyan-400" />
+            <span className="text-white text-lg">Loading trading analytics...</span>
+          </div>
+        </div>
+        
+        {/* Skeleton for metric cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="dashboard-card"><MetricCardSkeleton /></Card>
+          <Card className="dashboard-card"><MetricCardSkeleton /></Card>
+          <Card className="dashboard-card"><MetricCardSkeleton /></Card>
+          <Card className="dashboard-card"><MetricCardSkeleton /></Card>
+        </div>
+        
+        {/* Skeleton for charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="dashboard-card lg:col-span-2 p-6">
+            <ChartSkeleton height={300} />
+          </Card>
+          <Card className="dashboard-card p-6">
+            <ChartSkeleton height={300} />
+          </Card>
         </div>
       </div>
     );
