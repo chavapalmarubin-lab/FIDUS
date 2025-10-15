@@ -723,6 +723,10 @@ const AdminDashboard = ({ user, onLogout }) => {
           <TabsContent value="technical-docs" className="mt-6">
             <TechnicalDocumentation />
           </TabsContent>
+
+          <TabsContent value="phase4-docs" className="mt-6">
+            <Phase4Documentation />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
