@@ -192,6 +192,37 @@ const TradingAnalyticsDashboard = () => {
         setRecentTrades(mockTradesData);
         setLastUpdated(new Date(mockAnalyticsData.last_sync));
       }
+      
+      // PHASE 2: Fetch Equity History for chart
+      try {
+        const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : selectedPeriod === '90d' ? 90 : 30;
+        const equityResponse = await apiAxios.get('/admin/trading/equity-history', {
+          params: { account, days }
+        });
+        
+        if (equityResponse.data.success && equityResponse.data.history) {
+          setEquityHistory(equityResponse.data.history);
+        } else {
+          // Mock equity data for development
+          setEquityHistory(generateMockEquityHistory(days));
+        }
+      } catch (error) {
+        console.log('Using mock equity history data');
+        setEquityHistory(generateMockEquityHistory(selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90));
+      }
+      
+      // PHASE 2: Calculate Win/Loss data for donut chart
+      if (analyticsData || recentTrades.length > 0) {
+        const wins = analyticsData?.overview?.winning_trades || 0;
+        const losses = analyticsData?.overview?.losing_trades || 0;
+        const winRate = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(2) : 0;
+        
+        setWinLossData({
+          winning_trades: wins,
+          losing_trades: losses,
+          win_rate: parseFloat(winRate)
+        });
+      }
 
     } catch (err) {
       console.error("Trading analytics fetch error:", err);
