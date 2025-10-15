@@ -188,6 +188,21 @@ const CashFlowManagement = () => {
         setFundBreakdown(cashFlowResponse.data.fund_breakdown || {});
         setRebatesSummary(cashFlowResponse.data.rebates_summary || {});
         
+        // PHASE 3: Calculate revenue sources for pie chart
+        const revenueData = {
+          trading_profits: fundAccountingData.assets?.mt5_trading_profits || 0,
+          broker_rebates: fundAccountingData.assets?.broker_rebates || 0,
+          broker_interest: fundAccountingData.assets?.broker_interest || 0
+        };
+        setRevenueSources(revenueData);
+        
+        // PHASE 3: Generate monthly trends data
+        const monthlyData = generateMonthlyTrends(
+          cashFlowResponse.data.monthly_breakdown || [],
+          trendTimeRange
+        );
+        setMonthlyTrends(monthlyData);
+        
         // Process calendar data if available
         if (calendarResponse.data.success) {
           setCashFlowCalendar(calendarResponse.data.calendar || null);
