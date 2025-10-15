@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Activity
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import apiAxios from "../utils/apiAxios";
 
 const MoneyManagersDashboard = () => {
