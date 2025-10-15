@@ -33,6 +33,8 @@ import {
   ReferenceLine
 } from 'recharts';
 import { ChartSkeleton, MetricCardSkeleton } from "./ui/skeleton";
+import { exportTradingAnalytics } from "../utils/exportUtils";
+import { Download } from "lucide-react";
 
 const TradingAnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
