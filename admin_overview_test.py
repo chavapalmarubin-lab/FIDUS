@@ -10,7 +10,7 @@ Expected Results:
 - Should show Alejandro in clients array
 
 Authentication: admin/password123
-Backend: https://fidus-monitor.preview.emergentagent.com/api
+Backend: https://realtime-trader-4.preview.emergentagent.com/api
 """
 
 import requests
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from the review request
-BACKEND_URL = "https://fidus-monitor.preview.emergentagent.com/api"
+BACKEND_URL = "https://realtime-trader-4.preview.emergentagent.com/api"
 
 class AdminOverviewTester:
     def __init__(self):
