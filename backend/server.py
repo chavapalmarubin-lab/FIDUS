@@ -19145,7 +19145,7 @@ async def test_new_mt5_endpoint():
 @api_router.get("/mt5/sync/health")
 async def check_mt5_sync_health(current_user=Depends(get_current_user)):
     """
-    Comprehensive MT5 Bridge Service health check
+    Comprehensive MT5 Bridge Service health check (Admin only)
     Returns detailed sync status for all accounts
     """
     try:
@@ -19171,6 +19171,68 @@ async def check_mt5_sync_health(current_user=Depends(get_current_user)):
         return {
             "success": False,
             "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+@api_router.get("/mt5/health/public")
+async def check_mt5_health_public():
+    """
+    Public MT5 sync health check (no auth required)
+    Used for monitoring and status pages
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        stale_threshold = timedelta(minutes=10)
+        
+        # Query all accounts
+        all_accounts = await db.mt5_accounts.find({}).to_list(length=None)
+        
+        if not all_accounts:
+            return {
+                "status": "error",
+                "healthy": False,
+                "message": "No MT5 accounts found in database",
+                "accounts_count": 0,
+                "timestamp": now.isoformat()
+            }
+        
+        fresh_count = 0
+        stale_accounts = []
+        
+        for acc in all_accounts:
+            last_sync = acc.get('last_sync') or acc.get('updated_at')
+            if last_sync:
+                if last_sync.tzinfo is None:
+                    last_sync = last_sync.replace(tzinfo=timezone.utc)
+                
+                age = now - last_sync
+                if age < stale_threshold:
+                    fresh_count += 1
+                else:
+                    stale_accounts.append({
+                        "account": acc.get('account'),
+                        "minutes_old": round(age.total_seconds() / 60, 1)
+                    })
+        
+        is_healthy = fresh_count == len(all_accounts)
+        
+        return {
+            "status": "healthy" if is_healthy else "degraded",
+            "healthy": is_healthy,
+            "message": f"{fresh_count}/{len(all_accounts)} accounts have fresh data",
+            "accounts_count": len(all_accounts),
+            "fresh_accounts": fresh_count,
+            "stale_accounts_count": len(stale_accounts),
+            "stale_accounts": stale_accounts if stale_accounts else None,
+            "timestamp": now.isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 health check error: {e}")
+        return {
+            "status": "error",
+            "healthy": False,
+            "message": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
