@@ -553,6 +553,151 @@ const TradingAnalyticsDashboard = () => {
             </Card>
           </div>
 
+          {/* PHASE 2: Equity Curve & Win/Loss Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Equity Curve Chart - Takes 2 columns */}
+            <Card className="dashboard-card lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Activity className="mr-2 h-5 w-5 text-cyan-400" />
+                  Equity Curve
+                </CardTitle>
+                <p className="text-slate-400 text-sm">Account equity progression over time</p>
+              </CardHeader>
+              <CardContent>
+                {equityHistory && equityHistory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={equityHistory}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#94a3b8"
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tickFormatter={(date) => {
+                          const d = new Date(date);
+                          return `${d.getMonth() + 1}/${d.getDate()}`;
+                        }}
+                      />
+                      <YAxis 
+                        stroke="#94a3b8"
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: '1px solid #334155',
+                          borderRadius: '6px'
+                        }}
+                        labelStyle={{ color: '#94a3b8' }}
+                        formatter={(value) => [`$${value.toLocaleString()}`, 'Equity']}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: '#94a3b8' }}
+                      />
+                      <ReferenceLine 
+                        y={equityHistory[0]?.equity || 0} 
+                        stroke="#64748b" 
+                        strokeDasharray="3 3"
+                        label={{ value: 'Starting Balance', fill: '#64748b', fontSize: 12 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="equity" 
+                        stroke="#10b981" 
+                        strokeWidth={2}
+                        dot={false}
+                        name="Equity"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-slate-400">
+                    No equity data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Win/Loss Donut Chart - Takes 1 column */}
+            <Card className="dashboard-card">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <PieChart className="mr-2 h-5 w-5 text-cyan-400" />
+                  Win Rate
+                </CardTitle>
+                <p className="text-slate-400 text-sm">Trade success distribution</p>
+              </CardHeader>
+              <CardContent>
+                {winLossData && (winLossData.winning_trades + winLossData.losing_trades) > 0 ? (
+                  <div className="flex flex-col items-center">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RechartsChart>
+                        <Pie
+                          data={[
+                            { name: 'Wins', value: winLossData.winning_trades, fill: '#10b981' },
+                            { name: 'Losses', value: winLossData.losing_trades, fill: '#ef4444' }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          <Cell fill="#10b981" />
+                          <Cell fill="#ef4444" />
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#1e293b', 
+                            border: '1px solid #334155',
+                            borderRadius: '6px'
+                          }}
+                        />
+                      </RechartsChart>
+                    </ResponsiveContainer>
+                    
+                    {/* Center Win Rate Display */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                      <div className="text-3xl font-bold text-green-400">
+                        {winLossData.win_rate}%
+                      </div>
+                      <div className="text-xs text-slate-400">Win Rate</div>
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="mt-4 space-y-2 w-full">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-green-600 rounded-full mr-2"></div>
+                          <span className="text-sm text-slate-300">Wins</span>
+                        </div>
+                        <span className="text-sm font-medium text-green-400">
+                          {winLossData.winning_trades} trades
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-red-600 rounded-full mr-2"></div>
+                          <span className="text-sm text-slate-300">Losses</span>
+                        </div>
+                        <span className="text-sm font-medium text-red-400">
+                          {winLossData.losing_trades} trades
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[200px] text-slate-400">
+                    No trade data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Daily Performance Calendar (Basic Version for Phase 1A) */}
           <Card className="dashboard-card">
             <CardHeader>
