@@ -19084,6 +19084,10 @@ async def get_all_mt5_accounts():
         # Calculate overall performance
         overall_performance_percentage = (total_profit_loss / total_allocated * 100) if total_allocated > 0 else 0
         
+        # Count fresh vs stale accounts
+        fresh_count = sum(1 for acc in enriched_accounts if acc.get('is_fresh'))
+        stale_count = len(enriched_accounts) - fresh_count
+        
         return {
             "success": True,
             "accounts": enriched_accounts,
@@ -19092,8 +19096,12 @@ async def get_all_mt5_accounts():
                 "total_allocated": total_allocated,
                 "total_equity": total_equity,
                 "total_profit_loss": total_profit_loss,
-                "overall_performance_percentage": overall_performance_percentage
-            }
+                "overall_performance_percentage": overall_performance_percentage,
+                "fresh_accounts": fresh_count,
+                "stale_accounts": stale_count
+            },
+            "timestamp": now.isoformat(),
+            "data_source": "MongoDB mt5_accounts (VPS Bridge - every 5 min)"
         }
         
     except Exception as e:
