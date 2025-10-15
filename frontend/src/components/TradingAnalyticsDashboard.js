@@ -288,7 +288,7 @@ const TradingAnalyticsDashboard = () => {
             onChange={(e) => setSelectedAccount(e.target.value)}
             className="px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md"
           >
-            {MT5_ACCOUNTS.map(account => (
+            {mt5Accounts.map(account => (
               <option key={account.id} value={account.id}>{account.name}</option>
             ))}
           </select>
