@@ -549,10 +549,10 @@ class DataRestorationVerification:
         critical_endpoints = [mt5_accounts_success, fund_portfolio_success, money_managers_success, cashflow_success, investments_success]
         return all(critical_endpoints)
     
-    def print_investigation_summary(self):
-        """Print investigation summary"""
+    def print_verification_summary(self):
+        """Print verification summary"""
         print("=" * 80)
-        print("📊 MT5 DASHBOARD INVESTIGATION SUMMARY")
+        print("📊 DATA RESTORATION VERIFICATION SUMMARY")
         print("=" * 80)
         
         total_tests = len(self.test_results)
@@ -567,68 +567,76 @@ class DataRestorationVerification:
         print()
         
         if failed_tests > 0:
-            print("❌ FAILED INVESTIGATIONS:")
+            print("❌ FAILED VERIFICATIONS:")
             for result in self.test_results:
                 if not result['success']:
                     print(f"   • {result['test']}: {result['details']}")
             print()
         
-        print("✅ SUCCESSFUL INVESTIGATIONS:")
+        print("✅ SUCCESSFUL VERIFICATIONS:")
         for result in self.test_results:
             if result['success']:
                 print(f"   • {result['test']}: {result['details']}")
         print()
         
-        # Key findings
-        print("🔍 KEY FINDINGS:")
+        # Key findings by priority
+        print("🔍 VERIFICATION RESULTS BY PRIORITY:")
         
-        # Check if dashboard is showing $0
-        dashboard_issue = any('CONFIRMED ISSUE' in r['details'] for r in self.test_results if not r['success'])
-        if dashboard_issue:
-            print("   ❌ CONFIRMED: MT5 Dashboard is showing $0 for all metrics")
+        # Priority 1 - MT5 Endpoints
+        mt5_accounts_success = any('MT5 Admin Accounts Complete' in r['test'] and r['success'] for r in self.test_results)
+        fund_portfolio_success = any('BALANCE Fund Data' in r['test'] and r['success'] for r in self.test_results) and \
+                               any('CORE Fund Data' in r['test'] and r['success'] for r in self.test_results)
         
-        # Check if data exists in collections
-        data_exists = any('has the most complete data' in r['details'] for r in self.test_results if r['success'])
-        if data_exists:
-            print("   ✅ Data exists in MongoDB collections")
-        else:
-            print("   ❌ No adequate data found in MongoDB collections")
+        print(f"   Priority 1 - MT5 Endpoints:")
+        print(f"     {'✅' if mt5_accounts_success else '❌'} MT5 Admin Accounts (7 accounts expected)")
+        print(f"     {'✅' if fund_portfolio_success else '❌'} Fund Portfolio Overview (BALANCE & CORE funds)")
         
-        # Check for expected accounts
-        accounts_found = any('All 4 expected accounts found' in r['details'] for r in self.test_results if r['success'])
-        if accounts_found:
-            print("   ✅ All 4 expected accounts (885822, 886557, 886066, 886602) found")
-        else:
-            print("   ❌ Not all expected accounts found")
+        # Priority 2 - Money Managers
+        money_managers_success = any('Money Managers Complete' in r['test'] and r['success'] for r in self.test_results)
+        print(f"   Priority 2 - Money Managers:")
+        print(f"     {'✅' if money_managers_success else '❌'} Money Managers Endpoint (4 managers expected)")
         
-        # Check calculation logic
-        calculation_issue = any('Dashboard Data Source Match' in r['test'] for r in self.test_results)
-        if calculation_issue:
-            match_found = any('Dashboard Data Source Match' in r['test'] and r['success'] for r in self.test_results)
-            if match_found:
-                print("   ✅ Dashboard calculation logic identified")
-            else:
-                print("   ❌ Dashboard may be using wrong data source")
+        # Priority 3 - Cash Flow
+        cashflow_success = any('Account 891215 in Separation' in r['test'] and r['success'] for r in self.test_results)
+        print(f"   Priority 3 - Cash Flow:")
+        print(f"     {'✅' if cashflow_success else '❌'} Cash Flow Overview (account 891215 in separation)")
+        
+        # Priority 4 - Investments
+        investments_success = any('Alejandro\'s Investments Found' in r['test'] and r['success'] for r in self.test_results)
+        print(f"   Priority 4 - Investments:")
+        print(f"     {'✅' if investments_success else '❌'} Investments Overview (Alejandro's investments)")
         
         print()
-        print("🎯 INVESTIGATION CONCLUSIONS:")
+        print("🎯 VERIFICATION CONCLUSIONS:")
         
-        # Determine root cause
-        if dashboard_issue and data_exists:
-            print("   🔧 ROOT CAUSE: Dashboard endpoint may be querying wrong collection or has calculation bug")
-            print("   💡 SOLUTION: Check which collection the /api/mt5/dashboard/overview endpoint is using")
-        elif dashboard_issue and not data_exists:
-            print("   🔧 ROOT CAUSE: No data in MongoDB collections - VPS sync may be broken")
-            print("   💡 SOLUTION: Check MT5 VPS bridge service and data sync process")
-        elif not dashboard_issue:
-            print("   ✅ Dashboard appears to be working correctly")
+        # Overall status
+        all_critical_passed = mt5_accounts_success and fund_portfolio_success and money_managers_success and cashflow_success and investments_success
+        
+        if all_critical_passed:
+            print("   ✅ ALL CRITICAL ENDPOINTS VERIFIED: Data restoration was successful")
+            print("   🎉 All 7 MT5 accounts, 4 money managers, and Alejandro's investments are accessible via API")
+        else:
+            print("   ❌ SOME CRITICAL ENDPOINTS FAILED: Data restoration may be incomplete")
+            
+            if not mt5_accounts_success:
+                print("   🔧 MT5 accounts endpoint needs attention - may not be returning all 7 accounts")
+            if not fund_portfolio_success:
+                print("   🔧 Fund portfolio endpoint needs attention - may be showing $0 amounts")
+            if not money_managers_success:
+                print("   🔧 Money managers endpoint needs attention - may not be returning all 4 managers")
+            if not cashflow_success:
+                print("   🔧 Cash flow endpoint needs attention - account 891215 may not be in separation breakdown")
+            if not investments_success:
+                print("   🔧 Investments endpoint needs attention - Alejandro's investments may not be accessible")
         
         print()
-        print("📋 NEXT STEPS:")
-        print("   1. Check backend code for /api/mt5/dashboard/overview endpoint")
-        print("   2. Verify which MongoDB collection it queries")
-        print("   3. Ensure MT5 VPS bridge is syncing data correctly")
-        print("   4. Test with corrected data source if needed")
+        print("📋 SUCCESS CRITERIA STATUS:")
+        print("   Expected Results:")
+        print(f"     {'✅' if mt5_accounts_success else '❌'} All 7 MT5 accounts returned with complete data")
+        print(f"     {'✅' if money_managers_success else '❌'} All 4 money managers returned with correct P&L")
+        print(f"     {'✅' if fund_portfolio_success else '❌'} Fund allocations show real amounts (not $0)")
+        print(f"     {'✅' if cashflow_success else '❌'} Cash flow shows account 891215")
+        print(f"     {'✅' if investments_success else '❌'} Investments show actual amounts")
         
         print()
 
