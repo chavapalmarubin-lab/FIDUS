@@ -19112,6 +19112,39 @@ async def test_new_mt5_endpoint():
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
+@api_router.get("/mt5/sync/health")
+async def check_mt5_sync_health(current_user=Depends(get_current_user)):
+    """
+    Comprehensive MT5 Bridge Service health check
+    Returns detailed sync status for all accounts
+    """
+    try:
+        if current_user.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        from mt5_health_monitor import get_mt5_health_monitor
+        
+        # Get health monitor
+        monitor = get_mt5_health_monitor(db)
+        
+        # Check health
+        health_status = await monitor.check_health()
+        
+        return {
+            "success": True,
+            "health": health_status,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"MT5 sync health check error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+
 @api_router.post("/mt5/admin/credentials/update")
 async def update_mt5_credentials(credentials: MT5CredentialsRequest):
     """Update MT5 login credentials for a specific client and fund (Admin only)"""
