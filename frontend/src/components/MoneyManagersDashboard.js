@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import apiAxios from "../utils/apiAxios";
+import mt5Service from "../services/mt5Service"; // PHASE 4A
 
 const MoneyManagersDashboard = () => {
   const [managers, setManagers] = useState([]);
