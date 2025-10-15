@@ -99,98 +99,122 @@ const TradingAnalyticsDashboard = () => {
       setLoading(true);
       setError("");
 
-      // Phase 1B: Support all accounts with proper parameter handling
-      const account = selectedAccount === 'all' ? 0 : parseInt(selectedAccount);
-      const days = selectedPeriod === '7d' ? 7 : 
-                   selectedPeriod === '30d' ? 30 : 
-                   selectedPeriod === '90d' ? 90 : 
-                   selectedPeriod === 'ytd' ? 365 : 30;
+      // Phase 4A: Use real deal history APIs
+      const account = selectedAccount === 'all' ? null : parseInt(selectedAccount);
+      const dateRange = mt5Service.getDateRangeForPeriod(selectedPeriod);
 
       try {
-        // PHASE 3 FIX: Fetch corrected MT5 data for accurate P&L
-        const correctedResponse = await apiAxios.get('/mt5/fund-performance/corrected');
-        
-        // Fetch analytics overview with account filter
-        const overviewResponse = await apiAxios.get('/admin/trading/analytics/overview', {
-          params: { account, days }
-        });
-        
-        // Fetch daily performance with account filter
-        const dailyResponse = await apiAxios.get('/admin/trading/analytics/daily', {
-          params: { days, account }
-        });
-        
-        // Fetch recent trades with account filter
-        const tradesResponse = await apiAxios.get('/admin/trading/analytics/trades', {
-          params: { limit: 20, account }
+        // PHASE 4A: Fetch deal summary for analytics
+        const summaryResponse = await mt5Service.getDealsSummary({
+          account_number: account,
+          start_date: dateRange.start_date,
+          end_date: dateRange.end_date
         });
 
-        if (overviewResponse.data.success && dailyResponse.data.success && tradesResponse.data.success) {
-          const analytics = overviewResponse.data.analytics;
+        // PHASE 4A: Fetch daily P&L for equity curve
+        const dailyPnLResponse = await mt5Service.getDailyPnL({
+          account_number: account,
+          days: selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : selectedPeriod === '90d' ? 90 : 30
+        });
+
+        // PHASE 4A: Fetch recent deals
+        const dealsResponse = await mt5Service.getDeals({
+          account_number: account,
+          start_date: dateRange.start_date,
+          end_date: dateRange.end_date,
+          limit: 20
+        });
+
+        if (summaryResponse.success && dailyPnLResponse.success && dealsResponse.success) {
+          const summary = summaryResponse.summary;
           
-          // ✅ CRITICAL FIX: Only use aggregate for "All Accounts", preserve individual for specific accounts
-          if (correctedResponse.data.success) {
-            const corrected = correctedResponse.data;
-            
-            // ONLY override with aggregate if viewing ALL accounts
-            if (selectedAccount === 0 || selectedAccount === '0' || selectedAccount === 'all') {
-              analytics.overview.total_pnl = corrected?.fund_assets?.mt5_trading_pnl || 0;
-              console.log('✅ Using AGGREGATE P&L for All Accounts:', corrected?.fund_assets?.mt5_trading_pnl);
-            } else {
-              // For individual accounts, keep the backend's individual P&L value (don't override!)
-              console.log(`✅ Using INDIVIDUAL P&L for Account ${selectedAccount}:`, analytics.overview.total_pnl);
-            }
-            
-            analytics.overview.corrected_data_used = true;
-            
-            console.log('Trading Analytics P&L:', {
-              selected_account: selectedAccount,
-              is_aggregate: selectedAccount === 0 || selectedAccount === '0' || selectedAccount === 'all',
-              total_pnl: analytics.overview.total_pnl,
-              profit_withdrawals: corrected?.summary?.total_profit_withdrawals || 0,
-              verified: corrected?.verification?.verified || false
-            });
-          }
+          // Build analytics data structure from deal summary
+          const analytics = {
+            overview: {
+              total_pnl: summary.total_profit || 0,
+              total_volume: summary.total_volume || 0,
+              total_deals: summary.total_deals || 0,
+              winning_trades: summary.win_deals || 0,
+              losing_trades: summary.loss_deals || 0,
+              total_commission: summary.total_commission || 0,
+              total_swap: summary.total_swap || 0,
+              buy_deals: summary.buy_deals || 0,
+              sell_deals: summary.sell_deals || 0,
+              balance_operations: summary.balance_operations || 0,
+              symbols_traded: summary.symbols_traded || [],
+              corrected_data_used: true, // Phase 4A uses real deal data
+              data_source: 'Deal History (Phase 4A)'
+            },
+            last_sync: summary.latest_deal || new Date().toISOString()
+          };
           
           setAnalyticsData(analytics);
-          setDailyPerformance(dailyResponse.data.daily_performance || []);
-          setRecentTrades(tradesResponse.data.trades || []);
-          setLastUpdated(new Date(analytics.last_sync));
+          
+          // Set daily performance from Phase 4A API
+          setDailyPerformance(dailyPnLResponse.data || []);
+          
+          // Transform deals to recent trades format
+          const recentTradesData = dealsResponse.deals.slice(0, 20).map(deal => ({
+            id: deal.ticket,
+            symbol: deal.symbol,
+            type: deal.type === 0 ? 'BUY' : deal.type === 1 ? 'SELL' : 'BALANCE',
+            volume: deal.volume,
+            open_price: deal.price,
+            close_price: deal.price,
+            profit: deal.profit,
+            commission: deal.commission,
+            swap: deal.swap,
+            open_time: deal.time,
+            close_time: deal.time,
+            duration: 0
+          }));
+          
+          setRecentTrades(recentTradesData);
+          setLastUpdated(new Date());
+          
+          console.log('✅ [Phase 4A] Trading Analytics loaded from deal history:', {
+            total_deals: analytics.overview.total_deals,
+            total_pnl: analytics.overview.total_pnl,
+            daily_points: dailyPnLResponse.days
+          });
         } else {
           throw new Error("API returned unsuccessful response");
         }
 
       } catch (apiError) {
         console.error("Failed to fetch trading analytics:", apiError.message);
-        
-        // PHASE 3: No mock data fallback - show error to user
-        // PHASE 3: No mock data - set error state
-        setError("Trading analytics data not available. Please ensure backend is configured.");
+        setError(`Trading analytics data not available: ${apiError.message}`);
         setAnalyticsData(null);
         setDailyPerformance([]);
         setRecentTrades([]);
       }
       
-      // PHASE 2: Fetch Equity History for chart
+      // PHASE 4A: Fetch Equity History from daily P&L
       try {
         const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : selectedPeriod === '90d' ? 90 : 30;
-        const equityResponse = await apiAxios.get('/admin/trading/equity-history', {
-          params: { account, days }
+        const dailyResponse = await mt5Service.getDailyPnL({
+          account_number: account,
+          days: days
         });
         
-        if (equityResponse.data.success && equityResponse.data.history) {
-          setEquityHistory(equityResponse.data.history);
+        if (dailyResponse.success && dailyResponse.data) {
+          // Transform daily P&L to equity history format
+          const equityData = dailyResponse.data.map((day, index) => ({
+            date: day.date,
+            equity: dailyResponse.data.slice(0, index + 1).reduce((sum, d) => sum + d.pnl, 0),
+            balance: dailyResponse.data.slice(0, index + 1).reduce((sum, d) => sum + d.pnl, 0),
+            profit: day.pnl
+          }));
+          
+          setEquityHistory(equityData);
+          console.log(`✅ [Phase 4A] Equity curve loaded: ${equityData.length} days`);
         } else {
-          // PHASE 3: No mock data - set empty array
           setEquityHistory([]);
         }
       } catch (error) {
         console.error('Failed to fetch equity history:', error);
-        setEquityHistory([]); // PHASE 3: No mock data
+        setEquityHistory([]);
       }
-      
-      // PHASE 2: Calculate Win/Loss data after analytics data is set
-      // This will be triggered after state updates
 
     } catch (err) {
       console.error("Trading analytics fetch error:", err);
