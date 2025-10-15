@@ -397,9 +397,11 @@ class MT5DealsService:
         """
         Get balance operations (type=2) for cash flow tracking
         
+        Enhanced with detailed transfer classification
+        
         Identifies:
         - Profit withdrawals
-        - Deposits
+        - Deposits (bank wire, card, crypto, etc.)
         - Inter-account transfers
         - Interest payments
         
@@ -411,7 +413,8 @@ class MT5DealsService:
                     "account_number": 886557,
                     "profit": 5000.00,
                     "comment": "Profit withdrawal",
-                    "operation_type": "withdrawal"
+                    "operation_type": "withdrawal",
+                    "transfer_detail": "profit_withdrawal"  // NEW: Detailed classification
                 },
                 ...
             ]
@@ -432,7 +435,7 @@ class MT5DealsService:
             cursor = self.db.mt5_deals_history.find(query).sort("time", -1)
             operations = await cursor.to_list(length=None)
             
-            # Classify operations based on comment
+            # Classify operations based on comment (ENHANCED)
             for op in operations:
                 if "_id" in op:
                     op["_id"] = str(op["_id"])
@@ -445,22 +448,49 @@ class MT5DealsService:
                 comment = op.get("comment", "").lower()
                 profit = op.get("profit", 0)
                 
+                # Enhanced classification with transfer detail
                 if "withdrawal" in comment or "profit" in comment:
                     op["operation_type"] = "withdrawal"
+                    op["transfer_detail"] = "profit_withdrawal"
                 elif "deposit" in comment:
                     op["operation_type"] = "deposit"
+                    # Detailed deposit classification
+                    if "bank" in comment or "wire" in comment:
+                        op["transfer_detail"] = "bank_wire"
+                    elif "card" in comment or "credit" in comment or "debit" in comment:
+                        op["transfer_detail"] = "card_deposit"
+                    elif "crypto" in comment or "bitcoin" in comment or "btc" in comment:
+                        op["transfer_detail"] = "crypto_deposit"
+                    elif "e-wallet" in comment or "paypal" in comment or "skrill" in comment:
+                        op["transfer_detail"] = "ewallet_deposit"
+                    else:
+                        op["transfer_detail"] = "other_deposit"
                 elif "transfer" in comment:
                     op["operation_type"] = "transfer"
+                    # Detailed transfer classification
+                    if "internal" in comment or "inter" in comment:
+                        op["transfer_detail"] = "internal_transfer"
+                    elif "between" in comment:
+                        op["transfer_detail"] = "inter_account_transfer"
+                    else:
+                        op["transfer_detail"] = "other_transfer"
                 elif "interest" in comment or "separation" in comment:
                     op["operation_type"] = "interest"
+                    op["transfer_detail"] = "interest_payment"
+                elif "bonus" in comment or "rebate" in comment:
+                    op["operation_type"] = "credit"
+                    op["transfer_detail"] = "bonus_rebate"
                 elif profit > 0:
                     op["operation_type"] = "credit"
+                    op["transfer_detail"] = "other_credit"
                 elif profit < 0:
                     op["operation_type"] = "debit"
+                    op["transfer_detail"] = "other_debit"
                 else:
                     op["operation_type"] = "other"
+                    op["transfer_detail"] = "unclassified"
             
-            logger.info(f"Retrieved {len(operations)} balance operations")
+            logger.info(f"Retrieved {len(operations)} balance operations with enhanced classification")
             return operations
             
         except Exception as e:
