@@ -22,6 +22,7 @@ import MT5AccountManagement from "../pages/admin/MT5AccountManagement";
 import ApplicationDocuments from "./ApplicationDocuments";
 import TradingAnalyticsDashboard from "./TradingAnalyticsDashboard";
 import MoneyManagersDashboard from "./MoneyManagersDashboard";
+import BrokerRebates from "./BrokerRebates"; // PHASE 4A
 import UserAdministration from "./UserAdministration";
 // Clean imports - removed unused Google components
 import InvestmentDashboard from './InvestmentDashboard';
