@@ -282,6 +282,31 @@ const TradingAnalyticsDashboard = () => {
     return trades.sort((a, b) => new Date(b.close_time) - new Date(a.close_time));
   };
 
+  // PHASE 2: Generate mock equity history for development
+  const generateMockEquityHistory = (days) => {
+    const history = [];
+    const startEquity = 100000;
+    let currentEquity = startEquity;
+    const today = new Date();
+    
+    for (let i = days; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      
+      // Simulate daily equity changes (+/- 1-3%)
+      const change = (Math.random() - 0.4) * 0.03 * currentEquity;
+      currentEquity += change;
+      
+      history.push({
+        date: date.toISOString().split('T')[0],
+        equity: Math.round(currentEquity * 100) / 100,
+        balance: Math.round((currentEquity - change * 0.5) * 100) / 100
+      });
+    }
+    
+    return history;
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
