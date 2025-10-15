@@ -292,6 +292,118 @@ const CashFlowManagement = () => {
     }
   };
 
+  // PHASE 4A: Fetch MT5 Deal History for Cash Flow Tracking
+  const fetchDealHistory = async () => {
+    try {
+      setDealHistoryLoading(true);
+      
+      const dateRange = mt5Service.getDateRangeForPeriod('30d'); // Last 30 days
+      const account = selectedDealAccount === 'all' ? null : parseInt(selectedDealAccount);
+      
+      // Fetch balance operations (type=2 deals)
+      const response = await mt5Service.getBalanceOperations({
+        account_number: account,
+        start_date: dateRange.start_date,
+        end_date: dateRange.end_date
+      });
+      
+      if (response.success) {
+        // Classify deals
+        const classified = response.operations.map(deal => ({
+          ...deal,
+          classification: classifyDeal(deal)
+        }));
+        
+        setDealHistory(classified);
+        console.log(`✅ [Phase 4A] Fetched ${classified.length} balance operations`);
+      }
+    } catch (error) {
+      console.error('❌ [Phase 4A] Error fetching deal history:', error);
+    } finally {
+      setDealHistoryLoading(false);
+    }
+  };
+
+  // PHASE 4A: Classify deal based on comment and type
+  const classifyDeal = (deal) => {
+    const comment = (deal.comment || '').toLowerCase();
+    const profit = deal.profit || 0;
+    
+    // Internal transfers between FIDUS accounts
+    if (comment.includes('transfer') || comment.includes('entre cuentas')) {
+      return {
+        type: 'INTERNAL_TRANSFER',
+        color: 'blue',
+        displayName: 'Internal Transfer',
+        icon: '🔄'
+      };
+    }
+    
+    // Deposits
+    if (profit > 0 && comment.includes('deposit')) {
+      return {
+        type: 'DEPOSIT',
+        color: 'green',
+        displayName: 'Deposit',
+        icon: '⬇️'
+      };
+    }
+    
+    // Withdrawals
+    if (profit < 0 && comment.includes('withdrawal')) {
+      return {
+        type: 'WITHDRAWAL',
+        color: 'red',
+        displayName: 'Withdrawal',
+        icon: '⬆️'
+      };
+    }
+    
+    // Profit withdrawals (specific case)
+    if (profit < 0 && comment.includes('profit')) {
+      return {
+        type: 'PROFIT_WITHDRAWAL',
+        color: 'orange',
+        displayName: 'Profit Withdrawal',
+        icon: '💰'
+      };
+    }
+    
+    // Interest payments
+    if (comment.includes('interest') || comment.includes('separation')) {
+      return {
+        type: 'INTEREST',
+        color: 'purple',
+        displayName: 'Interest Payment',
+        icon: '📈'
+      };
+    }
+    
+    // Trading (if entry type indicates trade)
+    if (deal.entry === 0) {
+      return {
+        type: 'TRADING',
+        color: profit >= 0 ? 'green' : 'red',
+        displayName: 'Trade',
+        icon: '📊'
+      };
+    }
+    
+    // Other
+    return {
+      type: 'OTHER',
+      color: 'gray',
+      displayName: 'Other',
+      icon: '❓'
+    };
+  };
+
+  // PHASE 4A: Fetch deal history when component mounts or account changes
+  useEffect(() => {
+    fetchDealHistory();
+  }, [selectedDealAccount]);
+
+
   const getMonthsFromTimeframe = (timeframe) => {
     switch (timeframe) {
       case '1month': return 1;
