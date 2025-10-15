@@ -560,15 +560,15 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="crm" className="flex-shrink-0">
               CRM Dashboard
             </TabsTrigger>
-            <TabsTrigger value="redemptions">
+            <TabsTrigger value="redemptions" className="flex-shrink-0">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="google">
+            <TabsTrigger value="google" className="flex-shrink-0">
               🌐 Google Workspace
             </TabsTrigger>
             {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
-            <TabsTrigger value="technical-docs">
+            <TabsTrigger value="technical-docs" className="flex-shrink-0">
               <FileText size={16} className="mr-2" />
               📡 Tech Documentation
             </TabsTrigger>
