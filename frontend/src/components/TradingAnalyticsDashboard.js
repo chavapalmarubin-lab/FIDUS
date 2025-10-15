@@ -160,9 +160,9 @@ const TradingAnalyticsDashboard = () => {
         }
 
       } catch (apiError) {
-        console.warn("API endpoints not available yet, using mock data:", apiError.message);
+        console.error("Failed to fetch trading analytics:", apiError.message);
         
-        // Fallback to mock data for Phase 1A development
+        // PHASE 3: No mock data fallback - show error to user
         const mockAnalyticsData = {
           overview: {
             total_pnl: 2909.31,
