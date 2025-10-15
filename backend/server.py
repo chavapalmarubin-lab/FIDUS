@@ -19910,6 +19910,442 @@ async def get_daily_pnl(
         logging.error(f"Get daily P&L error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch daily P&L: {str(e)}")
 
+@api_router.get("/mt5/growth-metrics/{account_number}")
+async def get_account_growth_metrics(
+    account_number: int,
+    days: int = 30
+):
+    """
+    Calculate comprehensive growth metrics for an account
+    
+    Returns ROI, max drawdown, Sharpe ratio, win rate, profit factor, etc.
+    
+    Path Parameters:
+    - account_number: MT5 account number
+    
+    Query Parameters:
+    - days: Period for calculation (default: 30)
+    
+    Returns:
+        {
+            "roi": 12.5,
+            "max_drawdown": -5.2,
+            "sharpe_ratio": 1.85,
+            "win_rate": 65.5,
+            "profit_factor": 2.15,
+            ...
+        }
+    """
+    try:
+        metrics = await mt5_deals_service.calculate_account_growth_metrics(
+            account_number=account_number,
+            days=days
+        )
+        
+        return {
+            "success": True,
+            "account_number": account_number,
+            "metrics": metrics
+        }
+        
+    except Exception as e:
+        logging.error(f"Get growth metrics error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate growth metrics: {str(e)}")
+
+
+# ===============================================================================
+# MT5 ENHANCED FEATURES (Phase 4B: Optional Enhancements)
+# ===============================================================================
+
+# Import new services
+from services.equity_snapshots_service import EquitySnapshotsService
+from services.pending_orders_service import PendingOrdersService
+from services.terminal_status_service import TerminalStatusService
+from services.spread_analysis_service import SpreadAnalysisService
+
+# Initialize services
+equity_service = EquitySnapshotsService(db)
+pending_orders_service = PendingOrdersService(db)
+terminal_status_service = TerminalStatusService(db)
+spread_analysis_service = SpreadAnalysisService(db)
+
+# EQUITY SNAPSHOTS ENDPOINTS
+
+@api_router.get("/mt5/equity-snapshots")
+async def get_equity_snapshots(
+    account_number: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 1000
+):
+    """
+    Get equity snapshots for trend analysis
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    - limit: Maximum snapshots to return
+    
+    Returns:
+        List of equity snapshots with balance, equity, profit data
+    """
+    try:
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        snapshots = await equity_service.get_equity_snapshots(
+            account_number=account_number,
+            start_date=start_dt,
+            end_date=end_dt,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "count": len(snapshots),
+            "snapshots": snapshots
+        }
+        
+    except Exception as e:
+        logging.error(f"Get equity snapshots error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch equity snapshots: {str(e)}")
+
+@api_router.get("/mt5/equity-curve")
+async def get_equity_curve(
+    account_number: Optional[int] = None,
+    days: int = 30,
+    resolution: str = "daily"
+):
+    """
+    Get equity curve data for charting
+    
+    Query Parameters:
+    - account_number: Filter by account (None for all)
+    - days: Number of days to include (default: 30)
+    - resolution: "hourly", "daily", or "weekly"
+    
+    Returns:
+        List of equity curve data points
+    """
+    try:
+        curve_data = await equity_service.get_equity_curve(
+            account_number=account_number,
+            days=days,
+            resolution=resolution
+        )
+        
+        return {
+            "success": True,
+            "resolution": resolution,
+            "data_points": len(curve_data),
+            "curve": curve_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Get equity curve error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate equity curve: {str(e)}")
+
+@api_router.get("/mt5/equity-stats")
+async def get_equity_stats(
+    account_number: Optional[int] = None,
+    days: int = 30
+):
+    """
+    Get equity statistics for the period
+    
+    Query Parameters:
+    - account_number: Filter by account
+    - days: Number of days for calculation
+    
+    Returns:
+        Statistics including current, starting, highest, lowest equity, growth, drawdown
+    """
+    try:
+        stats = await equity_service.get_equity_stats(
+            account_number=account_number,
+            days=days
+        )
+        
+        return {
+            "success": True,
+            "period_days": days,
+            "stats": stats
+        }
+        
+    except Exception as e:
+        logging.error(f"Get equity stats error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate equity stats: {str(e)}")
+
+# PENDING ORDERS ENDPOINTS
+
+@api_router.get("/mt5/pending-orders")
+async def get_pending_orders(
+    account_number: Optional[int] = None,
+    symbol: Optional[str] = None
+):
+    """
+    Get pending MT5 orders (limit, stop, stop-limit orders)
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    - symbol: Filter by symbol
+    
+    Returns:
+        List of pending orders with details
+    """
+    try:
+        orders = await pending_orders_service.get_pending_orders(
+            account_number=account_number,
+            symbol=symbol
+        )
+        
+        return {
+            "success": True,
+            "count": len(orders),
+            "orders": orders
+        }
+        
+    except Exception as e:
+        logging.error(f"Get pending orders error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch pending orders: {str(e)}")
+
+@api_router.get("/mt5/pending-orders/summary")
+async def get_pending_orders_summary(
+    account_number: Optional[int] = None
+):
+    """
+    Get summary of pending orders
+    
+    Query Parameters:
+    - account_number: Filter by MT5 account
+    
+    Returns:
+        Summary with counts by type and symbol
+    """
+    try:
+        summary = await pending_orders_service.get_pending_orders_summary(
+            account_number=account_number
+        )
+        
+        return {
+            "success": True,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Get pending orders summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
+
+# TERMINAL STATUS ENDPOINTS
+
+@api_router.get("/mt5/terminal/status")
+async def get_terminal_status():
+    """
+    Get current MT5 terminal status
+    
+    Returns:
+        Terminal health status including connection, trade allowed, errors, etc.
+    """
+    try:
+        status = await terminal_status_service.get_latest_status()
+        
+        return {
+            "success": True,
+            "status": status
+        }
+        
+    except Exception as e:
+        logging.error(f"Get terminal status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch terminal status: {str(e)}")
+
+@api_router.get("/mt5/terminal/history")
+async def get_terminal_status_history(
+    hours: int = 24
+):
+    """
+    Get terminal status history
+    
+    Query Parameters:
+    - hours: Number of hours to retrieve (default: 24)
+    
+    Returns:
+        List of terminal status records
+    """
+    try:
+        history = await terminal_status_service.get_status_history(
+            hours=hours
+        )
+        
+        return {
+            "success": True,
+            "hours": hours,
+            "count": len(history),
+            "history": history
+        }
+        
+    except Exception as e:
+        logging.error(f"Get terminal history error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch status history: {str(e)}")
+
+@api_router.get("/mt5/terminal/errors")
+async def get_error_logs(
+    hours: int = 24,
+    error_type: Optional[str] = None,
+    account_number: Optional[int] = None,
+    limit: int = 100
+):
+    """
+    Get error logs for monitoring
+    
+    Query Parameters:
+    - hours: Number of hours to retrieve
+    - error_type: Filter by error type
+    - account_number: Filter by account
+    - limit: Maximum errors to return
+    
+    Returns:
+        List of error log entries
+    """
+    try:
+        errors = await terminal_status_service.get_error_logs(
+            hours=hours,
+            error_type=error_type,
+            account_number=account_number,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "count": len(errors),
+            "errors": errors
+        }
+        
+    except Exception as e:
+        logging.error(f"Get error logs error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch error logs: {str(e)}")
+
+@api_router.get("/mt5/terminal/error-summary")
+async def get_error_summary(
+    hours: int = 24
+):
+    """
+    Get error summary for monitoring
+    
+    Query Parameters:
+    - hours: Number of hours for summary
+    
+    Returns:
+        Error summary by type and account
+    """
+    try:
+        summary = await terminal_status_service.get_error_summary(
+            hours=hours
+        )
+        
+        return {
+            "success": True,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.error(f"Get error summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate error summary: {str(e)}")
+
+@api_router.get("/mt5/sync-status")
+async def get_sync_status():
+    """
+    Get overall sync status for MT5 bridge
+    
+    Returns:
+        Sync status including last sync times, data freshness, health indicators
+    """
+    try:
+        status = await terminal_status_service.get_sync_status()
+        
+        return {
+            "success": True,
+            "status": status
+        }
+        
+    except Exception as e:
+        logging.error(f"Get sync status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch sync status: {str(e)}")
+
+# SPREAD ANALYSIS ENDPOINTS
+
+@api_router.get("/mt5/spread-statistics")
+async def get_spread_statistics(
+    symbol: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get spread statistics for symbols
+    
+    Query Parameters:
+    - symbol: Filter by symbol
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    
+    Returns:
+        Spread statistics by symbol (avg, min, max spreads)
+    """
+    try:
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        stats = await spread_analysis_service.get_spread_statistics(
+            symbol=symbol,
+            start_date=start_dt,
+            end_date=end_dt
+        )
+        
+        return {
+            "success": True,
+            "statistics": stats
+        }
+        
+    except Exception as e:
+        logging.error(f"Get spread statistics error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate spread statistics: {str(e)}")
+
+@api_router.get("/mt5/spread-costs")
+async def calculate_spread_costs(
+    account_number: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Calculate spread costs
+    
+    Query Parameters:
+    - account_number: Filter by account
+    - start_date: Filter from date (ISO format)
+    - end_date: Filter to date (ISO format)
+    
+    Returns:
+        Estimated spread costs by symbol and account
+    """
+    try:
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        
+        costs = await spread_analysis_service.calculate_spread_costs(
+            account_number=account_number,
+            start_date=start_dt,
+            end_date=end_dt
+        )
+        
+        return {
+            "success": True,
+            "costs": costs
+        }
+        
+    except Exception as e:
+        logging.error(f"Calculate spread costs error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate spread costs: {str(e)}")
+
 
 # ===============================================================================
 # FUND PERFORMANCE vs MT5 REALITY MANAGEMENT SYSTEM
