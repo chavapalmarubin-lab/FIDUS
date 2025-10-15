@@ -70,6 +70,14 @@ const CashFlowManagement = () => {
   useEffect(() => {
     fetchCashFlowData();
   }, [selectedTimeframe, selectedFund]);
+  
+  // PHASE 3: Regenerate monthly trends when time range changes
+  useEffect(() => {
+    if (cashFlowData && cashFlowData.length > 0) {
+      const monthlyData = generateMonthlyTrends(cashFlowData, trendTimeRange);
+      setMonthlyTrends(monthlyData);
+    }
+  }, [trendTimeRange, cashFlowData]);
 
   const fetchCashFlowData = async () => {
     try {
