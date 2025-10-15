@@ -180,8 +180,8 @@ const TradingAnalyticsDashboard = () => {
         if (equityResponse.data.success && equityResponse.data.history) {
           setEquityHistory(equityResponse.data.history);
         } else {
-          // Mock equity data for development
-          setEquityHistory(generateMockEquityHistory(days));
+          // PHASE 3: No mock data - set empty array
+          setEquityHistory([]);
         }
       } catch (error) {
         console.error('Failed to fetch equity history:', error);
