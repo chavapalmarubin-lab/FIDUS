@@ -255,72 +255,71 @@ class DataRestorationVerification:
             self.log_test("Fund Portfolio Overview Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def verify_data_fields(self, collection_name, collection_data):
-        """Test 3: Verify Data Fields in the best collection"""
-        if not collection_name or not collection_data:
-            self.log_test("Data Fields Verification", False, "No valid collection data to verify")
-            return False
-        
+    def test_money_managers_endpoint(self):
+        """Priority 2: Test Money Managers Endpoint - GET /api/admin/money-managers/all"""
         try:
-            collection = self.db[collection_name]
+            # Try different possible endpoints
+            endpoints_to_try = [
+                "/api/admin/money-managers/all",
+                "/api/money-managers/all",
+                "/api/admin/money-managers",
+                "/api/money-managers"
+            ]
             
-            # Get all documents to analyze
-            all_docs = list(collection.find({}))
-            
-            if not all_docs:
-                self.log_test("Data Fields Verification", False, f"No documents found in {collection_name}")
-                return False
-            
-            # Check for expected account numbers
-            expected_accounts = ['885822', '886557', '886066', '886602']
-            found_accounts = []
-            total_equity = 0
-            total_profit = 0
-            
-            for doc in all_docs:
-                account_num = str(doc.get('mt5_account_number', ''))
-                if account_num in expected_accounts:
-                    found_accounts.append(account_num)
+            for endpoint in endpoints_to_try:
+                url = f"{BACKEND_URL}{endpoint}"
+                response = self.session.get(url)
+                
+                if response.status_code == 200:
+                    data = response.json()
                     
-                    # Sum equity
-                    equity = doc.get('equity', 0)
-                    if isinstance(equity, (int, float)):
-                        total_equity += equity
+                    # Check if managers are returned
+                    managers = data.get('managers', data.get('money_managers', []))
+                    if not managers:
+                        continue  # Try next endpoint
                     
-                    # Sum profit (try different field names)
-                    profit = doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0)))
-                    if isinstance(profit, (int, float)):
-                        total_profit += profit
-            
-            # Verify expected accounts are present
-            missing_accounts = [acc for acc in expected_accounts if acc not in found_accounts]
-            
-            details = f"Found accounts: {found_accounts}, Missing: {missing_accounts}, Total Equity: ${total_equity:,.2f}, Total P&L: ${total_profit:,.2f}"
-            
-            if len(found_accounts) == 4 and not missing_accounts:
-                self.log_test("Expected Accounts Present", True, f"All 4 expected accounts found: {found_accounts}")
-            else:
-                self.log_test("Expected Accounts Present", False, f"Missing accounts: {missing_accounts}")
-            
-            # Check if totals match expected values
-            expected_equity_min = 100000  # ~$121,000+
-            expected_profit = 3551  # $3,551
-            
-            if total_equity >= expected_equity_min:
-                self.log_test("Total Equity Calculation", True, f"Total equity ${total_equity:,.2f} >= expected ${expected_equity_min:,.2f}")
-            else:
-                self.log_test("Total Equity Calculation", False, f"Total equity ${total_equity:,.2f} < expected ${expected_equity_min:,.2f}")
-            
-            if abs(total_profit - expected_profit) < 500:  # Allow some variance
-                self.log_test("Total P&L Calculation", True, f"Total P&L ${total_profit:,.2f} ≈ expected ${expected_profit:,.2f}")
-            else:
-                self.log_test("Total P&L Calculation", False, f"Total P&L ${total_profit:,.2f} ≠ expected ${expected_profit:,.2f}")
-            
-            self.log_test("Data Fields Verification", True, details)
-            return True
-            
+                    # Expected 4 managers with specific P&L values
+                    expected_managers = {
+                        'TradingHub Gold': 4973.66,
+                        'GoldenTrade': 1828.32,
+                        'UNO14 MAM': -112.94,
+                        'CP Strategy': -112.94
+                    }
+                    
+                    found_managers = {}
+                    
+                    for manager in managers:
+                        name = manager.get('name', 'Unknown')
+                        pnl = manager.get('pnl', manager.get('profit_loss', manager.get('total_pnl', 0)))
+                        
+                        # Check if name is not "Unknown"
+                        if name != 'Unknown' and name in expected_managers:
+                            found_managers[name] = pnl
+                            
+                            expected_pnl = expected_managers[name]
+                            if abs(pnl - expected_pnl) < 100:  # Allow some variance
+                                self.log_test(f"Manager {name} P&L", True, f"P&L: ${pnl:,.2f} (expected: ${expected_pnl:,.2f})")
+                            else:
+                                self.log_test(f"Manager {name} P&L", False, f"P&L: ${pnl:,.2f} (expected: ${expected_pnl:,.2f})")
+                    
+                    # Check if all 4 managers found
+                    missing_managers = [name for name in expected_managers if name not in found_managers]
+                    
+                    details = f"Found {len(found_managers)}/4 managers: {list(found_managers.keys())}, Missing: {missing_managers}"
+                    
+                    if len(found_managers) == 4 and not missing_managers:
+                        self.log_test("Money Managers Complete", True, f"All 4 managers found: {details}")
+                        return True
+                    else:
+                        self.log_test("Money Managers Complete", False, f"Missing managers: {details}")
+                        return False
+                
+            # If no endpoint worked
+            self.log_test("Money Managers Endpoint", False, f"All endpoints failed. Tried: {endpoints_to_try}")
+            return False
+                
         except Exception as e:
-            self.log_test("Data Fields Verification", False, f"Exception: {str(e)}")
+            self.log_test("Money Managers Endpoint", False, f"Exception: {str(e)}")
             return False
     
     def test_calculation_logic(self):
