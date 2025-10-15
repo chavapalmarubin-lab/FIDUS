@@ -544,9 +544,6 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="mt5-accounts">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="mt5-config">
-              ⚙️ MT5 Config
-            </TabsTrigger>
             <TabsTrigger value="clients">
               <Users size={16} className="mr-2" />
               Clients
