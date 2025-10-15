@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 """
-Backend Investigation - MT5 Dashboard Showing $0
+Backend API Verification After Data Restoration
 
 Context:
-The MT5 Trading Dashboard is showing $0 for all metrics when it should show real data:
-- Total Equity: $0 (should be ~$121,000+)
-- Total P&L: $0 (should be $3,551)
-- Data Quality: 0 (should be "4 live of 4 accounts")
+Just restored all MT5 accounts, money managers, and investments data to fix dashboard display issues.
 
-Investigation Required:
-1. Check MT5 Dashboard Endpoint: GET /api/mt5/dashboard/overview
-2. Check MT5 Accounts Data Source (mt5_accounts, mt5_accounts_corrected, mt5_accounts_cache)
-3. Verify Data Fields (equity, profit/true_pnl, balance)
-4. Test Calculation Logic
+DATABASE STATUS (VERIFIED):
+- ✅ 7 MT5 accounts created (886557, 886066, 886602, 885822, 886528, 891215, 891234)
+- ✅ 4 money managers created with P&L data
+- ✅ Alejandro's investments restored (BALANCE: $100K, CORE: $18K)
 
-Expected Findings:
-- Total Equity should be ~$121,000+ (sum of 4 accounts)
-- Total P&L should be ~$3,551 (matches Cash Flow)
-- 4 active accounts should be present
-- Data should be recent (within last 24 hours)
+TEST OBJECTIVES:
+Test ALL critical endpoints to ensure they return the restored data correctly:
+
+Priority 1 - MT5 Endpoints:
+1. GET /api/mt5/admin/accounts - Should return 7 accounts with correct names, fund_types, equity, P&L
+2. GET /api/fund-portfolio/overview - Should show fund allocation with actual amounts
+
+Priority 2 - Money Managers Endpoints:
+3. GET /api/admin/money-managers/all - Should return 4 managers
+
+Priority 3 - Cash Flow Endpoint:
+4. GET /api/admin/cashflow/overview - Should include account 891215 in separation breakdown
+
+Priority 4 - Investments Endpoint:
+5. GET /api/investments/admin/overview - Should show Alejandro's investments
 """
 
 import requests
