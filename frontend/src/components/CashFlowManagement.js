@@ -731,11 +731,23 @@ const CashFlowManagement = () => {
                   </span>
                 </div>
                 
-                <div className="flex justify-between p-2 bg-slate-800/50 rounded">
-                  <span className="text-slate-400">Profit Withdrawn to Separation Account:</span>
-                  <span className="font-semibold text-green-400">
-                    {formatCurrency(fundAccounting?.profit_withdrawals || 0)}
-                  </span>
+                <div className="p-2 bg-slate-800/50 rounded">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-slate-400 font-medium">Profit Withdrawn to Separation Accounts:</span>
+                    <span className="font-semibold text-green-400">
+                      {formatCurrency(fundAccounting?.profit_withdrawals || 0)}
+                    </span>
+                  </div>
+                  <div className="pl-4 space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">→ Separation Account (886528):</span>
+                      <span className="text-slate-300">{formatCurrency(fundAccounting?.separation_accounts?.['886528'] || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">→ Interest Trading Account (891215):</span>
+                      <span className="text-slate-300">{formatCurrency(fundAccounting?.separation_accounts?.['891215'] || 0)}</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between p-2 bg-slate-800/50 rounded">
