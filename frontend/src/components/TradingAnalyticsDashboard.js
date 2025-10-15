@@ -211,18 +211,8 @@ const TradingAnalyticsDashboard = () => {
         setEquityHistory(generateMockEquityHistory(selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90));
       }
       
-      // PHASE 2: Calculate Win/Loss data for donut chart
-      if (analyticsData || recentTrades.length > 0) {
-        const wins = analyticsData?.overview?.winning_trades || 0;
-        const losses = analyticsData?.overview?.losing_trades || 0;
-        const winRate = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(2) : 0;
-        
-        setWinLossData({
-          winning_trades: wins,
-          losing_trades: losses,
-          win_rate: parseFloat(winRate)
-        });
-      }
+      // PHASE 2: Calculate Win/Loss data after analytics data is set
+      // This will be triggered after state updates
 
     } catch (err) {
       console.error("Trading analytics fetch error:", err);
