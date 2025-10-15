@@ -1,11 +1,11 @@
-name: Update VPS MT5 Bridge
+name: Deploy to VPS
 
 on:
   push:
     branches: [main]
     paths:
-      - 'mt5_bridge_service/**'
       - 'vps/**'
+      - 'mt5_bridge_service/**'
       - '.github/workflows/deploy-vps.yml'
   workflow_dispatch:
 
@@ -17,40 +17,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Setup SSH
-        run: |
-          echo "🔐 Setting up SSH connection..."
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          
-          # Add VPS to known hosts
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          echo "✅ SSH setup complete"
+      - name: Deploy to Windows VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          command_timeout: 30m
+          script: |
+            echo "🚀 Starting VPS deployment..."
+            cd C:\mt5_bridge_service
+            powershell -ExecutionPolicy Bypass -File auto_update.ps1
+            echo "✅ Deployment complete!"
       
-      - name: Deploy to VPS (PowerShell Remote)
+      - name: Verify Deployment
         run: |
-          echo "🚀 Deploying to VPS: ${{ secrets.VPS_HOST }}"
-          echo "📁 Target: C:\mt5_bridge_service"
-          
-          # Note: This uses PowerShell remoting (requires WinRM enabled on VPS)
-          # Alternative: Use VPS auto-update mechanism that pulls from GitHub every 5 minutes
-          
-          echo "✅ VPS update triggered"
-          echo "📝 VPS will auto-pull latest code on next sync cycle (within 5 minutes)"
-      
-      - name: Verification Instructions
-        run: |
-          echo "=" * 60
-          echo "VPS UPDATE PROCESS:"
-          echo "1. VPS auto-update script runs every 5 minutes"
-          echo "2. Script checks GitHub for new commits"
-          echo "3. If found, pulls latest code and backs up old version"
-          echo "4. Next sync uses updated code automatically"
-          echo ""
-          echo "🔍 To verify update:"
-          echo "- RDP to VPS: ${{ secrets.VPS_HOST }}"
-          echo "- Check: C:\mt5_bridge_service\logs\auto_update.log"
-          echo "- Run: git log -1 (should show this commit)"
-          echo ""
-          echo "✅ Deployment workflow complete"
+          echo "✅ VPS deployment triggered successfully"
+          echo "📊 Check VPS logs for deployment status"
+          echo "🔍 Verify at: C:\mt5_bridge_service\logs\auto_update.log"
