@@ -51,44 +51,28 @@ const TradingAnalyticsDashboard = () => {
   // PHASE 2: Chart data
   const [equityHistory, setEquityHistory] = useState([]);
   const [winLossData, setWinLossData] = useState(null);
+  // PHASE 3: Use unified MT5 data hook (no mock data)
+  const { accounts: mt5AccountsData, loading: mt5Loading } = useMT5Data();
+  
   const [mt5Accounts, setMt5Accounts] = useState([
     { id: 'all', name: 'All Accounts', number: 0 }
   ]);
 
-  // PHASE 1 FIX: Load MT5 accounts dynamically from database
+  // PHASE 3: Load MT5 accounts from unified service
   useEffect(() => {
-    const loadMT5Accounts = async () => {
-      try {
-        const token = localStorage.getItem('fidus_token');
-        const response = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/api/admin/mt5/config/accounts`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.accounts) {
-            const accountOptions = [
-              { id: 'all', name: 'All Accounts', number: 0 },
-              ...data.accounts
-                .filter(acc => acc.is_active)
-                .map(acc => ({
-                  id: acc.account.toString(),
-                  name: `${acc.account} - ${acc.fund_type} (${acc.name})`,
-                  number: acc.account
-                }))
-            ];
-            setMt5Accounts(accountOptions);
-            console.log('✅ Loaded', data.accounts.length, 'MT5 accounts for dropdown');
-          }
-        }
-      } catch (error) {
-        console.error('Error loading MT5 accounts:', error);
-      }
-    };
-    
-    loadMT5Accounts();
-  }, []);
+    if (mt5AccountsData && mt5AccountsData.length > 0) {
+      const accountOptions = [
+        { id: 'all', name: 'All Accounts', number: 0 },
+        ...mt5AccountsData.map(acc => ({
+          id: acc.mt5_login.toString(),
+          name: `${acc.mt5_login} - ${acc.fund_code} (${acc.broker_name})`,
+          number: acc.mt5_login
+        }))
+      ];
+      setMt5Accounts(accountOptions);
+      console.log('✅ [Phase 3] Loaded', mt5AccountsData.length, 'MT5 accounts from unified service');
+    }
+  }, [mt5AccountsData]);
 
   useEffect(() => {
     fetchAnalyticsData();
