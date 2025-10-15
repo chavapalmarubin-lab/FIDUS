@@ -18998,16 +18998,24 @@ async def get_client_mt5_accounts(client_id: str):
 
 @api_router.get("/mt5/admin/accounts")
 async def get_all_mt5_accounts():
-    """Get all MT5 accounts for admin overview - Use real MT5 data"""
+    """Get all MT5 accounts for admin overview - ONLY REAL DATA FROM VPS BRIDGE"""
     try:
         # Get all MT5 accounts with live data directly from MongoDB
         mt5_cursor = db.mt5_accounts.find({})
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
+        if not all_mt5_accounts:
+            raise HTTPException(
+                status_code=404, 
+                detail="No MT5 accounts found. VPS bridge may not be syncing."
+            )
+        
         enriched_accounts = []
         total_allocated = 0
         total_equity = 0
         total_profit_loss = 0
+        now = datetime.now(timezone.utc)
+        stale_threshold = timedelta(minutes=10)
         
         for account in all_mt5_accounts:
             # Remove MongoDB ObjectId to avoid serialization issues
@@ -19021,9 +19029,18 @@ async def get_all_mt5_accounts():
             # Calculate performance percentage
             profit_loss_percentage = (profit / allocated * 100) if allocated > 0 else 0
             
-            # Determine connection status based on data freshness
-            last_update = account.get('updated_at')
-            connection_status = 'active' if last_update else 'disconnected'
+            # Check data freshness (CRITICAL FOR PHASE 2)
+            last_update = account.get('updated_at') or account.get('last_sync')
+            is_fresh = False
+            data_age_minutes = None
+            
+            if last_update:
+                age = now - last_update
+                data_age_minutes = round(age.total_seconds() / 60, 1)
+                is_fresh = age < stale_threshold
+                connection_status = 'active' if is_fresh else 'stale'
+            else:
+                connection_status = 'disconnected'
             
             enriched_account = {
                 # Basic account info
