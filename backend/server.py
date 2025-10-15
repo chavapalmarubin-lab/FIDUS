@@ -8466,7 +8466,17 @@ class EnhancedMetaQuotesService:
 # Initialize enhanced MetaQuotes service
 enhanced_mt5_service = EnhancedMetaQuotesService()
 
-# Mock MT4/MT5 Trading Data Service (keeping existing for compatibility)
+# ============================================================================
+# DEPRECATED: Mock MT4/MT5 Trading Data Service
+# ============================================================================
+# WARNING: This MockMT5Service is DEPRECATED and should NOT be used for:
+# - /api/mt5/admin/accounts (uses real MongoDB data from VPS Bridge)
+# - /api/mt5/sync/health (uses real MongoDB data)
+# - /api/mt5/health/public (uses real MongoDB data)
+#
+# This class is kept ONLY for backward compatibility with legacy endpoints.
+# All new MT5 functionality should use REAL data from MongoDB mt5_accounts collection.
+# ============================================================================
 class MockMT5Service:
     def __init__(self):
         self.accounts = {}
