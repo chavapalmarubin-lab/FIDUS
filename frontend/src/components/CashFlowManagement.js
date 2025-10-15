@@ -45,6 +45,11 @@ const CashFlowManagement = () => {
   const [selectedFund, setSelectedFund] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // PHASE 3: New chart data
+  const [revenueSources, setRevenueSources] = useState(null);
+  const [monthlyTrends, setMonthlyTrends] = useState([]);
+  const [trendTimeRange, setTrendTimeRange] = useState('6months');
   const [showAddRebateModal, setShowAddRebateModal] = useState(false);
   const [newRebate, setNewRebate] = useState({
     fund_code: '',
