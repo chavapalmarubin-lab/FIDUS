@@ -604,44 +604,44 @@ class MT5DealsService:
             
             # Get deals for trading metrics
             deals_cursor = self.db.mt5_deals_history.find({
-                \"account_number\": account_number,
-                \"type\": {\"$in\": [0, 1]},  # Trading deals only
-                \"time\": {\"$gte\": start_date, \"$lte\": end_date}
-            }).sort(\"time\", 1)
+                "account_number": account_number,
+                "type": {"$in": [0, 1]},  # Trading deals only
+                "time": {"$gte": start_date, "$lte": end_date}
+            }).sort("time", 1)
             
             deals = await deals_cursor.to_list(length=None)
             
             # Initialize metrics
             metrics = {
-                \"roi\": 0,
-                \"max_drawdown\": 0,
-                \"max_drawdown_amount\": 0,
-                \"sharpe_ratio\": 0,
-                \"win_rate\": 0,
-                \"profit_factor\": 0,
-                \"avg_win\": 0,
-                \"avg_loss\": 0,
-                \"total_trades\": 0,
-                \"winning_trades\": 0,
-                \"losing_trades\": 0,
-                \"period_days\": days,
-                \"starting_equity\": 0,
-                \"ending_equity\": 0
+                "roi": 0,
+                "max_drawdown": 0,
+                "max_drawdown_amount": 0,
+                "sharpe_ratio": 0,
+                "win_rate": 0,
+                "profit_factor": 0,
+                "avg_win": 0,
+                "avg_loss": 0,
+                "total_trades": 0,
+                "winning_trades": 0,
+                "losing_trades": 0,
+                "period_days": days,
+                "starting_equity": 0,
+                "ending_equity": 0
             }
             
             # Calculate equity-based metrics
             if equity_snapshots and len(equity_snapshots) > 0:
-                equities = [s[\"equity\"] for s in equity_snapshots]
+                equities = [s["equity"] for s in equity_snapshots]
                 starting_equity = equities[0]
                 ending_equity = equities[-1]
                 
-                metrics[\"starting_equity\"] = round(starting_equity, 2)
-                metrics[\"ending_equity\"] = round(ending_equity, 2)
+                metrics["starting_equity"] = round(starting_equity, 2)
+                metrics["ending_equity"] = round(ending_equity, 2)
                 
                 # ROI
                 if starting_equity > 0:
                     roi = ((ending_equity - starting_equity) / starting_equity) * 100
-                    metrics[\"roi\"] = round(roi, 2)
+                    metrics["roi"] = round(roi, 2)
                 
                 # Max Drawdown
                 peak_equity = equities[0]
@@ -657,8 +657,8 @@ class MT5DealsService:
                         max_drawdown = drawdown
                         max_drawdown_pct = (drawdown / peak_equity * 100) if peak_equity > 0 else 0
                 
-                metrics[\"max_drawdown\"] = round(max_drawdown_pct, 2)
-                metrics[\"max_drawdown_amount\"] = round(max_drawdown, 2)
+                metrics["max_drawdown"] = round(max_drawdown_pct, 2)
+                metrics["max_drawdown_amount"] = round(max_drawdown, 2)
                 
                 # Sharpe Ratio (simplified: assumes risk-free rate = 0)
                 if len(equities) > 1:
@@ -677,43 +677,43 @@ class MT5DealsService:
                         # Sharpe ratio (annualized)
                         if std_dev > 0:
                             sharpe = (avg_return / std_dev) * (252 ** 0.5)  # Annualized
-                            metrics[\"sharpe_ratio\"] = round(sharpe, 2)
+                            metrics["sharpe_ratio"] = round(sharpe, 2)
             
             # Calculate trading metrics
             if deals:
                 total_trades = len(deals)
-                winning_trades = [d for d in deals if d[\"profit\"] > 0]
-                losing_trades = [d for d in deals if d[\"profit\"] < 0]
+                winning_trades = [d for d in deals if d["profit"] > 0]
+                losing_trades = [d for d in deals if d["profit"] < 0]
                 
-                metrics[\"total_trades\"] = total_trades
-                metrics[\"winning_trades\"] = len(winning_trades)
-                metrics[\"losing_trades\"] = len(losing_trades)
+                metrics["total_trades"] = total_trades
+                metrics["winning_trades"] = len(winning_trades)
+                metrics["losing_trades"] = len(losing_trades)
                 
                 # Win Rate
                 if total_trades > 0:
                     win_rate = (len(winning_trades) / total_trades) * 100
-                    metrics[\"win_rate\"] = round(win_rate, 2)
+                    metrics["win_rate"] = round(win_rate, 2)
                 
                 # Average Win/Loss
                 if winning_trades:
-                    avg_win = sum(d[\"profit\"] for d in winning_trades) / len(winning_trades)
-                    metrics[\"avg_win\"] = round(avg_win, 2)
+                    avg_win = sum(d["profit"] for d in winning_trades) / len(winning_trades)
+                    metrics["avg_win"] = round(avg_win, 2)
                 
                 if losing_trades:
-                    avg_loss = sum(d[\"profit\"] for d in losing_trades) / len(losing_trades)
-                    metrics[\"avg_loss\"] = round(avg_loss, 2)
+                    avg_loss = sum(d["profit"] for d in losing_trades) / len(losing_trades)
+                    metrics["avg_loss"] = round(avg_loss, 2)
                 
                 # Profit Factor
-                gross_profit = sum(d[\"profit\"] for d in winning_trades)
-                gross_loss = abs(sum(d[\"profit\"] for d in losing_trades))
+                gross_profit = sum(d["profit"] for d in winning_trades)
+                gross_loss = abs(sum(d["profit"] for d in losing_trades))
                 
                 if gross_loss > 0:
                     profit_factor = gross_profit / gross_loss
-                    metrics[\"profit_factor\"] = round(profit_factor, 2)
+                    metrics["profit_factor"] = round(profit_factor, 2)
             
-            logger.info(f\"Calculated growth metrics for account {account_number}: ROI={metrics['roi']}%, Sharpe={metrics['sharpe_ratio']}\")
+            logger.info(f"Calculated growth metrics for account {account_number}: ROI={metrics['roi']}%, Sharpe={metrics['sharpe_ratio']}")
             return metrics
             
         except Exception as e:
-            logger.error(f\"Error calculating growth metrics: {e}\")
+            logger.error(f"Error calculating growth metrics: {e}")
             raise
