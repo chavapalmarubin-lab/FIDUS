@@ -393,7 +393,7 @@ class DataRestorationVerification:
                     data = response.json()
                     
                     # Check if investments are returned
-                    investments = data.get('investments', data.get('client_investments', []))
+                    investments = data.get('all_investments', data.get('investments', data.get('client_investments', [])))
                     if not investments and 'clients' in data:
                         # Check if data is structured differently
                         clients = data['clients']
@@ -404,8 +404,12 @@ class DataRestorationVerification:
                                     investments = client_investments
                                     break
                     
-                    if not investments:
-                        continue  # Try next endpoint
+                    # If no investments found, check if endpoint is working but just empty
+                    if not investments and data.get('success'):
+                        # Endpoint is working but no investments found
+                        self.log_test("Investments Admin Overview Working", True, "Endpoint accessible but no investments found")
+                        self.log_test("Alejandro's Investments Found", False, "No investments found for any client (data may not be restored)")
+                        return False
                     
                     # Look for Alejandro's investments
                     alejandro_investments = []
