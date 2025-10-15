@@ -28,7 +28,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use production URL from frontend/.env
-BACKEND_URL = "https://realtime-trader-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge.preview.emergentagent.com/api"
 
 class LeadRegistration401Test:
     def __init__(self):

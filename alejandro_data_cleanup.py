@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL
-BACKEND_URL = "https://realtime-trader-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge.preview.emergentagent.com/api"
 
 class AlejandroDataCleanup:
     def __init__(self):

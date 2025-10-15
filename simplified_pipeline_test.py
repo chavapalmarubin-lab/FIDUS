@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://realtime-trader-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge.preview.emergentagent.com/api"
 
 class SimplifiedPipelineTest:
     def __init__(self):

@@ -53,7 +53,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://realtime-trader-4.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-mt5-bridge.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

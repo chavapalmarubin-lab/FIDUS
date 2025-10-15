@@ -92,7 +92,7 @@ Instead of spending more time debugging the complex component key conflicts, I i
 ## Production Readiness Status
 
 ### **Immediately Available for Demo**
-- **URL**: `https://realtime-trader-4.preview.emergentagent.com`
+- **URL**: `https://fidus-mt5-bridge.preview.emergentagent.com`
 - **Login Types**: Both Admin and Client working
 - **Authentication**: Secure MongoDB integration
 - **Session Management**: Persistent login state
