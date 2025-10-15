@@ -113,61 +113,69 @@ class DataRestorationVerification:
             self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_mt5_dashboard_endpoint(self):
-        """Test 1: Check MT5 Dashboard Endpoint - GET /api/mt5/dashboard/overview"""
+    def test_mt5_admin_accounts_endpoint(self):
+        """Priority 1: Test MT5 Admin Accounts Endpoint - GET /api/mt5/admin/accounts"""
         try:
-            url = f"{BACKEND_URL}/api/mt5/dashboard/overview"
+            url = f"{BACKEND_URL}/api/mt5/admin/accounts"
             response = self.session.get(url)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check response structure
-                if 'dashboard' not in data:
-                    self.log_test("MT5 Dashboard Structure", False, "Missing 'dashboard' key in response")
+                # Check if accounts are returned
+                accounts = data.get('accounts', [])
+                if not accounts:
+                    self.log_test("MT5 Admin Accounts", False, "No accounts returned in response")
                     return False
                 
-                dashboard = data['dashboard']
-                required_fields = ['total_equity', 'total_profit', 'total_accounts', 'data_quality']
-                missing_fields = [field for field in required_fields if field not in dashboard]
+                # Expected 7 accounts: 886557, 886066, 886602, 885822, 886528, 891215, 891234
+                expected_accounts = ['886557', '886066', '886602', '885822', '886528', '891215', '891234']
+                found_accounts = []
                 
-                if missing_fields:
-                    self.log_test("MT5 Dashboard Structure", False, f"Missing fields: {missing_fields}")
-                    return False
+                total_equity = 0
+                total_pnl = 0
                 
-                # Extract values
-                total_equity = dashboard.get('total_equity', 0)
-                total_profit = dashboard.get('total_profit', 0)
-                total_accounts = dashboard.get('total_accounts', 0)
-                data_quality = dashboard.get('data_quality', {})
+                for account in accounts:
+                    account_num = str(account.get('account', ''))
+                    if account_num in expected_accounts:
+                        found_accounts.append(account_num)
+                        
+                        # Check required fields
+                        name = account.get('name', 'Unknown')
+                        fund_type = account.get('fund_type', 'Unknown')
+                        equity = account.get('equity', 0)
+                        profit = account.get('profit', 0)
+                        
+                        # Sum totals
+                        if isinstance(equity, (int, float)):
+                            total_equity += equity
+                        if isinstance(profit, (int, float)):
+                            total_pnl += profit
+                        
+                        # Verify non-null values
+                        if name == 'Unknown' or fund_type == 'Unknown':
+                            self.log_test(f"Account {account_num} Data Quality", False, f"Name: {name}, Fund Type: {fund_type}")
+                        else:
+                            self.log_test(f"Account {account_num} Data Quality", True, f"Name: {name}, Fund Type: {fund_type}, Equity: ${equity:,.2f}, P&L: ${profit:,.2f}")
                 
-                # Expected values from review request
-                expected_equity_min = 100000  # Should be ~$121,000+
-                expected_profit_min = 300  # Should be around $3,551 but let's be flexible
-                expected_accounts = 4  # Should be 4+ active accounts
+                # Check if all expected accounts found
+                missing_accounts = [acc for acc in expected_accounts if acc not in found_accounts]
                 
-                # Log current values
-                live_accounts = data_quality.get('live_accounts', 0) if isinstance(data_quality, dict) else 0
-                details = f"Total Equity: ${total_equity:,.2f}, Total P&L: ${total_profit:,.2f}, Total Accounts: {total_accounts}, Live Accounts: {live_accounts}"
+                details = f"Found {len(found_accounts)}/7 accounts: {found_accounts}, Missing: {missing_accounts}, Total Equity: ${total_equity:,.2f}, Total P&L: ${total_pnl:,.2f}"
                 
-                # Check if values are reasonable (not $0)
-                if total_equity >= expected_equity_min and total_profit >= expected_profit_min:
-                    self.log_test("MT5 Dashboard Values", True, f"✅ VALUES CORRECT: {details}")
+                if len(found_accounts) == 7 and not missing_accounts:
+                    self.log_test("MT5 Admin Accounts Complete", True, f"All 7 accounts found with data: {details}")
                     return True
-                elif total_equity == 0 and total_profit == 0:
-                    self.log_test("MT5 Dashboard Values", False, f"❌ CONFIRMED ISSUE: {details} - All values are $0!")
-                    return False
                 else:
-                    # Values are not $0 but may be different than expected
-                    self.log_test("MT5 Dashboard Values", True, f"⚠️ VALUES PRESENT (not $0): {details}")
-                    return True
+                    self.log_test("MT5 Admin Accounts Complete", False, f"Missing accounts: {details}")
+                    return False
                 
             else:
-                self.log_test("MT5 Dashboard Endpoint", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Admin Accounts Endpoint", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("MT5 Dashboard Endpoint", False, f"Exception: {str(e)}")
+            self.log_test("MT5 Admin Accounts Endpoint", False, f"Exception: {str(e)}")
             return False
     
     def investigate_mt5_data_sources(self):
