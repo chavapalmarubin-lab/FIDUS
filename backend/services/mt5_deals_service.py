@@ -564,3 +564,155 @@ class MT5DealsService:
         except Exception as e:
             logger.error(f"Error calculating daily P&L: {e}")
             raise
+    
+    async def calculate_account_growth_metrics(
+        self,
+        account_number: int,
+        days: int = 30
+    ) -> Dict:
+        """
+        Calculate comprehensive growth metrics for an account
+        
+        Returns:
+            {
+                "roi": 12.5,  # Return on investment %
+                "max_drawdown": -5.2,  # Maximum drawdown %
+                "max_drawdown_amount": -1250.50,
+                "sharpe_ratio": 1.85,  # Risk-adjusted return
+                "win_rate": 65.5,  # Win rate %
+                "profit_factor": 2.15,  # Gross profit / Gross loss
+                "avg_win": 250.50,
+                "avg_loss": -150.25,
+                "total_trades": 145,
+                "winning_trades": 95,
+                "losing_trades": 50,
+                "period_days\": 30
+            }
+        """
+        try:\n            # Calculate date range
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=days)
+            
+            # Get equity snapshots for drawdown and ROI calculation
+            equity_cursor = self.db.mt5_equity_snapshots.find({
+                \"account_number\": account_number,
+                \"timestamp\": {\"$gte\": start_date, \"$lte\": end_date}
+            }).sort(\"timestamp\", 1)
+            
+            equity_snapshots = await equity_cursor.to_list(length=None)
+            
+            # Get deals for trading metrics
+            deals_cursor = self.db.mt5_deals_history.find({
+                \"account_number\": account_number,
+                \"type\": {\"$in\": [0, 1]},  # Trading deals only
+                \"time\": {\"$gte\": start_date, \"$lte\": end_date}
+            }).sort(\"time\", 1)
+            
+            deals = await deals_cursor.to_list(length=None)
+            
+            # Initialize metrics
+            metrics = {
+                \"roi\": 0,
+                \"max_drawdown\": 0,
+                \"max_drawdown_amount\": 0,
+                \"sharpe_ratio\": 0,
+                \"win_rate\": 0,
+                \"profit_factor\": 0,
+                \"avg_win\": 0,
+                \"avg_loss\": 0,
+                \"total_trades\": 0,
+                \"winning_trades\": 0,
+                \"losing_trades\": 0,
+                \"period_days\": days,
+                \"starting_equity\": 0,
+                \"ending_equity\": 0
+            }
+            
+            # Calculate equity-based metrics
+            if equity_snapshots and len(equity_snapshots) > 0:
+                equities = [s[\"equity\"] for s in equity_snapshots]
+                starting_equity = equities[0]
+                ending_equity = equities[-1]
+                
+                metrics[\"starting_equity\"] = round(starting_equity, 2)
+                metrics[\"ending_equity\"] = round(ending_equity, 2)
+                
+                # ROI
+                if starting_equity > 0:
+                    roi = ((ending_equity - starting_equity) / starting_equity) * 100
+                    metrics[\"roi\"] = round(roi, 2)
+                
+                # Max Drawdown
+                peak_equity = equities[0]
+                max_drawdown = 0
+                max_drawdown_pct = 0
+                
+                for equity in equities:
+                    if equity > peak_equity:
+                        peak_equity = equity
+                    
+                    drawdown = equity - peak_equity
+                    if drawdown < max_drawdown:
+                        max_drawdown = drawdown
+                        max_drawdown_pct = (drawdown / peak_equity * 100) if peak_equity > 0 else 0
+                
+                metrics[\"max_drawdown\"] = round(max_drawdown_pct, 2)
+                metrics[\"max_drawdown_amount\"] = round(max_drawdown, 2)
+                
+                # Sharpe Ratio (simplified: assumes risk-free rate = 0)
+                if len(equities) > 1:
+                    daily_returns = []
+                    for i in range(1, len(equities)):
+                        daily_return = (equities[i] - equities[i-1]) / equities[i-1]
+                        daily_returns.append(daily_return)
+                    
+                    if daily_returns:
+                        avg_return = sum(daily_returns) / len(daily_returns)
+                        
+                        # Calculate standard deviation
+                        variance = sum((r - avg_return) ** 2 for r in daily_returns) / len(daily_returns)
+                        std_dev = variance ** 0.5
+                        
+                        # Sharpe ratio (annualized)
+                        if std_dev > 0:
+                            sharpe = (avg_return / std_dev) * (252 ** 0.5)  # Annualized
+                            metrics[\"sharpe_ratio\"] = round(sharpe, 2)
+            
+            # Calculate trading metrics
+            if deals:
+                total_trades = len(deals)
+                winning_trades = [d for d in deals if d[\"profit\"] > 0]
+                losing_trades = [d for d in deals if d[\"profit\"] < 0]
+                
+                metrics[\"total_trades\"] = total_trades
+                metrics[\"winning_trades\"] = len(winning_trades)
+                metrics[\"losing_trades\"] = len(losing_trades)
+                
+                # Win Rate
+                if total_trades > 0:
+                    win_rate = (len(winning_trades) / total_trades) * 100
+                    metrics[\"win_rate\"] = round(win_rate, 2)
+                
+                # Average Win/Loss
+                if winning_trades:
+                    avg_win = sum(d[\"profit\"] for d in winning_trades) / len(winning_trades)
+                    metrics[\"avg_win\"] = round(avg_win, 2)
+                
+                if losing_trades:
+                    avg_loss = sum(d[\"profit\"] for d in losing_trades) / len(losing_trades)
+                    metrics[\"avg_loss\"] = round(avg_loss, 2)
+                
+                # Profit Factor
+                gross_profit = sum(d[\"profit\"] for d in winning_trades)
+                gross_loss = abs(sum(d[\"profit\"] for d in losing_trades))
+                
+                if gross_loss > 0:
+                    profit_factor = gross_profit / gross_loss
+                    metrics[\"profit_factor\"] = round(profit_factor, 2)
+            
+            logger.info(f\"Calculated growth metrics for account {account_number}: ROI={metrics['roi']}%, Sharpe={metrics['sharpe_ratio']}\")
+            return metrics
+            
+        except Exception as e:
+            logger.error(f\"Error calculating growth metrics: {e}\")
+            raise
