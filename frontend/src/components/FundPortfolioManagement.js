@@ -20,7 +20,7 @@ import {
   ChevronUp,
   ChevronDown
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import apiAxios from "../utils/apiAxios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
