@@ -45,7 +45,7 @@ ADMIN_PASSWORD = "password123"
 # MongoDB connection
 MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 
-class MT5DashboardInvestigation:
+class DataRestorationVerification:
     def __init__(self):
         self.session = requests.Session()
         self.token = None
