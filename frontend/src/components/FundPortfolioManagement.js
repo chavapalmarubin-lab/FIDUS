@@ -359,6 +359,113 @@ const FundPortfolioManagement = () => {
         </Card>
       </div>
 
+      {/* PHASE 2: Portfolio Allocation Pie Chart */}
+      <Card className="dashboard-card mb-8">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <PieChart className="mr-2 h-5 w-5 text-cyan-400" />
+            Portfolio Allocation by Fund Type
+          </CardTitle>
+          <p className="text-slate-400 text-sm">Asset distribution across fund types</p>
+        </CardHeader>
+        <CardContent>
+          {Object.keys(fundData || {}).length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Pie Chart */}
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsPieChart>
+                    <defs>
+                      {Object.entries(FUND_COLORS).map(([fundCode, color]) => (
+                        <linearGradient key={fundCode} id={`gradient-${fundCode}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                          <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      data={Object.entries(fundData || {}).map(([fundCode, fund]) => ({
+                        name: `${fundCode} Fund`,
+                        value: fund.current_aum || 0,
+                        fundCode: fundCode
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {Object.entries(fundData || {}).map(([fundCode], index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={FUND_COLORS[fundCode] || '#64748b'}
+                          stroke="#1e293b"
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1e293b', 
+                        border: '1px solid #334155',
+                        borderRadius: '6px',
+                        color: '#fff'
+                      }}
+                      formatter={(value) => [`$${value.toLocaleString()}`, 'AUM']}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Fund Details List */}
+              <div className="space-y-4">
+                <div className="text-center lg:text-left mb-4">
+                  <div className="text-3xl font-bold text-white">
+                    {formatCurrency(portfolioStats.aum)}
+                  </div>
+                  <div className="text-sm text-slate-400">Total Assets Under Management</div>
+                </div>
+
+                {Object.entries(fundData || {}).map(([fundCode, fund]) => {
+                  const percentage = portfolioStats.aum > 0 
+                    ? ((fund.current_aum / portfolioStats.aum) * 100).toFixed(1)
+                    : 0;
+                  
+                  return (
+                    <div key={fundCode} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                      <div className="flex items-center">
+                        <div 
+                          className="w-4 h-4 rounded-full mr-3"
+                          style={{ backgroundColor: FUND_COLORS[fundCode] }}
+                        ></div>
+                        <div>
+                          <div className="text-sm font-medium text-white">{fundCode} Fund</div>
+                          <div className="text-xs text-slate-400">{fund.fund_type}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-white">
+                          {formatCurrency(fund.current_aum)}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {percentage}% of portfolio
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-slate-400">
+              No fund data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Individual Fund Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {Object.entries(fundData || {}).map(([fundCode, fund]) => (
