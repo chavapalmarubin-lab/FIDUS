@@ -523,41 +523,41 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full bg-slate-800">
-            <TabsTrigger value="portfolio">
+          <TabsList className="flex overflow-x-auto whitespace-nowrap bg-slate-800 pb-2 gap-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+            <TabsTrigger value="portfolio" className="flex-shrink-0">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="cashflow">
+            <TabsTrigger value="cashflow" className="flex-shrink-0">
               <DollarSign size={16} className="mr-2" />
               Cash Flow & Performance
             </TabsTrigger>
-            <TabsTrigger value="trading-analytics">
+            <TabsTrigger value="trading-analytics" className="flex-shrink-0">
               <TrendingUp size={16} className="mr-2" />
               Trading Analytics
             </TabsTrigger>
-            <TabsTrigger value="money-managers">
+            <TabsTrigger value="money-managers" className="flex-shrink-0">
               💼 Money Managers
             </TabsTrigger>
-            <TabsTrigger value="broker-rebates">
+            <TabsTrigger value="broker-rebates" className="flex-shrink-0">
               💰 Broker Rebates
             </TabsTrigger>
 
-            <TabsTrigger value="investments">
+            <TabsTrigger value="investments" className="flex-shrink-0">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5-accounts">
+            <TabsTrigger value="mt5-accounts" className="flex-shrink-0">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="clients">
+            <TabsTrigger value="clients" className="flex-shrink-0">
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
-            <TabsTrigger value="users">
+            <TabsTrigger value="users" className="flex-shrink-0">
               <Users size={16} className="mr-2" />
               User Admin
             </TabsTrigger>
-            <TabsTrigger value="crm">
+            <TabsTrigger value="crm" className="flex-shrink-0">
               CRM Dashboard
             </TabsTrigger>
             <TabsTrigger value="redemptions">
