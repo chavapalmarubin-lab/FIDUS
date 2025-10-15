@@ -586,18 +586,19 @@ class MT5DealsService:
                 "total_trades": 145,
                 "winning_trades": 95,
                 "losing_trades": 50,
-                "period_days\": 30
+                "period_days": 30
             }
         """
-        try:\n            # Calculate date range
+        try:
+            # Calculate date range
             end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(days=days)
             
             # Get equity snapshots for drawdown and ROI calculation
             equity_cursor = self.db.mt5_equity_snapshots.find({
-                \"account_number\": account_number,
-                \"timestamp\": {\"$gte\": start_date, \"$lte\": end_date}
-            }).sort(\"timestamp\", 1)
+                "account_number": account_number,
+                "timestamp": {"$gte": start_date, "$lte": end_date}
+            }).sort("timestamp", 1)
             
             equity_snapshots = await equity_cursor.to_list(length=None)
             
