@@ -163,38 +163,11 @@ const TradingAnalyticsDashboard = () => {
         console.error("Failed to fetch trading analytics:", apiError.message);
         
         // PHASE 3: No mock data fallback - show error to user
-        const mockAnalyticsData = {
-          overview: {
-            total_pnl: 2909.31,
-            total_trades: 23,
-            winning_trades: 12,
-            losing_trades: 11,
-            breakeven_trades: 0,
-            win_rate: 52.17,
-            profit_factor: 1.89,
-            largest_win: 1234.56,
-            largest_loss: -856.78,
-            avg_win: 445.23,
-            avg_loss: -298.45,
-            gross_profit: 5342.76,
-            gross_loss: -2433.45,
-            avg_trade: 126.49,
-            max_drawdown: -1456.78,
-            recovery_factor: 2.0,
-            sharpe_ratio: 1.45
-          },
-          period_start: '2025-09-09',
-          period_end: '2025-10-09',
-          last_sync: '2025-10-09T23:05:00Z'
-        };
-
-        const mockDailyData = generateMockDailyData();
-        const mockTradesData = generateMockTradesData();
-
-        setAnalyticsData(mockAnalyticsData);
-        setDailyPerformance(mockDailyData);
-        setRecentTrades(mockTradesData);
-        setLastUpdated(new Date(mockAnalyticsData.last_sync));
+        // PHASE 3: No mock data - set error state
+        setError("Trading analytics data not available. Please ensure backend is configured.");
+        setAnalyticsData(null);
+        setDailyPerformance([]);
+        setRecentTrades([]);
       }
       
       // PHASE 2: Fetch Equity History for chart
