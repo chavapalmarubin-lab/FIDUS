@@ -738,6 +738,212 @@ const MoneyManagersDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* PHASE 4A: MT5 Manager Performance - Real Deal Data */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center justify-between">
+            <div className="flex items-center">
+              <Activity className="mr-2 h-5 w-5 text-cyan-400" />
+              MT5 Manager Performance (Real Deal Data)
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={mt5Period}
+                onChange={(e) => setMt5Period(e.target.value)}
+                className="px-3 py-1 bg-slate-700 border border-slate-600 text-white text-sm rounded-md"
+              >
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
+              <Button
+                onClick={fetchMT5Performance}
+                variant="outline"
+                size="sm"
+                disabled={mt5Loading}
+                className="text-cyan-400 border-cyan-400 hover:bg-cyan-400 hover:text-white"
+              >
+                {mt5Loading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {mt5Loading ? (
+            <div className="text-center py-8 text-slate-400">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+              Loading MT5 performance data...
+            </div>
+          ) : mt5Performance.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
+              <p>No MT5 performance data available for the selected period.</p>
+              <p className="text-sm mt-2">Deal history collection may not be active yet.</p>
+            </div>
+          ) : (
+            <>
+              {/* Performance Table */}
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-700">
+                      <th className="text-left text-slate-400 font-semibold py-3 px-2">Manager/Strategy</th>
+                      <th className="text-center text-slate-400 font-semibold py-3 px-2">Magic #</th>
+                      <th className="text-right text-slate-400 font-semibold py-3 px-2">Total P&L</th>
+                      <th className="text-right text-slate-400 font-semibold py-3 px-2">Volume (Lots)</th>
+                      <th className="text-center text-slate-400 font-semibold py-3 px-2">Total Deals</th>
+                      <th className="text-center text-slate-400 font-semibold py-3 px-2">Win Rate</th>
+                      <th className="text-right text-slate-400 font-semibold py-3 px-2">Avg P&L/Deal</th>
+                      <th className="text-center text-slate-400 font-semibold py-3 px-2">Accounts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mt5Performance.map((manager, index) => (
+                      <tr 
+                        key={manager.magic || index}
+                        className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors"
+                      >
+                        <td className="py-3 px-2">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm mr-3">
+                              {manager.manager_name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-white font-semibold">
+                                {manager.manager_name}
+                              </div>
+                              <div className="text-slate-400 text-xs">
+                                {manager.win_deals} wins / {manager.loss_deals} losses
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <Badge className="bg-purple-600 text-white">
+                            {manager.magic}
+                          </Badge>
+                        </td>
+                        <td className={`py-3 px-2 text-right font-bold ${
+                          manager.total_profit >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatCurrency(manager.total_profit)}
+                        </td>
+                        <td className="py-3 px-2 text-right text-white font-semibold">
+                          {manager.total_volume.toFixed(2)}
+                        </td>
+                        <td className="py-3 px-2 text-center text-white">
+                          {manager.total_deals}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <Badge className={`${
+                            manager.win_rate >= 60 ? 'bg-green-600' :
+                            manager.win_rate >= 50 ? 'bg-yellow-600' :
+                            'bg-red-600'
+                          } text-white`}>
+                            {manager.win_rate}%
+                          </Badge>
+                        </td>
+                        <td className={`py-3 px-2 text-right font-semibold ${
+                          manager.avg_profit_per_deal >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatCurrency(manager.avg_profit_per_deal)}
+                        </td>
+                        <td className="py-3 px-2 text-center text-slate-300 text-sm">
+                          {manager.accounts_used.length} account{manager.accounts_used.length > 1 ? 's' : ''}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Performance Bar Chart */}
+              <div className="bg-slate-800/30 rounded-lg p-4">
+                <h4 className="text-white font-medium mb-4">P&L by Manager</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={mt5Performance}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis 
+                      dataKey="manager_name" 
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8', fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8' }}
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1e293b', 
+                        border: '1px solid #334155',
+                        borderRadius: '8px',
+                        color: '#fff'
+                      }}
+                      formatter={(value) => [formatCurrency(value), 'Total P&L']}
+                    />
+                    <Bar dataKey="total_profit" radius={[8, 8, 0, 0]}>
+                      {mt5Performance.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.total_profit >= 0 ? '#10b981' : '#ef4444'} 
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Summary Stats */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="text-slate-400 text-sm">Total Managers</div>
+                  <div className="text-white text-2xl font-bold">{mt5Performance.length}</div>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="text-slate-400 text-sm">Total P&L</div>
+                  <div className={`text-2xl font-bold ${
+                    mt5Performance.reduce((sum, m) => sum + m.total_profit, 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {formatCurrency(mt5Performance.reduce((sum, m) => sum + m.total_profit, 0))}
+                  </div>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="text-slate-400 text-sm">Total Volume</div>
+                  <div className="text-cyan-400 text-2xl font-bold">
+                    {mt5Performance.reduce((sum, m) => sum + m.total_volume, 0).toFixed(2)} lots
+                  </div>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="text-slate-400 text-sm">Total Deals</div>
+                  <div className="text-white text-2xl font-bold">
+                    {mt5Performance.reduce((sum, m) => sum + m.total_deals, 0)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Source Info */}
+              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <div className="flex items-start">
+                  <Activity className="h-5 w-5 text-blue-400 mr-2 mt-0.5" />
+                  <div className="text-sm">
+                    <div className="text-blue-300 font-semibold">Real-time MT5 Deal Data</div>
+                    <div className="text-slate-300 mt-1">
+                      Performance metrics calculated from actual MT5 deal history. 
+                      Magic numbers identify trading strategies/providers. Updated every 5 minutes via VPS bridge.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
     </div>
   );
 };
