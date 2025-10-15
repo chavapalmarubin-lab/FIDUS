@@ -1684,6 +1684,158 @@ const CashFlowManagement = () => {
         </CardContent>
       </Card>
 
+
+      {/* PHASE 4A: MT5 Deal History - Balance Operations */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center justify-between">
+            <div className="flex items-center">
+              <DollarSign className="mr-2 h-5 w-5 text-cyan-400" />
+              MT5 Balance Operations (Last 30 Days)
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedDealAccount}
+                onChange={(e) => setSelectedDealAccount(e.target.value)}
+                className="px-3 py-1 bg-slate-700 border border-slate-600 text-white text-sm rounded-md"
+              >
+                <option value="all">All Accounts</option>
+                <option value="886557">886557 - Main Balance</option>
+                <option value="886066">886066 - Secondary Balance</option>
+                <option value="886602">886602 - Tertiary Balance</option>
+                <option value="885822">885822 - Core</option>
+                <option value="886528">886528 - Separation</option>
+                <option value="891215">891215 - Interest Trading</option>
+                <option value="891234">891234 - CORE Fund</option>
+              </select>
+              <Button
+                onClick={fetchDealHistory}
+                variant="outline"
+                size="sm"
+                disabled={dealHistoryLoading}
+                className="text-cyan-400 border-cyan-400 hover:bg-cyan-400 hover:text-white"
+              >
+                {dealHistoryLoading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {dealHistoryLoading ? (
+            <div className="text-center py-8 text-slate-400">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+              Loading deal history...
+            </div>
+          ) : dealHistory.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              No balance operations found for the selected period.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left text-slate-400 font-semibold py-3 px-2">Date/Time</th>
+                    <th className="text-left text-slate-400 font-semibold py-3 px-2">Account</th>
+                    <th className="text-left text-slate-400 font-semibold py-3 px-2">Type</th>
+                    <th className="text-right text-slate-400 font-semibold py-3 px-2">Amount</th>
+                    <th className="text-left text-slate-400 font-semibold py-3 px-2">Comment</th>
+                    <th className="text-center text-slate-400 font-semibold py-3 px-2">Ticket</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dealHistory.slice(0, 20).map((deal, index) => (
+                    <tr 
+                      key={deal.ticket || index} 
+                      className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="py-3 px-2">
+                        <div className="text-white text-sm">
+                          {new Date(deal.time).toLocaleDateString()}
+                        </div>
+                        <div className="text-slate-400 text-xs">
+                          {new Date(deal.time).toLocaleTimeString()}
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="text-white text-sm font-semibold">
+                          {deal.account_number}
+                        </div>
+                        <div className="text-slate-400 text-xs">
+                          {deal.account_name}
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <Badge 
+                          className={`
+                            ${deal.classification.color === 'green' ? 'bg-green-600' : ''}
+                            ${deal.classification.color === 'red' ? 'bg-red-600' : ''}
+                            ${deal.classification.color === 'blue' ? 'bg-blue-600' : ''}
+                            ${deal.classification.color === 'orange' ? 'bg-orange-600' : ''}
+                            ${deal.classification.color === 'purple' ? 'bg-purple-600' : ''}
+                            ${deal.classification.color === 'gray' ? 'bg-gray-600' : ''}
+                            text-white text-xs
+                          `}
+                        >
+                          {deal.classification.icon} {deal.classification.displayName}
+                        </Badge>
+                      </td>
+                      <td className={`py-3 px-2 text-right font-semibold ${
+                        deal.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formatCurrency(deal.profit)}
+                      </td>
+                      <td className="py-3 px-2 text-slate-300 text-sm">
+                        {deal.comment || '-'}
+                      </td>
+                      <td className="py-3 px-2 text-center text-slate-400 text-xs font-mono">
+                        #{deal.ticket}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {dealHistory.length > 20 && (
+                <div className="mt-4 text-center text-slate-400 text-sm">
+                  Showing 20 of {dealHistory.length} balance operations
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Summary Stats */}
+          {!dealHistoryLoading && dealHistory.length > 0 && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-slate-800/50 rounded-lg p-4">
+                <div className="text-slate-400 text-sm">Total Operations</div>
+                <div className="text-white text-2xl font-bold">{dealHistory.length}</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-4">
+                <div className="text-slate-400 text-sm">Total Credits</div>
+                <div className="text-green-400 text-2xl font-bold">
+                  {formatCurrency(dealHistory.filter(d => d.profit > 0).reduce((sum, d) => sum + d.profit, 0))}
+                </div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-4">
+                <div className="text-slate-400 text-sm">Total Debits</div>
+                <div className="text-red-400 text-2xl font-bold">
+                  {formatCurrency(Math.abs(dealHistory.filter(d => d.profit < 0).reduce((sum, d) => sum + d.profit, 0)))}
+                </div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-4">
+                <div className="text-slate-400 text-sm">Net Impact</div>
+                <div className={`text-2xl font-bold ${
+                  dealHistory.reduce((sum, d) => sum + d.profit, 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {formatCurrency(dealHistory.reduce((sum, d) => sum + d.profit, 0))}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Status Information */}
       <Card className="dashboard-card">
         <CardHeader>
