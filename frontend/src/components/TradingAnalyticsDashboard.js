@@ -20,6 +20,7 @@ import {
 import apiAxios from "../utils/apiAxios";
 import { useMT5Data } from "../hooks/useMT5Data";
 import MT5HealthIndicator from "./MT5HealthIndicator";
+import mt5Service from "../services/mt5Service"; // PHASE 4A
 import {
   LineChart,
   Line,
