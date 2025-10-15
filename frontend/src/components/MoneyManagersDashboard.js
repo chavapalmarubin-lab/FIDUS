@@ -66,8 +66,9 @@ const MoneyManagersDashboard = () => {
             throw new Error("Failed to initialize managers");
           }
         } catch (initError) {
-          console.warn("API not available, using mock data for development");
-          setManagers(getMockManagers());
+          console.warn("API returned no manager data");
+          setManagers([]);
+          setError("No money manager data available");
         }
       }
 
