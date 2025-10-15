@@ -178,94 +178,82 @@ class DataRestorationVerification:
             self.log_test("MT5 Admin Accounts Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def investigate_mt5_data_sources(self):
-        """Test 2: Check MT5 Accounts Data Sources"""
-        if self.db is None:
-            self.log_test("MT5 Data Sources Investigation", False, "MongoDB connection not available")
-            return False
-        
+    def test_fund_portfolio_overview_endpoint(self):
+        """Priority 1: Test Fund Portfolio Overview Endpoint - GET /api/fund-portfolio/overview"""
         try:
-            collections_to_check = [
-                'mt5_accounts',
-                'mt5_accounts_corrected', 
-                'mt5_accounts_cache'
-            ]
+            url = f"{BACKEND_URL}/api/fund-portfolio/overview"
+            response = self.session.get(url)
             
-            collection_data = {}
-            
-            for collection_name in collections_to_check:
-                try:
-                    collection = self.db[collection_name]
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if funds are returned
+                funds = data.get('funds', [])
+                if not funds:
+                    self.log_test("Fund Portfolio Overview", False, "No funds returned in response")
+                    return False
+                
+                # Look for BALANCE and CORE funds specifically
+                balance_fund = None
+                core_fund = None
+                
+                for fund in funds:
+                    fund_code = fund.get('fund_code', '')
+                    if fund_code == 'BALANCE':
+                        balance_fund = fund
+                    elif fund_code == 'CORE':
+                        core_fund = fund
+                
+                # Verify BALANCE fund shows accounts (not $0)
+                balance_success = False
+                if balance_fund:
+                    balance_amount = balance_fund.get('total_amount', 0)
+                    balance_accounts = balance_fund.get('account_count', 0)
                     
-                    # Check if collection exists and has data
-                    count = collection.count_documents({})
-                    
-                    if count > 0:
-                        # Get sample document
-                        sample_doc = collection.find_one({})
-                        
-                        # Check for required fields
-                        has_equity = 'equity' in sample_doc if sample_doc else False
-                        has_profit = any(field in sample_doc for field in ['profit', 'true_pnl', 'displayed_pnl']) if sample_doc else False
-                        has_balance = 'balance' in sample_doc if sample_doc else False
-                        
-                        # Get account numbers if available
-                        account_numbers = []
-                        if sample_doc and 'mt5_account_number' in sample_doc:
-                            # Get all account numbers
-                            accounts = list(collection.find({}, {'mt5_account_number': 1}))
-                            account_numbers = [str(acc.get('mt5_account_number', '')) for acc in accounts]
-                        
-                        collection_data[collection_name] = {
-                            'count': count,
-                            'has_equity': has_equity,
-                            'has_profit': has_profit,
-                            'has_balance': has_balance,
-                            'account_numbers': account_numbers,
-                            'sample_doc': sample_doc
-                        }
-                        
-                        details = f"Count: {count}, Equity: {has_equity}, Profit: {has_profit}, Balance: {has_balance}, Accounts: {account_numbers[:5]}"
-                        self.log_test(f"Collection {collection_name}", True, details)
+                    if balance_amount > 0 and balance_accounts > 0:
+                        balance_success = True
+                        self.log_test("BALANCE Fund Data", True, f"Amount: ${balance_amount:,.2f}, Accounts: {balance_accounts}")
                     else:
-                        collection_data[collection_name] = {'count': 0}
-                        self.log_test(f"Collection {collection_name}", False, "Empty collection")
-                        
-                except Exception as e:
-                    self.log_test(f"Collection {collection_name}", False, f"Error: {str(e)}")
-                    collection_data[collection_name] = {'error': str(e)}
-            
-            # Determine which collection has the correct data
-            best_collection = None
-            best_score = 0
-            
-            for collection_name, data in collection_data.items():
-                if 'count' in data and data['count'] > 0:
-                    score = data['count']
-                    if data.get('has_equity'): score += 10
-                    if data.get('has_profit'): score += 10
-                    if data.get('has_balance'): score += 5
+                        self.log_test("BALANCE Fund Data", False, f"Amount: ${balance_amount:,.2f}, Accounts: {balance_accounts} - showing $0 amounts")
+                else:
+                    self.log_test("BALANCE Fund Data", False, "BALANCE fund not found in response")
+                
+                # Verify CORE fund shows accounts (not $0)
+                core_success = False
+                if core_fund:
+                    core_amount = core_fund.get('total_amount', 0)
+                    core_accounts = core_fund.get('account_count', 0)
                     
-                    # Check for expected account numbers
-                    expected_accounts = ['885822', '886557', '886066', '886602']
-                    account_numbers = data.get('account_numbers', [])
-                    matching_accounts = sum(1 for acc in expected_accounts if acc in account_numbers)
-                    score += matching_accounts * 5
-                    
-                    if score > best_score:
-                        best_score = score
-                        best_collection = collection_name
-            
-            if best_collection:
-                self.log_test("Best Data Source Identified", True, f"Collection '{best_collection}' has the most complete data (score: {best_score})")
-                return best_collection, collection_data[best_collection]
+                    if core_amount > 0 and core_accounts > 0:
+                        core_success = True
+                        self.log_test("CORE Fund Data", True, f"Amount: ${core_amount:,.2f}, Accounts: {core_accounts}")
+                    else:
+                        self.log_test("CORE Fund Data", False, f"Amount: ${core_amount:,.2f}, Accounts: {core_accounts} - showing $0 amounts")
+                else:
+                    self.log_test("CORE Fund Data", False, "CORE fund not found in response")
+                
+                # Check for NaN percentages
+                nan_found = False
+                for fund in funds:
+                    allocation_pct = fund.get('allocation_percentage', 0)
+                    if str(allocation_pct).lower() == 'nan' or allocation_pct != allocation_pct:  # NaN check
+                        nan_found = True
+                        break
+                
+                if not nan_found:
+                    self.log_test("Fund Allocation Percentages", True, "No NaN percentages found")
+                else:
+                    self.log_test("Fund Allocation Percentages", False, "NaN percentages detected")
+                
+                return balance_success and core_success and not nan_found
+                
             else:
-                self.log_test("Best Data Source Identified", False, "No collection with adequate data found")
-                return None, None
+                self.log_test("Fund Portfolio Overview Endpoint", False, f"HTTP {response.status_code}: {response.text}")
+                return False
                 
         except Exception as e:
-            self.log_test("MT5 Data Sources Investigation", False, f"Exception: {str(e)}")
-            return None, None
+            self.log_test("Fund Portfolio Overview Endpoint", False, f"Exception: {str(e)}")
+            return False
     
     def verify_data_fields(self, collection_name, collection_data):
         """Test 3: Verify Data Fields in the best collection"""
