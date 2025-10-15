@@ -201,34 +201,34 @@ class DataRestorationVerification:
                 # Verify BALANCE fund shows accounts (not $0)
                 balance_success = False
                 if balance_fund:
-                    balance_amount = balance_fund.get('total_amount', 0)
-                    balance_accounts = balance_fund.get('account_count', 0)
+                    balance_amount = balance_fund.get('aum', balance_fund.get('client_investments', 0))
+                    balance_accounts = balance_fund.get('mt5_accounts_count', 0)
                     
                     if balance_amount > 0 and balance_accounts > 0:
                         balance_success = True
-                        self.log_test("BALANCE Fund Data", True, f"Amount: ${balance_amount:,.2f}, Accounts: {balance_accounts}")
+                        self.log_test("BALANCE Fund Data", True, f"AUM: ${balance_amount:,.2f}, MT5 Accounts: {balance_accounts}")
                     else:
-                        self.log_test("BALANCE Fund Data", False, f"Amount: ${balance_amount:,.2f}, Accounts: {balance_accounts} - showing $0 amounts")
+                        self.log_test("BALANCE Fund Data", False, f"AUM: ${balance_amount:,.2f}, MT5 Accounts: {balance_accounts} - showing $0 amounts")
                 else:
                     self.log_test("BALANCE Fund Data", False, "BALANCE fund not found in response")
                 
                 # Verify CORE fund shows accounts (not $0)
                 core_success = False
                 if core_fund:
-                    core_amount = core_fund.get('total_amount', 0)
-                    core_accounts = core_fund.get('account_count', 0)
+                    core_amount = core_fund.get('aum', core_fund.get('client_investments', 0))
+                    core_accounts = core_fund.get('mt5_accounts_count', 0)
                     
                     if core_amount > 0 and core_accounts > 0:
                         core_success = True
-                        self.log_test("CORE Fund Data", True, f"Amount: ${core_amount:,.2f}, Accounts: {core_accounts}")
+                        self.log_test("CORE Fund Data", True, f"AUM: ${core_amount:,.2f}, MT5 Accounts: {core_accounts}")
                     else:
-                        self.log_test("CORE Fund Data", False, f"Amount: ${core_amount:,.2f}, Accounts: {core_accounts} - showing $0 amounts")
+                        self.log_test("CORE Fund Data", False, f"AUM: ${core_amount:,.2f}, MT5 Accounts: {core_accounts} - showing $0 amounts")
                 else:
                     self.log_test("CORE Fund Data", False, "CORE fund not found in response")
                 
                 # Check for NaN percentages
                 nan_found = False
-                for fund in funds:
+                for fund_name, fund in funds.items():
                     allocation_pct = fund.get('allocation_percentage', 0)
                     if str(allocation_pct).lower() == 'nan' or allocation_pct != allocation_pct:  # NaN check
                         nan_found = True
