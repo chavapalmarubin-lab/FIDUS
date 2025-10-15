@@ -636,60 +636,64 @@ const TradingAnalyticsDashboard = () => {
               </CardHeader>
               <CardContent>
                 {winLossData && (winLossData.winning_trades + winLossData.losing_trades) > 0 ? (
-                  <div className="flex flex-col items-center">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RechartsChart>
-                        <Pie
-                          data={[
-                            { name: 'Wins', value: winLossData.winning_trades, fill: '#10b981' },
-                            { name: 'Losses', value: winLossData.losing_trades, fill: '#ef4444' }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          <Cell fill="#10b981" />
-                          <Cell fill="#ef4444" />
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: '#1e293b', 
-                            border: '1px solid #334155',
-                            borderRadius: '6px'
-                          }}
-                        />
-                      </RechartsChart>
-                    </ResponsiveContainer>
-                    
-                    {/* Center Win Rate Display */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                      <div className="text-3xl font-bold text-green-400">
+                  <div className="space-y-4">
+                    {/* Win Rate Display */}
+                    <div className="text-center py-4">
+                      <div className="text-4xl font-bold text-green-400">
                         {winLossData.win_rate}%
                       </div>
-                      <div className="text-xs text-slate-400">Win Rate</div>
+                      <div className="text-sm text-slate-400 mt-1">Win Rate</div>
+                    </div>
+                    
+                    {/* Donut Chart */}
+                    <div className="relative">
+                      <ResponsiveContainer width="100%" height={180}>
+                        <RechartsChart>
+                          <Pie
+                            data={[
+                              { name: 'Wins', value: winLossData.winning_trades },
+                              { name: 'Losses', value: winLossData.losing_trades }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={70}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            <Cell fill="#10b981" />
+                            <Cell fill="#ef4444" />
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#1e293b', 
+                              border: '1px solid #334155',
+                              borderRadius: '6px',
+                              color: '#fff'
+                            }}
+                          />
+                        </RechartsChart>
+                      </ResponsiveContainer>
                     </div>
                     
                     {/* Legend */}
-                    <div className="mt-4 space-y-2 w-full">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-3 h-3 bg-green-600 rounded-full mr-2"></div>
-                          <span className="text-sm text-slate-300">Wins</span>
+                          <span className="text-sm text-slate-300">Winning Trades</span>
                         </div>
                         <span className="text-sm font-medium text-green-400">
-                          {winLossData.winning_trades} trades
+                          {winLossData.winning_trades}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-3 h-3 bg-red-600 rounded-full mr-2"></div>
-                          <span className="text-sm text-slate-300">Losses</span>
+                          <span className="text-sm text-slate-300">Losing Trades</span>
                         </div>
                         <span className="text-sm font-medium text-red-400">
-                          {winLossData.losing_trades} trades
+                          {winLossData.losing_trades}
                         </span>
                       </div>
                     </div>
