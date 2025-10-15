@@ -423,6 +423,16 @@ const TradingAnalyticsDashboard = () => {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
+          
+          <Button
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            className="text-green-400 border-green-600 hover:bg-green-700"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export to Excel
+          </Button>
         </div>
       </div>
 
