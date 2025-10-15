@@ -112,6 +112,30 @@ const CashFlowManagement = () => {
           profitWithdrawals
         });
 
+        // PHASE 1 FIX: Fetch individual separation account balances
+        const separationAccounts = {};
+        try {
+          const token = localStorage.getItem('fidus_token');
+          const mt5Response = await fetch(
+            `${process.env.REACT_APP_BACKEND_URL}/api/mt5/accounts/corrected`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          if (mt5Response.ok) {
+            const mt5Data = await mt5Response.json();
+            if (mt5Data.success && mt5Data.accounts) {
+              // Find separation accounts (886528 and 891215)
+              mt5Data.accounts.forEach(acc => {
+                if (acc.account === 886528 || acc.account === 891215) {
+                  separationAccounts[acc.account.toString()] = acc.equity || 0;
+                }
+              });
+              console.log('✅ Loaded separation account balances:', separationAccounts);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading separation account balances:', error);
+        }
+
         const fundAccountingData = {
           assets: {
             mt5_trading_profits: mt5TruePnl,  // TRUE P&L (already includes profit withdrawals)
