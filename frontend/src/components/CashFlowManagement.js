@@ -1086,6 +1086,124 @@ const CashFlowManagement = () => {
         </CardContent>
       </Card>
 
+      {/* PHASE 3: Monthly Cash Flow Trends */}
+      <Card className="dashboard-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-white flex items-center">
+                <TrendingUp className="mr-2 h-5 w-5 text-cyan-400" />
+                Monthly Cash Flow Trends
+              </CardTitle>
+              <p className="text-slate-400 text-sm mt-1">
+                Track cash flow patterns over time
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={trendTimeRange === '3months' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTrendTimeRange('3months')}
+                className="text-xs"
+              >
+                3M
+              </Button>
+              <Button
+                variant={trendTimeRange === '6months' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTrendTimeRange('6months')}
+                className="text-xs"
+              >
+                6M
+              </Button>
+              <Button
+                variant={trendTimeRange === '12months' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTrendTimeRange('12months')}
+                className="text-xs"
+              >
+                12M
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {monthlyTrends && monthlyTrends.length > 0 ? (
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={monthlyTrends}>
+                <defs>
+                  <linearGradient id="colorProfits" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorWithdrawals" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#94a3b8"
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="#94a3b8"
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    border: '1px solid #334155',
+                    borderRadius: '6px',
+                    color: '#fff'
+                  }}
+                  formatter={(value) => [`$${value.toLocaleString()}`, '']}
+                />
+                <Legend 
+                  wrapperStyle={{ color: '#94a3b8' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="trading_profits"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorProfits)"
+                  name="Trading Profits"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="withdrawals"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorWithdrawals)"
+                  name="Withdrawals"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="net_position"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', r: 4 }}
+                  name="Net Position"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[350px] text-slate-400">
+              No monthly trend data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* PERFORMANCE ANALYSIS SECTION - NEW */}
       <Card className="dashboard-card">
         <CardHeader>
