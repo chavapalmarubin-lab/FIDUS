@@ -208,6 +208,178 @@ class MT5Service {
     if (!this.cacheTimestamp) return null;
     return Math.round((Date.now() - this.cacheTimestamp) / 1000);
   }
+
+  // ============================================================================
+  // PHASE 4A: DEAL HISTORY, REBATES, AND ANALYTICS
+  // ============================================================================
+
+  /**
+   * Get deal history with filters
+   * @param {Object} filters - { account_number, start_date, end_date, symbol, deal_type, limit }
+   * @returns {Promise<Object>} - { success, count, deals, filters }
+   */
+  async getDeals(filters = {}) {
+    try {
+      console.log('[MT5Service] Fetching deals with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/deals', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from deals API');
+      }
+
+      console.log(`[MT5Service] ✅ Fetched ${response.data.count} deals`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error fetching deals:', error);
+      throw new Error(`Failed to fetch deals: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get deal summary statistics
+   * @param {Object} filters - { account_number, start_date, end_date }
+   * @returns {Promise<Object>} - { success, summary }
+   */
+  async getDealsSummary(filters = {}) {
+    try {
+      console.log('[MT5Service] Fetching deals summary with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/deals/summary', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from deals summary API');
+      }
+
+      console.log(`[MT5Service] ✅ Fetched summary: ${response.data.summary.total_deals} deals`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error fetching deals summary:', error);
+      throw new Error(`Failed to fetch deals summary: ${error.message}`);
+    }
+  }
+
+  /**
+   * Calculate broker rebates
+   * @param {Object} filters - { start_date, end_date, account_number, rebate_per_lot }
+   * @returns {Promise<Object>} - { success, rebates }
+   */
+  async getRebates(filters = {}) {
+    try {
+      console.log('[MT5Service] Calculating rebates with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/rebates', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from rebates API');
+      }
+
+      console.log(`[MT5Service] ✅ Calculated rebates: $${response.data.rebates.total_rebates}`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error calculating rebates:', error);
+      throw new Error(`Failed to calculate rebates: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get money manager performance attribution
+   * @param {Object} filters - { start_date, end_date }
+   * @returns {Promise<Object>} - { success, managers, count }
+   */
+  async getManagerPerformance(filters = {}) {
+    try {
+      console.log('[MT5Service] Fetching manager performance with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/analytics/performance', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from manager performance API');
+      }
+
+      console.log(`[MT5Service] ✅ Fetched performance for ${response.data.count} managers`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error fetching manager performance:', error);
+      throw new Error(`Failed to fetch manager performance: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get balance operations for cash flow tracking
+   * @param {Object} filters - { account_number, start_date, end_date }
+   * @returns {Promise<Object>} - { success, count, operations }
+   */
+  async getBalanceOperations(filters = {}) {
+    try {
+      console.log('[MT5Service] Fetching balance operations with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/balance-operations', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from balance operations API');
+      }
+
+      console.log(`[MT5Service] ✅ Fetched ${response.data.count} balance operations`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error fetching balance operations:', error);
+      throw new Error(`Failed to fetch balance operations: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get daily P&L for equity curve charting
+   * @param {Object} filters - { account_number, days }
+   * @returns {Promise<Object>} - { success, days, data }
+   */
+  async getDailyPnL(filters = {}) {
+    try {
+      console.log('[MT5Service] Fetching daily P&L with filters:', filters);
+      
+      const response = await apiAxios.get('/mt5/daily-pnl', { params: filters });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from daily P&L API');
+      }
+
+      console.log(`[MT5Service] ✅ Fetched daily P&L for ${response.data.days} days`);
+      return response.data;
+    } catch (error) {
+      console.error('[MT5Service] Error fetching daily P&L:', error);
+      throw new Error(`Failed to fetch daily P&L: ${error.message}`);
+    }
+  }
+
+  /**
+   * Helper: Get date range for period selection (7d, 30d, 90d)
+   * @param {string} period - '7d', '30d', '90d', 'ytd'
+   * @returns {Object} - { start_date, end_date }
+   */
+  getDateRangeForPeriod(period) {
+    const end_date = new Date().toISOString().split('T')[0]; // Today
+    let start_date;
+
+    switch (period) {
+      case '7d':
+        start_date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      case '30d':
+        start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      case '90d':
+        start_date = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      case 'ytd':
+        const now = new Date();
+        start_date = `${now.getFullYear()}-01-01`;
+        break;
+      default:
+        start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
+
+    return { start_date, end_date };
+  }
 }
 
 // Export singleton instance
