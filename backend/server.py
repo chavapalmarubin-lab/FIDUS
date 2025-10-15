@@ -19064,9 +19064,14 @@ async def get_all_mt5_accounts():
                 # Status and metadata
                 'connection_status': connection_status,
                 'positions_count': 0,  # Would need to get from positions data
-                'last_updated': last_update,
+                'last_updated': last_update.isoformat() if last_update else None,
                 'currency': account.get('currency', 'USD'),
-                'leverage': account.get('leverage', 500)
+                'leverage': account.get('leverage', 500),
+                
+                # PHASE 2: Data freshness indicators
+                'is_fresh': is_fresh,
+                'data_age_minutes': data_age_minutes,
+                'data_source': 'VPS MT5 Bridge → MongoDB'
             }
             
             # Aggregate totals
