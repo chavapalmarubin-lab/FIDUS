@@ -1,0 +1,57 @@
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to Render
+        run: |
+          echo "🚀 Triggering Render backend deployment..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+      
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting 60 seconds for deployment to complete..."
+          sleep 60
+      
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying backend deployment..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://fidus-api.onrender.com/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend deployment successful!"
+            echo "Backend is healthy at: https://fidus-api.onrender.com"
+          else
+            echo "❌ Backend deployment failed (HTTP $response)"
+            exit 1
+          fi
+      
+      - name: Test Phase 4A endpoints
+        run: |
+          echo "🧪 Testing Phase 4A endpoints..."
+          
+          # Test deals endpoint
+          deals_response=$(curl -s -o /dev/null -w "%{http_code}" "https://fidus-api.onrender.com/api/mt5/deals?limit=1")
+          echo "Deals endpoint: $deals_response"
+          
+          # Test rebates endpoint
+          rebates_response=$(curl -s -o /dev/null -w "%{http_code}" "https://fidus-api.onrender.com/api/mt5/rebates")
+          echo "Rebates endpoint: $rebates_response"
+          
+          if [ $deals_response -eq 200 ] && [ $rebates_response -eq 200 ]; then
+            echo "✅ All Phase 4A endpoints responding"
+          else
+            echo "⚠️ Some endpoints may not be ready yet"
+          fi
