@@ -184,8 +184,8 @@ const TradingAnalyticsDashboard = () => {
           setEquityHistory(generateMockEquityHistory(days));
         }
       } catch (error) {
-        console.log('Using mock equity history data');
-        setEquityHistory(generateMockEquityHistory(selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90));
+        console.error('Failed to fetch equity history:', error);
+        setEquityHistory([]); // PHASE 3: No mock data
       }
       
       // PHASE 2: Calculate Win/Loss data after analytics data is set
