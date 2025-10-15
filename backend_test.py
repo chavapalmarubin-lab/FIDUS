@@ -357,15 +357,12 @@ class DataRestorationVerification:
                     self.log_test("Account 891215 in Separation", False, "Account 891215 NOT found in separation breakdown")
                 
                 # Check that amounts match MT5 account data (should not be $0)
-                total_amount = 0
-                if 'summary' in data:
-                    summary = data['summary']
-                    total_amount = summary.get('total_assets', summary.get('fund_revenue', 0))
+                total_amount = summary.get('fund_revenue', 0)
                 
                 if total_amount > 0:
-                    self.log_test("Cash Flow Amounts", True, f"Total amount: ${total_amount:,.2f} (not $0)")
+                    self.log_test("Cash Flow Amounts", True, f"Fund revenue: ${total_amount:,.2f} (not $0)")
                 else:
-                    self.log_test("Cash Flow Amounts", False, f"Total amount: ${total_amount:,.2f} (showing $0)")
+                    self.log_test("Cash Flow Amounts", False, f"Fund revenue: ${total_amount:,.2f} (showing $0)")
                 
                 return separation_found and account_891215_found and total_amount > 0
                 
