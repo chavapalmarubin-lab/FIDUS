@@ -495,12 +495,12 @@ class DataRestorationVerification:
             self.log_test("Investments Admin Overview Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def run_investigation(self):
-        """Run complete MT5 Dashboard investigation"""
-        print("🔍 MT5 DASHBOARD INVESTIGATION - Backend Showing $0")
+    def run_verification(self):
+        """Run complete data restoration verification"""
+        print("🔍 BACKEND API VERIFICATION AFTER DATA RESTORATION")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
-        print(f"Investigation Time: {datetime.now().isoformat()}")
+        print(f"Verification Time: {datetime.now().isoformat()}")
         print()
         
         # Step 1: Connect to MongoDB
@@ -517,33 +517,37 @@ class DataRestorationVerification:
             return False
         print()
         
-        # Step 3: Test MT5 Dashboard Endpoint
-        print("📋 STEP 3: Test MT5 Dashboard Endpoint")
-        self.test_mt5_dashboard_endpoint()
+        # Step 3: Priority 1 - MT5 Endpoints
+        print("📋 STEP 3: Priority 1 - MT5 Endpoints")
+        print("Testing MT5 Admin Accounts Endpoint...")
+        mt5_accounts_success = self.test_mt5_admin_accounts_endpoint()
         print()
         
-        # Step 4: Investigate Data Sources
-        print("📋 STEP 4: Investigate MT5 Data Sources")
-        best_collection, collection_data = self.investigate_mt5_data_sources()
+        print("Testing Fund Portfolio Overview Endpoint...")
+        fund_portfolio_success = self.test_fund_portfolio_overview_endpoint()
         print()
         
-        # Step 5: Verify Data Fields
-        print("📋 STEP 5: Verify Data Fields")
-        self.verify_data_fields(best_collection, collection_data)
+        # Step 4: Priority 2 - Money Managers Endpoints
+        print("📋 STEP 4: Priority 2 - Money Managers Endpoints")
+        money_managers_success = self.test_money_managers_endpoint()
         print()
         
-        # Step 6: Test Calculation Logic
-        print("📋 STEP 6: Test Calculation Logic")
-        self.test_calculation_logic()
+        # Step 5: Priority 3 - Cash Flow Endpoint
+        print("📋 STEP 5: Priority 3 - Cash Flow Endpoint")
+        cashflow_success = self.test_cashflow_overview_endpoint()
+        print()
+        
+        # Step 6: Priority 4 - Investments Endpoint
+        print("📋 STEP 6: Priority 4 - Investments Endpoint")
+        investments_success = self.test_investments_admin_overview_endpoint()
         print()
         
         # Summary
-        self.print_investigation_summary()
+        self.print_verification_summary()
         
-        # Return overall success
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        return passed_tests >= (total_tests * 0.7)  # 70% success rate acceptable for investigation
+        # Return overall success - all critical endpoints must pass
+        critical_endpoints = [mt5_accounts_success, fund_portfolio_success, money_managers_success, cashflow_success, investments_success]
+        return all(critical_endpoints)
     
     def print_investigation_summary(self):
         """Print investigation summary"""
