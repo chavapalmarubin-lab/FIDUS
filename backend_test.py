@@ -188,22 +188,15 @@ class DataRestorationVerification:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if funds are returned
-                funds = data.get('funds', [])
+                # Check if funds are returned - funds is a dict, not a list
+                funds = data.get('funds', {})
                 if not funds:
                     self.log_test("Fund Portfolio Overview", False, "No funds returned in response")
                     return False
                 
                 # Look for BALANCE and CORE funds specifically
-                balance_fund = None
-                core_fund = None
-                
-                for fund in funds:
-                    fund_code = fund.get('fund_code', '')
-                    if fund_code == 'BALANCE':
-                        balance_fund = fund
-                    elif fund_code == 'CORE':
-                        core_fund = fund
+                balance_fund = funds.get('BALANCE')
+                core_fund = funds.get('CORE')
                 
                 # Verify BALANCE fund shows accounts (not $0)
                 balance_success = False
