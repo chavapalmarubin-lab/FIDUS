@@ -88,6 +88,21 @@ const TradingAnalyticsDashboard = () => {
   useEffect(() => {
     fetchAnalyticsData();
   }, [selectedAccount, selectedPeriod]);
+  
+  // PHASE 2: Update win/loss data when analytics data changes
+  useEffect(() => {
+    if (analyticsData?.overview) {
+      const wins = analyticsData.overview.winning_trades || 0;
+      const losses = analyticsData.overview.losing_trades || 0;
+      const winRate = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(2) : 0;
+      
+      setWinLossData({
+        winning_trades: wins,
+        losing_trades: losses,
+        win_rate: parseFloat(winRate)
+      });
+    }
+  }, [analyticsData]);
 
   const fetchAnalyticsData = async () => {
     try {
