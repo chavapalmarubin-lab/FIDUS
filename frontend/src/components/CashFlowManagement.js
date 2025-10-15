@@ -52,6 +52,12 @@ const CashFlowManagement = () => {
   const [monthlyTrends, setMonthlyTrends] = useState([]);
   const [trendTimeRange, setTrendTimeRange] = useState('6months');
   const [showAddRebateModal, setShowAddRebateModal] = useState(false);
+  
+  // PHASE 4A: Deal history state
+  const [dealHistory, setDealHistory] = useState([]);
+  const [dealHistoryLoading, setDealHistoryLoading] = useState(false);
+  const [selectedDealAccount, setSelectedDealAccount] = useState('all');
+  
   const [newRebate, setNewRebate] = useState({
     fund_code: '',
     amount: '',
