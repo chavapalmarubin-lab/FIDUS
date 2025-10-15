@@ -18,6 +18,20 @@ import {
   RefreshCw
 } from "lucide-react";
 import apiAxios from "../utils/apiAxios";
+import {
+  LineChart,
+  Line,
+  PieChart as RechartsChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine
+} from 'recharts';
 
 const TradingAnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
