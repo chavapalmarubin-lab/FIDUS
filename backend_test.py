@@ -322,81 +322,177 @@ class DataRestorationVerification:
             self.log_test("Money Managers Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def test_calculation_logic(self):
-        """Test 4: Test Calculation Logic by manually calculating totals"""
+    def test_cashflow_overview_endpoint(self):
+        """Priority 3: Test Cash Flow Overview Endpoint - GET /api/admin/cashflow/overview"""
         try:
-            # Get data from all possible collections and compare
-            collections = ['mt5_accounts', 'mt5_accounts_corrected', 'mt5_accounts_cache']
-            calculations = {}
+            url = f"{BACKEND_URL}/api/admin/cashflow/overview"
+            response = self.session.get(url)
             
-            for collection_name in collections:
-                try:
-                    collection = self.db[collection_name]
-                    docs = list(collection.find({}))
-                    
-                    if docs:
-                        total_equity = sum(doc.get('equity', 0) for doc in docs if isinstance(doc.get('equity'), (int, float)))
-                        total_profit = sum(doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0))) for doc in docs if isinstance(doc.get('true_pnl', doc.get('profit', doc.get('displayed_pnl', 0))), (int, float)))
-                        account_count = len([doc for doc in docs if doc.get('mt5_account_number')])
-                        
-                        calculations[collection_name] = {
-                            'total_equity': total_equity,
-                            'total_profit': total_profit,
-                            'account_count': account_count,
-                            'doc_count': len(docs)
-                        }
-                        
-                        details = f"Equity: ${total_equity:,.2f}, P&L: ${total_profit:,.2f}, Accounts: {account_count}"
-                        self.log_test(f"Manual Calculation - {collection_name}", True, details)
-                    
-                except Exception as e:
-                    self.log_test(f"Manual Calculation - {collection_name}", False, f"Error: {str(e)}")
-            
-            # Compare with dashboard endpoint
-            dashboard_url = f"{BACKEND_URL}/api/mt5/dashboard/overview"
-            dashboard_response = self.session.get(dashboard_url)
-            
-            if dashboard_response.status_code == 200:
-                data = dashboard_response.json()
-                dashboard_data = data.get('dashboard', {})
-                dashboard_equity = dashboard_data.get('total_equity', 0)
-                dashboard_profit = dashboard_data.get('total_profit', 0)
+            if response.status_code == 200:
+                data = response.json()
                 
-                # Find which collection matches dashboard (if any)
-                matching_collection = None
-                for collection_name, calc in calculations.items():
-                    if (abs(calc['total_equity'] - dashboard_equity) < 1000 and 
-                        abs(calc['total_profit'] - dashboard_profit) < 100):
-                        matching_collection = collection_name
-                        break
+                # Check for separation breakdown that should include account 891215
+                separation_found = False
+                account_891215_found = False
                 
-                if matching_collection:
-                    self.log_test("Dashboard Data Source Match", True, f"Dashboard uses data from '{matching_collection}' collection")
+                # Look for separation data in various possible locations
+                if 'separation' in data:
+                    separation_data = data['separation']
+                    separation_found = True
+                    
+                    # Check if account 891215 is mentioned
+                    if isinstance(separation_data, dict):
+                        for key, value in separation_data.items():
+                            if '891215' in str(key) or '891215' in str(value):
+                                account_891215_found = True
+                                break
+                    elif isinstance(separation_data, list):
+                        for item in separation_data:
+                            if '891215' in str(item):
+                                account_891215_found = True
+                                break
+                
+                # Also check in breakdown or accounts sections
+                if 'breakdown' in data:
+                    breakdown = data['breakdown']
+                    if '891215' in str(breakdown):
+                        account_891215_found = True
+                
+                if 'accounts' in data:
+                    accounts = data['accounts']
+                    if '891215' in str(accounts):
+                        account_891215_found = True
+                
+                # Check separation accounts specifically
+                if 'separation_accounts' in data:
+                    sep_accounts = data['separation_accounts']
+                    if isinstance(sep_accounts, list):
+                        for acc in sep_accounts:
+                            if str(acc.get('account', '')) == '891215':
+                                account_891215_found = True
+                                break
+                    separation_found = True
+                
+                # Log results
+                if separation_found:
+                    self.log_test("Separation Data Present", True, "Separation breakdown found in cash flow response")
                 else:
-                    self.log_test("Dashboard Data Source Match", True, f"Dashboard values (${dashboard_equity:,.2f}, ${dashboard_profit:,.2f}) are from live MT5 integration, not static collections")
+                    self.log_test("Separation Data Present", False, "No separation breakdown found in cash flow response")
                 
-                # Check if dashboard is working correctly
-                if dashboard_equity > 100000 and dashboard_profit > 0:
-                    self.log_test("Dashboard Working Status", True, f"✅ Dashboard is working correctly - Total Equity: ${dashboard_equity:,.2f}, Total P&L: ${dashboard_profit:,.2f}")
-                elif dashboard_equity == 0 and dashboard_profit == 0:
-                    # Check if any collection has good data
-                    good_collections = [name for name, calc in calculations.items() 
-                                      if calc['total_equity'] > 100000 and abs(calc['total_profit'] - 3551) < 1000]
-                    
-                    if good_collections:
-                        self.log_test("Issue Identified", True, f"Dashboard shows $0 but collection(s) {good_collections} have correct data - API may be using wrong collection")
-                    else:
-                        self.log_test("Issue Identified", False, "No collection has the expected data - data may not be synced from VPS")
+                if account_891215_found:
+                    self.log_test("Account 891215 in Separation", True, "Account 891215 found in separation breakdown")
                 else:
-                    self.log_test("Dashboard Working Status", True, f"✅ Dashboard has real data (not $0) - Total Equity: ${dashboard_equity:,.2f}, Total P&L: ${dashboard_profit:,.2f}")
+                    self.log_test("Account 891215 in Separation", False, "Account 891215 NOT found in separation breakdown")
                 
-                return True
+                # Check that amounts match MT5 account data (should not be $0)
+                total_amount = 0
+                if 'summary' in data:
+                    summary = data['summary']
+                    total_amount = summary.get('total_assets', summary.get('fund_revenue', 0))
+                
+                if total_amount > 0:
+                    self.log_test("Cash Flow Amounts", True, f"Total amount: ${total_amount:,.2f} (not $0)")
+                else:
+                    self.log_test("Cash Flow Amounts", False, f"Total amount: ${total_amount:,.2f} (showing $0)")
+                
+                return separation_found and account_891215_found and total_amount > 0
+                
             else:
-                self.log_test("Dashboard Comparison", False, f"Could not fetch dashboard data: HTTP {dashboard_response.status_code}")
+                self.log_test("Cash Flow Overview Endpoint", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Calculation Logic Test", False, f"Exception: {str(e)}")
+            self.log_test("Cash Flow Overview Endpoint", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_investments_admin_overview_endpoint(self):
+        """Priority 4: Test Investments Admin Overview Endpoint - GET /api/investments/admin/overview"""
+        try:
+            # Try different possible endpoints
+            endpoints_to_try = [
+                "/api/investments/admin/overview",
+                "/api/admin/investments/overview",
+                "/api/investments/overview",
+                "/api/admin/investments"
+            ]
+            
+            for endpoint in endpoints_to_try:
+                url = f"{BACKEND_URL}{endpoint}"
+                response = self.session.get(url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check if investments are returned
+                    investments = data.get('investments', data.get('client_investments', []))
+                    if not investments and 'clients' in data:
+                        # Check if data is structured differently
+                        clients = data['clients']
+                        for client in clients:
+                            if client.get('name') == 'Alejandro Mariscal Romero' or 'alejandro' in client.get('name', '').lower():
+                                client_investments = client.get('investments', [])
+                                if client_investments:
+                                    investments = client_investments
+                                    break
+                    
+                    if not investments:
+                        continue  # Try next endpoint
+                    
+                    # Look for Alejandro's investments
+                    alejandro_investments = []
+                    total_balance_amount = 0
+                    total_core_amount = 0
+                    
+                    for investment in investments:
+                        client_name = investment.get('client_name', '')
+                        fund_code = investment.get('fund_code', '')
+                        amount = investment.get('amount', investment.get('principal_amount', 0))
+                        
+                        if 'alejandro' in client_name.lower() or 'mariscal' in client_name.lower():
+                            alejandro_investments.append(investment)
+                            
+                            if fund_code == 'BALANCE':
+                                total_balance_amount += amount
+                            elif fund_code == 'CORE':
+                                total_core_amount += amount
+                    
+                    # Expected: BALANCE: $100K, CORE: $18K
+                    expected_balance = 100000
+                    expected_core = 18000
+                    
+                    balance_success = abs(total_balance_amount - expected_balance) < 5000  # Allow some variance
+                    core_success = abs(total_core_amount - expected_core) < 2000  # Allow some variance
+                    
+                    if alejandro_investments:
+                        self.log_test("Alejandro's Investments Found", True, f"Found {len(alejandro_investments)} investments")
+                        
+                        if balance_success:
+                            self.log_test("BALANCE Investment Amount", True, f"BALANCE: ${total_balance_amount:,.2f} (expected: ${expected_balance:,.2f})")
+                        else:
+                            self.log_test("BALANCE Investment Amount", False, f"BALANCE: ${total_balance_amount:,.2f} (expected: ${expected_balance:,.2f})")
+                        
+                        if core_success:
+                            self.log_test("CORE Investment Amount", True, f"CORE: ${total_core_amount:,.2f} (expected: ${expected_core:,.2f})")
+                        else:
+                            self.log_test("CORE Investment Amount", False, f"CORE: ${total_core_amount:,.2f} (expected: ${expected_core:,.2f})")
+                        
+                        # Check that amounts are not $0
+                        if total_balance_amount > 0 and total_core_amount > 0:
+                            self.log_test("Investment Amounts Not Zero", True, f"BALANCE: ${total_balance_amount:,.2f}, CORE: ${total_core_amount:,.2f}")
+                            return balance_success and core_success
+                        else:
+                            self.log_test("Investment Amounts Not Zero", False, f"BALANCE: ${total_balance_amount:,.2f}, CORE: ${total_core_amount:,.2f} - showing $0 amounts")
+                            return False
+                    else:
+                        self.log_test("Alejandro's Investments Found", False, "No investments found for Alejandro Mariscal")
+                        continue  # Try next endpoint
+            
+            # If no endpoint worked
+            self.log_test("Investments Admin Overview Endpoint", False, f"All endpoints failed. Tried: {endpoints_to_try}")
+            return False
+                
+        except Exception as e:
+            self.log_test("Investments Admin Overview Endpoint", False, f"Exception: {str(e)}")
             return False
     
     def run_investigation(self):
