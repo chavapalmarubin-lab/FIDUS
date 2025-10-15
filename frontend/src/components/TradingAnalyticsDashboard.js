@@ -323,6 +323,16 @@ const TradingAnalyticsDashboard = () => {
       maximumFractionDigits: 2
     }).format(amount || 0);
   };
+  
+  // PHASE 4: Export handler
+  const handleExport = () => {
+    const result = exportTradingAnalytics(analyticsData, dailyPerformance, recentTrades);
+    if (result.success) {
+      console.log('✅ Exported:', result.filename);
+    } else {
+      console.error('❌ Export failed:', result.error);
+    }
+  };
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(2)}%`;
