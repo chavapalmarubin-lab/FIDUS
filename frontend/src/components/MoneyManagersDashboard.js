@@ -30,6 +30,11 @@ const MoneyManagersDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState('overview'); // overview, comparison, detailed
+  
+  // PHASE 4A: MT5 Manager Performance state
+  const [mt5Performance, setMt5Performance] = useState([]);
+  const [mt5Loading, setMt5Loading] = useState(false);
+  const [mt5Period, setMt5Period] = useState('30d'); // 7d, 30d, 90d
 
   useEffect(() => {
     fetchManagers();
