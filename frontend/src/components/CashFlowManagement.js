@@ -795,6 +795,80 @@ const CashFlowManagement = () => {
                   </p>
                 </div>
               </div>
+              
+              {/* PHASE 3: Revenue Sources Pie Chart */}
+              {revenueSources && (
+                <div className="mt-6 pt-6 border-t border-slate-700">
+                  <h4 className="text-sm font-semibold text-slate-300 mb-4">Revenue Breakdown</h4>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Trading Profits', value: revenueSources.trading_profits, fill: '#10b981' },
+                          { name: 'Broker Rebates', value: revenueSources.broker_rebates, fill: '#3b82f6' },
+                          { name: 'Interest Earnings', value: revenueSources.broker_interest, fill: '#f59e0b' }
+                        ].filter(item => item.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={70}
+                        dataKey="value"
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#3b82f6" />
+                        <Cell fill="#f59e0b" />
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: '1px solid #334155',
+                          borderRadius: '6px',
+                          color: '#fff'
+                        }}
+                        formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Legend */}
+                  <div className="mt-4 space-y-2 text-xs">
+                    {revenueSources.trading_profits > 0 && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-green-600 rounded-full mr-2"></div>
+                          <span className="text-slate-300">Trading Profits</span>
+                        </div>
+                        <span className="font-medium text-slate-200">
+                          {formatCurrency(revenueSources.trading_profits)}
+                        </span>
+                      </div>
+                    )}
+                    {revenueSources.broker_rebates > 0 && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-blue-600 rounded-full mr-2"></div>
+                          <span className="text-slate-300">Broker Rebates</span>
+                        </div>
+                        <span className="font-medium text-slate-200">
+                          {formatCurrency(revenueSources.broker_rebates)}
+                        </span>
+                      </div>
+                    )}
+                    {revenueSources.broker_interest > 0 && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-orange-600 rounded-full mr-2"></div>
+                          <span className="text-slate-300">Interest Earnings</span>
+                        </div>
+                        <span className="font-medium text-slate-200">
+                          {formatCurrency(revenueSources.broker_interest)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
