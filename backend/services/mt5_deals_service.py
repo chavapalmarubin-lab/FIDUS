@@ -134,6 +134,19 @@ class MT5DealsService:
                         "balance_operations": {
                             "$sum": {"$cond": [{"$eq": ["$type", 2]}, 1, 0]}
                         },
+                        # ✅ PHASE 1: Add win/loss aggregations for calculations
+                        "win_deals": {
+                            "$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}
+                        },
+                        "loss_deals": {
+                            "$sum": {"$cond": [{"$lt": ["$profit", 0]}, 1, 0]}
+                        },
+                        "total_win_profit": {
+                            "$sum": {"$cond": [{"$gt": ["$profit", 0]}, "$profit", 0]}
+                        },
+                        "total_loss_profit": {
+                            "$sum": {"$cond": [{"$lt": ["$profit", 0]}, "$profit", 0]}
+                        },
                         "symbols_traded": {"$addToSet": "$symbol"},
                         "earliest_deal": {"$min": "$time"},
                         "latest_deal": {"$max": "$time"}
@@ -153,12 +166,46 @@ class MT5DealsService:
                     "buy_deals": 0,
                     "sell_deals": 0,
                     "balance_operations": 0,
+                    "win_deals": 0,
+                    "loss_deals": 0,
+                    "total_win_profit": 0,
+                    "total_loss_profit": 0,
                     "symbols_traded": [],
-                    "date_range": None
+                    "date_range": None,
+                    # ✅ NEW CALCULATED FIELDS
+                    "win_rate": 0,
+                    "avg_trade": 0,
+                    "avg_win": 0,
+                    "avg_loss": 0,
+                    "profit_factor": 0
                 }
             
             summary = result[0]
             summary.pop("_id", None)
+            
+            # ✅ PHASE 1: Calculate the 5 performance metrics (moved from frontend Lines 139-148)
+            total_deals = summary.get("total_deals", 0)
+            total_profit = summary.get("total_profit", 0)
+            win_deals = summary.get("win_deals", 0)
+            loss_deals = summary.get("loss_deals", 0)
+            total_win_profit = summary.get("total_win_profit", 0)
+            total_loss_profit = summary.get("total_loss_profit", 0)
+            
+            # Calculation #1: Win Rate (Line 139)
+            summary["win_rate"] = round((win_deals / total_deals * 100) if total_deals > 0 else 0, 2)
+            
+            # Calculation #2: Average Trade (Line 142)
+            summary["avg_trade"] = round((total_profit / total_deals) if total_deals > 0 else 0, 2)
+            
+            # Calculation #3: Average Win (Line 143)
+            summary["avg_win"] = round((total_win_profit / win_deals) if win_deals > 0 else 0, 2)
+            
+            # Calculation #4: Average Loss (Line 144)
+            summary["avg_loss"] = round((total_loss_profit / loss_deals) if loss_deals > 0 else 0, 2)
+            
+            # Calculation #5: Profit Factor (Line 148)
+            total_loss_abs = abs(total_loss_profit)
+            summary["profit_factor"] = round((total_win_profit / total_loss_abs) if total_loss_abs > 0 else 0, 2)
             
             # Convert datetime to ISO string
             if "earliest_deal" in summary and summary["earliest_deal"]:
@@ -172,7 +219,7 @@ class MT5DealsService:
                 "end": summary.get("latest_deal")
             }
             
-            logger.info(f"Generated deals summary: {summary['total_deals']} deals, {summary['total_volume']:.2f} lots")
+            logger.info(f"Generated deals summary: {summary['total_deals']} deals, {summary['total_volume']:.2f} lots, win_rate={summary['win_rate']}%")
             return summary
             
         except Exception as e:
