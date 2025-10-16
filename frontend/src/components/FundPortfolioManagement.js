@@ -429,8 +429,9 @@ const FundPortfolioManagement = () => {
                 </div>
 
                 {Object.entries(fundData || {}).map(([fundCode, fund]) => {
+                  const fundAum = fund.aum || fund.current_aum || 0;
                   const percentage = portfolioStats.aum > 0 
-                    ? ((fund.current_aum / portfolioStats.aum) * 100).toFixed(1)
+                    ? ((fundAum / portfolioStats.aum) * 100).toFixed(1)
                     : 0;
                   
                   return (
@@ -447,7 +448,7 @@ const FundPortfolioManagement = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-bold text-white">
-                          {formatCurrency(fund.current_aum)}
+                          {formatCurrency(fundAum)}
                         </div>
                         <div className="text-xs text-slate-400">
                           {percentage}% of portfolio
