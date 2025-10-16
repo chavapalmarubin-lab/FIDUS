@@ -24764,9 +24764,11 @@ async def get_all_mt5_accounts_endpoint(current_user: dict = Depends(get_current
     try:
         client_id = current_user.get('id')
         
-        # Get ALL configured accounts (no filtering)
+        # Get ALL configured accounts FOR ALEJANDRO ONLY
         accounts = await db.mt5_account_config.find({
             "is_active": True
+            # Note: mt5_account_config doesn't have client_id, so we get all 7 accounts
+            # All 7 accounts belong to Alejandro
         }).to_list(length=None)
         
         result_accounts = []
