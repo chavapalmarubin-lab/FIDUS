@@ -488,13 +488,13 @@ const TradingAnalyticsDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${analyticsData.overview.avg_trade >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(analyticsData.overview.avg_trade)}
+                <div className={`text-2xl font-bold ${(analyticsData.overview.avg_trade || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(analyticsData.overview.avg_trade || 0)}
                 </div>
                 <div className="flex items-center mt-2 text-sm text-slate-400">
-                  <span className="text-green-400">Avg Win: {formatCurrency(analyticsData.overview.avg_win)}</span>
+                  <span className="text-green-400">Avg Win: {formatCurrency(analyticsData.overview.avg_win || 0)}</span>
                   <span className="mx-2">|</span>
-                  <span className="text-red-400">Avg Loss: {formatCurrency(analyticsData.overview.avg_loss)}</span>
+                  <span className="text-red-400">Avg Loss: {formatCurrency(analyticsData.overview.avg_loss || 0)}</span>
                 </div>
               </CardContent>
             </Card>
