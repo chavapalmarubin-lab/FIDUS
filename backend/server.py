@@ -21220,7 +21220,7 @@ async def create_rebate_config(
     {
         "broker_name": "MEX-Atlantic",
         "broker_code": "MEX",
-        "rebate_per_lot": 5.05,
+        "rebate_per_lot": 4.99,
         "effective_date": "2025-10-01"
     }
     """
