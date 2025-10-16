@@ -41,7 +41,7 @@ load_dotenv()
 # MongoDB Configuration
 MONGODB_URI = os.getenv('MONGODB_URI')
 if not MONGODB_URI:
-    logger.error("[ERROR] MONGODB_URI not found in .env file")
+    logger.error("❌ MONGODB_URI not found in .env file")
     sys.exit(1)
 
 # MT5 Configuration
@@ -75,7 +75,7 @@ class MT5BridgeEnhanced:
     def connect_mongodb(self):
         """Connect to MongoDB with pymongo 4.x compatibility"""
         try:
-            logger.info("[CONNECT] Connecting to MongoDB...")
+            logger.info("🔌 Connecting to MongoDB...")
             client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
             
             # Test connection
@@ -87,15 +87,15 @@ class MT5BridgeEnhanced:
             # Verify connection
             try:
                 list(self.db.list_collection_names())
-                logger.info("[OK] MongoDB connected successfully")
+                logger.info("✅ MongoDB connected successfully")
                 self.ensure_indexes()
                 return True
             except Exception as e:
-                logger.error(f"[ERROR] MongoDB connection test failed: {e}")
+                logger.error(f"❌ MongoDB connection test failed: {e}")
                 return False
                 
         except Exception as e:
-            logger.error(f"[ERROR] MongoDB connection error: {e}")
+            logger.error(f"❌ MongoDB connection error: {e}")
             self.log_error("mongodb_connection", str(e))
             self.db = None
             return False
@@ -136,10 +136,10 @@ class MT5BridgeEnhanced:
             errors_coll.create_index([("timestamp", DESCENDING)])
             errors_coll.create_index([("error_type", ASCENDING)])
             
-            logger.info("[OK] All indexes created/verified")
+            logger.info("✅ All indexes created/verified")
             
         except Exception as e:
-            logger.warning(f"[WARNING] Error creating indexes: {e}")
+            logger.warning(f"⚠️ Error creating indexes: {e}")
     
     def log_error(self, error_type, error_message, account_number=None, details=None):
         """Log error to MongoDB for monitoring"""
@@ -161,7 +161,7 @@ class MT5BridgeEnhanced:
             self.last_error_log_time = datetime.now(timezone.utc)
             
         except Exception as e:
-            logger.error(f"[ERROR] Failed to log error to MongoDB: {e}")
+            logger.error(f"❌ Failed to log error to MongoDB: {e}")
     
     def log_terminal_status(self):
         """Log terminal connection status"""
@@ -193,22 +193,22 @@ class MT5BridgeEnhanced:
                 }
                 
                 self.db.mt5_terminal_status.insert_one(status_doc)
-                logger.info("[OK] Terminal status logged")
+                logger.info("✅ Terminal status logged")
             else:
-                logger.warning("[WARNING] Unable to retrieve terminal info")
+                logger.warning("⚠️ Unable to retrieve terminal info")
                 
         except Exception as e:
-            logger.error(f"[ERROR] Error logging terminal status: {e}")
+            logger.error(f"❌ Error logging terminal status: {e}")
     
     def load_mt5_accounts_from_mongodb(self):
         """Load MT5 accounts from mt5_account_config collection"""
         try:
             if self.db is None:
-                logger.warning("[WARNING] MongoDB not connected, using fallback accounts")
+                logger.warning("⚠️ MongoDB not connected, using fallback accounts")
                 self.mt5_accounts = FALLBACK_ACCOUNTS
                 return
             
-            logger.info("[LOAD] Loading MT5 accounts from mt5_account_config collection...")
+            logger.info("📥 Loading MT5 accounts from mt5_account_config collection...")
             
             cursor = self.db.mt5_account_config.find(
                 {"is_active": True},
@@ -219,13 +219,13 @@ class MT5BridgeEnhanced:
             
             if len(accounts) > 0:
                 self.mt5_accounts = accounts
-                logger.info(f"[OK] Loaded {len(accounts)} active accounts from MongoDB")
+                logger.info(f"✅ Loaded {len(accounts)} active accounts from MongoDB")
             else:
-                logger.warning("[WARNING] No active accounts found, using fallback")
+                logger.warning("⚠️ No active accounts found, using fallback")
                 self.mt5_accounts = FALLBACK_ACCOUNTS
                 
         except Exception as e:
-            logger.error(f"[ERROR] Error loading accounts from MongoDB: {e}")
+            logger.error(f"❌ Error loading accounts from MongoDB: {e}")
             self.log_error("load_accounts", str(e))
             self.mt5_accounts = FALLBACK_ACCOUNTS
     
@@ -234,18 +234,18 @@ class MT5BridgeEnhanced:
         try:
             if not mt5.initialize(path=MT5_PATH):
                 error = mt5.last_error()
-                logger.error(f"[ERROR] MT5 initialize() failed, error code: {error}")
+                logger.error(f"❌ MT5 initialize() failed, error code: {error}")
                 self.log_error("mt5_initialization", f"Error code: {error}")
                 self.terminal_initialized = False
                 return False
             
             version = mt5.version()
-            logger.info(f"[OK] MT5 Terminal initialized: v{version}")
+            logger.info(f"✅ MT5 Terminal initialized: v{version}")
             self.terminal_initialized = True
             return True
             
         except Exception as e:
-            logger.error(f"[ERROR] MT5 initialization error: {e}")
+            logger.error(f"❌ MT5 initialization error: {e}")
             self.log_error("mt5_initialization", str(e))
             self.terminal_initialized = False
             return False
@@ -262,14 +262,14 @@ class MT5BridgeEnhanced:
             
             if not authorized:
                 error = mt5.last_error()
-                logger.error(f"[ERROR] Login failed for equity snapshot {account_number}: {error}")
+                logger.error(f"❌ Login failed for equity snapshot {account_number}: {error}")
                 self.log_error("equity_snapshot_login", f"Error: {error}", account_number)
                 return None
             
             # Get account info
             account_info = mt5.account_info()
             if account_info is None:
-                logger.error(f"[ERROR] Failed to get account info for equity snapshot {account_number}")
+                logger.error(f"❌ Failed to get account info for equity snapshot {account_number}")
                 return None
             
             # Create snapshot
@@ -291,7 +291,7 @@ class MT5BridgeEnhanced:
             return snapshot
             
         except Exception as e:
-            logger.error(f"[ERROR] Error collecting equity snapshot for {account_number}: {e}")
+            logger.error(f"❌ Error collecting equity snapshot for {account_number}: {e}")
             self.log_error("equity_snapshot", str(e), account_number)
             return None
     
@@ -307,7 +307,7 @@ class MT5BridgeEnhanced:
             
             if not authorized:
                 error = mt5.last_error()
-                logger.error(f"[ERROR] Login failed for pending orders {account_number}: {error}")
+                logger.error(f"❌ Login failed for pending orders {account_number}: {error}")
                 self.log_error("pending_orders_login", f"Error: {error}", account_number)
                 return []
             
@@ -349,11 +349,11 @@ class MT5BridgeEnhanced:
                 }
                 order_list.append(order_dict)
             
-            logger.info(f"[OK] Collected {len(order_list)} pending orders for {account_number}")
+            logger.info(f"✅ Collected {len(order_list)} pending orders for {account_number}")
             return order_list
             
         except Exception as e:
-            logger.error(f"[ERROR] Error collecting pending orders for {account_number}: {e}")
+            logger.error(f"❌ Error collecting pending orders for {account_number}: {e}")
             self.log_error("pending_orders", str(e), account_number)
             return []
     
@@ -398,7 +398,7 @@ class MT5BridgeEnhanced:
             deal_count = self.db.mt5_deals_history.count_documents({"account_number": account_number})
             
             if deal_count == 0:
-                logger.info(f"[BACKFILL] Account {account_number} needs initial backfill (no deals found)")
+                logger.info(f"📦 Account {account_number} needs initial backfill (no deals found)")
                 return True
             
             # Check if we have recent deals (within last 7 days)
@@ -409,14 +409,14 @@ class MT5BridgeEnhanced:
             })
             
             if recent_count == 0:
-                logger.info(f"[BACKFILL] Account {account_number} needs backfill (no recent deals)")
+                logger.info(f"📦 Account {account_number} needs backfill (no recent deals)")
                 return True
             
-            logger.info(f"[OK] Account {account_number} has {deal_count} deals, skipping backfill")
+            logger.info(f"✅ Account {account_number} has {deal_count} deals, skipping backfill")
             return False
             
         except Exception as e:
-            logger.error(f"[ERROR] Error checking backfill status: {e}")
+            logger.error(f"❌ Error checking backfill status: {e}")
             self.log_error("backfill_check", str(e), account_number)
             return True
     
@@ -432,7 +432,7 @@ class MT5BridgeEnhanced:
             
             if not authorized:
                 error = mt5.last_error()
-                logger.error(f"[ERROR] Login failed for {account_number}: {error}")
+                logger.error(f"❌ Login failed for {account_number}: {error}")
                 self.log_error("deal_collection_login", f"Error: {error}", account_number)
                 return []
             
@@ -440,11 +440,11 @@ class MT5BridgeEnhanced:
             deals = mt5.history_deals_get(start_date, end_date)
             
             if deals is None:
-                logger.warning(f"[WARNING] No deals found for {account_number} ({start_date.date()} to {end_date.date()})")
+                logger.warning(f"⚠️ No deals found for {account_number} ({start_date.date()} to {end_date.date()})")
                 return []
             
             if len(deals) == 0:
-                logger.info(f"[STATS] Account {account_number}: No deals in range")
+                logger.info(f"📊 Account {account_number}: No deals in range")
                 return []
             
             # Convert MT5 deals to dict format for MongoDB
@@ -478,11 +478,11 @@ class MT5BridgeEnhanced:
                 }
                 deal_list.append(deal_dict)
             
-            logger.info(f"[OK] Collected {len(deal_list)} deals for {account_number}")
+            logger.info(f"✅ Collected {len(deal_list)} deals for {account_number}")
             return deal_list
             
         except Exception as e:
-            logger.error(f"[ERROR] Error collecting deals for {account_number}: {e}")
+            logger.error(f"❌ Error collecting deals for {account_number}: {e}")
             self.log_error("deal_collection", str(e), account_number)
             return []
     
@@ -507,11 +507,11 @@ class MT5BridgeEnhanced:
             inserted = result.upserted_count
             modified = result.modified_count
             
-            logger.info(f"[SAVE] Stored {inserted} new deals, updated {modified} existing deals")
+            logger.info(f"💾 Stored {inserted} new deals, updated {modified} existing deals")
             return inserted + modified
             
         except Exception as e:
-            logger.error(f"[ERROR] Error storing deals to MongoDB: {e}")
+            logger.error(f"❌ Error storing deals to MongoDB: {e}")
             self.log_error("deal_storage", str(e))
             return 0
     
@@ -522,11 +522,11 @@ class MT5BridgeEnhanced:
         
         try:
             result = self.db.mt5_equity_snapshots.insert_many(snapshots)
-            logger.info(f"[SAVE] Stored {len(result.inserted_ids)} equity snapshots")
+            logger.info(f"💾 Stored {len(result.inserted_ids)} equity snapshots")
             return len(result.inserted_ids)
             
         except Exception as e:
-            logger.error(f"[ERROR] Error storing equity snapshots: {e}")
+            logger.error(f"❌ Error storing equity snapshots: {e}")
             self.log_error("equity_snapshot_storage", str(e))
             return 0
     
@@ -544,14 +544,14 @@ class MT5BridgeEnhanced:
             # Insert new orders
             if len(orders) > 0:
                 result = self.db.mt5_pending_orders.insert_many(orders)
-                logger.info(f"[SAVE] Stored {len(result.inserted_ids)} pending orders")
+                logger.info(f"💾 Stored {len(result.inserted_ids)} pending orders")
                 return len(result.inserted_ids)
             else:
-                logger.info("[STATS] No pending orders to store")
+                logger.info("📊 No pending orders to store")
                 return 0
             
         except Exception as e:
-            logger.error(f"[ERROR] Error storing pending orders: {e}")
+            logger.error(f"❌ Error storing pending orders: {e}")
             self.log_error("pending_orders_storage", str(e))
             return 0
     
@@ -563,7 +563,7 @@ class MT5BridgeEnhanced:
         if not self.check_if_backfill_needed(account_number):
             return 0
         
-        logger.info(f"[BACKFILL] Starting {INITIAL_BACKFILL_DAYS}-day backfill for account {account_number}")
+        logger.info(f"📦 Starting {INITIAL_BACKFILL_DAYS}-day backfill for account {account_number}")
         
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=INITIAL_BACKFILL_DAYS)
@@ -572,10 +572,10 @@ class MT5BridgeEnhanced:
         
         if len(deals) > 0:
             synced = self.sync_deals_to_mongodb(deals)
-            logger.info(f"[OK] Backfill complete for {account_number}: {synced} deals")
+            logger.info(f"✅ Backfill complete for {account_number}: {synced} deals")
             return synced
         else:
-            logger.info(f"[STATS] No deals to backfill for {account_number}")
+            logger.info(f"📊 No deals to backfill for {account_number}")
             return 0
     
     def sync_daily_deals(self, account_config):
@@ -585,7 +585,7 @@ class MT5BridgeEnhanced:
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=1)
         
-        logger.info(f"[SYNC] Syncing daily deals for {account_number} ({start_date.date()} to {end_date.date()})")
+        logger.info(f"🔄 Syncing daily deals for {account_number} ({start_date.date()} to {end_date.date()})")
         
         deals = self.collect_deals(account_config, start_date, end_date)
         
@@ -593,7 +593,7 @@ class MT5BridgeEnhanced:
             synced = self.sync_deals_to_mongodb(deals)
             return synced
         else:
-            logger.info(f"[STATS] No new deals for {account_number}")
+            logger.info(f"📊 No new deals for {account_number}")
             return 0
     
     def sync_account(self, account_config):
@@ -608,14 +608,14 @@ class MT5BridgeEnhanced:
             
             if not authorized:
                 error = mt5.last_error()
-                logger.error(f"[ERROR] Login failed for {account_number}: {error}")
+                logger.error(f"❌ Login failed for {account_number}: {error}")
                 self.log_error("account_sync_login", f"Error: {error}", account_number)
                 return False
             
             # Get account info
             account_info = mt5.account_info()
             if account_info is None:
-                logger.error(f"[ERROR] Failed to get account info for {account_number}")
+                logger.error(f"❌ Failed to get account info for {account_number}")
                 return False
             
             # Get positions
@@ -659,18 +659,18 @@ class MT5BridgeEnhanced:
                     upsert=True
                 )
             
-            logger.info(f"[OK] Synced {account_number}: Balance=${balance:.2f}, Equity=${equity:.2f}, P&L=${profit:.2f}")
+            logger.info(f"✅ Synced {account_number}: Balance=${balance:.2f}, Equity=${equity:.2f}, P&L=${profit:.2f}")
             return True
             
         except Exception as e:
-            logger.error(f"[ERROR] Error syncing account {account_number}: {e}")
+            logger.error(f"❌ Error syncing account {account_number}: {e}")
             self.log_error("account_sync", str(e), account_number)
             return False
     
     def sync_all_accounts(self):
         """Sync all configured MT5 accounts (basic data)"""
         logger.info("=" * 80)
-        logger.info(f"[SYNC] Starting account sync cycle at {datetime.now()}")
+        logger.info(f"🔄 Starting account sync cycle at {datetime.now()}")
         
         success_count = 0
         fail_count = 0
@@ -682,7 +682,7 @@ class MT5BridgeEnhanced:
                 fail_count += 1
             time.sleep(1)
         
-        logger.info(f"[OK] Account sync complete: {success_count} successful, {fail_count} failed")
+        logger.info(f"✅ Account sync complete: {success_count} successful, {fail_count} failed")
         logger.info("=" * 80)
     
     def sync_all_deals(self):
@@ -704,13 +704,13 @@ class MT5BridgeEnhanced:
             time.sleep(2)  # Delay between accounts
         
         self.last_deal_sync = datetime.now(timezone.utc)
-        logger.info(f"[OK] Deal sync complete: {total_deals} deals processed")
+        logger.info(f"✅ Deal sync complete: {total_deals} deals processed")
         logger.info("=" * 80)
     
     def sync_all_equity_snapshots(self):
         """Collect equity snapshots for all accounts"""
         logger.info("=" * 80)
-        logger.info(f"[SNAPSHOT] Starting equity snapshot collection at {datetime.now()}")
+        logger.info(f"📸 Starting equity snapshot collection at {datetime.now()}")
         
         snapshots = []
         
@@ -724,13 +724,13 @@ class MT5BridgeEnhanced:
             self.sync_equity_snapshots_to_mongodb(snapshots)
         
         self.last_equity_snapshot = datetime.now(timezone.utc)
-        logger.info(f"[OK] Equity snapshot complete: {len(snapshots)} snapshots collected")
+        logger.info(f"✅ Equity snapshot complete: {len(snapshots)} snapshots collected")
         logger.info("=" * 80)
     
     def sync_all_pending_orders(self):
         """Collect pending orders for all accounts"""
         logger.info("=" * 80)
-        logger.info(f"[ORDERS] Starting pending orders collection at {datetime.now()}")
+        logger.info(f"📋 Starting pending orders collection at {datetime.now()}")
         
         all_orders = []
         
@@ -742,9 +742,9 @@ class MT5BridgeEnhanced:
         if len(all_orders) > 0:
             self.sync_pending_orders_to_mongodb(all_orders)
         else:
-            logger.info("[STATS] No pending orders found across all accounts")
+            logger.info("📊 No pending orders found across all accounts")
         
-        logger.info(f"[OK] Pending orders sync complete: {len(all_orders)} orders collected")
+        logger.info(f"✅ Pending orders sync complete: {len(all_orders)} orders collected")
         logger.info("=" * 80)
     
     def should_sync_deals(self):
@@ -765,15 +765,15 @@ class MT5BridgeEnhanced:
     
     def run(self):
         """Main service loop"""
-        logger.info("[START] MT5 Bridge Service - Enhanced (Phase 4B) Starting...")
-        logger.info(f"[TIME]  Account sync interval: {UPDATE_INTERVAL} seconds ({UPDATE_INTERVAL/60:.1f} minutes)")
+        logger.info("🚀 MT5 Bridge Service - Enhanced (Phase 4B) Starting...")
+        logger.info(f"⏱️  Account sync interval: {UPDATE_INTERVAL} seconds ({UPDATE_INTERVAL/60:.1f} minutes)")
         logger.info(f"💼 Deal sync interval: {DEAL_SYNC_INTERVAL} seconds ({DEAL_SYNC_INTERVAL/3600:.1f} hours)")
-        logger.info(f"[SNAPSHOT] Equity snapshot interval: {EQUITY_SNAPSHOT_INTERVAL} seconds ({EQUITY_SNAPSHOT_INTERVAL/3600:.1f} hours)")
-        logger.info(f"[BACKFILL] Initial backfill: {INITIAL_BACKFILL_DAYS} days")
+        logger.info(f"📸 Equity snapshot interval: {EQUITY_SNAPSHOT_INTERVAL} seconds ({EQUITY_SNAPSHOT_INTERVAL/3600:.1f} hours)")
+        logger.info(f"📦 Initial backfill: {INITIAL_BACKFILL_DAYS} days")
         
         # Connect to MongoDB
         if not self.connect_mongodb():
-            logger.error("[ERROR] Failed to connect to MongoDB - exiting")
+            logger.error("❌ Failed to connect to MongoDB - exiting")
             sys.exit(1)
         
         # Load accounts
@@ -781,19 +781,19 @@ class MT5BridgeEnhanced:
         
         # Initialize MT5
         if not self.initialize_mt5():
-            logger.error("[ERROR] Failed to initialize MT5 - exiting")
+            logger.error("❌ Failed to initialize MT5 - exiting")
             sys.exit(1)
         
         # Log initial terminal status
         self.log_terminal_status()
         
         # Perform initial syncs
-        logger.info("[TARGET] Performing initial data sync...")
+        logger.info("🎯 Performing initial data sync...")
         self.sync_all_deals()
         self.sync_all_equity_snapshots()
         self.sync_all_pending_orders()
         
-        logger.info("[OK] Service initialized successfully - starting sync loop")
+        logger.info("✅ Service initialized successfully - starting sync loop")
         
         # Main sync loop
         cycle_count = 0
@@ -801,7 +801,7 @@ class MT5BridgeEnhanced:
             try:
                 cycle_count += 1
                 logger.info(f"\n{'='*80}")
-                logger.info(f"[STATS] SYNC CYCLE #{cycle_count}")
+                logger.info(f"📊 SYNC CYCLE #{cycle_count}")
                 
                 # Reload accounts from MongoDB (in case config changed)
                 self.load_mt5_accounts_from_mongodb()
@@ -814,7 +814,7 @@ class MT5BridgeEnhanced:
                 
                 # Sync equity snapshots (hourly check)
                 if self.should_sync_equity_snapshots():
-                    logger.info("[SNAPSHOT] Hourly equity snapshot triggered")
+                    logger.info("📸 Hourly equity snapshot triggered")
                     self.sync_all_equity_snapshots()
                 
                 # Sync deals (daily check)
@@ -827,26 +827,26 @@ class MT5BridgeEnhanced:
                     self.log_terminal_status()
                 
                 # Wait for next cycle
-                logger.info(f"[WAIT] Next sync in {UPDATE_INTERVAL} seconds...")
+                logger.info(f"⏳ Next sync in {UPDATE_INTERVAL} seconds...")
                 time.sleep(UPDATE_INTERVAL)
                 
             except KeyboardInterrupt:
-                logger.info("\n[WARNING] Service stopped by user (Ctrl+C)")
+                logger.info("\n⚠️ Service stopped by user (Ctrl+C)")
                 break
             except Exception as e:
-                logger.error(f"[ERROR] Unexpected error in main loop: {e}")
+                logger.error(f"❌ Unexpected error in main loop: {e}")
                 self.log_error("main_loop", str(e))
-                logger.info(f"[WAIT] Retrying in {UPDATE_INTERVAL} seconds...")
+                logger.info(f"⏳ Retrying in {UPDATE_INTERVAL} seconds...")
                 time.sleep(UPDATE_INTERVAL)
         
         # Cleanup
         mt5.shutdown()
-        logger.info("[OK] MT5 Bridge Service stopped")
+        logger.info("✅ MT5 Bridge Service stopped")
 
 if __name__ == "__main__":
     try:
         bridge = MT5BridgeEnhanced()
         bridge.run()
     except Exception as e:
-        logger.error(f"[ERROR] Fatal error: {e}")
+        logger.error(f"❌ Fatal error: {e}")
         sys.exit(1)
