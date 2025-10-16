@@ -57,8 +57,9 @@ def test_portfolio_fund_allocations(token):
             data = response.json()
             print(f"Response data: {json.dumps(data, indent=2)}")
             
-            # Extract total_aum
-            total_aum = data.get('total_aum', 0)
+            # Extract total_aum from nested data structure
+            data_section = data.get('data', {})
+            total_aum = data_section.get('total_aum', 0)
             print(f"Total AUM: ${total_aum:,.2f}")
             
             # Check if it's the expected value
