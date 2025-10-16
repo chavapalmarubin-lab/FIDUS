@@ -50,10 +50,13 @@ class MoneyManagersService:
         try:
             logger.info(f"📊 Calculating money manager performance for client: {client_id or 'ALL'}")
             
-            # Get accounts with their providers
-            match_filter = {"is_active": True}
+            # Get accounts with their providers FOR ALEJANDRO ONLY
+            match_filter = {
+                "is_active": True,
+                "client_id": {"$in": ["client_alejandro", "client_alejandro_mariscal"]}
+            }
             if client_id:
-                match_filter["client_id"] = client_id
+                match_filter["client_id"] = {"$in": [client_id, "client_alejandro", "client_alejandro_mariscal"]}
             
             accounts = await self.db.mt5_account_config.find(match_filter).to_list(length=None)
             
