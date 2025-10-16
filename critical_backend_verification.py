@@ -309,8 +309,8 @@ class CriticalBackendVerification:
                 rebate_data = {
                     "rebate_per_lot": f"${rebate_per_lot}",
                     "total_rebates": f"${total_rebates}",
-                    "total_lots": total_lots,
-                    "calculated_rebates": f"${total_lots * rebate_per_lot:.2f}" if rebate_per_lot and total_lots else "N/A"
+                    "total_volume": total_volume,
+                    "calculated_rebates": f"${total_volume * rebate_per_lot:.2f}" if rebate_per_lot and total_volume else "N/A"
                 }
                 
                 # Check rebate per lot rate
@@ -320,7 +320,7 @@ class CriticalBackendVerification:
                 total_rebates_correct = abs(total_rebates - expected_total_rebates) < 10.0
                 
                 # Check calculation consistency
-                calculated_total = total_lots * rebate_per_lot if rebate_per_lot and total_lots else 0
+                calculated_total = total_volume * rebate_per_lot if rebate_per_lot and total_volume else 0
                 calculation_consistent = abs(calculated_total - total_rebates) < 0.01
                 
                 if rebate_rate_correct and total_rebates_correct and calculation_consistent:
