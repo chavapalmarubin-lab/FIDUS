@@ -35,10 +35,11 @@ class InvestmentService:
         try:
             logger.info("📊 Calculating investments summary")
             
-            # Aggregate all active investments
+            # Aggregate all active investments FOR ALEJANDRO ONLY
             pipeline = [
                 {
                     "$match": {
+                        "client_id": {"$in": ["client_alejandro", "client_alejandro_mariscal"]},
                         "status": {"$in": ["active", "active_incubation"]}
                     }
                 },
