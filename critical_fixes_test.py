@@ -16,7 +16,7 @@ from datetime import datetime
 import uuid
 
 class FidusCriticalFixesTester:
-    def __init__(self, base_url="https://fidus-mt5-bridge.preview.emergentagent.com"):
+    def __init__(self, base_url="https://investsync-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
