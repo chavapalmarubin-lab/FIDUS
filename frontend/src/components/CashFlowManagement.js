@@ -1028,7 +1028,7 @@ const CashFlowManagement = () => {
                   <div className="pl-4 space-y-1 text-xs">
                     <div className="flex justify-between">
                       <span className="text-slate-500">→ Interest Trading Account (891215):</span>
-                      <span className="text-slate-300">{formatCurrency(fundAccounting?.separation_accounts?.['891215'] || 0)}</span>
+                      <span className="text-slate-300">{formatCurrency(fundAccounting?.separation_accounts?.['891215']?.balance || 0)}</span>
                     </div>
                   </div>
                 </div>
