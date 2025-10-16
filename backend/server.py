@@ -14143,7 +14143,11 @@ def calculate_investment_projections(investments, months=24):
             # Get investment details
             interest_start = inv.get('interest_start_date')
             principal = inv.get('principal_amount', 0)
-            interest_rate = inv.get('interest_rate', 0)
+            
+            # ✅ Get interest rate from fund configuration
+            fund_code = inv.get('fund_code', '')
+            fund_config = FIDUS_FUND_CONFIG.get(fund_code)
+            interest_rate = fund_config.interest_rate if fund_config else 0
             
             # Calculate months from interest start
             if interest_start:
