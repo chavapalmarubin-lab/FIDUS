@@ -19738,7 +19738,7 @@ async def calculate_mt5_rebates(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     account_number: Optional[int] = None,
-    rebate_per_lot: float = 4.99
+    rebate_per_lot: float = 5.05
 ):
     """
     Calculate broker rebates based on trading volume
