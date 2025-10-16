@@ -14895,7 +14895,8 @@ async def calculate_cash_flow_calendar():
         all_investments = await investments_cursor.to_list(length=None)
         
         # Get current fund revenue (real-time earnings)
-        current_revenue = await get_total_mt5_profits() + await get_separation_account_interest()
+        separation_data = await get_separation_account_interest()
+        current_revenue = await get_total_mt5_profits() + separation_data.get('total', 0)
         
         # Get current month's performance fees (assumed to be paid monthly)
         from services.performance_fee_calculator import PerformanceFeeCalculator
