@@ -42,11 +42,12 @@ class PortfolioService:
             logger.info(f"📊 Calculating fund allocations for client: {client_id}")
             
             # MongoDB aggregation - ALL calculations in database
+            # CRITICAL: Filter by Alejandro's client_id variations
             pipeline = [
                 # Match active investments for this client
                 {
                     "$match": {
-                        "client_id": client_id,
+                        "client_id": {"$in": [client_id, "client_alejandro", "client_alejandro_mariscal"]},
                         "status": {"$in": ["active", "active_incubation"]}
                     }
                 },
