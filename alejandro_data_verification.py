@@ -122,10 +122,11 @@ def test_investments_summary(token):
             data = response.json()
             print(f"Response data: {json.dumps(data, indent=2)}")
             
-            # Extract key values
-            total_aum = data.get('total_aum', 0)
-            active_clients = data.get('active_clients', 0)
-            total_investments = data.get('total_investments', 0)
+            # Extract key values from nested data structure
+            data_section = data.get('data', {})
+            total_aum = data_section.get('total_aum', 0)
+            active_clients = data_section.get('active_clients', 0)
+            total_investments = data_section.get('total_investments', 0)
             
             print(f"Total AUM: ${total_aum:,.2f}")
             print(f"Active Clients: {active_clients}")
