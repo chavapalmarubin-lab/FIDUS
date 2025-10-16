@@ -68,7 +68,7 @@ def test_portfolio_fund_allocations(token):
                 print(f"✅ CORRECT: Total AUM = ${total_aum:,.2f} (expected ${expected_aum:,.2f})")
                 
                 # Check fund breakdown
-                funds = data.get('funds', [])
+                funds = data_section.get('funds', [])
                 core_fund = None
                 balance_fund = None
                 
