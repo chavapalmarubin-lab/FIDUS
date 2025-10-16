@@ -14717,11 +14717,13 @@ async def get_total_mt5_profits() -> float:
         logging.error(f"Error calculating MT5 trading TRUE P&L: {str(e)}")
         return 0.0  # Return 0 if calculation fails
 
-async def get_separation_account_interest() -> float:
+async def get_separation_account_interest() -> dict:
     """
     Get ONLY the broker interest from separation accounts (NOT the full balance)
     PHASE 3 FIX: Separation balance = profit withdrawals + broker interest
     We only want to return the broker interest part!
+    
+    NOW RETURNS: dict with total and individual account breakdowns
     """
     try:
         # Get total profit withdrawals from all trading accounts
@@ -14730,6 +14732,7 @@ async def get_separation_account_interest() -> float:
         
         total_profit_withdrawals = 0.0
         separation_balance = 0.0
+        separation_accounts_detail = {}  # NEW: Individual account breakdowns
         
         # Calculate total profit withdrawals
         for account in all_mt5_accounts:
@@ -14744,7 +14747,17 @@ async def get_separation_account_interest() -> float:
                     value = account.get('balance', account.get('equity', 0))
                 else:
                     value = account.get('equity', 0)
-                separation_balance += float(value) if value else 0.0
+                
+                account_value = float(value) if value else 0.0
+                separation_balance += account_value
+                
+                # Store individual account details
+                separation_accounts_detail[str(account_num)] = {
+                    "account": account_num,
+                    "name": account.get('name', f'Account {account_num}'),
+                    "balance": account_value,
+                    "fund_type": account.get('fund_type', 'SEPARATION')
+                }
         
         # CRITICAL FIX: Broker interest = Separation Balance - Profit Withdrawals
         broker_interest = separation_balance - total_profit_withdrawals
@@ -14753,11 +14766,18 @@ async def get_separation_account_interest() -> float:
         logging.info(f"   Separation Balance: ${separation_balance:.2f}")
         logging.info(f"   Profit Withdrawals: ${total_profit_withdrawals:.2f}")
         logging.info(f"   Broker Interest ONLY: ${broker_interest:.2f}")
-        return broker_interest
+        logging.info(f"   Individual Accounts: {list(separation_accounts_detail.keys())}")
+        
+        return {
+            "total": broker_interest,
+            "separation_balance": separation_balance,
+            "profit_withdrawals": total_profit_withdrawals,
+            "accounts": separation_accounts_detail
+        }
         
     except Exception as e:
         logging.error(f"Error calculating broker interest: {str(e)}")
-        return 0.0
+        return {"total": 0.0, "separation_balance": 0.0, "profit_withdrawals": 0.0, "accounts": {}}
 
 def add_days(date_obj, days):
     """Add days to a date object"""
