@@ -194,7 +194,7 @@ class MT5DealsService:
         Returns:
             {
                 "total_volume": 156.5,
-                "rebate_per_lot": 4.99,
+                "rebate_per_lot": 5.05,
                 "total_rebates": 790.825,
                 "by_account": [
                     {"account": 886557, "volume": 50.5, "rebates": 255.025},
