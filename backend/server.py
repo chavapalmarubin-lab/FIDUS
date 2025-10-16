@@ -15272,6 +15272,7 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
             "summary": {
                 "mt5_trading_profits": mt5_trading_profits,  # Get real MT5 profit/loss (excluding separation)
                 "separation_interest": separation_interest,  # New line item for separation accounts
+                "separation_accounts": separation_data.get('accounts', {}),  # NEW: Individual account breakdowns
                 "broker_rebates": round(broker_rebates, 2),  # Real broker rebates from rebate calculator
                 "client_interest_obligations": round(total_client_obligations, 2),
                 "performance_fees_accrued": round(performance_fees_accrued, 2),  # Performance fees owed to managers
