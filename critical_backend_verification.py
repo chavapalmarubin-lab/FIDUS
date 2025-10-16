@@ -295,10 +295,11 @@ class CriticalBackendVerification:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Extract rebate information
-                rebate_per_lot = data.get('rebate_per_lot', 0)
-                total_rebates = data.get('total_rebates', 0)
-                total_lots = data.get('total_lots', 0)
+                # Extract rebate information from the correct structure
+                rebates_data = data.get('rebates', {})
+                rebate_per_lot = rebates_data.get('rebate_per_lot', 0)
+                total_rebates = rebates_data.get('total_rebates', 0)
+                total_volume = rebates_data.get('total_volume', 0)  # This is total lots
                 
                 # Expected values
                 expected_rebate_per_lot = 5.05
