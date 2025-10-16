@@ -812,6 +812,31 @@ const TradingAnalyticsDashboard = () => {
       )}
     </div>
   );
+  } catch (renderError) {
+    console.error('Trading Analytics Dashboard render error:', renderError);
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-900/20 border border-red-600 rounded-lg p-6">
+          <div className="flex items-center">
+            <AlertCircle className="h-6 w-6 text-red-400 mr-3" />
+            <div>
+              <h3 className="text-red-400 font-semibold mb-1">Dashboard Render Error</h3>
+              <p className="text-red-300 text-sm">
+                An unexpected error occurred while rendering the dashboard. Please try refreshing the page.
+              </p>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="mt-4 bg-cyan-600 hover:bg-cyan-700"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh Page
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default TradingAnalyticsDashboard;
