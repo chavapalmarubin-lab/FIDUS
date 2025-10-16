@@ -189,7 +189,7 @@ class MT5DealsService:
         """
         Calculate broker rebates based on trading volume
         
-        Formula: total_volume (lots) × rebate_per_lot ($4.99)
+        Formula: total_volume (lots) × rebate_per_lot ($5.05)
         
         Returns:
             {
