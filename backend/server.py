@@ -3190,8 +3190,6 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         # ONLY add the broker interest (not the full separation balance)
         broker_interest = separation_balance - total_profit_withdrawals  # Interest earned by broker
         
-        # Get broker rebates from rebate service
-        from services.rebate_calculator import RebateCalculator
         # Get broker rebates from MT5 deals service (FIXED: using same source as /api/mt5/rebates)
         from services.mt5_deals_service import mt5_deals_service
         
