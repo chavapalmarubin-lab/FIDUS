@@ -24584,6 +24584,239 @@ async def get_google_auth_url_legacy(current_user: dict = Depends(get_current_ad
 # Second set of duplicate OAuth endpoints removed - using individual OAuth implementation
 
 
+
+# ===============================================================================
+# PHASE 2 ARCHITECTURAL REFACTOR - NEW CALCULATION ENDPOINTS
+# ALL calculations done in backend - frontend ONLY displays
+# ===============================================================================
+
+# Portfolio Endpoints
+@api_router.get("/portfolio/fund-allocations")
+async def get_fund_allocations_endpoint(current_user: dict = Depends(get_current_user)):
+    """
+    Get complete fund allocation with ALL calculations done in backend.
+    Frontend does ZERO calculations - only displays.
+    
+    Returns:
+        {
+            "total_aum": 118151.41,
+            "funds": [
+                {
+                    "fund_code": "CORE",
+                    "amount": 18151.41,
+                    "percentage": 15.37,
+                    "accounts": ["885822", "891234"],
+                    "account_count": 2
+                }
+            ]
+        }
+    """
+    try:
+        from services.portfolio_service import PortfolioService
+        
+        client_id = current_user.get('id')
+        service = PortfolioService(db)
+        result = await service.calculate_fund_allocations(client_id)
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logging.error(f"Error in fund allocations endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Investment Summary Endpoint
+@api_router.get("/investments/summary")
+async def get_investments_summary_endpoint(current_user: dict = Depends(get_current_user)):
+    """
+    Get complete investment summary with ALL calculations done in backend.
+    Frontend does ZERO calculations - only displays.
+    
+    Returns:
+        {
+            "total_aum": 118151.41,
+            "total_investments": 2,
+            "active_clients": 1,
+            "avg_investment": 59075.71,
+            "by_fund": [...]
+        }
+    """
+    try:
+        from services.investment_service import InvestmentService
+        
+        service = InvestmentService(db)
+        result = await service.get_investments_summary()
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logging.error(f"Error in investments summary endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Analytics Trading Metrics Endpoint
+@api_router.get("/analytics/trading-metrics")
+async def get_trading_metrics_endpoint(
+    account: str = 'all',
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get COMPLETE trading analytics with ALL calculations done in backend.
+    Frontend does ZERO calculations - only displays.
+    All numbers returned as formatted strings - NO .toFixed() needed in frontend.
+    
+    Returns:
+        {
+            "total_pnl": "36264.44",
+            "win_rate": "65.50",
+            "profit_factor": "2.15",
+            ...
+        }
+    """
+    try:
+        from services.analytics_service import AnalyticsService
+        
+        service = AnalyticsService(db)
+        result = await service.get_trading_metrics(
+            account_number=account,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logging.error(f"Error in trading metrics endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Money Managers Performance Endpoint
+@api_router.get("/money-managers/performance")
+async def get_manager_performance_endpoint(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get COMPLETE money manager performance with ALL calculations done in backend.
+    Frontend does ZERO calculations - only displays.
+    Groups by strategy provider and calculates all metrics.
+    
+    Returns:
+        {
+            "managers": [
+                {
+                    "manager_name": "GoldenTrade Provider",
+                    "total_pnl": 692.22,
+                    "trade_count": 45,
+                    "win_rate": 60.00,
+                    ...
+                }
+            ],
+            "total_managers": 3
+        }
+    """
+    try:
+        from services.money_managers_service import MoneyManagersService
+        
+        client_id = current_user.get('id')
+        service = MoneyManagersService(db)
+        result = await service.get_manager_performance(
+            client_id=client_id,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logging.error(f"Error in manager performance endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# MT5 Accounts - ALL 7 Accounts Endpoint
+@api_router.get("/mt5/accounts/all")
+async def get_all_mt5_accounts_endpoint(current_user: dict = Depends(get_current_user)):
+    """
+    Get ALL MT5 accounts (all 7) for a client.
+    Includes accounts with sync issues.
+    Backend does ALL processing - frontend only displays.
+    
+    Returns:
+        {
+            "accounts": [...],  # ALL 7 accounts
+            "total_accounts": 7,
+            "total_balance": 128024.00,
+            "total_equity": 111223.05,
+            "total_profit": 6903.11
+        }
+    """
+    try:
+        client_id = current_user.get('id')
+        
+        # Get ALL configured accounts (no filtering)
+        accounts = await db.mt5_account_config.find({
+            "is_active": True
+        }).to_list(length=None)
+        
+        result_accounts = []
+        total_balance = 0.0
+        total_equity = 0.0
+        total_profit = 0.0
+        
+        for account in accounts:
+            account_number = account["account"]
+            
+            # Get latest MT5 data
+            mt5_data = await db.mt5_accounts.find_one(
+                {"account": account_number},
+                sort=[("last_sync", -1)]
+            )
+            
+            balance = mt5_data.get("balance", 0) if mt5_data else 0
+            equity = mt5_data.get("equity", 0) if mt5_data else 0
+            profit = mt5_data.get("profit", 0) if mt5_data else 0
+            
+            total_balance += balance
+            total_equity += equity
+            total_profit += profit
+            
+            result_accounts.append({
+                "account_number": str(account_number),
+                "account_name": account.get("name", ""),
+                "fund_code": account.get("fund_type", ""),
+                "broker": account.get("broker_name", "MEXAtlantic"),
+                "server": account.get("server", "MEXAtlantic-Real"),
+                "balance": round(balance, 2),
+                "equity": round(equity, 2),
+                "profit": round(profit, 2),
+                "sync_status": "success" if mt5_data else "failed",
+                "last_sync": mt5_data.get("last_sync") if mt5_data else None
+            })
+        
+        return {
+            "success": True,
+            "accounts": result_accounts,
+            "total_accounts": len(result_accounts),
+            "total_balance": round(total_balance, 2),
+            "total_equity": round(total_equity, 2),
+            "total_profit": round(total_profit, 2)
+        }
+    except Exception as e:
+        logging.error(f"Error in get all MT5 accounts endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ===============================================================================
 # INCLUDE ROUTER - MUST BE LAST!
 # ===============================================================================
