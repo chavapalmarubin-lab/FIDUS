@@ -386,7 +386,7 @@ const FundPortfolioManagement = () => {
                     <Pie
                       data={Object.entries(fundData || {}).map(([fundCode, fund]) => ({
                         name: `${fundCode} Fund`,
-                        value: fund.current_aum || 0,
+                        value: fund.aum || fund.current_aum || 0,
                         fundCode: fundCode
                       }))}
                       cx="50%"
