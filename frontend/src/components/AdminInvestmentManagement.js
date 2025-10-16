@@ -403,10 +403,7 @@ const AdminInvestmentManagement = () => {
             <div>
               <p className="text-sm text-slate-400">Avg Investment</p>
               <p className="text-xl font-semibold text-white">
-                {overviewData?.total_investments > 0 
-                  ? formatCurrency((overviewData?.total_aum || 0) / overviewData?.total_investments)
-                  : formatCurrency(0)
-                }
+                {formatCurrency(overviewData?.avg_investment || 0)}
               </p>
             </div>
           </div>
