@@ -14238,6 +14238,10 @@ async def get_client_investments(client_id: str):
             "overall_return_percentage": round(((total_current_value - total_invested) / total_invested * 100), 2) if total_invested > 0 else 0.0
         }
         
+        # ✅ PHASE 1: Calculate 24-month projections (moved from frontend Lines 236-246)
+        projections = calculate_investment_projections(investments_data, months=24)
+        portfolio_stats["projections"] = projections
+        
         return {
             "success": True,
             "client_id": client_id,
