@@ -225,33 +225,16 @@ const InvestmentDashboard = ({ user, userType }) => {
   };
 
   const prepareProjectionsChartData = () => {
-    const chartData = [];
-    const baseDate = new Date();
-    
-    for (let i = 0; i <= 24; i++) {
-      const date = addMonths(baseDate, i);
-      let totalValue = 0;
-      
-      investments.forEach(inv => {
-        const interestStartDate = safeParseDate(inv.interest_start_date);
-        const monthsFromStart = Math.max(0, i - Math.max(0, differenceInDays(interestStartDate, baseDate) / 30));
-        let projectedValue = inv.principal_amount;
-        
-        if (monthsFromStart > 0 && inv.interest_rate > 0) {
-          const interest = inv.principal_amount * (inv.interest_rate / 100) * monthsFromStart;
-          projectedValue += interest;
-        }
-        
-        totalValue += projectedValue;
-      });
-      
-      chartData.push({
-        month: safeFormatDate(date, 'MMM yyyy'),
-        value: Math.round(totalValue)
-      });
+    // ✅ PHASE 1: Use projections from backend API (moved from Lines 231-254)
+    if (portfolioStats?.projections && Array.isArray(portfolioStats.projections)) {
+      return portfolioStats.projections.map(proj => ({
+        month: proj.month,
+        value: Math.round(proj.value)
+      }));
     }
     
-    return chartData;
+    // Fallback to empty array if no projections
+    return [];
   };
 
   const calculateTimelineInfo = (investment) => {
