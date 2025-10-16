@@ -73,10 +73,11 @@ class InvestmentService:
             # Calculate average in BACKEND
             avg_investment = (total_aum / client_count) if client_count > 0 else 0.0
             
-            # Get breakdown by fund
+            # Get breakdown by fund FOR ALEJANDRO ONLY
             fund_pipeline = [
                 {
                     "$match": {
+                        "client_id": {"$in": ["client_alejandro", "client_alejandro_mariscal"]},
                         "status": {"$in": ["active", "active_incubation"]}
                     }
                 },
