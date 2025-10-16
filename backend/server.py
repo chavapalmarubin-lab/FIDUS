@@ -3117,18 +3117,29 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         # Format account data for response
         formatted_accounts = []
         for acc in trading_accounts:
+            balance = acc.get('balance', 0)
+            true_pnl = acc.get('true_pnl', 0)
+            
+            # ✅ PHASE 1: Calculate return percentage (moved from frontend Line 79)
+            return_percent = (true_pnl / balance * 100) if balance > 0 else 0
+            
             formatted_accounts.append({
                 'account_number': acc.get('account'),
                 'account_name': f"Account {acc.get('account')}",
-                'balance': round(acc.get('balance', 0), 2),
+                'balance': round(balance, 2),
                 'equity': round(acc.get('equity', 0), 2),
                 'displayed_pnl': round(acc.get('displayed_pnl', 0), 2),
                 'profit_withdrawals': round(acc.get('profit_withdrawals', 0), 2),
                 'inter_account_transfers': round(acc.get('inter_account_transfers', 0), 2),
-                'true_pnl': round(acc.get('true_pnl', 0), 2),
+                'true_pnl': round(true_pnl, 2),
+                'return_percent': round(return_percent, 2),  # ✅ NEW FIELD
                 'needs_review': acc.get('needs_review', False),
                 'last_updated': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else acc.get('updated_at')
             })
+        
+        # ✅ PHASE 1: Calculate overall return percentage (moved from frontend Lines 56-58)
+        total_balance = sum(a.get('balance', 0) for a in trading_accounts)
+        overall_return_percent = (total_true_pnl / total_balance * 100) if total_balance > 0 else 0
         
         return {
             'success': True,
@@ -3139,11 +3150,13 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'name': 'Separation Account'
             },
             'totals': {
+                'total_balance': round(total_balance, 2),  # ✅ NEW FIELD
                 'total_equity': round(total_equity, 2),
                 'total_true_pnl': round(total_true_pnl, 2),
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
                 'total_inter_account_transfers': round(total_inter_account, 2),
-                'separation_balance': round(separation_balance, 2)
+                'separation_balance': round(separation_balance, 2),
+                'overall_return_percent': round(overall_return_percent, 2)  # ✅ NEW FIELD
             },
             'verification': {
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
