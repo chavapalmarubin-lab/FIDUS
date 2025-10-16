@@ -3191,7 +3191,8 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         broker_interest = separation_balance - total_profit_withdrawals  # Interest earned by broker
         
         # Get broker rebates from MT5 deals service (FIXED: using same source as /api/mt5/rebates)
-        from services.mt5_deals_service import mt5_deals_service
+        from services.mt5_deals_service import MT5DealsService
+        mt5_deals_service = MT5DealsService(db)
         
         # Get rebates for current month (or last 30 days)
         end_date = datetime.now(timezone.utc)
@@ -15204,7 +15205,8 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         upcoming_redemptions.sort(key=lambda x: x['date'])
         
         # Get broker rebates from MT5 deals service (FIXED: using same source as /api/mt5/rebates)
-        from services.mt5_deals_service import mt5_deals_service
+        from services.mt5_deals_service import MT5DealsService
+        mt5_deals_service = MT5DealsService(db)
         
         # Get rebates for current month (or last 30 days)
         end_date = datetime.now(timezone.utc)
