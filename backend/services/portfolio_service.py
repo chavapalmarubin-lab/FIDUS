@@ -94,8 +94,8 @@ class PortfolioService:
                 fund_code = fund["fund_code"]
                 
                 # Get accounts for this fund
+                # ✅ FIX: mt5_account_config doesn't have client_id field, just match by fund_type
                 mt5_accounts = await self.db.mt5_account_config.find({
-                    "client_id": client_id,
                     "fund_type": fund_code,
                     "is_active": True
                 }).to_list(length=None)
