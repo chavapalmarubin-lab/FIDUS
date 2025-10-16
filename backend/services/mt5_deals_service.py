@@ -184,7 +184,7 @@ class MT5DealsService:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         account_number: Optional[int] = None,
-        rebate_per_lot: float = 4.99
+        rebate_per_lot: float = 5.05
     ) -> Dict:
         """
         Calculate broker rebates based on trading volume
