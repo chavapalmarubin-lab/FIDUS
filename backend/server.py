@@ -14410,11 +14410,15 @@ async def get_admin_investments_overview():
             fund_summary["total_interest_paid"] = round(fund_summary["total_interest_paid"], 2)
             fund_summary["average_investment"] = round(fund_summary["average_investment"], 2)
         
+        # ✅ PHASE 1: Calculate overall average investment (moved from frontend Line 407)
+        avg_investment = (total_aum / len(all_investments)) if len(all_investments) > 0 else 0.0
+        
         return {
             "success": True,
             "total_aum": round(total_aum, 2),
             "total_investments": len(all_investments),
             "total_clients": len(clients_summary),
+            "avg_investment": round(avg_investment, 2),  # ✅ NEW: Overall average calculation
             "clients": clients_summary,
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
