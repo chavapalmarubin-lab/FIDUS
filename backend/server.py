@@ -15253,7 +15253,8 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         
         # Get MT5 profits
         mt5_trading_profits = await get_total_mt5_profits()
-        separation_interest = await get_separation_account_interest()
+        separation_data = await get_separation_account_interest()  # NOW returns dict
+        separation_interest = separation_data.get('total', 0)  # Extract total for calculations
         
         # Calculate fund revenue including broker rebates
         fund_revenue = mt5_trading_profits + separation_interest + broker_rebates
