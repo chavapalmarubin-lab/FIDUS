@@ -123,7 +123,7 @@ class CriticalBackendVerification:
                 if response.status_code == 200:
                     data = response.json()
                     self.alejandro_token = data.get('token')
-                    self.alejandro_client_id = data.get('user', {}).get('id')
+                    self.alejandro_client_id = data.get('id')  # Direct from response, not nested in 'user'
                     
                     if self.alejandro_token and self.alejandro_client_id:
                         self.log_test("Alejandro Authentication", True, 
