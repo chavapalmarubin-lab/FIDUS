@@ -132,20 +132,18 @@ const TradingAnalyticsDashboard = () => {
         if (summaryResponse.success && dailyPnLResponse.success && dealsResponse.success) {
           const summary = summaryResponse.summary;
           
-          // Calculate additional metrics with defensive defaults
+          // ✅ PHASE 1: Use calculated metrics from backend API (moved from Lines 136-148)
           const winDeals = summary.win_deals || 0;
           const lossDeals = summary.loss_deals || 0;
           const totalTrades = winDeals + lossDeals || 1; // Prevent division by zero
-          const winRate = totalTrades > 0 ? (winDeals / totalTrades) * 100 : 0;
-          
           const totalProfit = summary.total_profit || 0;
-          const avgTrade = totalTrades > 0 ? totalProfit / totalTrades : 0;
-          const avgWin = winDeals > 0 ? (summary.total_win_profit || 0) / winDeals : 0;
-          const avgLoss = lossDeals > 0 ? (summary.total_loss_profit || 0) / lossDeals : 0;
           
-          // Profit factor: total wins / absolute(total losses)
-          const totalLossAbs = Math.abs(summary.total_loss_profit || 0);
-          const profitFactor = totalLossAbs > 0 ? (summary.total_win_profit || 0) / totalLossAbs : 0;
+          // Use backend-calculated values instead of frontend calculations
+          const winRate = summary.win_rate || 0;           // ✅ From backend
+          const avgTrade = summary.avg_trade || 0;         // ✅ From backend
+          const avgWin = summary.avg_win || 0;             // ✅ From backend
+          const avgLoss = summary.avg_loss || 0;           // ✅ From backend
+          const profitFactor = summary.profit_factor || 0; // ✅ From backend
           
           // Build analytics data structure from deal summary
           const analytics = {
