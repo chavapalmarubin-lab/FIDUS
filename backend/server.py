@@ -19749,7 +19749,7 @@ async def calculate_mt5_rebates(
     - start_date: Calculate from date (ISO format)
     - end_date: Calculate to date (ISO format)
     - account_number: Filter by MT5 account
-    - rebate_per_lot: Rebate amount per lot (default: $5.05)
+    - rebate_per_lot: Rebate amount per lot (default: $4.99)
     
     Returns:
         {
