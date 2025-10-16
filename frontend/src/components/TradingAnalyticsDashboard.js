@@ -821,8 +821,11 @@ const TradingAnalyticsDashboard = () => {
             <AlertCircle className="h-6 w-6 text-red-400 mr-3" />
             <div>
               <h3 className="text-red-400 font-semibold mb-1">Dashboard Render Error</h3>
-              <p className="text-red-300 text-sm">
-                An unexpected error occurred while rendering the dashboard. Please try refreshing the page.
+              <p className="text-red-300 text-sm mb-2">
+                An unexpected error occurred while rendering the dashboard.
+              </p>
+              <p className="text-red-200 text-xs font-mono bg-red-950/50 p-2 rounded mb-2">
+                {renderError?.message || String(renderError)}
               </p>
               <Button 
                 onClick={() => window.location.reload()}
