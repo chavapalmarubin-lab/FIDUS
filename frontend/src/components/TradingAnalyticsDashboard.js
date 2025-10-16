@@ -110,6 +110,10 @@ const TradingAnalyticsDashboard = () => {
           start_date: dateRange.start_date,
           end_date: dateRange.end_date
         });
+        
+        // Get all MT5 accounts for dropdown
+        const mt5AccountsResponse = await apiAxios.get('/admin/mt5/config/accounts');
+        const allAccounts = mt5AccountsResponse?.data?.accounts || [];
 
         // PHASE 4A: Fetch daily P&L for equity curve
         const dailyPnLResponse = await mt5Service.getDailyPnL({
