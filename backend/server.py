@@ -14123,6 +14123,60 @@ async def create_client_investment(investment_data: InvestmentCreate):
         logging.error(f"Create investment error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
 
+def calculate_investment_projections(investments, months=24):
+    """
+    Calculate 24-month investment projections
+    Logic matches frontend InvestmentDashboard.js Lines 236-246
+    ✅ PHASE 1: Moved from frontend to backend
+    """
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+    
+    projections = []
+    base_date = datetime.now()
+    
+    for month_num in range(0, months + 1):
+        projection_date = base_date + relativedelta(months=month_num)
+        total_value = 0
+        
+        for inv in investments:
+            # Get investment details
+            interest_start = inv.get('interest_start_date')
+            principal = inv.get('principal_amount', 0)
+            interest_rate = inv.get('interest_rate', 0)
+            
+            # Calculate months from interest start
+            if interest_start:
+                if isinstance(interest_start, str):
+                    try:
+                        interest_start = datetime.fromisoformat(interest_start.replace('Z', '+00:00'))
+                    except:
+                        interest_start = base_date
+                elif not isinstance(interest_start, datetime):
+                    interest_start = base_date
+                
+                days_diff = (interest_start - base_date).days
+                months_delay = max(0, days_diff / 30)
+                months_from_start = max(0, month_num - months_delay)
+            else:
+                months_from_start = month_num
+            
+            # Calculate projected value (same formula as frontend)
+            projected_value = principal
+            if months_from_start > 0 and interest_rate > 0:
+                interest = principal * (interest_rate / 100) * months_from_start
+                projected_value += interest
+            
+            total_value += projected_value
+        
+        projections.append({
+            'month': projection_date.strftime('%b %Y'),
+            'value': round(total_value, 2)
+        })
+    
+    return projections
+
+
 @api_router.get("/investments/client/{client_id}")
 async def get_client_investments(client_id: str):
     """Get all investments for a specific client - Direct MongoDB version"""
