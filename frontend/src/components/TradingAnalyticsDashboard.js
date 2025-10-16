@@ -173,6 +173,7 @@ const TradingAnalyticsDashboard = () => {
               corrected_data_used: true, // Phase 4A uses real deal data
               data_source: 'Deal History (Phase 4A)'
             },
+            accounts_included: allAccounts.filter(acc => acc.is_active !== false),  // All active accounts
             last_sync: summary.latest_deal || new Date().toISOString()
           };
           
