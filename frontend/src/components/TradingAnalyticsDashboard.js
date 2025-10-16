@@ -509,10 +509,10 @@ const TradingAnalyticsDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-400">
-                  {formatCurrency(analyticsData.overview.max_drawdown)}
+                  {formatCurrency(analyticsData.overview.max_drawdown || 0)}
                 </div>
                 <div className="text-sm text-slate-400 mt-2">
-                  Recovery Factor: {analyticsData.overview.recovery_factor.toFixed(2)}
+                  Recovery Factor: {(analyticsData.overview.recovery_factor || 0).toFixed(2)}
                 </div>
               </CardContent>
             </Card>
@@ -526,11 +526,11 @@ const TradingAnalyticsDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${analyticsData.overview.sharpe_ratio >= 1.0 ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {analyticsData.overview.sharpe_ratio.toFixed(2)}
+                <div className={`text-2xl font-bold ${(analyticsData.overview.sharpe_ratio || 0) >= 1.0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {(analyticsData.overview.sharpe_ratio || 0).toFixed(2)}
                 </div>
                 <div className="text-sm text-slate-400 mt-2">
-                  {analyticsData.overview.sharpe_ratio >= 1.0 ? 'Good Risk-Adjusted Return' : 'Moderate Performance'}
+                  {(analyticsData.overview.sharpe_ratio || 0) >= 1.0 ? 'Good Risk-Adjusted Return' : 'Moderate Performance'}
                 </div>
               </CardContent>
             </Card>
