@@ -469,12 +469,12 @@ const TradingAnalyticsDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${analyticsData.overview.profit_factor >= 1.5 ? 'text-green-400' : analyticsData.overview.profit_factor >= 1.0 ? 'text-yellow-400' : 'text-red-400'}`}>
-                  {analyticsData.overview.profit_factor.toFixed(2)}
+                <div className={`text-2xl font-bold ${(analyticsData.overview.profit_factor || 0) >= 1.5 ? 'text-green-400' : (analyticsData.overview.profit_factor || 0) >= 1.0 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  {(analyticsData.overview.profit_factor || 0).toFixed(2)}
                 </div>
                 <div className="text-sm text-slate-400 mt-2">
-                  {analyticsData.overview.profit_factor >= 1.5 ? 'Excellent' : 
-                   analyticsData.overview.profit_factor >= 1.0 ? 'Profitable' : 'Needs Improvement'}
+                  {(analyticsData.overview.profit_factor || 0) >= 1.5 ? 'Excellent' : 
+                   (analyticsData.overview.profit_factor || 0) >= 1.0 ? 'Profitable' : 'Needs Improvement'}
                 </div>
               </CardContent>
             </Card>
