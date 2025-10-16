@@ -12,6 +12,8 @@ PHASE 4B ENHANCEMENTS:
 - Terminal status monitoring
 - Comprehensive error logging
 - All Phase 4A features included
+
+FIX: Removed emojis to prevent Windows Unicode encoding errors
 """
 
 import MetaTrader5 as mt5
@@ -21,8 +23,14 @@ import time
 import os
 from dotenv import load_dotenv
 import sys
+import io
 import logging
 import traceback
+
+# Fix Unicode encoding issues on Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Configure logging
 logging.basicConfig(
