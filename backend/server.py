@@ -3192,16 +3192,23 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         
         # Get broker rebates from rebate service
         from services.rebate_calculator import RebateCalculator
-        calculator = RebateCalculator(db)
+        # Get broker rebates from MT5 deals service (FIXED: using same source as /api/mt5/rebates)
+        from services.mt5_deals_service import mt5_deals_service
         
         # Get rebates for current month (or last 30 days)
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=30)
         
-        rebate_data = await calculator.get_rebates_for_cash_flow(start_date, end_date)
+        # Calculate rebates from MT5 deals history at $5.05/lot
+        rebate_data = await mt5_deals_service.calculate_rebates(
+            start_date=start_date,
+            end_date=end_date,
+            account_number=None,  # All accounts
+            rebate_per_lot=5.05
+        )
         broker_rebates = rebate_data.get('total_rebates', 0)
         
-        logging.info(f"💰 Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots")
+        logging.info(f"💰 Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots (using MT5 deals service)")
         
         # CORRECT calculation: TRUE P&L + broker interest + broker rebates (NO double counting)
         total_fund_assets = mt5_trading_pnl + broker_interest + broker_rebates
