@@ -53,9 +53,7 @@ const MT5Dashboard = () => {
           total_allocated: correctedResult.summary?.total_balance || 0,
           total_accounts: correctedResult.accounts?.length || 0,
           total_positions: correctedResult.accounts?.reduce((sum, acc) => sum + (acc.open_positions || 0), 0) || 0,
-          overall_return_percent: correctedResult.summary?.total_balance > 0 
-            ? ((correctedResult.summary.total_true_pnl / correctedResult.summary.total_balance) * 100) 
-            : 0,
+          overall_return_percent: correctedResult.summary?.overall_return_percent || 0,  // ✅ PHASE 1: Use backend calculation
           data_quality: {
             live_accounts: correctedResult.accounts?.filter(acc => acc.connection_status === 'active').length || 0
           },
@@ -76,7 +74,7 @@ const MT5Dashboard = () => {
           allocated_amount: acc.balance || 0,
           current_equity: acc.equity || 0,
           profit_loss: acc.true_pnl || 0, // ✅ USE TRUE P&L
-          return_percent: acc.balance > 0 ? ((acc.true_pnl / acc.balance) * 100) : 0,
+          return_percent: acc.return_percent || 0,  // ✅ PHASE 1: Use backend calculation
           open_positions: acc.open_positions || 0,
           margin_used: acc.margin || 0,
           margin_free: acc.margin_free || 0,
