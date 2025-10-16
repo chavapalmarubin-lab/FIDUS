@@ -128,14 +128,38 @@ const TradingAnalyticsDashboard = () => {
         if (summaryResponse.success && dailyPnLResponse.success && dealsResponse.success) {
           const summary = summaryResponse.summary;
           
+          // Calculate additional metrics with defensive defaults
+          const winDeals = summary.win_deals || 0;
+          const lossDeals = summary.loss_deals || 0;
+          const totalTrades = winDeals + lossDeals || 1; // Prevent division by zero
+          const winRate = totalTrades > 0 ? (winDeals / totalTrades) * 100 : 0;
+          
+          const totalProfit = summary.total_profit || 0;
+          const avgTrade = totalTrades > 0 ? totalProfit / totalTrades : 0;
+          const avgWin = winDeals > 0 ? (summary.total_win_profit || 0) / winDeals : 0;
+          const avgLoss = lossDeals > 0 ? (summary.total_loss_profit || 0) / lossDeals : 0;
+          
+          // Profit factor: total wins / absolute(total losses)
+          const totalLossAbs = Math.abs(summary.total_loss_profit || 0);
+          const profitFactor = totalLossAbs > 0 ? (summary.total_win_profit || 0) / totalLossAbs : 0;
+          
           // Build analytics data structure from deal summary
           const analytics = {
             overview: {
-              total_pnl: summary.total_profit || 0,
+              total_pnl: totalProfit,
               total_volume: summary.total_volume || 0,
               total_deals: summary.total_deals || 0,
-              winning_trades: summary.win_deals || 0,
-              losing_trades: summary.loss_deals || 0,
+              total_trades: totalTrades,
+              winning_trades: winDeals,
+              losing_trades: lossDeals,
+              win_rate: winRate,
+              avg_trade: avgTrade,
+              avg_win: avgWin,
+              avg_loss: avgLoss,
+              profit_factor: profitFactor,
+              max_drawdown: summary.max_drawdown || 0,
+              recovery_factor: summary.recovery_factor || 0,
+              sharpe_ratio: summary.sharpe_ratio || 0,
               total_commission: summary.total_commission || 0,
               total_swap: summary.total_swap || 0,
               buy_deals: summary.buy_deals || 0,
