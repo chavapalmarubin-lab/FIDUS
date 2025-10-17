@@ -91,8 +91,7 @@ const CashFlowManagement = () => {
       setLoading(true);
       setError("");
       
-      // PHASE 3 FIX: Fetch corrected MT5 data with TRUE P&L
-      const mt5CorrectedResponse = await apiAxios.get(`/mt5/fund-performance/corrected`);
+      // ✅ PHASE 1: All calculations now done by backend API
       
       // Fetch fund accounting cash flow data
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
