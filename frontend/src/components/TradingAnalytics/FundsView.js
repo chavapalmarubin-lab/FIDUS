@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import { formatCurrency } from '../../constants/styles';
 import './FundsView.css';
+import './TradingAnalytics-responsive.css';
 
 export default function FundsView({ period }) {
   const [selectedFund, setSelectedFund] = useState('BALANCE');
