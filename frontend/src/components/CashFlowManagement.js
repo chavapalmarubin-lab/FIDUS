@@ -897,7 +897,7 @@ const CashFlowManagement = () => {
                   <p className="text-lg font-bold text-green-400">
                     {formatCurrency(fundAccounting?.assets?.broker_interest || 0)}
                   </p>
-                  {fundAccounting?.mt5_corrected_data && (
+                  {fundAccounting?.backend_calculated && (
                     <p className="text-xs text-yellow-400 mt-1">
                       Separation balance: {formatCurrency(fundAccounting?.separation_balance || 0)}
                     </p>
