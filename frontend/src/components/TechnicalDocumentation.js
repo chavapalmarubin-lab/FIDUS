@@ -1,6 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import ComponentCard from './ComponentCard';
-import LoadingSpinner from './LoadingSpinner';
+import Button from './ui/Button';
+import LoadingSpinner from './ui/LoadingSpinner';
+import Badge from './ui/Badge';
+import { COLORS, SPACING, TYPOGRAPHY } from '../constants/styles';
 import ReactMarkdown from 'react-markdown';
 
 // Lazy load heavy components for better performance (Phase 7)
