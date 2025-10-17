@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import PortfolioView from './TradingAnalytics/PortfolioView';
-import FundsView from './TradingAnalytics/FundsView';
-import ManagersView from './TradingAnalytics/ManagersView';
-import AccountsView from './TradingAnalytics/AccountsView';
+import React, { useState, lazy, Suspense } from 'react';
+import LoadingSpinner from './ui/LoadingSpinner';
 import './TradingAnalyticsDashboard.css';
+
+// Lazy load tab components for better performance
+const PortfolioView = lazy(() => import('./TradingAnalytics/PortfolioView'));
+const FundsView = lazy(() => import('./TradingAnalytics/FundsView'));
+const ManagersView = lazy(() => import('./TradingAnalytics/ManagersView'));
+const AccountsView = lazy(() => import('./TradingAnalytics/AccountsView'));
 
 export default function TradingAnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState('managers'); // Default to Managers (most important)
