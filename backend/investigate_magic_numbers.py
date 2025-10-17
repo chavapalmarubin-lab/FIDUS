@@ -2,12 +2,11 @@
 """
 Investigate magic numbers in mt5_deals_history collection to understand manager-level data
 """
-import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 import os
 import sys
 
-async def investigate_magic_numbers():
+def investigate_magic_numbers():
     """Investigate magic numbers in mt5_deals_history collection"""
     # Read MONGO_URL directly from .env file
     with open('.env', 'r') as f:
@@ -16,7 +15,7 @@ async def investigate_magic_numbers():
                 mongo_url = line.strip().split('=', 1)[1]
                 break
     
-    client = AsyncIOMotorClient(mongo_url)
+    client = MongoClient(mongo_url)
     db = client.fidus_investment_management
     
     print("=" * 80)
