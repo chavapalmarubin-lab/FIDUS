@@ -481,7 +481,7 @@ const FundPortfolioManagement = () => {
                   {fundCode} Fund
                 </CardTitle>
                 <Badge className="bg-slate-700">
-                  {fund.fund_type}
+                  {fund.fund_code}
                 </Badge>
               </div>
             </CardHeader>
