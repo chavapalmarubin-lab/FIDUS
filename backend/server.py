@@ -9736,7 +9736,7 @@ async def get_crm_admin_dashboard():
                     "open_positions": 0,  # Would need positions data
                     "last_activity": mt5_account.get('updated_at', datetime.now(timezone.utc).isoformat()),
                     "broker": mt5_account.get('name', 'MEXAtlantic'),  # MT5 Bridge uses 'name'
-                    "fund_code": mt5_account.get('fund_type', 'Unknown'),  # MT5 Bridge uses 'fund_type'
+                    "fund_code": mt5_account.get('fund_type', 'Unknown'),  # ✅ PHASE 2: Translate fund_type → fund_code
                     "profit_loss": profit_loss
                 })
                 
