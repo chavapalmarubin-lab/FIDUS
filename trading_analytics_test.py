@@ -91,12 +91,13 @@ class TradingAnalyticsAPITester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Extract key metrics
-                total_aum = data.get('total_aum', 0)
-                total_pnl = data.get('total_pnl', 0)
-                blended_return = data.get('blended_return', 0)
-                total_managers = data.get('total_managers', 0)
-                funds_breakdown = data.get('funds', {})
+                # Extract key metrics from portfolio object
+                portfolio = data.get('portfolio', {})
+                total_aum = portfolio.get('total_aum', 0)
+                total_pnl = portfolio.get('total_pnl', 0)
+                blended_return = portfolio.get('blended_return', 0)
+                total_managers = portfolio.get('total_managers', 0)
+                funds_breakdown = portfolio.get('funds', {})
                 
                 # Verify expected values
                 expected_aum = 118151  # $118,151
