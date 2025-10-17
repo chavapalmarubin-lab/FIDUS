@@ -15252,7 +15252,7 @@ async def get_complete_cashflow():
         }
     
     except Exception as e:
-        logger.error(f"Error in get_complete_cashflow: {str(e)}")
+        logging.error(f"Error in get_complete_cashflow: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
