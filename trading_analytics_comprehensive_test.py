@@ -353,10 +353,11 @@ class TradingAnalyticsAPITester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if manager details are returned
-                manager_name = data.get('manager_name', '')
-                return_percentage = data.get('return_percentage', 0)
-                total_pnl = data.get('total_pnl', 0)
+                # Check if manager details are returned from manager object
+                manager = data.get('manager', {})
+                manager_name = manager.get('manager_name', '')
+                return_percentage = manager.get('return_percentage', 0)
+                total_pnl = manager.get('total_pnl', 0)
                 
                 # Expected: UNO14 MAM Manager with ~11.40% return
                 name_success = 'UNO14' in manager_name or 'MAM' in manager_name
