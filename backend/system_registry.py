@@ -428,6 +428,150 @@ SYSTEM_COMPONENTS = {
             'quick_actions': ['viewDashboard', 'viewLogs', 'viewMetrics', 'triggerDeploy'],
             'documentation': 'Render platform hosts both frontend and backend with built-in SSL, CDN, load balancing, and auto-deploy from GitHub. No separate load balancer or CDN configuration needed.'
         }
+,
+        {
+            'id': 'trading-analytics',
+            'name': 'Trading Analytics System',
+            'type': 'feature',
+            'category': 'Applications',
+            'status': 'online',
+            'description': 'Manager-level performance analytics with risk-adjusted metrics for capital allocation decisions',
+            'version': '1.0.0',
+            'features': [
+                'Portfolio overview aggregating all funds',
+                'Fund performance tracking (BALANCE/CORE)',
+                'Manager rankings with Sharpe/Sortino/Calmar ratios',
+                'Capital allocation recommendations',
+                'Automated risk alerts and warnings',
+                'Period selection (7d, 30d, 90d, 6m, 1y)',
+                'Export capabilities',
+                'Real-time performance metrics'
+            ],
+            'endpoints': [
+                '/api/admin/trading-analytics/portfolio',
+                '/api/admin/trading-analytics/funds/{fund_name}',
+                '/api/admin/trading-analytics/managers',
+                '/api/admin/trading-analytics/managers/{manager_id}'
+            ],
+            'tech_stack': ['React 19', 'FastAPI', 'MongoDB', 'Tailwind CSS'],
+            'performance': {
+                'page_load': '~1s (67% faster with lazy loading)',
+                'api_response_cached': '<50ms (16x faster)',
+                'api_response_uncached': '<500ms',
+                'caching_ttl': '5 minutes'
+            },
+            'components': [
+                'PortfolioView.js - Aggregate fund metrics',
+                'FundsView.js - Individual fund analysis',
+                'ManagersView.js - Manager rankings (primary)',
+                'AccountsView.js - Account-level details'
+            ],
+            'last_updated': '2025-10-17',
+            'phase': 'Production',
+            'documentation': '/docs/TRADING_ANALYTICS_USER_GUIDE.md',
+            'quick_actions': ['viewManagers', 'exportReports', 'clearCache']
+        },
+        {
+            'id': 'money-managers',
+            'name': 'Money Managers System',
+            'type': 'data_model',
+            'category': 'Services',
+            'status': 'online',
+            'description': 'Trading strategy managers with performance tracking and risk management',
+            'managers': [
+                {
+                    'name': 'UNO14 MAM Manager',
+                    'account': 886602,
+                    'fund': 'BALANCE',
+                    'strategy': 'MAM Execution',
+                    'risk': 'Medium',
+                    'return_pct': 11.40,
+                    'sharpe_ratio': 1.85,
+                    'status': '⭐ Best Performer'
+                },
+                {
+                    'name': 'TradingHub Gold Provider',
+                    'account': 886557,
+                    'fund': 'BALANCE',
+                    'strategy': 'Copy Trade',
+                    'risk': 'Medium',
+                    'return_pct': 6.21,
+                    'sharpe_ratio': 1.34,
+                    'status': '✓ Solid'
+                },
+                {
+                    'name': 'GoldenTrade Provider',
+                    'account': 886066,
+                    'fund': 'BALANCE',
+                    'strategy': 'Copy Trade',
+                    'risk': 'High',
+                    'return_pct': 6.92,
+                    'sharpe_ratio': 0.87,
+                    'status': '⚠️ High Risk'
+                },
+                {
+                    'name': 'CP Strategy Provider',
+                    'account': 885822,
+                    'fund': 'CORE',
+                    'strategy': 'Copy Trade',
+                    'risk': 'Medium',
+                    'return_pct': 1.01,
+                    'sharpe_ratio': 1.12,
+                    'status': 'Monitor'
+                }
+            ],
+            'total_managers': 4,
+            'active_managers': 4,
+            'collection': 'money_managers',
+            'metrics_tracked': [
+                'Return percentage',
+                'Sharpe ratio (risk-adjusted return)',
+                'Sortino ratio (downside risk)',
+                'Calmar ratio (return vs drawdown)',
+                'Maximum drawdown',
+                'Win rate',
+                'Profit factor'
+            ],
+            'last_updated': '2025-10-17',
+            'documentation': 'Managers tracked in money_managers MongoDB collection with performance calculated from mt5_trades'
+        },
+        {
+            'id': 'ui-component-library',
+            'name': 'FIDUS UI Component Library',
+            'type': 'library',
+            'category': 'Frontend',
+            'status': 'online',
+            'description': 'Shared style system and reusable UI components for consistent FIDUS branding',
+            'version': '1.0.0',
+            'components': [
+                'Button - 7 variants (primary, secondary, success, danger, warning, outline, ghost)',
+                'LoadingSpinner - 3 sizes (sm, md, lg) with customizable text',
+                'Badge - Auto-styling based on type (status, fund, risk)',
+                'Card - Standard layouts with header, content, footer'
+            ],
+            'style_constants': {
+                'colors': {
+                    'primary_cyan': '#00bcd4',
+                    'secondary_orange': '#ffa726',
+                    'success_green': '#4caf50',
+                    'danger_red': '#ef4444'
+                },
+                'spacing': 'Consistent padding/margins (4px increments)',
+                'typography': 'Standard sizes (3xl, 2xl, xl, lg, base, sm)',
+                'transitions': 'Smooth animations (200ms ease-in-out)'
+            },
+            'location': '/app/frontend/src/constants/styles.js',
+            'usage': 'import { Button, Badge, LoadingSpinner } from "@/components/ui"',
+            'benefits': [
+                'Consistent FIDUS brand identity',
+                'Reduced code duplication',
+                'Easy maintenance',
+                'Faster development',
+                'Professional appearance'
+            ],
+            'documentation': 'In-code JSDoc documentation with usage examples',
+            'last_updated': '2025-10-17'
+        }
     ]
 }
 
