@@ -1006,7 +1006,7 @@ const CashFlowManagement = () => {
         </Card>
 
         {/* CASH POSITION BREAKDOWN (Info Box) */}
-        {fundAccounting?.mt5_corrected_data && (
+        {fundAccounting?.backend_calculated && (
           <Card className="bg-blue-900/20 border-blue-600">
             <CardHeader>
               <CardTitle className="text-white text-base flex items-center">
