@@ -21177,21 +21177,35 @@ async def get_portfolio_analytics(
     current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get portfolio-level trading analytics
+    Get portfolio-level trading analytics (with 5-minute cache)
     
     Returns overall performance across all funds and managers
     """
     try:
+        # Check cache first (5 minute TTL)
+        cache_key = f"portfolio_analytics_{period_days}"
+        cached_data = response_cache.get(cache_key, ttl_seconds=300)
+        
+        if cached_data:
+            return cached_data
+        
+        # Cache miss - fetch fresh data
         from services.trading_analytics_service import TradingAnalyticsService
         
         service = TradingAnalyticsService(db)
         portfolio_data = await service.get_portfolio_analytics(period_days)
         
-        return {
+        result = {
             "success": True,
             "portfolio": portfolio_data,
-            "generated_at": datetime.now(timezone.utc).isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "cached": False
         }
+        
+        # Store in cache
+        response_cache.set(cache_key, result)
+        
+        return result
         
     except Exception as e:
         logging.error(f"Portfolio analytics error: {str(e)}")
