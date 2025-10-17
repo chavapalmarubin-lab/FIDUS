@@ -1,0 +1,600 @@
+/* ============================================
+   DASHBOARD RESPONSIVE STYLES
+   ============================================
+   Mobile and tablet optimizations for Client and Admin Dashboards
+*/
+
+/* ============================================
+   CLIENT DASHBOARD RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Main dashboard container */
+  .client-dashboard {
+    padding: 12px;
+  }
+  
+  /* Fund cards - stack on mobile, 2-col on tablet */
+  .fund-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  /* Stats cards */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+  
+  /* Enhanced fund card */
+  .enhanced-fund-card {
+    padding: 16px;
+  }
+  
+  /* Investment calculator */
+  .investment-calculator {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet: 2 columns for fund cards */
+  .fund-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Stats: 4 columns on tablet */
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile: single column */
+  .client-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  
+  /* Tab navigation - scrollable */
+  .tabs-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+  }
+  
+  .tab-trigger {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  /* Currency selector */
+  .currency-selector {
+    width: 100%;
+  }
+  
+  /* Action buttons */
+  .dashboard-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .dashboard-actions button {
+    width: 100%;
+  }
+  
+  /* Transaction filters */
+  .transaction-filters {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .transaction-filters > * {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   ADMIN DASHBOARD RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Admin navigation tabs */
+  .admin-nav-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .admin-nav-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .admin-nav-tabs::-webkit-scrollbar-thumb {
+    background: rgba(0, 188, 212, 0.3);
+    border-radius: 2px;
+  }
+  
+  /* Admin dashboard content */
+  .admin-dashboard-content {
+    padding: 12px;
+  }
+  
+  /* MT5 Management tables */
+  .mt5-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mt5-table {
+    min-width: 600px;
+    font-size: 13px;
+  }
+  
+  /* Fund Portfolio cards */
+  .fund-portfolio-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  /* Cash Flow charts */
+  .cashflow-charts {
+    flex-direction: column;
+  }
+  
+  .chart-container {
+    width: 100% !important;
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Admin header */
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .admin-header h1 {
+    font-size: 20px !important;
+  }
+  
+  /* Admin nav tabs - smaller on mobile */
+  .admin-nav-tab {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  
+  /* Export buttons */
+  .export-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .export-buttons button {
+    width: 100%;
+  }
+  
+  /* Stats overview */
+  .admin-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  
+  /* Form inputs */
+  .admin-form {
+    gap: 12px;
+  }
+  
+  .admin-form input,
+  .admin-form select,
+  .admin-form button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet optimizations */
+  .fund-portfolio-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ============================================
+   INVESTMENT CALENDAR RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .investment-calendar {
+    padding: 12px;
+  }
+  
+  .calendar-grid {
+    font-size: 12px;
+  }
+  
+  .calendar-event {
+    padding: 6px;
+    font-size: 11px;
+  }
+  
+  /* Calendar navigation */
+  .calendar-nav {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .calendar-nav button {
+    flex: 1;
+    min-width: 44px;
+  }
+}
+
+/* ============================================
+   REDEMPTION MANAGEMENT RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .redemption-management {
+    padding: 12px;
+  }
+  
+  .redemption-form {
+    gap: 12px;
+  }
+  
+  .redemption-form input,
+  .redemption-form select,
+  .redemption-form button {
+    width: 100%;
+  }
+  
+  /* Redemption table - hide on mobile, show cards */
+  .redemption-table {
+    display: none;
+  }
+  
+  .redemption-card-view {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .redemption-card-view {
+    display: none;
+  }
+  
+  .redemption-table {
+    display: table;
+  }
+}
+
+/* ============================================
+   WALLET & TRANSACTIONS RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .client-wallet {
+    padding: 12px;
+  }
+  
+  .wallet-balance {
+    font-size: 24px;
+  }
+  
+  .transaction-list {
+    gap: 12px;
+  }
+  
+  .transaction-item {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  /* Transaction filters */
+  .transaction-search {
+    width: 100%;
+  }
+  
+  .date-range-picker {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   DOCUMENT PORTAL RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .document-portal {
+    padding: 12px;
+  }
+  
+  .document-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  
+  .document-card {
+    padding: 12px;
+  }
+  
+  .document-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .document-actions button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .document-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ============================================
+   GOOGLE WORKSPACE RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .google-workspace {
+    padding: 12px;
+  }
+  
+  .google-services-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+  
+  .google-service-card {
+    padding: 16px;
+  }
+  
+  .google-service-icon {
+    font-size: 32px;
+  }
+}
+
+/* ============================================
+   CARDS & MODALS RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* Card component */
+  .card {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .card-header {
+    padding: 16px;
+  }
+  
+  .card-content {
+    padding: 16px;
+  }
+  
+  .card-title {
+    font-size: 16px !important;
+  }
+  
+  /* Modal/Dialog */
+  .dialog-content,
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .dialog-header,
+  .modal-header {
+    padding: 16px;
+  }
+  
+  .dialog-body,
+  .modal-body {
+    padding: 16px;
+  }
+}
+
+/* ============================================
+   BUTTONS & INPUTS RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* Button groups */
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
+  
+  /* Input groups */
+  .input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .input-group input,
+  .input-group select {
+    width: 100%;
+  }
+  
+  /* Form layout */
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .form-col {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   TABLES RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Make tables scrollable horizontally on mobile/tablet */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-responsive table {
+    min-width: 600px;
+  }
+  
+  table {
+    font-size: 13px;
+  }
+  
+  table th,
+  table td {
+    padding: 10px 8px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Very small tables on mobile */
+  table {
+    font-size: 12px;
+  }
+  
+  table th,
+  table td {
+    padding: 8px 6px;
+  }
+  
+  /* Consider hiding less important columns */
+  table .hide-mobile {
+    display: none;
+  }
+}
+
+/* ============================================
+   CHARTS & VISUALIZATIONS RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* Recharts responsive */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  .recharts-surface {
+    width: 100% !important;
+  }
+  
+  /* Chart legends */
+  .recharts-legend-wrapper {
+    font-size: 11px !important;
+  }
+  
+  /* Chart tooltips */
+  .recharts-tooltip-wrapper {
+    font-size: 12px !important;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+@media (max-width: 767px) {
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  .mobile-text-center {
+    text-align: center !important;
+  }
+  
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-show {
+    display: block !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .desktop-hide {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   TOUCH OPTIMIZATIONS
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch-specific improvements */
+  .clickable,
+  button,
+  a,
+  .interactive {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover states on touch */
+  *:hover {
+    -webkit-tap-highlight-color: rgba(0, 188, 212, 0.3);
+  }
+  
+  /* Active states for touch feedback */
+  button:active,
+  .clickable:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* Reduce animations on mobile for better performance */
+  @media (prefers-reduced-motion: no-preference) {
+    * {
+      animation-duration: 0.5s !important;
+      transition-duration: 0.2s !important;
+    }
+  }
+  
+  /* Optimize images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
