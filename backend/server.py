@@ -3093,13 +3093,17 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
     - Verification that profit withdrawals = separation balance
     """
     try:
-        # Get all MT5 accounts
-        accounts = await db.mt5_accounts.find({
-            'account': {'$in': [886557, 886066, 886602, 885822, 886528]}
-        }).to_list(length=10)
+        # ✅ FIX ISSUE #1: Get ALL MT5 accounts dynamically (not hardcoded list)
+        # Previously only queried 5 accounts, missing 891215 and 891234
+        accounts = await db.mt5_accounts.find({}).to_list(length=20)
         
-        # Separate trading accounts from separation account
-        trading_accounts = [a for a in accounts if a.get('account') != 886528]
+        # Separate trading accounts from separation accounts
+        # SEPARATION accounts are: 886528, 891215
+        separation_account_numbers = [886528, 891215]
+        trading_accounts = [a for a in accounts if a.get('account') not in separation_account_numbers]
+        separation_accounts = [a for a in accounts if a.get('account') in separation_account_numbers]
+        
+        # Get primary separation account (886528) for backwards compatibility
         separation_account = next((a for a in accounts if a.get('account') == 886528), None)
         
         # Calculate totals
