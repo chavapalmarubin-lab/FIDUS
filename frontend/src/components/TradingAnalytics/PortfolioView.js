@@ -136,7 +136,9 @@ export default function PortfolioView({ period }) {
             return (
               <div key={fundName} className="fund-allocation-item">
                 <div className="fund-header">
-                  <span className={`fund-badge fund-${fundName.toLowerCase()}`}>{fundName}</span>
+                  <Badge type="fund" variant={fundName}>
+                    {fundName}
+                  </Badge>
                   <span className="fund-percentage">{percentage.toFixed(1)}%</span>
                 </div>
                 <div className="fund-bar">
