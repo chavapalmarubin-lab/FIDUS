@@ -1,4 +1,4 @@
-/* Funds View Styles */
+/* Funds View Styles - DARK THEME */
 
 .funds-view {
   padding: 20px;
@@ -14,9 +14,10 @@
 .fund-btn {
   flex: 1;
   padding: 16px 24px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
+  border: 2px solid rgba(0, 188, 212, 0.2);
+  border-radius: 16px;
+  background: rgba(26, 34, 56, 0.8);
+  color: #ffffff;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
@@ -25,33 +26,36 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  backdrop-filter: blur(15px);
 }
 
 .fund-btn:hover {
-  border-color: #cbd5e1;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border-color: rgba(0, 188, 212, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 188, 212, 0.3);
 }
 
 .fund-btn.active.fund-balance {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-color: #3b82f6;
-  color: white;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.3) 0%, rgba(0, 188, 212, 0.2) 100%);
+  border-color: #00bcd4;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
 }
 
 .fund-btn.active.fund-core {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  border-color: #8b5cf6;
-  color: white;
+  background: linear-gradient(135deg, rgba(255, 167, 38, 0.3) 0%, rgba(255, 167, 38, 0.2) 100%);
+  border-color: #ffa726;
+  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.4);
 }
 
 /* Fund Summary */
 .fund-summary {
   margin-bottom: 30px;
   padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
 }
 
 .fund-title {
@@ -64,24 +68,26 @@
 .fund-title h2 {
   margin: 0;
   font-size: 24px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .fund-status {
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
 }
 
 .fund-status.status-positive {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .fund-status.status-negative {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .metrics-row {
@@ -93,13 +99,14 @@
 .metric-item {
   text-align: center;
   padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 188, 212, 0.1);
 }
 
 .metric-item .metric-label {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 8px;
@@ -108,7 +115,7 @@
 .metric-item .metric-value {
   font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 /* Performance Attribution */
@@ -124,17 +131,19 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
 }
 
 .attribution-item.best {
-  border-left: 4px solid #10b981;
+  border-left: 4px solid #4caf50;
 }
 
 .attribution-item.worst {
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid #ffa726;
 }
 
 .attribution-icon {
@@ -147,7 +156,7 @@
 
 .attribution-label {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 4px;
@@ -156,7 +165,7 @@
 .attribution-manager {
   font-size: 16px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 /* Managers in Fund */
@@ -167,7 +176,7 @@
 .managers-in-fund h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .manager-cards-grid {
@@ -177,16 +186,19 @@
 }
 
 .manager-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  transition: transform 0.2s;
+  transition: all 0.3s;
+  backdrop-filter: blur(15px);
 }
 
 .manager-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 32px rgba(0, 188, 212, 0.4);
+  border-color: #00bcd4;
 }
 
 .manager-card-header {
@@ -194,14 +206,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid rgba(0, 188, 212, 0.2);
 }
 
 .manager-name {
   font-size: 16px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .status-indicator {
@@ -209,7 +221,7 @@
 }
 
 .status-indicator.status-active {
-  color: #10b981;
+  color: #4caf50;
 }
 
 .status-indicator.status-inactive {
@@ -228,12 +240,12 @@
 }
 
 .detail-label {
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 500;
 }
 
 .detail-value {
-  color: #1e293b;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -241,8 +253,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding: 16px 20px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.6);
+  border-top: 1px solid rgba(0, 188, 212, 0.2);
 }
 
 .manager-metric {
@@ -251,7 +263,7 @@
 
 .manager-metric .metric-label {
   font-size: 10px;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 4px;
@@ -260,7 +272,7 @@
 .manager-metric .metric-value {
   font-size: 14px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .manager-risk {
@@ -272,5 +284,5 @@
 .no-managers {
   padding: 40px;
   text-align: center;
-  color: #64748b;
+  color: #94a3b8;
 }

@@ -1,4 +1,4 @@
-/* Accounts View Styles */
+/* Accounts View Styles - DARK THEME */
 
 .accounts-view {
   padding: 40px 20px;
@@ -9,9 +9,11 @@
   margin: 60px auto;
   text-align: center;
   padding: 40px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
 }
 
 .coming-soon-icon {
@@ -22,11 +24,11 @@
 .coming-soon h3 {
   margin: 0 0 16px 0;
   font-size: 24px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .coming-soon p {
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.6;
   margin-bottom: 16px;
 }
@@ -35,7 +37,7 @@
   text-align: left;
   max-width: 400px;
   margin: 20px auto;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.8;
 }
 
@@ -46,12 +48,13 @@
 .note {
   margin-top: 24px;
   padding: 16px;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.6);
   border-radius: 8px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
   font-size: 14px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .note strong {
-  color: #1e293b;
+  color: #ffffff;
 }
