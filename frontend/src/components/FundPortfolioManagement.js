@@ -443,7 +443,7 @@ const FundPortfolioManagement = () => {
                         ></div>
                         <div>
                           <div className="text-sm font-medium text-white">{fundCode} Fund</div>
-                          <div className="text-xs text-slate-400">{fund.fund_type}</div>
+                          <div className="text-xs text-slate-400">{fund.fund_code}</div>
                         </div>
                       </div>
                       <div className="text-right">
