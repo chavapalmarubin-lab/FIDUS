@@ -3192,13 +3192,13 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         
         return {
             'success': True,
-            'accounts': formatted_accounts,
+            'accounts': all_formatted_accounts,  # ✅ FIX #2: Now includes ALL 7 accounts (5 trading + 2 separation)
             'separation_account': {  # Legacy field for backwards compatibility
                 'account_number': 886528,
                 'balance': round(separation_balance, 2),
                 'name': 'Separation Account'
             },
-            'separation_accounts': separation_accounts_data,  # ✅ NEW: All separation accounts
+            'separation_accounts': separation_accounts_data,  # ✅ NEW: All separation accounts (also in main accounts array)
             'totals': {
                 'total_balance': round(total_balance, 2),  # ✅ NEW FIELD
                 'total_equity': round(total_equity, 2),
