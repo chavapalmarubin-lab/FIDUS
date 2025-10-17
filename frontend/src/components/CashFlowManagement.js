@@ -129,7 +129,7 @@ const CashFlowManagement = () => {
             const data = await completeResponse.json();
             if (data.success) {
               // ✅ Use calculated values from backend API (NO frontend calculations)
-              mt5TruePnl = data.fund_assets.mt5_trading_pnl;
+              mt5TruePnl = data.fund_assets.total_profit_loss;  // ✅ PHASE 2: Standardized field name
               brokerInterest = data.broker_interest;           // CALCULATION #1 from backend
               totalInflows = data.total_inflows;               // CALCULATION #2 from backend
               netProfit = data.net_profit;                     // CALCULATION #3 from backend
@@ -139,8 +139,8 @@ const CashFlowManagement = () => {
               separationBalance = data.fund_assets.separation_interest;
               profitWithdrawals = data.summary.total_profit_withdrawals;
               
-              console.log("✅ PHASE 1: Using backend calculations (NO frontend calculations):", {
-                mt5_trading_pnl: mt5TruePnl,
+              console.log("✅ PHASE 2: Using backend standardized fields:", {
+                total_profit_loss: mt5TruePnl,  // ✅ Standardized
                 broker_interest: brokerInterest,      // From backend
                 total_inflows: totalInflows,          // From backend
                 net_profit: netProfit,                // From backend
