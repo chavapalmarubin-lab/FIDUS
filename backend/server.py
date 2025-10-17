@@ -3118,8 +3118,10 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         difference = abs(total_profit_withdrawals - separation_balance)
         verification_match = difference < 100  # Allow $100 difference for broker interest
         
-        # Format account data for response
-        formatted_accounts = []
+        # Format ALL account data for response (including separation accounts)
+        all_formatted_accounts = []
+        
+        # Add trading accounts first
         for acc in trading_accounts:
             balance = acc.get('balance', 0)
             true_pnl = acc.get('true_pnl', 0)
@@ -3127,7 +3129,7 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
             # ✅ PHASE 1: Calculate return percentage (moved from frontend Line 79)
             return_percent = (true_pnl / balance * 100) if balance > 0 else 0
             
-            formatted_accounts.append({
+            all_formatted_accounts.append({
                 'account_number': acc.get('account'),
                 'account_name': f"Account {acc.get('account')}",
                 'balance': round(balance, 2),
@@ -3141,7 +3143,33 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'return_percent': round(return_percent, 2),  # ✅ NEW FIELD
                 'needs_review': acc.get('needs_review', False),
                 'updated_at': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else str(acc.get('updated_at', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4: ISO 8601
-                'synced_at': acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('last_sync'), datetime) else str(acc.get('last_sync', datetime.now(timezone.utc).isoformat()))  # ✅ PHASE 2 TASK #4: ISO 8601
+                'synced_at': acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('last_sync'), datetime) else str(acc.get('last_sync', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4: ISO 8601
+                'account_type': 'TRADING',  # Mark as trading account
+                'broker_name': acc.get('name', 'MEXAtlantic'),
+                'fund_code': acc.get('fund_type', 'Unknown')
+            })
+        
+        # Add separation accounts (891215 and 886528)
+        for sep_acc in separation_accounts:
+            balance = sep_acc.get('balance', 0)
+            all_formatted_accounts.append({
+                'account_number': sep_acc.get('account'),
+                'account_name': sep_acc.get('name', f"Account {sep_acc.get('account')}"),
+                'balance': round(balance, 2),
+                'equity': round(sep_acc.get('equity', 0), 2),
+                'profit': round(sep_acc.get('profit', 0), 2),
+                'displayed_pnl': 0,
+                'profit_withdrawals': 0,
+                'inter_account_transfers': 0,
+                'corrected_profit_loss': 0,
+                'account_profit_loss': 0,
+                'return_percent': 0,
+                'needs_review': False,
+                'updated_at': sep_acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(sep_acc.get('updated_at'), datetime) else str(sep_acc.get('updated_at', datetime.now(timezone.utc).isoformat())),
+                'synced_at': sep_acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(sep_acc.get('last_sync'), datetime) else str(sep_acc.get('last_sync', datetime.now(timezone.utc).isoformat())),
+                'account_type': 'SEPARATION',  # Mark as separation account
+                'broker_name': sep_acc.get('name', 'MEXAtlantic'),
+                'fund_code': sep_acc.get('fund_type', 'SEPARATION')
             })
         
         # ✅ PHASE 1: Calculate overall return percentage (moved from frontend Lines 56-58)
