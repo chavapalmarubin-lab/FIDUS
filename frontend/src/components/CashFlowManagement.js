@@ -819,7 +819,7 @@ const CashFlowManagement = () => {
       )}
 
       {/* ✅ Verification Status Banner */}
-      {fundAccounting?.mt5_corrected_data?.verification && (
+      {fundAccounting?.backend_calculated && (
         <div className="rounded-lg p-4 border bg-green-900/20 border-green-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
