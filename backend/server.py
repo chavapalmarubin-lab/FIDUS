@@ -19303,7 +19303,7 @@ async def get_all_mt5_accounts():
                 'account_id': account.get('_id', str(account.get('account', 'unknown'))),
                 'mt5_login': account.get('account'),
                 'client_id': account.get('client_id'),
-                'fund_code': account.get('fund_type'),
+                'fund_code': account.get('fund_type'),  # ✅ PHASE 2: Translate fund_type → fund_code
                 'broker_name': account.get('name', 'MEXAtlantic'),
                 'server': account.get('server', 'MEXAtlantic-Real'),
                 
