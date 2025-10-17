@@ -13,20 +13,22 @@
   align-items: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
 }
 
 .header-left h1 {
   margin: 0;
   font-size: 28px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .header-left .subtitle {
   margin: 5px 0 0 0;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 14px;
 }
 
@@ -38,23 +40,26 @@
 
 .period-selector {
   padding: 8px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(0, 188, 212, 0.3);
   border-radius: 6px;
-  background: white;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .period-selector:hover {
-  border-color: #3b82f6;
+  border-color: #00bcd4;
+  background: rgba(0, 188, 212, 0.1);
 }
 
 .btn-icon {
   padding: 8px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(0, 188, 212, 0.3);
   border-radius: 6px;
-  background: white;
+  background: rgba(0, 188, 212, 0.1);
+  color: #ffffff;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
@@ -64,8 +69,9 @@
 }
 
 .btn-icon:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: rgba(0, 188, 212, 0.2);
+  border-color: #00bcd4;
+  transform: translateY(-1px);
 }
 
 /* Tabs Styles */
