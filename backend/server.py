@@ -3173,7 +3173,8 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
             'totals': {
                 'total_balance': round(total_balance, 2),  # ✅ NEW FIELD
                 'total_equity': round(total_equity, 2),
-                'total_true_pnl': round(total_true_pnl, 2),
+                'total_profit_loss': round(total_true_pnl, 2),  # ✅ PHASE 2: Standardized from total_true_pnl
+                'corrected_profit_loss': round(total_true_pnl, 2),  # ✅ PHASE 2: Alias for clarity
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
                 'total_inter_account_transfers': round(total_inter_account, 2),
                 'separation_balance': round(separation_balance, 2),  # Legacy field
