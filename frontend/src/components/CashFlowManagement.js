@@ -181,23 +181,23 @@ const CashFlowManagement = () => {
 
         const fundAccountingData = {
           assets: {
-            mt5_trading_profits: mt5TruePnl,  // TRUE P&L (already includes profit withdrawals)
-            broker_interest: brokerInterest,   // ONLY the interest earned (NOT full separation balance)
-            broker_rebates: summary.broker_rebates || 0,
-            total_inflows: mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)  // CORRECT: No double counting
+            mt5_trading_profits: mt5TruePnl,     // From backend API
+            broker_interest: brokerInterest,     // From backend API
+            broker_rebates: brokerRebates,       // From backend API
+            total_inflows: totalInflows          // From backend API (calculated)
           },
           liabilities: {
-            client_obligations: summary.client_interest_obligations || 0,
+            client_obligations: clientObligations,  // From backend API
             fund_obligations: summary.fund_obligations || 0,
-            total_outflows: summary.total_liabilities || summary.fund_obligations || 0  // Use total_liabilities if available
+            total_outflows: totalLiabilities        // From backend API (calculated)
           },
           performance_fees: cashFlowResponse.data.performance_fees || {
             total_accrued: 0,
             managers_count: 0,
             breakdown: []
           },
-          net_profit: summary.net_profit || ((mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.total_liabilities || summary.fund_obligations || 0)),
-          net_fund_profitability: summary.net_profit || ((mt5TruePnl + brokerInterest + (summary.broker_rebates || 0)) - (summary.total_liabilities || summary.fund_obligations || 0)),
+          net_profit: netProfit,                    // From backend API (calculated)
+          net_fund_profitability: netProfit,        // From backend API (calculated)
           // Store corrected MT5 data and breakdown for display
           mt5_corrected_data: mt5CorrectedResponse.data,
           separation_balance: separationBalance,
