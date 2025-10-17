@@ -1,8 +1,8 @@
-/* Trading Analytics Dashboard - Main Styles */
+/* Trading Analytics Dashboard - Main Styles - DARK THEME */
 
 .trading-analytics-dashboard {
   padding: 20px;
-  background-color: #f8f9fa;
+  background: transparent;
   min-height: 100vh;
 }
 
