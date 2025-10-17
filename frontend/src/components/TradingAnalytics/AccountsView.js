@@ -1,5 +1,6 @@
 import React from 'react';
 import './AccountsView.css';
+import './TradingAnalytics-responsive.css';
 
 export default function AccountsView({ period }) {
   return (
