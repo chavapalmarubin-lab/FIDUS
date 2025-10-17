@@ -21124,6 +21124,172 @@ async def trigger_manual_sync():
             "sync_result": None
         }
 
+
+# ===============================================================================
+# COMPREHENSIVE TRADING ANALYTICS - MANAGER LEVEL (NEW)
+# Portfolio → Funds → Managers → Accounts hierarchy
+# ===============================================================================
+
+@api_router.get("/admin/trading-analytics/portfolio")
+async def get_portfolio_analytics(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get portfolio-level trading analytics
+    
+    Returns overall performance across all funds and managers
+    """
+    try:
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        portfolio_data = await service.get_portfolio_analytics(period_days)
+        
+        return {
+            "success": True,
+            "portfolio": portfolio_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Portfolio analytics error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get portfolio analytics: {str(e)}",
+            "portfolio": None
+        }
+
+@api_router.get("/admin/trading-analytics/funds/{fund_name}")
+async def get_fund_analytics(
+    fund_name: str,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get fund-level analytics for BALANCE or CORE fund
+    
+    Args:
+        fund_name: "BALANCE" or "CORE"
+        period_days: Number of days to analyze
+        
+    Returns:
+        Fund performance with manager breakdown
+    """
+    try:
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        fund_data = await service.get_fund_analytics(fund_name.upper(), period_days)
+        
+        return {
+            "success": True,
+            "fund": fund_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Fund analytics error for {fund_name}: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get fund analytics: {str(e)}",
+            "fund": None
+        }
+
+@api_router.get("/admin/trading-analytics/managers")
+async def get_managers_ranking(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get all managers ranked by performance
+    
+    Returns complete manager rankings with risk-adjusted metrics:
+    - Sharpe Ratio
+    - Sortino Ratio
+    - Calmar Ratio
+    - Max Drawdown
+    - Win Rate
+    - Profit Factor
+    
+    This is the PRIMARY endpoint for manager-level analytics
+    """
+    try:
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        managers_data = await service.get_managers_ranking(period_days)
+        
+        return {
+            "success": True,
+            **managers_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Managers ranking error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get managers ranking: {str(e)}",
+            "managers": []
+        }
+
+@api_router.get("/admin/trading-analytics/managers/{manager_id}")
+async def get_manager_detailed_analytics(
+    manager_id: str,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get detailed analytics for a specific manager
+    
+    Args:
+        manager_id: Manager identifier (e.g., "manager_tradinghub_gold")
+        period_days: Number of days to analyze
+        
+    Returns:
+        Complete manager performance with risk-adjusted metrics
+    """
+    try:
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        
+        # Find manager to get account number
+        manager = await db.money_managers.find_one({"manager_id": manager_id})
+        if not manager:
+            return {
+                "success": False,
+                "error": f"Manager not found: {manager_id}",
+                "manager": None
+            }
+        
+        # Get first assigned account
+        account_num = manager["assigned_accounts"][0] if manager.get("assigned_accounts") else None
+        if not account_num:
+            return {
+                "success": False,
+                "error": f"No account assigned to manager: {manager_id}",
+                "manager": None
+            }
+        
+        manager_data = await service.get_manager_analytics(manager_id, account_num, period_days)
+        
+        return {
+            "success": True,
+            "manager": manager_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Manager detailed analytics error for {manager_id}: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get manager analytics: {str(e)}",
+            "manager": None
+        }
+
+
 # ===============================================================================
 # DEBUG ENDPOINTS - VERIFY ACCOUNT DATA FROM VPS
 # ===============================================================================
