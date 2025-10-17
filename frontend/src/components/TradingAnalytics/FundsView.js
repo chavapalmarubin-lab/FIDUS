@@ -98,9 +98,9 @@ export default function FundsView({ period }) {
       <div className="fund-summary">
         <div className="fund-title">
           <h2>{data.fund_name} Fund</h2>
-          <span className={`fund-status ${data.total_pnl >= 0 ? 'status-positive' : 'status-negative'}`}>
+          <Badge variant={data.total_pnl >= 0 ? 'success' : 'danger'}>
             {data.total_pnl >= 0 ? '✓ Profitable' : '⚠️ Loss'}
-          </span>
+          </Badge>
         </div>
 
         <div className="metrics-row">
