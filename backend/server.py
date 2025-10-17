@@ -19337,7 +19337,8 @@ async def get_all_mt5_accounts():
                 # Status and metadata
                 'connection_status': connection_status,
                 'positions_count': 0,  # Would need to get from positions data
-                'last_updated': last_update.isoformat() if last_update else None,
+                'updated_at': last_update.isoformat() if last_update else datetime.now(timezone.utc).isoformat(),  # ✅ PHASE 2 TASK #4: Standardized
+                'synced_at': account.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(account.get('last_sync'), datetime) else str(account.get('last_sync', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4
                 'currency': account.get('currency', 'USD'),
                 'leverage': account.get('leverage', 500),
                 
