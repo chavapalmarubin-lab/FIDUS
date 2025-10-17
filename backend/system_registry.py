@@ -592,6 +592,12 @@ COMPONENT_CONNECTIONS = [
     {'from': 'render_platform', 'to': 'frontend', 'type': 'Hosting & CDN', 'protocol': 'HTTPS'},
     {'from': 'render_platform', 'to': 'backend', 'type': 'Hosting & Load Balancing', 'protocol': 'HTTPS'},
     {'from': 'github', 'to': 'render_platform', 'type': 'Auto-Deploy', 'protocol': 'Git/HTTPS'},
+    # Phase 7 additions
+    {'from': 'frontend', 'to': 'trading-analytics', 'type': 'Component', 'protocol': 'React'},
+    {'from': 'trading-analytics', 'to': 'backend', 'type': 'REST API', 'protocol': 'HTTPS'},
+    {'from': 'trading-analytics', 'to': 'money-managers', 'type': 'Data Query', 'protocol': 'MongoDB'},
+    {'from': 'trading-analytics', 'to': 'mongodb', 'type': 'Database', 'protocol': 'MongoDB Protocol'},
+    {'from': 'frontend', 'to': 'ui-component-library', 'type': 'Import', 'protocol': 'ES6 Modules'},
 ]
 
 def get_all_components() -> Dict[str, List[Dict[str, Any]]]:
