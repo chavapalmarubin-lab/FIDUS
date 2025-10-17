@@ -3145,21 +3145,37 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         total_balance = sum(a.get('balance', 0) for a in trading_accounts)
         overall_return_percent = (total_true_pnl / total_balance * 100) if total_balance > 0 else 0
         
+        # ✅ FIX: Include all separation accounts in response
+        separation_accounts_data = []
+        total_separation_balance = 0
+        for sep_acc in separation_accounts:
+            balance = sep_acc.get('balance', 0)
+            total_separation_balance += balance
+            separation_accounts_data.append({
+                'account_number': sep_acc.get('account'),
+                'balance': round(balance, 2),
+                'equity': round(sep_acc.get('equity', 0), 2),
+                'name': sep_acc.get('name', f"Account {sep_acc.get('account')}"),
+                'fund_type': sep_acc.get('fund_type', 'SEPARATION')
+            })
+        
         return {
             'success': True,
             'accounts': formatted_accounts,
-            'separation_account': {
+            'separation_account': {  # Legacy field for backwards compatibility
                 'account_number': 886528,
                 'balance': round(separation_balance, 2),
                 'name': 'Separation Account'
             },
+            'separation_accounts': separation_accounts_data,  # ✅ NEW: All separation accounts
             'totals': {
                 'total_balance': round(total_balance, 2),  # ✅ NEW FIELD
                 'total_equity': round(total_equity, 2),
                 'total_true_pnl': round(total_true_pnl, 2),
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
                 'total_inter_account_transfers': round(total_inter_account, 2),
-                'separation_balance': round(separation_balance, 2),
+                'separation_balance': round(separation_balance, 2),  # Legacy field
+                'total_separation_balance': round(total_separation_balance, 2),  # ✅ NEW: All separation accounts
                 'overall_return_percent': round(overall_return_percent, 2)  # ✅ NEW FIELD
             },
             'verification': {
