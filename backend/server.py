@@ -15238,7 +15238,7 @@ async def get_complete_cashflow():
             
             # Source data (for transparency and debugging)
             'source_data': {
-                'mt5_trading_pnl': round(mt5_trading_pnl, 2),
+                'total_profit_loss': round(mt5_trading_pnl, 2),  # ✅ PHASE 2: Standardized from mt5_trading_pnl
                 'separation_balance': round(separation_balance, 2),
                 'separation_accounts': [  # ✅ NEW: Show which accounts included
                     {
@@ -15264,7 +15264,7 @@ async def get_complete_cashflow():
             
             # Nested structure for compatibility with existing frontend code
             'fund_assets': {
-                'mt5_trading_pnl': round(mt5_trading_pnl, 2),
+                'total_profit_loss': round(mt5_trading_pnl, 2),  # ✅ PHASE 2: Standardized from mt5_trading_pnl
                 'separation_interest': round(separation_balance, 2),
                 'broker_interest': round(broker_interest, 2),  # NEW
                 'broker_rebates': round(broker_rebates, 2)
