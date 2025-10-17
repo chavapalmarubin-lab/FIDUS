@@ -197,8 +197,8 @@ const CashFlowManagement = () => {
           },
           net_profit: netProfit,                    // From backend API (calculated)
           net_fund_profitability: netProfit,        // From backend API (calculated)
-          // Store corrected MT5 data and breakdown for display
-          mt5_corrected_data: mt5CorrectedResponse.data,
+          // Store backend API data for display
+          backend_calculated: true,
           separation_balance: separationBalance,
           profit_withdrawals: profitWithdrawals,
           separation_accounts: separationAccounts  // PHASE 1 FIX: Individual account balances
