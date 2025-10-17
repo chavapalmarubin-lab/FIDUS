@@ -21243,7 +21243,7 @@ async def get_managers_ranking(
     current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get all managers ranked by performance
+    Get all managers ranked by performance (with 5-minute cache)
     
     Returns complete manager rankings with risk-adjusted metrics:
     - Sharpe Ratio
@@ -21256,16 +21256,30 @@ async def get_managers_ranking(
     This is the PRIMARY endpoint for manager-level analytics
     """
     try:
+        # Check cache first (5 minute TTL)
+        cache_key = f"managers_ranking_{period_days}"
+        cached_data = response_cache.get(cache_key, ttl_seconds=300)
+        
+        if cached_data:
+            return cached_data
+        
+        # Cache miss - fetch fresh data
         from services.trading_analytics_service import TradingAnalyticsService
         
         service = TradingAnalyticsService(db)
         managers_data = await service.get_managers_ranking(period_days)
         
-        return {
+        result = {
             "success": True,
             **managers_data,
-            "generated_at": datetime.now(timezone.utc).isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "cached": False
         }
+        
+        # Store in cache
+        response_cache.set(cache_key, result)
+        
+        return result
         
     except Exception as e:
         logging.error(f"Managers ranking error: {str(e)}")
