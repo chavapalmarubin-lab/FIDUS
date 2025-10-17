@@ -102,10 +102,7 @@ def investigate_magic_numbers():
     
     for group in magic_groups[:5]:  # First 5 magic numbers
         magic = group['_id']
-        sample_deals = []
-        cursor = db.mt5_deals_history.find({'magic': magic}).limit(3)
-        async for deal in cursor:
-            sample_deals.append(deal)
+        sample_deals = list(db.mt5_deals_history.find({'magic': magic}).limit(3))
         
         print(f"Magic #{magic} - Sample Deals:")
         for deal in sample_deals:
