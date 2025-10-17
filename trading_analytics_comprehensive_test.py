@@ -379,8 +379,8 @@ class TradingAnalyticsAPITester:
                 else:
                     self.log_test("Individual Manager P&L", False, f"P&L: ${total_pnl:,.2f} (expected: positive value)")
                 
-                # Check for detailed metrics
-                has_detailed_metrics = all(key in data for key in ['sharpe_ratio', 'sortino_ratio', 'calmar_ratio', 'win_rate', 'profit_factor'])
+                # Check for detailed metrics in manager object
+                has_detailed_metrics = all(key in manager for key in ['sharpe_ratio', 'sortino_ratio', 'calmar_ratio', 'win_rate', 'profit_factor'])
                 
                 if has_detailed_metrics:
                     self.log_test("Individual Manager Detailed Metrics", True, "All detailed risk metrics present")
