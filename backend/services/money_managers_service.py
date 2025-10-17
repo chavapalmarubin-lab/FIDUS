@@ -166,14 +166,14 @@ class MoneyManagersService:
             if not accounts:
                 return {
                     "manager_name": manager_name,
-                    "total_pnl": 0.0,
+                    "total_profit_loss": 0.0,  # ✅ PHASE 2
                     "account_count": 0,
                     "accounts": []
                 }
             
             # Calculate metrics for each account
             account_details = []
-            total_pnl = 0.0
+            total_profit_loss = 0.0  # ✅ PHASE 2
             
             for account in accounts:
                 account_number = account["account"]
@@ -184,18 +184,18 @@ class MoneyManagersService:
                 }).to_list(length=None)
                 
                 account_pnl = sum(t.get("profit", 0) for t in trades)
-                total_pnl += account_pnl
+                total_profit_loss += account_pnl  # ✅ PHASE 2
                 
                 account_details.append({
                     "account_number": str(account_number),
                     "fund_code": account.get("fund_type", ""),  # ✅ PHASE 2: Translate fund_type → fund_code
-                    "pnl": round(account_pnl, 2),
+                    "account_profit_loss": round(account_pnl, 2),  # ✅ PHASE 2: Standardized from pnl
                     "trade_count": len(trades)
                 })
             
             return {
                 "manager_name": manager_name,
-                "total_pnl": round(total_pnl, 2),
+                "total_profit_loss": round(total_profit_loss, 2),  # ✅ PHASE 2
                 "account_count": len(accounts),
                 "accounts": account_details
             }
