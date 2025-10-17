@@ -51,30 +51,19 @@ export default function FundsView({ period }) {
     }
   };
 
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+  // Using imported formatCurrency from shared constants
 
   if (loading) {
-    return (
-      <div className="funds-view-loading">
-        <div className="spinner"></div>
-        <p>Loading fund data...</p>
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading fund data..." />;
   }
 
   if (error) {
     return (
       <div className="funds-view-error">
         <p>❌ Error loading fund: {error}</p>
-        <button onClick={fetchFundData} className="btn-retry">Retry</button>
+        <Button variant="primary" onClick={fetchFundData} className="mt-4">
+          Retry
+        </Button>
       </div>
     );
   }
