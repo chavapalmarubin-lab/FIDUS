@@ -1017,9 +1017,9 @@ const CashFlowManagement = () => {
             <CardContent>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between p-2 bg-slate-800/50 rounded">
-                  <span className="text-slate-400">Cash in Trading Accounts (Displayed P&L):</span>
-                  <span className={`font-semibold ${(fundAccounting.mt5_corrected_data?.summary?.total_displayed_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatCurrency(fundAccounting.mt5_corrected_data?.summary?.total_displayed_pnl || 0)}
+                  <span className="text-slate-400">Cash in Trading Accounts (MT5 P&L):</span>
+                  <span className={`font-semibold ${(fundAccounting?.assets?.mt5_trading_profits || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
                   </span>
                 </div>
                 
