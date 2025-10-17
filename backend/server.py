@@ -119,6 +119,47 @@ except Exception as e:
 # Import MT5 Bridge Client
 from mt5_bridge_client import mt5_bridge
 
+# ============================================
+# SIMPLE RESPONSE CACHING FOR PERFORMANCE
+# ============================================
+class SimpleCache:
+    """
+    Simple in-memory cache with TTL (Time To Live)
+    Used for caching expensive API responses
+    """
+    def __init__(self):
+        self.cache = {}
+        self.timestamps = {}
+    
+    def get(self, key: str, ttl_seconds: int = 300):
+        """Get cached value if it exists and hasn't expired (default 5 min TTL)"""
+        if key in self.cache:
+            age = time.time() - self.timestamps.get(key, 0)
+            if age < ttl_seconds:
+                logging.info(f"✅ Cache HIT for key: {key} (age: {age:.1f}s)")
+                return self.cache[key]
+            else:
+                logging.info(f"⏰ Cache EXPIRED for key: {key} (age: {age:.1f}s)")
+                del self.cache[key]
+                del self.timestamps[key]
+        return None
+    
+    def set(self, key: str, value: any):
+        """Set cache value with current timestamp"""
+        self.cache[key] = value
+        self.timestamps[key] = time.time()
+        logging.info(f"💾 Cache SET for key: {key}")
+    
+    def clear(self):
+        """Clear all cached values"""
+        self.cache.clear()
+        self.timestamps.clear()
+        logging.info("🧹 Cache cleared")
+
+# Global cache instance
+response_cache = SimpleCache()
+
+
 # Import REAL Google API service
 from real_google_api_service import real_google_api
 
