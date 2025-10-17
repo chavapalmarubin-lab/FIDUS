@@ -81,13 +81,9 @@ def investigate_magic_numbers():
     # 2. Check for BALANCE ADJUSTMENT deals
     print(f"\n🔍 CHECKING FOR BALANCE ADJUSTMENTS:\n")
     
-    balance_adjustments = []
-    cursor = db.mt5_deals_history.find({
+    balance_adjustments = list(db.mt5_deals_history.find({
         'comment': {'$regex': 'BALANCE|DEPOSIT|WITHDRAWAL|ADJUSTMENT', '$options': 'i'}
-    }).limit(10)
-    
-    async for deal in cursor:
-        balance_adjustments.append(deal)
+    }).limit(10))
     
     if balance_adjustments:
         print(f"Found {len(balance_adjustments)} balance adjustment deals (showing first 10):\n")
