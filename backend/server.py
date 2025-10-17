@@ -3156,7 +3156,7 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'balance': round(balance, 2),
                 'equity': round(sep_acc.get('equity', 0), 2),
                 'name': sep_acc.get('name', f"Account {sep_acc.get('account')}"),
-                'fund_type': sep_acc.get('fund_type', 'SEPARATION')
+                'fund_code': sep_acc.get('fund_type', 'SEPARATION')  # ✅ PHASE 2: Standardized to fund_code
             })
         
         return {
