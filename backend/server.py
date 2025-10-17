@@ -15240,6 +15240,13 @@ async def get_complete_cashflow():
             'source_data': {
                 'mt5_trading_pnl': round(mt5_trading_pnl, 2),
                 'separation_balance': round(separation_balance, 2),
+                'separation_accounts': [  # ✅ NEW: Show which accounts included
+                    {
+                        'account': acc.get('account'),
+                        'name': acc.get('name', f"Account {acc.get('account')}"),
+                        'balance': round(acc.get('balance', 0), 2)
+                    } for acc in separation_accounts
+                ],
                 'profit_withdrawals': round(profit_withdrawals, 2),
                 'broker_rebates': round(broker_rebates, 2),
                 'total_volume_lots': round(total_volume, 2),
