@@ -336,9 +336,9 @@ export default function ManagersView({ period }) {
 
                     {/* Risk Level */}
                     <td>
-                      <span className={`risk-badge risk-${manager.risk_level}`}>
+                      <Badge type="risk" variant={manager.risk_level}>
                         {manager.risk_level}
-                      </span>
+                      </Badge>
                     </td>
 
                     {/* Status */}
