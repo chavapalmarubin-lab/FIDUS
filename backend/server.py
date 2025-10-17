@@ -15239,37 +15239,41 @@ async def get_complete_cashflow():
         return {
             'success': True,
             
-            # Source data (for transparency and debugging)
-            'source_data': {
-                'total_profit_loss': round(mt5_trading_pnl, 2),  # ✅ PHASE 2: Standardized from mt5_trading_pnl
-                'separation_balance': round(separation_balance, 2),
-                'separation_accounts': [  # ✅ NEW: Show which accounts included
-                    {
-                        'account': acc.get('account'),
-                        'name': acc.get('name', f"Account {acc.get('account')}"),
-                        'balance': round(acc.get('balance', 0), 2)
-                    } for acc in separation_accounts
-                ],
-                'profit_withdrawals': round(profit_withdrawals, 2),
-                'broker_rebates': round(broker_rebates, 2),
-                'total_volume_lots': round(total_volume, 2),
-                'client_interest_obligations': round(client_interest_obligations, 2),
-                'mt5_accounts_count': len(mt5_accounts),
-                'active_investments_count': len(investments),
-                'total_deals_count': len(deals)
-            },
-            
-            # ✅ NEW CALCULATED FIELDS (moved from frontend)
-            'broker_interest': round(broker_interest, 2),      # CALCULATION #1
-            'total_inflows': round(total_inflows, 2),          # CALCULATION #2
-            'net_profit': round(net_profit, 2),                # CALCULATION #3
+            # ✅ PHASE 2 TASK #3: FLAT STRUCTURE (primary access)
+            # All fields accessible at top level - no nesting required
+            'total_profit_loss': round(mt5_trading_pnl, 2),
+            'separation_interest': round(separation_balance, 2),
+            'broker_interest': round(broker_interest, 2),
+            'broker_rebates': round(broker_rebates, 2),
+            'total_inflows': round(total_inflows, 2),
+            'net_profit': round(net_profit, 2),
+            'client_interest_obligations': round(client_interest_obligations, 2),
             'total_liabilities': round(total_liabilities, 2),
+            'profit_withdrawals': round(profit_withdrawals, 2),
+            'total_volume_lots': round(total_volume, 2),
             
-            # Nested structure for compatibility with existing frontend code
+            # Metadata
+            'mt5_accounts_count': len(mt5_accounts),
+            'separation_accounts_count': len(separation_accounts),
+            'active_investments_count': len(investments),
+            'total_deals_count': len(deals),
+            'last_updated': datetime.now(timezone.utc).isoformat(),
+            
+            # Separation account details
+            'separation_accounts': [
+                {
+                    'account': acc.get('account'),
+                    'name': acc.get('name', f"Account {acc.get('account')}"),
+                    'balance': round(acc.get('balance', 0), 2)
+                } for acc in separation_accounts
+            ],
+            
+            # ⚠️ DEPRECATED: Nested structure kept for backward compatibility
+            # Prefer flat fields above. These will be removed in future versions.
             'fund_assets': {
-                'total_profit_loss': round(mt5_trading_pnl, 2),  # ✅ PHASE 2: Standardized from mt5_trading_pnl
+                'total_profit_loss': round(mt5_trading_pnl, 2),
                 'separation_interest': round(separation_balance, 2),
-                'broker_interest': round(broker_interest, 2),  # NEW
+                'broker_interest': round(broker_interest, 2),
                 'broker_rebates': round(broker_rebates, 2)
             },
             'liabilities': {
@@ -15278,8 +15282,17 @@ async def get_complete_cashflow():
             },
             'summary': {
                 'total_profit_withdrawals': round(profit_withdrawals, 2),
-                'total_inflows': round(total_inflows, 2),      # NEW
-                'net_profit': round(net_profit, 2)             # NEW
+                'total_inflows': round(total_inflows, 2),
+                'net_profit': round(net_profit, 2)
+            },
+            
+            # Source data (for debugging)
+            'source_data': {
+                'total_profit_loss': round(mt5_trading_pnl, 2),
+                'separation_balance': round(separation_balance, 2),
+                'profit_withdrawals': round(profit_withdrawals, 2),
+                'broker_rebates': round(broker_rebates, 2),
+                'client_interest_obligations': round(client_interest_obligations, 2)
             }
         }
     
