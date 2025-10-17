@@ -163,19 +163,16 @@ export default function ManagersView({ period }) {
   };
 
   if (loading) {
-    return (
-      <div className="managers-view-loading">
-        <div className="spinner"></div>
-        <p>Loading manager rankings...</p>
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading manager rankings..." />;
   }
 
   if (error) {
     return (
       <div className="managers-view-error">
         <p>❌ Error loading managers: {error}</p>
-        <button onClick={fetchManagers} className="btn-retry">Retry</button>
+        <Button variant="primary" onClick={fetchManagers} className="mt-4">
+          Retry
+        </Button>
       </div>
     );
   }
