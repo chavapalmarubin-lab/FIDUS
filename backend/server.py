@@ -15186,9 +15186,11 @@ async def get_complete_cashflow():
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         mt5_trading_pnl = sum(acc.get('profit', 0) for acc in mt5_accounts)
         
-        # ✅ Get separation account balance from REAL account 886528 in MongoDB
-        separation_account = await db.mt5_accounts.find_one({'account': 886528})
-        separation_balance = separation_account.get('balance', 0) if separation_account else 0
+        # ✅ FIX ISSUE #2: Get BOTH separation accounts (886528 AND 891215) from MongoDB
+        separation_accounts = await db.mt5_accounts.find({
+            'account': {'$in': [886528, 891215]}
+        }).to_list(length=10)
+        separation_balance = sum(acc.get('balance', 0) for acc in separation_accounts)
         
         # ✅ Get profit withdrawals from REAL withdrawal records in MongoDB
         # Check if withdrawals collection exists
