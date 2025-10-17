@@ -213,9 +213,9 @@ export default function FundsView({ period }) {
                 </div>
 
                 <div className="manager-risk">
-                  <span className={`risk-badge risk-${manager.risk_level}`}>
+                  <Badge type="risk" variant={manager.risk_level}>
                     Risk: {manager.risk_level}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             ))}
