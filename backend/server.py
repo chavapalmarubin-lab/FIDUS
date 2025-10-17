@@ -3132,10 +3132,12 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'account_name': f"Account {acc.get('account')}",
                 'balance': round(balance, 2),
                 'equity': round(acc.get('equity', 0), 2),
+                'profit': round(acc.get('profit', 0), 2),  # ✅ PHASE 2: Raw profit
                 'displayed_pnl': round(acc.get('displayed_pnl', 0), 2),
                 'profit_withdrawals': round(acc.get('profit_withdrawals', 0), 2),
                 'inter_account_transfers': round(acc.get('inter_account_transfers', 0), 2),
-                'true_pnl': round(true_pnl, 2),
+                'corrected_profit_loss': round(true_pnl, 2),  # ✅ PHASE 2: Standardized from true_pnl
+                'account_profit_loss': round(true_pnl, 2),    # ✅ PHASE 2: Account-level P&L
                 'return_percent': round(return_percent, 2),  # ✅ NEW FIELD
                 'needs_review': acc.get('needs_review', False),
                 'last_updated': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else acc.get('updated_at')
