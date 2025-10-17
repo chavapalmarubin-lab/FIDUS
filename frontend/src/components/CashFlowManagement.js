@@ -887,8 +887,8 @@ const CashFlowManagement = () => {
                 <div>
                   <p className="text-sm text-slate-400">Last Profits Moved to Separation Balance</p>
                   <p className="text-xs text-slate-500">
-                    {fundAccounting?.mt5_corrected_data 
-                      ? '✓ Interest only (withdrawals already in TRUE P&L)'
+                    {fundAccounting?.backend_calculated 
+                      ? '✓ Calculated by backend API (interest only, no double counting)'
                       : 'Interest earned in separation accounts'
                     }
                   </p>
