@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://mt5-data-integrity.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""

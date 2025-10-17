@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://mt5-data-integrity.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and get JWT token"""

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import time
 
 # Configuration
-BACKEND_URL = "https://mt5-data-integrity.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class Colors:

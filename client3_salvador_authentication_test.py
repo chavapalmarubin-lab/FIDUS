@@ -26,7 +26,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://mt5-data-integrity.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com/api"
 CLIENT_USERNAME = "client3"
 CLIENT_PASSWORD = "password123"
 CLIENT_USER_TYPE = "client"

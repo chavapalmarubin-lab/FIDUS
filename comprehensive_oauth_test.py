@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://mt5-data-integrity.preview.emergentagent.com/api"
-FRONTEND_URL = "https://mt5-data-integrity.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com/api"
+FRONTEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
