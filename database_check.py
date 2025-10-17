@@ -6,7 +6,7 @@ Database Check for Alejandro Mariscal Production Setup
 import requests
 import json
 
-BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
 
 def authenticate():
     """Get admin token"""

@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
+BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv

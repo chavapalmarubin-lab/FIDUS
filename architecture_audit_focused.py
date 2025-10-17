@@ -21,7 +21,7 @@ class FocusedArchitectureAudit:
     
     def __init__(self):
         # Get backend URL from frontend environment
-        self.frontend_backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://mt5-dashboard-2.preview.emergentagent.com')
+        self.frontend_backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://portfolio-metrics-3.preview.emergentagent.com')
         self.backend_url = self.frontend_backend_url
         if not self.backend_url.endswith('/api'):
             self.backend_url = f"{self.backend_url}/api"

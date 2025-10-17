@@ -34,7 +34,7 @@ import time
 import urllib.parse
 
 # Configuration
-BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

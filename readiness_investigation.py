@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_readiness_discrepancy():
-    base_url = "https://mt5-dashboard-2.preview.emergentagent.com"
+    base_url = "https://portfolio-metrics-3.preview.emergentagent.com"
     
     print("🔍 INVESTIGATING CLIENT READINESS DISCREPANCY")
     print("="*60)

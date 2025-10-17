@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com"
+BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

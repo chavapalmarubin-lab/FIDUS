@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://mt5-dashboard-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {
