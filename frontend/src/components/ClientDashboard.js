@@ -545,7 +545,7 @@ const ClientDashboard = ({ user, onLogout }) => {
               <DollarSign className="mr-2" size={24} />
               Your Investment Funds
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {/* CORE Fund Card */}
               <EnhancedFundCard
                 fundName="CORE FUND"
