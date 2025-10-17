@@ -9686,7 +9686,7 @@ async def get_crm_admin_dashboard():
             total_investment = sum(inv.get('principal_amount', 0) for inv in fund_investments)
             
             # MT5 allocations for this fund  
-            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
+            fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]  # ✅ PHASE 2: Read from fund_type (DB field)
             total_mt5_allocation = sum(mt5.get('target_amount', 0) for mt5 in fund_mt5_accounts)
             
             # Use investment amount as AUM (more reliable than MT5 allocations)
