@@ -9,6 +9,7 @@ import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
 import "./App.css";
 import "./styles/animations.css";
+import "./styles/mobile-responsive.css";
 
 function App() {
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
