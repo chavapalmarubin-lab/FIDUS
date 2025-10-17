@@ -3140,7 +3140,8 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'account_profit_loss': round(true_pnl, 2),    # ✅ PHASE 2: Account-level P&L
                 'return_percent': round(return_percent, 2),  # ✅ NEW FIELD
                 'needs_review': acc.get('needs_review', False),
-                'last_updated': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else acc.get('updated_at')
+                'updated_at': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else str(acc.get('updated_at', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4: ISO 8601
+                'synced_at': acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('last_sync'), datetime) else str(acc.get('last_sync', datetime.now(timezone.utc).isoformat()))  # ✅ PHASE 2 TASK #4: ISO 8601
             })
         
         # ✅ PHASE 1: Calculate overall return percentage (moved from frontend Lines 56-58)
