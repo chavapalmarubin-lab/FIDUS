@@ -1,4 +1,4 @@
-/* Managers View Styles */
+/* Managers View Styles - DARK THEME */
 
 .managers-view {
   padding: 20px;
@@ -6,21 +6,40 @@
 
 /* Top Performers Banner */
 .top-performers-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.3) 0%, rgba(255, 167, 38, 0.3) 100%);
+  border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
   color: white;
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 188, 212, 0.2);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+}
+
+.top-performers-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(0, 188, 212, 0.2) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .top-performer {
   display: flex;
   align-items: center;
   gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .rank-emoji {
   font-size: 48px;
+  filter: drop-shadow(0 0 20px rgba(255, 167, 38, 0.5));
 }
 
 .performer-info {
@@ -31,18 +50,28 @@
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 10px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .performer-stats {
   display: flex;
   gap: 30px;
   font-size: 16px;
+  flex-wrap: wrap;
 }
 
 .return-value,
 .pnl-value,
 .sharpe-value {
   font-weight: 600;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+}
+
+.return-value.positive {
+  color: #4caf50;
 }
 
 /* Rankings Section */
@@ -60,7 +89,7 @@
 .section-header h3 {
   margin: 0;
   font-size: 20px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .table-controls {
@@ -71,32 +100,41 @@
 
 .table-controls label {
   font-size: 14px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .sort-selector {
   padding: 6px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(0, 188, 212, 0.3);
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  transition: all 0.2s;
+}
+
+.sort-selector:hover {
+  border-color: #00bcd4;
+  background: rgba(0, 188, 212, 0.1);
 }
 
 /* Manager Rankings Table */
 .table-container {
   overflow-x: auto;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .manager-rankings-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: rgba(26, 34, 56, 0.8);
+  backdrop-filter: blur(15px);
 }
 
 .manager-rankings-table thead {
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.9);
 }
 
 .manager-rankings-table th {
@@ -104,20 +142,25 @@
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid rgba(0, 188, 212, 0.3);
 }
 
 .manager-rankings-table td {
   padding: 16px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(0, 188, 212, 0.1);
   font-size: 14px;
-  color: #1e293b;
+  color: #ffffff;
+}
+
+.manager-rankings-table tbody tr {
+  transition: all 0.2s;
 }
 
 .manager-rankings-table tbody tr:hover {
-  background: #fafbfc;
+  background: rgba(0, 188, 212, 0.05);
+  transform: translateX(4px);
 }
 
 /* Rank Cell */
@@ -131,27 +174,27 @@
 }
 
 .rank-row.rank-1 {
-  background: #fef3c7;
+  background: rgba(255, 215, 0, 0.1);
 }
 
 .rank-row.rank-2 {
-  background: #e0e7ff;
+  background: rgba(192, 192, 192, 0.1);
 }
 
 .rank-row.rank-3 {
-  background: #fce7f3;
+  background: rgba(205, 127, 50, 0.1);
 }
 
 /* Manager Name Cell */
 .manager-name-cell {
   font-weight: 600;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 /* P&L and Return Cells */
 .pnl-cell.positive,
 .return-cell.positive {
-  color: #10b981;
+  color: #4caf50;
   font-weight: 600;
 }
 
@@ -167,28 +210,32 @@
   flex-direction: column;
   align-items: center;
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   min-width: 70px;
 }
 
 .sharpe-indicator.excellent {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .sharpe-indicator.good {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(0, 188, 212, 0.2);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.3);
 }
 
 .sharpe-indicator.fair {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(255, 167, 38, 0.2);
+  color: #ffa726;
+  border: 1px solid rgba(255, 167, 38, 0.3);
 }
 
 .sharpe-indicator.poor {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .sharpe-indicator .value {
@@ -201,6 +248,7 @@
   font-weight: 600;
   text-transform: uppercase;
   margin-top: 2px;
+  opacity: 0.8;
 }
 
 /* Drawdown Cell */
@@ -224,8 +272,8 @@
   position: relative;
   width: 100px;
   height: 20px;
-  background: #e2e8f0;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -234,7 +282,7 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
   transition: width 0.3s;
 }
 
@@ -245,23 +293,24 @@
   transform: translate(-50%, -50%);
   font-size: 11px;
   font-weight: 600;
-  color: #1e293b;
+  color: #ffffff;
   z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Profit Factor */
 .profit-factor.excellent {
-  color: #10b981;
+  color: #4caf50;
   font-weight: 700;
 }
 
 .profit-factor.good {
-  color: #3b82f6;
+  color: #00bcd4;
   font-weight: 600;
 }
 
 .profit-factor.breakeven {
-  color: #f59e0b;
+  color: #ffa726;
 }
 
 .profit-factor.poor {
@@ -271,44 +320,50 @@
 /* Status Badges */
 .status-badge {
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .status-badge.status-best {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .status-badge.status-solid {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(0, 188, 212, 0.2);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.3);
 }
 
 .status-badge.status-risk {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-badge.status-monitor {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 /* Capital Allocation Suggestions */
 .allocation-suggestions {
   margin: 40px 0;
   padding: 24px;
-  background: #f8fafc;
-  border-radius: 12px;
+  background: rgba(26, 34, 56, 0.6);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  backdrop-filter: blur(15px);
 }
 
 .allocation-suggestions h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .suggestions-grid {
@@ -321,14 +376,20 @@
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: white;
-  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 12px;
   border-left: 4px solid;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s;
+}
+
+.suggestion-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .suggestion-card.suggestion-increase {
-  border-left-color: #10b981;
+  border-left-color: #4caf50;
 }
 
 .suggestion-card.suggestion-decrease {
@@ -345,13 +406,13 @@
 
 .suggestion-manager {
   font-weight: 600;
-  color: #1e293b;
+  color: #ffffff;
   margin-bottom: 6px;
 }
 
 .suggestion-message {
   font-size: 13px;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -361,8 +422,9 @@
 
 .badge-high {
   padding: 4px 8px;
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
@@ -370,8 +432,9 @@
 
 .badge-medium {
   padding: 4px 8px;
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(255, 167, 38, 0.2);
+  color: #ffa726;
+  border: 1px solid rgba(255, 167, 38, 0.3);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
@@ -381,14 +444,16 @@
 .risk-alerts {
   margin: 40px 0;
   padding: 24px;
-  background: #fef2f2;
-  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(15px);
 }
 
 .risk-alerts h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .alerts-list {
@@ -402,13 +467,18 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: white;
+  background: rgba(15, 23, 42, 0.8);
   border-radius: 8px;
   border-left: 4px solid;
+  transition: all 0.2s;
+}
+
+.alert:hover {
+  transform: translateX(4px);
 }
 
 .alert.alert-warning {
-  border-left-color: #f59e0b;
+  border-left-color: #ffa726;
 }
 
 .alert.alert-danger {
@@ -422,7 +492,7 @@
 .alert-message {
   flex: 1;
   font-size: 14px;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 /* Summary Stats */
@@ -435,15 +505,24 @@
 
 .stat-card {
   padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background: rgba(26, 34, 56, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   text-align: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(15px);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 188, 212, 0.3);
+  border-color: #00bcd4;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 8px;
@@ -452,9 +531,30 @@
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .stat-value.positive {
-  color: #10b981;
+  color: #4caf50;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .manager-rankings-table {
+    font-size: 12px;
+  }
+  
+  .manager-rankings-table th,
+  .manager-rankings-table td {
+    padding: 8px 6px;
+  }
+  
+  .suggestions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .performer-stats {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
