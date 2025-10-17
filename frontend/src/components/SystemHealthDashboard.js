@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HealthMetricCard from './HealthMetricCard';
-import LoadingSpinner from './LoadingSpinner';
+import Button from './ui/Button';
+import LoadingSpinner from './ui/LoadingSpinner';
+import Badge from './ui/Badge';
 import { RefreshCw, Activity, AlertCircle, CheckCircle, Clock, Pause, Play } from 'lucide-react';
-import { BUTTONS, GRIDS, SPACING } from '../constants/uiConstants';
+import { COLORS, SPACING, TYPOGRAPHY, BUTTON_STYLES } from '../constants/styles';
 
 const SystemHealthDashboard = () => {
   const [healthData, setHealthData] = useState(null);
