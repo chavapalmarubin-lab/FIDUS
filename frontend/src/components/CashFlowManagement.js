@@ -866,8 +866,8 @@ const CashFlowManagement = () => {
                 <div>
                   <p className="text-sm text-slate-400">MT5 Trading Profits (TRUE P&L)</p>
                   <p className="text-xs text-slate-500">
-                    {fundAccounting?.mt5_corrected_data 
-                      ? '✓ Includes profit withdrawals to separation account'
+                    {fundAccounting?.backend_calculated 
+                      ? '✓ Calculated by backend API (includes profit withdrawals)'
                       : 'Fund\'s investment performance'
                     }
                   </p>
