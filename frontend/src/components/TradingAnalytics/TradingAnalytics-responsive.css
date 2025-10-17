@@ -1,0 +1,356 @@
+/* ============================================
+   TRADING ANALYTICS RESPONSIVE STYLES
+   ============================================
+   Mobile and tablet optimizations for all Trading Analytics components
+*/
+
+/* ============================================
+   PORTFOLIO VIEW RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Metrics Grid - Stack on mobile, 2-col on tablet */
+  .portfolio-view .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+  
+  .portfolio-view .metric-card {
+    padding: 16px;
+  }
+  
+  .portfolio-view .metric-value {
+    font-size: 20px !important;
+  }
+  
+  .portfolio-view .metric-subtitle {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 767px) {
+  .portfolio-view .metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Hide fund breakdown table on mobile, show cards instead */
+  .portfolio-view .fund-breakdown-table {
+    display: none;
+  }
+  
+  /* Allocation visual improvements */
+  .portfolio-view .allocation-visual {
+    gap: 16px;
+  }
+  
+  .portfolio-view .fund-details {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+  }
+  
+  .portfolio-view .fund-details span {
+    min-width: calc(50% - 4px);
+  }
+}
+
+/* Mobile-friendly fund breakdown cards */
+@media (max-width: 767px) {
+  .portfolio-view .fund-breakdown-section {
+    margin-top: 20px;
+  }
+  
+  /* Create card view for funds on mobile */
+  .portfolio-view .fund-breakdown-section::after {
+    content: '';
+    display: block;
+  }
+}
+
+/* ============================================
+   FUNDS VIEW RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Fund selector buttons */
+  .funds-view .fund-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .funds-view .fund-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  /* Metrics row - stack on mobile */
+  .funds-view .metrics-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+  
+  .funds-view .metric-item {
+    padding: 12px;
+  }
+  
+  /* Manager cards grid */
+  .funds-view .manager-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Single column for all metrics on mobile */
+  .funds-view .metrics-row {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Performance attribution */
+  .funds-view .performance-attribution {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .funds-view .attribution-item {
+    padding: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 2 columns on tablet */
+  .funds-view .manager-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ============================================
+   ACCOUNTS VIEW RESPONSIVE
+   ============================================ */
+
+@media (max-width: 767px) {
+  .accounts-view .coming-soon {
+    padding: 20px;
+  }
+  
+  .accounts-view .coming-soon-icon {
+    font-size: 48px;
+  }
+  
+  .accounts-view .coming-soon h3 {
+    font-size: 18px;
+  }
+  
+  .accounts-view .coming-soon ul {
+    padding-left: 20px;
+  }
+}
+
+/* ============================================
+   TRADING ANALYTICS DASHBOARD RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1023px) {
+  /* Tab navigation - scrollable on mobile */
+  .trading-analytics-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .trading-analytics-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .trading-analytics-tabs button {
+    flex-shrink: 0;
+    min-width: 140px;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Trading Analytics header */
+  .trading-analytics-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  
+  /* Period selector */
+  .period-selector {
+    width: 100%;
+  }
+  
+  .period-selector select {
+    width: 100%;
+  }
+  
+  /* Action buttons */
+  .trading-analytics-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .trading-analytics-actions button {
+    width: 100%;
+  }
+  
+  /* Tab buttons smaller text on very small screens */
+  .trading-analytics-tabs button {
+    font-size: 13px;
+    padding: 10px 12px;
+    min-width: 120px;
+  }
+}
+
+/* ============================================
+   SHARED RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Badge sizing on mobile */
+@media (max-width: 767px) {
+  .badge {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
+
+/* Metric cards touch improvements */
+@media (max-width: 1023px) {
+  .metric-card,
+  .manager-card,
+  .fund-allocation-item {
+    touch-action: manipulation;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .metric-card:active,
+  .manager-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Period info on mobile */
+@media (max-width: 767px) {
+  .period-info {
+    font-size: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  
+  .period-info p {
+    margin: 4px 0;
+  }
+}
+
+/* Page headers on mobile */
+@media (max-width: 767px) {
+  .page-header h2 {
+    font-size: 20px !important;
+  }
+  
+  .page-header .subtitle {
+    font-size: 13px;
+  }
+}
+
+/* Loading and error states */
+@media (max-width: 767px) {
+  .loading-spinner {
+    transform: scale(0.8);
+  }
+  
+  .error-message,
+  .empty-state {
+    padding: 20px;
+    font-size: 14px;
+  }
+}
+
+/* ============================================
+   TABLET-SPECIFIC OPTIMIZATIONS
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Optimize spacing for tablets */
+  .portfolio-view,
+  .funds-view,
+  .managers-view {
+    padding: 16px;
+  }
+  
+  /* Grid layouts - 2 columns on tablet */
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Tables - keep visible but optimize */
+  .fund-breakdown-table {
+    font-size: 13px;
+  }
+  
+  .fund-breakdown-table th,
+  .fund-breakdown-table td {
+    padding: 10px 8px;
+  }
+}
+
+/* ============================================
+   TOUCH OPTIMIZATION
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device optimizations */
+  button,
+  .clickable,
+  .tab-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover effects on touch devices */
+  .metric-card:hover,
+  .manager-card:hover,
+  .fund-btn:hover {
+    transform: none;
+  }
+  
+  /* Active states for touch feedback */
+  .metric-card:active,
+  .manager-card:active,
+  .fund-btn:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 896px) and (orientation: landscape) {
+  /* Reduce vertical spacing in landscape */
+  .metrics-grid {
+    gap: 8px !important;
+  }
+  
+  .metric-card {
+    padding: 12px !important;
+  }
+  
+  .page-header {
+    padding: 8px 0 !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .page-header h2 {
+    font-size: 18px !important;
+  }
+}
