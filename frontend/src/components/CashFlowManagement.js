@@ -109,44 +109,51 @@ const CashFlowManagement = () => {
         const summary = cashFlowResponse.data.summary || {};
         
         // PHASE 3 FIX: Use corrected MT5 data and avoid double counting
-        let mt5TruePnl = summary.mt5_trading_profits || 0;
+        // ✅ PHASE 1: Fetch complete cashflow from backend with all calculations
+        let mt5TruePnl = 0;
         let brokerInterest = 0;
+        let totalInflows = 0;
+        let netProfit = 0;
+        let brokerRebates = 0;
+        let clientObligations = 0;
+        let totalLiabilities = 0;
         let separationBalance = 0;
         let profitWithdrawals = 0;
         
-        if (mt5CorrectedResponse.data.success) {
-          const corrected = mt5CorrectedResponse.data;
-          // TRUE P&L already includes profit withdrawals!
-          mt5TruePnl = corrected.fund_assets?.mt5_trading_pnl || 0;
-          separationBalance = corrected.fund_assets?.separation_interest || 0;
-          profitWithdrawals = corrected.summary?.total_profit_withdrawals || 0;
+        try {
+          const token = localStorage.getItem('fidus_token');
+          const completeResponse = await fetch(
+            `${process.env.REACT_APP_BACKEND_URL}/api/admin/cashflow/complete`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
           
-          // CRITICAL FIX: Calculate ONLY the broker interest (not the full separation balance)
-          // Broker Interest = Separation Balance - Profit Withdrawals
-          brokerInterest = separationBalance - profitWithdrawals;
-          
-          console.log("✅ CORRECTED calculation (NO DOUBLE COUNTING):", {
-            mt5_true_pnl: mt5TruePnl,
-            profit_withdrawals: profitWithdrawals,
-            separation_balance: separationBalance,
-            broker_interest_calculation: `${separationBalance} - ${profitWithdrawals} = ${brokerInterest}`,
-            broker_interest_only: brokerInterest,
-            correct_total: mt5TruePnl + brokerInterest,
-            verification: {
-              should_be_3755: mt5TruePnl + brokerInterest,
-              not_7478: mt5TruePnl + separationBalance
+          if (completeResponse.ok) {
+            const data = await completeResponse.json();
+            if (data.success) {
+              // ✅ Use calculated values from backend API (NO frontend calculations)
+              mt5TruePnl = data.fund_assets.mt5_trading_pnl;
+              brokerInterest = data.broker_interest;           // CALCULATION #1 from backend
+              totalInflows = data.total_inflows;               // CALCULATION #2 from backend
+              netProfit = data.net_profit;                     // CALCULATION #3 from backend
+              brokerRebates = data.fund_assets.broker_rebates;
+              clientObligations = data.liabilities.client_interest_obligations;
+              totalLiabilities = data.total_liabilities;
+              separationBalance = data.fund_assets.separation_interest;
+              profitWithdrawals = data.summary.total_profit_withdrawals;
+              
+              console.log("✅ PHASE 1: Using backend calculations (NO frontend calculations):", {
+                mt5_trading_pnl: mt5TruePnl,
+                broker_interest: brokerInterest,      // From backend
+                total_inflows: totalInflows,          // From backend
+                net_profit: netProfit,                // From backend
+                broker_rebates: brokerRebates,
+                source: 'backend API /api/admin/cashflow/complete'
+              });
             }
-          });
+          }
+        } catch (error) {
+          console.error('Error loading complete cashflow:', error);
         }
-        
-        console.log("🔍 Fund Accounting Data before setState:", {
-          mt5TruePnl,
-          brokerInterest,
-          brokerRebates: summary.broker_rebates || 0,
-          totalInflows: mt5TruePnl + brokerInterest + (summary.broker_rebates || 0),
-          separationBalance,
-          profitWithdrawals
-        });
 
         // PHASE 1 FIX: Fetch individual separation account balances
         const separationAccounts = {};
