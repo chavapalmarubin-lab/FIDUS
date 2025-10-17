@@ -201,9 +201,9 @@ export default function PortfolioView({ period }) {
                   <td>{fundData.managers_count}</td>
                   <td>{weight.toFixed(1)}%</td>
                   <td>
-                    <span className={`status-badge ${isPerforming ? 'status-positive' : 'status-negative'}`}>
+                    <Badge variant={isPerforming ? 'success' : 'warning'}>
                       {isPerforming ? '✓ Performing' : '⚠️ Underperforming'}
-                    </span>
+                    </Badge>
                   </td>
                 </tr>
               );
