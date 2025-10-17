@@ -826,12 +826,12 @@ const CashFlowManagement = () => {
               <span className="text-lg">✅</span>
               <div>
                 <p className="font-semibold text-green-400">
-                  Cash Flow Data Verified - Using Corrected MT5 P&L
+                  Cash Flow Data Verified - Using Backend API Calculations
                 </p>
                 <p className="text-sm text-slate-300">
-                  MT5 Trading P&L: {formatCurrency(fundAccounting?.mt5_corrected_data?.fund_assets?.mt5_trading_pnl || 0)} | 
-                  Separation Interest: {formatCurrency(fundAccounting?.mt5_corrected_data?.fund_assets?.separation_interest || 0)} | 
-                  Total Profit Withdrawals: {formatCurrency(fundAccounting?.mt5_corrected_data?.summary?.total_profit_withdrawals || 0)}
+                  MT5 Trading P&L: {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)} | 
+                  Separation Interest: {formatCurrency(fundAccounting?.separation_balance || 0)} | 
+                  Total Profit Withdrawals: {formatCurrency(fundAccounting?.profit_withdrawals || 0)}
                 </p>
               </div>
             </div>
