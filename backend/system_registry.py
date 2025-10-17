@@ -108,10 +108,16 @@ SYSTEM_COMPONENTS = {
                     'sessions',
                     'documents',
                     'mt5_update_log',
-                    'redemptions'
+                    'redemptions',
+                    'deals',  # Historical deal data
+                    'money_managers',  # Trading strategy managers
+                    'fund_allocations',  # Fund allocation records
+                    'mt5_deals_history',  # MT5 deal history for analytics
+                    'mt5_trades'  # Closed trades for performance calculations
                 ],
                 'backup_enabled': True,
-                'backup_frequency': 'Daily'
+                'backup_frequency': 'Daily',
+                'indexes_optimized': True  # Added in Phase 7
             },
             'credentials_ref': 'mongodb_atlas',
             'dependencies': [],
