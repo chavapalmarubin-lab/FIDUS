@@ -50,30 +50,19 @@ export default function PortfolioView({ period }) {
     }
   };
 
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+  // Using imported formatCurrency from shared constants
 
   if (loading) {
-    return (
-      <div className="portfolio-view-loading">
-        <div className="spinner"></div>
-        <p>Loading portfolio data...</p>
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading portfolio data..." />;
   }
 
   if (error) {
     return (
       <div className="portfolio-view-error">
         <p>❌ Error loading portfolio: {error}</p>
-        <button onClick={fetchPortfolioData} className="btn-retry">Retry</button>
+        <Button variant="primary" onClick={fetchPortfolioData} className="mt-4">
+          Retry
+        </Button>
       </div>
     );
   }
