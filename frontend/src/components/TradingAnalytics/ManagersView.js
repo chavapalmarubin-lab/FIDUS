@@ -275,9 +275,9 @@ export default function ManagersView({ period }) {
 
                     {/* Fund */}
                     <td>
-                      <span className={`fund-badge fund-${manager.fund.toLowerCase()}`}>
+                      <Badge type="fund" variant={manager.fund}>
                         {manager.fund}
-                      </span>
+                      </Badge>
                     </td>
 
                     {/* Account */}
