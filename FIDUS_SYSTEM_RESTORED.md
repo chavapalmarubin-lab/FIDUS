@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://investsync-1.preview.emergentagent.com`
+`https://mt5-data-integrity.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

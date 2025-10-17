@@ -1,74 +1,58 @@
 <analysis>
-The AI engineer's work evolved from initial bug fixes and UI/UX improvements to establishing a robust MT5 data sync system. After addressing data loading issues and a critical production database problem, the focus shifted to the MT5 Bridge Service. The engineer successfully implemented Phases 1-3: a VPS-based MT5 Bridge with encryption and auto-restart, a FastAPI backend for real-time data, and a React frontend consuming this data, removing all mock data.
-
-The current phase, Phase 4A, involves enhancing data collection to include deal history, which is crucial for enabling several non-functional dashboards (Trading Analytics, Cash Flow, Broker Rebates, Money Manager Performance). The engineer successfully completed Days 1-2 (VPS script enhancement, MongoDB schema, backend API endpoints) and Day 3 (frontend integration for all relevant dashboards, including a new Broker Rebates component, and implementation of horizontal scrolling for UI tabs). The latest work, Day 4, focused on implementing a comprehensive GitHub Actions-driven CI/CD pipeline for automated deployments to Render (frontend/backend) and the VPS (MT5 bridge). The AI engineer has created all necessary code and documentation for this automation and is now providing instructions for the user to complete the final setup steps (GitHub Secrets and VPS configuration).
+The trajectory details a critical period in the application's development, marked by an initial aggressive refactor that broke key UI components. This led to an urgent  and a subsequent mandate for a comprehensive Field Standardization Audit. The audit revealed pervasive inconsistencies in naming, data structures, and calculation locations. Based on this, a three-phase standardization plan was formulated: first, move all calculations to the backend; second, standardize field names; and third, flatten nested structures. The AI engineer is currently executing **Phase 1**, component by component, focusing on migrating frontend calculations to the FastAPI backend, while strictly adhering to a Functionality Preservation Checklist and a rigorous verification process using real MongoDB data. A minor but critical interjection involved fixing the Fund Portfolio page, which was showing incorrect MT5 account allocations.
 </analysis>
 
 <product_requirements>
-The FIDUS platform needs an investment management system with accurate MT5 data. Initially, the core problem was inaccurate P&L, addressed by automating Broker Rebates, Money Manager Performance Fees, and ensuring real-time data integrity from MT5 via a VPS Bridge to MongoDB. The MT5 Account Management System allows administrators to manage accounts through a data-driven dashboard, featuring a FastAPI backend for CRUD operations and a Python Bridge for syncing active accounts. Existing implementations include a UI/UX overhaul, displaying all 7 active MT5 accounts, and automatic 5-minute data flow with encrypted passwords.
-
-Phase 4A aims to unlock advanced analytics by collecting deal history. This includes implementing , creating an  MongoDB collection (90-day backfill, daily incremental sync), and developing new backend API endpoints (, , , etc.). Frontend dashboards (Trading Analytics, Cash Flow, Broker Rebates, Money Manager Performance) require updates to consume this real data. A major recent requirement is to automate deployments through GitHub Actions for the frontend, backend, and VPS, eliminating manual intervention for updates.
+The FIDUS platform is an investment management system designed for accurate MT5 data, automating broker rebates, and managing money manager performance. It integrates real-time MT5 data via a VPS Bridge into MongoDB. Key features include an MT5 Account Management System (displaying 7 active accounts with CRUD), 5-minute data flow, and encrypted passwords. Phase 4A introduced deal history collection, a  collection, and new backend API endpoints with automated CI/CD. Phase 4B added 7 optional enhancements (Equity Snapshots, Pending Orders, Terminal Status, etc.). The core problem is ensuring data integrity and consistent backend-only calculations for a single client, Alejandro (18,151.41 investment across 7 MT5 accounts), and accurate UI display across all dashboards. The current project aims to standardize field names, move all calculations to the backend, and flatten data structures to prevent future development issues.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend:** Python (FastAPI, , ), MongoDB Atlas (), ,  (Fernet).
--   **Frontend:** React.js (Yarn, Tailwind CSS, Radix UI, Recharts).
--   **MT5 Integration:** MetaTrader5 Python API (Windows VPS), real-time data sync.
--   **Deployment/Automation:** Supervisor, Kubernetes, Windows Task Scheduler, GitHub Actions (for CI/CD with SSH/webhooks).
--   **Data Management:** Dynamic configuration, data freshness, deal classification.
+- **Backend:** Python (FastAPI, , ), MongoDB Atlas, ,  (Fernet).
+- **Frontend:** React.js (Yarn, Tailwind CSS, Radix UI, Recharts), CRACo.
+- **MT5 Integration:** MetaTrader5 Python API (Windows VPS), real-time data sync.
+- **Deployment/Automation:** Supervisor, Kubernetes, GitHub Actions, Render.
+- **Architectural Principles:** Backend-only calculations, frontend display-only, single source of truth.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: Main FastAPI app. Now includes 6 new endpoints for MT5 deal history and analytics (e.g., , , ).
--   ** (NEW)**: Service layer for handling MT5 deal data logic and MongoDB interactions.
--   ** (NEW)**: The enhanced Python script for the VPS, capable of collecting 90 days of historical MT5 deal data and performing daily incremental syncs to a new  MongoDB collection, using . This file will be  on the VPS.
--   ****: Updated to include new functions for fetching deal history, manager performance, equity curves, and rebates from the backend.
--   ****: Modified to consume new deal history APIs for equity curves and trade analytics.
--   ****: Modified to display deal history with classifications (Deposit, Withdrawal, Internal Transfer, Trading) using data from new APIs.
--   ****: Updated to fetch and display manager performance metrics (P&L, volume, win rate) by magic number from new APIs.
--   ** (NEW)**: A new React component that calculates and displays broker rebates based on traded volume and commission data fetched from the backend, including filters, summary cards, and charts.
--   ****: Modified to add the new  tab and implements horizontal scrolling (, ) to manage tab visibility.
--   ****: Updated to include CSS utilities for custom scrollbar styling to enhance the horizontal scrolling for tabs.
--   ** (NEW Directory)**: Contains the MT5 bridge scripts and associated automation files for the VPS.
-    -   ****: The production version of the MT5 bridge, now capable of deal history collection.
-    -   ** (NEW)**: A PowerShell script for the VPS to automatically fetch and pull the latest code from GitHub, create backups, and restart the MT5 Bridge service.
-    -   ** (NEW)**: An updated batch file for the VPS to execute the PowerShell auto-update script and then run the Python bridge service, ensuring the latest code is always used.
-    -   ** (NEW)**: Documentation for setting up Git and the auto-update mechanism on the Windows VPS.
--   ** (NEW Directory)**: Contains GitHub Actions workflow definitions.
-    -   ** (NEW)**: Workflow to trigger Render deployment for the backend on push to  branch.
-    -   ** (NEW)**: Workflow to trigger Emergent.host deployment for the frontend on push to  branch.
-    -   ** (NEW)**: Workflow to deploy updates to the VPS via SSH, executing the  script.
--   ** (NEW)**: Comprehensive documentation detailing the automated CI/CD pipelines for backend, frontend, and VPS, including manual rollback procedures and monitoring instructions.
--   ** (NEW)**: Step-by-step instructions for the user to add required GitHub Secrets.
--   ** (NEW)**: Step-by-step instructions for the user to configure Git and the auto-update scripts on the VPS.
+
+- ****: The main FastAPI application, serving as the central hub for API routes. It was significantly modified to include new GET endpoints for various dashboards (, , , ), integrating complex calculations for metrics like average investment, investment projections, MT5 return percentages, and cash flow components. Authentication () details were also crucial for debugging.
+- ****: This service, imported by , was crucial for the Fund Portfolio fix. It was modified to correctly query the  collection by removing an incorrect  filter, allowing it to correctly retrieve and associate MT5 accounts with their respective funds.
+- ****: Modified to centralize complex trading analytics calculations (e.g., win rate, average trade, profit factor) that were previously performed on the frontend.
+- ****: Refactored to remove the client-side calculation of Average Investment (Line 407) and now consumes the pre-calculated  field from the backend's  endpoint.
+- ****: Refactored to remove the 24-month investment projection calculation loop (Lines 236-246). It now fetches the  array directly from the  endpoint.
+- ****: Updated to remove client-side calculations for individual account  (Line 79) and  (Lines 56-58). It now uses pre-calculated values from the  endpoint.
+- ****: Refactored to eliminate 5 client-side calculations (win rate, average trade, average win, average loss, profit factor, Lines 139-148). It now fetches these metrics from the  endpoint.
+- ****: Being refactored to remove 3 critical client-side calculations (, , , Lines 126, 180, 192) and instead fetch these pre-calculated values from the new  endpoint.
+- ****: This component was displaying . The fix involved ensuring the backend  properly associated MT5 accounts with funds, making the frontend correctly display the allocated accounts.
+- ** (NEW)**: A comprehensive document created by the AI engineer, detailing MongoDB collections, API endpoints, frontend components, and a list of 10 critical field naming inconsistencies.
+- ** (NEW)**: A detailed checklist documenting all frontend calculations, display dependencies, and testing verification steps, created to prevent functionality loss during refactoring.
+- ** (NEW)**: A document to record live application values before modifications, used for comparison after implementing changes.
 </code_architecture>
 
 <pending_tasks>
--   **Optional Enhancements (from user's initial request):** Equity Snapshots, Pending Orders, Terminal Status, Transfer Classification Detail, Account Growth Metrics, Sync Status & Error Logging, Broker Costs & Spreads.
--   **User-side tasks for GitHub Automation:**
-    -   Add required GitHub Secrets (VPS credentials, Render deploy hook, Emergent webhook URL).
-    -   Perform one-time VPS setup (Git installation, repository initialization, configuring auto-update Task Scheduler tasks).
-    -   Perform comprehensive end-to-end testing of the entire CI/CD pipeline and dashboards.
+- **Verify Fund Portfolio Management page fix**: The user explicitly requested verification in Message 332, which was not explicitly confirmed.
+- **Complete Phase 1 Final Verification**: Fully verify Component #5 (CashFlowManagement) and all other components of Phase 1 to ensure 100% functionality.
+- **Phase 2: Standardize field names**: Implement the standardized naming conventions across the database, API responses, and frontend, as outlined in the audit.
+- **Phase 3: Flatten nested structures**: Refactor APIs and frontend to use flat data structures instead of nested ones.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer successfully completed the code implementation for Phase 4A and the GitHub automation.
-**Phase 4A Completion:**
--   **VPS Bridge Script**:  (which will be  on VPS) was enhanced to collect and sync deal history.
--   **MongoDB Schema**: Designed for  collection.
--   **Backend API**: Six new endpoints were added to  and  for fetching deal history, summaries, rebates, and analytics.
--   **Frontend Integration**: All four previously non-functional dashboards (, , ) were updated to consume real data from the new Phase 4A backend APIs. A brand new  component was created. The  was modified to include horizontal scrolling for tabs and ensure all new tabs are accessible.
+Immediately before this summary, the AI engineer was implementing **Phase 1, Component #5: CashFlowManagement**. This is the final and most critical component of Phase 1, involving the migration of three interconnected calculations to the backend:
+1.  **Broker Interest** ()
+2.  **Total Inflows** ()
+3.  **Net Profit** ()
 
-**GitHub Automation Implementation**:
--   **Workflow Files**: , , and  were created in .
--   **VPS Scripts**:  (PowerShell script for auto-pulling and service restart) and  (batch wrapper for update and running bridge) were created in the  directory.
--   **Documentation**:  and  were created to guide the user through setting up the VPS and understanding the CI/CD.
-
-The system is now at 92% completion, with all code implemented. The remaining 8% constitutes user-side tasks to configure GitHub Secrets, perform a one-time setup on the VPS, and conduct final end-to-end testing. The engineer has created detailed step-by-step instructions for these user tasks.
+The AI engineer successfully:
+-   Created a new backend endpoint  in .
+-   Implemented all three calculations within this endpoint, ensuring they query **real MongoDB data** for ,  (from account 886528),  (from ),  (calculated from  volume), and  (from ). Crucially, **no hardcoded values** were used, adhering to the corrected baseline procedure.
+-   Tested the backend API via , verified the response, and manually cross-referenced calculations with direct MongoDB queries to ensure accuracy. The API response confirmed , , , etc., all matching manual calculations from real data.
+-   Updated the frontend component  to remove the client-side calculation logic for these three metrics and instead fetch and display the pre-calculated values directly from the new  endpoint. The frontend modification involves replacing the calculation logic with direct assignments from the API response object.
+The trajectory ends after the frontend update, just before committing these changes.
 </current_work>
 
 <optional_next_step>
-Provide the user with the step-by-step instructions to add GitHub Secrets and perform the one-time VPS setup.
+Commit the changes for CashFlowManagement, then perform the final verification of Phase 1, including Chava's Daily Check.
 </optional_next_step>
 
