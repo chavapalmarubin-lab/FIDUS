@@ -188,7 +188,7 @@ class MoneyManagersService:
                 
                 account_details.append({
                     "account_number": str(account_number),
-                    "fund_code": account.get("fund_type", ""),
+                    "fund_code": account.get("fund_type", ""),  # ✅ PHASE 2: Translate fund_type → fund_code
                     "pnl": round(account_pnl, 2),
                     "trade_count": len(trades)
                 })
