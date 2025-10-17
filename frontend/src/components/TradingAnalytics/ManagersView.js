@@ -234,7 +234,8 @@ export default function ManagersView({ period }) {
           </div>
         </div>
 
-        <div className="table-container">
+        {/* Desktop Table View - Hidden on Mobile/Tablet */}
+        <div className="table-container desktop-only">
           <table className="manager-rankings-table">
             <thead>
               <tr>
@@ -352,6 +353,118 @@ export default function ManagersView({ period }) {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile/Tablet Card View - Hidden on Desktop */}
+        <div className="manager-cards-container mobile-tablet-only">
+          {sortedManagers.map((manager, index) => {
+            const status = getStatusBadge(manager);
+            
+            return (
+              <div key={manager.manager_id} className={`manager-card rank-${index + 1}`}>
+                {/* Card Header */}
+                <div className="manager-card-header">
+                  <div className="manager-card-rank">
+                    <span className="rank-badge-mobile">{getRankEmoji(index)}</span>
+                  </div>
+                  <div className="manager-card-title">
+                    <h4 className="manager-name">{manager.manager_name}</h4>
+                    <div className="manager-meta">
+                      <Badge type="fund" variant={manager.fund}>{manager.fund}</Badge>
+                      <span className="account-number">#{manager.account}</span>
+                    </div>
+                  </div>
+                  <div className="manager-card-status">
+                    <span className={`status-badge-mobile ${status.class}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Key Metrics - Prominent Display */}
+                <div className="manager-card-key-metrics">
+                  <div className="metric-primary">
+                    <div className="metric-label">P&L</div>
+                    <div className={`metric-value ${manager.total_pnl >= 0 ? 'positive' : 'negative'}`}>
+                      {formatCurrency(manager.total_pnl)}
+                    </div>
+                  </div>
+                  <div className="metric-primary">
+                    <div className="metric-label">Return</div>
+                    <div className={`metric-value ${manager.return_percentage >= 0 ? 'positive' : 'negative'}`}>
+                      {manager.return_percentage >= 0 ? '+' : ''}
+                      {manager.return_percentage?.toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="metric-primary">
+                    <div className="metric-label">Sharpe</div>
+                    <div className={`metric-value sharpe-${getSharpeClass(manager.sharpe_ratio)}`}>
+                      {manager.sharpe_ratio?.toFixed(2) || 'N/A'}
+                      <span className="metric-sublabel">{getSharpeLabel(manager.sharpe_ratio)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Collapsible Details */}
+                <details className="manager-card-details">
+                  <summary className="details-toggle">
+                    <span>View All Metrics</span>
+                    <span className="toggle-icon">▼</span>
+                  </summary>
+                  
+                  <div className="manager-card-expanded">
+                    {/* Risk Metrics Row */}
+                    <div className="metrics-grid">
+                      <div className="metric-item">
+                        <div className="metric-label">Sortino</div>
+                        <div className="metric-value">
+                          {manager.sortino_ratio?.toFixed(2) || 'N/A'}
+                        </div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-label">Max DD</div>
+                        <div className={`metric-value ${Math.abs(manager.max_drawdown_pct) > 20 ? 'warning' : ''}`}>
+                          {manager.max_drawdown_pct?.toFixed(2)}%
+                          {Math.abs(manager.max_drawdown_pct) > 20 && <span> ⚠️</span>}
+                        </div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-label">Profit Factor</div>
+                        <div className={`metric-value pf-${getProfitFactorClass(manager.profit_factor)}`}>
+                          {manager.profit_factor?.toFixed(2) || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Win Rate Bar */}
+                    <div className="metric-item full-width">
+                      <div className="metric-label">Win Rate</div>
+                      <div className="win-rate-bar-mobile">
+                        <div className="bar-fill" style={{ width: `${manager.win_rate}%` }}></div>
+                        <span className="bar-label">{manager.win_rate?.toFixed(1)}%</span>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="metrics-grid">
+                      <div className="metric-item">
+                        <div className="metric-label">Strategy</div>
+                        <div className="metric-value small">{manager.strategy}</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-label">Risk Level</div>
+                        <div className="metric-value">
+                          <Badge type="risk" variant={manager.risk_level}>
+                            {manager.risk_level}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            );
+          })}
         </div>
       </div>
 
