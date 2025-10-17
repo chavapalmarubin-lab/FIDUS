@@ -58,16 +58,8 @@ export default function ManagersView({ period }) {
     return bVal - aVal; // Descending order
   });
 
-  // Helper Functions
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+  // Helper Functions moved to shared constants
+  // Using imported formatCurrency and formatPercentage
 
   const getRankEmoji = (index) => {
     if (index === 0) return '🥇';
