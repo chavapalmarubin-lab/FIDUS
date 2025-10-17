@@ -183,9 +183,9 @@ export default function PortfolioView({ period }) {
               return (
                 <tr key={fundName}>
                   <td>
-                    <span className={`fund-badge fund-${fundName.toLowerCase()}`}>
+                    <Badge type="fund" variant={fundName}>
                       {fundName}
-                    </span>
+                    </Badge>
                   </td>
                   <td>{formatCurrency(fundData.aum)}</td>
                   <td>{formatCurrency(fundData.aum + fundData.pnl)}</td>
