@@ -15153,6 +15153,109 @@ async def calculate_cash_flow_calendar():
 # CASH FLOW MANAGEMENT ENDPOINTS
 # ===============================================================================
 
+@api_router.get("/admin/cashflow/complete")
+async def get_complete_cashflow():
+    """
+    Get complete cash flow analysis with all 3 calculations
+    ✅ PHASE 1: Replaces frontend calculations in CashFlowManagement.js
+    Uses REAL MongoDB data - NO hardcoded values
+    """
+    try:
+        # ✅ Get MT5 trading P&L from REAL accounts in MongoDB
+        mt5_accounts_cursor = db.mt5_accounts.find({})
+        mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
+        mt5_trading_pnl = sum(acc.get('profit', 0) for acc in mt5_accounts)
+        
+        # ✅ Get separation account balance from REAL account 886528 in MongoDB
+        separation_account = await db.mt5_accounts.find_one({'account': 886528})
+        separation_balance = separation_account.get('balance', 0) if separation_account else 0
+        
+        # ✅ Get profit withdrawals from REAL withdrawal records in MongoDB
+        # Check if withdrawals collection exists
+        collections = await db.list_collection_names()
+        if 'withdrawals' in collections:
+            withdrawals_cursor = db.withdrawals.find({'type': 'profit_withdrawal'})
+            withdrawals = await withdrawals_cursor.to_list(length=None)
+            profit_withdrawals = sum(w.get('amount', 0) for w in withdrawals)
+        else:
+            # No withdrawals collection yet - use 0
+            profit_withdrawals = 0
+        
+        # ✅ CALCULATION #1: Broker Interest (moved from frontend Line 126)
+        # Same logic as frontend: separation_balance - profit_withdrawals
+        broker_interest = separation_balance - profit_withdrawals
+        
+        # ✅ Get broker rebates from REAL deal history in MongoDB
+        # Calculate from actual deal volume: volume * $5.05 per lot
+        deals_cursor = db.mt5_deals_history.find({})
+        deals = await deals_cursor.to_list(length=None)
+        total_volume = sum(deal.get('volume', 0) for deal in deals)
+        broker_rebates = total_volume * 5.05
+        
+        # ✅ CALCULATION #2: Total Inflows (moved from frontend Line 180)
+        # Same logic as frontend: mt5_pnl + broker_interest + broker_rebates
+        total_inflows = mt5_trading_pnl + broker_interest + broker_rebates
+        
+        # ✅ Get client obligations from REAL investments in MongoDB
+        # Query actual active investments and sum earned interest
+        investments_cursor = db.investments.find({'status': 'active'})
+        investments = await investments_cursor.to_list(length=None)
+        client_interest_obligations = sum(
+            inv.get('earned_interest', 0) for inv in investments
+        )
+        
+        # Total liabilities (could include other liabilities if they exist)
+        total_liabilities = client_interest_obligations
+        
+        # ✅ CALCULATION #3: Net Profit (moved from frontend Line 192)
+        # Same logic as frontend: total_inflows - total_liabilities
+        net_profit = total_inflows - total_liabilities
+        
+        return {
+            'success': True,
+            
+            # Source data (for transparency and debugging)
+            'source_data': {
+                'mt5_trading_pnl': round(mt5_trading_pnl, 2),
+                'separation_balance': round(separation_balance, 2),
+                'profit_withdrawals': round(profit_withdrawals, 2),
+                'broker_rebates': round(broker_rebates, 2),
+                'total_volume_lots': round(total_volume, 2),
+                'client_interest_obligations': round(client_interest_obligations, 2),
+                'mt5_accounts_count': len(mt5_accounts),
+                'active_investments_count': len(investments),
+                'total_deals_count': len(deals)
+            },
+            
+            # ✅ NEW CALCULATED FIELDS (moved from frontend)
+            'broker_interest': round(broker_interest, 2),      # CALCULATION #1
+            'total_inflows': round(total_inflows, 2),          # CALCULATION #2
+            'net_profit': round(net_profit, 2),                # CALCULATION #3
+            'total_liabilities': round(total_liabilities, 2),
+            
+            # Nested structure for compatibility with existing frontend code
+            'fund_assets': {
+                'mt5_trading_pnl': round(mt5_trading_pnl, 2),
+                'separation_interest': round(separation_balance, 2),
+                'broker_interest': round(broker_interest, 2),  # NEW
+                'broker_rebates': round(broker_rebates, 2)
+            },
+            'liabilities': {
+                'client_interest_obligations': round(client_interest_obligations, 2),
+                'total': round(total_liabilities, 2)
+            },
+            'summary': {
+                'total_profit_withdrawals': round(profit_withdrawals, 2),
+                'total_inflows': round(total_inflows, 2),      # NEW
+                'net_profit': round(net_profit, 2)             # NEW
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"Error in get_complete_cashflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/admin/cashflow/overview")
 async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"):
     """Get cash flow overview for admin dashboard"""
