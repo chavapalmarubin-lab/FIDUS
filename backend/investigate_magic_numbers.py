@@ -124,9 +124,7 @@ def investigate_magic_numbers():
         }
     ]
     
-    deal_types = []
-    async for doc in db.mt5_deals_history.aggregate(type_pipeline):
-        deal_types.append(doc)
+    deal_types = list(db.mt5_deals_history.aggregate(type_pipeline))
     
     for dtype in deal_types:
         print(f"Entry Type: {dtype['_id']}")
@@ -134,9 +132,9 @@ def investigate_magic_numbers():
         print(f"  - Total Profit: ${dtype['total_profit']:,.2f}")
         print()
     
-    await client.close()
+    client.close()
     
     print("\n✅ INVESTIGATION COMPLETE!")
 
 if __name__ == "__main__":
-    asyncio.run(investigate_magic_numbers())
+    investigate_magic_numbers()
