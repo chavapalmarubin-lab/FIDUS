@@ -1,0 +1,57 @@
+/* Accounts View Styles */
+
+.accounts-view {
+  padding: 40px 20px;
+}
+
+.coming-soon {
+  max-width: 600px;
+  margin: 60px auto;
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.coming-soon-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.coming-soon h3 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  color: #1e293b;
+}
+
+.coming-soon p {
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.coming-soon ul {
+  text-align: left;
+  max-width: 400px;
+  margin: 20px auto;
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.coming-soon ul li {
+  margin-bottom: 8px;
+}
+
+.note {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.note strong {
+  color: #1e293b;
+}

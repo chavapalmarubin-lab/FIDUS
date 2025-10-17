@@ -1,0 +1,460 @@
+/* Managers View Styles */
+
+.managers-view {
+  padding: 20px;
+}
+
+/* Top Performers Banner */
+.top-performers-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.top-performer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rank-emoji {
+  font-size: 48px;
+}
+
+.performer-info {
+  flex: 1;
+}
+
+.performer-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.performer-stats {
+  display: flex;
+  gap: 30px;
+  font-size: 16px;
+}
+
+.return-value,
+.pnl-value,
+.sharpe-value {
+  font-weight: 600;
+}
+
+/* Rankings Section */
+.rankings-section {
+  margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table-controls label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.sort-selector {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Manager Rankings Table */
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.manager-rankings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.manager-rankings-table thead {
+  background: #f8fafc;
+}
+
+.manager-rankings-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.manager-rankings-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.manager-rankings-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+/* Rank Cell */
+.rank-cell {
+  text-align: center;
+  font-weight: 700;
+}
+
+.rank-badge {
+  font-size: 18px;
+}
+
+.rank-row.rank-1 {
+  background: #fef3c7;
+}
+
+.rank-row.rank-2 {
+  background: #e0e7ff;
+}
+
+.rank-row.rank-3 {
+  background: #fce7f3;
+}
+
+/* Manager Name Cell */
+.manager-name-cell {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* P&L and Return Cells */
+.pnl-cell.positive,
+.return-cell.positive {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.pnl-cell.negative,
+.return-cell.negative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Sharpe Indicator */
+.sharpe-indicator {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  min-width: 70px;
+}
+
+.sharpe-indicator.excellent {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.sharpe-indicator.good {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.sharpe-indicator.fair {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sharpe-indicator.poor {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sharpe-indicator .value {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sharpe-indicator .label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Drawdown Cell */
+.drawdown-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawdown-cell.warning {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.warning-icon {
+  font-size: 16px;
+}
+
+/* Win Rate Bar */
+.win-rate-bar {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  transition: width 0.3s;
+}
+
+.bar-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: #1e293b;
+  z-index: 1;
+}
+
+/* Profit Factor */
+.profit-factor.excellent {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.profit-factor.good {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.profit-factor.breakeven {
+  color: #f59e0b;
+}
+
+.profit-factor.poor {
+  color: #ef4444;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.status-best {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.status-solid {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.status-risk {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.status-monitor {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Capital Allocation Suggestions */
+.allocation-suggestions {
+  margin: 40px 0;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.allocation-suggestions h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 16px;
+}
+
+.suggestion-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.suggestion-card.suggestion-increase {
+  border-left-color: #10b981;
+}
+
+.suggestion-card.suggestion-decrease {
+  border-left-color: #ef4444;
+}
+
+.suggestion-icon {
+  font-size: 32px;
+}
+
+.suggestion-content {
+  flex: 1;
+}
+
+.suggestion-manager {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.suggestion-message {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.suggestion-priority {
+  align-self: center;
+}
+
+.badge-high {
+  padding: 4px 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.badge-medium {
+  padding: 4px 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Risk Alerts */
+.risk-alerts {
+  margin: 40px 0;
+  padding: 24px;
+  background: #fef2f2;
+  border-radius: 12px;
+}
+
+.risk-alerts h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.alert.alert-warning {
+  border-left-color: #f59e0b;
+}
+
+.alert.alert-danger {
+  border-left-color: #ef4444;
+}
+
+.alert-icon {
+  font-size: 20px;
+}
+
+.alert-message {
+  flex: 1;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Summary Stats */
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.stat-card {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stat-value.positive {
+  color: #10b981;
+}
