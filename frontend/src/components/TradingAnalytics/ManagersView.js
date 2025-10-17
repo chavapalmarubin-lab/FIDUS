@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import Button from '../ui/Button';
+import Badge from '../ui/Badge';
+import { formatCurrency, formatPercentage } from '../../constants/styles';
 import './ManagersView.css';
 
 export default function ManagersView({ period }) {
