@@ -23,16 +23,16 @@ def investigate_magic_numbers():
     print("=" * 80)
     
     # Check if collection exists
-    collections = await db.list_collection_names()
+    collections = db.list_collection_names()
     print(f"\nAvailable collections: {collections}\n")
     
     # Count total deals
-    total_count = await db.mt5_deals_history.count_documents({})
+    total_count = db.mt5_deals_history.count_documents({})
     print(f"Total deals in mt5_deals_history: {total_count:,}\n")
     
     if total_count == 0:
         print("❌ No deals found in mt5_deals_history collection!")
-        await client.close()
+        client.close()
         return
     
     # 1. Get deals grouped by magic number
@@ -50,9 +50,7 @@ def investigate_magic_numbers():
         {'$sort': {'count': -1}}
     ]
     
-    magic_groups = []
-    async for doc in db.mt5_deals_history.aggregate(pipeline):
-        magic_groups.append(doc)
+    magic_groups = list(db.mt5_deals_history.aggregate(pipeline))
     
     print(f"DEALS GROUPED BY MAGIC NUMBER:\n")
     
