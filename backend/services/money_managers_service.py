@@ -95,7 +95,7 @@ class MoneyManagersService:
                 if provider not in manager_stats:
                     manager_stats[provider] = {
                         "manager_name": provider,
-                        "total_pnl": 0.0,
+                        "total_profit_loss": 0.0,  # ✅ PHASE 2: Standardized from total_pnl
                         "trade_count": 0,
                         "winning_trades": 0,
                         "losing_trades": 0,
@@ -109,7 +109,7 @@ class MoneyManagersService:
                 winning = len([t for t in trades if t.get("profit", 0) > 0])
                 losing = len([t for t in trades if t.get("profit", 0) < 0])
                 
-                manager_stats[provider]["total_pnl"] += account_pnl
+                manager_stats[provider]["total_profit_loss"] += account_pnl  # ✅ PHASE 2
                 manager_stats[provider]["total_volume"] += account_volume
                 manager_stats[provider]["trade_count"] += len(trades)
                 manager_stats[provider]["winning_trades"] += winning
@@ -124,7 +124,7 @@ class MoneyManagersService:
                 
                 managers.append({
                     "manager_name": provider,
-                    "total_pnl": round(stats["total_pnl"], 2),
+                    "total_profit_loss": round(stats["total_profit_loss"], 2),  # ✅ PHASE 2
                     "total_volume": round(stats["total_volume"], 2),
                     "trade_count": total_trades,
                     "win_rate": round(win_rate, 2),
@@ -135,7 +135,7 @@ class MoneyManagersService:
                 })
             
             # Sort by total P&L (highest first)
-            managers.sort(key=lambda x: x["total_pnl"], reverse=True)
+            managers.sort(key=lambda x: x["total_profit_loss"], reverse=True)  # ✅ PHASE 2
             
             result = {
                 "managers": managers,
