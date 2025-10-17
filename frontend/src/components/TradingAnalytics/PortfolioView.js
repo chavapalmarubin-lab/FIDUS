@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import { formatCurrency } from '../../constants/styles';
 import './PortfolioView.css';
+import './TradingAnalytics-responsive.css';
 
 export default function PortfolioView({ period }) {
   const [data, setData] = useState(null);
