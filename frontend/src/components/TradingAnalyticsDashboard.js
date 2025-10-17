@@ -82,12 +82,14 @@ export default function TradingAnalyticsDashboard() {
         </button>
       </div>
 
-      {/* Tab Content */}
+      {/* Tab Content with Lazy Loading */}
       <div className="tab-content">
-        {activeTab === 'portfolio' && <PortfolioView period={period} />}
-        {activeTab === 'funds' && <FundsView period={period} />}
-        {activeTab === 'managers' && <ManagersView period={period} />}
-        {activeTab === 'accounts' && <AccountsView period={period} />}
+        <Suspense fallback={<LoadingSpinner size="lg" text="Loading view..." />}>
+          {activeTab === 'portfolio' && <PortfolioView period={period} />}
+          {activeTab === 'funds' && <FundsView period={period} />}
+          {activeTab === 'managers' && <ManagersView period={period} />}
+          {activeTab === 'accounts' && <AccountsView period={period} />}
+        </Suspense>
       </div>
     </div>
   );
