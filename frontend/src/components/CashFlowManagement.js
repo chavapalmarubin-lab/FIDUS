@@ -128,23 +128,24 @@ const CashFlowManagement = () => {
           if (completeResponse.ok) {
             const data = await completeResponse.json();
             if (data.success) {
-              // ✅ Use calculated values from backend API (NO frontend calculations)
-              mt5TruePnl = data.fund_assets.total_profit_loss;  // ✅ PHASE 2: Standardized field name
-              brokerInterest = data.broker_interest;           // CALCULATION #1 from backend
-              totalInflows = data.total_inflows;               // CALCULATION #2 from backend
-              netProfit = data.net_profit;                     // CALCULATION #3 from backend
-              brokerRebates = data.fund_assets.broker_rebates;
-              clientObligations = data.liabilities.client_interest_obligations;
-              totalLiabilities = data.total_liabilities;
-              separationBalance = data.fund_assets.separation_interest;
-              profitWithdrawals = data.summary.total_profit_withdrawals;
+              // ✅ PHASE 2 TASK #3: Use FLAT structure (with backward compatibility fallback)
+              mt5TruePnl = data.total_profit_loss || data.fund_assets?.total_profit_loss || 0;
+              brokerInterest = data.broker_interest || 0;  // Already flat
+              totalInflows = data.total_inflows || 0;      // Already flat
+              netProfit = data.net_profit || 0;            // Already flat
+              brokerRebates = data.broker_rebates || data.fund_assets?.broker_rebates || 0;
+              clientObligations = data.client_interest_obligations || data.liabilities?.client_interest_obligations || 0;
+              totalLiabilities = data.total_liabilities || 0;  // Already flat
+              separationBalance = data.separation_interest || data.fund_assets?.separation_interest || 0;
+              profitWithdrawals = data.profit_withdrawals || data.summary?.total_profit_withdrawals || 0;
               
-              console.log("✅ PHASE 2: Using backend standardized fields:", {
-                total_profit_loss: mt5TruePnl,  // ✅ Standardized
-                broker_interest: brokerInterest,      // From backend
-                total_inflows: totalInflows,          // From backend
-                net_profit: netProfit,                // From backend
+              console.log("✅ PHASE 2 TASK #3: Using FLAT structure (no nesting):", {
+                total_profit_loss: mt5TruePnl,
+                broker_interest: brokerInterest,
+                total_inflows: totalInflows,
+                net_profit: netProfit,
                 broker_rebates: brokerRebates,
+                structure: 'FLAT (preferred)',
                 source: 'backend API /api/admin/cashflow/complete'
               });
             }
