@@ -107,7 +107,6 @@ const CashFlowManagement = () => {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
-        // PHASE 3 FIX: Use corrected MT5 data and avoid double counting
         // ✅ PHASE 1: Fetch complete cashflow from backend with all calculations
         let mt5TruePnl = 0;
         let brokerInterest = 0;
