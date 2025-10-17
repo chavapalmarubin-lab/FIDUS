@@ -836,7 +836,7 @@ const CashFlowManagement = () => {
               </div>
             </div>
             <Badge className="bg-green-600 text-white">
-              ✓ Corrected
+              ✓ Backend API
             </Badge>
           </div>
         </div>
