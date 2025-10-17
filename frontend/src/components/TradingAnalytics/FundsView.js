@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import Button from '../ui/Button';
+import Badge from '../ui/Badge';
+import { formatCurrency } from '../../constants/styles';
 import './FundsView.css';
 
 export default function FundsView({ period }) {
