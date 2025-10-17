@@ -852,9 +852,9 @@ const CashFlowManagement = () => {
                 <ArrowUpCircle className="mr-2 h-5 w-5 text-green-400" />
                 Fund Assets (Income Sources)
               </div>
-              {fundAccounting?.mt5_corrected_data && (
+              {fundAccounting?.backend_calculated && (
                 <Badge className="bg-green-600 text-white text-xs">
-                  ✓ Corrected
+                  ✓ Backend API
                 </Badge>
               )}
             </CardTitle>
