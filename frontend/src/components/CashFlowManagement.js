@@ -876,8 +876,8 @@ const CashFlowManagement = () => {
                   <p className={`text-lg font-bold ${(fundAccounting?.assets?.mt5_trading_profits || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(fundAccounting?.assets?.mt5_trading_profits || 0)}
                   </p>
-                  {fundAccounting?.mt5_corrected_data && (
-                    <p className="text-xs text-green-400 mt-1">✓ Corrected</p>
+                  {fundAccounting?.backend_calculated && (
+                    <p className="text-xs text-green-400 mt-1">✓ Backend API</p>
                   )}
                 </div>
               </div>
