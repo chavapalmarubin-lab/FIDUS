@@ -48,6 +48,9 @@ from mongodb_integration import mongodb_manager
 # MT5 Config Management Routes
 from routes.mt5_config import router as mt5_config_router, init_db as init_mt5_config_db, init_auth as init_mt5_config_auth
 
+# MT5 Bridge Proxy Routes (for VPS API service)
+from routes.mt5_bridge_proxy import router as mt5_bridge_proxy_router
+
 # System Registry and Health Checks (Phase 1: Technical Documentation)
 from system_registry import (
     SYSTEM_COMPONENTS, 
