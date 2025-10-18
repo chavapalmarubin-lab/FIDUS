@@ -15,7 +15,7 @@ from datetime import datetime
 class FinalSalvadorTest:
     def __init__(self):
         self.environments = {
-            "Preview": "https://portfolio-metrics-3.preview.emergentagent.com",
+            "Preview": "https://investment-metrics.preview.emergentagent.com",
             "Production": "https://fidus-invest.emergent.host"
         }
         self.results = {}

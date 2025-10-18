@@ -19,7 +19,7 @@ VALIDATION CRITERIA:
 ✅ Issue #5 (Fund Portfolio Empty) should be RESOLVED
 
 Authentication: admin/password123
-Backend: https://portfolio-metrics-3.preview.emergentagent.com/api
+Backend: https://investment-metrics.preview.emergentagent.com/api
 """
 
 import requests
@@ -29,7 +29,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

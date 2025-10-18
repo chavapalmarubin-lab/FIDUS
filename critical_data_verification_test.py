@@ -4,7 +4,7 @@ CRITICAL DATA VERIFICATION TEST
 Testing all fixed endpoints after critical data corrections
 
 Authentication: admin/password123
-Backend: https://portfolio-metrics-3.preview.emergentagent.com/api
+Backend: https://investment-metrics.preview.emergentagent.com/api
 
 CRITICAL TESTS AFTER FIXES:
 1. Admin Overview (Should show correct totals)
@@ -19,7 +19,7 @@ from datetime import datetime
 import sys
 
 # Configuration
-BACKEND_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

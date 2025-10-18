@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "https://portfolio-metrics-3.preview.emergentagent.com"
+    base_url = "https://investment-metrics.preview.emergentagent.com"
     
     print("🔍 DETAILED ENDPOINT ANALYSIS")
     print("=" * 60)

@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://portfolio-metrics-3.preview.emergentagent.com`
+`https://investment-metrics.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://portfolio-metrics-3.preview.emergentagent.com/api"
+BASE_URL = "https://investment-metrics.preview.emergentagent.com/api"
 CLIENT_ID = "client_alejandro"
 
 class CorrectedAlejandroTest:
