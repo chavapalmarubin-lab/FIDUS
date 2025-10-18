@@ -24923,6 +24923,13 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include MT5 Config Management router: {e}")
 
+# Include MT5 Bridge Proxy Router (for VPS API endpoints)
+try:
+    api_router.include_router(mt5_bridge_proxy_router)
+    logging.info("✅ MT5 Bridge Proxy router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include MT5 Bridge Proxy router: {e}")
+
 # Test endpoint to verify routing
 @api_router.get("/test-routing")
 async def test_routing():
