@@ -1,0 +1,25 @@
+# FIDUS MT5 Bridge API Service Requirements - VPS Windows
+# Updated for FastAPI REST API Service
+
+# Core FastAPI Stack
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.0
+
+# MetaTrader5 Python API (Windows only)
+MetaTrader5==5.0.4508
+
+# MongoDB Driver
+pymongo==4.8.0
+
+# Environment & Configuration
+python-dotenv==1.0.1
+
+# Encryption (for password handling)
+cryptography==43.0.1
+
+# HTTP Client
+httpx==0.27.0
+
+# Utilities
+python-dateutil==2.8.2
