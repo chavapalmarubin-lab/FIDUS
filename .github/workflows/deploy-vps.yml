@@ -27,10 +27,29 @@ jobs:
           timeout: 60s
           command_timeout: 30m
           script: |
-            echo "🚀 Starting VPS deployment..."
+            echo "Starting VPS deployment..."
             cd C:\mt5_bridge_service
-            powershell -ExecutionPolicy Bypass -File auto_update.ps1
-            echo "✅ Deployment complete!"
+            
+            echo "Killing any existing Python processes on port 8000..."
+            powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force"
+            Start-Sleep -Seconds 3
+            
+            echo "Freeing port 8000..."
+            powershell -Command "$proc = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($proc) { Stop-Process -Id $proc -Force }"
+            Start-Sleep -Seconds 2
+            
+            echo "Pulling latest code from GitHub..."
+            git pull origin main
+            
+            echo "Starting MT5 Bridge API Service..."
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_api_service.py" -WindowStyle Hidden -RedirectStandardOutput "logs\service.log" -RedirectStandardError "logs\service_error.log"
+            
+            Start-Sleep -Seconds 10
+            
+            echo "Verifying service is running..."
+            powershell -Command "Invoke-WebRequest -Uri http://localhost:8000/api/mt5/bridge/health -UseBasicParsing -TimeoutSec 5 | Select-Object -ExpandProperty StatusCode"
+            
+            echo "Deployment complete!"
       
       - name: Verify Deployment
         run: |
