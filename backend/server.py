@@ -2899,6 +2899,110 @@ async def test_alert_email(current_user: dict = Depends(get_current_admin_user))
             "message": "Failed to send test alert email. Check server logs for details."
         }
 
+
+# ============================================
+# MT5 WATCHDOG ENDPOINTS
+# ============================================
+
+@api_router.get("/system/mt5-watchdog/status")
+async def get_mt5_watchdog_status(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get MT5 Watchdog current status
+    Shows health status, consecutive failures, and auto-healing progress
+    """
+    try:
+        from mt5_watchdog import get_watchdog
+        
+        watchdog = get_watchdog()
+        if not watchdog:
+            return {
+                "success": False,
+                "error": "MT5 Watchdog not initialized"
+            }
+        
+        # Get current health
+        health = await watchdog.check_mt5_health()
+        
+        # Get stored status from MongoDB
+        stored_status = await db.mt5_watchdog_status.find_one({'_id': 'current'})
+        
+        return {
+            "success": True,
+            "watchdog_enabled": True,
+            "current_health": health,
+            "consecutive_failures": watchdog.consecutive_failures,
+            "failure_threshold": watchdog.failure_threshold,
+            "auto_healing_in_progress": watchdog.auto_healing_in_progress,
+            "last_check": watchdog.last_check_time.isoformat() if watchdog.last_check_time else None,
+            "last_healing_attempt": watchdog.last_healing_attempt.isoformat() if watchdog.last_healing_attempt else None,
+            "github_token_configured": bool(watchdog.github_token),
+            "stored_status": stored_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting watchdog status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/system/mt5-watchdog/force-sync")
+async def force_mt5_sync(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Force an immediate MT5 sync
+    Triggers GitHub Actions workflow to sync MT5 data
+    """
+    try:
+        from mt5_watchdog import get_watchdog
+        
+        watchdog = get_watchdog()
+        if not watchdog:
+            return {
+                "success": False,
+                "error": "MT5 Watchdog not initialized"
+            }
+        
+        result = await watchdog.force_sync_now()
+        
+        return {
+            **result,
+            "triggered_by": current_user.get('username', 'unknown')
+        }
+        
+    except Exception as e:
+        logger.error(f"Error forcing MT5 sync: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/system/mt5-watchdog/force-healing")
+async def force_mt5_healing(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Force MT5 auto-healing attempt
+    Manually trigger the auto-healing workflow
+    """
+    try:
+        from mt5_watchdog import get_watchdog
+        
+        watchdog = get_watchdog()
+        if not watchdog:
+            return {
+                "success": False,
+                "error": "MT5 Watchdog not initialized"
+            }
+        
+        logger.info(f"[MT5 WATCHDOG] Manual healing triggered by {current_user.get('username')}")
+        
+        success = await watchdog.attempt_auto_healing()
+        
+        return {
+            "success": success,
+            "message": "Auto-healing completed successfully" if success else "Auto-healing failed",
+            "triggered_by": current_user.get('username', 'unknown'),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error forcing MT5 healing: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/system/health/history")
 async def get_health_history(hours: int = 24):
     """Get historical health data for the specified time period"""
