@@ -1,4 +1,6 @@
-# VPS Setup Guide - GitHub Auto-Update Integration
+# VPS Setup Guide
+
+**Last Updated:** 2025-01-19 - Automated deployment configured via GitHub Actions - GitHub Auto-Update Integration
 
 ## Overview
 This guide walks Chava through setting up Git on the VPS so that the MT5 bridge automatically pulls latest code from GitHub before each sync.
