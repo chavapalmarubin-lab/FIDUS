@@ -7,6 +7,8 @@ Runs on port 8000 and serves API requests from the FIDUS backend
 DEPLOYMENT LOCATION: C:\mt5_bridge_service\mt5_bridge_api_service.py
 Python Version: 3.12
 FastAPI Version: 0.115.0+
+
+Last Updated: 2025-01-19 - Production deployment with automated GitHub Actions
 """
 
 from fastapi import FastAPI, HTTPException
