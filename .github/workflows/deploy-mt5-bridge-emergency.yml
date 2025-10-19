@@ -1,0 +1,104 @@
+name: Emergency Deploy MT5 Bridge
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    branches: [main]
+    paths:
+      - 'vps/mt5_bridge_api_service.py'
+      - '.github/workflows/deploy-mt5-bridge-emergency.yml'
+
+jobs:
+  emergency-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Emergency Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 180s
+          command_timeout: 30m
+          script: |
+            echo "===== EMERGENCY DEPLOYMENT STARTING ====="
+            
+            cd C:\mt5_bridge_service
+            
+            REM Backup current version
+            if exist mt5_bridge_api_service.py (
+                powershell -Command "$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'; Copy-Item mt5_bridge_api_service.py mt5_bridge_api_service.py.backup_$timestamp"
+            )
+            
+            REM Pull latest code
+            echo "Pulling latest code from GitHub..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            REM Copy the fixed file from vps directory to current directory
+            if exist vps\mt5_bridge_api_service.py (
+                echo "Copying fixed service file..."
+                copy /Y vps\mt5_bridge_api_service.py mt5_bridge_api_service.py
+            )
+            
+            REM FORCE KILL EVERYTHING
+            echo "Force killing all Python processes..."
+            taskkill /F /IM python.exe /T 2>NUL
+            timeout /t 5 /nobreak
+            
+            REM FORCE FREE PORT 8000 - Multiple attempts
+            echo "Force freeing port 8000 (attempt 1)..."
+            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do taskkill /F /PID %%a 2>NUL
+            timeout /t 3 /nobreak
+            
+            echo "Force freeing port 8000 (attempt 2)..."
+            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do taskkill /F /PID %%a 2>NUL
+            timeout /t 3 /nobreak
+            
+            echo "Force freeing port 8000 (attempt 3 - aggressive)..."
+            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do (
+                echo Killing PID: %%a
+                taskkill /F /PID %%a 2>NUL
+                taskkill /F /T /PID %%a 2>NUL
+            )
+            timeout /t 5 /nobreak
+            
+            REM Final verification
+            netstat -ano | findstr ":8000" >nul
+            if %ERRORLEVEL% EQU 0 (
+                echo WARNING: Port 8000 is STILL in use after cleanup!
+                netstat -ano | findstr ":8000"
+                echo Attempting one more aggressive cleanup...
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do taskkill /F /PID %%a 2>NUL
+                timeout /t 5 /nobreak
+            ) else (
+                echo SUCCESS: Port 8000 is now FREE!
+            )
+            
+            REM Create logs directory if needed
+            if not exist logs mkdir logs
+            
+            REM Start the service with proper logging
+            echo "Starting MT5 Bridge API Service..."
+            start /B python mt5_bridge_api_service.py > logs\service_emergency.log 2>&1
+            
+            REM Wait for startup
+            echo "Waiting 20 seconds for service startup..."
+            timeout /t 20 /nobreak
+            
+            REM Test if service is responding
+            echo "Testing service health..."
+            powershell -Command "try { $response = Invoke-WebRequest -Uri http://localhost:8000/api/mt5/bridge/health -UseBasicParsing -TimeoutSec 10; Write-Host 'SUCCESS: Service is responding! Status Code:' $response.StatusCode; Write-Host $response.Content } catch { Write-Host 'WARNING: Service check failed:' $_.Exception.Message; Write-Host 'Last 50 lines of log:'; Get-Content logs\service_emergency.log -Tail 50 -ErrorAction SilentlyContinue }"
+            
+            echo "===== EMERGENCY DEPLOYMENT COMPLETE ====="
+      
+      - name: Verify Deployment
+        run: |
+          echo "[SUCCESS] Emergency deployment workflow completed"
+          echo "[INFO] Check deployment logs above for service status"
+          echo "[INFO] Service should be running on http://217.197.163.11:8000"
+          echo "[INFO] Test with: curl http://217.197.163.11:8000/api/mt5/bridge/health"
