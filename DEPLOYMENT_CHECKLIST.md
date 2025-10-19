@@ -57,7 +57,7 @@
 4. Click: **Add Environment Variable**
 5. Enter:
    - **Key:** `GITHUB_TOKEN`
-   - **Value:** `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`
+   - **Value:** `<paste-your-github-token-here>`
 6. Click: **Save Changes**
 
 **What Happens:**
