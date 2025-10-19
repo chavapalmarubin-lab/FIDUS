@@ -25185,6 +25185,22 @@ async def startup_event():
         logging.info("🏥 Running initial health check on startup...")
         await background_health_check()
         
+        # Initialize MT5 Watchdog
+        logging.info("🐕 Initializing MT5 Watchdog and Auto-Healing System...")
+        try:
+            from mt5_watchdog import initialize_watchdog
+            from alert_service import AlertService
+            
+            alert_service = AlertService(db)
+            await initialize_watchdog(db, alert_service)
+            
+            logging.info("✅ MT5 Watchdog initialized successfully")
+            logging.info("   Monitoring interval: 60 seconds")
+            logging.info("   Auto-healing threshold: 3 consecutive failures")
+            logging.info(f"   GitHub token configured: {bool(os.getenv('GITHUB_TOKEN'))}")
+        except Exception as e:
+            logging.error(f"❌ MT5 Watchdog initialization failed: {e}")
+        
     except Exception as e:
         logging.error(f"❌ VPS sync scheduler initialization failed: {e}")
     
