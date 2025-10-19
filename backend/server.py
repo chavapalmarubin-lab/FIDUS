@@ -2851,6 +2851,54 @@ async def get_render_platform_health():
         logger.error(f"Error checking Render platform health: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@api_router.post("/system/test-alert")
+async def test_alert_email(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Test endpoint to verify email alerting is working
+    Sends a test alert email to the configured recipient
+    """
+    try:
+        from alert_service import AlertService
+        alert_service = AlertService(db)
+        
+        # Send a test critical alert
+        alert_id = await alert_service.trigger_alert(
+            component="test_system",
+            component_name="Alert System Test",
+            severity="warning",
+            status="TESTING",
+            message="This is a test alert to verify email delivery is working correctly",
+            details={
+                "test_time": datetime.now(timezone.utc).isoformat(),
+                "reason": "Manual test triggered via API",
+                "triggered_by": current_user.get('username', 'unknown'),
+                "smtp_username": alert_service.smtp_username,
+                "smtp_configured": bool(alert_service.smtp_username and alert_service.smtp_password),
+                "recipient_email": alert_service.admin_email
+            }
+        )
+        
+        logger.info(f"✅ Test alert sent successfully - Alert ID: {alert_id}")
+        
+        return {
+            "success": True,
+            "message": "Test alert email sent successfully",
+            "alert_id": alert_id,
+            "recipient": alert_service.admin_email,
+            "smtp_configured": bool(alert_service.smtp_username and alert_service.smtp_password),
+            "note": "Check your email inbox for the test alert"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Test alert failed: {str(e)}")
+        logger.exception(e)
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to send test alert email. Check server logs for details."
+        }
+
 @api_router.get("/system/health/history")
 async def get_health_history(hours: int = 24):
     """Get historical health data for the specified time period"""
