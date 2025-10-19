@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
 
 # Backend URL Configuration
-BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-api-bridge.preview.emergentagent.com/api"
 
 class GoogleOAuthStateTester:
     def __init__(self):

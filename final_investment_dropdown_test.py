@@ -27,7 +27,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration - Use production URL from frontend .env
-BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-api-bridge.preview.emergentagent.com/api"
 
 # Test Admin Credentials
 ADMIN_CREDENTIALS = {

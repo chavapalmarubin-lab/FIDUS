@@ -18,7 +18,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-api-bridge.preview.emergentagent.com/api"
 
 class LilianLimonLeiteTest:
     def __init__(self):

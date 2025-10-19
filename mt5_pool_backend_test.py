@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration - Use from frontend .env
-BACKEND_URL = "https://investment-metrics.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-api-bridge.preview.emergentagent.com/api"
 
 # Admin Authentication
 ADMIN_CREDENTIALS = {

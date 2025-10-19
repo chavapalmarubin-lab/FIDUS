@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://investment-metrics.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-api-bridge.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

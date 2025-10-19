@@ -243,7 +243,7 @@ RENDER_API_KEY=rnd_...
 
 **Frontend (`.env`):**
 ```bash
-REACT_APP_BACKEND_URL=https://investment-metrics.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://fidus-api-bridge.preview.emergentagent.com
 ```
 
 ### MongoDB Indexes
@@ -317,14 +317,14 @@ yarn start
 **Health Checks:**
 ```bash
 # Test all health endpoints
-curl -X GET https://investment-metrics.preview.emergentagent.com/api/system/health/all \
+curl -X GET https://fidus-api-bridge.preview.emergentagent.com/api/system/health/all \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Quick Actions:**
 ```bash
 # Test MT5 sync action
-curl -X POST https://investment-metrics.preview.emergentagent.com/api/actions/sync-mt5 \
+curl -X POST https://fidus-api-bridge.preview.emergentagent.com/api/actions/sync-mt5 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json"
 ```
@@ -472,7 +472,7 @@ Open browser DevTools (F12) → Console
 tail -n 100 /var/log/supervisor/backend.err.log
 
 # Test health endpoint directly
-curl https://investment-metrics.preview.emergentagent.com/api/system/health/all
+curl https://fidus-api-bridge.preview.emergentagent.com/api/system/health/all
 ```
 
 **Solutions:**
