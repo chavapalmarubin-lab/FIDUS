@@ -53,6 +53,6 @@ jobs:
       
       - name: Verify Deployment
         run: |
-          echo "✅ VPS deployment triggered successfully"
-          echo "📊 Check VPS logs for deployment status"
-          echo "🔍 Verify at: C:\mt5_bridge_service\logs\auto_update.log"
+          echo "[SUCCESS] VPS deployment triggered successfully"
+          echo "[INFO] Check VPS logs for deployment status"
+          echo "[INFO] Verify at: C:\mt5_bridge_service\logs\service.log"
