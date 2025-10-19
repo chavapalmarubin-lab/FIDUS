@@ -25068,9 +25068,19 @@ async def startup_event():
         logging.info("✅ Automatic VPS sync scheduler started")
         logging.info("   Schedule: Every 5 minutes at :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56")
         
+        logging.info("✅ Automatic health monitoring scheduler started")
+        logging.info("   Schedule: Every 5 minutes at :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55")
+        logging.info(f"   Email alerts configured: {bool(os.getenv('SMTP_USERNAME'))}")
+        logging.info(f"   Alert recipient: {os.getenv('ALERT_RECIPIENT_EMAIL', 'Not configured')}")
+        
         # Run initial sync on startup
         logging.info("🔄 Running initial VPS→Render sync on startup...")
         await automatic_vps_sync()
+        
+        # Run initial health check on startup
+        logging.info("🏥 Running initial health check on startup...")
+        await background_health_check()
+        
     except Exception as e:
         logging.error(f"❌ VPS sync scheduler initialization failed: {e}")
     
