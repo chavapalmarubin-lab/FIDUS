@@ -21672,6 +21672,33 @@ async def automatic_vps_sync():
         logging.error(f"❌ Auto-sync exception: {e}")
 
 
+# Background health monitoring function
+async def background_health_check():
+    """
+    Background task to perform health checks and trigger alerts
+    Runs every 5 minutes to monitor system components
+    """
+    try:
+        logger.info("[HEALTH MONITOR] Running scheduled health check...")
+        
+        # Perform health checks with alert triggering enabled
+        health_data = await check_all_components(db, trigger_alerts=True)
+        
+        # Store health history
+        await store_health_history(db, health_data)
+        
+        logger.info(f"[HEALTH MONITOR] Health check complete - Overall status: {health_data['overall_status']}")
+        logger.info(f"[HEALTH MONITOR] Health percentage: {health_data['health_percentage']}% ({health_data['healthy_count']}/{health_data['total_count']} components healthy)")
+        
+        # Log any unhealthy components
+        for component in health_data.get('components', []):
+            if component['status'] not in ['healthy', 'not_configured']:
+                logger.warning(f"[HEALTH MONITOR] Component '{component['name']}' is {component['status']}: {component.get('message', 'No message')}")
+        
+    except Exception as e:
+        logger.error(f"[HEALTH MONITOR] Error during background health check: {str(e)}")
+
+
 # Schedule automatic sync every 5 minutes (1 minute offset from VPS)
 # VPS syncs at: :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
 # This syncs at: :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56
@@ -21680,6 +21707,16 @@ scheduler.add_job(
     'cron',
     minute='1,6,11,16,21,26,31,36,41,46,51,56',
     id='auto_vps_sync',
+    replace_existing=True
+)
+
+# Schedule automatic health monitoring every 5 minutes
+# Runs at: :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
+scheduler.add_job(
+    background_health_check,
+    'cron',
+    minute='*/5',  # Every 5 minutes
+    id='auto_health_check',
     replace_existing=True
 )
 
