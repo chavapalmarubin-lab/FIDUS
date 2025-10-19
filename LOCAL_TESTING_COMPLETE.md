@@ -149,7 +149,7 @@ This will push all code changes to GitHub repository
 2. Navigate to: Environment
 3. Add variable:
    Key: GITHUB_TOKEN
-   Value: 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
+   Value: <your-github-token-here> (Use the token you generated)
 4. Click: "Save Changes"
 5. Render will automatically restart backend
 ```
