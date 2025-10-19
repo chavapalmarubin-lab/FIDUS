@@ -544,3 +544,4 @@ if __name__ == "__main__":
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+# TRIGGER DEPLOYMENT - Sun Oct 19 19:44:16 UTC 2025
