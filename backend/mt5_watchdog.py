@@ -240,10 +240,7 @@ class MT5Watchdog:
             }
             
             data = {
-                'ref': 'main',
-                'inputs': {
-                    'reason': 'Auto-healing triggered by MT5 Watchdog'
-                }
+                'ref': 'main'
             }
             
             async with httpx.AsyncClient() as client:
