@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://trade-guardian-11.preview.emergentagent.com/api"
+BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
 
 def authenticate_admin():
     """Authenticate as admin user"""

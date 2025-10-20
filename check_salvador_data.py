@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://trade-guardian-11.preview.emergentagent.com'
+base_url = 'https://autobridge.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

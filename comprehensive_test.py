@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://trade-guardian-11.preview.emergentagent.com/api'
+BACKEND_URL = 'https://autobridge.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

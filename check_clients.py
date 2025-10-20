@@ -4,7 +4,7 @@ import json
 
 # Get admin token
 login_response = requests.post(
-    "https://trade-guardian-11.preview.emergentagent.com/api/auth/login",
+    "https://autobridge.preview.emergentagent.com/api/auth/login",
     json={
         "username": "admin", 
         "password": "password123",
@@ -19,7 +19,7 @@ if login_response.status_code == 200:
     # Get all clients
     headers = {'Authorization': f'Bearer {token}'}
     clients_response = requests.get(
-        "https://trade-guardian-11.preview.emergentagent.com/api/clients/all",
+        "https://autobridge.preview.emergentagent.com/api/clients/all",
         headers=headers
     )
     

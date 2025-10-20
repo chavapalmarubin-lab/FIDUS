@@ -25,7 +25,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use the URL from frontend/.env
-BACKEND_URL = "https://trade-guardian-11.preview.emergentagent.com/api"
+BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -7,7 +7,7 @@ import requests
 import json
 
 def check_system_data():
-    base_url = "https://trade-guardian-11.preview.emergentagent.com"
+    base_url = "https://autobridge.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={

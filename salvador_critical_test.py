@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 
 class SalvadorCriticalTest:
-    def __init__(self, base_url="https://trade-guardian-11.preview.emergentagent.com"):
+    def __init__(self, base_url="https://autobridge.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.salvador_client_id = "client_003"
@@ -219,7 +219,7 @@ def main():
     """Main function"""
     # Test both environments
     environments = [
-        ("Preview", "https://trade-guardian-11.preview.emergentagent.com"),
+        ("Preview", "https://autobridge.preview.emergentagent.com"),
         ("Production", "https://fidus-invest.emergent.host")
     ]
     
