@@ -1,15 +1,15 @@
-name: Diagnose VPS (Nuclear Reset Enabled)
+name: Direct File Deploy (No Git)
 
 on:
   workflow_dispatch:
 
 jobs:
-  nuclear-reset:
+  direct-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     
     steps:
-      - name: Nuclear Reset MT5 Bridge
+      - name: Direct File Download and Deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -17,104 +17,103 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 600s
-          command_timeout: 15m
+          command_timeout: 10m
           debug: true
           script: |
             powershell -Command "
             `$ErrorActionPreference = 'Stop'
             Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
-            Write-Host 'NUCLEAR RESET - MT5 BRIDGE' -ForegroundColor Cyan
+            Write-Host 'DIRECT FILE DOWNLOAD - NO GIT' -ForegroundColor Cyan
             Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
             
             # Stop Python
             Write-Host ''
-            Write-Host 'Stopping Python processes...'
+            Write-Host 'Stopping Python...'
             Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep -Seconds 5
             Write-Host '✅ Done'
             
-            # Backup
+            # Prepare directory
             Write-Host ''
-            Write-Host 'Backing up old directory...'
-            if (Test-Path 'C:\mt5_bridge_service') {
-                `$backup = 'C:\mt5_bridge_service_backup_' + (Get-Date -Format 'yyyyMMddHHmmss')
-                Move-Item -Path 'C:\mt5_bridge_service' -Destination `$backup -Force -ErrorAction SilentlyContinue
-                Write-Host '✅ Backed up to' `$backup
+            Write-Host 'Preparing C:\fidus_mt5_bridge...'
+            `$dir = 'C:\fidus_mt5_bridge'
+            if (-not (Test-Path `$dir)) {
+                New-Item -ItemType Directory -Path `$dir -Force | Out-Null
             }
+            Write-Host '✅ Done'
             
-            # Clone
+            # Download file
             Write-Host ''
-            Write-Host 'Cloning fresh repository...'
-            cd C:\
-            git clone https://github.com/chavapalmarubin-lab/FIDUS.git mt5_bridge_service
-            if (`$LASTEXITCODE -ne 0) { Write-Host '❌ Clone failed'; Exit 1 }
-            Write-Host '✅ Clone complete'
+            Write-Host 'Downloading from GitHub...'
+            `$url = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py'
+            `$file = \"`$dir\mt5_bridge_api_service.py\"
+            Write-Host '  URL:' `$url
+            
+            try {
+                `$ProgressPreference = 'SilentlyContinue'
+                Invoke-WebRequest -Uri `$url -OutFile `$file -TimeoutSec 30
+                Write-Host '✅ Downloaded'
+            } catch {
+                Write-Host 'Trying curl...'
+                cd `$dir
+                curl -L -o mt5_bridge_api_service.py `$url
+                if (`$LASTEXITCODE -ne 0) { Write-Host '❌ Failed'; Exit 1 }
+                Write-Host '✅ Downloaded via curl'
+            }
             
             # Verify
             Write-Host ''
-            Write-Host 'Verifying repository...'
-            cd C:\mt5_bridge_service
-            if (-not (Test-Path 'vps\mt5_bridge_api_service.py')) {
-                Write-Host '❌ File not found!'
-                Get-ChildItem vps
-                Exit 1
-            }
+            Write-Host 'Verifying file...'
+            if (-not (Test-Path `$file)) { Write-Host '❌ Not found'; Exit 1 }
+            `$size = (Get-Item `$file).Length
+            Write-Host '  Size:' `$size 'bytes'
+            if (`$size -lt 1000) { Write-Host '❌ Too small'; Exit 1 }
+            
+            `$content = Get-Content `$file -Raw
+            if (`$content -notmatch '/api/mt5/bridge/health') { Write-Host '❌ Missing routes'; Exit 1 }
+            if (`$content -notmatch 'FIDUS MT5 Bridge API') { Write-Host '❌ Wrong service name'; Exit 1 }
             Write-Host '✅ File verified'
             
-            # Deploy
+            # Copy .env
             Write-Host ''
-            Write-Host 'Deploying service file...'
-            Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
-            `$content = Get-Content 'mt5_bridge_api_service.py' -Raw
-            if (`$content -notmatch '/api/mt5/bridge/health') {
-                Write-Host '❌ Wrong file content!'
-                Exit 1
+            Write-Host 'Copying .env...'
+            if ((Test-Path 'C:\mt5_bridge_service\.env') -and -not (Test-Path \"`$dir\.env\")) {
+                Copy-Item 'C:\mt5_bridge_service\.env' \"`$dir\.env\" -Force
+                Write-Host '✅ .env copied'
+            } else {
+                Write-Host '  No .env to copy'
             }
-            Write-Host '✅ File deployed and verified'
-            
-            # Remove wrong files
-            Write-Host ''
-            Write-Host 'Removing wrong files...'
-            Remove-Item -Path 'main.py' -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path 'main_production.py' -Force -ErrorAction SilentlyContinue
-            Write-Host '✅ Done'
             
             # Start
             Write-Host ''
             Write-Host 'Starting service...'
+            cd `$dir
             if (-not (Test-Path 'logs')) { New-Item -ItemType Directory -Path 'logs' -Force | Out-Null }
-            Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\nuclear.log' -RedirectStandardError 'logs\nuclear_error.log' -WindowStyle Hidden
+            Start-Process python -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service.log' -RedirectStandardError 'logs\error.log' -WindowStyle Hidden
             Start-Sleep -Seconds 20
-            Write-Host '✅ Service started'
+            Write-Host '✅ Started'
             
             # Verify
             Write-Host ''
-            Write-Host 'Verifying endpoints...'
+            Write-Host 'Testing endpoints...'
             try {
-                `$r = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 10
-                Write-Host '  Service name:' `$r.service
+                `$r = Invoke-RestMethod 'http://localhost:8000/' -TimeoutSec 10
+                Write-Host '  Service:' `$r.service
                 if (`$r.service -ne 'FIDUS MT5 Bridge API') {
-                    Write-Host '❌ Wrong service name!'
+                    Write-Host '❌ Wrong service!'
                     Exit 1
                 }
-                Write-Host '  ✅ Correct service'
                 
-                Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 10 | Out-Null
-                Write-Host '  ✅ Bridge health endpoint working'
-                
-                Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/account/886557/info' -TimeoutSec 10 | Out-Null
-                Write-Host '  ✅ Account info endpoint working'
+                Invoke-RestMethod 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 10 | Out-Null
+                Write-Host '  ✅ Bridge health OK'
                 
                 Write-Host ''
-                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
-                Write-Host '✅✅✅ NUCLEAR RESET SUCCESSFUL! ✅✅✅' -ForegroundColor Green
-                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Write-Host '✅✅✅ SUCCESS! ✅✅✅' -ForegroundColor Green
+                Write-Host 'Direct download method worked!'
             } catch {
-                Write-Host '❌ Verification failed:' `$_.Exception.Message
-                Write-Host ''
-                Write-Host 'Logs:'
-                Get-Content 'logs\nuclear.log' -Tail 30 -ErrorAction SilentlyContinue
-                Get-Content 'logs\nuclear_error.log' -Tail 30 -ErrorAction SilentlyContinue
+                Write-Host '❌ Verification failed'
+                Get-Content 'logs\service.log' -Tail 30 -ErrorAction SilentlyContinue
+                Get-Content 'logs\error.log' -Tail 30 -ErrorAction SilentlyContinue
                 Exit 1
             }
             "
