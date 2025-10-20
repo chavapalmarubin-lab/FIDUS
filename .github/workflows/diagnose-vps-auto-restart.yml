@@ -1,0 +1,189 @@
+name: Diagnose VPS Auto-Restart Mechanisms
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose-auto-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Check VPS Auto-Restart Mechanisms
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 180s
+          debug: true
+          script: |
+            powershell -Command "
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'VPS AUTO-RESTART DIAGNOSTIC' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # 1. CHECK TASK SCHEDULER
+            Write-Host '=== 1. WINDOWS TASK SCHEDULER ===' -ForegroundColor Yellow
+            Write-Host 'All scheduled tasks related to Python or MT5:' -ForegroundColor Green
+            Get-ScheduledTask | Where-Object { $_.TaskName -like '*python*' -or $_.TaskName -like '*mt5*' -or $_.TaskName -like '*bridge*' } | ForEach-Object {
+                Write-Host ''
+                Write-Host 'Task Name:' $_.TaskName -ForegroundColor Cyan
+                Write-Host 'State:' $_.State
+                Write-Host 'Path:' $_.TaskPath
+                
+                # Get task details
+                $taskInfo = Get-ScheduledTaskInfo -TaskName $_.TaskName -ErrorAction SilentlyContinue
+                if ($taskInfo) {
+                    Write-Host 'Last Run Time:' $taskInfo.LastRunTime
+                    Write-Host 'Next Run Time:' $taskInfo.NextRunTime
+                }
+                
+                # Get task actions
+                $task = Get-ScheduledTask -TaskName $_.TaskName
+                Write-Host 'Actions:'
+                $task.Actions | ForEach-Object {
+                    Write-Host '  Execute:' $_.Execute
+                    Write-Host '  Arguments:' $_.Arguments
+                    Write-Host '  WorkingDirectory:' $_.WorkingDirectory
+                }
+                
+                # Get triggers
+                Write-Host 'Triggers:'
+                $task.Triggers | ForEach-Object {
+                    Write-Host '  Type:' $_.CimClass.CimClassName
+                    if ($_ -is [Microsoft.Management.Infrastructure.CimInstance]) {
+                        Write-Host '  Enabled:' $_.Enabled
+                    }
+                }
+            }
+            
+            if (-not (Get-ScheduledTask | Where-Object { $_.TaskName -like '*python*' -or $_.TaskName -like '*mt5*' })) {
+                Write-Host '  No Python/MT5 related scheduled tasks found' -ForegroundColor Green
+            }
+            Write-Host ''
+            
+            # 2. CHECK WINDOWS SERVICES
+            Write-Host '=== 2. WINDOWS SERVICES ===' -ForegroundColor Yellow
+            Write-Host 'Services related to Python or MT5:' -ForegroundColor Green
+            Get-Service | Where-Object { $_.Name -like '*python*' -or $_.Name -like '*mt5*' -or $_.DisplayName -like '*python*' -or $_.DisplayName -like '*mt5*' } | ForEach-Object {
+                Write-Host ''
+                Write-Host 'Service Name:' $_.Name -ForegroundColor Cyan
+                Write-Host 'Display Name:' $_.DisplayName
+                Write-Host 'Status:' $_.Status
+                Write-Host 'Start Type:' $_.StartType
+                
+                # Get service path
+                $service = Get-WmiObject Win32_Service | Where-Object { $_.Name -eq $_.Name } | Select-Object -First 1
+                if ($service) {
+                    Write-Host 'Path:' $service.PathName
+                }
+            }
+            
+            if (-not (Get-Service | Where-Object { $_.Name -like '*python*' -or $_.Name -like '*mt5*' })) {
+                Write-Host '  No Python/MT5 related services found' -ForegroundColor Green
+            }
+            Write-Host ''
+            
+            # 3. CHECK STARTUP FOLDER
+            Write-Host '=== 3. STARTUP FOLDER ===' -ForegroundColor Yellow
+            $startupPaths = @(
+                '$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup',
+                'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup'
+            )
+            
+            foreach ($path in $startupPaths) {
+                Write-Host ''
+                Write-Host 'Checking:' $path -ForegroundColor Green
+                if (Test-Path $path) {
+                    $items = Get-ChildItem -Path $path -ErrorAction SilentlyContinue
+                    if ($items) {
+                        $items | ForEach-Object {
+                            Write-Host '  -' $_.Name
+                            if ($_.Extension -eq '.bat' -or $_.Extension -eq '.ps1') {
+                                Write-Host '    Content Preview:'
+                                Get-Content $_.FullName -Head 10 | ForEach-Object { Write-Host '      ' $_ }
+                            }
+                        }
+                    } else {
+                        Write-Host '  (empty)'
+                    }
+                } else {
+                    Write-Host '  Path not found'
+                }
+            }
+            Write-Host ''
+            
+            # 4. CHECK REGISTRY RUN KEYS
+            Write-Host '=== 4. REGISTRY RUN KEYS ===' -ForegroundColor Yellow
+            $runKeys = @(
+                'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run',
+                'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run',
+                'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce',
+                'HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce'
+            )
+            
+            foreach ($key in $runKeys) {
+                Write-Host ''
+                Write-Host 'Checking:' $key -ForegroundColor Green
+                if (Test-Path $key) {
+                    $entries = Get-ItemProperty -Path $key -ErrorAction SilentlyContinue
+                    $entries.PSObject.Properties | Where-Object { $_.Name -notmatch 'PS' } | ForEach-Object {
+                        if ($_.Value -match 'python|mt5|bridge') {
+                            Write-Host '  ' $_.Name ':' $_.Value -ForegroundColor Yellow
+                        }
+                    }
+                }
+            }
+            Write-Host ''
+            
+            # 5. CHECK BATCH FILES IN SERVICE DIRECTORY
+            Write-Host '=== 5. BATCH FILES IN C:\mt5_bridge_service ===' -ForegroundColor Yellow
+            Set-Location C:\mt5_bridge_service
+            Write-Host 'Batch and PowerShell scripts:' -ForegroundColor Green
+            Get-ChildItem -Filter *.bat | ForEach-Object {
+                Write-Host ''
+                Write-Host 'File:' $_.Name -ForegroundColor Cyan
+                Write-Host 'Modified:' $_.LastWriteTime
+                Write-Host 'Content:'
+                Get-Content $_.FullName | ForEach-Object { Write-Host '  ' $_ }
+            }
+            
+            Get-ChildItem -Filter *.ps1 | ForEach-Object {
+                Write-Host ''
+                Write-Host 'File:' $_.Name -ForegroundColor Cyan
+                Write-Host 'Modified:' $_.LastWriteTime
+                Write-Host 'Content (first 20 lines):'
+                Get-Content $_.FullName -Head 20 | ForEach-Object { Write-Host '  ' $_ }
+            }
+            Write-Host ''
+            
+            # 6. CHECK CURRENT RUNNING PROCESS DETAILS
+            Write-Host '=== 6. PYTHON PROCESS DETAILS ===' -ForegroundColor Yellow
+            $pythonProcs = Get-WmiObject Win32_Process -Filter \"name = 'python.exe'\"
+            if ($pythonProcs) {
+                $pythonProcs | ForEach-Object {
+                    Write-Host ''
+                    Write-Host 'PID:' $_.ProcessId -ForegroundColor Cyan
+                    Write-Host 'Command Line:' $_.CommandLine
+                    Write-Host 'Creation Date:' $_.CreationDate
+                    Write-Host 'Working Directory:' $_.WorkingDirectory
+                    Write-Host 'Parent Process ID:' $_.ParentProcessId
+                    
+                    # Get parent process
+                    $parent = Get-Process -Id $_.ParentProcessId -ErrorAction SilentlyContinue
+                    if ($parent) {
+                        Write-Host 'Parent Process:' $parent.Name
+                    }
+                }
+            } else {
+                Write-Host '  No Python processes currently running' -ForegroundColor Yellow
+            }
+            Write-Host ''
+            
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'DIAGNOSTIC COMPLETE' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            "
