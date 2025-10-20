@@ -1,0 +1,50 @@
+name: Diagnose VPS Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Test Basic Connectivity
+        run: |
+          echo "Testing connectivity to VPS..."
+          ping -c 3 ${{ secrets.VPS_HOST }} || echo "Ping failed (might be blocked)"
+          echo "Testing SSH port..."
+          nc -zv ${{ secrets.VPS_HOST }} 22 || echo "SSH port not accessible"
+      
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          debug: true
+          script: |
+            echo "===== CONNECTION SUCCESSFUL ====="
+            echo ""
+            echo "Current directory:"
+            cd
+            echo ""
+            echo "Checking Python:"
+            python --version
+            echo ""
+            echo "Checking Git:"
+            git --version
+            echo ""
+            echo "Checking port 8000:"
+            netstat -ano | findstr ":8000"
+            echo ""
+            echo "Checking MT5 Bridge directory:"
+            dir C:\mt5_bridge_service
+            echo ""
+            echo "Checking if Git repo exists:"
+            cd C:\mt5_bridge_service
+            git status
+            echo ""
+            echo "===== DIAGNOSIS COMPLETE ====="
