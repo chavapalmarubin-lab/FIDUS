@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

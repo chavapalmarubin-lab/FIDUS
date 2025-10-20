@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
 
 class AlejandroDiagnostic:
     def __init__(self):

@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 class FocusedScalabilityTester:
-    def __init__(self, base_url="https://autobridge.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trading-analytics-10.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         

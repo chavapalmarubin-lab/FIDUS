@@ -59,7 +59,7 @@ const MT5AccountManagement = () => {
     is_active: true
   });
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://autobridge.preview.emergentagent.com';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://trading-analytics-10.preview.emergentagent.com';
 
   const loadAccounts = async () => {
     setLoading(true);

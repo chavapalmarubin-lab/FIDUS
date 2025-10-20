@@ -37,7 +37,7 @@ import io
 import base64
 
 # Configuration
-BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

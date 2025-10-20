@@ -37,7 +37,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
 
 class ClientCalendarTester:
     def __init__(self):

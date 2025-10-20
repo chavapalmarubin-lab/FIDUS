@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 # Backend URL Configuration - Use correct URL from frontend/.env
-BACKEND_URL = "https://autobridge.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
 
 # Expected Alejandro Data
 EXPECTED_ALEJANDRO = {

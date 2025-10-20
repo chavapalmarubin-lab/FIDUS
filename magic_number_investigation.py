@@ -30,7 +30,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://autobridge.preview.emergentagent.com"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://autobridge.preview.emergentagent.com"
+BACKEND_URL = "https://trading-analytics-10.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""
