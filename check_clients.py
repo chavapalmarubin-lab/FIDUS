@@ -4,7 +4,7 @@ import json
 
 # Get admin token
 login_response = requests.post(
-    "https://fidus-api-bridge.preview.emergentagent.com/api/auth/login",
+    "https://trade-guardian-11.preview.emergentagent.com/api/auth/login",
     json={
         "username": "admin", 
         "password": "password123",
@@ -19,7 +19,7 @@ if login_response.status_code == 200:
     # Get all clients
     headers = {'Authorization': f'Bearer {token}'}
     clients_response = requests.get(
-        "https://fidus-api-bridge.preview.emergentagent.com/api/clients/all",
+        "https://trade-guardian-11.preview.emergentagent.com/api/clients/all",
         headers=headers
     )
     
