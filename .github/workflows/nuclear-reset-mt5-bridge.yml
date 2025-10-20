@@ -1,0 +1,283 @@
+name: Nuclear Reset - MT5 Bridge Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  nuclear-reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Nuclear Reset and Clean Deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 600s
+          command_timeout: 15m
+          script_stop: false
+          debug: true
+          script: |
+            powershell -Command "
+            `$ErrorActionPreference = 'Stop'
+            
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'NUCLEAR RESET - MT5 BRIDGE SERVICE' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # STEP 1: Stop ALL Python processes
+            Write-Host '[STEP 1] Stopping all Python processes...' -ForegroundColor Yellow
+            try {
+                `$procs = Get-Process python -ErrorAction SilentlyContinue
+                if (`$procs) {
+                    `$procs | ForEach-Object {
+                        Write-Host '  Killing process:' `$_.Id
+                        Stop-Process -Id `$_.Id -Force -ErrorAction SilentlyContinue
+                    }
+                    Start-Sleep -Seconds 5
+                    Write-Host '✅ All Python processes stopped' -ForegroundColor Green
+                } else {
+                    Write-Host '✅ No Python processes running' -ForegroundColor Green
+                }
+            } catch {
+                Write-Host '⚠️  Warning: Could not stop all processes' -ForegroundColor Yellow
+            }
+            Write-Host ''
+            
+            # STEP 2: Disable ALL auto-restart mechanisms
+            Write-Host '[STEP 2] Disabling auto-restart mechanisms...' -ForegroundColor Yellow
+            try {
+                `$tasksDisabled = 0
+                Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object {
+                    `$_.TaskName -like '*mt5*' -or 
+                    `$_.TaskName -like '*bridge*' -or
+                    (`$_.Actions.Execute -like '*python*' -and `$_.Actions.Arguments -like '*main*')
+                } | ForEach-Object {
+                    Write-Host '  Disabling:' `$_.TaskName
+                    Disable-ScheduledTask -TaskName `$_.TaskName -ErrorAction SilentlyContinue
+                    `$tasksDisabled++
+                }
+                Write-Host '✅ Disabled' `$tasksDisabled 'task(s)' -ForegroundColor Green
+            } catch {
+                Write-Host '✅ No tasks to disable' -ForegroundColor Green
+            }
+            Write-Host ''
+            
+            # STEP 3: Backup old directory
+            Write-Host '[STEP 3] Backing up old installation...' -ForegroundColor Yellow
+            `$oldPath = 'C:\mt5_bridge_service'
+            `$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+            `$backupPath = \"C:\mt5_bridge_service_backup_`$timestamp\"
+            
+            if (Test-Path `$oldPath) {
+                try {
+                    Write-Host '  Moving' `$oldPath 'to' `$backupPath
+                    Move-Item -Path `$oldPath -Destination `$backupPath -Force -ErrorAction Stop
+                    Write-Host '✅ Backup created at' `$backupPath -ForegroundColor Green
+                } catch {
+                    Write-Host '⚠️  Could not move directory, will delete instead' -ForegroundColor Yellow
+                    Remove-Item -Path `$oldPath -Recurse -Force -ErrorAction SilentlyContinue
+                    Write-Host '✅ Old directory removed' -ForegroundColor Green
+                }
+            } else {
+                Write-Host '  No existing installation found'
+            }
+            Write-Host ''
+            
+            # STEP 4: Fresh clone from GitHub
+            Write-Host '[STEP 4] Fresh clone from GitHub...' -ForegroundColor Yellow
+            Set-Location C:\
+            
+            Write-Host '  Cloning repository...'
+            try {
+                git clone https://github.com/chavapalmarubin-lab/FIDUS.git mt5_bridge_service 2>&1 | Out-String | Write-Host
+                if (`$LASTEXITCODE -ne 0) { throw 'Git clone failed' }
+                Write-Host '✅ Repository cloned successfully' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: Git clone failed!' -ForegroundColor Red
+                Write-Host `$_.Exception.Message
+                Exit 1
+            }
+            Write-Host ''
+            
+            # STEP 5: Verify repository structure
+            Write-Host '[STEP 5] Verifying repository structure...' -ForegroundColor Yellow
+            Set-Location C:\mt5_bridge_service
+            
+            if (-not (Test-Path 'vps')) {
+                Write-Host '❌ ERROR: vps/ directory not found!' -ForegroundColor Red
+                Write-Host 'Directory contents:'
+                Get-ChildItem | Select-Object Name, Mode | ForEach-Object { Write-Host `$_.Name }
+                Exit 1
+            }
+            Write-Host '  ✅ vps/ directory found' -ForegroundColor Green
+            
+            if (-not (Test-Path 'vps\mt5_bridge_api_service.py')) {
+                Write-Host '❌ ERROR: mt5_bridge_api_service.py not found in vps/!' -ForegroundColor Red
+                Write-Host 'vps/ directory contents:'
+                Get-ChildItem vps | Select-Object Name, Length | ForEach-Object { Write-Host `$_.Name }
+                Exit 1
+            }
+            Write-Host '  ✅ mt5_bridge_api_service.py found' -ForegroundColor Green
+            Write-Host '✅ Repository structure verified' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 6: Deploy correct service file
+            Write-Host '[STEP 6] Deploying correct service file...' -ForegroundColor Yellow
+            
+            `$sourceFile = 'C:\mt5_bridge_service\vps\mt5_bridge_api_service.py'
+            `$destFile = 'C:\mt5_bridge_service\mt5_bridge_api_service.py'
+            
+            Write-Host '  Copying:' `$sourceFile
+            Write-Host '       to:' `$destFile
+            
+            try {
+                Copy-Item -Path `$sourceFile -Destination `$destFile -Force
+                if (-not (Test-Path `$destFile)) { throw 'File copy verification failed' }
+                Write-Host '  ✅ File copied' -ForegroundColor Green
+                
+                # Verify file has correct content
+                `$content = Get-Content `$destFile -Raw
+                if (`$content -notmatch '/api/mt5/bridge/health') {
+                    throw 'File missing required routes'
+                }
+                if (`$content -notmatch 'FIDUS MT5 Bridge API') {
+                    throw 'File has wrong service name'
+                }
+                Write-Host '  ✅ File content verified (has correct routes and service name)' -ForegroundColor Green
+                Write-Host '✅ Service file deployed successfully' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: File deployment failed!' -ForegroundColor Red
+                Write-Host `$_.Exception.Message
+                Exit 1
+            }
+            Write-Host ''
+            
+            # STEP 7: Remove any wrong files
+            Write-Host '[STEP 7] Removing wrong service files...' -ForegroundColor Yellow
+            `$wrongFiles = @('main.py', 'main_production.py', 'mt5_bridge_service_production.py')
+            `$removedCount = 0
+            
+            foreach (`$file in `$wrongFiles) {
+                if (Test-Path `$file) {
+                    Write-Host '  Removing:' `$file
+                    Remove-Item `$file -Force -ErrorAction SilentlyContinue
+                    `$removedCount++
+                }
+            }
+            Write-Host '✅ Removed' `$removedCount 'wrong file(s)' -ForegroundColor Green
+            Write-Host ''
+            
+            # Create logs directory
+            if (-not (Test-Path 'logs')) {
+                New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
+            }
+            
+            # STEP 8: Copy .env file if backup exists
+            Write-Host '[STEP 8] Restoring .env configuration...' -ForegroundColor Yellow
+            if (Test-Path `$backupPath\.env) {
+                Write-Host '  Copying .env from backup'
+                Copy-Item -Path \"`$backupPath\.env\" -Destination '.env' -Force
+                Write-Host '✅ .env restored' -ForegroundColor Green
+            } else {
+                Write-Host '  No .env backup found (continuing)' -ForegroundColor Yellow
+            }
+            Write-Host ''
+            
+            # STEP 9: Start correct service
+            Write-Host '[STEP 9] Starting MT5 Bridge API service...' -ForegroundColor Yellow
+            Write-Host '  Working directory:' (Get-Location)
+            Write-Host '  Starting: mt5_bridge_api_service.py'
+            
+            try {
+                `$process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\nuclear_reset.log' -RedirectStandardError 'logs\nuclear_reset_error.log' -PassThru -WindowStyle Hidden
+                Write-Host '  ✅ Service started with PID:' `$process.Id -ForegroundColor Green
+                Write-Host '  Waiting 20 seconds for startup...'
+                Start-Sleep -Seconds 20
+                Write-Host '✅ Startup complete' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: Failed to start service!' -ForegroundColor Red
+                Write-Host `$_.Exception.Message
+                Exit 1
+            }
+            Write-Host ''
+            
+            # STEP 10: Comprehensive endpoint verification
+            Write-Host '[STEP 10] Verifying all endpoints...' -ForegroundColor Yellow
+            
+            `$endpoints = @(
+                @{name='Root'; url='http://localhost:8000/'; checkService=`$true},
+                @{name='Legacy Health'; url='http://localhost:8000/health'; checkService=`$false},
+                @{name='MT5 Bridge Health (CRITICAL)'; url='http://localhost:8000/api/mt5/bridge/health'; checkService=`$false},
+                @{name='Account Info'; url='http://localhost:8000/api/mt5/account/886557/info'; checkService=`$false}
+            )
+            
+            `$allSuccess = `$true
+            `$successCount = 0
+            
+            foreach (`$ep in `$endpoints) {
+                Write-Host ''
+                Write-Host '  Testing:' `$ep.name -ForegroundColor Cyan
+                Write-Host '  URL:' `$ep.url
+                
+                try {
+                    `$response = Invoke-WebRequest -Uri `$ep.url -Method Get -TimeoutSec 15 -UseBasicParsing
+                    `$jsonResponse = `$response.Content | ConvertFrom-Json
+                    
+                    Write-Host '  ✅ Status:' `$response.StatusCode -ForegroundColor Green
+                    `$successCount++
+                    
+                    if (`$ep.checkService) {
+                        `$serviceName = `$jsonResponse.service
+                        Write-Host '     Service Name:' `$serviceName
+                        if (`$serviceName -eq 'FIDUS MT5 Bridge API') {
+                            Write-Host '     ✅ CORRECT SERVICE RUNNING!' -ForegroundColor Green
+                        } else {
+                            Write-Host '     ❌ WRONG SERVICE! Expected: FIDUS MT5 Bridge API, Got:' `$serviceName -ForegroundColor Red
+                            `$allSuccess = `$false
+                        }
+                    }
+                } catch {
+                    Write-Host '  ❌ FAILED!' -ForegroundColor Red
+                    Write-Host '     Error:' `$_.Exception.Message
+                    `$allSuccess = `$false
+                }
+            }
+            
+            Write-Host ''
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'Results: ' `$successCount 'of' `$endpoints.Count 'endpoints verified' -ForegroundColor Yellow
+            Write-Host ''
+            
+            if (`$allSuccess) {
+                Write-Host '✅✅✅ NUCLEAR RESET SUCCESSFUL! ✅✅✅' -ForegroundColor Green
+                Write-Host '✅ MT5 Bridge API is running correctly' -ForegroundColor Green
+                Write-Host '✅ All endpoints verified' -ForegroundColor Green
+                Write-Host '✅ Service: FIDUS MT5 Bridge API' -ForegroundColor Green
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Exit 0
+            } else {
+                Write-Host '❌ VERIFICATION FAILED' -ForegroundColor Red
+                Write-Host 'Some endpoints are not responding correctly' -ForegroundColor Red
+                Write-Host ''
+                Write-Host 'Service log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\nuclear_reset.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host `$_ }
+                Write-Host ''
+                Write-Host 'Error log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\nuclear_reset_error.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host `$_ }
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Exit 1
+            }
+            "
+      
+      - name: Final Verification
+        run: |
+          echo "✅ Nuclear reset workflow completed"
+          echo "🔗 Test endpoints:"
+          echo "   http://217.197.163.11:8000/"
+          echo "   http://217.197.163.11:8000/api/mt5/bridge/health"
+          echo "   http://217.197.163.11:8000/api/mt5/account/886557/info"
