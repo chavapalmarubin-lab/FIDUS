@@ -1,0 +1,179 @@
+name: Setup MT5 Auto-Login on VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-auto-login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy Auto-Login Script to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          command_timeout: 10m
+          script_stop: false
+          debug: true
+          script: |
+            powershell -Command "
+            Write-Host '===== MT5 AUTO-LOGIN SETUP STARTING =====' -ForegroundColor Green
+            
+            # Create service directory if it doesn't exist
+            if (!(Test-Path 'C:\mt5_bridge_service')) {
+                New-Item -ItemType Directory -Path 'C:\mt5_bridge_service' -Force
+                Write-Host 'Created mt5_bridge_service directory' -ForegroundColor Green
+            }
+            
+            # Create logs directory
+            if (!(Test-Path 'C:\mt5_bridge_service\logs')) {
+                New-Item -ItemType Directory -Path 'C:\mt5_bridge_service\logs' -Force
+                Write-Host 'Created logs directory' -ForegroundColor Green
+            }
+            
+            # Download auto-login script from GitHub
+            Write-Host 'Downloading auto-login script from GitHub...' -ForegroundColor Yellow
+            $url = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/auto_login_mt5.ps1'
+            $destination = 'C:\mt5_bridge_service\auto_login_mt5.ps1'
+            
+            try {
+                Invoke-WebRequest -Uri `$url -OutFile `$destination -UseBasicParsing
+                Write-Host 'Auto-login script downloaded successfully' -ForegroundColor Green
+            } catch {
+                Write-Host 'ERROR: Failed to download auto-login script' -ForegroundColor Red
+                Write-Host `$_.Exception.Message -ForegroundColor Red
+                exit 1
+            }
+            
+            # Set MT5_MASTER_PASSWORD as system environment variable (if not already set)
+            Write-Host 'Checking MT5_MASTER_PASSWORD environment variable...' -ForegroundColor Yellow
+            `$currentPassword = [System.Environment]::GetEnvironmentVariable('MT5_MASTER_PASSWORD', 'Machine')
+            
+            if ([string]::IsNullOrEmpty(`$currentPassword)) {
+                Write-Host 'WARNING: MT5_MASTER_PASSWORD not set as system environment variable' -ForegroundColor Yellow
+                Write-Host 'You will need to set it manually in Windows System Environment Variables' -ForegroundColor Yellow
+                Write-Host 'Variable Name: MT5_MASTER_PASSWORD' -ForegroundColor Yellow
+                Write-Host 'Variable Value: [Your MT5 account 886557 password]' -ForegroundColor Yellow
+            } else {
+                Write-Host 'MT5_MASTER_PASSWORD is already set' -ForegroundColor Green
+            }
+            
+            # Create Windows Task Scheduler task for auto-login on startup
+            Write-Host 'Setting up Windows Task Scheduler...' -ForegroundColor Yellow
+            
+            `$taskName = 'MT5_Auto_Login'
+            `$taskExists = Get-ScheduledTask -TaskName `$taskName -ErrorAction SilentlyContinue
+            
+            if (`$taskExists) {
+                Write-Host 'Removing existing scheduled task...' -ForegroundColor Yellow
+                Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false
+            }
+            
+            # Create scheduled task action
+            `$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-ExecutionPolicy Bypass -File C:\mt5_bridge_service\auto_login_mt5.ps1'
+            
+            # Create trigger for system startup
+            `$trigger = New-ScheduledTaskTrigger -AtStartup
+            
+            # Set principal to run with highest privileges
+            `$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+            
+            # Create settings
+            `$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+            
+            # Register the task
+            Register-ScheduledTask -TaskName `$taskName -Action `$action -Trigger `$trigger -Principal `$principal -Settings `$settings -Description 'Automatically login to MT5 account 886557 on system startup'
+            
+            Write-Host 'Scheduled task created successfully' -ForegroundColor Green
+            
+            # Verify task was created
+            `$verifyTask = Get-ScheduledTask -TaskName `$taskName -ErrorAction SilentlyContinue
+            if (`$verifyTask) {
+                Write-Host 'Task verification: SUCCESS' -ForegroundColor Green
+                Write-Host 'Task Name: ' `$verifyTask.TaskName -ForegroundColor Cyan
+                Write-Host 'Task State: ' `$verifyTask.State -ForegroundColor Cyan
+            } else {
+                Write-Host 'ERROR: Task verification failed' -ForegroundColor Red
+                exit 1
+            }
+            
+            # Test the auto-login script immediately
+            Write-Host '' -ForegroundColor White
+            Write-Host '===== TESTING AUTO-LOGIN SCRIPT =====' -ForegroundColor Green
+            Write-Host 'Running auto-login script now...' -ForegroundColor Yellow
+            
+            `$env:MT5_MASTER_PASSWORD = [System.Environment]::GetEnvironmentVariable('MT5_MASTER_PASSWORD', 'Machine')
+            
+            if ([string]::IsNullOrEmpty(`$env:MT5_MASTER_PASSWORD)) {
+                Write-Host 'WARNING: Cannot test login - MT5_MASTER_PASSWORD not set' -ForegroundColor Yellow
+                Write-Host 'Please set the environment variable and restart the VPS' -ForegroundColor Yellow
+            } else {
+                & 'C:\mt5_bridge_service\auto_login_mt5.ps1'
+                
+                if (`$LASTEXITCODE -eq 0) {
+                    Write-Host 'AUTO-LOGIN TEST: SUCCESS' -ForegroundColor Green
+                } else {
+                    Write-Host 'AUTO-LOGIN TEST: FAILED' -ForegroundColor Red
+                    Write-Host 'Please check the logs at C:\mt5_bridge_service\logs\auto_login.log' -ForegroundColor Yellow
+                }
+            }
+            
+            Write-Host '' -ForegroundColor White
+            Write-Host '===== MT5 AUTO-LOGIN SETUP COMPLETED =====' -ForegroundColor Green
+            Write-Host '' -ForegroundColor White
+            Write-Host 'NEXT STEPS:' -ForegroundColor Yellow
+            Write-Host '1. Set MT5_MASTER_PASSWORD as system environment variable (if not already set)' -ForegroundColor White
+            Write-Host '2. Restart the VPS to test auto-login on startup' -ForegroundColor White
+            Write-Host '3. Check logs at C:\mt5_bridge_service\logs\auto_login.log' -ForegroundColor White
+            Write-Host '' -ForegroundColor White
+            Write-Host 'The system will now automatically login to MT5 account 886557 on every VPS restart!' -ForegroundColor Green
+            "
+      
+      - name: Generate Setup Report
+        if: always()
+        run: |
+          echo "# MT5 Auto-Login Setup Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Setup Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Was Configured:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Auto-login PowerShell script deployed to VPS" >> $GITHUB_STEP_SUMMARY
+          echo "2. Windows Task Scheduler configured to run on startup" >> $GITHUB_STEP_SUMMARY
+          echo "3. Script tested immediately" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## How It Works:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- When VPS restarts, Windows Task Scheduler runs the auto-login script" >> $GITHUB_STEP_SUMMARY
+          echo "- Script uses MetaTrader5 Python library to login to account 886557" >> $GITHUB_STEP_SUMMARY
+          echo "- Credentials read from MT5_MASTER_PASSWORD environment variable" >> $GITHUB_STEP_SUMMARY
+          echo "- All actions logged to C:\mt5_bridge_service\logs\auto_login.log" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Required Configuration:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**IMPORTANT:** You must set the MT5_MASTER_PASSWORD environment variable on the VPS:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Open PowerShell as Administrator on VPS" >> $GITHUB_STEP_SUMMARY
+          echo "2. Run: \`[System.Environment]::SetEnvironmentVariable('MT5_MASTER_PASSWORD', 'YOUR_MT5_PASSWORD', 'Machine')\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Replace YOUR_MT5_PASSWORD with actual password for account 886557" >> $GITHUB_STEP_SUMMARY
+          echo "4. Restart VPS to test auto-login" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Testing:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To test without restarting VPS:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`powershell" >> $GITHUB_STEP_SUMMARY
+          echo "cd C:\mt5_bridge_service" >> $GITHUB_STEP_SUMMARY
+          echo ".\auto_login_mt5.ps1" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Log Location:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "C:\mt5_bridge_service\logs\auto_login.log" >> $GITHUB_STEP_SUMMARY
