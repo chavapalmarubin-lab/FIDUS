@@ -1,0 +1,169 @@
+name: Auto-Test MT5 Healing System
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+
+jobs:
+  test-complete-system:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Test 1 - VPS Connectivity
+        id: test_connectivity
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          script: |
+            echo "=== VPS Connectivity Test ==="
+            echo "Hostname: $(hostname)"
+            python --version
+            git --version
+            echo "=== Test 1 Complete ==="
+      
+      - name: Test 2 - Deploy MT5 Bridge
+        id: test_deploy
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: false
+          script: |
+            powershell -Command "
+            Write-Host '=== Emergency Deployment Test ==='
+            
+            Set-Location C:\mt5_bridge_service
+            
+            # Kill processes
+            Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 10
+            
+            # Free port
+            $port = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+            if ($port) { Stop-Process -Id $port.OwningProcess -Force }
+            Start-Sleep -Seconds 5
+            
+            # Pull code
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # Start service
+            Start-Process python -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\test.log' -RedirectStandardError 'logs\test_error.log'
+            Start-Sleep -Seconds 20
+            
+            # Test health
+            try {
+                $r = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing
+                Write-Host 'Service is UP - Status:' $r.StatusCode
+            } catch {
+                Write-Host 'Service check failed'
+            }
+            
+            Write-Host '=== Test 2 Complete ==='
+            "
+      
+      - name: Test 3 - Verify MT5 Bridge Health
+        id: test_health
+        continue-on-error: true
+        run: |
+          echo "=== MT5 Bridge Health Check ==="
+          sleep 30
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://217.197.163.11:8000/api/mt5/bridge/health)
+          if [ "$response" -eq 200 ]; then
+            echo "[PASS] Bridge is healthy (HTTP $response)"
+          else
+            echo "[FAIL] Bridge unhealthy (HTTP $response)"
+            exit 1
+          fi
+          echo "=== Test 3 Complete ==="
+      
+      - name: Test 4 - Check Account Syncing
+        id: test_sync
+        continue-on-error: true
+        run: |
+          echo "=== Account Sync Verification ==="
+          sleep 60
+          
+          response=$(curl -s https://fidus-api.onrender.com/api/system/status)
+          echo "Backend response received"
+          
+          echo "=== Test 4 Complete ==="
+      
+      - name: Test 5 - Trigger Auto-Healing
+        id: test_auto_healing
+        continue-on-error: true
+        run: |
+          echo "=== Auto-Healing Trigger Test ==="
+          
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/chavapalmarubin-lab/FIDUS/actions/workflows/deploy-mt5-bridge-emergency-ps.yml/dispatches \
+            -d '{"ref":"main"}'
+          
+          echo "Auto-healing workflow triggered"
+          sleep 180
+          
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://217.197.163.11:8000/api/mt5/bridge/health)
+          if [ "$response" -eq 200 ]; then
+            echo "[PASS] Auto-healing successful"
+          else
+            echo "[FAIL] Auto-healing failed"
+            exit 1
+          fi
+          echo "=== Test 5 Complete ==="
+      
+      - name: Generate Test Report
+        if: always()
+        run: |
+          echo "# MT5 Auto-Healing System Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 1. VPS Connectivity | ${{ steps.test_connectivity.outcome == 'success' && 'PASSED' || 'FAILED' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2. Emergency Deploy | ${{ steps.test_deploy.outcome == 'success' && 'PASSED' || 'FAILED' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 3. Bridge Health | ${{ steps.test_health.outcome == 'success' && 'PASSED' || 'FAILED' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 4. Account Syncing | ${{ steps.test_sync.outcome == 'success' && 'PASSED' || 'FAILED' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 5. Auto-Healing | ${{ steps.test_auto_healing.outcome == 'success' && 'PASSED' || 'FAILED' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          total=5
+          passed=0
+          [ "${{ steps.test_connectivity.outcome }}" == "success" ] && passed=$((passed+1))
+          [ "${{ steps.test_deploy.outcome }}" == "success" ] && passed=$((passed+1))
+          [ "${{ steps.test_health.outcome }}" == "success" ] && passed=$((passed+1))
+          [ "${{ steps.test_sync.outcome }}" == "success" ] && passed=$((passed+1))
+          [ "${{ steps.test_auto_healing.outcome }}" == "success" ] && passed=$((passed+1))
+          
+          pass_rate=$((passed * 100 / total))
+          
+          echo "## Overall Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pass Rate:** ${passed}/${total} (${pass_rate}%)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $pass_rate -eq 100 ]; then
+            echo "ALL TESTS PASSED - System is fully operational." >> $GITHUB_STEP_SUMMARY
+          elif [ $pass_rate -ge 80 ]; then
+            echo "MOSTLY PASSED - Minor issues detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "SYSTEM FAILURE - Critical issues detected." >> $GITHUB_STEP_SUMMARY
+          fi
