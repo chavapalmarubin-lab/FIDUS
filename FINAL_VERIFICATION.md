@@ -105,7 +105,7 @@ The green button is safe to click. GitHub will:
 1. Go to: https://dashboard.render.com/web/fidus-api
 2. Environment → Add Environment Variable
 3. Key: `GITHUB_TOKEN`
-4. Value: `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`
+4. Value: `<your-github-token-here>` (Token is configured in Render, not in local files)
 5. Save Changes
 
 ### Step 2: Monitor Deployment (5 minutes)
