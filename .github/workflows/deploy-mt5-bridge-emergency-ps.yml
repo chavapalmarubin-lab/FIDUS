@@ -54,11 +54,31 @@ jobs:
             git fetch origin main 2>&1 | Out-String | Write-Host
             git reset --hard origin/main 2>&1 | Out-String | Write-Host
             
-            # Copy service file from vps directory if it exists
+            # CRITICAL: Copy and verify correct service file
+            Write-Host '=== DEPLOYING CORRECT API SERVICE FILE ===' -ForegroundColor Cyan
             if (Test-Path 'vps\mt5_bridge_api_service.py') {
-                Write-Host 'Copying service file from vps directory...' -ForegroundColor Yellow
+                Write-Host 'Source file found in vps directory' -ForegroundColor Green
                 Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
+                Write-Host 'File copied successfully' -ForegroundColor Green
+                
+                # Verify the file has the correct content (check for FastAPI routes)
+                $content = Get-Content 'mt5_bridge_api_service.py' -Raw
+                if ($content -match '/api/mt5/bridge/health') {
+                    Write-Host '✅ VERIFIED: Correct API service file deployed' -ForegroundColor Green
+                } else {
+                    Write-Host '⚠️  WARNING: File may not have correct routes!' -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host '❌ ERROR: vps\mt5_bridge_api_service.py not found!' -ForegroundColor Red
+                exit 1
             }
+            
+            # Remove any old/wrong service files
+            Write-Host 'Removing old service files...' -ForegroundColor Yellow
+            Remove-Item -Path 'main.py' -ErrorAction SilentlyContinue -Force
+            Remove-Item -Path 'main_production.py' -ErrorAction SilentlyContinue -Force
+            Remove-Item -Path 'mt5_bridge_service_production.py' -ErrorAction SilentlyContinue -Force
+            Write-Host 'Old files cleaned up' -ForegroundColor Green
             
             # Create logs directory
             if (-not (Test-Path 'logs')) {
@@ -80,10 +100,10 @@ jobs:
                 Write-Host 'Note: auto_login_mt5.ps1 not found, skipping MT5 login' -ForegroundColor Yellow
             }
             
-            # Start service
-            Write-Host 'Starting MT5 Bridge service...' -ForegroundColor Yellow
+            # Start CORRECT service file
+            Write-Host '=== STARTING mt5_bridge_api_service.py ===' -ForegroundColor Cyan
             $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_emergency.log' -RedirectStandardError 'logs\error_emergency.log' -PassThru
-            Write-Host 'Service started with PID:' $process.Id -ForegroundColor Green
+            Write-Host '✅ Service started with PID:' $process.Id -ForegroundColor Green
             
             # Wait for startup
             Write-Host 'Waiting 20 seconds for service startup...' -ForegroundColor Yellow
