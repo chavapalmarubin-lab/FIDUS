@@ -1,24 +1,15 @@
-name: Diagnose and Fix VPS
+name: Diagnose VPS (Nuclear Reset Enabled)
 
 on:
   workflow_dispatch:
-    inputs:
-      action:
-        description: 'Action to perform'
-        required: true
-        default: 'diagnose'
-        type: choice
-        options:
-          - diagnose
-          - nuclear_reset
 
 jobs:
-  execute:
+  nuclear-reset:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
     steps:
-      - name: Execute Action on VPS
+      - name: Nuclear Reset MT5 Bridge
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -30,110 +21,100 @@ jobs:
           debug: true
           script: |
             powershell -Command "
-            `$action = '${{ github.event.inputs.action }}'
+            `$ErrorActionPreference = 'Stop'
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'NUCLEAR RESET - MT5 BRIDGE' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
             
-            if (`$action -eq 'diagnose') {
-                Write-Host '===== VPS DIAGNOSTIC =====' -ForegroundColor Cyan
-                Write-Host 'Current directory:'
-                Get-Location
-                Write-Host ''
-                Write-Host 'Python version:'
-                python --version
-                Write-Host ''
-                Write-Host 'Git version:'
-                git --version
-                Write-Host ''
-                Write-Host 'Port 8000 status:'
-                Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object State, OwningProcess
-                Write-Host ''
-                Write-Host 'MT5 Bridge directory:'
-                Get-ChildItem C:\mt5_bridge_service -ErrorAction SilentlyContinue | Select-Object Name, Length
-                Write-Host ''
-                Write-Host 'Git status:'
-                cd C:\mt5_bridge_service
-                git status
-                Write-Host ''
-                Write-Host '===== DIAGNOSTIC COMPLETE ====='
+            # Stop Python
+            Write-Host ''
+            Write-Host 'Stopping Python processes...'
+            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 5
+            Write-Host '✅ Done'
+            
+            # Backup
+            Write-Host ''
+            Write-Host 'Backing up old directory...'
+            if (Test-Path 'C:\mt5_bridge_service') {
+                `$backup = 'C:\mt5_bridge_service_backup_' + (Get-Date -Format 'yyyyMMddHHmmss')
+                Move-Item -Path 'C:\mt5_bridge_service' -Destination `$backup -Force -ErrorAction SilentlyContinue
+                Write-Host '✅ Backed up to' `$backup
             }
             
-            if (`$action -eq 'nuclear_reset') {
-                `$ErrorActionPreference = 'Stop'
+            # Clone
+            Write-Host ''
+            Write-Host 'Cloning fresh repository...'
+            cd C:\
+            git clone https://github.com/chavapalmarubin-lab/FIDUS.git mt5_bridge_service
+            if (`$LASTEXITCODE -ne 0) { Write-Host '❌ Clone failed'; Exit 1 }
+            Write-Host '✅ Clone complete'
+            
+            # Verify
+            Write-Host ''
+            Write-Host 'Verifying repository...'
+            cd C:\mt5_bridge_service
+            if (-not (Test-Path 'vps\mt5_bridge_api_service.py')) {
+                Write-Host '❌ File not found!'
+                Get-ChildItem vps
+                Exit 1
+            }
+            Write-Host '✅ File verified'
+            
+            # Deploy
+            Write-Host ''
+            Write-Host 'Deploying service file...'
+            Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
+            `$content = Get-Content 'mt5_bridge_api_service.py' -Raw
+            if (`$content -notmatch '/api/mt5/bridge/health') {
+                Write-Host '❌ Wrong file content!'
+                Exit 1
+            }
+            Write-Host '✅ File deployed and verified'
+            
+            # Remove wrong files
+            Write-Host ''
+            Write-Host 'Removing wrong files...'
+            Remove-Item -Path 'main.py' -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path 'main_production.py' -Force -ErrorAction SilentlyContinue
+            Write-Host '✅ Done'
+            
+            # Start
+            Write-Host ''
+            Write-Host 'Starting service...'
+            if (-not (Test-Path 'logs')) { New-Item -ItemType Directory -Path 'logs' -Force | Out-Null }
+            Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\nuclear.log' -RedirectStandardError 'logs\nuclear_error.log' -WindowStyle Hidden
+            Start-Sleep -Seconds 20
+            Write-Host '✅ Service started'
+            
+            # Verify
+            Write-Host ''
+            Write-Host 'Verifying endpoints...'
+            try {
+                `$r = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 10
+                Write-Host '  Service name:' `$r.service
+                if (`$r.service -ne 'FIDUS MT5 Bridge API') {
+                    Write-Host '❌ Wrong service name!'
+                    Exit 1
+                }
+                Write-Host '  ✅ Correct service'
+                
+                Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 10 | Out-Null
+                Write-Host '  ✅ Bridge health endpoint working'
+                
+                Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/account/886557/info' -TimeoutSec 10 | Out-Null
+                Write-Host '  ✅ Account info endpoint working'
+                
+                Write-Host ''
                 Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
-                Write-Host 'NUCLEAR RESET - MT5 BRIDGE' -ForegroundColor Cyan
+                Write-Host '✅✅✅ NUCLEAR RESET SUCCESSFUL! ✅✅✅' -ForegroundColor Green
                 Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
-                
-                # Stop Python
+            } catch {
+                Write-Host '❌ Verification failed:' `$_.Exception.Message
                 Write-Host ''
-                Write-Host 'Stopping Python processes...'
-                Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
-                Start-Sleep -Seconds 5
-                Write-Host '✅ Done'
-                
-                # Backup
-                Write-Host ''
-                Write-Host 'Backing up old directory...'
-                if (Test-Path 'C:\mt5_bridge_service') {
-                    `$backup = \"C:\mt5_bridge_service_backup_\" + (Get-Date -Format 'yyyyMMddHHmmss')
-                    Move-Item -Path 'C:\mt5_bridge_service' -Destination `$backup -Force -ErrorAction SilentlyContinue
-                    Write-Host '✅ Backed up to' `$backup
-                }
-                
-                # Clone
-                Write-Host ''
-                Write-Host 'Cloning fresh repository...'
-                cd C:\
-                git clone https://github.com/chavapalmarubin-lab/FIDUS.git mt5_bridge_service
-                if (`$LASTEXITCODE -ne 0) { Write-Host '❌ Clone failed'; Exit 1 }
-                Write-Host '✅ Clone complete'
-                
-                # Verify
-                Write-Host ''
-                Write-Host 'Verifying repository...'
-                cd C:\mt5_bridge_service
-                if (-not (Test-Path 'vps\mt5_bridge_api_service.py')) {
-                    Write-Host '❌ File not found!'
-                    Exit 1
-                }
-                Write-Host '✅ File verified'
-                
-                # Deploy
-                Write-Host ''
-                Write-Host 'Deploying service file...'
-                Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
-                `$content = Get-Content 'mt5_bridge_api_service.py' -Raw
-                if (`$content -notmatch '/api/mt5/bridge/health') {
-                    Write-Host '❌ Wrong file content!'
-                    Exit 1
-                }
-                Write-Host '✅ File deployed'
-                
-                # Start
-                Write-Host ''
-                Write-Host 'Starting service...'
-                if (-not (Test-Path 'logs')) { New-Item -ItemType Directory -Path 'logs' -Force | Out-Null }
-                Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -WindowStyle Hidden
-                Start-Sleep -Seconds 20
-                Write-Host '✅ Service started'
-                
-                # Verify
-                Write-Host ''
-                Write-Host 'Verifying endpoints...'
-                try {
-                    `$r = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 10
-                    Write-Host '✅ Service:' `$r.service
-                    if (`$r.service -ne 'FIDUS MT5 Bridge API') {
-                        Write-Host '❌ Wrong service!'
-                        Exit 1
-                    }
-                    
-                    Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 10 | Out-Null
-                    Write-Host '✅ Bridge health endpoint working'
-                    
-                    Write-Host ''
-                    Write-Host '✅✅✅ NUCLEAR RESET SUCCESSFUL! ✅✅✅' -ForegroundColor Green
-                } catch {
-                    Write-Host '❌ Verification failed:' `$_.Exception.Message
-                    Exit 1
-                }
+                Write-Host 'Logs:'
+                Get-Content 'logs\nuclear.log' -Tail 30 -ErrorAction SilentlyContinue
+                Get-Content 'logs\nuclear_error.log' -Tail 30 -ErrorAction SilentlyContinue
+                Exit 1
             }
             "
