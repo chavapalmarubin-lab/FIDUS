@@ -49,7 +49,7 @@
 
 **Command Run:**
 ```bash
-grep -r "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" /app \
+grep -r "YOUR_TOKEN_HERE" /app \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
   --exclude-dir=venv \
