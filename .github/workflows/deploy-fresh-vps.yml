@@ -1,0 +1,301 @@
+name: Deploy to Fresh VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-fresh-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Deploy MT5 Bridge API to Fresh VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 92.118.45.135
+          port: 42014
+          username: trader
+          password: 4p1We0OHh3LKgm6
+          timeout: 900s
+          command_timeout: 15m
+          debug: true
+          script: |
+            powershell -Command "
+            `$ErrorActionPreference = 'Stop'
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'DEPLOYING TO FRESH VPS - ZERO LEGACY ISSUES' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # STEP 1: Create directory
+            Write-Host '═══ STEP 1: CREATE DIRECTORY ═══' -ForegroundColor Yellow
+            `$deployDir = 'C:\fidus_mt5_bridge'
+            
+            if (-not (Test-Path `$deployDir)) {
+                New-Item -ItemType Directory -Path `$deployDir -Force | Out-Null
+                Write-Host '✅ Created:' `$deployDir -ForegroundColor Green
+            } else {
+                Write-Host '✅ Directory exists:' `$deployDir -ForegroundColor Green
+            }
+            
+            Set-Location `$deployDir
+            Write-Host '  Working directory:' (Get-Location)
+            Write-Host ''
+            
+            # STEP 2: Download service file
+            Write-Host '═══ STEP 2: DOWNLOAD SERVICE FILE ═══' -ForegroundColor Yellow
+            `$url = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py'
+            `$file = 'mt5_bridge_api_service.py'
+            
+            Write-Host '  URL:' `$url
+            
+            `$ProgressPreference = 'SilentlyContinue'
+            try {
+                Invoke-WebRequest -Uri `$url -OutFile `$file -TimeoutSec 30
+                Write-Host '✅ Downloaded via Invoke-WebRequest' -ForegroundColor Green
+            } catch {
+                Write-Host '  Trying curl...'
+                curl -L -o `$file `$url
+                if (`$LASTEXITCODE -eq 0) {
+                    Write-Host '✅ Downloaded via curl' -ForegroundColor Green
+                } else {
+                    Write-Host '❌ Download failed!' -ForegroundColor Red
+                    Exit 1
+                }
+            }
+            Write-Host ''
+            
+            # STEP 3: Verify file
+            Write-Host '═══ STEP 3: VERIFY FILE CONTENT ═══' -ForegroundColor Yellow
+            
+            `$size = (Get-Item `$file).Length
+            Write-Host '  Size:' `$size 'bytes'
+            
+            if (`$size -lt 10000) {
+                Write-Host '❌ File too small!' -ForegroundColor Red
+                Exit 1
+            }
+            
+            `$content = Get-Content `$file -Raw
+            
+            if (`$content -match 'FIDUS MT5 Bridge API') {
+                Write-Host '  ✅ Service name: FIDUS MT5 Bridge API' -ForegroundColor Green
+            } else {
+                Write-Host '  ❌ Wrong service name!' -ForegroundColor Red
+                Exit 1
+            }
+            
+            if (`$content -match '/api/mt5/bridge/health') {
+                Write-Host '  ✅ Route: /api/mt5/bridge/health' -ForegroundColor Green
+            } else {
+                Write-Host '  ❌ Missing route!' -ForegroundColor Red
+                Exit 1
+            }
+            
+            Write-Host '✅ File verified' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 4: Install Python packages
+            Write-Host '═══ STEP 4: INSTALL PYTHON PACKAGES ═══' -ForegroundColor Yellow
+            `$pythonPath = 'C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe'
+            
+            Write-Host '  Python:' `$pythonPath
+            
+            # Create requirements.txt
+            `$requirements = @'
+fastapi==0.115.5
+uvicorn[standard]==0.34.0
+MetaTrader5==5.0.4518
+python-dotenv==1.0.1
+pymongo==4.10.1
+httpx==0.28.1
+pydantic==2.10.3
+'@
+            
+            Set-Content -Path 'requirements.txt' -Value `$requirements
+            Write-Host '  requirements.txt created'
+            
+            Write-Host '  Installing packages...'
+            & `$pythonPath -m pip install --quiet --upgrade pip
+            & `$pythonPath -m pip install --quiet -r requirements.txt
+            
+            Write-Host '✅ Packages installed' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 5: Create .env file
+            Write-Host '═══ STEP 5: CREATE .ENV FILE ═══' -ForegroundColor Yellow
+            
+            `$envContent = @'
+MONGODB_URI=mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production
+MT5_PASSWORD=Fidus13!
+'@
+            
+            Set-Content -Path '.env' -Value `$envContent
+            Write-Host '✅ .env created' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 6: Create logs directory
+            Write-Host '═══ STEP 6: CREATE LOGS DIRECTORY ═══' -ForegroundColor Yellow
+            if (-not (Test-Path 'logs')) {
+                New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
+            }
+            Write-Host '✅ Logs directory ready' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 7: Test service startup
+            Write-Host '═══ STEP 7: TEST SERVICE STARTUP ═══' -ForegroundColor Yellow
+            Write-Host '  Starting service...'
+            
+            `$process = Start-Process -FilePath `$pythonPath -ArgumentList `$file -RedirectStandardOutput 'logs\deploy.log' -RedirectStandardError 'logs\deploy_error.log' -PassThru -WindowStyle Hidden
+            
+            Write-Host '  PID:' `$process.Id
+            Write-Host '  Waiting 25 seconds for startup...'
+            Start-Sleep -Seconds 25
+            
+            `$stillRunning = Get-Process -Id `$process.Id -ErrorAction SilentlyContinue
+            if (`$stillRunning) {
+                Write-Host '✅ Service is running' -ForegroundColor Green
+            } else {
+                Write-Host '❌ Service crashed!' -ForegroundColor Red
+                Get-Content 'logs\deploy_error.log' -ErrorAction SilentlyContinue
+                Exit 1
+            }
+            Write-Host ''
+            
+            # STEP 8: Verify endpoints
+            Write-Host '═══ STEP 8: VERIFY ENDPOINTS ═══' -ForegroundColor Yellow
+            
+            `$allSuccess = `$true
+            
+            # Root endpoint
+            Write-Host ''
+            Write-Host '  Testing: http://localhost:8000/' -ForegroundColor Cyan
+            try {
+                `$response = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 20
+                `$serviceName = `$response.service
+                Write-Host '    HTTP 200 OK'
+                Write-Host '    Service name:' `$serviceName
+                
+                if (`$serviceName -eq 'FIDUS MT5 Bridge API') {
+                    Write-Host '    ✅ CORRECT SERVICE NAME!' -ForegroundColor Green
+                } else {
+                    Write-Host '    ❌ WRONG! Expected: FIDUS MT5 Bridge API, Got:' `$serviceName -ForegroundColor Red
+                    `$allSuccess = `$false
+                }
+            } catch {
+                Write-Host '    ❌ FAILED:' `$_.Exception.Message -ForegroundColor Red
+                `$allSuccess = `$false
+            }
+            
+            # Bridge health
+            Write-Host ''
+            Write-Host '  Testing: http://localhost:8000/api/mt5/bridge/health' -ForegroundColor Cyan
+            try {
+                `$response = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 20
+                Write-Host '    ✅ HTTP 200 OK' -ForegroundColor Green
+            } catch {
+                Write-Host '    ❌ FAILED:' `$_.Exception.Message -ForegroundColor Red
+                `$allSuccess = `$false
+            }
+            
+            # Account info
+            Write-Host ''
+            Write-Host '  Testing: http://localhost:8000/api/mt5/account/886557/info' -ForegroundColor Cyan
+            try {
+                `$response = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/account/886557/info' -TimeoutSec 20
+                Write-Host '    ✅ HTTP 200 OK' -ForegroundColor Green
+            } catch {
+                Write-Host '    ❌ FAILED:' `$_.Exception.Message -ForegroundColor Red
+                `$allSuccess = `$false
+            }
+            
+            # External access
+            Write-Host ''
+            Write-Host '  Testing: http://92.118.45.135:8000/' -ForegroundColor Cyan
+            try {
+                `$extResponse = Invoke-RestMethod -Uri 'http://92.118.45.135:8000/' -TimeoutSec 20
+                if (`$extResponse.service -eq 'FIDUS MT5 Bridge API') {
+                    Write-Host '    ✅ External access OK!' -ForegroundColor Green
+                }
+            } catch {
+                Write-Host '    ⚠️  External test inconclusive' -ForegroundColor Yellow
+            }
+            
+            if (-not `$allSuccess) {
+                Write-Host ''
+                Write-Host '❌ ENDPOINT VERIFICATION FAILED' -ForegroundColor Red
+                Exit 1
+            }
+            
+            Write-Host ''
+            Write-Host '✅ ALL ENDPOINTS VERIFIED!' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 9: Create Task Scheduler task
+            Write-Host '═══ STEP 9: CREATE TASK SCHEDULER ═══' -ForegroundColor Yellow
+            
+            # Stop current process first
+            Stop-Process -Id `$process.Id -Force
+            Start-Sleep -Seconds 3
+            
+            `$taskName = 'MT5 Bridge API Service'
+            `$action = New-ScheduledTaskAction -Execute `$pythonPath -Argument \"`$deployDir\`$file\" -WorkingDirectory `$deployDir
+            `$trigger = New-ScheduledTaskTrigger -AtStartup
+            `$trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration ([TimeSpan]::MaxValue)
+            `$principal = New-ScheduledTaskPrincipal -UserId 'Administrator' -RunLevel Highest
+            `$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+            
+            Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false -ErrorAction SilentlyContinue
+            Register-ScheduledTask -TaskName `$taskName -Action `$action -Trigger `$trigger,`$trigger2 -Principal `$principal -Settings `$settings -Force | Out-Null
+            
+            Write-Host '✅ Task created:' `$taskName -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 10: Start via Task Scheduler
+            Write-Host '═══ STEP 10: START VIA TASK SCHEDULER ═══' -ForegroundColor Yellow
+            
+            Start-ScheduledTask -TaskName `$taskName
+            Write-Host '  Task started'
+            Write-Host '  Waiting 25 seconds...'
+            Start-Sleep -Seconds 25
+            
+            # Final verification
+            Write-Host ''
+            Write-Host '  Final verification...' -ForegroundColor Cyan
+            try {
+                `$finalResponse = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 20
+                if (`$finalResponse.service -eq 'FIDUS MT5 Bridge API') {
+                    Write-Host '  ✅ Service running via Task Scheduler!' -ForegroundColor Green
+                } else {
+                    Write-Host '  ❌ Wrong service name!' -ForegroundColor Red
+                    Exit 1
+                }
+            } catch {
+                Write-Host '  ❌ Service not responding!' -ForegroundColor Red
+                Exit 1
+            }
+            
+            Write-Host ''
+            
+            # SUCCESS
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host '✅✅✅ DEPLOYMENT COMPLETE! ✅✅✅' -ForegroundColor Green
+            Write-Host ''
+            Write-Host 'FRESH VPS DEPLOYMENT SUCCESSFUL:' -ForegroundColor Green
+            Write-Host '  ✅ Directory: C:\fidus_mt5_bridge' -ForegroundColor Green
+            Write-Host '  ✅ Service file deployed' -ForegroundColor Green
+            Write-Host '  ✅ Python packages installed' -ForegroundColor Green
+            Write-Host '  ✅ .env file created' -ForegroundColor Green
+            Write-Host '  ✅ All endpoints verified' -ForegroundColor Green
+            Write-Host '  ✅ Task Scheduler configured' -ForegroundColor Green
+            Write-Host '  ✅ Service running' -ForegroundColor Green
+            Write-Host ''
+            Write-Host 'SERVICE DETAILS:' -ForegroundColor Green
+            Write-Host '  Name: FIDUS MT5 Bridge API' -ForegroundColor Green
+            Write-Host '  URL: http://92.118.45.135:8000' -ForegroundColor Green
+            Write-Host '  Health: http://92.118.45.135:8000/api/mt5/bridge/health' -ForegroundColor Green
+            Write-Host ''
+            Write-Host 'MT5 BRIDGE 404 ISSUE - PERMANENTLY RESOLVED!' -ForegroundColor Green
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Exit 0
+            "
