@@ -125,22 +125,33 @@ jobs:
             
             # STEP 5: DEPLOY CORRECT FILE
             Write-Host '=== STEP 5: DEPLOY CORRECT API SERVICE ===' -ForegroundColor Yellow
-            if (Test-Path 'vps\mt5_bridge_api_service.py') {
-                Write-Host '✅ Source file found in vps directory' -ForegroundColor Green
+            if (-not (Test-Path 'vps\mt5_bridge_api_service.py')) {
+                Write-Host '❌ ERROR: vps\mt5_bridge_api_service.py not found!' -ForegroundColor Red
+                Write-Host 'Files in vps directory:' -ForegroundColor Yellow
+                Get-ChildItem vps -File | ForEach-Object { Write-Host '  -' $_.Name }
+                Exit 1
+            }
+            Write-Host '✅ Source file found' -ForegroundColor Green
+            
+            try {
                 Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
+                if (-not (Test-Path 'mt5_bridge_api_service.py')) {
+                    throw 'File copy verification failed'
+                }
                 Write-Host '✅ File copied successfully' -ForegroundColor Green
                 
                 # Verify the file has correct routes
                 $content = Get-Content 'mt5_bridge_api_service.py' -Raw
-                if ($content -match '/api/mt5/bridge/health') {
-                    Write-Host '✅ VERIFIED: File has correct routes (/api/mt5/bridge/health)' -ForegroundColor Green
-                } else {
-                    Write-Host '❌ ERROR: File missing required routes!' -ForegroundColor Red
-                    exit 1
+                if ($content -notmatch '/api/mt5/bridge/health') {
+                    throw 'File missing required routes (/api/mt5/bridge/health)'
                 }
-            } else {
-                Write-Host '❌ ERROR: vps\mt5_bridge_api_service.py not found!' -ForegroundColor Red
-                exit 1
+                if ($content -notmatch 'FIDUS MT5 Bridge API') {
+                    throw 'File has wrong service name'
+                }
+                Write-Host '✅ VERIFIED: File has correct routes and service name' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: File deployment failed:' $_.Exception.Message -ForegroundColor Red
+                Exit 1
             }
             
             # Create logs directory
