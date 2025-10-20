@@ -25,107 +25,182 @@ jobs:
           debug: true
           script: |
             powershell -Command "
-            Write-Host '===== EMERGENCY DEPLOYMENT STARTING =====' -ForegroundColor Green
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'COMPREHENSIVE MT5 BRIDGE FIX - STARTING' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host ''
             
             # Navigate to service directory
             Set-Location C:\mt5_bridge_service
             Write-Host 'Working directory:' (Get-Location) -ForegroundColor Yellow
+            Write-Host ''
             
-            # Kill Python processes
-            Write-Host 'Killing Python processes...' -ForegroundColor Yellow
-            Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
-            Start-Sleep -Seconds 5
-            
-            # Free port 8000
-            Write-Host 'Freeing port 8000...' -ForegroundColor Yellow
-            $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-            if ($connections) {
-                $connections | ForEach-Object {
-                    Write-Host 'Killing process on port 8000: PID' $_.OwningProcess
-                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
+            # STEP 1: DISABLE AUTO-RESTART MECHANISMS
+            Write-Host '=== STEP 1: DISABLE AUTO-RESTART MECHANISMS ===' -ForegroundColor Yellow
+            try {
+                $tasksDisabled = 0
+                Get-ScheduledTask | Where-Object { 
+                    $_.Actions.Execute -like '*python*' -and 
+                    ($_.Actions.Arguments -like '*main.py*' -or $_.Actions.Arguments -like '*main_production.py*')
+                } | ForEach-Object {
+                    Write-Host 'Disabling task:' $_.TaskName -ForegroundColor Red
+                    Disable-ScheduledTask -TaskName $_.TaskName -ErrorAction SilentlyContinue
+                    $tasksDisabled++
                 }
+                Write-Host 'Disabled' $tasksDisabled 'auto-restart tasks' -ForegroundColor Green
+            } catch {
+                Write-Host 'Task Scheduler check completed (no tasks to disable)' -ForegroundColor Green
+            }
+            Write-Host ''
+            
+            # STEP 2: STOP ALL WRONG PROCESSES
+            Write-Host '=== STEP 2: STOP ALL PYTHON PROCESSES ===' -ForegroundColor Yellow
+            $pythonCount = (Get-Process -Name python -ErrorAction SilentlyContinue).Count
+            if ($pythonCount -gt 0) {
+                Write-Host 'Stopping' $pythonCount 'Python process(es)...' -ForegroundColor Red
+                Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
                 Start-Sleep -Seconds 5
+                Write-Host '✅ All Python processes stopped' -ForegroundColor Green
             } else {
-                Write-Host 'Port 8000 is already free' -ForegroundColor Green
+                Write-Host '✅ No Python processes running' -ForegroundColor Green
             }
             
-            # Pull latest code
-            Write-Host 'Pulling latest code...' -ForegroundColor Yellow
+            # Free port 8000
+            $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+            if ($connections) {
+                Write-Host 'Freeing port 8000...' -ForegroundColor Yellow
+                $connections | ForEach-Object {
+                    Write-Host 'Killing process PID' $_.OwningProcess
+                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
+                }
+                Start-Sleep -Seconds 3
+                Write-Host '✅ Port 8000 freed' -ForegroundColor Green
+            } else {
+                Write-Host '✅ Port 8000 already free' -ForegroundColor Green
+            }
+            Write-Host ''
+            
+            # STEP 3: CLEAN UP WRONG FILES
+            Write-Host '=== STEP 3: REMOVE WRONG SERVICE FILES ===' -ForegroundColor Yellow
+            $wrongFiles = @('main.py', 'main_production.py', 'mt5_bridge_service_production.py')
+            $removedCount = 0
+            foreach ($file in $wrongFiles) {
+                if (Test-Path $file) {
+                    Write-Host 'Removing:' $file -ForegroundColor Red
+                    Remove-Item -Path $file -Force -ErrorAction SilentlyContinue
+                    $removedCount++
+                }
+            }
+            Write-Host 'Removed' $removedCount 'wrong file(s)' -ForegroundColor Green
+            Write-Host ''
+            
+            # STEP 4: PULL LATEST CODE
+            Write-Host '=== STEP 4: PULL LATEST CODE ===' -ForegroundColor Yellow
             git fetch origin main 2>&1 | Out-String | Write-Host
             git reset --hard origin/main 2>&1 | Out-String | Write-Host
+            Write-Host '✅ Code updated' -ForegroundColor Green
+            Write-Host ''
             
-            # CRITICAL: Copy and verify correct service file
-            Write-Host '=== DEPLOYING CORRECT API SERVICE FILE ===' -ForegroundColor Cyan
+            # STEP 5: DEPLOY CORRECT FILE
+            Write-Host '=== STEP 5: DEPLOY CORRECT API SERVICE ===' -ForegroundColor Yellow
             if (Test-Path 'vps\mt5_bridge_api_service.py') {
-                Write-Host 'Source file found in vps directory' -ForegroundColor Green
+                Write-Host '✅ Source file found in vps directory' -ForegroundColor Green
                 Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
-                Write-Host 'File copied successfully' -ForegroundColor Green
+                Write-Host '✅ File copied successfully' -ForegroundColor Green
                 
-                # Verify the file has the correct content (check for FastAPI routes)
+                # Verify the file has correct routes
                 $content = Get-Content 'mt5_bridge_api_service.py' -Raw
                 if ($content -match '/api/mt5/bridge/health') {
-                    Write-Host '✅ VERIFIED: Correct API service file deployed' -ForegroundColor Green
+                    Write-Host '✅ VERIFIED: File has correct routes (/api/mt5/bridge/health)' -ForegroundColor Green
                 } else {
-                    Write-Host '⚠️  WARNING: File may not have correct routes!' -ForegroundColor Yellow
+                    Write-Host '❌ ERROR: File missing required routes!' -ForegroundColor Red
+                    exit 1
                 }
             } else {
                 Write-Host '❌ ERROR: vps\mt5_bridge_api_service.py not found!' -ForegroundColor Red
                 exit 1
             }
             
-            # Remove any old/wrong service files
-            Write-Host 'Removing old service files...' -ForegroundColor Yellow
-            Remove-Item -Path 'main.py' -ErrorAction SilentlyContinue -Force
-            Remove-Item -Path 'main_production.py' -ErrorAction SilentlyContinue -Force
-            Remove-Item -Path 'mt5_bridge_service_production.py' -ErrorAction SilentlyContinue -Force
-            Write-Host 'Old files cleaned up' -ForegroundColor Green
-            
             # Create logs directory
             if (-not (Test-Path 'logs')) {
                 New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
             }
+            Write-Host ''
             
-            # Run MT5 auto-login first (if script exists)
+            # STEP 6: MT5 AUTO-LOGIN
+            Write-Host '=== STEP 6: MT5 AUTO-LOGIN ===' -ForegroundColor Yellow
             if (Test-Path 'auto_login_mt5.ps1') {
-                Write-Host 'Running MT5 auto-login...' -ForegroundColor Yellow
                 $env:MT5_MASTER_PASSWORD = [System.Environment]::GetEnvironmentVariable('MT5_MASTER_PASSWORD', 'Machine')
                 & '.\auto_login_mt5.ps1'
                 if ($LASTEXITCODE -eq 0) {
-                    Write-Host 'MT5 auto-login successful!' -ForegroundColor Green
+                    Write-Host '✅ MT5 auto-login successful' -ForegroundColor Green
                 } else {
-                    Write-Host 'WARNING: MT5 auto-login failed, continuing anyway...' -ForegroundColor Yellow
+                    Write-Host '⚠️  MT5 auto-login failed (continuing anyway)' -ForegroundColor Yellow
                 }
                 Start-Sleep -Seconds 5
             } else {
-                Write-Host 'Note: auto_login_mt5.ps1 not found, skipping MT5 login' -ForegroundColor Yellow
+                Write-Host '⚠️  auto_login_mt5.ps1 not found (skipping)' -ForegroundColor Yellow
             }
+            Write-Host ''
             
-            # Start CORRECT service file
-            Write-Host '=== STARTING mt5_bridge_api_service.py ===' -ForegroundColor Cyan
-            $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_emergency.log' -RedirectStandardError 'logs\error_emergency.log' -PassThru
+            # STEP 7: START CORRECT SERVICE
+            Write-Host '=== STEP 7: START CORRECT SERVICE ===' -ForegroundColor Yellow
+            Write-Host 'Starting: mt5_bridge_api_service.py' -ForegroundColor Cyan
+            $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_emergency.log' -RedirectStandardError 'logs\error_emergency.log' -PassThru -WindowStyle Hidden
             Write-Host '✅ Service started with PID:' $process.Id -ForegroundColor Green
-            
-            # Wait for startup
-            Write-Host 'Waiting 20 seconds for service startup...' -ForegroundColor Yellow
+            Write-Host 'Waiting 20 seconds for service startup...'
             Start-Sleep -Seconds 20
+            Write-Host ''
             
-            # Test service
-            Write-Host 'Testing service health...' -ForegroundColor Yellow
-            try {
-                $response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 10 -UseBasicParsing
-                Write-Host 'SUCCESS: Service is UP!' -ForegroundColor Green
-                Write-Host 'Status Code:' $response.StatusCode
-                Write-Host 'Response:' $response.Content
-            } catch {
-                Write-Host 'WARNING: Service health check failed!' -ForegroundColor Red
-                Write-Host 'Error:' $_.Exception.Message
-                Write-Host 'Last 30 lines of service log:' -ForegroundColor Yellow
-                Get-Content 'logs\service_emergency.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
-                Write-Host 'Last 30 lines of error log:' -ForegroundColor Yellow
-                Get-Content 'logs\error_emergency.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+            # STEP 8: COMPREHENSIVE VERIFICATION
+            Write-Host '=== STEP 8: VERIFY ENDPOINTS ===' -ForegroundColor Yellow
+            $allGood = `$true
+            $endpoints = @(
+                @{url='http://localhost:8000/'; name='Root'; checkService=`$true},
+                @{url='http://localhost:8000/health'; name='Legacy Health'; checkService=`$false},
+                @{url='http://localhost:8000/api/mt5/bridge/health'; name='Bridge Health (CRITICAL)'; checkService=`$false},
+                @{url='http://localhost:8000/api/mt5/account/886557/info'; name='Account Info'; checkService=`$false}
+            )
+            
+            foreach ($ep in $endpoints) {
+                try {
+                    $response = Invoke-WebRequest -Uri $ep.url -Method Get -TimeoutSec 10 -UseBasicParsing
+                    $jsonResponse = $response.Content | ConvertFrom-Json
+                    Write-Host '✅' $ep.name 'Status:' $response.StatusCode -ForegroundColor Green
+                    
+                    if ($ep.checkService) {
+                        $serviceName = $jsonResponse.service
+                        Write-Host '   Service Name:' $serviceName
+                        if ($serviceName -eq 'FIDUS MT5 Bridge API') {
+                            Write-Host '   ✅ CORRECT SERVICE RUNNING!' -ForegroundColor Green
+                        } else {
+                            Write-Host '   ❌ WRONG SERVICE! Expected: FIDUS MT5 Bridge API, Got:' $serviceName -ForegroundColor Red
+                            $allGood = `$false
+                        }
+                    }
+                } catch {
+                    Write-Host '❌' $ep.name 'FAILED!' -ForegroundColor Red
+                    Write-Host '   Error:' $_.Exception.Message
+                    $allGood = `$false
+                }
             }
+            Write-Host ''
             
-            Write-Host '===== EMERGENCY DEPLOYMENT COMPLETE =====' -ForegroundColor Green
+            # FINAL STATUS
+            Write-Host '========================================' -ForegroundColor Cyan
+            if ($allGood) {
+                Write-Host '✅✅✅ FIX SUCCESSFUL! ✅✅✅' -ForegroundColor Green
+                Write-Host 'MT5 Bridge API is running correctly' -ForegroundColor Green
+                Write-Host 'All critical endpoints verified' -ForegroundColor Green
+            } else {
+                Write-Host '❌ FIX INCOMPLETE - CHECK LOGS' -ForegroundColor Red
+                Write-Host 'Service log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\service_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+                Write-Host 'Error log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\error_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+                exit 1
+            }
+            Write-Host '========================================' -ForegroundColor Cyan
             "
       
       - name: Verify Deployment
