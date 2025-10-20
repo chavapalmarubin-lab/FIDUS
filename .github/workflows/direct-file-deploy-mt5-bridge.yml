@@ -1,0 +1,263 @@
+name: Direct File Deploy - MT5 Bridge (Bypass Git)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  direct-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Direct File Deployment via SSH (Bypass Git)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 600s
+          command_timeout: 10m
+          debug: true
+          script: |
+            powershell -Command "
+            `$ErrorActionPreference = 'Stop'
+            
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'DIRECT FILE DEPLOYMENT - BYPASS GIT' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            
+            # STEP 1: Stop all Python processes
+            Write-Host ''
+            Write-Host '[STEP 1] Stopping Python processes...' -ForegroundColor Yellow
+            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 5
+            Write-Host '✅ Done' -ForegroundColor Green
+            
+            # STEP 2: Disable auto-restart
+            Write-Host ''
+            Write-Host '[STEP 2] Disabling auto-restart mechanisms...' -ForegroundColor Yellow
+            try {
+                Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object {
+                    `$_.TaskName -like '*mt5*' -or (`$_.Actions.Execute -like '*python*')
+                } | Disable-ScheduledTask -ErrorAction SilentlyContinue
+                Write-Host '✅ Done' -ForegroundColor Green
+            } catch {
+                Write-Host '✅ No tasks to disable' -ForegroundColor Green
+            }
+            
+            # STEP 3: Prepare deployment directory
+            Write-Host ''
+            Write-Host '[STEP 3] Preparing deployment directory...' -ForegroundColor Yellow
+            `$deployDir = 'C:\fidus_mt5_bridge'
+            
+            if (-not (Test-Path `$deployDir)) {
+                New-Item -ItemType Directory -Path `$deployDir -Force | Out-Null
+                Write-Host '✅ Created:' `$deployDir -ForegroundColor Green
+            } else {
+                Write-Host '✅ Directory exists:' `$deployDir -ForegroundColor Green
+            }
+            
+            # STEP 4: Download file directly from GitHub raw URL
+            Write-Host ''
+            Write-Host '[STEP 4] Downloading file from GitHub...' -ForegroundColor Yellow
+            
+            `$rawUrl = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py'
+            `$destFile = \"`$deployDir\mt5_bridge_api_service.py\"
+            
+            Write-Host '  Source:' `$rawUrl
+            Write-Host '  Destination:' `$destFile
+            
+            try {
+                `$ProgressPreference = 'SilentlyContinue'
+                Invoke-WebRequest -Uri `$rawUrl -OutFile `$destFile -TimeoutSec 30
+                Write-Host '✅ File downloaded successfully' -ForegroundColor Green
+            } catch {
+                Write-Host '⚠️  Primary method failed, trying curl...' -ForegroundColor Yellow
+                cd `$deployDir
+                curl -L -o mt5_bridge_api_service.py `$rawUrl
+                if (`$LASTEXITCODE -ne 0) {
+                    Write-Host '❌ ERROR: Download failed!' -ForegroundColor Red
+                    Exit 1
+                }
+                Write-Host '✅ File downloaded via curl' -ForegroundColor Green
+            }
+            
+            # STEP 5: Verify file downloaded correctly
+            Write-Host ''
+            Write-Host '[STEP 5] Verifying downloaded file...' -ForegroundColor Yellow
+            
+            if (-not (Test-Path `$destFile)) {
+                Write-Host '❌ ERROR: File not found at' `$destFile -ForegroundColor Red
+                Exit 1
+            }
+            
+            `$fileSize = (Get-Item `$destFile).Length
+            Write-Host '  File size:' `$fileSize 'bytes'
+            
+            if (`$fileSize -lt 1000) {
+                Write-Host '❌ ERROR: File too small (' `$fileSize 'bytes)' -ForegroundColor Red
+                Write-Host '  File content:'
+                Get-Content `$destFile -ErrorAction SilentlyContinue
+                Exit 1
+            }
+            Write-Host '  ✅ File size OK' -ForegroundColor Green
+            
+            # Verify content has required routes
+            `$content = Get-Content `$destFile -Raw
+            
+            if (`$content -notmatch '/api/mt5/bridge/health') {
+                Write-Host '❌ ERROR: File missing /api/mt5/bridge/health route' -ForegroundColor Red
+                Exit 1
+            }
+            Write-Host '  ✅ Route /api/mt5/bridge/health found' -ForegroundColor Green
+            
+            if (`$content -notmatch 'FIDUS MT5 Bridge API') {
+                Write-Host '❌ ERROR: File has wrong service name' -ForegroundColor Red
+                Exit 1
+            }
+            Write-Host '  ✅ Service name verified: FIDUS MT5 Bridge API' -ForegroundColor Green
+            
+            Write-Host '✅ File fully verified' -ForegroundColor Green
+            
+            # STEP 6: Remove wrong files
+            Write-Host ''
+            Write-Host '[STEP 6] Removing wrong service files...' -ForegroundColor Yellow
+            `$wrongFiles = @(
+                \"`$deployDir\main.py\",
+                \"`$deployDir\main_production.py\",
+                \"`$deployDir\mt5_bridge_service_production.py\",
+                'C:\mt5_bridge_service\main.py',
+                'C:\mt5_bridge_service\main_production.py'
+            )
+            
+            `$removedCount = 0
+            foreach (`$file in `$wrongFiles) {
+                if (Test-Path `$file) {
+                    Remove-Item `$file -Force -ErrorAction SilentlyContinue
+                    Write-Host '  Removed:' `$file
+                    `$removedCount++
+                }
+            }
+            Write-Host '✅ Removed' `$removedCount 'wrong file(s)' -ForegroundColor Green
+            
+            # STEP 7: Create logs directory and prepare .env
+            Write-Host ''
+            Write-Host '[STEP 7] Preparing environment...' -ForegroundColor Yellow
+            
+            if (-not (Test-Path \"`$deployDir\logs\")) {
+                New-Item -ItemType Directory -Path \"`$deployDir\logs\" -Force | Out-Null
+            }
+            
+            # Copy .env if it exists in old location
+            if ((Test-Path 'C:\mt5_bridge_service\.env') -and -not (Test-Path \"`$deployDir\.env\")) {
+                Write-Host '  Copying .env from C:\mt5_bridge_service'
+                Copy-Item -Path 'C:\mt5_bridge_service\.env' -Destination \"`$deployDir\.env\" -Force
+            }
+            Write-Host '✅ Environment ready' -ForegroundColor Green
+            
+            # STEP 8: Start service
+            Write-Host ''
+            Write-Host '[STEP 8] Starting MT5 Bridge API service...' -ForegroundColor Yellow
+            
+            Set-Location `$deployDir
+            Write-Host '  Working directory:' (Get-Location)
+            
+            try {
+                `$process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\direct_deploy.log' -RedirectStandardError 'logs\direct_deploy_error.log' -PassThru -WindowStyle Hidden
+                Write-Host '  ✅ Service started with PID:' `$process.Id -ForegroundColor Green
+                Write-Host '  Waiting 20 seconds for startup...'
+                Start-Sleep -Seconds 20
+                Write-Host '✅ Startup complete' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: Failed to start service!' -ForegroundColor Red
+                Write-Host `$_.Exception.Message
+                Exit 1
+            }
+            
+            # STEP 9: Comprehensive endpoint verification
+            Write-Host ''
+            Write-Host '[STEP 9] Verifying all endpoints...' -ForegroundColor Yellow
+            
+            `$tests = @(
+                @{ Name='Root'; URL='http://localhost:8000/'; CheckService=`$true; Expected='FIDUS MT5 Bridge API' },
+                @{ Name='Health (Legacy)'; URL='http://localhost:8000/health'; CheckService=`$false; Expected=`$null },
+                @{ Name='MT5 Bridge Health (CRITICAL)'; URL='http://localhost:8000/api/mt5/bridge/health'; CheckService=`$false; Expected=`$null },
+                @{ Name='Account Info'; URL='http://localhost:8000/api/mt5/account/886557/info'; CheckService=`$false; Expected=`$null }
+            )
+            
+            `$allSuccess = `$true
+            `$successCount = 0
+            
+            foreach (`$test in `$tests) {
+                Write-Host ''
+                Write-Host '  Testing:' `$test.Name -ForegroundColor Cyan
+                Write-Host '  URL:' `$test.URL
+                
+                try {
+                    `$response = Invoke-RestMethod -Uri `$test.URL -TimeoutSec 15
+                    Write-Host '  ✅ SUCCESS' -ForegroundColor Green
+                    `$successCount++
+                    
+                    if (`$test.CheckService) {
+                        `$actualService = `$response.service
+                        Write-Host '     Service name:' `$actualService
+                        
+                        if (`$actualService -eq `$test.Expected) {
+                            Write-Host '     ✅ CORRECT SERVICE!' -ForegroundColor Green
+                        } else {
+                            Write-Host '     ❌ WRONG SERVICE! Expected:' `$test.Expected ', Got:' `$actualService -ForegroundColor Red
+                            `$allSuccess = `$false
+                        }
+                    }
+                } catch {
+                    Write-Host '  ❌ FAILED!' -ForegroundColor Red
+                    Write-Host '     Error:' `$_.Exception.Message
+                    `$allSuccess = `$false
+                }
+            }
+            
+            # STEP 10: External access test
+            Write-Host ''
+            Write-Host '[STEP 10] Testing external access...' -ForegroundColor Yellow
+            try {
+                `$extResponse = Invoke-RestMethod -Uri 'http://217.197.163.11:8000/api/mt5/bridge/health' -TimeoutSec 10
+                Write-Host '✅ External access confirmed' -ForegroundColor Green
+            } catch {
+                Write-Host '⚠️  External access test: ' `$_.Exception.Message -ForegroundColor Yellow
+            }
+            
+            # FINAL RESULT
+            Write-Host ''
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host 'Results:' `$successCount 'of' `$tests.Count 'endpoints verified' -ForegroundColor Yellow
+            Write-Host ''
+            
+            if (`$allSuccess) {
+                Write-Host '✅✅✅ DIRECT DEPLOYMENT SUCCESSFUL! ✅✅✅' -ForegroundColor Green
+                Write-Host '✅ File downloaded directly from GitHub' -ForegroundColor Green
+                Write-Host '✅ Correct service deployed (FIDUS MT5 Bridge API)' -ForegroundColor Green
+                Write-Host '✅ All critical endpoints verified' -ForegroundColor Green
+                Write-Host '✅ Service running at: C:\fidus_mt5_bridge' -ForegroundColor Green
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Exit 0
+            } else {
+                Write-Host '❌ DEPLOYMENT COMPLETED BUT VERIFICATION FAILED' -ForegroundColor Red
+                Write-Host ''
+                Write-Host 'Service log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\direct_deploy.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host `$_ }
+                Write-Host ''
+                Write-Host 'Error log (last 50 lines):' -ForegroundColor Yellow
+                Get-Content 'logs\direct_deploy_error.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host `$_ }
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Exit 1
+            }
+            "
+      
+      - name: Final Status
+        run: |
+          echo "✅ Direct file deployment workflow completed"
+          echo "🔗 Test endpoints:"
+          echo "   http://217.197.163.11:8000/"
+          echo "   http://217.197.163.11:8000/api/mt5/bridge/health"
+          echo "   http://217.197.163.11:8000/api/mt5/account/886557/info"
