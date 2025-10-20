@@ -1,0 +1,101 @@
+name: Emergency Deploy MT5 Bridge (PowerShell)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  emergency-deploy-ps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Emergency Deploy to VPS via PowerShell
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          command_timeout: 10m
+          script_stop: false
+          debug: true
+          script: |
+            powershell -Command "
+            Write-Host '===== EMERGENCY DEPLOYMENT STARTING =====' -ForegroundColor Green
+            
+            # Navigate to service directory
+            Set-Location C:\mt5_bridge_service
+            Write-Host 'Working directory:' (Get-Location) -ForegroundColor Yellow
+            
+            # Kill Python processes
+            Write-Host 'Killing Python processes...' -ForegroundColor Yellow
+            Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 5
+            
+            # Free port 8000
+            Write-Host 'Freeing port 8000...' -ForegroundColor Yellow
+            $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+            if ($connections) {
+                $connections | ForEach-Object {
+                    Write-Host 'Killing process on port 8000: PID' $_.OwningProcess
+                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
+                }
+                Start-Sleep -Seconds 5
+            } else {
+                Write-Host 'Port 8000 is already free' -ForegroundColor Green
+            }
+            
+            # Pull latest code
+            Write-Host 'Pulling latest code...' -ForegroundColor Yellow
+            git fetch origin main 2>&1 | Out-String | Write-Host
+            git reset --hard origin/main 2>&1 | Out-String | Write-Host
+            
+            # Copy service file from vps directory if it exists
+            if (Test-Path 'vps\mt5_bridge_api_service.py') {
+                Write-Host 'Copying service file from vps directory...' -ForegroundColor Yellow
+                Copy-Item -Path 'vps\mt5_bridge_api_service.py' -Destination 'mt5_bridge_api_service.py' -Force
+            }
+            
+            # Create logs directory
+            if (-not (Test-Path 'logs')) {
+                New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
+            }
+            
+            # Start service
+            Write-Host 'Starting MT5 Bridge service...' -ForegroundColor Yellow
+            $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_emergency.log' -RedirectStandardError 'logs\error_emergency.log' -PassThru
+            Write-Host 'Service started with PID:' $process.Id -ForegroundColor Green
+            
+            # Wait for startup
+            Write-Host 'Waiting 20 seconds for service startup...' -ForegroundColor Yellow
+            Start-Sleep -Seconds 20
+            
+            # Test service
+            Write-Host 'Testing service health...' -ForegroundColor Yellow
+            try {
+                $response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 10 -UseBasicParsing
+                Write-Host 'SUCCESS: Service is UP!' -ForegroundColor Green
+                Write-Host 'Status Code:' $response.StatusCode
+                Write-Host 'Response:' $response.Content
+            } catch {
+                Write-Host 'WARNING: Service health check failed!' -ForegroundColor Red
+                Write-Host 'Error:' $_.Exception.Message
+                Write-Host 'Last 30 lines of service log:' -ForegroundColor Yellow
+                Get-Content 'logs\service_emergency.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+                Write-Host 'Last 30 lines of error log:' -ForegroundColor Yellow
+                Get-Content 'logs\error_emergency.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+            }
+            
+            Write-Host '===== EMERGENCY DEPLOYMENT COMPLETE =====' -ForegroundColor Green
+            "
+      
+      - name: Verify Deployment
+        run: |
+          echo "✅ Emergency deployment workflow completed"
+          echo "📊 Check deployment logs above for service status"
+          echo "🔗 Service URL: http://217.197.163.11:8000"
+          echo "🧪 Test command: curl http://217.197.163.11:8000/api/mt5/bridge/health"
