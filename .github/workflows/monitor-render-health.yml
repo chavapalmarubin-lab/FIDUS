@@ -1,0 +1,81 @@
+name: Monitor Render Backend Health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+
+jobs:
+  check-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Check Render Service Health
+        id: check_backend
+        continue-on-error: true
+        run: |
+          echo "=== Checking Render Backend Health ==="
+          response=$(curl -s https://fidus-api.onrender.com/api/health)
+          echo "Response: $response"
+          
+          status=$(echo $response | jq -r '.status' 2>/dev/null || echo "unknown")
+          echo "Backend Status: $status"
+          
+          if [ "$status" != "healthy" ]; then
+            echo "[FAIL] Backend unhealthy"
+            exit 1
+          fi
+          
+          echo "[PASS] Backend healthy"
+      
+      - name: Check MT5 Bridge via Backend
+        id: check_bridge
+        continue-on-error: true
+        run: |
+          echo "=== Checking MT5 Bridge Status ==="
+          response=$(curl -s https://fidus-api.onrender.com/api/system/status)
+          echo "System Status Response received"
+          
+          bridge_status=$(echo $response | jq -r '.components.mt5_bridge.status' 2>/dev/null || echo "unknown")
+          echo "MT5 Bridge Status: $bridge_status"
+          
+          if [ "$bridge_status" == "unhealthy" ]; then
+            echo "[WARNING] MT5 Bridge unhealthy - auto-healing should trigger"
+          elif [ "$bridge_status" == "healthy" ]; then
+            echo "[PASS] MT5 Bridge healthy"
+          else
+            echo "[INFO] MT5 Bridge status: $bridge_status"
+          fi
+      
+      - name: Check Watchdog Status
+        id: check_watchdog
+        continue-on-error: true
+        run: |
+          echo "=== Checking Watchdog Status ==="
+          response=$(curl -s https://fidus-api.onrender.com/api/system/components)
+          echo "Components Response received"
+          
+          watchdog_status=$(echo $response | jq -r '.[] | select(.name=="MT5 Watchdog") | .status' 2>/dev/null || echo "unknown")
+          echo "Watchdog Status: $watchdog_status"
+          
+          if [ "$watchdog_status" == "healthy" ]; then
+            echo "[PASS] Watchdog is running"
+          else
+            echo "[WARNING] Watchdog status: $watchdog_status"
+          fi
+      
+      - name: Generate Monitoring Report
+        if: always()
+        run: |
+          echo "# Render Backend Health Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Check Time:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ steps.check_backend.outcome == 'success' && 'HEALTHY' || 'UNHEALTHY' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MT5 Bridge | ${{ steps.check_bridge.outcome == 'success' && 'HEALTHY' || 'CHECK LOGS' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Watchdog | ${{ steps.check_watchdog.outcome == 'success' && 'RUNNING' || 'CHECK LOGS' }} |" >> $GITHUB_STEP_SUMMARY
