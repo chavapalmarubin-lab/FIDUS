@@ -11,19 +11,23 @@ on:
 jobs:
   emergency-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       
       - name: Emergency Deploy to VPS
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          timeout: 180s
-          command_timeout: 30m
+          timeout: 300s
+          command_timeout: 10m
+          script_stop: false
+          debug: true
           script: |
             echo "===== EMERGENCY DEPLOYMENT STARTING ====="
             
