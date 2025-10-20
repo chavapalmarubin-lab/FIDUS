@@ -231,7 +231,7 @@ class MT5Watchdog:
     async def _trigger_github_workflow(self) -> bool:
         """Trigger GitHub Actions workflow to restart MT5 Bridge"""
         try:
-            url = f"https://api.github.com/repos/{self.github_repo}/actions/workflows/deploy-mt5-bridge-emergency.yml/dispatches"
+            url = f"https://api.github.com/repos/{self.github_repo}/actions/workflows/deploy-mt5-bridge-emergency-ps.yml/dispatches"  # Use PowerShell version for better Windows compatibility
             
             headers = {
                 'Authorization': f'Bearer {self.github_token}',
