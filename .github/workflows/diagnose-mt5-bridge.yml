@@ -1,0 +1,188 @@
+name: Diagnose MT5 Bridge API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Deep Diagnostic of MT5 Bridge Service
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          debug: true
+          script: |
+            powershell -Command "
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'MT5 BRIDGE API - DEEP DIAGNOSTIC' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # 1. DIRECTORY STRUCTURE
+            Write-Host '=== 1. DIRECTORY STRUCTURE ===' -ForegroundColor Yellow
+            Set-Location C:\mt5_bridge_service
+            Write-Host 'Current directory:' (Get-Location)
+            Write-Host ''
+            Write-Host 'All Python files:' -ForegroundColor Green
+            Get-ChildItem -Filter *.py | ForEach-Object { Write-Host '  -' $_.Name '(' $_.Length 'bytes, Modified:' $_.LastWriteTime ')' }
+            Write-Host ''
+            
+            # 2. RUNNING PROCESSES
+            Write-Host '=== 2. RUNNING PROCESSES ===' -ForegroundColor Yellow
+            Write-Host 'All Python processes:' -ForegroundColor Green
+            Get-Process -Name python -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host '  PID:' $_.Id '| Name:' $_.ProcessName '| Memory:' ([math]::Round($_.WorkingSet64/1MB, 2)) 'MB'
+            }
+            Write-Host ''
+            
+            # 3. PORT 8000 STATUS
+            Write-Host '=== 3. PORT 8000 STATUS ===' -ForegroundColor Yellow
+            Write-Host 'Process listening on port 8000:' -ForegroundColor Green
+            $portCheck = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+            if ($portCheck) {
+                $portCheck | ForEach-Object {
+                    $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue
+                    Write-Host '  PID:' $_.OwningProcess
+                    if ($proc) {
+                        Write-Host '  Process Name:' $proc.Name
+                        Write-Host '  Process Path:' $proc.Path
+                    }
+                }
+            } else {
+                Write-Host '  ⚠️  NO PROCESS LISTENING ON PORT 8000!' -ForegroundColor Red
+            }
+            Write-Host ''
+            
+            # 4. CHECK WHICH FILE IS RUNNING
+            Write-Host '=== 4. IDENTIFYING RUNNING SCRIPT ===' -ForegroundColor Yellow
+            $pythonProcs = Get-Process -Name python -ErrorAction SilentlyContinue
+            if ($pythonProcs) {
+                Write-Host 'Command lines of running Python processes:' -ForegroundColor Green
+                Get-WmiObject Win32_Process -Filter \"name = 'python.exe'\" | ForEach-Object {
+                    Write-Host '  PID:' $_.ProcessId
+                    Write-Host '  Command:' $_.CommandLine
+                    Write-Host ''
+                }
+            } else {
+                Write-Host '  ⚠️  NO PYTHON PROCESSES RUNNING!' -ForegroundColor Red
+            }
+            Write-Host ''
+            
+            # 5. CHECK FILE CONTENTS (First 50 lines of each Python file)
+            Write-Host '=== 5. PYTHON FILES CONTENT PREVIEW ===' -ForegroundColor Yellow
+            Get-ChildItem -Filter *.py | ForEach-Object {
+                Write-Host ''
+                Write-Host '--- File:' $_.Name '---' -ForegroundColor Cyan
+                Write-Host 'First 50 lines:' -ForegroundColor Green
+                Get-Content $_.FullName -Head 50 | ForEach-Object { Write-Host $_ }
+                Write-Host ''
+            }
+            
+            # 6. CHECK LOGS
+            Write-Host '=== 6. RECENT LOGS ===' -ForegroundColor Yellow
+            if (Test-Path 'logs') {
+                Write-Host 'Log files available:' -ForegroundColor Green
+                Get-ChildItem logs -Filter *.log | ForEach-Object { Write-Host '  -' $_.Name }
+                Write-Host ''
+                Write-Host 'Last 50 lines of service_emergency.log:' -ForegroundColor Green
+                if (Test-Path 'logs\service_emergency.log') {
+                    Get-Content 'logs\service_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+                } else {
+                    Write-Host '  File not found'
+                }
+                Write-Host ''
+                Write-Host 'Last 50 lines of error_emergency.log:' -ForegroundColor Green
+                if (Test-Path 'logs\error_emergency.log') {
+                    Get-Content 'logs\error_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+                } else {
+                    Write-Host '  File not found'
+                }
+            } else {
+                Write-Host '  ⚠️  No logs directory found!' -ForegroundColor Red
+            }
+            Write-Host ''
+            
+            # 7. TEST ALL ENDPOINTS
+            Write-Host '=== 7. ENDPOINT TESTING ===' -ForegroundColor Yellow
+            
+            $endpoints = @(
+                'http://localhost:8000/',
+                'http://localhost:8000/api/mt5/bridge/health',
+                'http://localhost:8000/api/mt5/status',
+                'http://localhost:8000/api/mt5/account/886557/info',
+                'http://localhost:8000/api/mt5/accounts/summary'
+            )
+            
+            foreach ($endpoint in $endpoints) {
+                Write-Host ''
+                Write-Host 'Testing:' $endpoint -ForegroundColor Cyan
+                try {
+                    $response = Invoke-WebRequest -Uri $endpoint -Method Get -TimeoutSec 5 -UseBasicParsing
+                    Write-Host '  ✅ Status Code:' $response.StatusCode -ForegroundColor Green
+                    Write-Host '  Response Length:' $response.Content.Length 'bytes'
+                    Write-Host '  Response Preview:' ($response.Content.Substring(0, [Math]::Min(200, $response.Content.Length)))
+                } catch {
+                    Write-Host '  ❌ FAILED!' -ForegroundColor Red
+                    Write-Host '  Error:' $_.Exception.Message
+                    if ($_.Exception.Response) {
+                        Write-Host '  Status Code:' $_.Exception.Response.StatusCode.Value__
+                    }
+                }
+            }
+            Write-Host ''
+            
+            # 8. EXTERNAL ACCESS TEST
+            Write-Host '=== 8. EXTERNAL ACCESS TEST ===' -ForegroundColor Yellow
+            Write-Host 'Testing external access (from VPS itself):' -ForegroundColor Green
+            try {
+                $extResponse = Invoke-WebRequest -Uri 'http://217.197.163.11:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 5 -UseBasicParsing
+                Write-Host '  ✅ External access works! Status:' $extResponse.StatusCode -ForegroundColor Green
+            } catch {
+                Write-Host '  ❌ External access FAILED!' -ForegroundColor Red
+                Write-Host '  Error:' $_.Exception.Message
+            }
+            Write-Host ''
+            
+            # 9. GIT STATUS
+            Write-Host '=== 9. GIT STATUS ===' -ForegroundColor Yellow
+            Write-Host 'Git repository status:' -ForegroundColor Green
+            git status 2>&1 | Out-String | Write-Host
+            Write-Host 'Latest commit:' -ForegroundColor Green
+            git log -1 --oneline 2>&1 | Out-String | Write-Host
+            Write-Host ''
+            
+            # 10. ENVIRONMENT CHECK
+            Write-Host '=== 10. ENVIRONMENT CHECK ===' -ForegroundColor Yellow
+            Write-Host '.env file exists:' (Test-Path '.env')
+            if (Test-Path '.env') {
+                Write-Host '.env file size:' (Get-Item '.env').Length 'bytes'
+                Write-Host '.env file content (showing non-sensitive lines):' -ForegroundColor Green
+                Get-Content '.env' | Where-Object { $_ -notmatch 'PASSWORD|SECRET|KEY|TOKEN' } | ForEach-Object { Write-Host '  ' $_ }
+            }
+            Write-Host ''
+            
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'DIAGNOSTIC COMPLETE' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            "
+      
+      - name: Summary
+        run: |
+          echo "✅ Deep diagnostic completed"
+          echo "📋 Review the output above to identify:"
+          echo "   1. Which Python file is actually running"
+          echo "   2. Whether port 8000 is being served"
+          echo "   3. What endpoints are responding"
+          echo "   4. What error messages appear in logs"
+          echo ""
+          echo "🎯 Next Steps:"
+          echo "   - If wrong file is running → Deploy correct file"
+          echo "   - If no process on port 8000 → Check startup errors in logs"
+          echo "   - If 404 errors → Check route definitions in running file"
