@@ -65,6 +65,21 @@ jobs:
                 New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
             }
             
+            # Run MT5 auto-login first (if script exists)
+            if (Test-Path 'auto_login_mt5.ps1') {
+                Write-Host 'Running MT5 auto-login...' -ForegroundColor Yellow
+                $env:MT5_MASTER_PASSWORD = [System.Environment]::GetEnvironmentVariable('MT5_MASTER_PASSWORD', 'Machine')
+                & '.\auto_login_mt5.ps1'
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host 'MT5 auto-login successful!' -ForegroundColor Green
+                } else {
+                    Write-Host 'WARNING: MT5 auto-login failed, continuing anyway...' -ForegroundColor Yellow
+                }
+                Start-Sleep -Seconds 5
+            } else {
+                Write-Host 'Note: auto_login_mt5.ps1 not found, skipping MT5 login' -ForegroundColor Yellow
+            }
+            
             # Start service
             Write-Host 'Starting MT5 Bridge service...' -ForegroundColor Yellow
             $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_emergency.log' -RedirectStandardError 'logs\error_emergency.log' -PassThru
