@@ -101,9 +101,26 @@ jobs:
             
             # STEP 4: PULL LATEST CODE
             Write-Host '=== STEP 4: PULL LATEST CODE ===' -ForegroundColor Yellow
-            git fetch origin main 2>&1 | Out-String | Write-Host
-            git reset --hard origin/main 2>&1 | Out-String | Write-Host
-            Write-Host '✅ Code updated' -ForegroundColor Green
+            try {
+                git fetch origin main
+                if (`$LASTEXITCODE -ne 0) { throw 'Git fetch failed' }
+                git reset --hard origin/main
+                if (`$LASTEXITCODE -ne 0) { throw 'Git reset failed' }
+                Write-Host '✅ Code updated successfully' -ForegroundColor Green
+            } catch {
+                Write-Host '❌ ERROR: Git operations failed:' $_.Exception.Message -ForegroundColor Red
+                Exit 1
+            }
+            
+            # CRITICAL: Verify repository structure
+            Write-Host 'Verifying repository structure...'
+            if (-not (Test-Path 'vps')) {
+                Write-Host '❌ ERROR: vps directory not found in repository!' -ForegroundColor Red
+                Write-Host 'Available directories:' -ForegroundColor Yellow
+                Get-ChildItem -Directory | ForEach-Object { Write-Host '  -' $_.Name }
+                Exit 1
+            }
+            Write-Host '✅ vps directory found' -ForegroundColor Green
             Write-Host ''
             
             # STEP 5: DEPLOY CORRECT FILE
