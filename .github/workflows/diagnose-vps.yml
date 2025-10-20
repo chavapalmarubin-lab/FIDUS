@@ -1,4 +1,4 @@
-name: Direct File Deploy (No Git)
+name: FINAL FIX - Complete MT5 Bridge
 
 on:
   workflow_dispatch:
