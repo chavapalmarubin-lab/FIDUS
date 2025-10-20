@@ -25539,6 +25539,14 @@ async def get_all_mt5_accounts_endpoint(current_user: dict = Depends(get_current
 # ===============================================================================
 # INCLUDE ROUTER - MUST BE LAST!
 # ===============================================================================
+# Import and include system test router
+try:
+    from routes.system_test import router as system_test_router
+    app.include_router(system_test_router, tags=["System Testing"])
+    logging.info("✅ System Test router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include System Test router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
