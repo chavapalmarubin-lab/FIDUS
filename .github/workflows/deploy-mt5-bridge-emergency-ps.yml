@@ -25,6 +25,7 @@ jobs:
           debug: true
           script: |
             powershell -Command "
+            `$ErrorActionPreference = 'Stop'
             Write-Host '========================================' -ForegroundColor Cyan
             Write-Host 'COMPREHENSIVE MT5 BRIDGE FIX - STARTING' -ForegroundColor Cyan
             Write-Host '========================================' -ForegroundColor Cyan
@@ -32,7 +33,11 @@ jobs:
             
             # Navigate to service directory
             Set-Location C:\mt5_bridge_service
-            Write-Host 'Working directory:' (Get-Location) -ForegroundColor Yellow
+            if (`$LASTEXITCODE -ne 0) {
+                Write-Host '❌ ERROR: Failed to navigate to C:\mt5_bridge_service' -ForegroundColor Red
+                Exit 1
+            }
+            Write-Host '✅ Working directory:' (Get-Location) -ForegroundColor Yellow
             Write-Host ''
             
             # STEP 1: DISABLE AUTO-RESTART MECHANISMS
