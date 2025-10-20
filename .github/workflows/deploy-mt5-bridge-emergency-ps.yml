@@ -225,15 +225,17 @@ jobs:
                 Write-Host '✅✅✅ FIX SUCCESSFUL! ✅✅✅' -ForegroundColor Green
                 Write-Host 'MT5 Bridge API is running correctly' -ForegroundColor Green
                 Write-Host 'All critical endpoints verified' -ForegroundColor Green
+                Write-Host '========================================' -ForegroundColor Cyan
+                Exit 0
             } else {
                 Write-Host '❌ FIX INCOMPLETE - CHECK LOGS' -ForegroundColor Red
                 Write-Host 'Service log (last 50 lines):' -ForegroundColor Yellow
                 Get-Content 'logs\service_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
                 Write-Host 'Error log (last 50 lines):' -ForegroundColor Yellow
                 Get-Content 'logs\error_emergency.log' -Tail 50 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
-                exit 1
+                Write-Host '========================================' -ForegroundColor Cyan
+                Exit 1
             }
-            Write-Host '========================================' -ForegroundColor Cyan
             "
       
       - name: Verify Deployment
