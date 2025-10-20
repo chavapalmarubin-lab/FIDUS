@@ -1,7 +1,12 @@
 name: Emergency Deploy MT5 Bridge
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual trigger'
+        required: false
+        default: 'Manual deployment'
   push:
     branches: [main]
     paths:
