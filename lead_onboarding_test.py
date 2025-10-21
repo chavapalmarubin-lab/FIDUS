@@ -28,7 +28,7 @@ import uuid
 import os
 
 # Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://trading-analytics-10.preview.emergentagent.com') + '/api'
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://broker-connect-35.preview.emergentagent.com') + '/api'
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

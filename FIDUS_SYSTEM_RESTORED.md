@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://trading-analytics-10.preview.emergentagent.com`
+`https://broker-connect-35.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

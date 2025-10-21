@@ -23,7 +23,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://trading-analytics-10.preview.emergentagent.com/api"
+PREVIEW_URL = "https://broker-connect-35.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
