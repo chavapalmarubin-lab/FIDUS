@@ -3,7 +3,7 @@ MT5 Bridge Adapter - Uses Existing MT5 Bridge Service
 CRITICAL FIX: Adapts enhanced sync to use the MT5 Bridge on VPS
 
 This adapter:
-1. Calls MT5 Bridge API on VPS (217.197.163.11:8000)
+1. Calls MT5 Bridge API on VPS (92.118.45.135:8000)
 2. Gets MT5 account data and deal history
 3. Classifies transfers using our logic
 4. Calculates true P&L
