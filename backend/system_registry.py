@@ -189,7 +189,7 @@ SYSTEM_COMPONENTS = {
             'type': 'service',
             'category': 'Services Layer',
             'status': 'online',
-            'url': 'http://217.197.163.11:8000',
+            'url': 'http://92.118.45.135:8000',
             'platform': 'Python Script (Windows Task Scheduler)',
             'description': 'Syncs MT5 account data to MongoDB every 15 minutes',
             'tech_stack': ['Python 3.12', 'MetaTrader5 Library', 'pymongo', 'Task Scheduler'],
