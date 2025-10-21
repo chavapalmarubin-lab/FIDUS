@@ -18,7 +18,7 @@ class MT5MonitoringDashboard:
     
     def __init__(self):
         self.fidus_api = "https://fidus-api.onrender.com"
-        self.mt5_bridge = "http://217.197.163.11:8000"
+        self.mt5_bridge = "http://92.118.45.135:8000"
         self.check_interval = 300  # 5 minutes
         self.alert_thresholds = {
             'sync_failure_minutes': 15,  # Alert if no sync in 15 minutes
