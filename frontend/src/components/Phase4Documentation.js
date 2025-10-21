@@ -428,7 +428,7 @@ function VPSDeploymentTab() {
           </div>
           <div className="flex items-center">
             <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-            <span className="font-mono text-sm">VPS_HOST (217.197.163.11)</span>
+            <span className="font-mono text-sm">VPS_HOST (92.118.45.135)</span>
           </div>
           <div className="flex items-center">
             <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
