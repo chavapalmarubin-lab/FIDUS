@@ -133,7 +133,7 @@ class MT5MonitoringDashboard:
                 'status': 'critical',
                 'terminal_running': False,
                 'error': 'MetaTrader 5 terminal not running or not connected',
-                'recommendation': 'Start MT5 terminal on Windows VPS (217.197.163.11)',
+                'recommendation': 'Start MT5 terminal on Windows VPS (92.118.45.135)',
                 'last_check': datetime.now(timezone.utc).isoformat()
             }
     
@@ -207,7 +207,7 @@ class MT5MonitoringDashboard:
         # MT5 Terminal recommendations
         if health_report['components']['mt5_terminal']['status'] == 'critical':
             recommendations.append(
-                "CRITICAL: Start MetaTrader 5 terminal on Windows VPS (217.197.163.11)"
+                "CRITICAL: Start MetaTrader 5 terminal on Windows VPS (92.118.45.135)"
             )
         
         # Data freshness recommendations
@@ -255,7 +255,7 @@ Last Check: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 ❌ Real-time data unavailable
 
 🎯 CRITICAL ACTIONS REQUIRED:
-1. Start MetaTrader 5 terminal on Windows VPS (217.197.163.11)
+1. Start MetaTrader 5 terminal on Windows VPS (92.118.45.135)
 2. Verify MT5 accounts are logged in and connected
 3. Test MT5 Bridge connection after terminal startup
 4. Force sync all 5 accounts to refresh data
