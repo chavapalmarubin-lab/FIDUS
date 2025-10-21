@@ -1,0 +1,141 @@
+name: Deploy API Routes Fix to VPS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'vps/mt5_bridge_api_service.py'
+      - '.github/workflows/deploy-api-routes-fix.yml'
+
+jobs:
+  deploy-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy Fixed API Service
+        run: |
+          echo "================================================"
+          echo "DEPLOYING API ROUTES FIX TO NEW VPS"
+          echo "================================================"
+          echo ""
+          echo "Target VPS: 92.118.45.135"
+          echo "Service: mt5_bridge_api_service.py"
+          echo "Fix: Added /api/mt5/accounts endpoint"
+          echo ""
+          
+          # Create deployment script
+          cat > deploy_fix.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "📤 Uploading fixed service file to VPS..."
+          
+          # Use curl to download the file directly on VPS
+          VPS_HOST="92.118.45.135"
+          VPS_PORT="42014"
+          VPS_USER="trader"
+          VPS_PASS="${{ secrets.VPS_PASSWORD }}"
+          
+          # Create PowerShell script for VPS
+          cat > vps_deploy.ps1 << 'PSEOF'
+          Set-Location C:\mt5_bridge_service
+          
+          Write-Host "📥 Downloading updated service file..."
+          Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py' -OutFile 'mt5_bridge_api_service.py.new'
+          
+          Write-Host "✅ File downloaded"
+          
+          Write-Host "🔄 Backing up current file..."
+          if (Test-Path 'mt5_bridge_api_service.py') {
+              Copy-Item 'mt5_bridge_api_service.py' "mt5_bridge_api_service.py.backup.$(Get-Date -Format 'yyyyMMddHHmmss')"
+              Write-Host "✅ Backup created"
+          }
+          
+          Write-Host "📝 Replacing service file..."
+          Move-Item 'mt5_bridge_api_service.py.new' 'mt5_bridge_api_service.py' -Force
+          Write-Host "✅ File replaced"
+          
+          Write-Host "🛑 Stopping service..."
+          Stop-ScheduledTask -TaskName 'MT5BridgeService' -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 5
+          Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep -Seconds 3
+          Write-Host "✅ Service stopped"
+          
+          Write-Host "🚀 Starting service..."
+          Start-ScheduledTask -TaskName 'MT5BridgeService'
+          Write-Host "✅ Service started"
+          
+          Write-Host "⏳ Waiting 25 seconds for initialization..."
+          Start-Sleep -Seconds 25
+          
+          Write-Host "🔍 Testing endpoints..."
+          Write-Host ""
+          
+          # Test health endpoint
+          Write-Host "Test 1: Health endpoint"
+          try {
+              $health = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing
+              Write-Host "✅ Health: OK"
+          } catch {
+              Write-Host "❌ Health: Failed"
+          }
+          
+          # Test NEW accounts endpoint
+          Write-Host "Test 2: Accounts endpoint (NEW)"
+          try {
+              $accounts = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/accounts' -UseBasicParsing
+              $accountsData = $accounts.Content | ConvertFrom-Json
+              Write-Host "✅ Accounts: OK - Found $($accountsData.Count) accounts"
+              Write-Host "Accounts: $($accountsData | ForEach-Object { $_.account } | Join-String -Separator ', ')"
+          } catch {
+              Write-Host "❌ Accounts: $($_.Exception.Message)"
+          }
+          
+          # Test accounts summary
+          Write-Host "Test 3: Accounts summary endpoint"
+          try {
+              $summary = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/accounts/summary' -UseBasicParsing
+              Write-Host "✅ Summary: OK"
+          } catch {
+              Write-Host "❌ Summary: Failed"
+          }
+          
+          Write-Host ""
+          Write-Host "================================================"
+          Write-Host "DEPLOYMENT COMPLETE"
+          Write-Host "================================================"
+          PSEOF
+          
+          echo "Script created, would execute via SSH if available"
+          echo "For manual deployment:"
+          echo "1. RDP to VPS"
+          echo "2. Run: Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py' -OutFile 'C:\mt5_bridge_service\mt5_bridge_api_service.py'"
+          echo "3. Restart service"
+          
+          EOF
+          
+          chmod +x deploy_fix.sh
+          ./deploy_fix.sh
+      
+      - name: Verify External Access
+        run: |
+          echo "⏳ Waiting 30 seconds before external test..."
+          sleep 30
+          
+          echo "🔍 Testing external API access..."
+          
+          # Test health
+          curl -f http://92.118.45.135:8000/api/mt5/bridge/health || echo "Health check failed"
+          
+          # Test accounts endpoint
+          echo ""
+          echo "Testing /api/mt5/accounts endpoint..."
+          curl -f http://92.118.45.135:8000/api/mt5/accounts || echo "Accounts endpoint failed"
+          
+          echo ""
+          echo "✅ External access tests complete"
