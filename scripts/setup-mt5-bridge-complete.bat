@@ -28,7 +28,7 @@ echo.
 REM Step 3: Create .env file with CORRECT cluster name
 echo [3/8] Creating .env file with correct MongoDB credentials...
 (
-echo MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true^&w=majority^&appName=FIDUS
+echo MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%%21@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true^&w=majority^&appName=FIDUS
 echo MONGODB_DATABASE=fidus_production
 echo MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 echo MT5_SERVER=MEXAtlantic-Real
