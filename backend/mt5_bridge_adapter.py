@@ -30,7 +30,7 @@ from mt5_transfer_classifier import (
 logger = logging.getLogger(__name__)
 
 # Configuration
-MT5_BRIDGE_URL = os.getenv('MT5_BRIDGE_URL', 'http://217.197.163.11:8000')
+MT5_BRIDGE_URL = os.getenv('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
 MT5_BRIDGE_API_KEY = os.getenv('MT5_BRIDGE_API_KEY', 'fidus-mt5-bridge-key-2025-secure')
 MONGO_URL = os.getenv('MONGO_URL')
 
