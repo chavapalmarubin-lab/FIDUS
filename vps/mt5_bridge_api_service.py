@@ -411,6 +411,31 @@ async def get_account_trades(account_id: int, limit: int = 100):
 
 
 # ============================================
+# GET ALL ACCOUNTS
+# ============================================
+@app.get("/api/mt5/accounts")
+async def get_all_accounts():
+    """
+    Get all MT5 accounts from MongoDB
+    Returns list of all accounts with their current data
+    """
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="MongoDB not available")
+        
+        accounts_collection = db['mt5_accounts']
+        
+        # Get all accounts
+        accounts = list(accounts_collection.find({}, {'_id': 0}).sort('account', 1))
+        
+        return accounts
+        
+    except Exception as e:
+        logger.error(f"[ERROR] Get all accounts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
 # ALL ACCOUNTS SUMMARY
 # ============================================
 @app.get("/api/mt5/accounts/summary")
