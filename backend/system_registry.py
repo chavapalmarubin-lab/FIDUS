@@ -176,7 +176,7 @@ SYSTEM_COMPONENTS = {
                 'timeout': 2
             },
             'management': {
-                'rdp_access': '217.197.163.11:3389',
+                'rdp_access': '92.118.45.135:3389',
                 'ssh_access': 'Available',
                 'admin_users': ['Administrator', 'EmergentOps']
             },
