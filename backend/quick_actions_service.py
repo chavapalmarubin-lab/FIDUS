@@ -22,7 +22,7 @@ class QuickActionsService:
         self.db = db
         self.backend_url = os.getenv("BACKEND_URL", "https://fidus-api.onrender.com")
         self.frontend_url = os.getenv("FRONTEND_URL", "https://fidus-investment-platform.onrender.com")
-        self.mt5_bridge_url = os.getenv("MT5_BRIDGE_URL", "http://217.197.163.11:8000")
+        self.mt5_bridge_url = os.getenv("MT5_BRIDGE_URL", "http://92.118.45.135:8000")
         
     async def log_action(
         self,
