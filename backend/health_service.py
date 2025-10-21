@@ -157,7 +157,7 @@ async def check_mt5_bridge_health() -> Dict[str, Any]:
             "name": "MT5 Bridge Service",
             "status": "healthy" if response.status_code == 200 else "degraded",
             "response_time": round(response_time, 2),
-            "vps_ip": "217.197.163.11",
+            "vps_ip": "92.118.45.135",
             "accounts_connected": data.get('accounts_connected', 0),
             "last_sync": data.get('last_sync', 'Unknown'),
             "last_check": datetime.now(timezone.utc).isoformat(),
@@ -169,7 +169,7 @@ async def check_mt5_bridge_health() -> Dict[str, Any]:
             "name": "MT5 Bridge Service",
             "status": "timeout",
             "error": "VPS not responding",
-            "vps_ip": "217.197.163.11",
+            "vps_ip": "92.118.45.135",
             "last_check": datetime.now(timezone.utc).isoformat(),
             "message": "Unable to reach VPS"
         }
@@ -179,7 +179,7 @@ async def check_mt5_bridge_health() -> Dict[str, Any]:
             "name": "MT5 Bridge Service",
             "status": "offline",
             "error": str(e),
-            "vps_ip": "217.197.163.11",
+            "vps_ip": "92.118.45.135",
             "last_check": datetime.now(timezone.utc).isoformat(),
             "message": "VPS bridge unavailable"
         }
