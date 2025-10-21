@@ -57,7 +57,7 @@ CREDENTIALS_REGISTRY = {
         'last_rotated': None,
         'rotation_recommended_days': 180,
         'public_info': {
-            'ip': '217.197.163.11',
+            'ip': '92.118.45.135',
             'hostname': 'VMI0594978015651953-1.forexvps.net',
             'rdp_port': 3389,
             'ssh_port': 22
