@@ -177,7 +177,7 @@ async def perform_all_health_checks(mongo_client, db) -> Dict[str, Dict[str, Any
     # VPS check (basic ping)
     logger.info("Checking VPS health...")
     health_results['vps'] = await check_url_health(
-        url='http://217.197.163.11:8000',
+        url='http://92.118.45.135:8000',
         timeout=3,
         expected_status=200
     )
