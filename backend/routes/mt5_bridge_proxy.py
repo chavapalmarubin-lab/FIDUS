@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # MT5 Bridge configuration
-MT5_BRIDGE_URL = os.getenv('MT5_BRIDGE_URL', 'http://217.197.163.11:8000')
+MT5_BRIDGE_URL = os.getenv('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
 REQUEST_TIMEOUT = 30.0
 
 # ============================================
