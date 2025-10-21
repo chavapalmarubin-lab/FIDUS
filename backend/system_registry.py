@@ -142,7 +142,7 @@ SYSTEM_COMPONENTS = {
             'type': 'infrastructure',
             'category': 'Services Layer',
             'status': 'online',
-            'url': '217.197.163.11',
+            'url': '92.118.45.135',
             'platform': 'Windows Server 2022',
             'description': 'Dedicated VPS hosting MT5 Terminal and Bridge Service',
             'tech_stack': ['Windows Server 2022', 'Python 3.12', 'MetaTrader 5', 'Task Scheduler'],
