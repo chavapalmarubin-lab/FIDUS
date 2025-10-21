@@ -160,7 +160,7 @@ System is now fully autonomous."
           echo "$backend_response"
           
           echo "[INFO] Checking MT5 Bridge..."
-          bridge_response=$(curl -s -o /dev/null -w "%{http_code}" http://217.197.163.11:8000/api/mt5/bridge/health)
+          bridge_response=$(curl -s -o /dev/null -w "%{http_code}" http://92.118.45.135:8000/api/mt5/bridge/health)
           echo "MT5 Bridge status: $bridge_response"
           
           echo "[INFO] Checking watchdog status..."

@@ -278,6 +278,6 @@ jobs:
         run: |
           echo "✅ Nuclear reset workflow completed"
           echo "🔗 Test endpoints:"
-          echo "   http://217.197.163.11:8000/"
-          echo "   http://217.197.163.11:8000/api/mt5/bridge/health"
-          echo "   http://217.197.163.11:8000/api/mt5/account/886557/info"
+          echo "   http://92.118.45.135:8000/"
+          echo "   http://92.118.45.135:8000/api/mt5/bridge/health"
+          echo "   http://92.118.45.135:8000/api/mt5/account/886557/info"

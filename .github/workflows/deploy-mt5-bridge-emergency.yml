@@ -104,5 +104,5 @@ jobs:
         run: |
           echo "[SUCCESS] Emergency deployment workflow completed"
           echo "[INFO] Check deployment logs above for service status"
-          echo "[INFO] Service should be running on http://217.197.163.11:8000"
-          echo "[INFO] Test with: curl http://217.197.163.11:8000/api/mt5/bridge/health"
+          echo "[INFO] Service should be running on http://92.118.45.135:8000"
+          echo "[INFO] Test with: curl http://92.118.45.135:8000/api/mt5/bridge/health"

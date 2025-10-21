@@ -331,7 +331,7 @@ jobs:
             Write-Host ''
             Write-Host '[4.4] Testing external access...' -ForegroundColor Cyan
             try {
-                `$extResponse = Invoke-RestMethod -Uri 'http://217.197.163.11:8000/' -TimeoutSec 20
+                `$extResponse = Invoke-RestMethod -Uri 'http://92.118.45.135:8000/' -TimeoutSec 20
                 Write-Host '  Service name (external):' `$extResponse.service
                 if (`$extResponse.service -eq 'FIDUS MT5 Bridge API') {
                     Write-Host '  ✅ External access OK!' -ForegroundColor Green
@@ -379,7 +379,7 @@ jobs:
                 Write-Host '  ✅ Task Scheduler configured' -ForegroundColor Green
                 Write-Host ''
                 Write-Host 'MT5 BRIDGE 404 ISSUE - PERMANENTLY RESOLVED!' -ForegroundColor Green
-                Write-Host 'Service URL: http://217.197.163.11:8000' -ForegroundColor Green
+                Write-Host 'Service URL: http://92.118.45.135:8000' -ForegroundColor Green
                 Write-Host 'Service Name: FIDUS MT5 Bridge API' -ForegroundColor Green
                 Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
                 Exit 0

@@ -221,7 +221,7 @@ jobs:
             Write-Host ''
             Write-Host '[STEP 10] Testing external access...' -ForegroundColor Yellow
             try {
-                `$extResponse = Invoke-RestMethod -Uri 'http://217.197.163.11:8000/api/mt5/bridge/health' -TimeoutSec 10
+                `$extResponse = Invoke-RestMethod -Uri 'http://92.118.45.135:8000/api/mt5/bridge/health' -TimeoutSec 10
                 Write-Host '✅ External access confirmed' -ForegroundColor Green
             } catch {
                 Write-Host '⚠️  External access test: ' `$_.Exception.Message -ForegroundColor Yellow
@@ -258,6 +258,6 @@ jobs:
         run: |
           echo "✅ Direct file deployment workflow completed"
           echo "🔗 Test endpoints:"
-          echo "   http://217.197.163.11:8000/"
-          echo "   http://217.197.163.11:8000/api/mt5/bridge/health"
-          echo "   http://217.197.163.11:8000/api/mt5/account/886557/info"
+          echo "   http://92.118.45.135:8000/"
+          echo "   http://92.118.45.135:8000/api/mt5/bridge/health"
+          echo "   http://92.118.45.135:8000/api/mt5/account/886557/info"

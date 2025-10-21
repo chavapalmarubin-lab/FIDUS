@@ -142,7 +142,7 @@ jobs:
             Write-Host '=== 8. EXTERNAL ACCESS TEST ===' -ForegroundColor Yellow
             Write-Host 'Testing external access (from VPS itself):' -ForegroundColor Green
             try {
-                $extResponse = Invoke-WebRequest -Uri 'http://217.197.163.11:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 5 -UseBasicParsing
+                $extResponse = Invoke-WebRequest -Uri 'http://92.118.45.135:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 5 -UseBasicParsing
                 Write-Host '  ✅ External access works! Status:' $extResponse.StatusCode -ForegroundColor Green
             } catch {
                 Write-Host '  ❌ External access FAILED!' -ForegroundColor Red
