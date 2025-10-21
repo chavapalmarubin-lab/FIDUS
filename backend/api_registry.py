@@ -453,7 +453,7 @@ API_REGISTRY = {
                         "200": {
                             "description": "Sync status retrieved successfully",
                             "example": {
-                                "vps_ip": "217.197.163.11",
+                                "vps_ip": "92.118.45.135",
                                 "vps_port": 8000,
                                 "bridge_status": "running",
                                 "last_successful_sync": "2025-10-12T14:30:00Z",
