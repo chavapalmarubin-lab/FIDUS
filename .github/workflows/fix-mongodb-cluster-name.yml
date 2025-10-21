@@ -1,0 +1,146 @@
+name: Fix MongoDB Cluster Name on VPS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-mongodb-cluster-name.yml'
+
+jobs:
+  fix-cluster-name:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Fix MongoDB Connection via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 92.118.45.135
+          port: 42014
+          username: trader
+          password: ${{ secrets.VPS_PASSWORD }}
+          timeout: 180s
+          script: |
+            powershell -Command "
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host '🔧 FIXING MONGODB CLUSTER NAME' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host ''
+            Write-Host 'OLD: fidus.ylp9be2.mongodb.net (letter L - WRONG)' -ForegroundColor Red
+            Write-Host 'NEW: fidus.y1p9be2.mongodb.net (number 1 - CORRECT)' -ForegroundColor Green
+            Write-Host ''
+            
+            Set-Location C:\mt5_bridge_service
+            
+            # Backup .env
+            if (Test-Path '.env') {
+                Copy-Item '.env' \".env.backup.\$(Get-Date -Format 'yyyyMMddHHmmss')\"
+                Write-Host '✅ Backed up .env' -ForegroundColor Green
+            }
+            
+            # Create corrected .env with NUMBER 1 not letter L
+            \$envContent = @'
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_DATABASE=fidus_production
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_PASSWORD=Fidus13!
+MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
+SYNC_INTERVAL=300
+LOG_LEVEL=INFO
+API_PORT=8000
+'@
+            
+            Set-Content -Path '.env' -Value \$envContent -Force
+            Write-Host '✅ Updated .env with CORRECT cluster name (y1p9be2)' -ForegroundColor Green
+            Write-Host ''
+            
+            # Verify cluster name
+            \$content = Get-Content '.env' -Raw
+            if (\$content -match 'y1p9be2') {
+                Write-Host '✅ Verified: Using y1p9be2 (number 1)' -ForegroundColor Green
+            } else {
+                Write-Host '❌ ERROR: Still using wrong cluster name!' -ForegroundColor Red
+                exit 1
+            }
+            
+            if (\$content -match 'ylp9be2') {
+                Write-Host '❌ ERROR: Found ylp9be2 (letter L) - should be y1p9be2!' -ForegroundColor Red
+                exit 1
+            }
+            Write-Host ''
+            
+            # Stop service
+            Write-Host '🛑 Stopping service...' -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName 'MT5BridgeService' -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            Write-Host '✅ Service stopped' -ForegroundColor Green
+            Write-Host ''
+            
+            # Start service
+            Write-Host '🚀 Starting service...' -ForegroundColor Yellow
+            Start-ScheduledTask -TaskName 'MT5BridgeService'
+            Write-Host '✅ Service started' -ForegroundColor Green
+            Write-Host ''
+            
+            # Wait for initialization
+            Write-Host '⏳ Waiting 25 seconds for service initialization...' -ForegroundColor Cyan
+            Start-Sleep -Seconds 25
+            Write-Host ''
+            
+            # Test connection
+            Write-Host '🔍 Testing MongoDB connection...' -ForegroundColor Yellow
+            Write-Host ''
+            
+            try {
+                \$response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing -TimeoutSec 10
+                \$health = \$response.Content | ConvertFrom-Json
+                
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Write-Host '📊 SERVICE HEALTH CHECK' -ForegroundColor Cyan
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+                Write-Host ''
+                Write-Host \"Status: \$(\$health.status)\" -ForegroundColor White
+                Write-Host \"MT5 Available: \$(\$health.mt5.available)\" -ForegroundColor White
+                Write-Host \"MongoDB Connected: \$(\$health.mongodb.connected)\" -ForegroundColor White
+                Write-Host ''
+                
+                if (\$health.mongodb.connected -eq \$true) {
+                    Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                    Write-Host '🎉 SUCCESS! MONGODB CONNECTED!' -ForegroundColor Green
+                    Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                    Write-Host ''
+                    Write-Host 'The cluster name fix worked!' -ForegroundColor Green
+                    Write-Host 'y1p9be2 (number 1) is CORRECT' -ForegroundColor Green
+                    exit 0
+                } else {
+                    Write-Host '❌ MongoDB still not connected' -ForegroundColor Red
+                    Write-Host ''
+                    Write-Host 'Checking logs...' -ForegroundColor Yellow
+                    if (Test-Path 'logs\service_error.log') {
+                        Write-Host ''
+                        Write-Host '=== Last 30 lines of error log ===' -ForegroundColor Yellow
+                        Get-Content 'logs\service_error.log' -Tail 30
+                    }
+                    exit 1
+                }
+            } catch {
+                Write-Host '❌ Service not responding' -ForegroundColor Red
+                Write-Host \"Error: \$(\$_.Exception.Message)\" -ForegroundColor Red
+                exit 1
+            }
+            "
+      
+      - name: Test External Access
+        run: |
+          echo "⏳ Waiting 10 seconds before external test..."
+          sleep 10
+          
+          echo "🔍 Testing external API access..."
+          curl -f http://92.118.45.135:8000/api/mt5/bridge/health || exit 1
+          
+          echo ""
+          echo "✅ External API access confirmed!"
+          echo "🎉 MongoDB cluster name fix SUCCESSFUL!"
