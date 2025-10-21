@@ -17,7 +17,7 @@ class MT5BridgeClient:
     """Production-grade client to communicate with MT5 Bridge Service on Windows VPS"""
     
     def __init__(self):
-        self.bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://217.197.163.11:8000')
+        self.bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
         self.api_key = os.environ.get('MT5_BRIDGE_API_KEY', 'fidus-mt5-bridge-key-2025-secure')
         self.timeout = int(os.environ.get('MT5_BRIDGE_TIMEOUT', '30'))
         self.session = None
