@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://broker-connect-35.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com/api"
 
 class SimplifiedPipelineFinalTest:
     def __init__(self):

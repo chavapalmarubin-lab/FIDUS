@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://broker-connect-35.preview.emergentagent.com"
+        self.base_url = "https://fidus-mt5-bridge-1.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 
 # Backend URL from environment
-BACKEND_URL = "https://broker-connect-35.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

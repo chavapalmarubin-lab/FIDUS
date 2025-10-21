@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 
 # Configuration
-BACKEND_URL = "https://broker-connect-35.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com/api"
 
 # Test data
 TEST_CLIENT_ID = "client_001"  # Gerardo Briones

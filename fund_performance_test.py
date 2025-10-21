@@ -10,7 +10,7 @@ from datetime import datetime
 import json
 
 class FundPerformanceTester:
-    def __init__(self, base_url="https://broker-connect-35.preview.emergentagent.com"):
+    def __init__(self, base_url="https://fidus-mt5-bridge-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

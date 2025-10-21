@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 # Backend URL Configuration - Use correct URL from frontend/.env
-BACKEND_URL = "https://broker-connect-35.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com/api"
 
 # Expected Alejandro Data
 EXPECTED_ALEJANDRO = {
