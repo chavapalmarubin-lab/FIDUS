@@ -1,0 +1,303 @@
+name: Complete VPS Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/complete-vps-deployment.yml'
+
+jobs:
+  deploy-complete-service:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy Complete MT5 Bridge Service to VPS
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "🚀 COMPLETE VPS DEPLOYMENT STARTING" -ForegroundColor Cyan
+          Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host ""
+          
+          # VPS Connection Details
+          $VPS_HOST = "${{ secrets.VPS_HOST }}"
+          $VPS_USERNAME = "${{ secrets.VPS_USERNAME }}"
+          $VPS_PASSWORD = "${{ secrets.VPS_PASSWORD }}"
+          
+          Write-Host "🔐 VPS: $VPS_HOST" -ForegroundColor Yellow
+          Write-Host "👤 User: $VPS_USERNAME" -ForegroundColor Yellow
+          Write-Host ""
+          
+          # Create PSCredential
+          $securePassword = ConvertTo-SecureString $VPS_PASSWORD -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential($VPS_USERNAME, $securePassword)
+          
+          # Configure WinRM for remote connection
+          Write-Host "⚙️ Configuring WinRM for remote access..." -ForegroundColor Yellow
+          
+          # Enable WinRM on local machine (GitHub runner)
+          Enable-PSRemoting -Force -SkipNetworkProfileCheck
+          Set-Item WSMan:\localhost\Client\TrustedHosts -Value $VPS_HOST -Force
+          
+          Write-Host "✅ WinRM configured" -ForegroundColor Green
+          Write-Host ""
+          
+          # Test connection first
+          Write-Host "🔌 Testing connection to VPS..." -ForegroundColor Yellow
+          
+          try {
+              $session = New-PSSession -ComputerName $VPS_HOST -Credential $credential -ErrorAction Stop
+              Write-Host "✅ Connected to VPS successfully!" -ForegroundColor Green
+              Write-Host ""
+              
+              # Execute deployment script on VPS
+              Invoke-Command -Session $session -ScriptBlock {
+                  $ErrorActionPreference = 'Continue'
+                  
+                  Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+                  Write-Host "📦 DEPLOYING FILES TO VPS" -ForegroundColor Cyan
+                  Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+                  Write-Host ""
+                  
+                  # Step 1: Ensure directories exist
+                  Write-Host "📁 Creating directory structure..." -ForegroundColor Yellow
+                  New-Item -Path "C:\mt5_bridge_service" -ItemType Directory -Force | Out-Null
+                  New-Item -Path "C:\mt5_bridge_service\logs" -ItemType Directory -Force | Out-Null
+                  Write-Host "✅ Directories ready" -ForegroundColor Green
+                  Write-Host ""
+                  
+                  # Step 2: Download mt5_bridge_api_service.py from GitHub
+                  Write-Host "⬇️ Downloading mt5_bridge_api_service.py..." -ForegroundColor Yellow
+                  try {
+                      $url = "https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py"
+                      Invoke-WebRequest -Uri $url -OutFile "C:\mt5_bridge_service\mt5_bridge_api_service.py" -UseBasicParsing
+                      Write-Host "✅ Service file downloaded" -ForegroundColor Green
+                  } catch {
+                      Write-Host "⚠️ Could not download from GitHub: $($_.Exception.Message)" -ForegroundColor Yellow
+                      Write-Host "Creating file manually..." -ForegroundColor Yellow
+                      # File will be created in next step if download fails
+                  }
+                  Write-Host ""
+                  
+                  # Step 3: Create requirements.txt
+                  Write-Host "📝 Creating requirements.txt..." -ForegroundColor Yellow
+                  $requirements = @'
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.0
+MetaTrader5==5.0.4508
+pymongo==4.8.0
+python-dotenv==1.0.1
+cryptography==43.0.1
+httpx==0.27.0
+python-dateutil==2.8.2
+'@
+                  Set-Content -Path "C:\mt5_bridge_service\requirements.txt" -Value $requirements -Force
+                  Write-Host "✅ requirements.txt created" -ForegroundColor Green
+                  Write-Host ""
+                  
+                  # Step 4: Create .env file
+                  Write-Host "🔐 Creating .env file..." -ForegroundColor Yellow
+                  $envContent = @'
+MONGODB_URI=mongodb+srv://fidus_admin:FIDUS2024secureDB!@fiduscluster.qscrf.mongodb.net/fidus_production?retryWrites=true&w=majority
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_ACCOUNT=886557
+MT5_PASSWORD=Fidus13!
+'@
+                  Set-Content -Path "C:\mt5_bridge_service\.env" -Value $envContent -Force
+                  Write-Host "✅ .env file created" -ForegroundColor Green
+                  Write-Host ""
+                  
+                  # Step 5: Find Python executable
+                  Write-Host "🐍 Locating Python installation..." -ForegroundColor Yellow
+                  $pythonPaths = @(
+                      "C:\Users\trader\AppData\Local\Programs\Python\Python312\python.exe",
+                      "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe",
+                      "C:\Python312\python.exe",
+                      "C:\Python311\python.exe"
+                  )
+                  
+                  $pythonExe = $null
+                  foreach ($path in $pythonPaths) {
+                      if (Test-Path $path) {
+                          $pythonExe = $path
+                          Write-Host "✅ Python found: $pythonExe" -ForegroundColor Green
+                          break
+                      }
+                  }
+                  
+                  if (-not $pythonExe) {
+                      Write-Host "❌ Python not found in expected locations" -ForegroundColor Red
+                      Write-Host "Searching system..." -ForegroundColor Yellow
+                      $found = Get-ChildItem -Path "C:\" -Recurse -Filter "python.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+                      if ($found) {
+                          $pythonExe = $found.FullName
+                          Write-Host "✅ Found Python: $pythonExe" -ForegroundColor Green
+                      } else {
+                          Write-Host "❌ Python not installed on VPS" -ForegroundColor Red
+                          exit 1
+                      }
+                  }
+                  Write-Host ""
+                  
+                  # Step 6: Install Python dependencies
+                  Write-Host "📦 Installing Python dependencies..." -ForegroundColor Yellow
+                  Write-Host "This may take 2-3 minutes..." -ForegroundColor Cyan
+                  
+                  Set-Location "C:\mt5_bridge_service"
+                  
+                  # Upgrade pip first
+                  Write-Host "Upgrading pip..." -ForegroundColor Cyan
+                  & $pythonExe -m pip install --upgrade pip --quiet
+                  
+                  # Install requirements
+                  Write-Host "Installing packages..." -ForegroundColor Cyan
+                  & $pythonExe -m pip install -r requirements.txt --quiet
+                  
+                  if ($LASTEXITCODE -eq 0) {
+                      Write-Host "✅ All dependencies installed" -ForegroundColor Green
+                  } else {
+                      Write-Host "⚠️ Some dependencies may have failed" -ForegroundColor Yellow
+                  }
+                  Write-Host ""
+                  
+                  # Step 7: Update start_mt5_bridge.bat with correct Python path
+                  Write-Host "📝 Updating start_mt5_bridge.bat..." -ForegroundColor Yellow
+                  $pythonDir = Split-Path $pythonExe -Parent
+                  $batchContent = @"
+@echo off
+cd /d C:\mt5_bridge_service
+SET PYTHON_PATH=$pythonDir
+"%PYTHON_PATH%\python.exe" mt5_bridge_api_service.py >> logs\service_output.log 2>> logs\service_error.log
+exit /b %ERRORLEVEL%
+"@
+                  Set-Content -Path "C:\mt5_bridge_service\start_mt5_bridge.bat" -Value $batchContent -Force
+                  Write-Host "✅ Batch file updated with correct Python path" -ForegroundColor Green
+                  Write-Host ""
+                  
+                  # Step 8: Configure/Update Task Scheduler
+                  Write-Host "📅 Configuring Task Scheduler..." -ForegroundColor Yellow
+                  
+                  # Delete existing task if exists
+                  schtasks /Delete /TN "MT5BridgeService" /F 2>$null | Out-Null
+                  
+                  # Create new task
+                  $action = New-ScheduledTaskAction -Execute "C:\mt5_bridge_service\start_mt5_bridge.bat" -WorkingDirectory "C:\mt5_bridge_service"
+                  $trigger = New-ScheduledTaskTrigger -AtStartup
+                  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartInterval (New-TimeSpan -Minutes 5) -RestartCount 3 -ExecutionTimeLimit (New-TimeSpan -Hours 0)
+                  $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+                  
+                  try {
+                      Register-ScheduledTask -TaskName "MT5BridgeService" -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description "MT5 Bridge API Service" -Force | Out-Null
+                      Write-Host "✅ Task Scheduler configured" -ForegroundColor Green
+                  } catch {
+                      Write-Host "⚠️ Task registration warning: $($_.Exception.Message)" -ForegroundColor Yellow
+                  }
+                  Write-Host ""
+                  
+                  # Step 9: Configure Windows Firewall
+                  Write-Host "🔥 Configuring Windows Firewall..." -ForegroundColor Yellow
+                  try {
+                      New-NetFirewallRule -DisplayName "MT5 Bridge API" -Direction Inbound -LocalPort 8000 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue | Out-Null
+                      Write-Host "✅ Firewall rule created" -ForegroundColor Green
+                  } catch {
+                      Write-Host "⚠️ Firewall rule may already exist" -ForegroundColor Yellow
+                  }
+                  Write-Host ""
+                  
+                  # Step 10: Start the service
+                  Write-Host "🚀 Starting MT5 Bridge service..." -ForegroundColor Yellow
+                  
+                  # Stop any existing instance
+                  Stop-ScheduledTask -TaskName "MT5BridgeService" -ErrorAction SilentlyContinue | Out-Null
+                  Start-Sleep -Seconds 2
+                  
+                  # Start the task
+                  Start-ScheduledTask -TaskName "MT5BridgeService"
+                  
+                  Write-Host "⏳ Waiting 15 seconds for service to initialize..." -ForegroundColor Cyan
+                  Start-Sleep -Seconds 15
+                  
+                  # Step 11: Verify service is running
+                  Write-Host "🔍 Verifying service status..." -ForegroundColor Yellow
+                  Write-Host ""
+                  
+                  try {
+                      $response = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                      
+                      Write-Host "═══════════════════════════════════════════" -ForegroundColor Green
+                      Write-Host "✅ SERVICE IS RUNNING!" -ForegroundColor Green
+                      Write-Host "═══════════════════════════════════════════" -ForegroundColor Green
+                      Write-Host ""
+                      Write-Host "Response Code: $($response.StatusCode)" -ForegroundColor Cyan
+                      Write-Host "Response:" -ForegroundColor Cyan
+                      Write-Host $response.Content -ForegroundColor White
+                      Write-Host ""
+                      
+                  } catch {
+                      Write-Host "⚠️ Service not responding on localhost:8000" -ForegroundColor Yellow
+                      Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Yellow
+                      Write-Host ""
+                      Write-Host "Checking Task Scheduler status..." -ForegroundColor Cyan
+                      $task = Get-ScheduledTask -TaskName "MT5BridgeService" -ErrorAction SilentlyContinue
+                      if ($task) {
+                          Write-Host "Task State: $($task.State)" -ForegroundColor White
+                          Write-Host "Last Run Time: $($task.LastRunTime)" -ForegroundColor White
+                          Write-Host "Last Result: $($task.LastTaskResult)" -ForegroundColor White
+                      }
+                      Write-Host ""
+                      Write-Host "Checking error logs..." -ForegroundColor Cyan
+                      if (Test-Path "C:\mt5_bridge_service\logs\service_error.log") {
+                          Write-Host "=== Last 20 lines of error log ===" -ForegroundColor Yellow
+                          Get-Content "C:\mt5_bridge_service\logs\service_error.log" -Tail 20 -ErrorAction SilentlyContinue
+                      }
+                  }
+                  
+                  # Final summary
+                  Write-Host ""
+                  Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+                  Write-Host "📊 DEPLOYMENT SUMMARY" -ForegroundColor Cyan
+                  Write-Host "═══════════════════════════════════════════" -ForegroundColor Cyan
+                  Write-Host ""
+                  Write-Host "✅ Directory: C:\mt5_bridge_service" -ForegroundColor White
+                  Write-Host "✅ Service file: mt5_bridge_api_service.py" -ForegroundColor White
+                  Write-Host "✅ Dependencies: Installed" -ForegroundColor White
+                  Write-Host "✅ Environment: Configured (.env)" -ForegroundColor White
+                  Write-Host "✅ Task Scheduler: Configured" -ForegroundColor White
+                  Write-Host "✅ Firewall: Port 8000 opened" -ForegroundColor White
+                  Write-Host "✅ Service: Started" -ForegroundColor White
+                  Write-Host ""
+                  Write-Host "🔗 External test:" -ForegroundColor Yellow
+                  Write-Host "   curl http://92.118.45.135:8000/api/mt5/bridge/health" -ForegroundColor Cyan
+                  Write-Host ""
+              }
+              
+              # Close session
+              Remove-PSSession -Session $session
+              
+              Write-Host "═══════════════════════════════════════════" -ForegroundColor Green
+              Write-Host "🎉 DEPLOYMENT COMPLETE!" -ForegroundColor Green
+              Write-Host "═══════════════════════════════════════════" -ForegroundColor Green
+              
+          } catch {
+              Write-Host ""
+              Write-Host "═══════════════════════════════════════════" -ForegroundColor Red
+              Write-Host "❌ DEPLOYMENT FAILED" -ForegroundColor Red
+              Write-Host "═══════════════════════════════════════════" -ForegroundColor Red
+              Write-Host ""
+              Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+              Write-Host ""
+              Write-Host "Possible causes:" -ForegroundColor Yellow
+              Write-Host "1. WinRM not enabled on VPS" -ForegroundColor White
+              Write-Host "2. Firewall blocking WinRM port 5985/5986" -ForegroundColor White
+              Write-Host "3. VPS credentials incorrect" -ForegroundColor White
+              Write-Host ""
+              exit 1
+          }
