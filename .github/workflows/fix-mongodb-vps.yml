@@ -1,0 +1,183 @@
+name: Fix MongoDB Connection on NEW VPS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-mongodb-vps.yml'
+
+jobs:
+  fix-mongodb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Fix MongoDB Connection via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 92.118.45.135
+          port: 42014
+          username: trader
+          password: ${{ secrets.VPS_PASSWORD }}
+          timeout: 300s
+          command_timeout: 10m
+          script: |
+            powershell -Command "
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host '🔧 FIXING MONGODB CONNECTION ON NEW VPS' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host ''
+            
+            Set-Location C:\mt5_bridge_service
+            
+            # Backup current .env
+            if (Test-Path '.env') {
+                Copy-Item '.env' \".env.backup.\$(Get-Date -Format 'yyyyMMddHHmmss')\"
+                Write-Host '✅ Backed up existing .env' -ForegroundColor Green
+            }
+            
+            # Create correct .env with proper MongoDB credentials
+            \$envContent = @'
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_DATABASE=fidus_production
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_PASSWORD=Fidus13!
+MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
+SYNC_INTERVAL=300
+LOG_LEVEL=INFO
+API_PORT=8000
+'@
+            
+            Set-Content -Path '.env' -Value \$envContent -Force
+            Write-Host '✅ Created .env with CORRECT MongoDB credentials' -ForegroundColor Green
+            Write-Host ''
+            
+            # Display .env (hide password)
+            Write-Host '📄 New .env content:' -ForegroundColor Yellow
+            Get-Content '.env' | ForEach-Object {
+                if (\$_ -match 'PASSWORD') {
+                    Write-Host (\$_ -replace '=.*', '=***HIDDEN***')
+                } else {
+                    Write-Host \$_
+                }
+            }
+            Write-Host ''
+            
+            # Stop service
+            Write-Host '🛑 Stopping MT5 Bridge Service...' -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName 'MT5BridgeService' -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            
+            # Kill any running Python processes
+            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            Write-Host '✅ Service stopped' -ForegroundColor Green
+            Write-Host ''
+            
+            # Start service
+            Write-Host '🚀 Starting MT5 Bridge Service...' -ForegroundColor Yellow
+            Start-ScheduledTask -TaskName 'MT5BridgeService'
+            Write-Host '✅ Service start command sent' -ForegroundColor Green
+            Write-Host ''
+            
+            # Wait for service to initialize
+            Write-Host '⏳ Waiting 20 seconds for service to initialize...' -ForegroundColor Cyan
+            Start-Sleep -Seconds 20
+            
+            # Test health
+            Write-Host '🔍 Testing service health...' -ForegroundColor Yellow
+            Write-Host ''
+            
+            try {
+                \$response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing -TimeoutSec 10
+                \$health = \$response.Content | ConvertFrom-Json
+                
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                Write-Host '📊 SERVICE HEALTH CHECK' -ForegroundColor Green
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                Write-Host ''
+                Write-Host \"Status: \$(\$health.status)\" -ForegroundColor White
+                Write-Host \"MT5 Available: \$(\$health.mt5.available)\" -ForegroundColor White
+                Write-Host \"MT5 Connected: \$(\$health.mt5.terminal_info.connected)\" -ForegroundColor White
+                Write-Host \"MongoDB Connected: \$(\$health.mongodb.connected)\" -ForegroundColor White
+                Write-Host ''
+                
+                if (\$health.mongodb.connected -eq \$true) {
+                    Write-Host '🎉 SUCCESS! MONGODB CONNECTION FIXED!' -ForegroundColor Green
+                    Write-Host ''
+                    
+                    # Test accounts endpoint
+                    Write-Host '🔍 Testing accounts endpoint...' -ForegroundColor Yellow
+                    try {
+                        \$accounts = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/accounts' -UseBasicParsing -TimeoutSec 10
+                        \$accountsData = \$accounts.Content | ConvertFrom-Json
+                        Write-Host \"✅ Accounts endpoint responding: \$(\$accountsData.Count) accounts\" -ForegroundColor Green
+                    } catch {
+                        Write-Host '⚠️ Accounts endpoint not ready yet' -ForegroundColor Yellow
+                    }
+                    
+                    Write-Host ''
+                    Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                    Write-Host '✅ MIGRATION FIX COMPLETE!' -ForegroundColor Green
+                    Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                    exit 0
+                    
+                } else {
+                    Write-Host '❌ MongoDB connection still failing' -ForegroundColor Red
+                    Write-Host ''
+                    Write-Host 'Checking error logs...' -ForegroundColor Yellow
+                    if (Test-Path 'logs\service_error.log') {
+                        Write-Host ''
+                        Write-Host '=== Last 30 lines of error log ===' -ForegroundColor Yellow
+                        Get-Content 'logs\service_error.log' -Tail 30
+                    }
+                    if (Test-Path 'logs\api_service.log') {
+                        Write-Host ''
+                        Write-Host '=== Last 30 lines of API log ===' -ForegroundColor Yellow
+                        Get-Content 'logs\api_service.log' -Tail 30
+                    }
+                    exit 1
+                }
+                
+            } catch {
+                Write-Host '❌ Service not responding' -ForegroundColor Red
+                Write-Host \"Error: \$(\$_.Exception.Message)\" -ForegroundColor Red
+                Write-Host ''
+                Write-Host 'Checking logs...' -ForegroundColor Yellow
+                if (Test-Path 'logs\service_error.log') {
+                    Get-Content 'logs\service_error.log' -Tail 50
+                }
+                exit 1
+            }
+            "
+      
+      - name: Test External API Access
+        run: |
+          echo "⏳ Waiting 10 seconds before external test..."
+          sleep 10
+          
+          echo "🔍 Testing external API access..."
+          
+          # Test health endpoint
+          echo "Testing health endpoint..."
+          curl -f http://92.118.45.135:8000/api/mt5/bridge/health || {
+            echo "❌ Health endpoint failed"
+            exit 1
+          }
+          
+          echo "✅ Health endpoint accessible"
+          
+          # Test accounts endpoint
+          echo "Testing accounts endpoint..."
+          curl -f http://92.118.45.135:8000/api/mt5/accounts || {
+            echo "⚠️ Accounts endpoint not ready yet (normal)"
+          }
+          
+          echo ""
+          echo "═══════════════════════════════════════════"
+          echo "✅ EXTERNAL API ACCESS CONFIRMED!"
+          echo "═══════════════════════════════════════════"
