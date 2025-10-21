@@ -12,10 +12,10 @@ jobs:
       - name: Deploy MT5 Bridge API to Fresh VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 92.118.45.135
-          port: 42014
-          username: trader
-          password: 4p1We0OHh3LKgm6
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
           timeout: 900s
           command_timeout: 15m
           debug: true
