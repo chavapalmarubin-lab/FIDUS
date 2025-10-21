@@ -14,7 +14,7 @@ class AutonomousMonitor:
     
     def __init__(self):
         self.fidus_api_url = "https://fidus-api.onrender.com"
-        self.mt5_bridge_url = "http://217.197.163.11:8000"
+        self.mt5_bridge_url = "http://92.118.45.135:8000"
         self.monitoring_interval = 300  # 5 minutes
         self.alert_thresholds = {
             'mt5_sync_success_rate': 80,  # Alert if <80%
