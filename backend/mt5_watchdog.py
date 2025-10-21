@@ -318,7 +318,7 @@ class MT5Watchdog:
                                         'auto_healing_result': 'FAILED',
                                         'last_healing_attempt': self.last_healing_attempt.isoformat() if self.last_healing_attempt else None,
                                         'action_required': 'Manual VPS access required to diagnose and fix the issue',
-                                        'vps_ip': '217.197.163.11',
+                                        'vps_ip': '92.118.45.135',
                                         'health_details': health
                                     }
                                 )
