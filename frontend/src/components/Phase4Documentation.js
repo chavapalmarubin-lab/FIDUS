@@ -376,7 +376,7 @@ function VPSDeploymentTab() {
         </div>
         <div className="p-6 space-y-4">
           <ConfigItem label="VPS Provider" value="Contabo / ForexVPS.net" />
-          <ConfigItem label="IP Address" value="217.197.163.11" />
+          <ConfigItem label="IP Address" value="92.118.45.135" />
           <ConfigItem label="Operating System" value="Windows Server" />
           <ConfigItem label="Service Path" value="C:\mt5_bridge_service" />
           <ConfigItem label="Git Installed" value="v2.42.0.windows.2" />
