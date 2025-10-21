@@ -141,7 +141,7 @@ async def check_database_health(db) -> Dict[str, Any]:
 async def check_mt5_bridge_health() -> Dict[str, Any]:
     """Check MT5 Bridge VPS service availability"""
     start = time.time()
-    vps_url = "http://217.197.163.11:8000"
+    vps_url = "http://92.118.45.135:8000"
     
     try:
         async with httpx.AsyncClient() as client:
