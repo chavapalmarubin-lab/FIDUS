@@ -1,0 +1,93 @@
+name: Fix MongoDB Connection on NEW VPS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-vps-mongodb.yml'
+
+jobs:
+  fix-mongodb:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Fix MongoDB Connection via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          timeout: 300s
+          script: |
+            powershell -Command "
+            Set-Location C:\mt5_bridge_service
+            
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            Write-Host '🔧 FIXING MONGODB CONNECTION' -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════' -ForegroundColor Cyan
+            
+            # Backup existing .env
+            if (Test-Path '.env') {
+                Copy-Item '.env' \".env.backup.\$(Get-Date -Format 'yyyyMMdd_HHmmss')\"
+                Write-Host '✅ Backed up existing .env' -ForegroundColor Green
+            }
+            
+            # Create correct .env
+            \$envContent = @'
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_ACCOUNT=886557
+MT5_PASSWORD=Fidus13!
+'@
+            
+            Set-Content -Path '.env' -Value \$envContent -Force
+            Write-Host '✅ Updated .env with correct MongoDB credentials' -ForegroundColor Green
+            
+            # Restart service
+            Write-Host '🛑 Stopping service...' -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName 'MT5BridgeService' -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            
+            Write-Host '🚀 Starting service...' -ForegroundColor Yellow
+            Start-ScheduledTask -TaskName 'MT5BridgeService'
+            Start-Sleep -Seconds 15
+            
+            # Test health
+            Write-Host '🔍 Testing service health...' -ForegroundColor Yellow
+            try {
+                \$response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing -TimeoutSec 10
+                \$json = \$response.Content | ConvertFrom-Json
+                
+                Write-Host ''
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                Write-Host '📊 SERVICE STATUS' -ForegroundColor Green
+                Write-Host '═══════════════════════════════════════════' -ForegroundColor Green
+                Write-Host \"Status: \$(\$json.status)\" -ForegroundColor White
+                Write-Host \"MT5 Available: \$(\$json.mt5.available)\" -ForegroundColor White
+                Write-Host \"MongoDB Connected: \$(\$json.mongodb.connected)\" -ForegroundColor White
+                
+                if (\$json.mongodb.connected -eq \$true) {
+                    Write-Host ''
+                    Write-Host '🎉 SUCCESS! MongoDB connection FIXED!' -ForegroundColor Green
+                    exit 0
+                } else {
+                    Write-Host ''
+                    Write-Host '❌ MongoDB still not connected' -ForegroundColor Red
+                    Write-Host 'Checking logs...' -ForegroundColor Yellow
+                    if (Test-Path 'logs\service_error.log') {
+                        Get-Content 'logs\service_error.log' -Tail 20
+                    }
+                    exit 1
+                }
+            } catch {
+                Write-Host '❌ Service not responding' -ForegroundColor Red
+                Write-Host \"Error: \$(\$_.Exception.Message)\" -ForegroundColor Red
+                exit 1
+            }
+            "
