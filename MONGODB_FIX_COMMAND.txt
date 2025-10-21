@@ -1,0 +1,14 @@
+# IMMEDIATE MONGODB FIX - RUN THIS ON VPS NOW
+# Copy-paste this ENTIRE command in PowerShell (as Administrator) on VPS 92.118.45.135
+
+cd C:\mt5_bridge_service; if (Test-Path '.env') { Copy-Item '.env' ".env.backup.$(Get-Date -Format 'yyyyMMddHHmmss')" }; @'
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_DATABASE=fidus_production
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_PASSWORD=Fidus13!
+MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
+SYNC_INTERVAL=300
+LOG_LEVEL=INFO
+API_PORT=8000
+'@ | Out-File -FilePath ".env" -Encoding ASCII -Force; Stop-ScheduledTask -TaskName "MT5BridgeService" -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 3; Start-ScheduledTask -TaskName "MT5BridgeService"; Start-Sleep -Seconds 20; $response = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing; $health = $response.Content | ConvertFrom-Json; Write-Host ""; Write-Host "Status: $($health.status)" -ForegroundColor Yellow; Write-Host "MT5 Available: $($health.mt5.available)" -ForegroundColor $(if ($health.mt5.available) {"Green"} else {"Red"}); Write-Host "MongoDB Connected: $($health.mongodb.connected)" -ForegroundColor $(if ($health.mongodb.connected) {"Green"} else {"Red"}); if ($health.mongodb.connected) { Write-Host ""; Write-Host "🎉 SUCCESS! MongoDB connection FIXED!" -ForegroundColor Green } else { Write-Host ""; Write-Host "❌ Still failing - check logs" -ForegroundColor Red; Get-Content "logs\service_error.log" -Tail 20 }
