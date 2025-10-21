@@ -162,7 +162,7 @@ def print_vps_setup_reminder():
     print("To complete MT5 integration, you need to:")
     print()
     print("1. 🖥️ Connect to Windows VPS:")
-    print("   - IP: 217.197.163.11")
+    print("   - IP: 92.118.45.135")
     print("   - Username: chavapalmarubin@gmail.com")
     print("   - Password: 2170Tenoch!")
     print()
