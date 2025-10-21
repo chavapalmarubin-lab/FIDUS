@@ -1,0 +1,94 @@
+name: Fix MongoDB via PowerShell Remoting
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-mongodb:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Fix MongoDB Connection
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          Write-Host "=" * 70
+          Write-Host "🔧 FIXING MONGODB CLUSTER NAME VIA POWERSHELL"
+          Write-Host "=" * 70
+          Write-Host ""
+          
+          # VPS credentials
+          $VPS_HOST = "92.118.45.135"
+          $VPS_USER = "trader"
+          $VPS_PASS = "${{ secrets.VPS_PASSWORD }}"
+          
+          # Create credential
+          $securePass = ConvertTo-SecureString $VPS_PASS -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential($VPS_USER, $securePass)
+          
+          Write-Host "🔌 Attempting PowerShell remoting to VPS..."
+          
+          try {
+              # Configure WinRM for remoting
+              Set-Item WSMan:\localhost\Client\TrustedHosts -Value $VPS_HOST -Force
+              
+              # Create session
+              $session = New-PSSession -ComputerName $VPS_HOST -Credential $credential -ErrorAction Stop
+              
+              Write-Host "✅ Connected to VPS"
+              Write-Host ""
+              
+              # Execute fix on VPS
+              Invoke-Command -Session $session -ScriptBlock {
+                  Set-Location C:\mt5_bridge_service
+                  
+                  Write-Host "📝 Creating .env with CORRECT cluster name (y1p9be2)..."
+                  
+                  $envContent = @'
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_DATABASE=fidus_production
+MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
+MT5_SERVER=MEXAtlantic-Real
+MT5_PASSWORD=Fidus13!
+MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
+SYNC_INTERVAL=300
+LOG_LEVEL=INFO
+API_PORT=8000
+'@
+                  
+                  Set-Content -Path '.env' -Value $envContent -Force
+                  Write-Host "✅ .env updated"
+                  
+                  # Restart service
+                  Write-Host "🔄 Restarting service..."
+                  Stop-ScheduledTask -TaskName 'MT5BridgeService' -ErrorAction SilentlyContinue
+                  Start-Sleep -Seconds 5
+                  Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+                  Start-Sleep -Seconds 3
+                  Start-ScheduledTask -TaskName 'MT5BridgeService'
+                  Start-Sleep -Seconds 20
+                  
+                  # Test
+                  $response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -UseBasicParsing
+                  $health = $response.Content | ConvertFrom-Json
+                  
+                  Write-Host ""
+                  Write-Host "MongoDB Connected: $($health.mongodb.connected)"
+                  
+                  if ($health.mongodb.connected) {
+                      Write-Host "🎉 SUCCESS!" -ForegroundColor Green
+                  } else {
+                      Write-Host "❌ Still failing" -ForegroundColor Red
+                  }
+              }
+              
+              Remove-PSSession -Session $session
+              
+          } catch {
+              Write-Host "❌ PowerShell remoting failed: $($_.Exception.Message)"
+              Write-Host ""
+              Write-Host "This means WinRM is not enabled on the VPS."
+              exit 1
+          }
