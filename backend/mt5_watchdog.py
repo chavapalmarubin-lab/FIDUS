@@ -45,7 +45,7 @@ class MT5Watchdog:
         # GitHub configuration for auto-healing
         self.github_token = os.getenv('GITHUB_TOKEN')
         self.github_repo = 'chavapalmarubin-lab/FIDUS'  # Updated repo name
-        self.vps_bridge_url = 'http://217.197.163.11:8000'
+        self.vps_bridge_url = 'http://92.118.45.135:8000'
     
     async def check_mt5_health(self) -> Dict[str, Any]:
         """
