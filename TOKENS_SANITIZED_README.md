@@ -54,7 +54,9 @@ All files now use placeholders like:
 2. Click "New repository secret"
 3. Add:
    - **Name:** `ADMIN_SECRET_TOKEN`
-   - **Value:** `fidus_admin_restart_2025_secure_key_xyz123`
+   - **Value:** `[Generate a secure random token]`
+
+**Suggested token format:** `fidus_admin_restart_[RANDOM_STRING_HERE]`
 
 **Add to VPS (when you have access):**
 ```powershell
