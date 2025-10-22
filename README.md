@@ -143,11 +143,13 @@ POST /mt5/positions     # Position data retrieval
 - **Automated Email & Calendar Services**
 
 **External Services**
-- **MT5 Bridge VPS**: Windows Server (217.197.163.11:8000)
-- **MongoDB Atlas**: Production cluster (fidus_production)
+- **MT5 Bridge VPS**: ForexVPS Windows Server (92.118.45.135:8000)
+  - Old VPS: ❌ 217.197.163.11 (Migrated October 2025)
+  - Auto-Healing: MT5 Watchdog system active
+- **MongoDB Atlas**: Production cluster (fidus.y1p9be2.mongodb.net)
 - **Google Workspace**: OAuth 2.0 integration
 - **ForexVPS**: MT5 hosting provider
-- **Emergent Platform**: Kubernetes deployment
+- **Render.com**: Frontend & Backend deployment
 
 ---
 
