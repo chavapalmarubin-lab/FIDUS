@@ -59,6 +59,7 @@ export default function Phase4Documentation() {
           {activeTab === 'architecture' && <ArchitectureTab />}
           {activeTab === 'api' && <APIEndpointsTab />}
           {activeTab === 'monitoring' && <MonitoringTab />}
+          {activeTab === 'autohealing' && <AutoHealingTab />}
         </div>
       </div>
     </div>
