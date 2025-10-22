@@ -113,12 +113,16 @@ FIDUS is a comprehensive hedge fund management platform providing:
   - documents (uploaded files)
 - **Status:** ✅ Online
 
-### 4. VPS Services
-- **IP:** 217.197.163.11
-- **OS:** Windows Server 2022
+### 4. VPS Services (NEW VPS - October 2025)
+- **IP:** 92.118.45.135 (ForexVPS)
+- **Old IP:** ❌ 217.197.163.11 (DEPRECATED - Do not use)
+- **SSH Port:** 42014
+- **RDP Port:** 42014
+- **OS:** Windows Server
 - **Services:**
-  - MT5 Bridge Service (Python, Task Scheduler)
+  - MT5 Bridge Service (Python, Auto-start)
   - MT5 Terminal (terminal64.exe)
+  - MT5 Watchdog (Auto-Healing System)
 - **Status:** ✅ Online
 
 ### 5. MT5 Trading System
