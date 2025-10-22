@@ -648,7 +648,7 @@ async def one_time_setup(setup_key: str = None):
     EXPECTED_SETUP_KEY = "FIDUS_SETUP_2025_ONE_TIME_USE_KEY_XYZ"
     
     if not setup_key or setup_key != EXPECTED_SETUP_KEY:
-        logger.warning(f"[SECURITY] Invalid setup attempt from client")
+        logger.warning("[SECURITY] Invalid setup attempt from client")
         raise HTTPException(status_code=401, detail="Invalid setup key")
     
     try:
@@ -718,7 +718,7 @@ if __name__ == "__main__":
     print(f"MT5 Path: {MT5_PATH}")
     print(f"MT5 Server: {MT5_SERVER}")
     print('MongoDB: Connected' if db is not None else 'MongoDB: Not Connected')
-    print(f"Port: 8000")
+    print("Port: 8000")
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
