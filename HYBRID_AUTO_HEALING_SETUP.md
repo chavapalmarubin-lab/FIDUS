@@ -30,7 +30,7 @@
 
 ```bash
 # Admin token for emergency restart API
-ADMIN_SECRET_TOKEN="fidus_admin_restart_2025_secure_key_xyz123"
+ADMIN_SECRET_TOKEN="YOUR_SECURE_RANDOM_TOKEN_HERE"
 ```
 
 **Or use PowerShell to add it:**
@@ -41,7 +41,7 @@ ADMIN_SECRET_TOKEN="fidus_admin_restart_2025_secure_key_xyz123"
 cd C:\mt5_bridge_service
 
 # Add the token to .env file
-Add-Content -Path ".env" -Value "`nADMIN_SECRET_TOKEN=`"fidus_admin_restart_2025_secure_key_xyz123`""
+Add-Content -Path ".env" -Value "`nADMIN_SECRET_TOKEN=`"YOUR_SECURE_RANDOM_TOKEN_HERE`""
 
 # Verify it was added
 Get-Content .env | Select-String "ADMIN_SECRET_TOKEN"
@@ -78,7 +78,7 @@ Invoke-WebRequest http://localhost:8000/api/mt5/bridge/health
 1. Go to: https://github.com/chavapalmarubin-lab/FIDUS/settings/secrets/actions
 2. Click "New repository secret"
 3. Name: `ADMIN_SECRET_TOKEN`
-4. Value: `fidus_admin_restart_2025_secure_key_xyz123`
+4. Value: `YOUR_SECURE_RANDOM_TOKEN_HERE`
 5. Click "Add secret"
 
 ⚠️ **IMPORTANT:** Use the SAME token in both .env and GitHub secrets!
@@ -163,7 +163,7 @@ All systems operational.
 
 **Token Format:** Long random string like:
 ```
-fidus_admin_restart_2025_secure_key_xyz123
+YOUR_SECURE_RANDOM_TOKEN_HERE
 ```
 
 **Change the token if you suspect it's compromised!**
@@ -354,7 +354,7 @@ Get-Content C:\mt5_bridge_service\logs\api_service.log -Tail 50
 
 ```bash
 # From any machine with curl:
-curl -X POST "http://92.118.45.135:8000/api/admin/emergency-restart?token=fidus_admin_restart_2025_secure_key_xyz123"
+curl -X POST "http://92.118.45.135:8000/api/admin/emergency-restart?token=YOUR_SECURE_RANDOM_TOKEN_HERE"
 
 # Should return:
 {
