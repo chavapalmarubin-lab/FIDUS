@@ -59,7 +59,7 @@ const MT5AccountManagement = () => {
     is_active: true
   });
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-mt5-bridge-1.preview.emergentagent.com';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://vps-bridge-fix.preview.emergentagent.com';
 
   const loadAccounts = async () => {
     setLoading(true);

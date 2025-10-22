@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com/api"
 
 class SimplifiedPipelineTest:
     def __init__(self):

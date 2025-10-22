@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import json
 
 class RedemptionSystemTester:
-    def __init__(self, base_url="https://fidus-mt5-bridge-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://vps-bridge-fix.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

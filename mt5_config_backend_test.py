@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-mt5-bridge-1.preview.emergentagent.com"
+BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
