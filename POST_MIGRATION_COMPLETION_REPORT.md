@@ -133,7 +133,8 @@ NEW: MT5_BRIDGE_URL="http://92.118.45.135:8000"
 
 **B. GitHub Token Added ✅**
 ```bash
-GITHUB_TOKEN="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"
+# GitHub Token for Auto-Healing (Add to Render.com environment variables)
+GITHUB_TOKEN="YOUR_GITHUB_TOKEN_HERE"
 ```
 
 **C. Frontend URL Cleaned ✅**
