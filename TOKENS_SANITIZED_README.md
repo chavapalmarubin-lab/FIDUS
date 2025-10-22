@@ -40,8 +40,10 @@ All files now use placeholders like:
 3. Go to "Environment" tab
 4. Add variable:
    - **Key:** `GITHUB_TOKEN`
-   - **Value:** `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`
+   - **Value:** `[Use your actual GitHub Personal Access Token]`
 5. Save changes
+
+**Note:** Get your GitHub token from: https://github.com/settings/tokens
 
 ---
 
