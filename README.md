@@ -44,12 +44,14 @@ FIDUS is a comprehensive investment management platform that provides sophistica
 ### 🏗️ MT5 Bridge Architecture Implementation
 **Status:** ✅ FULLY OPERATIONAL
 
-**Windows VPS Infrastructure:**
-- **Server**: ForexVPS Windows Server (217.197.163.11:8000)
+**Windows VPS Infrastructure (NEW - October 2025):**
+- **Server**: ForexVPS Windows Server (92.118.45.135:8000)
+- **Old Server**: ❌ 217.197.163.11 (DEPRECATED - Migrated October 2025)
 - **MT5 Python Bridge**: Standalone FastAPI service
-- **Auto-Startup**: Windows Service configuration
-- **External Access**: Port 8000 opened via ForexVPS support
-- **Health Check**: `/health` endpoint operational
+- **Auto-Startup**: Windows Task Scheduler configuration
+- **Auto-Healing**: MT5 Watchdog monitors and auto-restarts
+- **External Access**: Port 8000, SSH port 42014
+- **Health Check**: `/api/mt5/bridge/health` endpoint operational
 - **Connection Status**: `mt5_available: true, mt5_initialized: true`
 
 **Bridge Service Features:**
