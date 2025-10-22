@@ -273,8 +273,9 @@ Authorization: Bearer <admin_jwt_token>
 ### Environment Variables (Backend .env)
 
 ```bash
-# GitHub Token for Auto-Healing
-GITHUB_TOKEN="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"
+# GitHub Token for Auto-Healing (MT5 Watchdog emergency deployment)
+# Add this to Render.com environment variables, not in code
+GITHUB_TOKEN="YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"
 
 # MT5 Bridge Configuration
 MT5_BRIDGE_URL="http://92.118.45.135:8000"
