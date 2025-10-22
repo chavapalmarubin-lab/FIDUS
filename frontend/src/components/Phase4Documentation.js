@@ -17,6 +17,7 @@ export default function Phase4Documentation() {
     { id: 'architecture', name: 'Architecture', icon: GitBranch },
     { id: 'api', name: 'API Endpoints (23)', icon: Code },
     { id: 'monitoring', name: 'Monitoring', icon: Shield },
+    { id: 'autohealing', name: 'Auto-Healing', icon: Activity },
   ];
 
   return (
