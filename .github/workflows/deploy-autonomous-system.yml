@@ -55,16 +55,15 @@ jobs:
           if git diff --staged --quiet; then
             echo "[INFO] No changes to commit"
           else
-            git commit -m "feat: Deploy autonomous testing and monitoring system
-
-- Auto-test workflow runs every 6 hours
-- Health monitoring every 15 minutes  
-- Test API endpoints for manual triggers
-- Complete documentation
-- Zero manual intervention required
-- All emojis removed from code files
-
-System is now fully autonomous."
+            git commit -m "feat: Deploy autonomous testing and monitoring system" \
+              -m "- Auto-test workflow runs every 6 hours" \
+              -m "- Health monitoring every 15 minutes" \
+              -m "- Test API endpoints for manual triggers" \
+              -m "- Complete documentation" \
+              -m "- Zero manual intervention required" \
+              -m "- All emojis removed from code files" \
+              -m "" \
+              -m "System is now fully autonomous."
             
             git push origin main
             echo "[PASS] Changes committed and pushed"
