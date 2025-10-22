@@ -95,9 +95,14 @@ function OverviewTab() {
             <div className="text-xs text-gray-500 mt-1">All 7 Enhancements Live</div>
           </div>
           <div className="bg-white rounded-lg p-4 border border-green-200">
-            <div className="text-sm text-gray-600 mb-1">VPS Deployment</div>
+            <div className="text-sm text-gray-600 mb-1">VPS Migration</div>
             <div className="text-2xl font-bold text-green-600">✅ Complete</div>
-            <div className="text-xs text-gray-500 mt-1">Auto-start Enabled</div>
+            <div className="text-xs text-gray-500 mt-1">NEW VPS: 92.118.45.135</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <div className="text-sm text-gray-600 mb-1">Auto-Healing</div>
+            <div className="text-2xl font-bold text-green-600">✅ Active</div>
+            <div className="text-xs text-gray-500 mt-1">90% Auto-Recovery</div>
           </div>
         </div>
       </div>
