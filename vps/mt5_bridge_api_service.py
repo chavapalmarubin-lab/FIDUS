@@ -194,6 +194,84 @@ async def bridge_health():
 
 
 # ============================================
+# ADMIN RESTART ENDPOINT (For Auto-Healing)
+# ============================================
+@app.post("/api/admin/emergency-restart")
+async def admin_emergency_restart(token: str = None):
+    """
+    Emergency restart endpoint for auto-healing system
+    Requires ADMIN_SECRET_TOKEN for security
+    
+    This endpoint allows GitHub Actions to trigger a service restart
+    without needing SSH/WinRM access to the VPS
+    """
+    try:
+        # Get admin token from environment
+        admin_token = os.getenv('ADMIN_SECRET_TOKEN')
+        
+        if not admin_token:
+            logger.error("[ERROR] ADMIN_SECRET_TOKEN not configured")
+            raise HTTPException(status_code=500, detail="Admin token not configured")
+        
+        # Verify token
+        if not token or token != admin_token:
+            logger.warning("[SECURITY] Unauthorized restart attempt")
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        
+        logger.info("[ADMIN] Emergency restart triggered via API")
+        
+        # Reinitialize MT5 connection
+        try:
+            mt5.shutdown()
+            logger.info("[RESTART] MT5 shutdown complete")
+            
+            if not mt5.initialize(path=MT5_PATH):
+                logger.error(f"[RESTART] MT5 initialize() failed, error code: {mt5.last_error()}")
+                return {
+                    "success": False,
+                    "message": "MT5 reinitialization failed",
+                    "error_code": mt5.last_error(),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            
+            version = mt5.version()
+            logger.info(f"[RESTART] MT5 reinitialized: v{version}")
+            
+        except Exception as e:
+            logger.error(f"[RESTART] MT5 restart error: {e}")
+            return {
+                "success": False,
+                "message": "MT5 restart error",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        
+        # Verify MongoDB connection
+        mongo_ok = False
+        try:
+            if db is not None:
+                mongo_client.admin.command('ping')
+                mongo_ok = True
+                logger.info("[RESTART] MongoDB connection verified")
+        except Exception as e:
+            logger.error(f"[RESTART] MongoDB verification error: {e}")
+        
+        return {
+            "success": True,
+            "message": "MT5 Bridge service restarted successfully",
+            "mt5_reinitialized": True,
+            "mongodb_connected": mongo_ok,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[ERROR] Emergency restart error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
 # MT5 STATUS ENDPOINT
 # ============================================
 @app.get("/api/mt5/status")
