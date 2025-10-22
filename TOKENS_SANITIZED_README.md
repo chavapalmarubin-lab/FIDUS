@@ -61,8 +61,10 @@ All files now use placeholders like:
 **Add to VPS (when you have access):**
 ```powershell
 # On VPS: C:\mt5_bridge_service\.env
-ADMIN_SECRET_TOKEN="fidus_admin_restart_2025_secure_key_xyz123"
+ADMIN_SECRET_TOKEN="[Same token as GitHub Secret]"
 ```
+
+**Important:** Use the SAME token in both GitHub Secrets and VPS .env file!
 
 ---
 
