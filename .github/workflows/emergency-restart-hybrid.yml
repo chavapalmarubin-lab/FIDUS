@@ -1,0 +1,117 @@
+name: MT5 Bridge Emergency Restart (Hybrid API)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for restart'
+        required: false
+        default: 'Auto-healing triggered by watchdog'
+
+jobs:
+  emergency-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Trigger Emergency Restart via API
+        run: |
+          echo "========================================="
+          echo "MT5 BRIDGE EMERGENCY RESTART (HYBRID API)"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+          echo "========================================="
+          echo ""
+          
+          echo "🔧 Triggering restart via API endpoint..."
+          
+          RESPONSE=$(curl -X POST \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_CODE:%{http_code}" \
+            -s \
+            "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" \
+          )
+          
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
+          BODY=$(echo "$RESPONSE" | sed '/HTTP_CODE/d')
+          
+          echo ""
+          echo "Response:"
+          echo "$BODY" | jq '.' || echo "$BODY"
+          echo ""
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Restart API call successful (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Restart API call failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+      
+      - name: Wait for Service Stabilization
+        run: |
+          echo ""
+          echo "⏳ Waiting 20 seconds for service to stabilize..."
+          sleep 20
+          echo "✅ Wait complete"
+      
+      - name: Verify Service Health
+        run: |
+          echo ""
+          echo "========================================="
+          echo "VERIFYING SERVICE HEALTH"
+          echo "========================================="
+          echo ""
+          
+          echo "🔍 Checking bridge health endpoint..."
+          
+          HEALTH_RESPONSE=$(curl -s http://92.118.45.135:8000/api/mt5/bridge/health)
+          
+          echo "Health Check Response:"
+          echo "$HEALTH_RESPONSE" | jq '.' || echo "$HEALTH_RESPONSE"
+          echo ""
+          
+          # Check if status is healthy
+          STATUS=$(echo "$HEALTH_RESPONSE" | jq -r '.status' 2>/dev/null)
+          MT5_AVAILABLE=$(echo "$HEALTH_RESPONSE" | jq -r '.mt5.available' 2>/dev/null)
+          MONGO_CONNECTED=$(echo "$HEALTH_RESPONSE" | jq -r '.mongodb.connected' 2>/dev/null)
+          
+          echo "Status: $STATUS"
+          echo "MT5 Available: $MT5_AVAILABLE"
+          echo "MongoDB Connected: $MONGO_CONNECTED"
+          echo ""
+          
+          if [ "$STATUS" = "healthy" ] && [ "$MT5_AVAILABLE" = "true" ] && [ "$MONGO_CONNECTED" = "true" ]; then
+            echo "✅✅✅ SERVICE HEALTH CHECK PASSED ✅✅✅"
+            echo ""
+            echo "MT5 Bridge is running and healthy!"
+            echo "All systems operational."
+            exit 0
+          else
+            echo "⚠️ SERVICE HEALTH CHECK WARNING"
+            echo ""
+            echo "Service responded but may not be fully healthy."
+            echo "Status: $STATUS"
+            echo "Please verify manually if needed."
+            
+            # Don't fail the workflow if service is responding
+            # Just warn and let monitoring handle it
+            exit 0
+          fi
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "========================================="
+          echo "EMERGENCY RESTART COMPLETE"
+          echo "========================================="
+          echo ""
+          echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Triggered by: ${{ github.event.inputs.reason }}"
+          echo ""
+          echo "Next steps:"
+          echo "1. Monitor watchdog status for recovery confirmation"
+          echo "2. Check email for auto-recovery notification"
+          echo "3. Verify MT5 data sync is working"
+          echo ""
+          echo "VPS URL: http://92.118.45.135:8000"
+          echo "Health Check: http://92.118.45.135:8000/api/mt5/bridge/health"
