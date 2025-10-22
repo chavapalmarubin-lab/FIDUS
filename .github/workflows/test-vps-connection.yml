@@ -1,0 +1,91 @@
+name: Test VPS Connection (Diagnostic)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Verify GitHub Secrets
+        run: |
+          echo "🔍 Checking GitHub Secrets Configuration..."
+          echo ""
+          
+          if [ -z "${{ secrets.VPS_HOST }}" ]; then
+            echo "❌ VPS_HOST is NOT set"
+          else
+            echo "✅ VPS_HOST is set: ${{ secrets.VPS_HOST }}"
+          fi
+          
+          if [ -z "${{ secrets.VPS_USERNAME }}" ]; then
+            echo "❌ VPS_USERNAME is NOT set"
+          else
+            echo "✅ VPS_USERNAME is set: ${{ secrets.VPS_USERNAME }}"
+          fi
+          
+          if [ -z "${{ secrets.VPS_PASSWORD }}" ]; then
+            echo "❌ VPS_PASSWORD is NOT set"
+          else
+            echo "✅ VPS_PASSWORD is set: (hidden)"
+          fi
+          
+          if [ -z "${{ secrets.VPS_PORT }}" ]; then
+            echo "❌ VPS_PORT is NOT set"
+          else
+            echo "✅ VPS_PORT is set: ${{ secrets.VPS_PORT }}"
+          fi
+          
+          echo ""
+          echo "Expected values:"
+          echo "  VPS_HOST: 92.118.45.135"
+          echo "  VPS_USERNAME: trader"
+          echo "  VPS_PORT: 42014"
+      
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          timeout: 30s
+          command_timeout: 1m
+          script: |
+            echo "========================================="
+            echo "SSH CONNECTION SUCCESSFUL!"
+            echo "========================================="
+            echo ""
+            echo "VPS Information:"
+            echo "Hostname: $(hostname)"
+            echo "Current User: $(whoami)"
+            echo "Current Directory: $(pwd)"
+            echo ""
+            echo "Checking PowerShell:"
+            powershell -Command "Write-Host 'PowerShell is available!' -ForegroundColor Green"
+            echo ""
+            echo "Checking service directory:"
+            if [ -d "C:/mt5_bridge_service" ]; then
+              echo "✅ C:/mt5_bridge_service exists"
+            else
+              echo "❌ C:/mt5_bridge_service NOT FOUND"
+            fi
+            
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "========================================="
+          echo "CONNECTION TEST COMPLETE"
+          echo "========================================="
+          echo ""
+          echo "If you see 'SSH CONNECTION SUCCESSFUL' above,"
+          echo "then the emergency workflow should work."
+          echo ""
+          echo "If connection failed, check:"
+          echo "1. GitHub Secrets are set correctly"
+          echo "2. SSH is enabled on Windows VPS"
+          echo "3. Port 42014 is accessible"
+          echo "4. Firewall allows SSH connections"
