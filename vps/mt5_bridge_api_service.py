@@ -631,6 +631,81 @@ async def get_system_status():
 
 
 # ============================================
+# ONE-TIME SETUP ENDPOINT (REMOVE AFTER USE)
+# ============================================
+@app.post("/api/admin/one-time-setup")
+async def one_time_setup(setup_key: str = None):
+    """
+    ONE-TIME SETUP ENDPOINT - Remove after successful configuration!
+    Allows remote configuration of ADMIN_SECRET_TOKEN via GitHub Actions.
+    
+    Security: Requires setup key authentication
+    """
+    import os
+    from datetime import datetime
+    
+    # Security: Verify setup key
+    EXPECTED_SETUP_KEY = "FIDUS_SETUP_2025_ONE_TIME_USE_KEY_XYZ"
+    
+    if not setup_key or setup_key != EXPECTED_SETUP_KEY:
+        logger.warning(f"[SECURITY] Invalid setup attempt from client")
+        raise HTTPException(status_code=401, detail="Invalid setup key")
+    
+    try:
+        # Get request body
+        from fastapi import Request
+        request_data = await Request.json()
+        
+        if not request_data or 'admin_token' not in request_data:
+            raise HTTPException(status_code=400, detail="admin_token required in request body")
+        
+        admin_token = request_data['admin_token']
+        
+        # Validate token length
+        if len(admin_token) < 32:
+            raise HTTPException(status_code=400, detail="Token too short (minimum 32 characters)")
+        
+        logger.warning("[SETUP] 🔧 ONE-TIME SETUP: Adding ADMIN_SECRET_TOKEN to .env")
+        
+        # Check if token already exists
+        env_path = os.path.join(os.path.dirname(__file__), '.env')
+        token_exists = False
+        
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                content = f.read()
+                if 'ADMIN_SECRET_TOKEN' in content:
+                    token_exists = True
+                    logger.warning("[SETUP] ⚠️  Token already exists in .env")
+        
+        if not token_exists:
+            # Add token to .env
+            with open(env_path, 'a') as f:
+                f.write(f'\n# Auto-Healing Token (Added: {datetime.now().isoformat()})\n')
+                f.write(f'ADMIN_SECRET_TOKEN="{admin_token}"\n')
+            
+            logger.warning("[SETUP] ✅ ADMIN_SECRET_TOKEN added successfully")
+            
+        return {
+            "status": "success",
+            "message": "Token configured successfully" if not token_exists else "Token already exists",
+            "token_existed": token_exists,
+            "next_steps": [
+                "Restart MT5 Bridge service to load new token",
+                "Test emergency restart workflow",
+                "Remove this setup endpoint for security"
+            ],
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[SETUP] Setup failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
 # RUN SERVER
 # ============================================
 if __name__ == "__main__":
