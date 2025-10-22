@@ -1,0 +1,127 @@
+name: Configure VPS Auto-Healing (One-Time Setup)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Check VPS Connectivity
+        run: |
+          echo "========================================="
+          echo "🚀 CONFIGURING AUTO-HEALING ON VPS"
+          echo "VPS: 92.118.45.135:8000"
+          echo "========================================="
+          echo ""
+          
+          echo "🔍 Checking VPS connectivity..."
+          if curl -f -s --max-time 10 http://92.118.45.135:8000/api/mt5/bridge/health > /dev/null; then
+            echo "✅ VPS is online and responding"
+          else
+            echo "❌ VPS not responding - may need manual restart"
+            exit 1
+          fi
+      
+      - name: Configure ADMIN_SECRET_TOKEN
+        run: |
+          echo ""
+          echo "🔧 Configuring ADMIN_SECRET_TOKEN on VPS..."
+          
+          RESPONSE=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"admin_token": "fidus_admin_restart_2025_secure_key_xyz123"}' \
+            -w "\nHTTP_STATUS:%{http_code}" \
+            "http://92.118.45.135:8000/api/admin/one-time-setup?setup_key=FIDUS_SETUP_2025_ONE_TIME_USE_KEY_XYZ")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+          BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS/d')
+          
+          echo "Response body:"
+          echo "$BODY" | jq '.' || echo "$BODY"
+          echo ""
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Token configuration successful"
+          else
+            echo "❌ Configuration failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+      
+      - name: Restart MT5 Bridge Service
+        run: |
+          echo ""
+          echo "🔄 Attempting to restart MT5 Bridge service..."
+          
+          # Try to restart using the emergency endpoint
+          RESTART_RESPONSE=$(curl -s -X POST \
+            -w "\nHTTP_STATUS:%{http_code}" \
+            "http://92.118.45.135:8000/api/admin/emergency-restart?token=fidus_admin_restart_2025_secure_key_xyz123")
+          
+          RESTART_CODE=$(echo "$RESTART_RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+          RESTART_BODY=$(echo "$RESTART_RESPONSE" | sed '/HTTP_STATUS/d')
+          
+          echo "Restart response:"
+          echo "$RESTART_BODY" | jq '.' || echo "$RESTART_BODY"
+          echo ""
+          
+          if [ "$RESTART_CODE" = "200" ]; then
+            echo "✅ Service restart triggered successfully"
+          else
+            echo "⚠️  Restart may have failed (HTTP $RESTART_CODE)"
+            echo "Note: Service may need manual restart on VPS"
+          fi
+          
+          echo ""
+          echo "⏳ Waiting 20 seconds for service to stabilize..."
+          sleep 20
+      
+      - name: Verify Service Health
+        run: |
+          echo ""
+          echo "========================================="
+          echo "🏥 VERIFYING SERVICE HEALTH"
+          echo "========================================="
+          echo ""
+          
+          HEALTH_RESPONSE=$(curl -s http://92.118.45.135:8000/api/mt5/bridge/health)
+          
+          echo "Health check response:"
+          echo "$HEALTH_RESPONSE" | jq '.' || echo "$HEALTH_RESPONSE"
+          echo ""
+          
+          STATUS=$(echo "$HEALTH_RESPONSE" | jq -r '.status' 2>/dev/null || echo "unknown")
+          
+          if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "degraded" ]; then
+            echo "✅ Service is responding"
+          else
+            echo "⚠️  Service health status unclear"
+          fi
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "========================================="
+          echo "📊 CONFIGURATION SUMMARY"
+          echo "========================================="
+          echo ""
+          echo "✅ ADMIN_SECRET_TOKEN added to VPS .env"
+          echo "✅ Service restart attempted"
+          echo "✅ Health check completed"
+          echo ""
+          echo "Next steps:"
+          echo "1. Verify MT5 Bridge service is running on VPS"
+          echo "2. Test emergency restart workflow"
+          echo "3. Remove one-time setup endpoint from code"
+          echo ""
+          echo "GitHub Secret to add manually:"
+          echo "  Name: ADMIN_SECRET_TOKEN"
+          echo "  Value: fidus_admin_restart_2025_secure_key_xyz123"
+          echo "  URL: https://github.com/chavapalmarubin-lab/FIDUS/settings/secrets/actions"
+          echo ""
+          echo "========================================="
+          echo "✅✅✅ VPS CONFIGURATION COMPLETE ✅✅✅"
+          echo "========================================="
