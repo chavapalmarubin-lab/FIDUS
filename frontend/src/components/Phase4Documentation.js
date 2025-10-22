@@ -691,6 +691,146 @@ function MonitoringTab() {
   );
 }
 
+// Auto-Healing Tab
+function AutoHealingTab() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">MT5 Auto-Healing System</h2>
+        <p className="text-gray-600">Intelligent monitoring and automatic recovery for MT5 Bridge service</p>
+      </div>
+
+      {/* System Status */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-start">
+          <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-green-900 mb-1">Auto-Healing Active: October 21, 2025</h3>
+            <p className="text-sm text-green-800">Watchdog monitoring every 60 seconds • 90% automatic recovery rate expected</p>
+          </div>
+        </div>
+      </div>
+
+      {/* How It Works */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">How Auto-Healing Works</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-3">1</div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Detection (0-3 minutes)</h4>
+              <p className="text-sm text-gray-600">Watchdog monitors MT5 Bridge health every 60 seconds. After 3 consecutive failures (~3 minutes), auto-healing triggers.</p>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-3">2</div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Automated Recovery (3-5 minutes)</h4>
+              <p className="text-sm text-gray-600">GitHub Actions workflow triggered → SSH to VPS → Stop Python processes → Restart MT5 Bridge service → Verify health</p>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-3">3</div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Verification & Alert (5-6 minutes)</h4>
+              <p className="text-sm text-gray-600">If successful: Send recovery notification. If failed: Send critical alert requiring manual intervention.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Health Checks */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Three-Layer Health Monitoring</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="border-l-4 border-green-500 pl-4">
+            <h4 className="font-semibold text-gray-900 mb-1">✅ Bridge API Availability</h4>
+            <p className="text-sm text-gray-600">Checks: http://92.118.45.135:8000/api/mt5/bridge/health</p>
+            <p className="text-xs text-gray-500 mt-1">Failure indicates: VPS down, service crashed, network issues, or port blocked</p>
+          </div>
+          <div className="border-l-4 border-blue-500 pl-4">
+            <h4 className="font-semibold text-gray-900 mb-1">✅ Data Freshness</h4>
+            <p className="text-sm text-gray-600">Last account update must be < 15 minutes ago</p>
+            <p className="text-xs text-gray-500 mt-1">Failure indicates: MT5 not connected, sync stopped, or MongoDB write issues</p>
+          </div>
+          <div className="border-l-4 border-purple-500 pl-4">
+            <h4 className="font-semibold text-gray-900 mb-1">✅ Account Sync Rate</h4>
+            <p className="text-sm text-gray-600">At least 50% of accounts (4/7) must be recently synced</p>
+            <p className="text-xs text-gray-500 mt-1">Failure indicates: Partial connection issues, accounts not logged in, or sync degraded</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Configuration */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Watchdog Configuration</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <ConfigItem label="Check Interval" value="60 seconds" />
+          <ConfigItem label="Failure Threshold" value="3 consecutive failures" />
+          <ConfigItem label="Healing Cooldown" value="5 minutes (prevents rapid restarts)" />
+          <ConfigItem label="Data Freshness Threshold" value="15 minutes" />
+          <ConfigItem label="VPS Bridge URL" value="http://92.118.45.135:8000" />
+          <ConfigItem label="GitHub Workflow" value="deploy-mt5-bridge-emergency-ps.yml" />
+        </div>
+      </div>
+
+      {/* API Endpoints */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Watchdog API Endpoints</h3>
+        </div>
+        <div className="p-6 space-y-3">
+          <div className="font-mono text-sm bg-gray-50 p-3 rounded border border-gray-200">
+            <span className="text-green-600 font-semibold">GET</span> /api/system/mt5-watchdog/status
+            <p className="text-xs text-gray-600 mt-1">Get current watchdog status and health</p>
+          </div>
+          <div className="font-mono text-sm bg-gray-50 p-3 rounded border border-gray-200">
+            <span className="text-blue-600 font-semibold">POST</span> /api/system/mt5-watchdog/force-sync
+            <p className="text-xs text-gray-600 mt-1">Manually trigger MT5 data sync</p>
+          </div>
+          <div className="font-mono text-sm bg-gray-50 p-3 rounded border border-gray-200">
+            <span className="text-blue-600 font-semibold">POST</span> /api/system/mt5-watchdog/force-healing
+            <p className="text-xs text-gray-600 mt-1">Manually trigger emergency restart</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Expected Performance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard icon={CheckCircle} label="Auto-Recovery" value="90%" status="good" />
+        <MetricCard icon={Clock} label="Avg Downtime" value="<6 min" status="good" />
+        <MetricCard icon={Activity} label="Detection Time" value="~3 min" status="good" />
+        <MetricCard icon={AlertCircle} label="Manual Needed" value="<10%" status="good" />
+      </div>
+
+      {/* Email Alerts */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Email Alert System</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-semibold text-green-900 mb-2">✅ Recovery Successful (INFO)</h4>
+            <p className="text-sm text-green-800 mb-2">Sent when auto-healing successfully restores service</p>
+            <p className="text-xs text-green-700">Subject: ✅ MT5 Auto-Recovery Successful</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="font-semibold text-red-900 mb-2">🚨 Manual Intervention Required (CRITICAL)</h4>
+            <p className="text-sm text-red-800 mb-2">Sent only when auto-healing fails and manual action needed</p>
+            <p className="text-xs text-red-700">Subject: 🚨 CRITICAL: MT5 Auto-Healing Failed - Manual Intervention Required</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Helper Components
 function StatCard({ icon: Icon, label, value, color }) {
   const colors = {
