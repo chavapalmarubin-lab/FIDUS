@@ -59,7 +59,7 @@ FIDUS is a comprehensive hedge fund management platform providing:
 │         ↑                                            │
 │         │ Sync every 5 min                          │
 │  [VPS MT5 Bridge Service] ←→ [MT5 Terminal]       │
-│    217.197.163.11              MEXAtlantic-Real     │
+│    92.118.45.135 (NEW)         MEXAtlantic-Real     │
 │                                                      │
 │  [Integrations]                                     │
 │    - Google Workspace (Gmail, Calendar, Drive)     │
