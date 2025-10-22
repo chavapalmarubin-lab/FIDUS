@@ -173,24 +173,26 @@ POST /mt5/positions     # Position data retrieval
 
 ### Service Endpoints
 ```bash
-# FIDUS Production URLs
-Frontend: https://fidus-invest.emergent.host
-Backend:  https://fidus-invest.emergent.host/api
-Health:   https://fidus-invest.emergent.host/api/health
+# FIDUS Production URLs (October 2025)
+Frontend: https://fidus-investment-platform.onrender.com
+Backend:  https://fidus-api.onrender.com
+Health:   https://fidus-api.onrender.com/health
 
 # External Services  
-MT5 Bridge: http://217.197.163.11:8000/health
-MongoDB:    MongoDB Atlas Cluster (fidus_production)
+MT5 Bridge (NEW): http://92.118.45.135:8000/api/mt5/bridge/health
+MT5 Bridge (OLD): ❌ http://217.197.163.11:8000 (DEPRECATED)
+MongoDB:    MongoDB Atlas Cluster (fidus.y1p9be2.mongodb.net)
 Google:     OAuth via accounts.google.com
 ```
 
 ### Environment Configuration
 ```bash
 # Backend Environment (.env)
-MONGO_URL="mongodb+srv://...fidus_production"
+MONGO_URL="mongodb+srv://...@fidus.y1p9be2.mongodb.net/fidus_production"
 GOOGLE_CLIENT_ID="909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs..."
-GOOGLE_OAUTH_REDIRECT_URI="https://fidus-invest.emergent.host/admin/google-callback"
-MT5_BRIDGE_URL="http://217.197.163.11:8000"
+GOOGLE_OAUTH_REDIRECT_URI="https://fidus-investment-platform.onrender.com/admin/google-callback"
+MT5_BRIDGE_URL="http://92.118.45.135:8000"
+GITHUB_TOKEN="ghp_..." # For MT5 Auto-Healing
 JWT_SECRET_KEY="fidus-production-secret-2025-secure-key"
 
 # Frontend Environment (.env)
