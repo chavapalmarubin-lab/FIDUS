@@ -326,11 +326,7 @@ function App() {
           {/* PUBLIC ROUTE: Prospects Portal - No authentication required */}
           <Route 
             path="/prospects" 
-            element={
-              <div className="App">
-                <ProspectsPortalNew />
-              </div>
-            } 
+            element={<ProspectsPortalNew />} 
           />
           
           {/* MAIN APP: All other routes with authentication */}
