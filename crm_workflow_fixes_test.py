@@ -142,7 +142,7 @@ class CRMWorkflowFixesTest:
                     self.log_test("Lead Creation", True, f"Created lead with ID: {self.test_lead_id}")
                     
                     # Track simulator session
-                    simulator_url = f"{BACKEND_URL}/api/leads/{self.test_lead_id}/simulator-session"
+                    simulator_url = f"{BACKEND_URL}/api/prospects/simulator/{self.test_lead_id}"
                     simulator_data = {
                         "session_duration": 300,  # 5 minutes
                         "pages_viewed": 5,
