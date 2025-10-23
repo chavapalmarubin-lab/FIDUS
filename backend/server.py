@@ -10476,6 +10476,104 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
         logging.error(f"Update prospect error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update prospect")
 
+@api_router.post("/crm/prospects/{prospect_id}/mark-won")
+async def mark_prospect_won(prospect_id: str):
+    """Quick endpoint to mark prospect as won - SUPPORTS portal_lead_ IDs"""
+    try:
+        # Handle portal_lead_ prefix - resolve to actual prospect_id
+        actual_prospect_id = prospect_id
+        if prospect_id.startswith("portal_lead_"):
+            # Extract original lead ID and find the migrated prospect
+            original_lead_id = prospect_id.replace("portal_lead_", "")
+            lead_doc = await db.leads.find_one({"_id": ObjectId(original_lead_id)})
+            
+            if lead_doc and lead_doc.get("migrated_to_crm"):
+                actual_prospect_id = lead_doc.get("crm_prospect_id")
+                logging.info(f"✅ [CRM] Resolved portal_lead to CRM prospect: {actual_prospect_id}")
+            else:
+                # If not migrated, trigger migration first by creating prospect
+                if not lead_doc:
+                    raise HTTPException(status_code=404, detail="Portal lead not found")
+                
+                # Create a full CRM prospect from the portal lead
+                new_prospect_id = str(uuid.uuid4())
+                prospect_dict = {
+                    "prospect_id": new_prospect_id,
+                    "name": lead_doc.get('email', '').split('@')[0].title(),
+                    "email": lead_doc.get('email', ''),
+                    "phone": lead_doc.get('phone', ''),
+                    "stage": "won",  # Set directly to won
+                    "notes": f"Migrated from Prospects Portal and marked as won | Original engagement score: {lead_doc.get('engagement_score', 0)}",
+                    "created_at": lead_doc.get('created_at', datetime.now(timezone.utc)),
+                    "updated_at": datetime.now(timezone.utc),
+                    "converted_to_client": False,
+                    "client_id": "",
+                    "google_drive_folder": "",
+                    "source": "prospects_portal",
+                    "_original_lead_id": str(lead_doc['_id'])
+                }
+                
+                # Insert into CRM prospects
+                await db.crm_prospects.insert_one(prospect_dict)
+                
+                # Mark the lead as migrated
+                await db.leads.update_one(
+                    {"_id": ObjectId(original_lead_id)},
+                    {"$set": {
+                        "migrated_to_crm": True,
+                        "crm_prospect_id": new_prospect_id,
+                        "migrated_date": datetime.now(timezone.utc)
+                    }}
+                )
+                
+                logging.info(f"✅ [CRM] Migrated portal lead {original_lead_id} to won prospect {new_prospect_id}")
+                
+                return {
+                    "success": True,
+                    "message": "Portal lead migrated and marked as won",
+                    "prospect_id": new_prospect_id,
+                    "stage": "won"
+                }
+        
+        # Update stage to won for existing CRM prospect
+        result = await db.crm_prospects.update_one(
+            {"prospect_id": actual_prospect_id},
+            {
+                "$set": {
+                    "stage": "won",
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            # Check if prospect exists
+            existing = await db.crm_prospects.find_one({"prospect_id": actual_prospect_id})
+            if not existing:
+                raise HTTPException(status_code=404, detail="Prospect not found")
+            # If exists but not modified, might already be won
+            return {
+                "success": True,
+                "message": "Prospect already marked as won",
+                "prospect_id": actual_prospect_id,
+                "stage": "won"
+            }
+        
+        logging.info(f"✅ [CRM] Marked prospect {actual_prospect_id} as won")
+        
+        return {
+            "success": True,
+            "message": "Prospect marked as won",
+            "prospect_id": actual_prospect_id,
+            "stage": "won"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Mark won error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to mark prospect as won: {str(e)}")
+
 @api_router.delete("/crm/prospects/{prospect_id}")
 async def delete_prospect(prospect_id: str):
     """Delete a prospect"""
