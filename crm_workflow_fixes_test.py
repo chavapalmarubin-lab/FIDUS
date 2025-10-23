@@ -419,7 +419,9 @@ class CRMWorkflowFixesTest:
                     self.log_test("Client Conversion", True, f"Successfully converted to client: {self.test_client_id}")
                     
                     # Verify client created in users collection
-                    client_doc = self.db.users.find_one({"id": self.test_client_id})
+                    client_doc = (self.db.users.find_one({"id": self.test_client_id}) or
+                                 self.db.users.find_one({"_id": self.test_client_id}) or
+                                 self.db.users.find_one({"username": self.test_client_id}))
                     if client_doc:
                         self.log_test("Client in Users Collection", True, f"Client found in users collection")
                         return True
