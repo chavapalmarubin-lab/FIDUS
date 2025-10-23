@@ -154,9 +154,31 @@ class CRMWorkflowFixesTest:
                         self.log_test("Simulator Tracking", True, "Engagement score set to 10")
                         
                         # Verify engagement score in MongoDB - try different field names
-                        lead_doc = (self.db.leads.find_one({"lead_id": self.test_lead_id}) or 
-                                   self.db.leads.find_one({"_id": self.test_lead_id}) or
-                                   self.db.leads.find_one({"id": self.test_lead_id}))
+                        print(f"DEBUG: Looking for lead {self.test_lead_id} in collections...")
+                        collections = self.db.list_collection_names()
+                        print(f"DEBUG: Available collections: {collections}")
+                        
+                        # Try different collections and field names
+                        lead_doc = None
+                        for collection_name in ['leads', 'prospects_leads', 'prospect_leads']:
+                            if collection_name in collections:
+                                collection = self.db[collection_name]
+                                lead_doc = (collection.find_one({"lead_id": self.test_lead_id}) or 
+                                           collection.find_one({"_id": self.test_lead_id}) or
+                                           collection.find_one({"id": self.test_lead_id}))
+                                if lead_doc:
+                                    print(f"DEBUG: Found lead in {collection_name} collection")
+                                    break
+                        
+                        if not lead_doc:
+                            # Try to find any document with our email
+                            for collection_name in collections:
+                                collection = self.db[collection_name]
+                                email_doc = collection.find_one({"email": self.unique_email})
+                                if email_doc:
+                                    print(f"DEBUG: Found document with email in {collection_name}: {email_doc}")
+                                    lead_doc = email_doc
+                                    break
                         if lead_doc and lead_doc.get('engagement_score') == 10:
                             self.log_test("Engagement Score Verification", True, "Engagement score = 10 confirmed in database")
                             return True
