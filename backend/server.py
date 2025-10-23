@@ -10497,10 +10497,23 @@ async def delete_prospect(prospect_id: str):
 
 @api_router.post("/crm/prospects/{prospect_id}/aml-kyc")
 async def run_aml_kyc_check(prospect_id: str):
-    """Run AML/KYC compliance check for a prospect"""
+    """Run AML/KYC compliance check for a prospect - SUPPORTS portal_lead_ IDs"""
     try:
+        # Handle portal_lead_ prefix - resolve to actual prospect_id
+        actual_prospect_id = prospect_id
+        if prospect_id.startswith("portal_lead_"):
+            # Extract original lead ID and find the migrated prospect
+            original_lead_id = prospect_id.replace("portal_lead_", "")
+            lead_doc = await db.leads.find_one({"_id": ObjectId(original_lead_id)})
+            
+            if lead_doc and lead_doc.get("migrated_to_crm"):
+                actual_prospect_id = lead_doc.get("crm_prospect_id")
+                logging.info(f"✅ [CRM] Resolved portal_lead to CRM prospect: {actual_prospect_id}")
+            else:
+                raise HTTPException(status_code=400, detail="Portal lead not yet migrated to CRM. Please update prospect first.")
+        
         # Find prospect in MongoDB (consistent with GET endpoint)
-        prospect_doc = await db.crm_prospects.find_one({"prospect_id": prospect_id})
+        prospect_doc = await db.crm_prospects.find_one({"prospect_id": actual_prospect_id})
         
         if not prospect_doc:
             raise HTTPException(status_code=404, detail="Prospect not found")
