@@ -322,82 +322,72 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AppRouter 
-          currentView={currentView}
-          user={user}
-          handleLogin={handleLogin}
-          handleLogout={handleLogout}
-        />
+        <Routes>
+          {/* PUBLIC ROUTE: Prospects Portal - No authentication required */}
+          <Route 
+            path="/prospects" 
+            element={
+              <div className="App">
+                <ProspectsPortal />
+              </div>
+            } 
+          />
+          
+          {/* MAIN APP: All other routes with authentication */}
+          <Route 
+            path="*" 
+            element={
+              <div className="App">
+                <AnimatePresence mode="wait">
+                  {/* EMERGENCY: Only show login and dashboard - no logo animation */}
+                  {currentView === "login" && (
+                    <motion.div
+                      key="login"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <LoginSelection onLogin={handleLogin} />
+                    </motion.div>
+                  )}
+                  
+                  {/* GoogleCallback component removed - clean Google integration */}
+                  
+                  {currentView === "client" && user && (
+                    <motion.div
+                      key="client"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <ClientDashboard user={user} onLogout={handleLogout} />
+                      </Suspense>
+                    </motion.div>
+                  )}
+                  
+                  {currentView === "admin" && user && (
+                    <motion.div
+                      key="admin"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <AdminDashboard user={user} onLogout={handleLogout} />
+                      </Suspense>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            } 
+          />
+        </Routes>
       </ToastProvider>
     </BrowserRouter>
-  );
-}
-
-// Router component with useLocation hook
-function AppRouter({ currentView, user, handleLogin, handleLogout }) {
-  const location = useLocation();
-  
-  console.log('[FIDUS] Current path:', location.pathname);
-  
-  // Check if we're on prospects route
-  if (location.pathname.startsWith('/prospects')) {
-    console.log('[FIDUS] Rendering Prospects Portal');
-    return (
-      <div className="App">
-        <ProspectsPortal />
-      </div>
-    );
-  }
-
-  // Main authenticated app
-  console.log('[FIDUS] Rendering Main App, currentView:', currentView);
-  return (
-    <div className="App">
-      <AnimatePresence mode="wait">
-        {/* EMERGENCY: Only show login and dashboard - no logo animation */}
-        {currentView === "login" && (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <LoginSelection onLogin={handleLogin} />
-          </motion.div>
-        )}
-        
-        {/* GoogleCallback component removed - clean Google integration */}
-        
-        {currentView === "client" && user && (
-          <motion.div
-            key="client"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<div>Loading...</div>}>
-              <ClientDashboard user={user} onLogout={handleLogout} />
-            </Suspense>
-          </motion.div>
-        )}
-        
-        {currentView === "admin" && user && (
-          <motion.div
-            key="admin"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<div>Loading...</div>}>
-              <AdminDashboard user={user} onLogout={handleLogout} />
-            </Suspense>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
   );
 }
 
