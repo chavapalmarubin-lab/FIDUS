@@ -328,6 +328,20 @@ function App() {
     setCurrentView("login");
   };
 
+  // EARLY RETURN: Render public routes immediately without any App wrapper
+  if (isProspectsRoute) {
+    return (
+      <BrowserRouter>
+        <ToastProvider>
+          <Routes>
+            <Route path="/prospects/*" element={<ProspectsPortalNew />} />
+            <Route path="/prospects" element={<ProspectsPortalNew />} />
+          </Routes>
+        </ToastProvider>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <ToastProvider>
