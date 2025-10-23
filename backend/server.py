@@ -10429,7 +10429,10 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             # Validate stage
             valid_stages = ["lead", "qualified", "proposal", "negotiation", "won", "lost"]
             if update_data.stage not in valid_stages:
-                raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+                raise HTTPException(
+                    status_code=422, 
+                    detail=f"Invalid stage. Must be one of: {', '.join(valid_stages)}"
+                )
             update_fields['stage'] = update_data.stage
         if update_data.notes is not None:
             update_fields['notes'] = update_data.notes
