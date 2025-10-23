@@ -425,12 +425,12 @@ class CRMWorkflowTester:
     def verify_won_stage_in_mongodb(self):
         """Verify prospect is in won stage in MongoDB"""
         try:
-            if not self.db:
+            if self.db is None:
                 return False
             
             prospect = self.db.crm_prospects.find_one({"email": self.test_email})
             
-            if prospect and prospect.get('stage') == 'won':
+            if prospect is not None and prospect.get('stage') == 'won':
                 self.log_test("Won Stage MongoDB Verification", True, "Prospect stage updated to 'won' in MongoDB")
                 return True
             else:
