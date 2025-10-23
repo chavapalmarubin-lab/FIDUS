@@ -10373,6 +10373,17 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             # STRATEGY: Migrate portal lead to CRM prospects when first updated
             # This allows full CRM management once they're engaged
             
+            # Validate stage if provided
+            stage_to_use = "lead"
+            if update_data.stage is not None:
+                valid_stages = ["lead", "qualified", "proposal", "negotiation", "won", "lost"]
+                if update_data.stage not in valid_stages:
+                    raise HTTPException(
+                        status_code=422,
+                        detail=f"Invalid stage. Must be one of: {', '.join(valid_stages)}"
+                    )
+                stage_to_use = update_data.stage
+            
             # Create a full CRM prospect from the portal lead
             new_prospect_id = str(uuid.uuid4())
             prospect_dict = {
@@ -10380,7 +10391,7 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
                 "name": update_data.name if update_data.name else lead_doc.get('email', '').split('@')[0].title(),
                 "email": update_data.email if update_data.email else lead_doc.get('email', ''),
                 "phone": update_data.phone if update_data.phone else lead_doc.get('phone', ''),
-                "stage": update_data.stage if update_data.stage else "lead",
+                "stage": stage_to_use,
                 "notes": update_data.notes if update_data.notes else f"Migrated from Prospects Portal | Original engagement score: {lead_doc.get('engagement_score', 0)}",
                 "created_at": lead_doc.get('created_at', datetime.now(timezone.utc)),
                 "updated_at": datetime.now(timezone.utc),
