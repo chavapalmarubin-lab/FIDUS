@@ -325,13 +325,13 @@ function App() {
         <Routes>
           {/* PUBLIC ROUTE: Prospects Portal - No authentication required */}
           <Route 
-            path="/prospects" 
+            path="/prospects/*" 
             element={<ProspectsPortalNew />} 
           />
           
-          {/* MAIN APP: All other routes with authentication */}
+          {/* MAIN APP: Home/Dashboard route with authentication */}
           <Route 
-            path="*" 
+            path="/" 
             element={
               <div className="App">
                 <AnimatePresence mode="wait">
