@@ -100,7 +100,7 @@ const ProspectsPortal = () => {
   // Lead Capture Form
   if (step === 'capture') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -109,10 +109,12 @@ const ProspectsPortal = () => {
         >
           {/* FIDUS Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold text-white mb-4">
-              FIDUS
-            </h1>
-            <div className="h-1 w-32 bg-gradient-to-r from-blue-400 to-cyan-400 mx-auto rounded-full" />
+            <img 
+              src="/fidus-logo-complete.png" 
+              alt="FIDUS" 
+              className="h-24 mx-auto mb-6"
+            />
+            <div className="h-1 w-32 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full" />
           </div>
 
           {/* Main Card */}
