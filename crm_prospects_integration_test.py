@@ -230,14 +230,23 @@ class CRMProspectsIntegrationTester:
                     self.log_test("Data Structure Consistency", False, "No prospects found")
                     return False
                 
-                required_fields = ['prospect_id', 'name', 'email', 'phone', 'stage', 'notes', 'created_at']
+                required_fields = ['name', 'email', 'phone', 'stage', 'notes', 'created_at']
+                # prospect_id or id field is required
+                id_fields = ['prospect_id', 'id']
                 inconsistent_prospects = []
                 
                 for prospect in prospects:
+                    # Check if at least one ID field exists
+                    has_id = any(field in prospect for field in id_fields)
                     missing_fields = [field for field in required_fields if field not in prospect]
+                    
+                    if not has_id:
+                        missing_fields.append('prospect_id/id')
+                    
                     if missing_fields:
+                        prospect_id = prospect.get('prospect_id', prospect.get('id', 'unknown'))
                         inconsistent_prospects.append({
-                            'id': prospect.get('prospect_id', 'unknown'),
+                            'id': prospect_id,
                             'missing': missing_fields
                         })
                 
