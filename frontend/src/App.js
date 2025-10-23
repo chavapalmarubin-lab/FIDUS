@@ -321,7 +321,7 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AppContent 
+        <AppRouter 
           currentView={currentView}
           user={user}
           handleLogin={handleLogin}
@@ -332,29 +332,24 @@ function App() {
   );
 }
 
-// Separate component to access router context
-function AppContent({ currentView, user, handleLogin, handleLogout }) {
-  const location = window.location;
-  const isProspectsRoute = location.pathname.startsWith('/prospects');
-
-  // If on prospects route, show prospects portal (no auth required)
-  if (isProspectsRoute) {
+// Router component with useLocation hook
+function AppRouter({ currentView, user, handleLogin, handleLogout }) {
+  const location = useLocation();
+  
+  console.log('[FIDUS] Current path:', location.pathname);
+  
+  // Check if we're on prospects route
+  if (location.pathname.startsWith('/prospects')) {
+    console.log('[FIDUS] Rendering Prospects Portal');
     return (
       <div className="App">
-        <motion.div
-          key="prospects"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <ProspectsPortal />
-        </motion.div>
+        <ProspectsPortal />
       </div>
     );
   }
 
-  // Main app with authentication
+  // Main authenticated app
+  console.log('[FIDUS] Rendering Main App, currentView:', currentView);
   return (
     <div className="App">
       <AnimatePresence mode="wait">
