@@ -87,7 +87,7 @@ class CRMProspectsIntegrationTester:
                 portal_leads = []
                 
                 for prospect in prospects:
-                    prospect_id = prospect.get('prospect_id', '')
+                    prospect_id = prospect.get('prospect_id', prospect.get('id', ''))
                     if prospect_id.startswith('portal_lead_'):
                         portal_leads.append(prospect)
                     else:
