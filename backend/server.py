@@ -25555,6 +25555,7 @@ async def create_prospect_lead(lead_data: LeadCreate):
     """
     Create a new prospect lead (simplified registration)
     Only requires email and phone - no full KYC
+    Stores in SEPARATE 'leads' collection (NOT users collection)
     """
     try:
         # Validate email format
@@ -25567,14 +25568,14 @@ async def create_prospect_lead(lead_data: LeadCreate):
         if not phone_clean.startswith('+') or len(phone_clean) < 8:
             raise HTTPException(status_code=400, detail="Invalid phone format. Include country code (e.g., +52...)")
         
-        # Check if lead already exists
-        existing_lead = await db["users"].find_one({
-            "email": lead_data.email,
-            "type": "Lead"
+        # Check if lead already exists in LEADS collection
+        existing_lead = await db["leads"].find_one({
+            "email": lead_data.email
         })
         
         if existing_lead:
             # Return existing lead ID
+            logging.info(f"[PROSPECTS] Existing lead found: {lead_data.email}")
             return {
                 "success": True,
                 "leadId": str(existing_lead["_id"]),
@@ -25582,24 +25583,27 @@ async def create_prospect_lead(lead_data: LeadCreate):
                 "existing": True
             }
         
-        # Create new lead document
+        # Create new lead document in LEADS collection (separate from users)
         lead_doc = {
-            "type": "Lead",
+            "type": "lead",  # lowercase for consistency
             "email": lead_data.email,
             "phone": lead_data.phone,
             "source": lead_data.source,
-            "status": "New Lead",
+            "status": "new",
             "created_at": datetime.now(timezone.utc),
             "last_activity": datetime.now(timezone.utc),
             "simulator_sessions": [],
-            "converted_to_client": False,
+            "converted": False,
             "converted_date": None,
-            "client_id": None
+            "client_id": None,
+            "engagement_score": 0,
+            "interest_level": "warm"
         }
         
-        result = await db["users"].insert_one(lead_doc)
+        # Insert into LEADS collection (NOT users)
+        result = await db["leads"].insert_one(lead_doc)
         
-        logging.info(f"✅ New lead created: {lead_data.email}")
+        logging.info(f"✅ [PROSPECTS] New lead created in 'leads' collection: {lead_data.email}")
         
         return {
             "success": True,
