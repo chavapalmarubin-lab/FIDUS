@@ -620,7 +620,7 @@ class CRMWorkflowTester:
             integrity_checks = []
             
             # Check lead is marked converted
-            if lead and lead.get('converted'):
+            if lead is not None and lead.get('converted'):
                 integrity_checks.append("Lead marked as converted")
             else:
                 integrity_checks.append("❌ Lead not marked as converted")
