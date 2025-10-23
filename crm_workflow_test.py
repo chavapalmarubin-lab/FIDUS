@@ -626,7 +626,7 @@ class CRMWorkflowTester:
                 integrity_checks.append("❌ Lead not marked as converted")
             
             # Check prospect is marked converted_to_client
-            if prospect and prospect.get('converted_to_client'):
+            if prospect is not None and prospect.get('converted_to_client'):
                 integrity_checks.append("Prospect marked as converted_to_client")
             else:
                 integrity_checks.append("❌ Prospect not marked as converted_to_client")
