@@ -136,17 +136,17 @@ const ProspectsPortal = () => {
               <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
                 {/* Email Input */}
                 <div>
-                  <label className="block text-sm font-medium text-blue-100 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     📧 Email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300 w-5 h-5" />
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="tu@email.com"
-                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       required
                     />
                   </div>
@@ -154,21 +154,21 @@ const ProspectsPortal = () => {
 
                 {/* Phone Input */}
                 <div>
-                  <label className="block text-sm font-medium text-blue-100 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     📱 Teléfono
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300 w-5 h-5" />
+                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="+52 55 1234 5678"
-                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       required
                     />
                   </div>
-                  <p className="mt-2 text-xs text-blue-300">
+                  <p className="mt-2 text-xs text-slate-400">
                     Incluye el código de país (ej: +52 para México)
                   </p>
                 </div>
