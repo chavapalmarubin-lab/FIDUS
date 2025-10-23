@@ -134,7 +134,8 @@ class CRMWorkflowFixesTest:
             
             if response.status_code == 200:
                 data = response.json()
-                self.test_lead_id = data.get('lead_id')
+                print(f"DEBUG: Lead creation response: {data}")
+                self.test_lead_id = data.get('lead_id') or data.get('id')
                 
                 if self.test_lead_id:
                     self.log_test("Lead Creation", True, f"Created lead with ID: {self.test_lead_id}")
