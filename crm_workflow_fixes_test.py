@@ -142,9 +142,9 @@ class CRMWorkflowFixesTest:
                     # Track simulator session
                     simulator_url = f"{BACKEND_URL}/api/prospects/simulator/{self.test_lead_id}"
                     simulator_data = {
-                        "session_duration": 300,  # 5 minutes
-                        "pages_viewed": 5,
-                        "engagement_score": 10
+                        "fund": "BALANCE",
+                        "amount": 100000.0,
+                        "projections": {"monthly_return": 2.5}
                     }
                     
                     sim_response = self.session.post(simulator_url, json=simulator_data)
