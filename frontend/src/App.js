@@ -284,7 +284,7 @@ function App() {
       console.log('👤 No authentication found - showing login');
       setCurrentView("login");
     }
-  }, []);
+  }, [isProspectsRoute]);
 
   const handleLogin = (userData) => {
     console.log('App.js: handleLogin called with:', userData);
