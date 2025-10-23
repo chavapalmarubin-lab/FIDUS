@@ -237,7 +237,9 @@ class CRMWorkflowFixesTest:
                 self.log_test("Pipeline Movement", True, "Successfully moved to negotiation stage")
                 
                 # CRITICAL: Verify migration flag in MongoDB
-                lead_doc = self.db.leads.find_one({"lead_id": self.test_lead_id})
+                lead_doc = (self.db.leads.find_one({"lead_id": self.test_lead_id}) or 
+                           self.db.leads.find_one({"_id": self.test_lead_id}) or
+                           self.db.leads.find_one({"id": self.test_lead_id}))
                 
                 if lead_doc:
                     migrated_to_crm = lead_doc.get('migrated_to_crm')
