@@ -367,7 +367,7 @@ class CRMWorkflowTester:
             
             # Check original lead is marked as migrated
             original_lead = self.db.leads.find_one({"email": self.test_email})
-            if not original_lead or not original_lead.get('migrated'):
+            if original_lead is None or not original_lead.get('migrated'):
                 self.log_test("Lead Migration Verification", False, "Original lead not marked as migrated")
                 return False
             
