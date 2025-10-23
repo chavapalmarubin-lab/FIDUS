@@ -402,8 +402,11 @@ class CRMWorkflowFixesTest:
         try:
             # Convert prospect to client
             url = f"{BACKEND_URL}/api/crm/prospects/{self.test_prospect_id}/convert"
+            conversion_data = {
+                "send_agreement": True
+            }
             
-            response = self.session.post(url)
+            response = self.session.post(url, json=conversion_data)
             
             # CRITICAL: Should now work (was blocked before)
             if response.status_code == 200:
