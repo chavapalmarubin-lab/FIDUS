@@ -679,7 +679,7 @@ class CRMWorkflowTester:
     def test_no_duplicate_records(self):
         """Test 5.1: No Duplicate Records"""
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test("No Duplicate Records", False, "No MongoDB connection")
                 return False
             
