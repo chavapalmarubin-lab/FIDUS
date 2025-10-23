@@ -54,6 +54,8 @@ const ProspectsPortal = () => {
     setLoading(true);
 
     try {
+      console.log('[PROSPECTS] Submitting to:', `${backendUrl}/api/prospects/lead`);
+      
       const response = await fetch(`${backendUrl}/api/prospects/lead`, {
         method: 'POST',
         headers: {
@@ -66,7 +68,16 @@ const ProspectsPortal = () => {
         })
       });
 
+      console.log('[PROSPECTS] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[PROSPECTS] Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
       const data = await response.json();
+      console.log('[PROSPECTS] Response data:', data);
 
       if (data.success) {
         setLeadId(data.leadId);
@@ -79,7 +90,7 @@ const ProspectsPortal = () => {
         setError(data.message || 'Error al procesar tu información. Intenta nuevamente.');
       }
     } catch (err) {
-      console.error('Lead submission error:', err);
+      console.error('[PROSPECTS] Lead submission error:', err);
       setError('Error de conexión. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
