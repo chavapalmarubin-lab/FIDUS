@@ -175,8 +175,8 @@ const ProspectsPortal = () => {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4">
-                    <p className="text-red-200 text-sm">{error}</p>
+                  <div className="bg-red-900/30 border border-red-700 rounded-xl p-4">
+                    <p className="text-red-300 text-sm">{error}</p>
                   </div>
                 )}
 
