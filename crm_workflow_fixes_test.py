@@ -384,10 +384,10 @@ class CRMWorkflowFixesTest:
                 result_id = data.get('result_id', data.get('resultId', data.get('id', 'generated')))
                 
                 if can_convert:
-                    self.log_test("AML/KYC Process", True, f"AML/KYC completed, can_convert=True, status={data.get('overall_status')}")
+                    self.log_test("AML/KYC Process", True, f"AML/KYC completed, can_convert={can_convert}, status={status}")
                     return True
                 else:
-                    self.log_test("AML/KYC Process", False, f"Missing fields: {missing_fields}, can_convert: {data.get('can_convert')}")
+                    self.log_test("AML/KYC Process", False, f"can_convert={can_convert}, status={status}, response: {data}")
                     return False
             else:
                 self.log_test("AML/KYC Process", False, f"HTTP {response.status_code}: {response.text}")
