@@ -349,7 +349,9 @@ class CRMWorkflowFixesTest:
                     self.log_test("Mark-Won Endpoint", True, f"New endpoint works, returned stage='won'")
                     
                     # Verify prospect stage updated in MongoDB
-                    prospect_doc = self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id})
+                    prospect_doc = (self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id}) or
+                                   self.db.crm_prospects.find_one({"_id": self.test_prospect_id}) or
+                                   self.db.crm_prospects.find_one({"id": self.test_prospect_id}))
                     if prospect_doc and prospect_doc.get('stage') == 'won':
                         self.log_test("Prospect Stage Updated to Won", True, "Stage updated to 'won' in database")
                         return True
