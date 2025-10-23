@@ -847,7 +847,7 @@ class CRMWorkflowTester:
     def cleanup_test_data(self):
         """Clean up test data at end"""
         try:
-            if not self.db:
+            if self.db is None:
                 return False
             
             # Delete test records from all collections
