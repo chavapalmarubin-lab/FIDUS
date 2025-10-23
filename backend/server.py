@@ -10654,7 +10654,9 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             "type": "client",
             "status": "active",
             "created_from_prospect": True,
-            "prospect_id": prospect_id,
+            "prospect_id": actual_prospect_id,
+            "source_prospect_id": actual_prospect_id,  # For data chain
+            "source_lead_id": original_lead_id if original_lead_id else prospect_data.get('_original_lead_id'),  # Link back to original portal lead
             "aml_kyc_status": aml_status,
             "aml_kyc_result_id": prospect_data.get('aml_kyc_result_id'),
             "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -10668,7 +10670,7 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
             mongodb_client_data['user_type'] = 'client'
             mongodb_client_data['username'] = username
             await db.users.insert_one(mongodb_client_data)
-            logging.info(f"Client {client_id} added to MongoDB users collection")
+            logging.info(f"✅ [CRM] Client {client_id} created from prospect {actual_prospect_id}")
         except Exception as mongo_error:
             logging.error(f"Failed to add client to MongoDB: {str(mongo_error)}")
             raise HTTPException(status_code=500, detail="Failed to create client in database")
@@ -10693,9 +10695,17 @@ async def convert_prospect_to_client(prospect_id: str, conversion_data: Prospect
         }
         
         await db.crm_prospects.update_one(
-            {"id": prospect_id},
+            {"prospect_id": actual_prospect_id},
             {"$set": conversion_update}
         )
+        
+        # If this was from a portal lead, also update the original lead
+        if original_lead_id:
+            await db.leads.update_one(
+                {"_id": ObjectId(original_lead_id)},
+                {"$set": {"converted": True, "client_id": client_id, "converted_date": datetime.now(timezone.utc)}}
+            )
+            logging.info(f"✅ [CRM] Updated original portal lead {original_lead_id} as converted")
         
         # Also update memory storage if it exists (for backwards compatibility)
         if prospect_id in prospects_storage:
