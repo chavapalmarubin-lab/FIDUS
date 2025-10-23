@@ -322,50 +322,68 @@ function App() {
     <BrowserRouter>
       <ToastProvider>
         <div className="App">
-          <AnimatePresence mode="wait">
-            {/* EMERGENCY: Only show login and dashboard - no logo animation */}
-            {currentView === "login" && (
+          <Routes>
+            {/* Prospects Portal Route - Public access, no authentication required */}
+            <Route path="/prospects" element={
               <motion.div
-                key="login"
+                key="prospects"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <LoginSelection onLogin={handleLogin} />
+                <ProspectsPortal />
               </motion.div>
-            )}
+            } />
             
-            {/* GoogleCallback component removed - clean Google integration */}
-            
-            {currentView === "client" && user && (
-              <motion.div
-                key="client"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Suspense fallback={<div>Loading...</div>}>
-                  <ClientDashboard user={user} onLogout={handleLogout} />
-                </Suspense>
-              </motion.div>
-            )}
-            
-            {currentView === "admin" && user && (
-              <motion.div
-                key="admin"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Suspense fallback={<div>Loading...</div>}>
-                  <AdminDashboard user={user} onLogout={handleLogout} />
-                </Suspense>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            {/* Main App Routes - Existing authentication flow */}
+            <Route path="*" element={
+              <AnimatePresence mode="wait">
+                {/* EMERGENCY: Only show login and dashboard - no logo animation */}
+                {currentView === "login" && (
+                  <motion.div
+                    key="login"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <LoginSelection onLogin={handleLogin} />
+                  </motion.div>
+                )}
+                
+                {/* GoogleCallback component removed - clean Google integration */}
+                
+                {currentView === "client" && user && (
+                  <motion.div
+                    key="client"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <ClientDashboard user={user} onLogout={handleLogout} />
+                    </Suspense>
+                  </motion.div>
+                )}
+                
+                {currentView === "admin" && user && (
+                  <motion.div
+                    key="admin"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <AdminDashboard user={user} onLogout={handleLogout} />
+                    </Suspense>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            } />
+          </Routes>
         </div>
       </ToastProvider>
     </BrowserRouter>
