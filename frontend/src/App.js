@@ -14,11 +14,20 @@ import "./styles/mobile-responsive.css";
 import "./styles/dashboard-responsive.css";
 
 function App() {
+  // CRITICAL: Check if we're on a public route BEFORE any auth logic
+  const isProspectsRoute = window.location.pathname.startsWith('/prospects');
+  
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
   // Prospects Portal - Phase 1 MVP Active
 
   useEffect(() => {
+    // Skip all auth logic for public routes
+    if (isProspectsRoute) {
+      console.log('📍 Public route detected - skipping auth check');
+      return;
+    }
+    
     console.log('🔍 App initializing - checking for OAuth callback...');
     
     // Check for OAuth callback parameters
