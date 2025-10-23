@@ -10390,7 +10390,11 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             # Mark the lead as migrated (but don't delete)
             await db.leads.update_one(
                 {"_id": ObjectId(original_lead_id)},
-                {"$set": {"migrated_to_crm": True, "crm_prospect_id": new_prospect_id}}
+                {"$set": {
+                    "migrated_to_crm": True,
+                    "crm_prospect_id": new_prospect_id,
+                    "migrated_date": datetime.now(timezone.utc)
+                }}
             )
             
             logging.info(f"✅ [CRM INTEGRATION] Migrated portal lead {original_lead_id} to CRM prospect {new_prospect_id}")
