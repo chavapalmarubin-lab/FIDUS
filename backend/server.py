@@ -25667,15 +25667,27 @@ async def track_simulator_session(lead_id: str, session_data: SimulatorSession):
 async def get_prospect_lead(lead_id: str):
     """
     Get prospect lead information
+    Retrieves from LEADS collection (NOT users)
     """
     try:
-        lead = await db["users"].find_one({"_id": ObjectId(lead_id), "type": "Lead"})
+        # Query LEADS collection
+        lead = await db["leads"].find_one({"_id": ObjectId(lead_id)})
         
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
-        # Convert ObjectId to string
+        # Convert ObjectId to string for JSON serialization
         lead["_id"] = str(lead["_id"])
+        
+        # Convert datetime objects to ISO format
+        if "created_at" in lead:
+            lead["created_at"] = lead["created_at"].isoformat()
+        if "last_activity" in lead:
+            lead["last_activity"] = lead["last_activity"].isoformat()
+        if "converted_date" in lead and lead["converted_date"]:
+            lead["converted_date"] = lead["converted_date"].isoformat()
+        
+        logging.info(f"[PROSPECTS] Lead retrieved: {lead_id}")
         
         return {
             "success": True,
@@ -25685,7 +25697,7 @@ async def get_prospect_lead(lead_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error fetching lead: {str(e)}")
+        logging.error(f"[PROSPECTS] Error fetching lead: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error fetching lead")
 
 
