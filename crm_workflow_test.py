@@ -362,7 +362,7 @@ class CRMWorkflowTester:
     def verify_lead_migration_to_crm(self):
         """Verify lead was migrated from leads to crm_prospects collection"""
         try:
-            if not self.db:
+            if self.db is None:
                 return False
             
             # Check original lead is marked as migrated
