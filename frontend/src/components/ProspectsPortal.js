@@ -201,17 +201,17 @@ const ProspectsPortal = () => {
               </form>
 
               {/* Trust Indicators */}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-blue-200 text-sm">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-slate-300 text-sm">
                 <div className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-cyan-400" />
                   <span>Sin compromiso</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-cyan-400" />
                   <span>Gratis</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-cyan-400" />
                   <span>En 2 minutos</span>
                 </div>
               </div>
@@ -219,7 +219,7 @@ const ProspectsPortal = () => {
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-8 text-blue-200 text-sm">
+          <div className="text-center mt-8 text-slate-400 text-sm">
             <p>30 años democratizando el mundo financiero</p>
           </div>
         </motion.div>
