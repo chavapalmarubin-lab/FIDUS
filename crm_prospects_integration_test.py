@@ -163,7 +163,7 @@ class CRMProspectsIntegrationTester:
             
             if response.status_code in [200, 201]:
                 data = response.json()
-                lead_id = data.get('lead_id') or data.get('id')
+                lead_id = data.get('leadId') or data.get('lead_id') or data.get('id')
                 
                 if lead_id:
                     self.log_test("Create Test Lead", True, f"Lead created with ID: {lead_id}")
