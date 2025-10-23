@@ -25611,8 +25611,8 @@ async def create_prospect_lead(lead_data: LeadCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error creating lead: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error creating lead")
+        logging.error(f"[PROSPECTS] Error creating lead: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error creating lead: {str(e)}")
 
 
 @api_router.post("/prospects/simulator/{lead_id}")
