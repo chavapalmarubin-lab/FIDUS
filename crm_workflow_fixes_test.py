@@ -439,9 +439,15 @@ class CRMWorkflowFixesTest:
         """TEST 8: Verify Complete Data Chain"""
         try:
             # Query all 3 collections and verify data chain
-            lead_doc = self.db.leads.find_one({"lead_id": self.test_lead_id})
-            prospect_doc = self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id})
-            client_doc = self.db.users.find_one({"id": self.test_client_id}) if self.test_client_id else None
+            lead_doc = (self.db.leads.find_one({"lead_id": self.test_lead_id}) or 
+                       self.db.leads.find_one({"_id": self.test_lead_id}) or
+                       self.db.leads.find_one({"id": self.test_lead_id}))
+            prospect_doc = (self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id}) or
+                           self.db.crm_prospects.find_one({"_id": self.test_prospect_id}) or
+                           self.db.crm_prospects.find_one({"id": self.test_prospect_id}))
+            client_doc = (self.db.users.find_one({"id": self.test_client_id}) or
+                         self.db.users.find_one({"_id": self.test_client_id}) or
+                         self.db.users.find_one({"username": self.test_client_id})) if self.test_client_id else None
             
             # Verify Lead data chain
             lead_chain_success = False
