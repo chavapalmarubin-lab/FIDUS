@@ -607,7 +607,7 @@ class CRMWorkflowTester:
     def test_verify_data_chain(self):
         """Test 4.3: Verify Complete Data Chain"""
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test("Data Chain Verification", False, "No MongoDB connection")
                 return False
             
