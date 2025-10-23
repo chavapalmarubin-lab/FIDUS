@@ -241,12 +241,12 @@ class CRMWorkflowTester:
     def verify_simulator_session_in_mongodb(self):
         """Verify simulator session was tracked in MongoDB"""
         try:
-            if not self.db:
+            if self.db is None:
                 return False
                 
             lead = self.db.leads.find_one({"email": self.test_email})
             
-            if lead:
+            if lead is not None:
                 # Check for simulator_sessions array and engagement_score update
                 simulator_sessions = lead.get('simulator_sessions', [])
                 engagement_score = lead.get('engagement_score', 0)
