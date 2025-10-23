@@ -572,14 +572,14 @@ class CRMWorkflowTester:
     def test_verify_client_creation(self):
         """Test 4.2: Verify Client Creation"""
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test("Verify Client Creation", False, "No MongoDB connection")
                 return False
             
             # Check client exists in users collection
             client = self.db.users.find_one({"email": self.test_email})
             
-            if client:
+            if client is not None:
                 # Verify client properties
                 client_type = client.get('type')
                 source_prospect_id = client.get('source_prospect_id')
