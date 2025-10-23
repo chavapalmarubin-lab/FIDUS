@@ -10331,7 +10331,7 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
                 prospect_doc = await db.crm_prospects.find_one({"prospect_id": existing_prospect_id})
                 
                 if prospect_doc:
-                    # Prepare update fields
+                    # Prepare update fields with validation
                     update_fields = {}
                     if update_data.name is not None:
                         update_fields['name'] = update_data.name
@@ -10340,6 +10340,13 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
                     if update_data.phone is not None:
                         update_fields['phone'] = update_data.phone
                     if update_data.stage is not None:
+                        # Validate stage
+                        valid_stages = ["lead", "qualified", "proposal", "negotiation", "won", "lost"]
+                        if update_data.stage not in valid_stages:
+                            raise HTTPException(
+                                status_code=422,
+                                detail=f"Invalid stage. Must be one of: {', '.join(valid_stages)}"
+                            )
                         update_fields['stage'] = update_data.stage
                     if update_data.notes is not None:
                         update_fields['notes'] = update_data.notes
