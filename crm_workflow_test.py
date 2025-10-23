@@ -632,7 +632,7 @@ class CRMWorkflowTester:
                 integrity_checks.append("❌ Prospect not marked as converted_to_client")
             
             # Check client has source references
-            if client:
+            if client is not None:
                 if client.get('source_prospect_id'):
                     integrity_checks.append("Client has source_prospect_id")
                 else:
