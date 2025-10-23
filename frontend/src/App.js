@@ -16,6 +16,7 @@ import "./styles/dashboard-responsive.css";
 function App() {
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
+  // Prospects Portal - Phase 1 MVP Active
 
   useEffect(() => {
     console.log('🔍 App initializing - checking for OAuth callback...');
