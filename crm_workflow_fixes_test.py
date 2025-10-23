@@ -469,9 +469,12 @@ class CRMWorkflowFixesTest:
         """TEST 8: Verify Complete Data Chain"""
         try:
             # Query all 3 collections and verify data chain
-            lead_doc = (self.db.leads.find_one({"lead_id": self.test_lead_id}) or 
-                       self.db.leads.find_one({"_id": self.test_lead_id}) or
-                       self.db.leads.find_one({"id": self.test_lead_id}))
+            from bson import ObjectId
+            try:
+                lead_doc = self.db.leads.find_one({"_id": ObjectId(self.test_lead_id)})
+            except:
+                lead_doc = self.db.leads.find_one({"email": self.unique_email})
+            
             prospect_doc = (self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id}) or
                            self.db.crm_prospects.find_one({"_id": self.test_prospect_id}) or
                            self.db.crm_prospects.find_one({"id": self.test_prospect_id}))
