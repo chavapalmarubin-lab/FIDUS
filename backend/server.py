@@ -25537,6 +25537,149 @@ async def get_all_mt5_accounts_endpoint(current_user: dict = Depends(get_current
 
 
 # ===============================================================================
+# PROSPECTS PORTAL API - Lead Capture & Simulator
+# ===============================================================================
+
+class LeadCreate(BaseModel):
+    email: str
+    phone: str
+    source: str = "prospects_portal"
+
+class SimulatorSession(BaseModel):
+    fund: str
+    amount: float
+    projections: Optional[Dict] = None
+
+@api_router.post("/prospects/lead")
+async def create_prospect_lead(lead_data: LeadCreate):
+    """
+    Create a new prospect lead (simplified registration)
+    Only requires email and phone - no full KYC
+    """
+    try:
+        # Validate email format
+        email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_regex, lead_data.email):
+            raise HTTPException(status_code=400, detail="Invalid email format")
+        
+        # Validate phone format (international)
+        phone_clean = lead_data.phone.replace(' ', '').replace('-', '')
+        if not phone_clean.startswith('+') or len(phone_clean) < 8:
+            raise HTTPException(status_code=400, detail="Invalid phone format. Include country code (e.g., +52...)")
+        
+        # Check if lead already exists
+        existing_lead = await db["users"].find_one({
+            "email": lead_data.email,
+            "type": "Lead"
+        })
+        
+        if existing_lead:
+            # Return existing lead ID
+            return {
+                "success": True,
+                "leadId": str(existing_lead["_id"]),
+                "message": "Welcome back! Continue to simulator",
+                "existing": True
+            }
+        
+        # Create new lead document
+        lead_doc = {
+            "type": "Lead",
+            "email": lead_data.email,
+            "phone": lead_data.phone,
+            "source": lead_data.source,
+            "status": "New Lead",
+            "created_at": datetime.now(timezone.utc),
+            "last_activity": datetime.now(timezone.utc),
+            "simulator_sessions": [],
+            "converted_to_client": False,
+            "converted_date": None,
+            "client_id": None
+        }
+        
+        result = await db["users"].insert_one(lead_doc)
+        
+        logging.info(f"✅ New lead created: {lead_data.email}")
+        
+        return {
+            "success": True,
+            "leadId": str(result.inserted_id),
+            "message": "Lead created successfully",
+            "existing": False
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error creating lead: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error creating lead")
+
+
+@api_router.post("/prospects/simulator/{lead_id}")
+async def track_simulator_session(lead_id: str, session_data: SimulatorSession):
+    """
+    Track simulator usage by prospects
+    Records which funds they explore and investment amounts
+    """
+    try:
+        # Update lead with simulator activity
+        session_doc = {
+            "fund": session_data.fund,
+            "amount": session_data.amount,
+            "projections": session_data.projections,
+            "timestamp": datetime.now(timezone.utc)
+        }
+        
+        result = await db["users"].update_one(
+            {"_id": ObjectId(lead_id), "type": "Lead"},
+            {
+                "$push": {"simulator_sessions": session_doc},
+                "$set": {"last_activity": datetime.now(timezone.utc)}
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        return {
+            "success": True,
+            "message": "Simulator session tracked"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error tracking simulator session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error tracking session")
+
+
+@api_router.get("/prospects/lead/{lead_id}")
+async def get_prospect_lead(lead_id: str):
+    """
+    Get prospect lead information
+    """
+    try:
+        lead = await db["users"].find_one({"_id": ObjectId(lead_id), "type": "Lead"})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Convert ObjectId to string
+        lead["_id"] = str(lead["_id"])
+        
+        return {
+            "success": True,
+            "lead": lead
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching lead: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching lead")
+
+
+# ===============================================================================
 # INCLUDE ROUTER - MUST BE LAST!
 # ===============================================================================
 # Import and include system test router
