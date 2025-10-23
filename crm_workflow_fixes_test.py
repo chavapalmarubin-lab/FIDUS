@@ -123,11 +123,9 @@ class CRMWorkflowFixesTest:
         try:
             # Create unique test lead
             lead_data = {
-                "name": "Test Lead CRM Fixes",
                 "email": self.unique_email,
                 "phone": "+1-555-TEST-001",
-                "source": "prospects_portal",
-                "interest_level": "high"
+                "source": "prospects_portal"
             }
             
             # Create lead
