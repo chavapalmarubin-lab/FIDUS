@@ -10303,9 +10303,62 @@ async def create_prospect(prospect_data: ProspectCreate):
 
 @api_router.put("/crm/prospects/{prospect_id}")
 async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
-    """Update an existing prospect - FIXED to use MongoDB consistently"""
+    """Update an existing prospect - SUPPORTS both CRM prospects and portal leads"""
     try:
-        # Find prospect in MongoDB (consistent with GET endpoint)
+        # Check if this is a portal lead (starts with "portal_lead_")
+        is_portal_lead = prospect_id.startswith("portal_lead_")
+        
+        if is_portal_lead:
+            # Extract original lead ID
+            original_lead_id = prospect_id.replace("portal_lead_", "")
+            
+            # STRATEGY: Migrate portal lead to CRM prospects when first updated
+            # This allows full CRM management once they're engaged
+            
+            # Get lead data from leads collection
+            lead_doc = await db.leads.find_one({"_id": ObjectId(original_lead_id)})
+            
+            if not lead_doc:
+                raise HTTPException(status_code=404, detail="Portal lead not found")
+            
+            # Create a full CRM prospect from the portal lead
+            new_prospect_id = str(uuid.uuid4())
+            prospect_dict = {
+                "prospect_id": new_prospect_id,
+                "name": update_data.name if update_data.name else lead_doc.get('email', '').split('@')[0].title(),
+                "email": update_data.email if update_data.email else lead_doc.get('email', ''),
+                "phone": update_data.phone if update_data.phone else lead_doc.get('phone', ''),
+                "stage": update_data.stage if update_data.stage else "lead",
+                "notes": update_data.notes if update_data.notes else f"Migrated from Prospects Portal | Original engagement score: {lead_doc.get('engagement_score', 0)}",
+                "created_at": lead_doc.get('created_at', datetime.now(timezone.utc)),
+                "updated_at": datetime.now(timezone.utc),
+                "converted_to_client": False,
+                "client_id": "",
+                "google_drive_folder": ""
+            }
+            
+            # Insert into CRM prospects
+            await db.crm_prospects.insert_one(prospect_dict)
+            
+            # Mark the lead as migrated (but don't delete)
+            await db.leads.update_one(
+                {"_id": ObjectId(original_lead_id)},
+                {"$set": {"migrated_to_crm": True, "crm_prospect_id": new_prospect_id}}
+            )
+            
+            logging.info(f"✅ [CRM INTEGRATION] Migrated portal lead {original_lead_id} to CRM prospect {new_prospect_id}")
+            
+            # Remove MongoDB _id for response
+            if '_id' in prospect_dict:
+                del prospect_dict['_id']
+            
+            return {
+                "success": True,
+                "prospect": prospect_dict,
+                "message": "Portal lead migrated to CRM successfully"
+            }
+        
+        # Standard CRM prospect update
         prospect_doc = await db.crm_prospects.find_one({"prospect_id": prospect_id})
         
         if not prospect_doc:
