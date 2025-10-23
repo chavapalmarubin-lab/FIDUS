@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com/api"
-FRONTEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com/api"
+FRONTEND_URL = "https://prospect-portal.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

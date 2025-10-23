@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import time
 
 # Configuration
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class Colors:

@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

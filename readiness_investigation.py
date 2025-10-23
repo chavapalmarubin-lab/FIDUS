@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_readiness_discrepancy():
-    base_url = "https://vps-bridge-fix.preview.emergentagent.com"
+    base_url = "https://prospect-portal.preview.emergentagent.com"
     
     print("🔍 INVESTIGATING CLIENT READINESS DISCREPANCY")
     print("="*60)

@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv

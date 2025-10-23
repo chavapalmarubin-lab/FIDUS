@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com/api"
 
 class AlejandroDiagnostic:
     def __init__(self):

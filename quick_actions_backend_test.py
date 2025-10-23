@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Admin credentials for testing

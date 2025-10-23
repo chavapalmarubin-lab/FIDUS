@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://vps-bridge-fix.preview.emergentagent.com"
+BACKEND_URL = "https://prospect-portal.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
