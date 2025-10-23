@@ -230,37 +230,39 @@ const ProspectsPortal = () => {
   // Simulator View
   if (step === 'simulator') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      <div className="min-h-screen bg-slate-900">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
-              FIDUS
-            </h1>
-            <p className="text-blue-200">
+            <img 
+              src="/fidus-logo-complete.png" 
+              alt="FIDUS" 
+              className="h-16 mx-auto mb-4"
+            />
+            <p className="text-slate-300">
               Simula tu inversión personalizada
             </p>
           </div>
 
           {/* Simulator Component */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl p-6 md:p-8">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl p-6 md:p-8">
             <InvestmentSimulator />
           </div>
 
           {/* CTA Section */}
           <div className="mt-8 text-center">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 max-w-2xl mx-auto">
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-2xl mx-auto">
               <h3 className="text-2xl font-bold text-white mb-4">
                 ¿Listo para invertir?
               </h3>
-              <p className="text-blue-200 mb-6">
+              <p className="text-slate-300 mb-6">
                 Habla con uno de nuestros asesores para comenzar
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                   📞 Agendar Llamada
                 </button>
-                <button className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                <button className="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                   📄 Descargar Brochure
                 </button>
               </div>
