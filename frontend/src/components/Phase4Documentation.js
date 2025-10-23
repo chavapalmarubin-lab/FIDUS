@@ -759,7 +759,7 @@ function AutoHealingTab() {
           </div>
           <div className="border-l-4 border-blue-500 pl-4">
             <h4 className="font-semibold text-gray-900 mb-1">✅ Data Freshness</h4>
-            <p className="text-sm text-gray-600">Last account update must be &lt; 15 minutes ago</p>
+            <p className="text-sm text-gray-600">Last account update must be within 15 minutes</p>
             <p className="text-xs text-gray-500 mt-1">Failure indicates: MT5 not connected, sync stopped, or MongoDB write issues</p>
           </div>
           <div className="border-l-4 border-purple-500 pl-4">
