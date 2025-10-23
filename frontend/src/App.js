@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
