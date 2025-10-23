@@ -171,12 +171,12 @@ class CRMWorkflowTester:
     def verify_lead_in_mongodb(self):
         """Verify lead exists in MongoDB leads collection"""
         try:
-            if not self.db:
+            if self.db is None:
                 return False
                 
             lead = self.db.leads.find_one({"email": self.test_email})
             
-            if lead:
+            if lead is not None:
                 # Verify required fields
                 required_fields = ['email', 'phone', 'source', 'status', 'engagement_score']
                 missing_fields = [field for field in required_fields if field not in lead]
