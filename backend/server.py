@@ -10063,7 +10063,11 @@ async def get_all_prospects():
                 del prospect['_id']
         
         # INTEGRATION: Fetch leads from Prospects Portal (leads collection)
-        leads_cursor = db.leads.find({"converted": False})  # Only unconverted leads
+        # Only fetch leads that haven't been migrated to CRM
+        leads_cursor = db.leads.find({
+            "converted": False,
+            "migrated_to_crm": {"$ne": True}  # Exclude migrated leads
+        })
         portal_leads = await leads_cursor.to_list(length=None)
         
         # Transform portal leads to prospect format for CRM display
