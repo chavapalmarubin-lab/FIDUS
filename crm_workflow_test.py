@@ -807,14 +807,14 @@ class CRMWorkflowTester:
     def test_lead_engagement_metrics(self):
         """Test 6.2: Lead Engagement Metrics"""
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test("Lead Engagement Metrics", False, "No MongoDB connection")
                 return False
             
             # Verify lead has proper engagement tracking
             lead = self.db.leads.find_one({"email": self.test_email})
             
-            if lead:
+            if lead is not None:
                 simulator_sessions = lead.get('simulator_sessions', [])
                 engagement_score = lead.get('engagement_score', 0)
                 last_activity = lead.get('last_activity')
