@@ -153,8 +153,10 @@ class CRMWorkflowFixesTest:
                     if sim_response.status_code == 200:
                         self.log_test("Simulator Tracking", True, "Engagement score set to 10")
                         
-                        # Verify engagement score in MongoDB
-                        lead_doc = self.db.leads.find_one({"lead_id": self.test_lead_id})
+                        # Verify engagement score in MongoDB - try different field names
+                        lead_doc = (self.db.leads.find_one({"lead_id": self.test_lead_id}) or 
+                                   self.db.leads.find_one({"_id": self.test_lead_id}) or
+                                   self.db.leads.find_one({"id": self.test_lead_id}))
                         if lead_doc and lead_doc.get('engagement_score') == 10:
                             self.log_test("Engagement Score Verification", True, "Engagement score = 10 confirmed in database")
                             return True
