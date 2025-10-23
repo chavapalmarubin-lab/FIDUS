@@ -328,7 +328,7 @@ function App() {
             path="/prospects" 
             element={
               <div className="App">
-                <ProspectsPortal />
+                <ProspectsPortalNew />
               </div>
             } 
           />
