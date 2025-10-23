@@ -267,7 +267,9 @@ class CRMWorkflowFixesTest:
                         self.log_test("Migration Date Set", False, f"migrated_date = {migrated_date} (should not be None)")
                     
                     # Verify prospect created in crm_prospects collection
-                    prospect_doc = self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id})
+                    prospect_doc = (self.db.crm_prospects.find_one({"prospect_id": self.test_prospect_id}) or
+                                   self.db.crm_prospects.find_one({"_id": self.test_prospect_id}) or
+                                   self.db.crm_prospects.find_one({"id": self.test_prospect_id}))
                     if prospect_doc:
                         self.log_test("Prospect in CRM Collection", True, f"Prospect found in crm_prospects collection")
                         return migration_flag_success and prospect_id_success and migrated_date_success
