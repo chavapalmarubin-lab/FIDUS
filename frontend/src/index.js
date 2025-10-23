@@ -2,10 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
+import PublicApp from "./PublicApp";
+
+// Check if we're on a public route
+const isPublicRoute = window.location.pathname.startsWith('/prospects');
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    {isPublicRoute ? <PublicApp /> : <App />}
   </React.StrictMode>,
 );
