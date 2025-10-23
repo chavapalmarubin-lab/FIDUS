@@ -373,7 +373,7 @@ class CRMWorkflowTester:
             
             # Check new prospect exists in crm_prospects collection
             prospect = self.db.crm_prospects.find_one({"email": self.test_email})
-            if not prospect:
+            if prospect is None:
                 self.log_test("Lead Migration Verification", False, "Prospect not found in crm_prospects collection")
                 return False
             
