@@ -118,7 +118,7 @@ const ProspectsPortal = () => {
           </div>
 
           {/* Main Card */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
             <div className="p-8 md:p-12">
               {/* Headline */}
               <div className="text-center mb-8">
@@ -127,7 +127,7 @@ const ProspectsPortal = () => {
                   <br />
                   PARA TODOS
                 </h2>
-                <p className="text-xl text-blue-200">
+                <p className="text-xl text-slate-300">
                   Descubre cómo tu dinero puede crecer con FIDUS
                 </p>
               </div>
