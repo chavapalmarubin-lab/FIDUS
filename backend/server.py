@@ -25624,6 +25624,7 @@ async def track_simulator_session(lead_id: str, session_data: SimulatorSession):
     """
     Track simulator usage by prospects
     Records which funds they explore and investment amounts
+    Updates in LEADS collection (NOT users)
     """
     try:
         # Update lead with simulator activity
@@ -25631,19 +25632,24 @@ async def track_simulator_session(lead_id: str, session_data: SimulatorSession):
             "fund": session_data.fund,
             "amount": session_data.amount,
             "projections": session_data.projections,
-            "timestamp": datetime.now(timezone.utc)
+            "timestamp": datetime.now(timezone.utc),
+            "duration_seconds": 0  # Can be tracked if needed
         }
         
-        result = await db["users"].update_one(
-            {"_id": ObjectId(lead_id), "type": "Lead"},
+        # Update in LEADS collection
+        result = await db["leads"].update_one(
+            {"_id": ObjectId(lead_id)},
             {
                 "$push": {"simulator_sessions": session_doc},
-                "$set": {"last_activity": datetime.now(timezone.utc)}
+                "$set": {"last_activity": datetime.now(timezone.utc)},
+                "$inc": {"engagement_score": 10}  # Increase engagement score
             }
         )
         
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Lead not found")
+        
+        logging.info(f"[PROSPECTS] Simulator session tracked for lead: {lead_id}")
         
         return {
             "success": True,
@@ -25653,7 +25659,7 @@ async def track_simulator_session(lead_id: str, session_data: SimulatorSession):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error tracking simulator session: {str(e)}")
+        logging.error(f"[PROSPECTS] Error tracking simulator session: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error tracking session")
 
 
