@@ -10316,14 +10316,55 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             # Extract original lead ID
             original_lead_id = prospect_id.replace("portal_lead_", "")
             
-            # STRATEGY: Migrate portal lead to CRM prospects when first updated
-            # This allows full CRM management once they're engaged
-            
             # Get lead data from leads collection
             lead_doc = await db.leads.find_one({"_id": ObjectId(original_lead_id)})
             
             if not lead_doc:
                 raise HTTPException(status_code=404, detail="Portal lead not found")
+            
+            # Check if already migrated
+            if lead_doc.get("migrated_to_crm"):
+                existing_prospect_id = lead_doc.get("crm_prospect_id")
+                logging.info(f"✅ [CRM INTEGRATION] Lead already migrated to CRM prospect {existing_prospect_id}")
+                
+                # Update the existing CRM prospect instead
+                prospect_doc = await db.crm_prospects.find_one({"prospect_id": existing_prospect_id})
+                
+                if prospect_doc:
+                    # Prepare update fields
+                    update_fields = {}
+                    if update_data.name is not None:
+                        update_fields['name'] = update_data.name
+                    if update_data.email is not None:
+                        update_fields['email'] = update_data.email
+                    if update_data.phone is not None:
+                        update_fields['phone'] = update_data.phone
+                    if update_data.stage is not None:
+                        update_fields['stage'] = update_data.stage
+                    if update_data.notes is not None:
+                        update_fields['notes'] = update_data.notes
+                    update_fields['updated_at'] = datetime.now(timezone.utc)
+                    
+                    # Update existing prospect
+                    await db.crm_prospects.update_one(
+                        {"prospect_id": existing_prospect_id},
+                        {"$set": update_fields}
+                    )
+                    
+                    # Get updated prospect
+                    updated_prospect = await db.crm_prospects.find_one({"prospect_id": existing_prospect_id})
+                    if '_id' in updated_prospect:
+                        del updated_prospect['_id']
+                    
+                    return {
+                        "success": True,
+                        "prospect": updated_prospect,
+                        "message": "Prospect updated successfully",
+                        "migrated_prospect_id": existing_prospect_id
+                    }
+            
+            # STRATEGY: Migrate portal lead to CRM prospects when first updated
+            # This allows full CRM management once they're engaged
             
             # Create a full CRM prospect from the portal lead
             new_prospect_id = str(uuid.uuid4())
@@ -10338,7 +10379,9 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
                 "updated_at": datetime.now(timezone.utc),
                 "converted_to_client": False,
                 "client_id": "",
-                "google_drive_folder": ""
+                "google_drive_folder": "",
+                "source": "prospects_portal",
+                "_original_lead_id": str(lead_doc['_id'])
             }
             
             # Insert into CRM prospects
@@ -10359,7 +10402,8 @@ async def update_prospect(prospect_id: str, update_data: ProspectUpdate):
             return {
                 "success": True,
                 "prospect": prospect_dict,
-                "message": "Portal lead migrated to CRM successfully"
+                "message": "Portal lead migrated to CRM successfully",
+                "migrated_prospect_id": new_prospect_id
             }
         
         # Standard CRM prospect update
