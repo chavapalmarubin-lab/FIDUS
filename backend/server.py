@@ -10051,9 +10051,9 @@ async def get_crm_admin_dashboard():
 
 @api_router.get("/crm/prospects")
 async def get_all_prospects():
-    """Get all prospects with pipeline information"""
+    """Get all prospects with pipeline information - INCLUDES leads from Prospects Portal"""
     try:
-        # Get prospects from MongoDB first
+        # Get prospects from MongoDB first (existing CRM prospects)
         prospects_cursor = db.crm_prospects.find()
         prospects = await prospects_cursor.to_list(length=None)
         
@@ -10061,6 +10061,34 @@ async def get_all_prospects():
         for prospect in prospects:
             if '_id' in prospect:
                 del prospect['_id']
+        
+        # INTEGRATION: Fetch leads from Prospects Portal (leads collection)
+        leads_cursor = db.leads.find({"converted": False})  # Only unconverted leads
+        portal_leads = await leads_cursor.to_list(length=None)
+        
+        # Transform portal leads to prospect format for CRM display
+        for lead in portal_leads:
+            lead_id = str(lead.get('_id', ''))
+            transformed_lead = {
+                "prospect_id": f"portal_lead_{lead_id}",  # Prefix to identify portal leads
+                "name": lead.get('email', '').split('@')[0].title(),  # Extract name from email for display
+                "email": lead.get('email', ''),
+                "phone": lead.get('phone', ''),
+                "stage": "lead",  # All portal leads start in "lead" stage
+                "notes": f"Source: Prospects Portal | Engagement Score: {lead.get('engagement_score', 0)} | Interest: {lead.get('interest_level', 'warm')} | Simulator Sessions: {len(lead.get('simulator_sessions', []))}",
+                "created_at": lead.get('created_at'),
+                "updated_at": lead.get('last_activity', lead.get('created_at')),
+                "converted_to_client": False,
+                "client_id": "",
+                "google_drive_folder": "",
+                "source": "prospects_portal",
+                "engagement_score": lead.get('engagement_score', 0),
+                "simulator_sessions": len(lead.get('simulator_sessions', [])),
+                "_original_lead_id": lead_id  # Store original lead ID for updates
+            }
+            prospects.append(transformed_lead)
+        
+        logging.info(f"✅ [CRM INTEGRATION] Fetched {len(prospects) - len(portal_leads)} CRM prospects + {len(portal_leads)} portal leads")
         
         # If MongoDB is empty, create some sample prospects for demo
         if not prospects:
