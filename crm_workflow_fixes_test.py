@@ -131,7 +131,7 @@ class CRMWorkflowFixesTest:
             }
             
             # Create lead
-            url = f"{BACKEND_URL}/api/leads"
+            url = f"{BACKEND_URL}/api/prospects/lead"
             response = self.session.post(url, json=lead_data)
             
             if response.status_code == 200:
