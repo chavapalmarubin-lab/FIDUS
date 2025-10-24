@@ -110,7 +110,7 @@ const ProspectsPortalNew = () => {
             src="/assets/logos/fidus-logo-complete.png" 
             alt="FIDUS Investment Management"
             style={{
-              height: '120px',
+              height: '180px',
               width: 'auto'
             }}
           />
