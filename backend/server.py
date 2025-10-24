@@ -12578,6 +12578,69 @@ async def get_mt5_sync_dashboard(current_user: dict = Depends(get_current_admin_
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
+
+@api_router.post("/api/admin/sync-from-vps")
+async def force_sync_from_vps(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Force immediate sync from VPS MT5 Bridge
+    CRITICAL FIX: Oct 24, 2025 - Fetches LIVE data from VPS (not stale MongoDB data)
+    """
+    try:
+        logging.info("🚀 [VPS SYNC] Manual VPS→MongoDB sync requested")
+        
+        # Import VPS sync service
+        from vps_sync_service import get_vps_sync_service
+        
+        # Get VPS sync service
+        vps_sync = await get_vps_sync_service(db)
+        
+        # Check VPS health first
+        health = await vps_sync.check_vps_health()
+        
+        if not health.get('healthy'):
+            logging.error(f"❌ VPS Bridge unhealthy: {health.get('error')}")
+            return {
+                "status": "error",
+                "error": "VPS MT5 Bridge is unhealthy",
+                "health": health,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        
+        logging.info("✅ VPS Bridge is healthy, proceeding with sync")
+        
+        # Sync all accounts from VPS
+        result = await vps_sync.sync_all_accounts()
+        
+        if result.get('success'):
+            logging.info(f"✅ VPS sync complete: {result.get('accounts_synced')}/{result.get('total_accounts')} accounts")
+            return {
+                "status": "success",
+                "message": f"Synced {result.get('accounts_synced')}/{result.get('total_accounts')} accounts from VPS",
+                "accounts_synced": result.get('accounts_synced'),
+                "total_accounts": result.get('total_accounts'),
+                "duration_seconds": result.get('duration_seconds'),
+                "vps_url": result.get('vps_url'),
+                "timestamp": result.get('timestamp')
+            }
+        else:
+            logging.error(f"❌ VPS sync failed: {result.get('error')}")
+            return {
+                "status": "error",
+                "error": result.get('error'),
+                "accounts_synced": result.get('accounts_synced', 0),
+                "timestamp": result.get('timestamp')
+            }
+        
+    except Exception as e:
+        logging.error(f"❌ [VPS SYNC] Error: {str(e)}", exc_info=True)
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+
 @api_router.post("/mt5/start-background-sync")
 async def start_mt5_background_sync(current_user: dict = Depends(get_current_admin_user)):
     """Start automated MT5 background sync (every 2 minutes)"""
