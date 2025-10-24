@@ -53,6 +53,9 @@ async def check_sync_status():
         if updated_at:
             if isinstance(updated_at, str):
                 updated_at = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+            # Make updated_at timezone-aware if it isn't
+            if updated_at.tzinfo is None:
+                updated_at = updated_at.replace(tzinfo=timezone.utc)
             age_seconds = (now - updated_at).total_seconds()
             age_minutes = age_seconds / 60
             
