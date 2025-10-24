@@ -283,7 +283,7 @@ const ProspectsPortalNew = () => {
       {/* SECTION 3: Fund Showcase */}
       <section style={{
         padding: '5rem 2rem',
-        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
+        background: '#1a1f2e'
       }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
