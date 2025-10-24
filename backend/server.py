@@ -12584,9 +12584,10 @@ async def force_sync_from_vps(current_user: dict = Depends(get_current_admin_use
     """
     Force immediate sync from VPS MT5 Bridge
     CRITICAL FIX: Oct 24, 2025 - Fetches LIVE data from VPS (not stale MongoDB data)
+    Updated: Now syncs BOTH account balances AND trades/deals
     """
     try:
-        logging.info("🚀 [VPS SYNC] Manual VPS→MongoDB sync requested")
+        logging.info("🚀 [VPS SYNC] Manual VPS→MongoDB sync requested (accounts + trades)")
         
         # Import VPS sync service
         from vps_sync_service import get_vps_sync_service
@@ -12608,27 +12609,45 @@ async def force_sync_from_vps(current_user: dict = Depends(get_current_admin_use
         
         logging.info("✅ VPS Bridge is healthy, proceeding with sync")
         
-        # Sync all accounts from VPS
-        result = await vps_sync.sync_all_accounts()
+        # 1. Sync all accounts from VPS
+        accounts_result = await vps_sync.sync_all_accounts()
         
-        if result.get('success'):
-            logging.info(f"✅ VPS sync complete: {result.get('accounts_synced')}/{result.get('total_accounts')} accounts")
+        # 2. Sync all trades from VPS
+        trades_result = await vps_sync.sync_all_trades(limit_per_account=100)
+        
+        if accounts_result.get('success') and trades_result.get('success'):
+            logging.info(f"✅ Complete sync: {accounts_result.get('accounts_synced')} accounts + {trades_result.get('total_trades_synced')} trades")
             return {
                 "status": "success",
-                "message": f"Synced {result.get('accounts_synced')}/{result.get('total_accounts')} accounts from VPS",
-                "accounts_synced": result.get('accounts_synced'),
-                "total_accounts": result.get('total_accounts'),
-                "duration_seconds": result.get('duration_seconds'),
-                "vps_url": result.get('vps_url'),
-                "timestamp": result.get('timestamp')
+                "message": f"Synced {accounts_result.get('accounts_synced')} accounts and {trades_result.get('total_trades_synced')} trades from VPS",
+                "accounts": {
+                    "synced": accounts_result.get('accounts_synced'),
+                    "total": accounts_result.get('total_accounts'),
+                    "duration_seconds": accounts_result.get('duration_seconds')
+                },
+                "trades": {
+                    "synced": trades_result.get('total_trades_synced'),
+                    "accounts_processed": trades_result.get('accounts_processed'),
+                    "failed_accounts": trades_result.get('failed_accounts', []),
+                    "duration_seconds": trades_result.get('duration_seconds')
+                },
+                "vps_url": accounts_result.get('vps_url'),
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         else:
-            logging.error(f"❌ VPS sync failed: {result.get('error')}")
+            errors = []
+            if not accounts_result.get('success'):
+                errors.append(f"Accounts: {accounts_result.get('error')}")
+            if not trades_result.get('success'):
+                errors.append(f"Trades: {trades_result.get('error')}")
+            
+            logging.error(f"❌ Sync partially failed: {'; '.join(errors)}")
             return {
-                "status": "error",
-                "error": result.get('error'),
-                "accounts_synced": result.get('accounts_synced', 0),
-                "timestamp": result.get('timestamp')
+                "status": "partial_success" if (accounts_result.get('success') or trades_result.get('success')) else "error",
+                "error": '; '.join(errors),
+                "accounts": accounts_result,
+                "trades": trades_result,
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         
     except Exception as e:
