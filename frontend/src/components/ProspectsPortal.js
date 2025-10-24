@@ -485,7 +485,7 @@ const ProspectsPortalNew = () => {
                     fontSize: '1rem',
                     fontWeight: '600',
                     color: 'white',
-                    background: fund.color,
+                    background: fund.buttonColor || fund.color,
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
