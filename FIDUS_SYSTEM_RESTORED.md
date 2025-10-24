@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://prospect-portal.preview.emergentagent.com`
+`https://prospects-portal.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

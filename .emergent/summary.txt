@@ -1,63 +1,59 @@
 <analysis>
-The previous AI engineer successfully completed a challenging VPS migration, addressing 404 errors, GitHub authentication, and a critical MongoDB cluster name typo. The infrastructure shifted from  to . The core challenge now is to fully implement the MT5 Auto-Healing System.
+The previous AI engineer focused on two main areas: initially, resolving critical MT5 Auto-Healing System issues, and subsequently developing a Prospects Portal. The auto-healing system faced MT5 connection problems and lacked a configured  for full functionality. The Prospects Portal involved building a lead capture frontend and backend, integrating with an existing simulator. A critical backend bug where new leads were incorrectly inserted into the  collection instead of a  collection was fixed.
 
-The AI engineer developed the MT5 Watchdog service, a GitHub emergency deployment workflow, and email alerts. However, during testing, several issues arose: the  was accidentally committed, blocking Git pushes, which required token sanitization and explicit instructions for secure storage (Render.com environment variables). A major persistent blocker is the deployment of the *correct, updated*  to the Windows VPS. Despite multiple manual restarts and file copy attempts by the user, the VPS continues to run an older code version, lacking the new auto-healing and one-time setup endpoints. The AI identified that the workflow was targeting the wrong port (5000 instead of 8000) and that the VPS environment is standalone, requiring manual code updates. The current task is to provide a clean, copy-pastable version of the Python file for the user to manually deploy to the VPS, as previous attempts resulted in syntax errors.
+The subsequent work involved integrating these new leads into the existing CRM system, requiring significant backend modifications in  to merge data, manage lead migration, and enforce stage validation. After successfully implementing these backend fixes, the focus shifted to a major frontend redesign of the Prospects Portal. However, this redesign encountered persistent local webpack caching and routing issues, preventing the new UI from rendering. This prompted a pivot to addressing a critical MT5 data synchronization failure, where the VPS-side bridge was reporting zero balances due to a missing  call for the master account. A fix for this has just been provided.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an investment management system managing seven MT5 accounts, requiring robust MT5 data integration, broker rebate calculations, and performance analytics. It comprises a Python/FastAPI backend, React.js frontend, and an MT5 Bridge on a Windows VPS.
+The FIDUS platform is an investment management system for MT5 accounts. The initial objective was to migrate to a new VPS, implement an MT5 Auto-Healing System (monitoring every 60 seconds, auto-healing after 3 failures, GitHub workflows, email alerts), and remove old VPS references.
 
-The project began with a critical migration from a problematic old VPS () to a stable new one (). This involved updating all backend, frontend, and GitHub Actions references to the new VPS, ensuring MongoDB connectivity, and deprecating old references.
-
-The immediate post-migration goal is to implement a high-priority MT5 Auto-Healing System. This system requires:
-1.  **MT5 Watchdog Service**: To monitor MT5 Bridge health (API availability, data freshness, account sync) every 60 seconds, with auto-healing after 3 consecutive failures.
-2.  **GitHub Emergency Deployment Workflow**: To trigger service restarts on the VPS via API when issues are detected.
-3.  **Enhanced Email Alerts**: To notify users of recovery success or critical failures requiring manual intervention.
-Additionally, documentation within the app, removal of all old VPS references, and verification of frontend deployment are required.
+Subsequently, the priority shifted to developing a Prospects Portal (). This portal needs a two-field form (email + phone) for lead capture, storing them in a  MongoDB collection (with ), and immediately redirecting to an existing investment simulator (). The design must match the existing dark theme and include the FIDUS logo. Future phases include an educational sidebar, enhanced simulator, and an admin panel for lead management and Convert to Client functionality (including AML/KYC process and activity tracking). A critical, recent requirement is accurate, real-time MT5 account data synchronization for the entire application.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, PyMongo, APScheduler, httpx), MongoDB for data persistence.
--   **Frontend**: React.js for user interface.
--   **Deployment/Orchestration**: GitHub Actions (PowerShell, SSH), Render.com, Windows Task Scheduler, Supervisor.
--   **Architectural Principles**: API Gateway/Proxy, Auto-healing, Health Monitoring.
--   **VPS Specifics**: Windows Server, MT5 Terminal, manual file deployment for critical updates.
+-   **Backend**: Python (FastAPI, PyMongo), MongoDB.
+-   **Frontend**: React.js, React Router DOM, styled-components (implied by design snippets).
+-   **Deployment**: GitHub Actions (PowerShell), Render.com, Supervisor, Windows VPS.
+-   **Architectural Patterns**: Auto-healing, Health Monitoring, API Gateway/Proxy, CRM pipeline, Data persistence.
+-   **Data Handling**: UUIDs for IDs, MongoDB  and  collections.
 </key_technical_concepts>
 
 <code_architecture>
-The application features a React.js frontend, a Python/FastAPI backend, and a Windows VPS hosting the MT5 Bridge, managed with GitHub Actions.
 
 
-
--   ****: Main FastAPI application. Initializes the  service.
--   ****: Monitors MT5 Bridge health and initiates auto-healing. Its configuration now correctly references the new VPS.
--   ****: Updated  to .  and  are managed securely via Render.com/GitHub Secrets.
--   ****: The core FastAPI service intended for the Windows VPS. This file was modified to include the  endpoint and a temporary  endpoint. *Currently, the VPS is reported to be running an old version of this file, missing these new endpoints.*
--   ****: Existing GitHub Actions workflow for emergency deployment, which was to be updated for the new VPS.
--   ****: New GitHub Actions workflow created for the Hybrid auto-healing approach, which triggers the  endpoint on the VPS.
--   ****: New GitHub Actions workflow created to remotely configure  on the VPS via the  endpoint.
--   ****: Frontend component updated to include a new MT5 Auto-Healing System tab and generally sanitized from old VPS references.
--   ****: New documentation files created for infrastructure, troubleshooting, VPS migration history, and MT5 auto-healing.
--   ****: Updated to reflect the new VPS IP and current infrastructure status.
+-   ****: Main FastAPI application.
+    -   **Importance**: Handles core API logic, including CRM, prospects, and client conversion.
+    -   **Changes**: Modified  (GET/PUT) to merge  and  data, handle lead migration, add  flag, and implement stage validation. New  endpoint added. AML/KYC and convert endpoints updated to handle  IDs and link data correctly.
+-   ****: Main React application, handles routing and authentication.
+    -   **Importance**: Controls which components are rendered based on routes and user authentication status.
+    -   **Changes**: Updated to incorporate  component and handle its routing. Several attempts were made to bypass the authentication check for the  route, encountering persistent local caching issues.
+-   ****: (Now reflects  content) Frontend component for lead capture.
+    -   **Importance**: The primary interface for lead generation.
+    -   **Changes**: Completely redesigned with a professional, multi-section layout matching FIDUS branding (dark theme, specific colors). Includes hero, lead capture form, value propositions, fund showcase, how-it-works, social proof, final CTA, and footer. Phone validation was made more flexible, and MT5 references were replaced with portal de cliente.
+-   ****: FastAPI service on Windows VPS.
+    -   **Importance**: Acts as a bridge between the backend and MT5 terminal for live data.
+    -   **Changes**: A fixed version () was created. It includes  call for the master account (886557) in the  and  functions to ensure proper MT5 account authentication and live data retrieval.
+-   ****: Monitors MT5 Bridge health.
+    -   **Importance**: Core of the auto-healing system.
+    -   **Changes**: Discovered to be failing due to an unconfigured , preventing automated restarts.
 </code_architecture>
 
 <pending_tasks>
--   Complete the automated execution of the auto-healing system (after new code is deployed to VPS).
+-   Complete automated execution of the MT5 auto-healing system (requires  setup on VPS).
 -   Remove the temporary  endpoint from  for security.
 -   Verify all documentation updates are correctly rendered in the frontend.
--   Remove any remaining old VPS references () from the codebase, especially historical or log files.
+-   Remove any remaining old VPS references ().
 -   Perform Kubernetes cleanup (remove  from MongoDB Atlas network access if unused).
+-   Resolve frontend routing and caching issues preventing the new Prospects Portal design from displaying locally/in dev environment.
+-   Implement Phase 2 and 3 of the Prospects Portal (educational sidebar, enhanced simulator, admin dashboard, lead detail pages, convert to client functionality, mobile optimization, analytics, document upload UI, Convert to Client/Mark as Won buttons in CRM UI).
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was focused on resolving a critical deployment blocker for the MT5 Auto-Healing System. Despite successfully integrating the auto-healing logic into the  and creating associated GitHub Actions workflows (, ), the updated  file, containing the necessary  and  endpoints, was consistently failing to deploy to the Windows VPS ().
+Immediately prior to this summary, the AI engineer was addressing a critical MT5 data synchronization failure. The MT5 bridge service, running on the Windows VPS, was returning  for all account balances, leading to Suspicious balance change validation errors in the backend and stale data in the client portal. This issue was diagnosed as the Python  failing to explicitly log into the master MT5 account (886557) using  after . The watchdog detected the problem but could not resolve the authentication issue nor trigger auto-healing due to a missing .
 
-The AI diagnosed that the VPS was still running an old version of the code, as calls to the new endpoints resulted in 404 Not Found errors, even after the user performed manual restarts and confirmed service running. The user had also encountered syntax errors during previous manual copy-paste attempts of the file content. The AI determined that manual intervention by the user to update the file on the VPS was unavoidable.
-
-The current immediate task is to provide the user with a completely clean, copy-pastable version of the  file, ensuring no syntax errors or hidden characters, to finally get the new endpoints deployed on the VPS. This is in direct response to the user's latest message, there is something wrong in line 2. please i need the file that i can simply copy and paste.
+The AI engineer has created a fixed version of the VPS service file, , which integrates the  call within the  and  functions. This modification ensures the master account is properly authenticated with the MT5 terminal to retrieve live data. The user has been instructed to copy this updated file to the VPS, replace the existing , and restart the Python service.
 </current_work>
 
 <optional_next_step>
-Provide the user with a clean, copy-pastable  file content to fix the syntax error on line 2 and enable manual deployment.
+Instruct the user to copy  to the VPS, replace the existing service file, and restart the Python service.
 </optional_next_step>
-

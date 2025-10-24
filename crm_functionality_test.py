@@ -42,7 +42,7 @@ from datetime import datetime, timedelta
 import time
 
 # Configuration - Use correct backend URL from frontend/.env
-BACKEND_URL = "https://prospect-portal.preview.emergentagent.com/api"
+BACKEND_URL = "https://prospects-portal.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

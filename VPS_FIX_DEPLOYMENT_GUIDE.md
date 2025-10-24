@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://prospect-portal.preview.emergentagent.com/api/system/status
+   curl https://prospects-portal.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://prospect-portal.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://prospects-portal.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

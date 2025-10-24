@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://prospect-portal.preview.emergentagent.com/api'
+BACKEND_URL = 'https://prospects-portal.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():
