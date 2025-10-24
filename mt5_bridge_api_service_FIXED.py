@@ -757,6 +757,182 @@ async def get_system_status():
 
 # ============================================
 # RUN SERVER
+
+# ============================================
+# LIVE DEALS ENDPOINTS (NEW - Oct 24, 2025)
+# ============================================
+@app.get("/api/mt5/account/{account_id}/deals/live")
+async def get_account_live_deals(account_id: int, days: int = 30):
+    """
+    Get LIVE deals from MT5 terminal (not cached MongoDB data)
+    Critical fix: Returns real-time deal history directly from MT5
+    """
+    try:
+        logger.info(f"[LIVE DEALS] Fetching live deals for account {account_id}, last {days} days")
+        
+        if db is None:
+            raise HTTPException(status_code=503, detail="MongoDB not available")
+        
+        # Get account credentials
+        accounts_collection = db['mt5_accounts']
+        account_doc = accounts_collection.find_one({'account': account_id})
+        
+        if not account_doc:
+            account_doc = db['mt5_account_config'].find_one({'account': account_id})
+        
+        if not account_doc:
+            raise HTTPException(status_code=404, detail=f"Account {account_id} not found")
+        
+        password = account_doc.get('password')
+        if not password:
+            raise HTTPException(status_code=400, detail=f"No password for account {account_id}")
+        
+        # Check MT5 initialized
+        if mt5.terminal_info() is None:
+            raise HTTPException(status_code=503, detail="MT5 terminal not initialized")
+        
+        # Login to this account
+        authorized = mt5.login(account_id, password=password, server=MT5_SERVER)
+        
+        if not authorized:
+            error_code = mt5.last_error()
+            logger.error(f"[LIVE DEALS] Login failed for {account_id}: {error_code}")
+            raise HTTPException(status_code=401, detail=f"Login failed: {error_code}")
+        
+        logger.info(f"[LIVE DEALS] ✅ Logged into account {account_id}")
+        
+        # Get deal history from MT5 terminal
+        date_to = datetime.now(timezone.utc)
+        date_from = date_to - timedelta(days=days)
+        
+        logger.info(f"[LIVE DEALS] Fetching deals from {date_from.date()} to {date_to.date()}")
+        deals = mt5.history_deals_get(date_from, date_to)
+        
+        if deals is None:
+            logger.warning(f"[LIVE DEALS] No deals returned for account {account_id}")
+            return {
+                "account_id": account_id,
+                "deals_count": 0,
+                "total_volume_lots": 0.0,
+                "deals": [],
+                "date_from": date_from.isoformat(),
+                "date_to": date_to.isoformat(),
+                "data_source": "MT5_TERMINAL_LIVE"
+            }
+        
+        # Convert deals to list of dicts
+        deals_list = []
+        total_volume = 0.0
+        
+        for deal in deals:
+            deal_dict = {
+                "ticket": deal.ticket,
+                "order": deal.order,
+                "time": datetime.fromtimestamp(deal.time, tz=timezone.utc).isoformat(),
+                "type": deal.type,
+                "entry": deal.entry,
+                "magic": deal.magic,
+                "position_id": deal.position_id,
+                "volume": deal.volume,
+                "price": deal.price,
+                "commission": deal.commission,
+                "swap": deal.swap,
+                "profit": deal.profit,
+                "symbol": deal.symbol,
+                "comment": deal.comment,
+                "external_id": deal.external_id
+            }
+            deals_list.append(deal_dict)
+            
+            # Sum volume for trading deals only (type 0=buy, 1=sell)
+            if deal.type in [0, 1]:
+                total_volume += deal.volume
+        
+        logger.info(f"[LIVE DEALS] ✅ Retrieved {len(deals_list)} deals, {total_volume:.2f} lots for account {account_id}")
+        
+        return {
+            "account_id": account_id,
+            "deals_count": len(deals_list),
+            "total_volume_lots": round(total_volume, 2),
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "deals": deals_list,
+            "data_source": "MT5_TERMINAL_LIVE"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[ERROR] Get live deals for {account_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/mt5/accounts/deals/live")
+async def get_all_accounts_live_deals(days: int = 30):
+    """
+    Get LIVE deals for all accounts from MT5 terminal
+    Returns real-time deal history for all configured accounts
+    """
+    try:
+        logger.info(f"[LIVE DEALS] Fetching live deals for all accounts, last {days} days")
+        
+        if db is None:
+            raise HTTPException(status_code=503, detail="MongoDB not available")
+        
+        # Get all accounts
+        accounts_cursor = db.mt5_accounts.find({}, {'account': 1, 'name': 1})
+        accounts = list(accounts_cursor)
+        
+        logger.info(f"[LIVE DEALS] Processing {len(accounts)} accounts")
+        
+        all_deals = []
+        total_volume = 0.0
+        total_deals_count = 0
+        
+        for account in accounts:
+            account_id = account['account']
+            
+            try:
+                # Call individual account endpoint
+                result = await get_account_live_deals(account_id, days)
+                
+                all_deals.append({
+                    "account_id": account_id,
+                    "account_name": account.get('name', f"Account {account_id}"),
+                    "deals_count": result['deals_count'],
+                    "total_volume_lots": result['total_volume_lots'],
+                    "deals": result['deals']
+                })
+                
+                total_volume += result['total_volume_lots']
+                total_deals_count += result['deals_count']
+                
+            except Exception as e:
+                logger.error(f"[LIVE DEALS] Failed to get deals for account {account_id}: {e}")
+                all_deals.append({
+                    "account_id": account_id,
+                    "account_name": account.get('name', f"Account {account_id}"),
+                    "error": str(e),
+                    "deals_count": 0,
+                    "total_volume_lots": 0.0
+                })
+        
+        logger.info(f"[LIVE DEALS] ✅ Total: {total_deals_count} deals, {total_volume:.2f} lots from {len(accounts)} accounts")
+        
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "accounts_count": len(accounts),
+            "total_deals": total_deals_count,
+            "total_volume_lots": round(total_volume, 2),
+            "date_range_days": days,
+            "accounts": all_deals,
+            "data_source": "MT5_TERMINAL_LIVE"
+        }
+        
+    except Exception as e:
+        logger.error(f"[ERROR] Get all live deals: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================
 if __name__ == "__main__":
     import uvicorn
