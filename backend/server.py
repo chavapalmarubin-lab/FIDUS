@@ -22120,6 +22120,7 @@ async def automatic_vps_sync():
     Background job that runs automatically
     Fetches LIVE data from VPS MT5 Bridge and updates MongoDB
     Fixed on Oct 24, 2025 - Was reading stale data from MongoDB, now fetches from VPS
+    Updated: Now syncs BOTH account balances AND trades/deals
     """
     try:
         logging.info(f"🔄 Auto-sync starting at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
@@ -22139,11 +22140,11 @@ async def automatic_vps_sync():
         
         logging.info("✅ VPS Bridge is healthy, proceeding with sync")
         
-        # Sync all accounts from VPS
-        result = await vps_sync.sync_all_accounts()
+        # 1. Sync all ACCOUNT BALANCES from VPS
+        accounts_result = await vps_sync.sync_all_accounts()
         
-        if result.get('success'):
-            logging.info(f"✅ Auto-sync complete: {result.get('accounts_synced')}/{result.get('total_accounts')} accounts synced in {result.get('duration_seconds', 0):.2f}s")
+        if accounts_result.get('success'):
+            logging.info(f"✅ Accounts sync complete: {accounts_result.get('accounts_synced')}/{accounts_result.get('total_accounts')} accounts synced in {accounts_result.get('duration_seconds', 0):.2f}s")
             
             # Update cache collection
             accounts_synced = 0
@@ -22164,9 +22165,24 @@ async def automatic_vps_sync():
                 )
                 accounts_synced += 1
             
-            logging.info(f"✅ Cache updated: {accounts_synced} accounts")
+            logging.info(f"✅ Accounts cache updated: {accounts_synced} accounts")
         else:
-            logging.error(f"❌ Auto-sync failed: {result.get('error')}")
+            logging.error(f"❌ Accounts sync failed: {accounts_result.get('error')}")
+        
+        # 2. Sync all TRADES/DEALS from VPS
+        trades_result = await vps_sync.sync_all_trades(limit_per_account=100)
+        
+        if trades_result.get('success'):
+            logging.info(f"✅ Trades sync complete: {trades_result.get('total_trades_synced')} trades from {trades_result.get('accounts_processed')}/{trades_result.get('total_accounts')} accounts")
+            
+            if trades_result.get('failed_accounts'):
+                logging.warning(f"⚠️  Trades sync failed for accounts: {trades_result.get('failed_accounts')}")
+        else:
+            logging.error(f"❌ Trades sync failed: {trades_result.get('error')}")
+        
+        # 3. Log summary
+        total_duration = accounts_result.get('duration_seconds', 0) + trades_result.get('duration_seconds', 0)
+        logging.info(f"✅ Complete sync finished in {total_duration:.2f}s: {accounts_result.get('accounts_synced', 0)} accounts + {trades_result.get('total_trades_synced', 0)} trades")
             
     except Exception as e:
         logging.error(f"❌ Auto-sync exception: {e}", exc_info=True)
