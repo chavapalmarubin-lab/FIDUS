@@ -22055,62 +22055,58 @@ async def sync_from_vps(current_user: dict = Depends(get_current_admin_user)):
 async def automatic_vps_sync():
     """
     Background job that runs automatically
-    Executes 1 minute after VPS bridge sync (every 5 minutes)
+    Fetches LIVE data from VPS MT5 Bridge and updates MongoDB
+    Fixed on Oct 24, 2025 - Was reading stale data from MongoDB, now fetches from VPS
     """
     try:
         logging.info(f"🔄 Auto-sync starting at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
         
-        # Call the sync function without authentication (internal call)
-        start_time = datetime.now(timezone.utc)
+        # Import VPS sync service
+        from vps_sync_service import get_vps_sync_service
         
-        # Sync MT5 accounts from VPS
-        vps_accounts_cursor = db.mt5_accounts.find()
-        vps_accounts = await vps_accounts_cursor.to_list(length=None)
+        # Get VPS sync service
+        vps_sync = await get_vps_sync_service(db)
         
-        if not vps_accounts:
-            logging.warning("⚠️ Auto-sync: No accounts found in VPS")
+        # Check VPS health first
+        health = await vps_sync.check_vps_health()
+        
+        if not health.get('healthy'):
+            logging.error(f"❌ VPS Bridge unhealthy, skipping sync: {health.get('error')}")
             return
         
-        # Update cache collection
-        accounts_synced = 0
-        for account in vps_accounts:
-            await db.mt5_accounts_cache.update_one(
-                {'account': account.get('account')},
-                {
-                    '$set': {
-                        **account,
-                        'cached_at': datetime.now(timezone.utc),
-                        'cache_source': 'VPS_MONGODB'
-                    }
-                },
-                upsert=True
-            )
-            accounts_synced += 1
+        logging.info("✅ VPS Bridge is healthy, proceeding with sync")
         
-        # Sync trades (last 30 days)
-        end_date = datetime.now(timezone.utc)
-        start_date = end_date - timedelta(days=30)
+        # Sync all accounts from VPS
+        result = await vps_sync.sync_all_accounts()
         
-        vps_trades_cursor = db.mt5_trades.find({
-            'close_time': {'$gte': start_date, '$lte': end_date}
-        })
-        vps_trades = await vps_trades_cursor.to_list(length=None)
-        
-        trades_synced = 0
-        if vps_trades:
-            await db.mt5_trades_cache.delete_many({})
-            for trade in vps_trades:
-                if '_id' in trade:
-                    del trade['_id']
-            await db.mt5_trades_cache.insert_many(vps_trades)
-            trades_synced = len(vps_trades)
-        
-        duration = (datetime.now(timezone.utc) - start_time).total_seconds()
-        
-        logging.info(f"✅ Auto-sync complete: {accounts_synced} accounts, {trades_synced} trades in {duration:.2f}s")
+        if result.get('success'):
+            logging.info(f"✅ Auto-sync complete: {result.get('accounts_synced')}/{result.get('total_accounts')} accounts synced in {result.get('duration_seconds', 0):.2f}s")
+            
+            # Update cache collection
+            accounts_synced = 0
+            vps_accounts_cursor = db.mt5_accounts.find()
+            vps_accounts = await vps_accounts_cursor.to_list(length=None)
+            
+            for account in vps_accounts:
+                await db.mt5_accounts_cache.update_one(
+                    {'account': account.get('account')},
+                    {
+                        '$set': {
+                            **account,
+                            'cached_at': datetime.now(timezone.utc),
+                            'cache_source': 'VPS_BRIDGE_API'
+                        }
+                    },
+                    upsert=True
+                )
+                accounts_synced += 1
+            
+            logging.info(f"✅ Cache updated: {accounts_synced} accounts")
+        else:
+            logging.error(f"❌ Auto-sync failed: {result.get('error')}")
             
     except Exception as e:
-        logging.error(f"❌ Auto-sync exception: {e}")
+        logging.error(f"❌ Auto-sync exception: {e}", exc_info=True)
 
 
 # Background health monitoring function
