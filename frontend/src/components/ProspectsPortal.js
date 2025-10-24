@@ -104,14 +104,19 @@ const ProspectsPortalNew = () => {
           position: 'absolute',
           top: '2rem',
           left: '2rem',
-          zIndex: 10
+          zIndex: 10,
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '1rem 1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}>
           <img 
             src="/assets/logos/fidus-logo-complete.png" 
             alt="FIDUS Investment Management"
             style={{
-              height: '180px',
-              width: 'auto'
+              height: 'auto',
+              width: '200px',
+              display: 'block'
             }}
           />
         </div>
