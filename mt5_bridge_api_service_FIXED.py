@@ -102,21 +102,20 @@ async def startup_event():
         
         try:
             # Get master account credentials from MongoDB
-            accounts_collection = db['mt5_accounts']
-            master_account_doc = accounts_collection.find_one({'account': MASTER_ACCOUNT})
+            # Check mt5_accounts first
+            master_account_doc = db['mt5_accounts'].find_one({'account': MASTER_ACCOUNT})
+            master_password = master_account_doc.get('password', '') if master_account_doc else ''
             
-            if not master_account_doc:
-                # Try mt5_account_config as fallback
-                master_account_doc = db['mt5_account_config'].find_one({'account': MASTER_ACCOUNT})
-            
-            if not master_account_doc:
-                logger.error(f"[ERROR] Master account {MASTER_ACCOUNT} not found in MongoDB")
-                return
-            
-            master_password = master_account_doc.get('password', '')
+            # If password not found, try mt5_account_config
+            if not master_password:
+                logger.info(f"[LOGIN] Password not in mt5_accounts, checking mt5_account_config...")
+                config_doc = db['mt5_account_config'].find_one({'account': MASTER_ACCOUNT})
+                if config_doc:
+                    master_password = config_doc.get('password', '')
+                    logger.info(f"[LOGIN] Found password in mt5_account_config")
             
             if not master_password:
-                logger.error(f"[ERROR] Password not found for master account {MASTER_ACCOUNT}")
+                logger.error(f"[ERROR] Password not found for master account {MASTER_ACCOUNT} in any collection")
                 return
             
             # Login to master account
