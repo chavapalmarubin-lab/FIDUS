@@ -212,7 +212,7 @@ const ProspectsPortalNew = () => {
       {/* SECTION 2: Value Propositions */}
       <section style={{
         padding: '5rem 2rem',
-        background: 'white'
+        background: '#0f1419'
       }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
