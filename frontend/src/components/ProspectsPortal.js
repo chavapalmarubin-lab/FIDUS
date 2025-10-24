@@ -288,7 +288,7 @@ const ProspectsPortalNew = () => {
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
           fontWeight: '600',
-          color: '#1e2843',
+          color: '#ffffff',
           textAlign: 'center',
           marginBottom: '1rem'
         }}>
@@ -296,7 +296,7 @@ const ProspectsPortalNew = () => {
         </h2>
         <p style={{
           fontSize: '1.125rem',
-          color: '#666',
+          color: '#9ca3af',
           textAlign: 'center',
           marginBottom: '3rem',
           maxWidth: '700px',
