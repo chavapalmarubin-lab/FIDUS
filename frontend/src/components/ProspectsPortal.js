@@ -360,7 +360,7 @@ const ProspectsPortalNew = () => {
                   position: 'absolute',
                   top: '1rem',
                   right: '1rem',
-                  background: '#f5a623',
+                  background: '#06b6d4',
                   color: 'white',
                   padding: '0.375rem 0.875rem',
                   borderRadius: '20px',
