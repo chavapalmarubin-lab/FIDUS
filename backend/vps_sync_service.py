@@ -51,6 +51,7 @@ class VPSSyncService:
     async def sync_all_accounts(self) -> Dict[str, Any]:
         """
         Sync all MT5 accounts from VPS to MongoDB
+        Uses individual account endpoints to get LIVE data (not cached MongoDB data)
         
         Returns:
             Sync results with statistics
@@ -59,21 +60,21 @@ class VPSSyncService:
             logger.info("🔄 Starting VPS→MongoDB sync for all accounts")
             start_time = datetime.now(timezone.utc)
             
-            # Fetch all accounts from VPS
-            result = await self.fetch_from_vps('/api/mt5/accounts/summary')
+            # First, get the list of accounts from summary (just to know which accounts exist)
+            summary_result = await self.fetch_from_vps('/api/mt5/accounts/summary')
             
-            if 'error' in result:
-                logger.error(f"❌ Failed to fetch from VPS: {result['error']}")
+            if 'error' in summary_result:
+                logger.error(f"❌ Failed to fetch account list from VPS: {summary_result['error']}")
                 return {
                     "success": False,
-                    "error": result['error'],
+                    "error": summary_result['error'],
                     "accounts_synced": 0,
                     "timestamp": start_time.isoformat()
                 }
             
-            accounts = result.get('accounts', [])
+            accounts_list = summary_result.get('accounts', [])
             
-            if not accounts:
+            if not accounts_list:
                 logger.warning("⚠️  No accounts returned from VPS")
                 return {
                     "success": False,
@@ -82,48 +83,87 @@ class VPSSyncService:
                     "timestamp": start_time.isoformat()
                 }
             
-            # Update each account in MongoDB
+            # Fetch LIVE data for each account individually
             accounts_synced = 0
-            for account in accounts:
-                account_id = account.get('account')
+            failed_accounts = []
+            
+            for account_info in accounts_list:
+                account_id = account_info.get('account')
                 
                 if not account_id:
-                    logger.warning(f"⚠️  Skipping account with no ID: {account}")
+                    logger.warning(f"⚠️  Skipping account with no ID: {account_info}")
                     continue
                 
-                # Update mt5_accounts collection
-                update_result = await self.db.mt5_accounts.update_one(
-                    {'account': account_id},
-                    {
-                        '$set': {
-                            'balance': account.get('balance', 0),
-                            'equity': account.get('equity', 0),
-                            'profit': account.get('profit', 0),
-                            'margin': account.get('margin'),
-                            'margin_free': account.get('margin_free'),
-                            'margin_level': account.get('margin_level'),
-                            'updated_at': start_time,
-                            'synced_from_vps': True,
-                            'vps_sync_timestamp': start_time
-                        }
-                    },
-                    upsert=False  # Don't create new accounts, only update existing
-                )
+                try:
+                    # Fetch live data from VPS for this specific account
+                    account_result = await self.fetch_from_vps(f'/api/mt5/account/{account_id}/info')
+                    
+                    if 'error' in account_result:
+                        logger.error(f"❌ Failed to fetch account {account_id}: {account_result['error']}")
+                        failed_accounts.append(account_id)
+                        continue
+                    
+                    # Get live data (not cached MongoDB data)
+                    live_data = account_result.get('live_data', {})
+                    
+                    if not live_data:
+                        logger.warning(f"⚠️  No live data for account {account_id}, using stored data")
+                        # Fallback to stored data if live data not available
+                        stored_data = account_result.get('stored_data', {})
+                        balance = stored_data.get('balance', account_info.get('balance', 0))
+                        equity = stored_data.get('equity', account_info.get('equity', 0))
+                        profit = stored_data.get('profit', account_info.get('profit', 0))
+                    else:
+                        # Use LIVE data from MT5
+                        balance = live_data.get('balance', 0)
+                        equity = live_data.get('equity', 0)
+                        profit = live_data.get('profit', 0)
+                    
+                    # Update MongoDB with LIVE data
+                    update_result = await self.db.mt5_accounts.update_one(
+                        {'account': account_id},
+                        {
+                            '$set': {
+                                'balance': balance,
+                                'equity': equity,
+                                'profit': profit,
+                                'margin': live_data.get('margin'),
+                                'margin_free': live_data.get('margin_free'),
+                                'margin_level': live_data.get('margin_level'),
+                                'leverage': live_data.get('leverage'),
+                                'currency': live_data.get('currency', 'USD'),
+                                'trade_allowed': live_data.get('trade_allowed'),
+                                'updated_at': start_time,
+                                'synced_from_vps': True,
+                                'vps_sync_timestamp': start_time,
+                                'data_source': 'VPS_LIVE_MT5' if live_data else 'VPS_STORED'
+                            }
+                        },
+                        upsert=False  # Don't create new accounts, only update existing
+                    )
+                    
+                    if update_result.modified_count > 0 or update_result.matched_count > 0:
+                        accounts_synced += 1
+                        logger.info(f"✅ Synced account {account_id}: ${balance:,.2f} (live: {bool(live_data)})")
+                    else:
+                        logger.warning(f"⚠️  Account {account_id} not found in database")
+                        failed_accounts.append(account_id)
                 
-                if update_result.modified_count > 0 or update_result.matched_count > 0:
-                    accounts_synced += 1
-                    logger.info(f"✅ Synced account {account_id}: ${account.get('balance', 0):,.2f}")
-                else:
-                    logger.warning(f"⚠️  Account {account_id} not found in database")
+                except Exception as e:
+                    logger.error(f"❌ Error syncing account {account_id}: {str(e)}")
+                    failed_accounts.append(account_id)
             
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             
-            logger.info(f"✅ VPS sync complete: {accounts_synced}/{len(accounts)} accounts synced in {duration:.2f}s")
+            logger.info(f"✅ VPS sync complete: {accounts_synced}/{len(accounts_list)} accounts synced in {duration:.2f}s")
+            if failed_accounts:
+                logger.warning(f"⚠️  Failed accounts: {failed_accounts}")
             
             return {
                 "success": True,
                 "accounts_synced": accounts_synced,
-                "total_accounts": len(accounts),
+                "total_accounts": len(accounts_list),
+                "failed_accounts": failed_accounts,
                 "duration_seconds": duration,
                 "timestamp": start_time.isoformat(),
                 "vps_url": self.bridge_url
