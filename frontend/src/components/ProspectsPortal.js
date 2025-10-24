@@ -263,14 +263,14 @@ const ProspectsPortalNew = () => {
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: '600',
-                color: '#1e2843',
+                color: '#ffffff',
                 marginBottom: '0.75rem'
               }}>
                 {benefit.title}
               </h3>
               <p style={{
                 fontSize: '0.95rem',
-                color: '#666',
+                color: '#9ca3af',
                 lineHeight: '1.6'
               }}>
                 {benefit.desc}
