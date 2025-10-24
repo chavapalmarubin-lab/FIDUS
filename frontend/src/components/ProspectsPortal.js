@@ -161,8 +161,8 @@ const ProspectsPortalNew = () => {
             <button 
               onClick={() => scrollToSection('lead-capture')}
               style={{
-                background: '#f5a623',
-                color: '#1e2843',
+                background: '#3b82f6',
+                color: '#ffffff',
                 padding: '1rem 3rem',
                 fontSize: '1.125rem',
                 fontWeight: '600',
@@ -170,7 +170,7 @@ const ProspectsPortalNew = () => {
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                boxShadow: '0 4px 20px rgba(245, 166, 35, 0.3)'
+                boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)'
               }}
               onMouseEnter={(e) => {
                 e.target.style.transform = 'translateY(-2px)';
