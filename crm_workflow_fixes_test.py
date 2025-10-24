@@ -35,7 +35,7 @@ import uuid
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://prospects-portal.preview.emergentagent.com"
+BACKEND_URL = "https://fidusmt5-sync.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

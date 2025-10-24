@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://prospects-portal.preview.emergentagent.com/api"
-FRONTEND_URL = "https://prospects-portal.preview.emergentagent.com"
+BACKEND_URL = "https://fidusmt5-sync.preview.emergentagent.com/api"
+FRONTEND_URL = "https://fidusmt5-sync.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

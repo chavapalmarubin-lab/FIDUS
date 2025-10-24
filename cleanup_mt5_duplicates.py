@@ -32,7 +32,7 @@ class MT5AccountCleanup:
             raise
         
         # API configuration
-        self.base_url = "https://prospects-portal.preview.emergentagent.com"
+        self.base_url = "https://fidusmt5-sync.preview.emergentagent.com"
         self.admin_token = None
         
         # Real MT5 trading data from the screenshot
