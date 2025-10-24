@@ -317,7 +317,7 @@ const ProspectsPortalNew = () => {
           {[
             {
               name: 'FIDUS CORE',
-              logo: '/assets/logos/fidus-core.png',
+              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/uibusrfk_FIDUS%20CORE.png',
               tagline: 'Estabilidad y Crecimiento',
               rate: '1.5%',
               annualRate: '18%',
@@ -328,7 +328,7 @@ const ProspectsPortalNew = () => {
             },
             {
               name: 'FIDUS BALANCE',
-              logo: '/assets/logos/fidus-balance.png',
+              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/yav4r65z_FIDUS%20BALANCE.png',
               tagline: 'Equilibrio Perfecto',
               rate: '2.5%',
               annualRate: '30%',
@@ -340,7 +340,7 @@ const ProspectsPortalNew = () => {
             },
             {
               name: 'FIDUS DYNAMIC',
-              logo: '/assets/logos/fidus-dynamic.png',
+              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/u4yztdby_FIDUS%20DYNAMIC.png',
               tagline: 'Máximo Rendimiento',
               rate: '3.5%',
               annualRate: '42%',
