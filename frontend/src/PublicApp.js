@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import ProspectsPortalNew from './components/ProspectsPortalNew';
+import ProspectsPortal from './components/ProspectsPortal';
 
 function PublicApp() {
   return (
