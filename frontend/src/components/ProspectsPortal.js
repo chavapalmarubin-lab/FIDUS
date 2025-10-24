@@ -325,6 +325,7 @@ const ProspectsPortalNew = () => {
               redemption: 'Mensual',
               color: '#ffffff',
               textColor: '#1e293b',
+              buttonColor: '#1e3a8a',
               features: ['Ideal para principiantes', 'Liquidez mensual', 'Menor riesgo']
             },
             {
@@ -337,6 +338,7 @@ const ProspectsPortalNew = () => {
               redemption: 'Trimestral',
               color: '#0891b2',
               textColor: '#ffffff',
+              buttonColor: '#0891b2',
               popular: true,
               features: ['Más popular', 'Rendimiento balanceado', 'Estrategia diversificada']
             },
@@ -350,6 +352,7 @@ const ProspectsPortalNew = () => {
               redemption: 'Semestral',
               color: '#1e3a8a',
               textColor: '#ffffff',
+              buttonColor: '#1e3a8a',
               features: ['Para inversionistas avanzados', 'Máximo potencial', 'Gestión activa']
             }
           ].map((fund, index) => (
