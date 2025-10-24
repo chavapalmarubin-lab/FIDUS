@@ -231,7 +231,7 @@ const ProspectsPortalNew = () => {
         }}>
           {[
             { icon: '🎯', title: '30 Años de Experiencia', desc: 'Trading algorítmico profesional con historial comprobado en mercados globales.' },
-            { icon: '💎', title: 'Transparencia Total', desc: 'Acceso completo a tu cuenta MT5. Ve tus inversiones en tiempo real, 24/7.' },
+            { icon: '💎', title: 'Transparencia Total', desc: 'Acceso completo a tu cuenta, portal de cliente. Ve tus inversiones en tiempo real, 24/7.' },
             { icon: '📈', title: 'Rendimientos Profesionales', desc: 'Desde 1.5% hasta 4% mensual según tu perfil de inversión y capital.' },
             { icon: '🔒', title: 'Seguridad Garantizada', desc: 'Brokers regulados internacionalmente. Tu capital siempre protegido.' },
             { icon: '💰', title: 'Desde $10,000 USD', desc: 'Acceso a inversiones institucionales con montos accesibles.' },
