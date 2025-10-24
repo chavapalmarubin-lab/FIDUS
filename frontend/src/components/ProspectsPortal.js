@@ -385,7 +385,7 @@ const ProspectsPortalNew = () => {
               <div style={{
                 background: fund.color,
                 padding: '2rem',
-                color: 'white'
+                color: fund.textColor || 'white'
               }}>
                 {/* Fund Logo */}
                 <div style={{
