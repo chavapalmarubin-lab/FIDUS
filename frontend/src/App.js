@@ -349,7 +349,7 @@ function App() {
           {/* PUBLIC ROUTE: Prospects Portal - No authentication required */}
           <Route 
             path="/prospects/*" 
-            element={<ProspectsPortalNew />} 
+            element={<ProspectsPortal />} 
           />
           
           {/* MAIN APP: Home/Dashboard route with authentication */}
