@@ -562,7 +562,7 @@ const ProspectsPortalNew = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+52 55 1234 5678"
+                placeholder="+1917-456-2151"
                 style={{
                   width: '100%',
                   padding: '0.875rem',
