@@ -28,12 +28,12 @@ const ProspectsPortalNew = () => {
       newErrors.email = 'Correo inválido';
     }
 
-    // Phone validation
-    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{4,10}$/;
+    // Phone validation - more flexible to allow various formats
+    const phoneRegex = /^[+]?[0-9\s\-().]{8,20}$/;
     if (!formData.phone) {
       newErrors.phone = 'El teléfono es requerido';
     } else if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Teléfono inválido';
+      newErrors.phone = 'Teléfono inválido (mínimo 8 dígitos)';
     }
 
     setErrors(newErrors);
