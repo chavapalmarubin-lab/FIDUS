@@ -281,20 +281,24 @@ async def admin_emergency_restart(token: str = None):
             
             # Re-login to master account
             if db is not None:
-                accounts_collection = db['mt5_accounts']
-                master_account_doc = accounts_collection.find_one({'account': MASTER_ACCOUNT})
+                # Check mt5_accounts first
+                master_account_doc = db['mt5_accounts'].find_one({'account': MASTER_ACCOUNT})
+                master_password = master_account_doc.get('password', '') if master_account_doc else ''
                 
-                if not master_account_doc:
-                    master_account_doc = db['mt5_account_config'].find_one({'account': MASTER_ACCOUNT})
+                # If password not found, try mt5_account_config
+                if not master_password:
+                    config_doc = db['mt5_account_config'].find_one({'account': MASTER_ACCOUNT})
+                    if config_doc:
+                        master_password = config_doc.get('password', '')
                 
-                if master_account_doc:
-                    master_password = master_account_doc.get('password', '')
-                    if master_password:
-                        authorized = mt5.login(MASTER_ACCOUNT, password=master_password, server=MT5_SERVER)
-                        if authorized:
-                            logger.info(f"[RESTART] ✅ Master account {MASTER_ACCOUNT} re-logged in")
-                        else:
-                            logger.error(f"[RESTART] ❌ Master account re-login failed")
+                if master_password:
+                    authorized = mt5.login(MASTER_ACCOUNT, password=master_password, server=MT5_SERVER)
+                    if authorized:
+                        logger.info(f"[RESTART] ✅ Master account {MASTER_ACCOUNT} re-logged in")
+                    else:
+                        logger.error(f"[RESTART] ❌ Master account re-login failed")
+                else:
+                    logger.error(f"[RESTART] ❌ Password not found for master account")
             
         except Exception as e:
             logger.error(f"[RESTART] MT5 restart error: {e}")
