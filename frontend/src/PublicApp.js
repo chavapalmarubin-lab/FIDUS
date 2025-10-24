@@ -6,9 +6,9 @@ function PublicApp() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/prospects/*" element={<ProspectsPortalNew />} />
-        <Route path="/prospects" element={<ProspectsPortalNew />} />
-        <Route path="*" element={<ProspectsPortalNew />} />
+        <Route path="/prospects/*" element={<ProspectsPortal />} />
+        <Route path="/prospects" element={<ProspectsPortal />} />
+        <Route path="*" element={<ProspectsPortal />} />
       </Routes>
     </BrowserRouter>
   );
