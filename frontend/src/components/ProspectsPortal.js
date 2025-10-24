@@ -174,11 +174,11 @@ const ProspectsPortalNew = () => {
               }}
               onMouseEnter={(e) => {
                 e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 25px rgba(245, 166, 35, 0.5)';
+                e.target.style.boxShadow = '0 6px 25px rgba(59, 130, 246, 0.5)';
               }}
               onMouseLeave={(e) => {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 20px rgba(245, 166, 35, 0.3)';
+                e.target.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.3)';
               }}
             >
               Simula Tu Inversión →
