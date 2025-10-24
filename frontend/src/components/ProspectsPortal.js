@@ -312,6 +312,7 @@ const ProspectsPortalNew = () => {
           {[
             {
               name: 'FIDUS CORE',
+              logo: '/assets/logos/fidus-core.png',
               tagline: 'Estabilidad y Crecimiento',
               rate: '1.5%',
               annualRate: '18%',
@@ -322,6 +323,7 @@ const ProspectsPortalNew = () => {
             },
             {
               name: 'FIDUS BALANCE',
+              logo: '/assets/logos/fidus-balance.png',
               tagline: 'Equilibrio Perfecto',
               rate: '2.5%',
               annualRate: '30%',
@@ -333,6 +335,7 @@ const ProspectsPortalNew = () => {
             },
             {
               name: 'FIDUS DYNAMIC',
+              logo: '/assets/logos/fidus-dynamic.png',
               tagline: 'Máximo Rendimiento',
               rate: '3.5%',
               annualRate: '42%',
