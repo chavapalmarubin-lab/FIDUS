@@ -1,0 +1,168 @@
+name: Deploy MT5 Bridge Fix to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY to confirm deployment'
+        required: true
+        default: ''
+
+jobs:
+  deploy-fix:
+    runs-on: windows-latest
+    if: github.event.inputs.confirmation == 'DEPLOY'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Display deployment info
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "🚀 DEPLOYING MT5 BRIDGE FIX TO VPS" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "VPS: ${{ secrets.VPS_HOST }}" -ForegroundColor Yellow
+          Write-Host "File: mt5_bridge_api_service_FIXED.py" -ForegroundColor Yellow
+          Write-Host "Fix: Password lookup from both collections" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
+      
+      - name: Test VPS connectivity
+        run: |
+          Write-Host "🔌 Testing VPS connectivity..." -ForegroundColor Yellow
+          Test-Connection -ComputerName ${{ secrets.VPS_HOST }} -Count 2
+      
+      - name: Deploy fixed file to VPS
+        shell: pwsh
+        run: |
+          Write-Host "📦 Deploying fixed MT5 Bridge service file..." -ForegroundColor Cyan
+          
+          $vpsHost = "${{ secrets.VPS_HOST }}"
+          $vpsUser = "${{ secrets.VPS_USERNAME }}"
+          $vpsPass = ConvertTo-SecureString "${{ secrets.VPS_PASSWORD }}" -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential($vpsUser, $vpsPass)
+          
+          # Create remote session
+          $session = New-PSSession -ComputerName $vpsHost -Credential $credential
+          
+          if ($session) {
+              Write-Host "✅ Connected to VPS" -ForegroundColor Green
+              
+              # Copy the fixed file to VPS
+              Write-Host "📤 Uploading fixed file..." -ForegroundColor Yellow
+              Copy-Item -Path "./mt5_bridge_api_service_FIXED.py" -Destination "C:\mt5_bridge_service\mt5_bridge_api_service.py" -ToSession $session -Force
+              
+              Write-Host "✅ File uploaded successfully" -ForegroundColor Green
+              
+              # Verify file was copied
+              $fileCheck = Invoke-Command -Session $session -ScriptBlock {
+                  Test-Path "C:\mt5_bridge_service\mt5_bridge_api_service.py"
+              }
+              
+              if ($fileCheck) {
+                  Write-Host "✅ File verified on VPS" -ForegroundColor Green
+              } else {
+                  Write-Host "❌ File not found after upload" -ForegroundColor Red
+                  exit 1
+              }
+              
+              # Remove session
+              Remove-PSSession -Session $session
+          } else {
+              Write-Host "❌ Failed to connect to VPS" -ForegroundColor Red
+              exit 1
+          }
+      
+      - name: Restart MT5 Bridge Service
+        shell: pwsh
+        run: |
+          Write-Host "🔄 Restarting MT5 Bridge service..." -ForegroundColor Cyan
+          
+          $vpsHost = "${{ secrets.VPS_HOST }}"
+          $vpsUser = "${{ secrets.VPS_USERNAME }}"
+          $vpsPass = ConvertTo-SecureString "${{ secrets.VPS_PASSWORD }}" -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential($vpsUser, $vpsPass)
+          
+          $session = New-PSSession -ComputerName $vpsHost -Credential $credential
+          
+          if ($session) {
+              # Restart the Python service
+              Invoke-Command -Session $session -ScriptBlock {
+                  # Stop any running Python processes for MT5 Bridge
+                  Write-Host "⏹️  Stopping existing MT5 Bridge processes..."
+                  Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*mt5_bridge_api_service*" } | Stop-Process -Force
+                  
+                  Start-Sleep -Seconds 3
+                  
+                  # Start the service
+                  Write-Host "▶️  Starting MT5 Bridge service..."
+                  Set-Location "C:\mt5_bridge_service"
+                  
+                  # Start Python service in background
+                  $process = Start-Process -FilePath "python" -ArgumentList "mt5_bridge_api_service.py" -WindowStyle Hidden -PassThru
+                  
+                  Start-Sleep -Seconds 5
+                  
+                  if ($process -and !$process.HasExited) {
+                      Write-Host "✅ MT5 Bridge service started (PID: $($process.Id))"
+                      return $true
+                  } else {
+                      Write-Host "❌ Failed to start MT5 Bridge service"
+                      return $false
+                  }
+              }
+              
+              Remove-PSSession -Session $session
+              Write-Host "✅ Service restart complete" -ForegroundColor Green
+          } else {
+              Write-Host "❌ Failed to connect to VPS for restart" -ForegroundColor Red
+              exit 1
+          }
+      
+      - name: Verify deployment
+        shell: pwsh
+        run: |
+          Write-Host "🔍 Verifying deployment..." -ForegroundColor Cyan
+          
+          Start-Sleep -Seconds 10
+          
+          try {
+              # Test health endpoint
+              $response = Invoke-RestMethod -Uri "http://${{ secrets.VPS_HOST }}:8000/api/mt5/bridge/health" -Method Get -TimeoutSec 30
+              
+              Write-Host "✅ MT5 Bridge service is responding" -ForegroundColor Green
+              Write-Host "Status: $($response.status)" -ForegroundColor Yellow
+              Write-Host "MT5 Available: $($response.mt5.available)" -ForegroundColor Yellow
+              Write-Host "MongoDB Connected: $($response.mongodb.connected)" -ForegroundColor Yellow
+              
+              if ($response.status -eq "healthy") {
+                  Write-Host "========================================" -ForegroundColor Green
+                  Write-Host "✅ DEPLOYMENT SUCCESSFUL!" -ForegroundColor Green
+                  Write-Host "========================================" -ForegroundColor Green
+              } else {
+                  Write-Host "⚠️  Service is running but status is: $($response.status)" -ForegroundColor Yellow
+              }
+          } catch {
+              Write-Host "⚠️  Could not verify health endpoint: $_" -ForegroundColor Yellow
+              Write-Host "Service may still be starting up..." -ForegroundColor Yellow
+          }
+      
+      - name: Display next steps
+        run: |
+          Write-Host "" -ForegroundColor White
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "📋 NEXT STEPS:" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "1. Check VPS logs at:" -ForegroundColor Yellow
+          Write-Host "   C:\mt5_bridge_service\logs\api_service.log" -ForegroundColor White
+          Write-Host "" -ForegroundColor White
+          Write-Host "2. Look for these success messages:" -ForegroundColor Yellow
+          Write-Host "   [LOGIN] Found password in mt5_account_config" -ForegroundColor Green
+          Write-Host "   [OK] ✅ Master account 886557 logged in" -ForegroundColor Green
+          Write-Host "   [OK] Master account balance: $XXX,XXX.XX" -ForegroundColor Green
+          Write-Host "" -ForegroundColor White
+          Write-Host "3. Test account data from backend:" -ForegroundColor Yellow
+          Write-Host "   The client portal should now show live balances" -ForegroundColor White
+          Write-Host "" -ForegroundColor White
+          Write-Host "4. Verify account 891215 shows ~$27,047.52" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
