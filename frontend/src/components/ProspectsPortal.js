@@ -91,7 +91,7 @@ const ProspectsPortalNew = () => {
     }}>
       {/* SECTION 1: Hero Section */}
       <section style={{
-        background: 'linear-gradient(135deg, #1e2843 0%, #0b5ea8 100%)',
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%)',
         minHeight: '70vh',
         display: 'flex',
         flexDirection: 'column',
