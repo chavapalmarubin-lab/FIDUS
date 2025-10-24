@@ -671,8 +671,8 @@ const ProspectsPortalNew = () => {
             fontSize: '0.95rem',
             color: '#9ca3af'
           }}>
-            <div>📧 info@fidusinvestment.com</div>
-            <div>📱 WhatsApp: +52 55 1234 5678</div>
+            <div>📧 hq@getfidus.com</div>
+            <div>📱 WhatsApp: +1917-456-2151</div>
           </div>
 
           <div style={{
