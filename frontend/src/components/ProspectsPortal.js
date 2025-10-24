@@ -111,7 +111,7 @@ const ProspectsPortalNew = () => {
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}>
           <img 
-            src="/assets/logos/fidus-logo-complete.png" 
+            src="https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png" 
             alt="FIDUS Investment Management"
             style={{
               height: 'auto',
