@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Main Prospects Portal Component - Marketing-Grade Landing Page
+// Main Prospects Portal Component - Matching Client Portal Dark Theme
 const ProspectsPortalNew = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', phone: '' });
@@ -28,11 +28,11 @@ const ProspectsPortalNew = () => {
       newErrors.email = 'Correo inválido';
     }
 
-    // Phone validation - more flexible to allow various formats
+    // Phone validation - more flexible
     const phoneRegex = /^[+]?[0-9\s\-().]{8,20}$/;
     if (!formData.phone) {
       newErrors.phone = 'El teléfono es requerido';
-    } else if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+    } else if (!phoneRegex.test(formData.phone)) {
       newErrors.phone = 'Teléfono inválido (mínimo 8 dígitos)';
     }
 
@@ -65,9 +65,7 @@ const ProspectsPortalNew = () => {
       if (data.success || response.ok) {
         const leadId = data.leadId || data.lead_id || data.id;
         if (leadId) {
-          // Store leadId
           localStorage.setItem('fidus_lead_id', leadId);
-          // Redirect to simulator
           navigate(`/prospects/simulator/${leadId}`);
         } else {
           setErrors({ submit: 'Error al crear registro. Intenta de nuevo.' });
@@ -86,7 +84,7 @@ const ProspectsPortalNew = () => {
   return (
     <div style={{ 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      background: '#ffffff',
+      background: '#0f1419',
       minHeight: '100vh'
     }}>
       {/* SECTION 1: Hero Section */}
@@ -127,7 +125,7 @@ const ProspectsPortalNew = () => {
           right: 0,
           bottom: 0,
           opacity: 0.1,
-          background: 'radial-gradient(circle at 30% 50%, #15a4d9 0%, transparent 50%), radial-gradient(circle at 70% 80%, #f5a623 0%, transparent 50%)'
+          background: 'radial-gradient(circle at 30% 50%, #06b6d4 0%, transparent 50%), radial-gradient(circle at 70% 80%, #3b82f6 0%, transparent 50%)'
         }} />
 
         {/* Main Content */}
@@ -250,7 +248,7 @@ const ProspectsPortalNew = () => {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.2)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
@@ -346,13 +344,13 @@ const ProspectsPortalNew = () => {
             }
           ].map((fund, index) => (
             <div key={index} style={{
-              background: 'white',
+              background: '#1f2937',
               borderRadius: '16px',
               overflow: 'hidden',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
               position: 'relative',
-              border: fund.popular ? '3px solid #f5a623' : 'none',
-              transform: fund.popular ? 'scale(1.05)' : 'scale(1)',
+              border: fund.popular ? `2px solid ${fund.color}` : '1px solid rgba(255,255,255,0.1)',
+              transform: fund.popular ? 'scale(1.02)' : 'scale(1)',
               transition: 'all 0.3s ease'
             }}>
               {fund.popular && (
@@ -360,7 +358,7 @@ const ProspectsPortalNew = () => {
                   position: 'absolute',
                   top: '1rem',
                   right: '1rem',
-                  background: '#06b6d4',
+                  background: fund.color,
                   color: 'white',
                   padding: '0.375rem 0.875rem',
                   borderRadius: '20px',
@@ -428,7 +426,7 @@ const ProspectsPortalNew = () => {
                 </div>
               </div>
 
-              <div style={{ padding: '2rem' }}>
+              <div style={{ padding: '2rem', background: '#1f2937' }}>
                 <ul style={{
                   listStyle: 'none',
                   padding: 0,
@@ -440,7 +438,7 @@ const ProspectsPortalNew = () => {
                       alignItems: 'center',
                       gap: '0.75rem',
                       marginBottom: '0.75rem',
-                      color: '#666',
+                      color: '#9ca3af',
                       fontSize: '0.95rem'
                     }}>
                       <span style={{ color: fund.color, fontSize: '1.25rem', fontWeight: 'bold' }}>✓</span>
@@ -465,7 +463,7 @@ const ProspectsPortalNew = () => {
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.transform = 'translateY(0)';
@@ -483,13 +481,13 @@ const ProspectsPortalNew = () => {
       {/* SECTION 4: Lead Capture Form */}
       <section id="lead-capture" style={{
         padding: '5rem 2rem',
-        background: '#ffffff'
+        background: '#0f1419'
       }}>
         <div style={{ maxWidth: '550px', margin: '0 auto' }}>
           <h2 style={{
             fontSize: 'clamp(1.75rem, 3vw, 2rem)',
             fontWeight: '600',
-            color: '#1e2843',
+            color: '#ffffff',
             textAlign: 'center',
             marginBottom: '0.5rem'
           }}>
@@ -497,7 +495,7 @@ const ProspectsPortalNew = () => {
           </h2>
           <p style={{
             fontSize: '1rem',
-            color: '#666',
+            color: '#9ca3af',
             textAlign: 'center',
             marginBottom: '2rem'
           }}>
@@ -505,11 +503,11 @@ const ProspectsPortalNew = () => {
           </p>
 
           <form onSubmit={handleSubmit} style={{
-            background: 'white',
+            background: '#1f2937',
             padding: '2.5rem',
             borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid #e0e0e0'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
             {/* Email Field */}
             <div style={{ marginBottom: '1.5rem' }}>
@@ -517,7 +515,7 @@ const ProspectsPortalNew = () => {
                 display: 'block',
                 fontSize: '0.95rem',
                 fontWeight: '500',
-                color: '#1e2843',
+                color: '#ffffff',
                 marginBottom: '0.5rem'
               }}>
                 📧 Correo Electrónico
@@ -531,17 +529,19 @@ const ProspectsPortalNew = () => {
                   width: '100%',
                   padding: '0.875rem',
                   fontSize: '1rem',
-                  border: errors.email ? '2px solid #dc3545' : '2px solid #e0e0e0',
+                  border: errors.email ? '2px solid #ef4444' : '2px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.3s ease',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  background: '#0f1419',
+                  color: '#ffffff'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#0b5ea8'}
-                onBlur={(e) => e.target.style.borderColor = errors.email ? '#dc3545' : '#e0e0e0'}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.target.style.borderColor = errors.email ? '#ef4444' : 'rgba(59, 130, 246, 0.3)'}
               />
               {errors.email && (
-                <span style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                   {errors.email}
                 </span>
               )}
@@ -553,7 +553,7 @@ const ProspectsPortalNew = () => {
                 display: 'block',
                 fontSize: '0.95rem',
                 fontWeight: '500',
-                color: '#1e2843',
+                color: '#ffffff',
                 marginBottom: '0.5rem'
               }}>
                 📱 Teléfono (WhatsApp)
@@ -567,17 +567,19 @@ const ProspectsPortalNew = () => {
                   width: '100%',
                   padding: '0.875rem',
                   fontSize: '1rem',
-                  border: errors.phone ? '2px solid #dc3545' : '2px solid #e0e0e0',
+                  border: errors.phone ? '2px solid #ef4444' : '2px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'border-color 0.3s ease',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  background: '#0f1419',
+                  color: '#ffffff'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#0b5ea8'}
-                onBlur={(e) => e.target.style.borderColor = errors.phone ? '#dc3545' : '#e0e0e0'}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : 'rgba(59, 130, 246, 0.3)'}
               />
               {errors.phone && (
-                <span style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                   {errors.phone}
                 </span>
               )}
@@ -587,11 +589,11 @@ const ProspectsPortalNew = () => {
             {errors.submit && (
               <div style={{
                 padding: '1rem',
-                background: '#fee',
-                border: '1px solid #fcc',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid #ef4444',
                 borderRadius: '8px',
                 marginBottom: '1.5rem',
-                color: '#c33',
+                color: '#ef4444',
                 fontSize: '0.9rem'
               }}>
                 {errors.submit}
@@ -608,7 +610,7 @@ const ProspectsPortalNew = () => {
                 fontSize: '1.125rem',
                 fontWeight: '600',
                 color: 'white',
-                background: isSubmitting ? '#ccc' : '#0b5ea8',
+                background: isSubmitting ? '#6b7280' : '#3b82f6',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -622,7 +624,7 @@ const ProspectsPortalNew = () => {
             {/* Privacy Notice */}
             <p style={{
               fontSize: '0.75rem',
-              color: '#666',
+              color: '#9ca3af',
               textAlign: 'center',
               lineHeight: '1.4'
             }}>
@@ -632,225 +634,13 @@ const ProspectsPortalNew = () => {
         </div>
       </section>
 
-      {/* SECTION 5: How It Works */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#f8f9fa'
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-          fontWeight: '600',
-          color: '#1e2843',
-          textAlign: 'center',
-          marginBottom: '3rem'
-        }}>
-          Cómo Funciona
-        </h2>
-
-        <div style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '2rem',
-          position: 'relative'
-        }}>
-          {[
-            { icon: '📊', title: 'Simula Tu Inversión', desc: 'Ingresa tu correo y teléfono para acceder a nuestro simulador interactivo.' },
-            { icon: '🎯', title: 'Elige Tu Fondo', desc: 'Compara rendimientos, plazos y condiciones de cada fondo FIDUS.' },
-            { icon: '📝', title: 'Abre Tu Cuenta', desc: 'Proceso 100% digital con verificación de identidad en menos de 48 horas.' },
-            { icon: '🚀', title: 'Comienza a Invertir', desc: 'Deposita y ve tu inversión crecer con acceso completo a tu cuenta MT5.' }
-          ].map((step, index) => (
-            <div key={index} style={{
-              textAlign: 'center',
-              position: 'relative',
-              zIndex: 1
-            }}>
-              <div style={{
-                width: '100px',
-                height: '100px',
-                margin: '0 auto 1.5rem',
-                background: 'linear-gradient(135deg, #0b5ea8 0%, #15a4d9 100%)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '3rem',
-                boxShadow: '0 4px 15px rgba(11, 94, 168, 0.3)'
-              }}>
-                {step.icon}
-              </div>
-
-              <h3 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#1e2843',
-                marginBottom: '0.75rem'
-              }}>
-                {step.title}
-              </h3>
-              <p style={{
-                fontSize: '0.95rem',
-                color: '#666',
-                lineHeight: '1.6',
-                maxWidth: '220px',
-                margin: '0 auto'
-              }}>
-                {step.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 6: Social Proof */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: 'linear-gradient(135deg, #1e2843 0%, #0b5ea8 100%)',
-        color: 'white'
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-          fontWeight: '600',
-          textAlign: 'center',
-          marginBottom: '3rem'
-        }}>
-          Lo Que Dicen Nuestros Clientes
-        </h2>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '2rem',
-          maxWidth: '1200px',
-          margin: '0 auto 4rem'
-        }}>
-          {[
-            { quote: "FIDUS transformó mi manera de invertir. Transparencia total y rendimientos consistentes mes tras mes.", author: "María G.", role: "Inversionista BALANCE" },
-            { quote: "Después de 2 años invirtiendo, puedo decir que FIDUS cumple todo lo que promete. Altamente recomendado.", author: "Roberto M.", role: "Inversionista DYNAMIC" },
-            { quote: "El acceso directo a MT5 me da tranquilidad total. Veo mis operaciones en tiempo real, sin intermediarios.", author: "Laura S.", role: "Inversionista CORE" }
-          ].map((testimonial, index) => (
-            <div key={index} style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              padding: '2rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              <div style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>
-                {'⭐'.repeat(5)}
-              </div>
-
-              <p style={{
-                fontSize: '1.05rem',
-                lineHeight: '1.7',
-                marginBottom: '1.5rem',
-                fontStyle: 'italic'
-              }}>
-                "{testimonial.quote}"
-              </p>
-
-              <div>
-                <div style={{ fontWeight: '600', fontSize: '1.05rem' }}>
-                  {testimonial.author}
-                </div>
-                <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                  {testimonial.role}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          paddingTop: '3rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.2)'
-        }}>
-          <p style={{ marginBottom: '1.5rem', opacity: 0.9 }}>
-            Operamos con brokers regulados internacionalmente
-          </p>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '3rem',
-            flexWrap: 'wrap',
-            alignItems: 'center'
-          }}>
-            {['MEXAtlantic', 'Regulación Internacional', 'Seguridad Garantizada'].map((text, i) => (
-              <div key={i} style={{ opacity: 0.7, fontSize: '0.9rem' }}>{text}</div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 7: Final CTA */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#f5a623',
-        textAlign: 'center'
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-          fontWeight: '700',
-          color: '#1e2843',
-          marginBottom: '1rem'
-        }}>
-          ¿Listo para Empezar a Invertir?
-        </h2>
-        <p style={{
-          fontSize: '1.25rem',
-          color: '#1e2843',
-          opacity: 0.9,
-          marginBottom: '2.5rem',
-          maxWidth: '600px',
-          margin: '0 auto 2.5rem'
-        }}>
-          Simula tu inversión ahora y descubre tu potencial de rendimiento con FIDUS
-        </p>
-
-        <button
-          onClick={() => scrollToSection('lead-capture')}
-          style={{
-            background: '#1e2843',
-            color: 'white',
-            padding: '1.25rem 3.5rem',
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(30, 40, 67, 0.3)'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-3px)';
-            e.target.style.boxShadow = '0 6px 25px rgba(30, 40, 67, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 20px rgba(30, 40, 67, 0.3)';
-          }}
-        >
-          Comenzar Simulación Gratis →
-        </button>
-
-        <p style={{
-          marginTop: '1.5rem',
-          fontSize: '0.95rem',
-          color: '#1e2843',
-          opacity: 0.7
-        }}>
-          Sin compromiso • Gratis • En menos de 2 minutos
-        </p>
-      </section>
-
-      {/* SECTION 8: Footer */}
+      {/* SECTION 5: Footer */}
       <footer style={{
         padding: '3rem 2rem 2rem',
-        background: '#1e2843',
+        background: '#1a1f2e',
         color: 'white',
-        textAlign: 'center'
+        textAlign: 'center',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <img 
@@ -867,7 +657,7 @@ const ProspectsPortalNew = () => {
           <p style={{
             fontSize: '1.125rem',
             marginBottom: '2rem',
-            opacity: 0.9
+            color: '#9ca3af'
           }}>
             Democratizamos el mundo financiero para todos
           </p>
@@ -879,7 +669,7 @@ const ProspectsPortalNew = () => {
             marginBottom: '2rem',
             flexWrap: 'wrap',
             fontSize: '0.95rem',
-            opacity: 0.8
+            color: '#9ca3af'
           }}>
             <div>📧 info@fidusinvestment.com</div>
             <div>📱 WhatsApp: +52 55 1234 5678</div>
@@ -887,9 +677,9 @@ const ProspectsPortalNew = () => {
 
           <div style={{
             paddingTop: '2rem',
-            borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
             fontSize: '0.875rem',
-            opacity: 0.7
+            color: '#6b7280'
           }}>
             © 2025 FIDUS Investment Management. Todos los derechos reservados.
           </div>
