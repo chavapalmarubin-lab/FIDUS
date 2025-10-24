@@ -379,6 +379,23 @@ const ProspectsPortalNew = () => {
                 padding: '2rem',
                 color: 'white'
               }}>
+                {/* Fund Logo */}
+                <div style={{
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
+                  <img 
+                    src={fund.logo}
+                    alt={fund.name}
+                    style={{
+                      height: '80px',
+                      width: 'auto',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </div>
+                
                 <h3 style={{
                   fontSize: '1.75rem',
                   fontWeight: '700',
