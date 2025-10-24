@@ -261,6 +261,180 @@ class VPSSyncService:
                 "error": str(e)
             }
     
+
+    async def sync_account_trades(self, account_id: int, limit: int = 100) -> Dict[str, Any]:
+        """
+        Sync trades/deals for a single account from VPS
+        
+        Args:
+            account_id: MT5 account number
+            limit: Number of recent trades to fetch
+        
+        Returns:
+            Sync result with trade count
+        """
+        try:
+            logger.info(f"🔄 Syncing trades for account {account_id}")
+            
+            # Fetch trades from VPS
+            result = await self.fetch_from_vps(f'/api/mt5/account/{account_id}/trades?limit={limit}')
+            
+            if 'error' in result:
+                logger.error(f"❌ Failed to fetch trades for {account_id}: {result['error']}")
+                return {
+                    "success": False,
+                    "account_id": account_id,
+                    "error": result['error'],
+                    "trades_synced": 0
+                }
+            
+            trades = result.get('trades', [])
+            
+            if not trades:
+                logger.info(f"📭 No trades found for account {account_id}")
+                return {
+                    "success": True,
+                    "account_id": account_id,
+                    "trades_synced": 0,
+                    "message": "No trades to sync"
+                }
+            
+            # Store trades in mt5_deals_history collection
+            trades_synced = 0
+            sync_time = datetime.now(timezone.utc)
+            
+            for trade in trades:
+                try:
+                    # Prepare trade document
+                    trade_doc = {
+                        'account_number': account_id,
+                        'ticket': trade.get('ticket') or trade.get('order'),
+                        'time': trade.get('time') or trade.get('close_time'),
+                        'type': trade.get('type'),
+                        'entry': trade.get('entry'),
+                        'action': trade.get('action'),
+                        'deal': trade.get('deal'),
+                        'symbol': trade.get('symbol'),
+                        'volume': trade.get('volume', 0),
+                        'price': trade.get('price'),
+                        'commission': trade.get('commission', 0),
+                        'swap': trade.get('swap', 0),
+                        'profit': trade.get('profit', 0),
+                        'fee': trade.get('fee', 0),
+                        'comment': trade.get('comment', ''),
+                        'synced_at': sync_time,
+                        'synced_from_vps': True
+                    }
+                    
+                    # Upsert trade (update if exists, insert if new)
+                    # Use ticket+time as unique identifier
+                    await self.db.mt5_deals_history.update_one(
+                        {
+                            'account_number': account_id,
+                            'ticket': trade_doc['ticket'],
+                            'time': trade_doc['time']
+                        },
+                        {'$set': trade_doc},
+                        upsert=True
+                    )
+                    
+                    trades_synced += 1
+                
+                except Exception as e:
+                    logger.error(f"❌ Error storing trade {trade.get('ticket')}: {str(e)}")
+                    continue
+            
+            logger.info(f"✅ Synced {trades_synced}/{len(trades)} trades for account {account_id}")
+            
+            return {
+                "success": True,
+                "account_id": account_id,
+                "trades_synced": trades_synced,
+                "total_trades": len(trades),
+                "sync_time": sync_time.isoformat()
+            }
+        
+        except Exception as e:
+            logger.error(f"❌ Error syncing trades for {account_id}: {str(e)}", exc_info=True)
+            return {
+                "success": False,
+                "account_id": account_id,
+                "error": str(e),
+                "trades_synced": 0
+            }
+    
+    async def sync_all_trades(self, limit_per_account: int = 100) -> Dict[str, Any]:
+        """
+        Sync trades for all accounts from VPS
+        
+        Args:
+            limit_per_account: Number of recent trades to fetch per account
+        
+        Returns:
+            Sync results with statistics
+        """
+        try:
+            logger.info("🔄 Starting VPS→MongoDB trades sync for all accounts")
+            start_time = datetime.now(timezone.utc)
+            
+            # Get list of all accounts
+            accounts_cursor = self.db.mt5_accounts.find({}, {'account': 1})
+            accounts = await accounts_cursor.to_list(length=None)
+            
+            if not accounts:
+                logger.warning("⚠️  No accounts found for trades sync")
+                return {
+                    "success": False,
+                    "error": "No accounts found",
+                    "accounts_processed": 0,
+                    "total_trades_synced": 0
+                }
+            
+            # Sync trades for each account
+            accounts_processed = 0
+            total_trades_synced = 0
+            failed_accounts = []
+            
+            for acc in accounts:
+                account_id = acc.get('account')
+                
+                if not account_id:
+                    continue
+                
+                result = await self.sync_account_trades(account_id, limit_per_account)
+                
+                if result.get('success'):
+                    accounts_processed += 1
+                    total_trades_synced += result.get('trades_synced', 0)
+                else:
+                    failed_accounts.append(account_id)
+            
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
+            
+            logger.info(f"✅ Trades sync complete: {total_trades_synced} trades from {accounts_processed}/{len(accounts)} accounts in {duration:.2f}s")
+            
+            if failed_accounts:
+                logger.warning(f"⚠️  Failed accounts: {failed_accounts}")
+            
+            return {
+                "success": True,
+                "accounts_processed": accounts_processed,
+                "total_accounts": len(accounts),
+                "total_trades_synced": total_trades_synced,
+                "failed_accounts": failed_accounts,
+                "duration_seconds": duration,
+                "timestamp": start_time.isoformat()
+            }
+        
+        except Exception as e:
+            logger.error(f"❌ Trades sync error: {str(e)}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "accounts_processed": 0,
+                "total_trades_synced": 0
+            }
+
     async def check_vps_health(self) -> Dict[str, Any]:
         """
         Check if VPS MT5 Bridge is healthy
