@@ -334,8 +334,8 @@ function App() {
       <BrowserRouter>
         <ToastProvider>
           <Routes>
-            <Route path="/prospects/*" element={<ProspectsPortalNew />} />
-            <Route path="/prospects" element={<ProspectsPortalNew />} />
+            <Route path="/prospects/*" element={<ProspectsPortal />} />
+            <Route path="/prospects" element={<ProspectsPortal />} />
           </Routes>
         </ToastProvider>
       </BrowserRouter>
