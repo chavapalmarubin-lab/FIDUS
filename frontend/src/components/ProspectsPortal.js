@@ -323,7 +323,7 @@ const ProspectsPortalNew = () => {
               annualRate: '18%',
               minInvestment: '$10,000',
               redemption: 'Mensual',
-              color: '#f97316',
+              color: '#1e3a8a',
               features: ['Ideal para principiantes', 'Liquidez mensual', 'Menor riesgo']
             },
             {
@@ -334,7 +334,7 @@ const ProspectsPortalNew = () => {
               annualRate: '30%',
               minInvestment: '$50,000',
               redemption: 'Trimestral',
-              color: '#06b6d4',
+              color: '#0891b2',
               popular: true,
               features: ['Más popular', 'Rendimiento balanceado', 'Estrategia diversificada']
             },
@@ -346,7 +346,7 @@ const ProspectsPortalNew = () => {
               annualRate: '42%',
               minInvestment: '$250,000',
               redemption: 'Semestral',
-              color: '#8b5cf6',
+              color: '#ea580c',
               features: ['Para inversionistas avanzados', 'Máximo potencial', 'Gestión activa']
             }
           ].map((fund, index) => (
