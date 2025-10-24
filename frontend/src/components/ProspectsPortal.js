@@ -241,11 +241,12 @@ const ProspectsPortalNew = () => {
           ].map((benefit, index) => (
             <div key={index} style={{
               padding: '2rem',
-              background: '#f8f9fa',
+              background: '#1f2937',
               borderRadius: '12px',
               textAlign: 'center',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              border: '1px solid rgba(59, 130, 246, 0.1)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-5px)';
