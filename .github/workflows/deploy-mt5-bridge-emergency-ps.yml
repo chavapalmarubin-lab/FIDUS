@@ -1,4 +1,4 @@
-name: MT5 Bridge Emergency Restart (NEW VPS)
+name: MT5 Bridge Emergency Restart (HTTP API)
 
 on:
   workflow_dispatch:
@@ -7,131 +7,101 @@ on:
         description: 'Reason for restart'
         required: false
         default: 'Auto-healing triggered by watchdog'
+  repository_dispatch:
+    types: [mt5-bridge-restart]
 
 jobs:
   emergency-restart:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     
     steps:
-      - name: Emergency Restart MT5 Bridge on NEW VPS
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          timeout: 300s
-          command_timeout: 5m
-          script_stop: false
-          script: |
-            powershell -Command "
-            `$ErrorActionPreference = 'Stop'
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host 'MT5 BRIDGE EMERGENCY RESTART - NEW VPS' -ForegroundColor Cyan
-            Write-Host 'Reason: ${{ github.event.inputs.reason }}' -ForegroundColor Yellow
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host ''
-            
-            # Navigate to service directory
-            Set-Location C:\mt5_bridge_service
-            Write-Host '✅ Working directory:' (Get-Location) -ForegroundColor Yellow
-            Write-Host ''
-            
-            # STEP 1: STOP ALL PYTHON PROCESSES
-            Write-Host '=== STEP 1: STOP MT5 BRIDGE SERVICE ===' -ForegroundColor Yellow
-            $pythonCount = (Get-Process -Name python -ErrorAction SilentlyContinue).Count
-            if ($pythonCount -gt 0) {
-                Write-Host 'Stopping' $pythonCount 'Python process(es)...' -ForegroundColor Red
-                Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
-                Start-Sleep -Seconds 5
-                Write-Host '✅ All Python processes stopped' -ForegroundColor Green
-            } else {
-                Write-Host '✅ No Python processes running' -ForegroundColor Green
-            }
-            
-            # Free port 8000
-            $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-            if ($connections) {
-                Write-Host 'Freeing port 8000...' -ForegroundColor Yellow
-                $connections | ForEach-Object {
-                    Write-Host 'Killing process PID' $_.OwningProcess
-                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
-                }
-                Start-Sleep -Seconds 3
-                Write-Host '✅ Port 8000 freed' -ForegroundColor Green
-            } else {
-                Write-Host '✅ Port 8000 already free' -ForegroundColor Green
-            }
-            Write-Host ''
-            
-            # STEP 2: VERIFY CORRECT FILE EXISTS
-            Write-Host '=== STEP 2: VERIFY SERVICE FILE ===' -ForegroundColor Yellow
-            if (-not (Test-Path 'mt5_bridge_api_service.py')) {
-                Write-Host '❌ ERROR: mt5_bridge_api_service.py not found!' -ForegroundColor Red
-                Exit 1
-            }
-            Write-Host '✅ Service file found' -ForegroundColor Green
-            Write-Host ''
-            
-            # STEP 3: START SERVICE
-            Write-Host '=== STEP 3: START MT5 BRIDGE SERVICE ===' -ForegroundColor Yellow
-            Write-Host 'Starting: mt5_bridge_api_service.py' -ForegroundColor Cyan
-            
-            # Create logs directory if needed
-            if (-not (Test-Path 'logs')) {
-                New-Item -ItemType Directory -Path 'logs' -Force | Out-Null
-            }
-            
-            # Start service
-            $process = Start-Process -FilePath 'python' -ArgumentList 'mt5_bridge_api_service.py' -RedirectStandardOutput 'logs\service_restart.log' -RedirectStandardError 'logs\error_restart.log' -PassThru -WindowStyle Hidden
-            Write-Host '✅ Service started with PID:' $process.Id -ForegroundColor Green
-            Write-Host 'Waiting 20 seconds for service startup...' -ForegroundColor Yellow
-            Start-Sleep -Seconds 20
-            Write-Host ''
-            
-            # STEP 4: VERIFY SERVICE IS HEALTHY
-            Write-Host '=== STEP 4: VERIFY SERVICE HEALTH ===' -ForegroundColor Yellow
-            $allGood = `$true
-            
-            try {
-                $response = Invoke-WebRequest -Uri 'http://localhost:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 10 -UseBasicParsing
-                Write-Host '✅ Bridge Health Check: HTTP' $response.StatusCode -ForegroundColor Green
-                
-                $healthData = $response.Content | ConvertFrom-Json
-                Write-Host '   MongoDB Connected:' $healthData.mongodb.connected
-                Write-Host '   MT5 Connected:' $healthData.mt5.connected
-                Write-Host '   Accounts Count:' $healthData.mt5.accounts_count
-                
-            } catch {
-                Write-Host '❌ Bridge Health Check FAILED!' -ForegroundColor Red
-                Write-Host '   Error:' $_.Exception.Message
-                $allGood = `$false
-            }
-            Write-Host ''
-            
-            # FINAL STATUS
-            Write-Host '========================================' -ForegroundColor Cyan
-            if ($allGood) {
-                Write-Host '✅✅✅ RESTART SUCCESSFUL! ✅✅✅' -ForegroundColor Green
-                Write-Host 'MT5 Bridge API is running and healthy' -ForegroundColor Green
-                Write-Host '========================================' -ForegroundColor Cyan
-                Exit 0
-            } else {
-                Write-Host '❌ RESTART FAILED - CHECK LOGS' -ForegroundColor Red
-                Write-Host 'Service log (last 30 lines):' -ForegroundColor Yellow
-                Get-Content 'logs\service_restart.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
-                Write-Host 'Error log (last 30 lines):' -ForegroundColor Yellow
-                Get-Content 'logs\error_restart.log' -Tail 30 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
-                Write-Host '========================================' -ForegroundColor Cyan
-                Exit 1
-            }
-            "
-      
-      - name: Report Status
+      - name: Trigger Emergency Restart via HTTP API
         run: |
-          echo "✅ Emergency restart workflow completed"
-          echo "📊 Check logs above for service status"
-          echo "🔗 NEW VPS Service URL: http://92.118.45.135:8000"
-          echo "🧪 Test command: curl http://92.118.45.135:8000/api/mt5/bridge/health"
-          echo "Triggered by: ${{ github.event.inputs.reason }}"
+          echo "🚨 MT5 Bridge Emergency Restart Initiated"
+          echo "=========================================="
+          echo "Reason: ${{ github.event.inputs.reason || 'Auto-healing triggered by watchdog' }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "VPS: 92.118.45.135:8000"
+          echo "=========================================="
+          echo ""
+          
+          echo "📡 Calling emergency restart endpoint..."
+          response=$(curl -X POST \
+            "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}" \
+            -s)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo ""
+          echo "📊 Response Details:"
+          echo "HTTP Status: $http_code"
+          echo "Response Body: $body"
+          echo ""
+          
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Emergency restart successful!"
+            echo "$body" | grep -q '"success":true' && echo "✅ MT5 reinitialized successfully"
+            echo "$body" | grep -q '"mongodb_connected":true' && echo "✅ MongoDB connection verified"
+            exit 0
+          elif [ "$http_code" -eq 401 ]; then
+            echo "❌ Authentication failed!"
+            echo "⚠️  Check ADMIN_SECRET_TOKEN in GitHub secrets"
+            echo "⚠️  Verify token matches VPS .env configuration"
+            exit 1
+          elif [ "$http_code" -eq 404 ]; then
+            echo "❌ Emergency restart endpoint not found!"
+            echo "⚠️  Check VPS deployment status"
+            echo "⚠️  Verify mt5_bridge_api_service.py is running"
+            exit 1
+          else
+            echo "❌ Unexpected response - HTTP $http_code"
+            echo "⚠️  Check VPS service logs for details"
+            exit 1
+          fi
+      
+      - name: Verify Service Recovery
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🔍 Verifying Service Recovery"
+          echo "=========================================="
+          echo "Waiting 10 seconds for service stabilization..."
+          sleep 10
+          
+          echo "📡 Performing health check..."
+          health=$(curl -s http://92.118.45.135:8000/api/mt5/bridge/health)
+          
+          echo ""
+          echo "📊 Health Check Response:"
+          echo "$health" | python3 -m json.tool || echo "$health"
+          echo ""
+          
+          if echo "$health" | grep -q '"status":"healthy"'; then
+            echo "✅✅✅ SERVICE IS HEALTHY ✅✅✅"
+            echo "✅ MT5 Bridge is operational"
+            echo "✅ Auto-healing completed successfully"
+            echo "=========================================="
+            exit 0
+          else
+            echo "⚠️ Service may need additional recovery time"
+            echo "⚠️ Check service logs if issues persist"
+            echo "=========================================="
+            exit 1
+          fi
+      
+      - name: Report Final Status
+        if: always()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "📋 Emergency Restart Summary"
+          echo "=========================================="
+          echo "Trigger: ${{ github.event.inputs.reason || 'Auto-healing' }}"
+          echo "Completed: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "VPS Service: http://92.118.45.135:8000"
+          echo "Health Check: http://92.118.45.135:8000/api/mt5/bridge/health"
+          echo "=========================================="
