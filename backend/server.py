@@ -206,8 +206,8 @@ async def store_google_session_token(user_id: str, token_data: Dict, admin_email
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Import google_apis_service after environment is loaded
-from google_apis_service import google_apis_service
+# Import google_apis_service after environment is loaded - Removed in clean OAuth rebuild
+# from google_apis_service import google_apis_service
 
 # MongoDB connection with connection pooling
 mongo_url = os.environ['MONGO_URL']
