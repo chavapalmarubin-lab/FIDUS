@@ -23964,6 +23964,7 @@ PUBLIC_CRM_ENDPOINTS = [
 GOOGLE_OAUTH_ENDPOINTS = [
     "/api/admin/google/profile",
     "/api/admin/google/process-callback",
+    "/api/admin/google/individual-callback",  # Individual Google OAuth callback (NEW)
     "/api/admin/google/process-session",  # Emergent OAuth session processing
     "/api/admin/google/test-callback",
     "/api/admin/google/oauth-callback",  # Real Google OAuth callback
