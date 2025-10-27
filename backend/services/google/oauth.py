@@ -162,6 +162,16 @@ class GoogleOAuthService:
                 detail="State verification failed - possible CSRF attack"
             )
         
+        # Defensive check: Ensure user_id is valid
+        if not user_id or user_id == "":
+            logger.error(f"❌ Empty user_id after state parsing")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid user_id in OAuth state"
+            )
+        
+        logger.info(f"✅ State verified for user: {user_id}")
+        
         # Exchange authorization code for tokens
         try:
             logger.info(f"🔄 Exchanging code for tokens (user: {user_id})")
