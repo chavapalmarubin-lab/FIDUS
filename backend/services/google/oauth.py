@@ -62,7 +62,7 @@ class GoogleOAuthService:
         logger.info("✅ Google OAuth Service initialized")
         logger.info(f"📍 Redirect URI: {self.redirect_uri}")
     
-    def generate_auth_url(self, user_id: str) -> str:
+    async def generate_auth_url(self, user_id: str) -> str:
         """
         Generate OAuth authorization URL
         
@@ -76,7 +76,7 @@ class GoogleOAuthService:
         state = f"{user_id}:{secrets.token_urlsafe(32)}"
         
         # Store state for validation (expires in 10 minutes)
-        self.token_manager.store_state(user_id, state, expires_minutes=10)
+        await self.token_manager.store_state(user_id, state, expires_minutes=10)
         
         # Build OAuth parameters
         params = {
