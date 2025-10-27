@@ -37,6 +37,11 @@ class GoogleTokenManager:
         """Store OAuth tokens for user"""
         logger.info(f"💾 Storing tokens for user {user_id}")
         
+        # Validate user_id
+        if not user_id or user_id == "":
+            logger.error("❌ Cannot store tokens: user_id is empty")
+            raise ValueError("user_id cannot be empty")
+        
         token_doc = {
             "user_id": user_id,
             "access_token": access_token,
