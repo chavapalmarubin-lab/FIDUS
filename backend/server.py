@@ -25645,47 +25645,132 @@ async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_us
         logging.error(f"❌ Failed to generate OAuth URL: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate OAuth URL: {str(e)}")
 
-@api_router.get("/admin/google-callback")
-async def handle_google_oauth_callback(code: str = None, state: str = None, error: str = None):
-    """Handle Google OAuth callback (GET redirect from Google) - Uses google_oauth_final.py"""
+# ============================================
+# GOOGLE WORKSPACE INTEGRATION - CLEAN REBUILD (October 2025)
+# ============================================
+
+@api_router.get("/google/auth-url")
+async def get_google_auth_url(current_user: dict = Depends(get_current_user)):
+    """
+    Generate Google OAuth URL for admin to connect their account
+    
+    Returns:
+        OAuth URL to redirect user to
+    """
     try:
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        auth_url = google_oauth_service.generate_auth_url(user_id)
         
-        if error:
-            logging.error(f"❌ OAuth error from Google: {error}")
-            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error={error}")
-        
-        if not code or not state:
-            logging.error("❌ Missing code or state in OAuth callback")
-            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=missing_params")
-        
-        # Use google_oauth.handle_oauth_callback from google_oauth_final.py
-        success = await google_oauth.handle_oauth_callback(code, state)
-        
-        if success:
-            logging.info(f"✅ OAuth callback successful")
-            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=success")
-        else:
-            logging.error("❌ OAuth callback processing failed")
-            return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=callback_failed")
+        return {
+            "success": True,
+            "auth_url": auth_url
+        }
         
     except Exception as e:
-        logging.error(f"❌ OAuth callback failed: {str(e)}")
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
-        return RedirectResponse(url=f"{frontend_url}/admin?google_auth=error&error=callback_failed")
-
-# Duplicate endpoint removed - using the OAuth 2.0 version above
-
-# Duplicate service account endpoints removed - using individual OAuth system instead
-
-# Legacy endpoint for compatibility with existing frontend
-@api_router.get("/auth/google/url")
-async def get_google_auth_url_legacy(current_user: dict = Depends(get_current_admin_user)):
-    """Legacy endpoint - redirects to new OAuth URL endpoint"""
-    return await get_google_oauth_url(current_user)
+        logger.error(f"❌ Failed to generate auth URL: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate auth URL: {str(e)}"
+        )
 
 
-# Second set of duplicate OAuth endpoints removed - using individual OAuth implementation
+@api_router.get("/google/callback")
+async def google_oauth_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None
+):
+    """
+    Handle OAuth callback from Google
+    
+    Redirects user back to frontend with success/error status
+    """
+    try:
+        # Handle callback
+        result = await google_oauth_service.handle_callback(
+            code=code,
+            state=state,
+            error=error
+        )
+        
+        # Redirect to frontend with success
+        frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
+        return RedirectResponse(
+            url=f"{frontend_url}/admin?google_connected=true",
+            status_code=302
+        )
+        
+    except HTTPException as e:
+        # Redirect to frontend with error
+        frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
+        return RedirectResponse(
+            url=f"{frontend_url}/admin?google_error={e.detail}",
+            status_code=302
+        )
+    except Exception as e:
+        logger.error(f"❌ OAuth callback failed: {str(e)}")
+        frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
+        return RedirectResponse(
+            url=f"{frontend_url}/admin?google_error=callback_failed",
+            status_code=302
+        )
+
+
+@api_router.get("/google/status")
+async def get_google_connection_status(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Check if user has connected their Google account
+    
+    Returns:
+        Connection status and user info
+    """
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        tokens = await google_token_manager.get_tokens(user_id)
+        
+        if tokens:
+            return {
+                "connected": True,
+                "email": current_user.get('email'),
+                "connected_at": tokens.get('created_at').isoformat() if tokens.get('created_at') else None
+            }
+        else:
+            return {
+                "connected": False
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Failed to check connection status: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to check status: {str(e)}"
+        )
+
+
+@api_router.post("/google/disconnect")
+async def disconnect_google(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Disconnect user's Google account
+    """
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        await google_oauth_service.disconnect(user_id)
+        
+        return {
+            "success": True,
+            "message": "Google account disconnected"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to disconnect: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to disconnect: {str(e)}"
+        )
 
 
 
