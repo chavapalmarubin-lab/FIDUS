@@ -18306,7 +18306,10 @@ async def start_google_oauth(current_user: dict = Depends(get_current_admin_user
         
         logger.info(f"🔍 [USER DEBUG] OAuth start - using admin_user_id: {admin_user_id}")
         
-        auth_url = google_oauth.get_oauth_url(admin_user_id)
+        # OLD IMPLEMENTATION - Replaced by clean rebuild OAuth endpoints
+        # auth_url = google_oauth.get_oauth_url(admin_user_id)
+        # Using new clean OAuth service
+        auth_url = google_oauth_service.generate_auth_url(admin_user_id)
         
         logger.info(f"✅ Generated OAuth URL for admin {current_user.get('username', admin_user_id)}")
         
@@ -18321,18 +18324,14 @@ async def start_google_oauth(current_user: dict = Depends(get_current_admin_user
         raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
 
 @api_router.get("/auth/google/callback")
-async def google_oauth_callback(code: str, state: str):
-    """Handle OAuth callback from Google - Exchange code for tokens"""
+async def google_oauth_callback_legacy(code: str, state: str):
+    """Handle OAuth callback from Google - LEGACY ENDPOINT - redirects to new callback"""
     try:
-        # Handle the OAuth callback
-        success = await google_oauth.handle_oauth_callback(code, state)
-        
-        if success:
-            logger.info("✅ OAuth callback processed successfully")
-            return RedirectResponse(url="/admin?google_connected=true")
-        else:
-            logger.error("❌ OAuth callback processing failed")
-            return RedirectResponse(url="/admin?google_error=true")
+        # Redirect to new clean OAuth callback
+        return RedirectResponse(url=f"/api/google/callback?code={code}&state={state}")
+    except Exception as e:
+        logger.error(f"❌ OAuth callback redirect failed: {str(e)}")
+        return RedirectResponse(url="/admin?google_error=true")
             
     except Exception as e:
         logger.error(f"❌ OAuth callback error: {str(e)}")
