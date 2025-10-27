@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidusmt5-sync.preview.emergentagent.com`
+`https://oauth-reforge.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

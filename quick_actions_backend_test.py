@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://fidusmt5-sync.preview.emergentagent.com"
+BACKEND_URL = "https://oauth-reforge.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Admin credentials for testing

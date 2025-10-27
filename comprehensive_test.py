@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://fidusmt5-sync.preview.emergentagent.com/api'
+BACKEND_URL = 'https://oauth-reforge.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

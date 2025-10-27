@@ -30,7 +30,7 @@ import subprocess
 import os
 
 # Configuration
-BACKEND_URL = "https://fidusmt5-sync.preview.emergentagent.com/api"
+BACKEND_URL = "https://oauth-reforge.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
