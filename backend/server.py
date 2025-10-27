@@ -18350,7 +18350,7 @@ async def start_google_oauth(current_user: dict = Depends(get_current_admin_user
         # OLD IMPLEMENTATION - Replaced by clean rebuild OAuth endpoints
         # auth_url = google_oauth.get_oauth_url(admin_user_id)
         # Using new clean OAuth service
-        auth_url = google_oauth_service.generate_auth_url(admin_user_id)
+        auth_url = await google_oauth_service.generate_auth_url(admin_user_id)
         
         logger.info(f"✅ Generated OAuth URL for admin {current_user.get('username', admin_user_id)}")
         
