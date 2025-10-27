@@ -226,8 +226,18 @@ db = client[os.environ.get('DB_NAME', 'fidus_production')]
 # Initialize MT5 Config Management routes with db (auth will be initialized later)
 init_mt5_config_db(db)
 
-# Initialize Google OAuth Service
-google_oauth = get_google_oauth_service(db)
+# Initialize Google Workspace Integration Services (Clean Rebuild)
+google_token_manager = GoogleTokenManager(
+    mongodb_client=client,
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET')
+)
+
+google_oauth_service = GoogleOAuthService(
+    token_manager=google_token_manager
+)
+
+logger.info("✅ Google OAuth services initialized")
 
 # JWT and Password Security Configuration
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
