@@ -108,6 +108,10 @@ from services.google.drive import DriveService
 from services.mt5_service import mt5_service
 from models.mt5_account import BrokerCode
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Import Enhanced MT5 Pool Management (Phase 1)
 try:
     from api.mt5_pool_endpoints import mt5_pool_router
