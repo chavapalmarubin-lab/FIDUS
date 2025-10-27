@@ -145,18 +145,24 @@ class GoogleOAuthFlowTest:
                 
                 self.log_test("OAuth URL Generation Success", True, "OAuth URL generated successfully")
                 
-                # Verify auth_url contains admin_001: in state parameter
-                if 'admin_001:' in auth_url:
-                    self.log_test("OAuth State Parameter", True, "auth_url contains 'admin_001:' in state parameter")
+                # Verify auth_url contains admin_001: in state parameter (URL encoded)
+                import urllib.parse
+                parsed_url = urllib.parse.urlparse(auth_url)
+                query_params = urllib.parse.parse_qs(parsed_url.query)
+                state_param = query_params.get('state', [''])[0]
+                
+                if 'admin_001:' in state_param:
+                    self.log_test("OAuth State Parameter", True, f"auth_url contains 'admin_001:' in state parameter: {state_param}")
                 else:
-                    self.log_test("OAuth State Parameter", False, "auth_url does NOT contain 'admin_001:' in state parameter")
+                    self.log_test("OAuth State Parameter", False, f"auth_url does NOT contain 'admin_001:' in state parameter: {state_param}")
                 
                 # Verify redirect_uri is correct
+                redirect_uri = query_params.get('redirect_uri', [''])[0]
                 expected_redirect_uri = "https://fidus-invest.emergent.host/admin/google-callback"
-                if expected_redirect_uri in auth_url:
-                    self.log_test("OAuth Redirect URI", True, f"Correct redirect URI found: {expected_redirect_uri}")
+                if redirect_uri == expected_redirect_uri:
+                    self.log_test("OAuth Redirect URI", True, f"Correct redirect URI found: {redirect_uri}")
                 else:
-                    self.log_test("OAuth Redirect URI", False, f"Expected redirect URI not found. Auth URL: {auth_url}")
+                    self.log_test("OAuth Redirect URI", False, f"Expected redirect URI not found. Expected: {expected_redirect_uri}, Got: {redirect_uri}")
                 
                 print(f"   Generated Auth URL: {auth_url[:100]}...")
                 return True
