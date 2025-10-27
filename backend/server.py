@@ -25767,6 +25767,10 @@ async def google_oauth_callback(
         )
     except Exception as e:
         logger.error(f"❌ OAuth callback failed: {str(e)}")
+        logger.error(f"❌ Exception type: {type(e).__name__}")
+        logger.error(f"❌ Exception details: {repr(e)}")
+        import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
         frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         return RedirectResponse(
             url=f"{frontend_url}/admin?google_error=callback_failed",
