@@ -25754,7 +25754,7 @@ async def google_oauth_callback(
         # Redirect to frontend with success
         frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         return RedirectResponse(
-            url=f"{frontend_url}/admin?google_connected=true",
+            url=f"{frontend_url}/admin",
             status_code=302
         )
         
@@ -25762,7 +25762,7 @@ async def google_oauth_callback(
         # Redirect to frontend with error
         frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         return RedirectResponse(
-            url=f"{frontend_url}/admin?google_error={e.detail}",
+            url=f"{frontend_url}/admin",
             status_code=302
         )
     except Exception as e:
