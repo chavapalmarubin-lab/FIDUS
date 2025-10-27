@@ -238,7 +238,11 @@ google_oauth_service = GoogleOAuthService(
     token_manager=google_token_manager
 )
 
-logger.info("✅ Google OAuth services initialized")
+gmail_service = GmailService(
+    token_manager=google_token_manager
+)
+
+logger.info("✅ Google OAuth & Gmail services initialized")
 
 # JWT and Password Security Configuration
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
