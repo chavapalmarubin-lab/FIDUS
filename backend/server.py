@@ -25773,7 +25773,7 @@ async def google_oauth_callback(
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
         frontend_url = os.getenv('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         return RedirectResponse(
-            url=f"{frontend_url}/admin?google_error=callback_failed",
+            url=f"{frontend_url}/admin",
             status_code=302
         )
 
