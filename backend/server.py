@@ -25717,7 +25717,7 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_user)):
     """
     try:
         user_id = str(current_user.get('_id') or current_user.get('id'))
-        auth_url = google_oauth_service.generate_auth_url(user_id)
+        auth_url = await google_oauth_service.generate_auth_url(user_id)
         
         return {
             "success": True,
