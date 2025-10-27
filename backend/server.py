@@ -11784,7 +11784,7 @@ async def test_google_endpoint():
 async def handle_individual_google_oauth_callback_redirect(request: Request, code: str = None, state: str = None, error: str = None):
     """Handle individual Google OAuth callback via GET redirect from Google"""
     try:
-        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         
         if error:
             logging.error(f"❌ Individual Google OAuth error: {error}")
@@ -11805,7 +11805,7 @@ async def handle_individual_google_oauth_callback_redirect(request: Request, cod
         
     except Exception as e:
         logging.error(f"❌ Individual Google OAuth callback redirect error: {str(e)}")
-        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        frontend_base_url = os.environ.get('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         return RedirectResponse(url=f"{frontend_base_url}/?skip_animation=true&error=callback_failed")
 
 @api_router.post("/admin/google/oauth-callback")
