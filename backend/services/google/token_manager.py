@@ -139,7 +139,7 @@ class GoogleTokenManager:
         
         logger.info(f"✅ Tokens deleted for user {user_id}")
     
-    def store_state(self, user_id: str, state: str, expires_minutes: int = 10):
+    async def store_state(self, user_id: str, state: str, expires_minutes: int = 10):
         """Store OAuth state for CSRF protection"""
         logger.info(f"💾 Storing state for user {user_id}")
         
@@ -156,7 +156,7 @@ class GoogleTokenManager:
         
         logger.info(f"💾 State document: user_id={user_id}, state={state[:50]}...")
         
-        self.state_collection.update_one(
+        await self.state_collection.update_one(
             {"user_id": user_id},
             {"$set": state_doc},
             upsert=True
