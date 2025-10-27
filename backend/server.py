@@ -11344,12 +11344,15 @@ async def process_individual_google_callback(request: Request):
         access_token = token_response['access_token']
         user_info_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
         
+        logging.info("🔄 Fetching user info from Google...")
         async with aiohttp.ClientSession() as session:
             async with session.get(user_info_url) as response:
                 if response.status == 200:
                     user_info = await response.json()
+                    logging.info(f"✅ User info retrieved: {user_info.get('email')}")
                 else:
                     user_info = {}
+                    logging.warning(f"⚠️ Failed to get user info, status: {response.status}")
         
         # Prepare token data for storage - include all required OAuth fields
         token_data = {
