@@ -11310,9 +11310,13 @@ async def process_individual_google_callback(request: Request):
         # Verify admin user exists
         admin_doc = await db.users.find_one({"id": admin_user_id, "type": "admin"})
         if not admin_doc:
+            logging.error(f"❌ Admin user not found: {admin_user_id}")
             raise HTTPException(status_code=400, detail="Invalid admin user")
         
+        logging.info(f"✅ Admin user verified: {admin_doc.get('username')} ({admin_user_id})")
+        
         # Exchange authorization code for tokens
+        logging.info("🔄 Exchanging authorization code for tokens...")
         token_exchange_data = {
             'client_id': individual_google_oauth.google_client_id,
             'client_secret': individual_google_oauth.google_client_secret,
@@ -11321,14 +11325,20 @@ async def process_individual_google_callback(request: Request):
             'redirect_uri': individual_google_oauth.google_redirect_uri
         }
         
+        logging.info(f"📡 Token exchange redirect_uri: {individual_google_oauth.google_redirect_uri}")
+        
         async with aiohttp.ClientSession() as session:
             async with session.post('https://oauth2.googleapis.com/token', data=token_exchange_data) as response:
-                if response.status != 200:
+                response_status = response.status
+                logging.info(f"📡 Token exchange response status: {response_status}")
+                
+                if response_status != 200:
                     error_data = await response.text()
-                    logging.error(f"Token exchange failed: {error_data}")
-                    raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
+                    logging.error(f"❌ Token exchange failed with status {response_status}: {error_data}")
+                    raise HTTPException(status_code=400, detail=f"Failed to exchange authorization code: {error_data}")
                 
                 token_response = await response.json()
+                logging.info("✅ Token exchange successful")
         
         # Get user info from Google
         access_token = token_response['access_token']
