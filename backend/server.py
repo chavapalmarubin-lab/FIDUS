@@ -25831,6 +25831,58 @@ async def list_gmail_messages(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================
+# CALENDAR API ENDPOINTS
+# ============================================
+
+@api_router.post("/google/calendar/events")
+async def create_calendar_event(
+    summary: str,
+    start_time: str,
+    end_time: str,
+    description: Optional[str] = None,
+    attendees: Optional[List[str]] = None,
+    create_meet_link: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create calendar event with optional Google Meet link"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        result = await calendar_service.create_event(
+            user_id=user_id,
+            summary=summary,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            attendees=attendees,
+            create_meet_link=create_meet_link
+        )
+        return result
+    except Exception as e:
+        logger.error(f"❌ Failed to create event: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/google/calendar/events")
+async def list_calendar_events(
+    max_results: int = 20,
+    time_min: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """List upcoming calendar events"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        events = await calendar_service.list_events(
+            user_id=user_id,
+            max_results=max_results,
+            time_min=time_min
+        )
+        return {"success": True, "events": events}
+    except Exception as e:
+        logger.error(f"❌ Failed to list events: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # ===============================================================================
 # PHASE 2 ARCHITECTURAL REFACTOR - NEW CALCULATION ENDPOINTS
