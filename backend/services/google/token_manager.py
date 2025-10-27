@@ -153,25 +153,31 @@ class GoogleTokenManager:
     
     def verify_state(self, user_id: str, state: str) -> bool:
         """Verify OAuth state"""
-        logger.debug(f"🔍 Verifying state for user {user_id}")
+        logger.info(f"🔍 Verifying state for user {user_id}")
+        logger.info(f"🔍 State to verify: {state[:50]}...")
         
         state_doc = self.state_collection.find_one({"user_id": user_id})
         
         if not state_doc:
-            logger.warning(f"⚠️ No state found for user {user_id}")
+            logger.warning(f"⚠️ No state found for user {user_id} in MongoDB")
             return False
+        
+        logger.info(f"🔍 Found state doc: user_id={state_doc.get('user_id')}, state={state_doc.get('state', '')[:50]}...")
         
         # Check expiration
         if state_doc['expires_at'] < datetime.utcnow():
             logger.warning(f"⚠️ State expired for user {user_id}")
+            logger.warning(f"   Expired at: {state_doc['expires_at']}, Now: {datetime.utcnow()}")
             return False
         
         # Verify match
         if state_doc['state'] != state:
             logger.warning(f"⚠️ State mismatch for user {user_id}")
+            logger.warning(f"   Expected: {state_doc['state'][:50]}...")
+            logger.warning(f"   Received: {state[:50]}...")
             return False
         
-        logger.debug(f"✅ State verified for user {user_id}")
+        logger.info(f"✅ State verified for user {user_id}")
         return True
     
     def clear_state(self, user_id: str):
