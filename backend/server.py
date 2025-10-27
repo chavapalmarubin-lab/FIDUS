@@ -101,6 +101,7 @@ from document_signing_service import document_signing_service
 # Import Google OAuth Service (CLEAN REBUILD - October 2025)
 from services.google import GoogleOAuthService, GoogleTokenManager
 from services.google.gmail import GmailService
+from services.google.calendar import CalendarService
 
 # Import MT5 Service
 from services.mt5_service import mt5_service
