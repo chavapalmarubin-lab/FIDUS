@@ -98,14 +98,8 @@ from google_admin_service import GoogleAdminService
 from google_social_auth import google_social_auth
 from document_signing_service import document_signing_service
 
-# Import Google OAuth Service (PROPER OAUTH IMPLEMENTATION!)
-from google_oauth_final import (
-    get_google_oauth_service,
-    list_gmail_messages,
-    list_calendar_events,
-    list_drive_files,
-    send_gmail_message
-)
+# Import Google OAuth Service (CLEAN REBUILD - October 2025)
+from services.google import GoogleOAuthService, GoogleTokenManager
 
 # Import MT5 Service
 from services.mt5_service import mt5_service
