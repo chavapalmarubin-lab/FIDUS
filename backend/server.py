@@ -23962,6 +23962,7 @@ PUBLIC_CRM_ENDPOINTS = [
 
 # Google OAuth endpoints that bypass JWT middleware (use session tokens instead)
 GOOGLE_OAUTH_ENDPOINTS = [
+    "/api/google/callback",  # Main OAuth callback endpoint (CRITICAL)
     "/api/admin/google/profile",
     "/api/admin/google/process-callback",
     "/api/admin/google/individual-callback",  # Individual Google OAuth callback (NEW)
