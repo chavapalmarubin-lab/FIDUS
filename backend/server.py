@@ -18103,13 +18103,13 @@ async def google_connection_monitor():
 
 # ===============================================================================
 
-# Import Hybrid Google Service
-from hybrid_google_service import hybrid_google_service
-from emergent_google_auth import initialize_emergent_google_auth
-from emergent_gmail_service import emergent_gmail_service
+# Import Hybrid Google Service - Removed in clean OAuth rebuild
+# from hybrid_google_service import hybrid_google_service
+# from emergent_google_auth import initialize_emergent_google_auth
+# from emergent_gmail_service import emergent_gmail_service
 
-# Initialize Emergent Google Auth
-emergent_google_auth = initialize_emergent_google_auth(db)
+# Initialize Emergent Google Auth - Removed in clean OAuth rebuild
+# emergent_google_auth = initialize_emergent_google_auth(db)
 
 # ==================== EMERGENT GOOGLE AUTH ENDPOINTS ====================
 
