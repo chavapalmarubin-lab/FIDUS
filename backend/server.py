@@ -163,9 +163,9 @@ response_cache = SimpleCache()
 # Initialize Google Admin Service (with error handling for missing env vars) - Removed in clean OAuth rebuild
 # try:
 #     google_admin_service = GoogleAdminService()
-except ValueError as e:
-    logging.warning(f"Google Admin Service initialization failed: {e}")
-    google_admin_service = None
+# except ValueError as e:
+#     logging.warning(f"Google Admin Service initialization failed: {e}")
+#     google_admin_service = None
 
 # Gmail API imports
 import pickle
