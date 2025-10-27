@@ -23982,8 +23982,18 @@ async def api_authentication_middleware(request: Request, call_next):
     """Protect sensitive API endpoints with JWT token validation and role-based access control"""
     path = request.url.path
     
+    # DEBUG: Log all Google OAuth checks
+    logging.info(f"🔍 MIDDLEWARE: Checking path: {path}")
+    
     # Check if this is a Google OAuth endpoint (use session tokens, not JWT)
     is_google_oauth = any(path.startswith(endpoint) for endpoint in GOOGLE_OAUTH_ENDPOINTS)
+    
+    # DEBUG: Log Google OAuth check result
+    if is_google_oauth:
+        logging.info(f"✅ MIDDLEWARE: Path {path} matched Google OAuth endpoint - SKIPPING AUTH")
+    else:
+        logging.info(f"⚠️ MIDDLEWARE: Path {path} did NOT match any Google OAuth endpoint")
+        logging.info(f"   Available endpoints: {GOOGLE_OAUTH_ENDPOINTS}")
     
     # Skip JWT authentication for Google OAuth endpoints
     if is_google_oauth:
