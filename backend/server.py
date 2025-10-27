@@ -11283,7 +11283,7 @@ async def get_individual_google_auth_url(request: Request):
         logging.error(f"Individual Google auth URL error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate individual OAuth URL")
 
-@api_router.post("/auth/google-oauth-callback")
+@api_router.post("/auth/google/callback-exchange")
 async def process_individual_google_callback(request: Request):
     """Process individual Google OAuth callback and store admin-specific tokens - PUBLIC ENDPOINT"""
     try:
