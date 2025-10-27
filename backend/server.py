@@ -23982,6 +23982,11 @@ async def api_authentication_middleware(request: Request, call_next):
     """Protect sensitive API endpoints with JWT token validation and role-based access control"""
     path = request.url.path
     
+    # CRITICAL FIX: Hardcoded exception for OAuth callback
+    if path == "/api/admin/google/individual-callback":
+        logging.info(f"✅ HARDCODED EXCEPTION: Skipping auth for {path}")
+        return await call_next(request)
+    
     # DEBUG: Log all Google OAuth checks
     logging.info(f"🔍 MIDDLEWARE: Checking path: {path}")
     
