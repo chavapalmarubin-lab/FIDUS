@@ -25793,6 +25793,49 @@ async def disconnect_google(
 
 
 # ============================================
+# BACKWARD COMPATIBILITY ENDPOINTS
+# (For existing frontend code)
+# ============================================
+
+@api_router.get("/auth/google/url")
+async def old_google_auth_url(current_user: dict = Depends(get_current_user)):
+    """Backward compatibility - redirects to new endpoint"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        auth_url = google_oauth_service.generate_auth_url(user_id)
+        
+        return {
+            "success": True,
+            "auth_url": auth_url
+        }
+    except Exception as e:
+        logger.error(f"❌ Failed to generate auth URL: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/auth/google/callback")
+async def old_google_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None
+):
+    """Backward compatibility - redirects to new callback"""
+    return await google_oauth_callback(code=code, state=state, error=error)
+
+
+@api_router.post("/auth/google/logout")
+async def old_google_logout(current_user: dict = Depends(get_current_user)):
+    """Backward compatibility - redirects to disconnect"""
+    return await disconnect_google(current_user)
+
+
+@api_router.post("/auth/google/disconnect")
+async def old_google_disconnect(current_user: dict = Depends(get_current_user)):
+    """Backward compatibility - redirects to disconnect"""
+    return await disconnect_google(current_user)
+
+
+# ============================================
 # GMAIL API ENDPOINTS
 # ============================================
 
