@@ -193,8 +193,8 @@ class GoogleTokenManager:
         logger.info(f"✅ State verified for user {user_id}")
         return True
     
-    def clear_state(self, user_id: str):
+    async def clear_state(self, user_id: str):
         """Clear OAuth state after use"""
         logger.debug(f"🗑️ Clearing state for user {user_id}")
         
-        self.state_collection.delete_one({"user_id": user_id})
+        await self.state_collection.delete_one({"user_id": user_id})
