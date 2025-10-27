@@ -138,11 +138,20 @@ class GoogleOAuthService:
         # Parse state to get user_id
         try:
             user_id, state_token = state.split(':', 1)
+            logger.info(f"🔍 Extracted user_id from state: {user_id}")
         except ValueError:
             logger.error(f"❌ Invalid state format: {state}")
+            logger.error(f"❌ State value: {state}")
             raise HTTPException(
                 status_code=400,
                 detail="Invalid state parameter"
+            )
+        except Exception as e:
+            logger.error(f"❌ Error parsing state: {str(e)}")
+            logger.error(f"❌ State value: {state}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"State parsing failed: {str(e)}"
             )
         
         # Verify state (CSRF protection)
