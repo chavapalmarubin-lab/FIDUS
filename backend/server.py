@@ -25632,8 +25632,9 @@ async def get_google_oauth_url(current_user: dict = Depends(get_current_admin_us
             "admin"  # fallback
         )
         
-        # Use google_oauth from google_oauth_final.py
-        oauth_url = google_oauth.get_oauth_url(admin_user_id)
+        # OLD IMPLEMENTATION - Replaced by clean rebuild OAuth endpoints
+        # Use new clean OAuth service
+        oauth_url = google_oauth_service.generate_auth_url(admin_user_id)
         
         return {
             'success': True,
