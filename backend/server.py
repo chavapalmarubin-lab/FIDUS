@@ -25888,6 +25888,76 @@ async def list_calendar_events(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================
+# DRIVE API ENDPOINTS
+# ============================================
+
+@api_router.post("/google/drive/folders")
+async def create_drive_folder(
+    name: str,
+    parent_folder_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create folder in Google Drive"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        result = await drive_service.create_folder(
+            user_id=user_id,
+            name=name,
+            parent_folder_id=parent_folder_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"❌ Failed to create folder: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/google/drive/files")
+async def upload_drive_file(
+    file: UploadFile,
+    folder_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload file to Google Drive"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        
+        # Read file content
+        file_content = await file.read()
+        
+        result = await drive_service.upload_file(
+            user_id=user_id,
+            file_name=file.filename,
+            file_content=file_content,
+            mime_type=file.content_type,
+            folder_id=folder_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"❌ Failed to upload file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/google/drive/files")
+async def list_drive_files(
+    folder_id: Optional[str] = None,
+    max_results: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """List files in Google Drive"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        files = await drive_service.list_files(
+            user_id=user_id,
+            folder_id=folder_id,
+            max_results=max_results
+        )
+        return {"success": True, "files": files}
+    except Exception as e:
+        logger.error(f"❌ Failed to list files: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # ===============================================================================
 # PHASE 2 ARCHITECTURAL REFACTOR - NEW CALCULATION ENDPOINTS
