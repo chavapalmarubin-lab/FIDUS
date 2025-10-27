@@ -250,7 +250,7 @@ class GoogleOAuthService:
             )
         
         # Clear state (one-time use)
-        self.token_manager.clear_state(user_id)
+        await self.token_manager.clear_state(user_id)
         
         logger.info(f"🎉 OAuth flow completed successfully for user {user_id}")
         
