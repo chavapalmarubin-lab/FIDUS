@@ -164,12 +164,12 @@ class GoogleTokenManager:
         
         logger.info(f"✅ State stored successfully for user {user_id}")
     
-    def verify_state(self, user_id: str, state: str) -> bool:
+    async def verify_state(self, user_id: str, state: str) -> bool:
         """Verify OAuth state"""
         logger.info(f"🔍 Verifying state for user {user_id}")
         logger.info(f"🔍 State to verify: {state[:50]}...")
         
-        state_doc = self.state_collection.find_one({"user_id": user_id})
+        state_doc = await self.state_collection.find_one({"user_id": user_id})
         
         if not state_doc:
             logger.warning(f"⚠️ No state found for user {user_id} in MongoDB")
