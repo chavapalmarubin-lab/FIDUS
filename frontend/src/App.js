@@ -74,7 +74,7 @@ function App() {
             headers['Authorization'] = `Bearer ${token}`;
           }
           
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/google/callback-exchange`, {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/individual-callback`, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({
