@@ -155,7 +155,7 @@ class GoogleOAuthService:
             )
         
         # Verify state (CSRF protection)
-        if not self.token_manager.verify_state(user_id, state):
+        if not await self.token_manager.verify_state(user_id, state):
             logger.error(f"❌ State verification failed for user {user_id}")
             raise HTTPException(
                 status_code=400,
