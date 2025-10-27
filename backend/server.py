@@ -18140,7 +18140,7 @@ async def get_emergent_google_auth_url(current_user: dict = Depends(get_current_
     """Get Emergent Google Auth URL for admin user"""
     try:
         # Use production URL for redirect after auth
-        redirect_url = "https://fidus-invest.emergent.host/?skip_animation=true&tab=google-workspace"
+        redirect_url = "https://fidus-investment-platform.onrender.com/?skip_animation=true&tab=google-workspace"
         
         auth_url = emergent_google_auth.get_auth_url(redirect_url)
         
