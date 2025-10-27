@@ -11286,17 +11286,25 @@ async def get_individual_google_auth_url(request: Request):
 async def process_individual_google_callback(request: Request):
     """Process individual Google OAuth callback and store admin-specific tokens"""
     try:
+        logging.info("🔄 Individual Google OAuth callback endpoint called")
+        
         data = await request.json()
         authorization_code = data.get('code')
         state = data.get('state')
         
+        logging.info(f"📝 Received code: {authorization_code[:20] if authorization_code else 'None'}...")
+        logging.info(f"📝 Received state: {state}")
+        
         if not authorization_code or not state:
+            logging.error("❌ Missing authorization code or state in callback")
             raise HTTPException(status_code=400, detail="Authorization code and state are required")
         
         # Extract admin_user_id from state
         try:
             admin_user_id = state.split(':')[0]
-        except:
+            logging.info(f"🔍 Extracted admin_user_id from state: {admin_user_id}")
+        except Exception as parse_error:
+            logging.error(f"❌ Failed to parse state: {parse_error}")
             raise HTTPException(status_code=400, detail="Invalid state parameter")
         
         # Verify admin user exists
