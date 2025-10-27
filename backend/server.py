@@ -25778,6 +25778,54 @@ async def disconnect_google(
         )
 
 
+# ============================================
+# GMAIL API ENDPOINTS
+# ============================================
+
+@api_router.post("/google/gmail/send")
+async def send_gmail(
+    to: str,
+    subject: str,
+    body: str,
+    body_html: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send email via Gmail"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        result = await gmail_service.send_email(
+            user_id=user_id,
+            to=to,
+            subject=subject,
+            body=body,
+            body_html=body_html
+        )
+        return result
+    except Exception as e:
+        logger.error(f"❌ Failed to send email: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/google/gmail/messages")
+async def list_gmail_messages(
+    max_results: int = 20,
+    query: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """List Gmail messages"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        messages = await gmail_service.list_messages(
+            user_id=user_id,
+            max_results=max_results,
+            query=query
+        )
+        return {"success": True, "messages": messages}
+    except Exception as e:
+        logger.error(f"❌ Failed to list messages: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # ===============================================================================
 # PHASE 2 ARCHITECTURAL REFACTOR - NEW CALCULATION ENDPOINTS
