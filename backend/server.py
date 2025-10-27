@@ -2702,7 +2702,7 @@ async def get_api_documentation():
             "total_categories": len(registry["categories"]),
             "total_endpoints": sum(len(cat["endpoints"]) for cat in registry["categories"]),
             "version": "1.0.0",
-            "base_url": os.environ.get('REACT_APP_BACKEND_URL', 'https://fidus-invest.emergent.host/api'),
+            "base_url": os.environ.get('BACKEND_URL', 'https://fidus-api.onrender.com/api'),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
