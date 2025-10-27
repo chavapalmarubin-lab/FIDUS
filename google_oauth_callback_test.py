@@ -172,7 +172,7 @@ class GoogleOAuthFlowTest:
     def test_oauth_state_storage(self):
         """Test Step 3: Check OAuth State Storage"""
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test("OAuth State Storage", False, "MongoDB connection not available")
                 return False
             
