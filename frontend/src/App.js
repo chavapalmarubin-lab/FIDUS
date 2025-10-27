@@ -60,18 +60,31 @@ function App() {
       const processIndividualOAuthCallback = async () => {
         try {
           console.log('📡 Processing individual Google OAuth callback...');
+          console.log('📝 Code:', googleOAuthCode?.substring(0, 20) + '...');
+          console.log('📝 State:', googleOAuthState);
+          
+          // Prepare headers - token is optional for this endpoint
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          
+          // Add authorization if available (but endpoint doesn't require it)
+          const token = localStorage.getItem('fidus_token');
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
           
           const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/google/individual-callback`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('fidus_token')}`,
-              'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
               code: googleOAuthCode,
               state: googleOAuthState
             })
           });
+          
+          console.log('📡 Response status:', response.status);
+          console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
 
           console.log('🔍 Individual OAuth callback response status:', response.status);
           const data = await response.json();
