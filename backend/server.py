@@ -18372,11 +18372,11 @@ async def google_oauth_callback_legacy(code: str, state: str):
         return RedirectResponse(url=f"/api/google/callback?code={code}&state={state}")
     except Exception as e:
         logger.error(f"❌ OAuth callback redirect failed: {str(e)}")
-        return RedirectResponse(url="/admin?google_error=true")
+        return RedirectResponse(url="/admin")
             
     except Exception as e:
         logger.error(f"❌ OAuth callback error: {str(e)}")
-        return RedirectResponse(url="/admin?google_error=true")
+        return RedirectResponse(url="/admin")
 
 @api_router.get("/admin/google/status")
 async def check_google_connection_status(current_user: dict = Depends(get_current_admin_user)):
