@@ -1450,7 +1450,8 @@ class IndividualGoogleOAuth:
     def __init__(self):
         self.google_client_id = os.environ.get('GOOGLE_CLIENT_ID')
         self.google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
-        self.google_redirect_uri = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
+        # Use GOOGLE_REDIRECT_URI to match GoogleOAuthService
+        self.google_redirect_uri = os.environ.get('GOOGLE_REDIRECT_URI') or os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         
     async def get_admin_google_tokens(self, admin_user_id: str) -> Optional[Dict]:
         """Get Google OAuth tokens for specific admin user (respects disconnect flag)"""
