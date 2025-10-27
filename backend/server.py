@@ -157,12 +157,12 @@ class SimpleCache:
 response_cache = SimpleCache()
 
 
-# Import REAL Google API service
-from real_google_api_service import real_google_api
+# Import REAL Google API service - Removed in clean OAuth rebuild
+# from real_google_api_service import real_google_api
 
-# Initialize Google Admin Service (with error handling for missing env vars)
-try:
-    google_admin_service = GoogleAdminService()
+# Initialize Google Admin Service (with error handling for missing env vars) - Removed in clean OAuth rebuild
+# try:
+#     google_admin_service = GoogleAdminService()
 except ValueError as e:
     logging.warning(f"Google Admin Service initialization failed: {e}")
     google_admin_service = None
