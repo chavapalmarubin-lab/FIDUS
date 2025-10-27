@@ -136,7 +136,11 @@ class GoogleTokenManager:
     
     def store_state(self, user_id: str, state: str, expires_minutes: int = 10):
         """Store OAuth state for CSRF protection"""
-        logger.debug(f"💾 Storing state for user {user_id}")
+        logger.info(f"💾 Storing state for user {user_id}")
+        
+        if not user_id or user_id == "":
+            logger.error("❌ Cannot store state: user_id is empty")
+            raise ValueError("user_id cannot be empty")
         
         state_doc = {
             "user_id": user_id,
@@ -145,11 +149,15 @@ class GoogleTokenManager:
             "expires_at": datetime.utcnow() + timedelta(minutes=expires_minutes)
         }
         
+        logger.info(f"💾 State document: user_id={user_id}, state={state[:50]}...")
+        
         self.state_collection.update_one(
             {"user_id": user_id},
             {"$set": state_doc},
             upsert=True
         )
+        
+        logger.info(f"✅ State stored successfully for user {user_id}")
     
     def verify_state(self, user_id: str, state: str) -> bool:
         """Verify OAuth state"""
