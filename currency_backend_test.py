@@ -37,7 +37,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://oauth-reforge.preview.emergentagent.com/api"
+BACKEND_URL = "https://oauth-flow-debug.preview.emergentagent.com/api"
 
 class CurrencyConversionTest:
     def __init__(self):

@@ -270,12 +270,12 @@ Your production script will continue working! ✅
 
 ### Verify Backend
 ```bash
-curl -X POST https://oauth-reforge.preview.emergentagent.com/api/auth/login \
+curl -X POST https://oauth-flow-debug.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"password123","user_type":"admin"}'
 
 # Use token from response
-curl -X GET https://oauth-reforge.preview.emergentagent.com/api/admin/mt5/config/accounts \
+curl -X GET https://oauth-flow-debug.preview.emergentagent.com/api/admin/mt5/config/accounts \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 **Expected:** Returns JSON with 7+ accounts

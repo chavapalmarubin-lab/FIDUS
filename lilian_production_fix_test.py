@@ -23,7 +23,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://oauth-reforge.preview.emergentagent.com/api"
+PREVIEW_URL = "https://oauth-flow-debug.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

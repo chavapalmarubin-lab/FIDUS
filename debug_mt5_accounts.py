@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://oauth-reforge.preview.emergentagent.com"
+BACKEND_URL = "https://oauth-flow-debug.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
