@@ -11001,7 +11001,7 @@ async def get_google_auth_url(current_user: dict = Depends(get_current_admin_use
     """Get Emergent OAuth URL for Google authentication"""
     try:
         # Use Emergent OAuth for hassle-free Google authentication
-        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-invest.emergent.host')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://fidus-investment-platform.onrender.com')
         
         # Redirect URL that includes session_id parameter for processing
         redirect_url = f"{frontend_url}/?session_id={{session_id}}"
