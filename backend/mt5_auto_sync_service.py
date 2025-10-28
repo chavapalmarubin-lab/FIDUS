@@ -208,7 +208,13 @@ class MT5AutoSyncService:
             old_balance = float(old_data.get('balance', 0))
             new_balance = float(new_data.get('balance', 0))
             
-            if old_balance > 0:
+            # CRITICAL FIX: Allow $0 balances (indicates MT5 terminal disconnection)
+            # This is needed for auto-healing to detect and fix the issue
+            if new_balance == 0 and old_balance > 0:
+                logging.warning(f"Account balance dropped to $0 (was ${old_balance:.2f}) - MT5 terminal may be disconnected")
+                return True, "Zero balance accepted (terminal disconnection)"
+            
+            if old_balance > 0 and new_balance > 0:
                 balance_change_pct = abs(new_balance - old_balance) / old_balance * 100
                 
                 # Alert if balance changed >50% in one sync (likely error)
