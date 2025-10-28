@@ -18542,7 +18542,7 @@ async def get_gmail_messages_oauth(current_user: dict = Depends(get_current_admi
             current_user.get("username") or
             str(current_user.get("user_id", "admin"))  # convert to string if numeric
         )
-        messages = await list_gmail_messages(admin_user_id, db, max_results=10)
+        messages = await list_gmail_messages(max_results=10, current_user=current_user)
         
         return {
             "success": True,
