@@ -146,9 +146,9 @@ class GoogleWorkspaceBugFixesVerification:
             return False
     
     def test_gmail_api_endpoint(self):
-        """Test 1: Gmail API Endpoint - GET /api/admin/google/gmail/inbox"""
+        """Test 1: Gmail API Endpoint - GET /api/admin/google/gmail/messages"""
         try:
-            url = f"{BACKEND_URL}/api/admin/google/gmail/inbox"
+            url = f"{BACKEND_URL}/api/admin/google/gmail/messages"
             response = self.session.get(url)
             
             # Check if we get a proper response (not necessarily 200 if not connected)
