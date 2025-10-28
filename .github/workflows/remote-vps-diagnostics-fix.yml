@@ -1,0 +1,279 @@
+name: Remote VPS Diagnostics & Fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - 'diagnose'
+          - 'fix-port-8000'
+          - 'fix-port-8001'
+          - 'restart-services'
+          - 'full-recovery'
+      verbose:
+        description: 'Verbose output'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  remote-vps-fix:
+    runs-on: windows-latest
+    
+    steps:
+      - name: 🔍 Diagnose VPS Issues
+        if: inputs.action == 'diagnose'
+        shell: pwsh
+        run: |
+          Write-Host "🔍 Running VPS Diagnostics..." -ForegroundColor Cyan
+          
+          # Check if VPS is reachable
+          Write-Host "`n📡 Testing VPS connectivity..." -ForegroundColor Yellow
+          try {
+            $response = Invoke-WebRequest -Uri "http://92.118.45.135:8000/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8000 is accessible" -ForegroundColor Green
+            Write-Host "Response: $($response.Content)" -ForegroundColor Gray
+          } catch {
+            Write-Host "❌ Port 8000 is NOT accessible" -ForegroundColor Red
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+          }
+          
+          try {
+            $response = Invoke-WebRequest -Uri "http://92.118.45.135:8001/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8001 is accessible" -ForegroundColor Green
+            Write-Host "Response: $($response.Content)" -ForegroundColor Gray
+          } catch {
+            Write-Host "❌ Port 8001 is NOT accessible" -ForegroundColor Red
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+          }
+          
+          Write-Host "`n📊 Diagnosis Complete" -ForegroundColor Cyan
+          Write-Host "If ports are not accessible, run 'fix-port-8000' or 'fix-port-8001' action" -ForegroundColor Yellow
+
+      - name: 🔧 Fix Port 8000 (MT5 Bridge)
+        if: inputs.action == 'fix-port-8000'
+        shell: pwsh
+        run: |
+          Write-Host "🔧 Fixing Port 8000 (MT5 Bridge)..." -ForegroundColor Cyan
+          
+          # This would require WinRM/SSH access to VPS
+          # For now, we'll trigger the emergency restart workflow
+          Write-Host "⚠️ Direct VPS access requires WinRM/SSH credentials" -ForegroundColor Yellow
+          Write-Host "Instead, use the existing emergency restart workflows:" -ForegroundColor Yellow
+          Write-Host "  - deploy-mt5-bridge-emergency-ps.yml" -ForegroundColor Gray
+          Write-Host "  - nuclear-reset-mt5-bridge.yml" -ForegroundColor Gray
+          
+          # Call the existing emergency restart endpoint
+          try {
+            Write-Host "`n🚀 Attempting HTTP API restart..." -ForegroundColor Yellow
+            $body = @{} | ConvertTo-Json
+            $response = Invoke-RestMethod `
+              -Uri "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" `
+              -Method POST `
+              -Body $body `
+              -ContentType "application/json" `
+              -TimeoutSec 30
+            
+            Write-Host "✅ Restart triggered successfully" -ForegroundColor Green
+            Write-Host "Response: $($response | ConvertTo-Json -Depth 5)" -ForegroundColor Gray
+          } catch {
+            Write-Host "❌ Failed to trigger restart via HTTP" -ForegroundColor Red
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "`n⚠️ Recommendation: Run 'deploy-mt5-bridge-emergency-ps.yml' workflow instead" -ForegroundColor Yellow
+          }
+
+      - name: 🔧 Fix Port 8001 (Full Restart Service)
+        if: inputs.action == 'fix-port-8001'
+        shell: pwsh
+        run: |
+          Write-Host "🔧 Fixing Port 8001 (Full Restart Service)..." -ForegroundColor Cyan
+          
+          # Check if service is running
+          try {
+            $response = Invoke-WebRequest -Uri "http://92.118.45.135:8001/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Service is already running on port 8001" -ForegroundColor Green
+            Write-Host "Response: $($response.Content)" -ForegroundColor Gray
+          } catch {
+            Write-Host "❌ Service not responding on port 8001" -ForegroundColor Red
+            Write-Host "`n⚠️ This requires manual VPS access to restart the Windows service" -ForegroundColor Yellow
+            Write-Host "Steps to fix manually:" -ForegroundColor Yellow
+            Write-Host "  1. RDP to 92.118.45.135" -ForegroundColor Gray
+            Write-Host "  2. Open Task Scheduler" -ForegroundColor Gray
+            Write-Host "  3. Find 'MT5 Full Restart Service' task" -ForegroundColor Gray
+            Write-Host "  4. Right-click → Run" -ForegroundColor Gray
+            Write-Host "`n  OR restart the VPS (all services auto-start)" -ForegroundColor Gray
+          }
+
+      - name: 🔄 Restart All Services
+        if: inputs.action == 'restart-services'
+        shell: pwsh
+        run: |
+          Write-Host "🔄 Restarting All VPS Services..." -ForegroundColor Cyan
+          
+          # Trigger both restart mechanisms
+          Write-Host "`n1️⃣ Restarting MT5 Bridge (port 8000)..." -ForegroundColor Yellow
+          try {
+            $response = Invoke-RestMethod `
+              -Uri "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" `
+              -Method POST `
+              -ContentType "application/json" `
+              -TimeoutSec 30
+            Write-Host "✅ MT5 Bridge restart triggered" -ForegroundColor Green
+          } catch {
+            Write-Host "❌ Failed to restart MT5 Bridge" -ForegroundColor Red
+          }
+          
+          Write-Host "`n2️⃣ Triggering Full System Restart (port 8001)..." -ForegroundColor Yellow
+          try {
+            $response = Invoke-RestMethod `
+              -Uri "http://92.118.45.135:8001/api/system/full-restart" `
+              -Method POST `
+              -Headers @{
+                "Authorization" = "Bearer ${{ secrets.MT5_BRIDGE_API_KEY }}"
+              } `
+              -ContentType "application/json" `
+              -TimeoutSec 60
+            Write-Host "✅ Full restart triggered" -ForegroundColor Green
+            Write-Host "Response: $($response | ConvertTo-Json -Depth 5)" -ForegroundColor Gray
+          } catch {
+            Write-Host "❌ Failed to trigger full restart" -ForegroundColor Red
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+          }
+          
+          Write-Host "`n⏳ Waiting 60 seconds for services to restart..." -ForegroundColor Yellow
+          Start-Sleep -Seconds 60
+          
+          Write-Host "`n3️⃣ Verifying services..." -ForegroundColor Yellow
+          try {
+            $response8000 = Invoke-WebRequest -Uri "http://92.118.45.135:8000/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8000: Healthy" -ForegroundColor Green
+          } catch {
+            Write-Host "❌ Port 8000: Not responding" -ForegroundColor Red
+          }
+          
+          try {
+            $response8001 = Invoke-WebRequest -Uri "http://92.118.45.135:8001/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8001: Healthy" -ForegroundColor Green
+          } catch {
+            Write-Host "❌ Port 8001: Not responding" -ForegroundColor Red
+          }
+
+      - name: 🚨 Full Recovery Mode
+        if: inputs.action == 'full-recovery'
+        shell: pwsh
+        run: |
+          Write-Host "🚨 FULL RECOVERY MODE" -ForegroundColor Red
+          Write-Host "This will attempt all recovery methods in sequence" -ForegroundColor Yellow
+          
+          Write-Host "`n📋 Recovery Plan:" -ForegroundColor Cyan
+          Write-Host "  1. Emergency restart MT5 Bridge (HTTP API)" -ForegroundColor Gray
+          Write-Host "  2. Trigger GitHub workflow: deploy-mt5-bridge-emergency-ps" -ForegroundColor Gray
+          Write-Host "  3. Full system restart (port 8001)" -ForegroundColor Gray
+          Write-Host "  4. Verify all services" -ForegroundColor Gray
+          
+          # Step 1: HTTP API restart
+          Write-Host "`n1️⃣ Emergency HTTP restart..." -ForegroundColor Yellow
+          try {
+            Invoke-RestMethod `
+              -Uri "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" `
+              -Method POST `
+              -ContentType "application/json" `
+              -TimeoutSec 30 | Out-Null
+            Write-Host "✅ HTTP restart triggered" -ForegroundColor Green
+          } catch {
+            Write-Host "⚠️ HTTP restart failed (expected if service is down)" -ForegroundColor Yellow
+          }
+          
+          Start-Sleep -Seconds 10
+          
+          # Step 2: GitHub workflow
+          Write-Host "`n2️⃣ Triggering GitHub workflow..." -ForegroundColor Yellow
+          try {
+            $workflowBody = @{
+              ref = "main"
+            } | ConvertTo-Json
+            
+            Invoke-RestMethod `
+              -Uri "https://api.github.com/repos/chavapalmarubin-lab/FIDUS/actions/workflows/deploy-mt5-bridge-emergency-ps.yml/dispatches" `
+              -Method POST `
+              -Headers @{
+                "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}"
+                "Accept" = "application/vnd.github.v3+json"
+              } `
+              -Body $workflowBody `
+              -ContentType "application/json"
+            
+            Write-Host "✅ GitHub workflow triggered" -ForegroundColor Green
+          } catch {
+            Write-Host "⚠️ GitHub workflow trigger failed" -ForegroundColor Yellow
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+          }
+          
+          Start-Sleep -Seconds 30
+          
+          # Step 3: Full system restart
+          Write-Host "`n3️⃣ Full system restart..." -ForegroundColor Yellow
+          try {
+            $response = Invoke-RestMethod `
+              -Uri "http://92.118.45.135:8001/api/system/full-restart" `
+              -Method POST `
+              -Headers @{
+                "Authorization" = "Bearer ${{ secrets.MT5_BRIDGE_API_KEY }}"
+              } `
+              -ContentType "application/json" `
+              -TimeoutSec 60
+            Write-Host "✅ Full restart completed" -ForegroundColor Green
+          } catch {
+            Write-Host "⚠️ Full restart failed" -ForegroundColor Yellow
+          }
+          
+          Start-Sleep -Seconds 60
+          
+          # Step 4: Final verification
+          Write-Host "`n4️⃣ Final verification..." -ForegroundColor Yellow
+          
+          $allHealthy = $true
+          
+          try {
+            $response = Invoke-WebRequest -Uri "http://92.118.45.135:8000/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8000: HEALTHY" -ForegroundColor Green
+          } catch {
+            Write-Host "❌ Port 8000: FAILED" -ForegroundColor Red
+            $allHealthy = $false
+          }
+          
+          try {
+            $response = Invoke-WebRequest -Uri "http://92.118.45.135:8001/health" -TimeoutSec 10 -UseBasicParsing
+            Write-Host "✅ Port 8001: HEALTHY" -ForegroundColor Green
+          } catch {
+            Write-Host "❌ Port 8001: FAILED" -ForegroundColor Red
+            $allHealthy = $false
+          }
+          
+          Write-Host "`n" -NoNewline
+          if ($allHealthy) {
+            Write-Host "🎉 FULL RECOVERY SUCCESSFUL!" -ForegroundColor Green
+          } else {
+            Write-Host "⚠️ PARTIAL RECOVERY - Manual intervention may be required" -ForegroundColor Yellow
+            Write-Host "`nNext steps:" -ForegroundColor Yellow
+            Write-Host "  1. Check VPS is powered on" -ForegroundColor Gray
+            Write-Host "  2. RDP to VPS and check Task Manager for Python processes" -ForegroundColor Gray
+            Write-Host "  3. Restart VPS if necessary" -ForegroundColor Gray
+          }
+
+      - name: 📊 Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "`n" -NoNewline
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "         WORKFLOW COMPLETE" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "`nAction performed: ${{ inputs.action }}" -ForegroundColor Yellow
+          Write-Host "`nNext steps:" -ForegroundColor Yellow
+          Write-Host "  - Check VPS health: http://92.118.45.135:8000/health" -ForegroundColor Gray
+          Write-Host "  - Check restart service: http://92.118.45.135:8001/health" -ForegroundColor Gray
+          Write-Host "  - Monitor FIDUS dashboard: https://fidus-invest.emergent.host" -ForegroundColor Gray
