@@ -35,6 +35,13 @@ jobs:
             # Navigate to Bridge directory
             cd C:\mt5_bridge_service
             
+            # Download latest fix script from GitHub
+            Write-Host "[INFO] Downloading fix script from GitHub..." -ForegroundColor Yellow
+            $scriptUrl = "https://raw.githubusercontent.com/${{ github.repository }}/main/vps-scripts/fix_unicode_logging.py"
+            Invoke-WebRequest -Uri $scriptUrl -OutFile "fix_unicode_logging.py" -UseBasicParsing
+            Write-Host "[OK] Fix script downloaded!" -ForegroundColor Green
+            Write-Host ""
+            
             Write-Host "[INFO] Running Unicode fix script..." -ForegroundColor Yellow
             python fix_unicode_logging.py
             
