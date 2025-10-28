@@ -11943,7 +11943,7 @@ async def get_real_gmail_messages(current_user: dict = Depends(get_current_admin
         logging.info(f"🔍 [GMAIL API] Getting Gmail messages for admin: {admin_user_id}")
         
         # Use google_oauth from google_oauth_final.py (stores in google_tokens collection)
-        messages = await list_gmail_messages(admin_user_id, db, max_results=20)
+        messages = await list_gmail_messages(admin_user_id, max_results=20)
         
         if not messages:
             logging.warning(f"⚠️ [GMAIL API] No messages returned for admin: {admin_user_id}")
