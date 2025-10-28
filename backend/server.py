@@ -7550,7 +7550,7 @@ class GmailService:
         return html_template
 
 # Initialize Gmail service
-gmail_service = GmailService()
+# gmail_service = GmailService()  # Commented out - using the proper GmailService from services/google/gmail.py
 
 # OAuth state storage for Gmail authentication
 oauth_states = {}
