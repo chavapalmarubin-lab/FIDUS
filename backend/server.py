@@ -11420,8 +11420,8 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
             str(current_user.get("user_id", "admin"))  # convert to string if numeric
         )
         
-        # Get admin's Google tokens
-        tokens = await individual_google_oauth.get_admin_google_tokens(admin_user_id)
+        # Get admin's Google tokens (using the centralized token manager)
+        tokens = await google_oauth_service.token_manager.get_tokens(admin_user_id)
         
         if not tokens:
             return {
