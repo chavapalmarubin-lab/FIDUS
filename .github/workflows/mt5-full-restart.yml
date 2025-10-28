@@ -1,0 +1,80 @@
+name: MT5 Full System Restart
+
+on:
+  repository_dispatch:
+    types: [mt5-full-restart]
+
+jobs:
+  restart-mt5-system:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🔄 Trigger Full MT5 Restart
+        run: |
+          echo "🚀 Triggering full MT5 system restart on VPS..."
+          echo "📍 VPS: 92.118.45.135:8000"
+          
+          # Call VPS restart endpoint
+          response=$(curl -X POST "http://92.118.45.135:8000/api/system/full-restart" \
+            -H "Authorization: Bearer ${{ secrets.MT5_BRIDGE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -w "%{http_code}" \
+            -s -o /tmp/restart_response.json)
+          
+          echo "📡 HTTP Status: $response"
+          
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Restart triggered successfully"
+            cat /tmp/restart_response.json | jq '.'
+          else
+            echo "❌ Restart failed with status $response"
+            cat /tmp/restart_response.json
+            exit 1
+          fi
+      
+      - name: ⏳ Wait for System Stabilization
+        run: |
+          echo "⏳ Waiting 60 seconds for MT5 terminals to reconnect..."
+          sleep 60
+      
+      - name: 🔍 Verify Account Connections
+        run: |
+          echo "🔍 Verifying all MT5 accounts are connected..."
+          
+          accounts=(886557 886066 886602 885822 886528 891215 891234)
+          connected=0
+          failed=0
+          
+          for account in "${accounts[@]}"; do
+            echo "Checking account $account..."
+            
+            response=$(curl -s "http://92.118.45.135:8000/api/mt5/account/$account/info" \
+              -H "Authorization: Bearer ${{ secrets.MT5_BRIDGE_API_KEY }}")
+            
+            balance=$(echo "$response" | jq -r '.live_data.balance // "0.0"')
+            
+            if [ "$balance" == "0.0" ] || [ "$balance" == "null" ]; then
+              echo "❌ Account $account: Still showing \$0 balance"
+              failed=$((failed + 1))
+            else
+              echo "✅ Account $account: Balance = \$$balance"
+              connected=$((connected + 1))
+            fi
+          done
+          
+          echo ""
+          echo "📊 Results: $connected/${#accounts[@]} accounts connected"
+          
+          if [ $connected -ge 5 ]; then
+            echo "🎉 Restart successful! Most accounts connected."
+            exit 0
+          else
+            echo "⚠️ Restart incomplete - only $connected accounts connected"
+            exit 1
+          fi
+      
+      - name: 📧 Send Status Notification
+        if: always()
+        run: |
+          echo "📧 Restart workflow completed"
+          echo "Check FIDUS platform for detailed status"
