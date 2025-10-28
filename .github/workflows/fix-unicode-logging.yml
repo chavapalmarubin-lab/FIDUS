@@ -1,0 +1,128 @@
+name: Fix MT5 Bridge Unicode Logging
+
+on:
+  workflow_dispatch:
+    inputs:
+      auto_restart:
+        description: 'Automatically restart Bridge service after fix'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  fix-unicode-logging:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy Unicode Fix Script to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: "vps-scripts/fix_unicode_logging.py"
+          target: "C:\\mt5_bridge_service\\"
+          strip_components: 1
+      
+      - name: Run Unicode Fix on VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "MT5 BRIDGE UNICODE LOGGING FIX" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Navigate to Bridge directory
+            cd C:\mt5_bridge_service
+            
+            Write-Host "[INFO] Running Unicode fix script..." -ForegroundColor Yellow
+            python fix_unicode_logging.py
+            
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host ""
+                Write-Host "[SUCCESS] Unicode fix completed successfully!" -ForegroundColor Green
+                
+                if ("${{ inputs.auto_restart }}" -eq "true") {
+                    Write-Host ""
+                    Write-Host "[INFO] Restarting MT5 Bridge service..." -ForegroundColor Yellow
+                    
+                    # Stop the Bridge service (via Task Scheduler)
+                    Stop-ScheduledTask -TaskName "MT5 Bridge Service" -ErrorAction SilentlyContinue
+                    
+                    # Wait for graceful shutdown
+                    Start-Sleep -Seconds 10
+                    
+                    # Force kill if still running
+                    Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object {
+                        $_.Path -like "*mt5_bridge_service*"
+                    } | Stop-Process -Force
+                    
+                    Write-Host "[INFO] Waiting 5 seconds before restart..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 5
+                    
+                    # Start the Bridge service
+                    Start-ScheduledTask -TaskName "MT5 Bridge Service"
+                    
+                    Write-Host "[INFO] Waiting 15 seconds for Bridge to initialize..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 15
+                    
+                    Write-Host ""
+                    Write-Host "[INFO] Testing Bridge health..." -ForegroundColor Yellow
+                    
+                    try {
+                        $response = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing -TimeoutSec 10
+                        $health = $response.Content | ConvertFrom-Json
+                        
+                        Write-Host ""
+                        Write-Host "========================================" -ForegroundColor Green
+                        Write-Host "BRIDGE HEALTH CHECK RESULTS" -ForegroundColor Green
+                        Write-Host "========================================" -ForegroundColor Green
+                        Write-Host "Status: $($health.status)" -ForegroundColor White
+                        Write-Host "MT5 Available: $($health.mt5.available)" -ForegroundColor $(if ($health.mt5.available) { "Green" } else { "Red" })
+                        Write-Host "MongoDB Connected: $($health.mongodb.connected)" -ForegroundColor $(if ($health.mongodb.connected) { "Green" } else { "Red" })
+                        Write-Host ""
+                        
+                        if ($health.status -eq "healthy" -and $health.mt5.available) {
+                            Write-Host "[OK] MT5 Bridge is running and connected!" -ForegroundColor Green
+                            Write-Host ""
+                            Write-Host "Next: Check dashboard at https://fidus-invest.emergent.host" -ForegroundColor Cyan
+                            Write-Host "Real balances should appear within 1 minute." -ForegroundColor Cyan
+                        } else {
+                            Write-Host "[WARN] Bridge is running but MT5 connection may have issues" -ForegroundColor Yellow
+                            Write-Host "This might be due to the Task Scheduler session issue." -ForegroundColor Yellow
+                            Write-Host "If balances still show [ZERO]0, run the 'Fix Bridge User Session' workflow next." -ForegroundColor Yellow
+                        }
+                        
+                    } catch {
+                        Write-Host "[ERROR] Failed to connect to Bridge health endpoint" -ForegroundColor Red
+                        Write-Host "Error: $_" -ForegroundColor Red
+                        Write-Host ""
+                        Write-Host "The Bridge service may not have started correctly." -ForegroundColor Yellow
+                        Write-Host "Check Task Scheduler and Windows Event Viewer for errors." -ForegroundColor Yellow
+                    }
+                    
+                } else {
+                    Write-Host ""
+                    Write-Host "[INFO] Auto-restart disabled. Manual restart required:" -ForegroundColor Yellow
+                    Write-Host "  1. Stop-ScheduledTask -TaskName 'MT5 Bridge Service'" -ForegroundColor Gray
+                    Write-Host "  2. Start-ScheduledTask -TaskName 'MT5 Bridge Service'" -ForegroundColor Gray
+                }
+                
+            } else {
+                Write-Host ""
+                Write-Host "[FAIL] Unicode fix script failed!" -ForegroundColor Red
+                Write-Host "Exit code: $LASTEXITCODE" -ForegroundColor Red
+                exit 1
+            }
+            
+            Write-Host ""
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "UNICODE FIX WORKFLOW COMPLETE" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
