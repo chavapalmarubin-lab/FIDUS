@@ -11488,7 +11488,18 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
         
     except Exception as e:
         logging.error(f"Get individual Google status error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get Google connection status")
+        return {
+            "success": False,
+            "connected": False,
+            "overall_status": "disconnected",
+            "error": str(e),
+            "services": {
+                "gmail": {"status": "error"},
+                "calendar": {"status": "error"},
+                "drive": {"status": "error"},
+                "meet": {"status": "error"}
+            }
+        }
 
 @api_router.post("/admin/google/individual-disconnect")
 async def disconnect_individual_google(current_user: dict = Depends(get_current_admin_user)):
