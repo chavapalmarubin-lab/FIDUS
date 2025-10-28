@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://oauth-flow-debug.preview.emergentagent.com"
+BACKEND_URL = "https://token-rescue-2.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Admin credentials for testing

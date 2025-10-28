@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://oauth-flow-debug.preview.emergentagent.com"
+BACKEND_URL = "https://token-rescue-2.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""
