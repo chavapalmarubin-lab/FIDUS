@@ -1,0 +1,74 @@
+name: Fix MT5 Bridge User Session
+
+on:
+  workflow_dispatch:
+    inputs:
+      vps_password:
+        description: 'VPS Administrator Password'
+        required: true
+        type: string
+
+jobs:
+  fix-bridge-session:
+    runs-on: windows-latest
+    
+    steps:
+      - name: 🔧 Reconfigure MT5 Bridge Task
+        shell: pwsh
+        run: |
+          Write-Host "🔧 Fixing MT5 Bridge to run in Administrator session..." -ForegroundColor Cyan
+          
+          # This workflow needs to run ON the VPS, not from GitHub Actions
+          # Because we need to modify Task Scheduler on the VPS itself
+          
+          Write-Host "⚠️ IMPORTANT: This workflow template is for reference" -ForegroundColor Yellow
+          Write-Host ""
+          Write-Host "To fix the Bridge, run these commands ON THE VPS:" -ForegroundColor Yellow
+          Write-Host ""
+          Write-Host "Option 1: Manual PowerShell Fix (Recommended)" -ForegroundColor Cyan
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "1. RDP to VPS (92.118.45.135)" -ForegroundColor White
+          Write-Host "2. Open PowerShell as Administrator" -ForegroundColor White
+          Write-Host "3. Run these commands:" -ForegroundColor White
+          Write-Host ""
+          Write-Host '$taskName = "MT5 Bridge Service"' -ForegroundColor Gray
+          Write-Host '$principal = New-ScheduledTaskPrincipal -UserId "Administrator" -LogonType Interactive -RunLevel Highest' -ForegroundColor Gray
+          Write-Host 'Set-ScheduledTask -TaskName $taskName -Principal $principal' -ForegroundColor Gray
+          Write-Host 'Stop-ScheduledTask -TaskName $taskName' -ForegroundColor Gray
+          Write-Host 'Start-Sleep -Seconds 5' -ForegroundColor Gray
+          Write-Host 'Start-ScheduledTask -TaskName $taskName' -ForegroundColor Gray
+          Write-Host ""
+          Write-Host "4. Test the connection:" -ForegroundColor White
+          Write-Host 'Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health"' -ForegroundColor Gray
+          Write-Host ""
+          Write-Host ""
+          Write-Host "Option 2: Task Scheduler GUI" -ForegroundColor Cyan
+          Write-Host "=============================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "1. Open Task Scheduler (taskschd.msc)" -ForegroundColor White
+          Write-Host "2. Find 'MT5 Bridge Service' task" -ForegroundColor White
+          Write-Host "3. Right-click → Properties" -ForegroundColor White
+          Write-Host "4. General tab:" -ForegroundColor White
+          Write-Host "   - Change user to: Administrator" -ForegroundColor Gray
+          Write-Host "   - Select: 'Run only when user is logged on'" -ForegroundColor Gray
+          Write-Host "   - Check: 'Run with highest privileges'" -ForegroundColor Gray
+          Write-Host "5. Click OK" -ForegroundColor White
+          Write-Host "6. Right-click task → End (stop current instance)" -ForegroundColor White
+          Write-Host "7. Right-click task → Run (start new instance)" -ForegroundColor White
+          Write-Host ""
+          Write-Host ""
+          Write-Host "Expected Result:" -ForegroundColor Green
+          Write-Host "================" -ForegroundColor Green
+          Write-Host "After fix, this should return 'available: true':" -ForegroundColor White
+          Write-Host 'curl http://92.118.45.135:8000/api/mt5/bridge/health' -ForegroundColor Gray
+          Write-Host ""
+          Write-Host '{' -ForegroundColor Gray
+          Write-Host '  "status": "healthy",' -ForegroundColor Gray
+          Write-Host '  "mt5": {' -ForegroundColor Gray
+          Write-Host '    "available": true,' -ForegroundColor Green
+          Write-Host '    "terminal_info": {...}' -ForegroundColor Gray
+          Write-Host '  }' -ForegroundColor Gray
+          Write-Host '}' -ForegroundColor Gray
+          Write-Host ""
+          Write-Host "✅ Once fixed, dashboard will show real balances within 1 minute!" -ForegroundColor Green
