@@ -18569,7 +18569,7 @@ async def get_calendar_events_oauth(current_user: dict = Depends(get_current_adm
             current_user.get("username") or
             str(current_user.get("user_id", "admin"))  # convert to string if numeric
         )
-        events = await list_calendar_events(admin_user_id, db, max_results=10)
+        events = await list_calendar_events(max_results=10, current_user=current_user)
         
         return {
             "success": True,
