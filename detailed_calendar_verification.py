@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://token-rescue-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://oauth-debugger.preview.emergentagent.com/api"
 
 def authenticate_and_get_calendar():
     """Authenticate and get detailed calendar data"""

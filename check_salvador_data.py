@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://token-rescue-2.preview.emergentagent.com'
+base_url = 'https://oauth-debugger.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

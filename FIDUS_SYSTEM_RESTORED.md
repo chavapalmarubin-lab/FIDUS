@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://token-rescue-2.preview.emergentagent.com`
+`https://oauth-debugger.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

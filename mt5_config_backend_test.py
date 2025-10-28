@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://token-rescue-2.preview.emergentagent.com"
+BACKEND_URL = "https://oauth-debugger.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

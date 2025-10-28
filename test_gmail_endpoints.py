@@ -21,7 +21,7 @@ Document Content:
     return io.BytesIO(content.encode('utf-8'))
 
 def test_gmail_endpoints():
-    base_url = "https://token-rescue-2.preview.emergentagent.com"
+    base_url = "https://oauth-debugger.preview.emergentagent.com"
     
     print("🚀 Testing Gmail Integration Endpoints...")
     print("=" * 60)
