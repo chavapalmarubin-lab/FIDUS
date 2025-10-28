@@ -18433,22 +18433,37 @@ async def verify_google_connection(current_user: dict = Depends(get_current_admi
                 "verification": {
                     "overall_status": False,
                     "token_exists": False,
-                    "token_valid": False
+                    "token_valid": False,
+                    "gmail_connected": False,
+                    "calendar_connected": False,
+                    "drive_connected": False
                 }
             }
         
         # Tokens exist and are valid (refreshed if needed)
+        # Check if scopes include Gmail, Calendar, and Drive
+        scope = tokens.get('scope', '')
+        gmail_connected = 'gmail' in scope.lower()
+        calendar_connected = 'calendar' in scope.lower()
+        drive_connected = 'drive' in scope.lower()
+        
+        overall_status = gmail_connected and calendar_connected and drive_connected
+        
         logger.info(f"✅ Google connection verified for user {admin_user_id}")
+        logger.info(f"   - Gmail: {gmail_connected}, Calendar: {calendar_connected}, Drive: {drive_connected}")
         
         return {
             "success": True,
             "message": "Google account connected and verified",
             "verification": {
-                "overall_status": True,
+                "overall_status": overall_status,
                 "token_exists": True,
                 "token_valid": True,
+                "gmail_connected": gmail_connected,
+                "calendar_connected": calendar_connected,
+                "drive_connected": drive_connected,
                 "expires_at": tokens.get('expires_at').isoformat() if tokens.get('expires_at') else None,
-                "scope": tokens.get('scope', '')
+                "scope": scope
             }
         }
         
@@ -18459,6 +18474,9 @@ async def verify_google_connection(current_user: dict = Depends(get_current_admi
             "message": f"Verification failed: {str(e)}",
             "verification": {
                 "overall_status": False,
+                "gmail_connected": False,
+                "calendar_connected": False,
+                "drive_connected": False,
                 "error": str(e)
             }
         }
