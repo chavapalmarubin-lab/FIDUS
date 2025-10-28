@@ -18407,6 +18407,61 @@ async def check_google_connection_status(current_user: dict = Depends(get_curren
         logger.error(f"❌ Failed to check connection status: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check connection status")
 
+@api_router.get("/admin/google/verify-connection")
+async def verify_google_connection(current_user: dict = Depends(get_current_admin_user)):
+    """Verify Google OAuth connection and token validity"""
+    try:
+        # Get admin user ID
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or 
+            current_user.get("username") or 
+            "admin"
+        )
+        
+        logger.info(f"🔍 Verifying Google connection for user: {admin_user_id}")
+        
+        # Get tokens (this will auto-refresh if expired)
+        tokens = await google_oauth_service.token_manager.get_tokens(admin_user_id)
+        
+        if not tokens:
+            logger.warning(f"⚠️ No tokens found for user {admin_user_id}")
+            return {
+                "success": False,
+                "message": "Google account not connected",
+                "verification": {
+                    "overall_status": False,
+                    "token_exists": False,
+                    "token_valid": False
+                }
+            }
+        
+        # Tokens exist and are valid (refreshed if needed)
+        logger.info(f"✅ Google connection verified for user {admin_user_id}")
+        
+        return {
+            "success": True,
+            "message": "Google account connected and verified",
+            "verification": {
+                "overall_status": True,
+                "token_exists": True,
+                "token_valid": True,
+                "expires_at": tokens.get('expires_at').isoformat() if tokens.get('expires_at') else None,
+                "scope": tokens.get('scope', '')
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to verify Google connection: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Verification failed: {str(e)}",
+            "verification": {
+                "overall_status": False,
+                "error": str(e)
+            }
+        }
 @api_router.post("/admin/google/disconnect")
 async def disconnect_google_account(current_user: dict = Depends(get_current_admin_user)):
     """Revoke Google OAuth tokens and disconnect"""
