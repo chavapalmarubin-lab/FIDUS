@@ -1,0 +1,154 @@
+name: MT5 Bridge Auto-Healing Monitor
+
+on:
+  # Run every hour automatically
+  schedule:
+    - cron: '0 * * * *'  # Every hour at minute 0
+  
+  # Also allow manual trigger if needed
+  workflow_dispatch:
+
+jobs:
+  monitor-and-heal:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check Bridge Health and Auto-Heal
+        continue-on-error: true
+        run: |
+          echo "=========================================="
+          echo "MT5 BRIDGE AUTO-HEALING MONITOR"
+          echo "Time: $(date)"
+          echo "=========================================="
+          echo ""
+          
+          # Try to check Bridge health from external endpoint
+          HEALTH_URL="http://92.118.45.135:8000/api/mt5/bridge/health"
+          
+          echo "Checking Bridge health at: $HEALTH_URL"
+          
+          HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "$HEALTH_URL" || echo "000")
+          
+          echo "Health check response code: $HEALTH_CHECK"
+          
+          if [ "$HEALTH_CHECK" = "200" ]; then
+            # Bridge is responding - check if MT5 is available
+            HEALTH_DATA=$(curl -s "$HEALTH_URL")
+            echo "Health data: $HEALTH_DATA"
+            
+            MT5_AVAILABLE=$(echo "$HEALTH_DATA" | grep -o '"available":[^,}]*' | cut -d':' -f2 | tr -d ' ')
+            
+            if [ "$MT5_AVAILABLE" = "true" ]; then
+              echo "✅ Bridge is healthy and MT5 is connected"
+              echo "Status: OK - No action needed"
+              exit 0
+            else
+              echo "⚠️  Bridge is running but MT5 not connected"
+              echo "Status: DEGRADED - Will attempt session fix"
+              echo "TRIGGER_SESSION_FIX=true" >> $GITHUB_ENV
+            fi
+          else
+            echo "❌ Bridge is not responding (HTTP $HEALTH_CHECK)"
+            echo "Status: DOWN - Will attempt full restart"
+            echo "TRIGGER_FULL_RESTART=true" >> $GITHUB_ENV
+          fi
+      
+      - name: Checkout Repository (if healing needed)
+        if: env.TRIGGER_FULL_RESTART == 'true' || env.TRIGGER_SESSION_FIX == 'true'
+        uses: actions/checkout@v3
+      
+      - name: Auto-Heal - Unicode Fix and Restart
+        if: env.TRIGGER_FULL_RESTART == 'true'
+        uses: appleboy/ssh-action@master
+        continue-on-error: true
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 120s
+          script_stop: false
+          script: |
+            Write-Host "AUTO-HEALING: Applying Unicode fix and restart..." -ForegroundColor Yellow
+            
+            cd C:\mt5_bridge_service
+            
+            # Download latest fix script
+            try {
+              Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/vps-scripts/fix_unicode_logging.py" -OutFile "fix_unicode_logging.py" -UseBasicParsing -TimeoutSec 30
+            } catch {
+              Write-Host "Note: Using existing fix script" -ForegroundColor Yellow
+            }
+            
+            # Stop Bridge
+            Stop-ScheduledTask -TaskName "MT5 Bridge Service" -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*mt5_bridge_service*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+            
+            # Apply Unicode fix
+            if (Test-Path "fix_unicode_logging.py") {
+              python fix_unicode_logging.py
+            }
+            
+            # Restart Bridge
+            Start-ScheduledTask -TaskName "MT5 Bridge Service"
+            Start-Sleep -Seconds 20
+            
+            # Verify
+            try {
+              $health = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing -TimeoutSec 10
+              Write-Host "Bridge restarted successfully" -ForegroundColor Green
+            } catch {
+              Write-Host "Bridge may need additional time to start" -ForegroundColor Yellow
+            }
+      
+      - name: Auto-Heal - Session Fix
+        if: env.TRIGGER_SESSION_FIX == 'true'
+        uses: appleboy/ssh-action@master
+        continue-on-error: true
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 120s
+          script_stop: false
+          script: |
+            Write-Host "AUTO-HEALING: Applying Task Scheduler session fix..." -ForegroundColor Yellow
+            
+            # Reconfigure Task Scheduler to run in user session
+            $taskName = "MT5 Bridge Service"
+            $principal = New-ScheduledTaskPrincipal -UserId "Administrator" -LogonType Interactive -RunLevel Highest
+            Set-ScheduledTask -TaskName $taskName -Principal $principal -ErrorAction SilentlyContinue
+            
+            # Restart the task
+            Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            Start-ScheduledTask -TaskName $taskName
+            Start-Sleep -Seconds 20
+            
+            # Verify
+            try {
+              $health = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing -TimeoutSec 10
+              Write-Host "Session fix applied successfully" -ForegroundColor Green
+            } catch {
+              Write-Host "Bridge may need additional time to start" -ForegroundColor Yellow
+            }
+      
+      - name: Report Status
+        if: always()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "AUTO-HEALING MONITOR COMPLETED"
+          echo "Time: $(date)"
+          echo "=========================================="
+          
+          # Check final status
+          FINAL_CHECK=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "http://92.118.45.135:8000/api/mt5/bridge/health" || echo "000")
+          
+          if [ "$FINAL_CHECK" = "200" ]; then
+            echo "✅ Bridge is now responding"
+          else
+            echo "⚠️  Bridge still not responding - may need manual intervention"
+          fi
