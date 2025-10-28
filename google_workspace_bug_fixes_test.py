@@ -421,17 +421,19 @@ class GoogleWorkspaceBugFixesVerification:
                         self.log_test("Connection Status Overall", False, f"Invalid overall_status: {overall_status}")
                         overall_success = False
                     
-                    # Check for individual service statuses
+                    # Check for individual service statuses in services object
+                    services_obj = data.get('services', {})
                     services = ['gmail', 'calendar', 'drive']
                     service_statuses = {}
                     
                     for service in services:
-                        service_status = data.get(f'{service}_status')
+                        service_info = services_obj.get(service, {})
+                        service_status = service_info.get('status')
                         if service_status is not None:
                             service_statuses[service] = service_status
-                            self.log_test(f"Connection Status {service.title()}", True, f"{service}_status: {service_status}")
+                            self.log_test(f"Connection Status {service.title()}", True, f"{service} status: {service_status}")
                         else:
-                            self.log_test(f"Connection Status {service.title()}", False, f"Missing {service}_status field")
+                            self.log_test(f"Connection Status {service.title()}", False, f"Missing {service} status in services object")
                     
                     # Check if we have at least some service status info
                     if len(service_statuses) >= 2:  # At least 2 out of 3 services
