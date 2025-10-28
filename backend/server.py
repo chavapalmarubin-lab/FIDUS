@@ -11427,10 +11427,18 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
             return {
                 "success": True,
                 "connected": False,
+                "overall_status": "disconnected",
                 "message": "No Google account connected",
-                "admin_info": {
-                    "admin_user_id": admin_user_id,
-                    "admin_username": current_user["username"]
+                "services": {
+                    "gmail": {"status": "not_connected"},
+                    "calendar": {"status": "not_connected"},
+                    "drive": {"status": "not_connected"},
+                    "meet": {"status": "not_connected"}
+                },
+                "connection_quality": {
+                    "total_tests": 4,
+                    "successful_tests": 0,
+                    "success_rate": 0
                 }
             }
         
