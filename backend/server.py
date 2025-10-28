@@ -1699,23 +1699,6 @@ class IndividualGoogleOAuth:
             logging.error(f"Error getting all admin connections: {str(e)}")
             return []
 
-    async def disconnect_admin_google(self, admin_user_id: str) -> bool:
-        """Disconnect Google account for specific admin"""
-        try:
-            # Remove admin's Google connection
-            result = await db.admin_google_sessions.delete_one({"admin_user_id": admin_user_id})
-            
-            if result.deleted_count > 0:
-                logging.info(f"✅ Disconnected Google account for admin {admin_user_id}")
-                return True
-            else:
-                logging.warning(f"No Google connection found for admin {admin_user_id}")
-                return False
-                
-        except Exception as e:
-            logging.error(f"Error disconnecting Google for admin {admin_user_id}: {str(e)}")
-            return False
-
 # Initialize individual Google OAuth manager
 individual_google_oauth = IndividualGoogleOAuth()
 # MOCK_USERS REMOVED - MongoDB is the ONLY database used by FIDUS application
