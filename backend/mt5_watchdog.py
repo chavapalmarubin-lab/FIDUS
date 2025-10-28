@@ -254,9 +254,33 @@ class MT5Watchdog:
             self.auto_healing_in_progress = False
     
     async def _trigger_github_workflow(self) -> bool:
-        """Trigger GitHub Actions workflow to restart MT5 Bridge"""
+        """Trigger GitHub Actions workflow to restart MT5 Bridge or Full System"""
         try:
-            url = f"https://api.github.com/repos/{self.github_repo}/actions/workflows/deploy-mt5-bridge-emergency-ps.yml/dispatches"  # Use PowerShell version for better Windows compatibility
+            # Choose workflow based on needs_full_restart flag
+            if self.needs_full_restart:
+                workflow_file = "mt5-full-restart.yml"
+                event_type = "mt5-full-restart"
+                logger.info("[MT5 WATCHDOG] 🚀 Triggering FULL MT5 SYSTEM RESTART (terminals + bridge)")
+            else:
+                workflow_file = "deploy-mt5-bridge-emergency-ps.yml"
+                event_type = None
+                logger.info("[MT5 WATCHDOG] 🔧 Triggering simple MT5 Bridge restart")
+            
+            # For repository_dispatch events (full restart)
+            if event_type:
+                url = f"https://api.github.com/repos/{self.github_repo}/dispatches"
+                data = {
+                    'event_type': event_type,
+                    'client_payload': {
+                        'trigger': 'watchdog',
+                        'reason': 'All accounts showing $0 balance - MT5 terminals disconnected',
+                        'timestamp': datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            else:
+                # For workflow_dispatch events (simple restart)
+                url = f"https://api.github.com/repos/{self.github_repo}/actions/workflows/{workflow_file}/dispatches"
+                data = {'ref': 'main'}
             
             headers = {
                 'Authorization': f'Bearer {self.github_token}',
@@ -264,15 +288,14 @@ class MT5Watchdog:
                 'Content-Type': 'application/json'
             }
             
-            data = {
-                'ref': 'main'
-            }
-            
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, json=data, headers=headers, timeout=10.0)
             
             if response.status_code == 204:
                 logger.info("[MT5 WATCHDOG] ✅ GitHub Actions workflow dispatch successful")
+                # Reset flag after triggering
+                if self.needs_full_restart:
+                    self.needs_full_restart = False
                 return True
             else:
                 logger.error(f"[MT5 WATCHDOG] ❌ GitHub Actions dispatch failed: {response.status_code} - {response.text}")
