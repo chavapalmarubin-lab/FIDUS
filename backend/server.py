@@ -11442,33 +11442,48 @@ async def get_individual_google_status(current_user: dict = Depends(get_current_
                 }
             }
         
-        # Check token expiration
-        expires_at = tokens.get('expires_at')
-        is_expired = False
-        if expires_at:
-            try:
-                expiry_time = datetime.fromisoformat(expires_at)
-                is_expired = expiry_time <= datetime.now(timezone.utc)
-            except:
-                is_expired = True
+        # Check scopes to determine which services are connected
+        scope = tokens.get('scope', '')
+        gmail_connected = 'gmail' in scope.lower()
+        calendar_connected = 'calendar' in scope.lower()
+        drive_connected = 'drive' in scope.lower()
+        meet_connected = 'meet' in scope.lower()
+        
+        # Calculate connection status
+        services_connected = sum([gmail_connected, calendar_connected, drive_connected, meet_connected])
+        total_services = 4
+        success_rate = (services_connected / total_services) * 100
+        
+        if services_connected == total_services:
+            overall_status = "fully_connected"
+        elif services_connected > 0:
+            overall_status = "partially_connected"
+        else:
+            overall_status = "disconnected"
+        
+        logger.info(f"✅ Google status for {admin_user_id}: {overall_status} ({services_connected}/{total_services} services)")
         
         return {
             "success": True,
-            "connected": True,
-            "is_expired": is_expired,
+            "connected": services_connected > 0,
+            "overall_status": overall_status,
+            "services": {
+                "gmail": {"status": "connected" if gmail_connected else "not_connected"},
+                "calendar": {"status": "connected" if calendar_connected else "not_connected"},
+                "drive": {"status": "connected" if drive_connected else "not_connected"},
+                "meet": {"status": "connected" if meet_connected else "not_connected"}
+            },
+            "connection_quality": {
+                "total_tests": total_services,
+                "successful_tests": services_connected,
+                "success_rate": round(success_rate, 1)
+            },
             "admin_info": {
                 "admin_user_id": admin_user_id,
                 "admin_username": current_user["username"]
             },
-            "google_info": {
-                "email": tokens.get('user_email', ''),
-                "name": tokens.get('user_name', ''),
-                "picture": tokens.get('user_picture', ''),
-                "connected_at": tokens.get('connected_at', ''),
-                "last_used": tokens.get('last_used', '')
-            },
-            "scopes": tokens.get('granted_scopes', []) or (tokens.get('scope', '').split(' ') if tokens.get('scope') else []),
-            "token_expires_at": expires_at
+            "token_expires_at": tokens.get('expires_at').isoformat() if tokens.get('expires_at') else None,
+            "scopes": scope
         }
         
     except Exception as e:
