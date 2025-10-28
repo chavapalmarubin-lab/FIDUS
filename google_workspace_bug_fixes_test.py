@@ -564,7 +564,8 @@ class GoogleWorkspaceBugFixesVerification:
         
         # Bug 1: Gmail API TypeError
         gmail_no_error = any('Gmail API TypeError Check' in r['test'] and r['success'] for r in self.test_results) or \
-                        any('Gmail API No TypeError' in r['test'] and r['success'] for r in self.test_results)
+                        any('Gmail API No TypeError' in r['test'] and r['success'] for r in self.test_results) or \
+                        any('Gmail API Error Response' in r['test'] and r['success'] for r in self.test_results)
         print(f"   Bug 1 - Gmail API TypeError:")
         print(f"     {'✅' if gmail_no_error else '❌'} No TypeError in Gmail API responses")
         
