@@ -365,6 +365,41 @@ function App() {
             element={<ProspectsPortal />} 
           />
           
+          {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}
+          <Route 
+            path="/admin" 
+            element={
+              <div className="App">
+                <AnimatePresence mode="wait">
+                  {currentView === "admin" && user && (
+                    <motion.div
+                      key="admin"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <AdminDashboard user={user} onLogout={handleLogout} />
+                      </Suspense>
+                    </motion.div>
+                  )}
+                  {currentView === "login" && (
+                    <motion.div
+                      key="login"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <LoginSelection onLogin={handleLogin} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            } 
+          />
+          
           {/* MAIN APP: Home/Dashboard route with authentication */}
           <Route 
             path="/" 
