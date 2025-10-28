@@ -1,68 +1,82 @@
 <analysis>
-The AI engineer's work initially focused on stabilizing the Google Workspace OAuth integration for the FIDUS platform, resolving   by adding  keywords in , , and . This was followed by fixing frontend routing issues (black page) by adjusting backend redirects and introducing React Router routes in . A database diagnostic phase revealed expired Google OAuth tokens for , leading to the creation and refinement of backend endpoints (, ) to properly fetch and refresh tokens and return statuses matching frontend expectations (string-based ). The UI finally showed connected. However, new critical bugs were immediately identified from logs: a  in , duplicate  prefixes causing 404s for Calendar/Drive endpoints, and a failing disconnect function. The current task is to fix these three newly reported bugs.
+The previous AI engineer’s trajectory outlines a complex, iterative development process focused on stabilizing Google Workspace integration and enhancing MT5 auto-healing. Initially, the engineer fixed critical  errors and frontend routing for Google OAuth. Subsequent user feedback revealed deeper issues with Google API calls (Gmail content, Calendar/Drive 404s) and a persistent  in Gmail, which were systematically addressed by correcting parameters, API call formats, and frontend URL prefixes.
+
+A significant pivot occurred with the MT5 auto-healing, which consistently failed to restore trading terminal connections, leading to /bin/bash balances. The AI proposed a robust GitHub Actions-driven full restart system. This exposed limitations in direct VPS interaction, leading to a collaborative approach where the AI generated remote deployment scripts and workflows, and the user handled initial manual VPS setup. Despite progress, persistent MT5 connection issues (IPC timeout, Unicode errors) and Task Scheduler misconfigurations surfaced, requiring further remote diagnostic and configuration fixes. The current task is addressing these remaining MT5 Bridge stability issues.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an MT5 investment management system providing real-time account data. Key requirements include:
-*   **MT5 Auto-Healing System**: Monitors MT5 Bridge API (60-second intervals), triggers auto-healing via GitHub Actions after three consecutive failures, and sends email alerts.
-*   **Infrastructure Migration**: All references to the old VPS infrastructure must be removed.
-*   **Prospects Portal**: Development of a  section for lead capture, including an investment simulator () with a dark, professional theme.
-*   **Google Workspace OAuth Integration (Admin Focus)**: A complete rebuild enabling admin users (specifically ) to connect Gmail, Google Calendar, and Google Drive for email, meeting scheduling, event management, and file operations. This requires explicit account selection (),  pre-selection, consistent callback URIs, centralized credential management, and robust OAuth state handling. So far, the core OAuth flow for token acquisition and storage is functional, and the frontend now correctly displays the Google Workspace connection status. However, deeper issues with individual API calls (Gmail, Calendar, Drive) and the disconnect functionality have emerged, alongside URL routing errors.
+The FIDUS platform is an MT5 investment management system designed for real-time account data and robust automation.
+1.  **MT5 Auto-Healing System**: Monitors MT5 Bridge API for failures (e.g., /bin/bash balances or bridge unavailability), triggers auto-healing via GitHub Actions (restarting Bridge and MT5 terminals), and sends email alerts. Requires robust VPS-level control and automatic recovery without manual intervention.
+2.  **Infrastructure Migration**: All references to the old VPS infrastructure must be removed.
+3.  **Prospects Portal**: Development of a  section for lead capture, including an investment simulator with a dark, professional theme.
+4.  **Google Workspace OAuth Integration (Admin Focus)**: A complete rebuild to enable admin users (specifically ) to connect Gmail, Google Calendar, and Google Drive for email, meeting scheduling, event management, and file operations. This includes explicit account selection,  pre-selection, consistent callback URIs, centralized credential management, and robust OAuth state handling. Currently, the core OAuth flow, token acquisition, storage, frontend connection status display, Gmail message bodies, Calendar events, Drive files, and disconnect functionality are all operational.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Backend**: Python (FastAPI, PyMongo, APScheduler, httpx, requests, logging), MongoDB.
 -   **Frontend**: React.js, React Router DOM.
--   **Deployment**: GitHub Actions, Supervisor, Render.com.
+-   **Deployment**: GitHub Actions, Supervisor, Render.com, VPS (Windows, PowerShell, Task Scheduler).
+-   **Google APIs**: Gmail, Calendar, Drive.
 -   **Architectural Patterns**: Auto-healing, Health Monitoring, Google OAuth 2.0, Service-Oriented Architecture, Asynchronous Programming.
 </key_technical_concepts>
 
 <code_architecture>
 
 
--   ****: Main FastAPI application handling API routes and background tasks.
-    -   **Importance**: Central routing and logic for Google OAuth.
-    -   **Changes**:  fixes were applied to  calls. Backend redirects after Google OAuth were simplified to . A new GET endpoint  was added to check and refresh Google OAuth tokens. The  endpoint was modified to return string-based  (e.g., ) to match frontend expectations.
--   ****: Manages Google OAuth 2.0 flow.
-    -   **Importance**: Generates authorization URLs and handles callbacks.
-    -   **Changes**: Methods like  were made , and calls within  were updated to .  was updated to await  and .
--   ****: Manages secure storage and refreshing of Google OAuth tokens in MongoDB.
-    -   **Importance**: Critical for token persistence and automatic refreshing.
-    -   **Changes**: All PyMongo operations were updated with  to resolve  objects. The  method is designed to automatically refresh expired tokens using the .
--   ****: Main React application file.
-    -   **Importance**: Defines UI structure and routing.
-    -   **Changes**: React Router routes were explicitly added or modified to handle  paths to address no routes matched errors.
--   ****: React component responsible for Google Workspace integration logic.
-    -   **Importance**: Orchestrates API calls to the backend to verify connection status.
-    -   **Changes**: Contains logic to call  and expects individual API connection statuses.
--   ****: React component displaying the detailed Google Workspace connection status.
-    -   **Importance**: Renders the connection status and individual service details.
-    -   **Changes**: Was found to be expecting string values (, etc.) for  from the backend endpoint , which prompted a backend change to match this format.
+-   ****: Main FastAPI application for routing and Google OAuth.
+    -   **Importance**: Central API entry point.
+    -   **Changes**: Fixed  call parameters to resolve . Removed a duplicate  method to ensure proper token revocation.
+-   ****: Handles Google Gmail API interactions.
+    -   **Importance**: Fetches and parses email messages.
+    -   **Changes**: Modified  function (line 145) from  to  and added logic to extract full message bodies from the API response.
+-   ****: Manages automated data synchronization with MT5 accounts.
+    -   **Importance**: Critical for fetching real-time trading data.
+    -   **Changes**: Adjusted data validation logic to correctly handle and allow  balances when the MT5 terminals are disconnected, enabling auto-healing detection.
+-   ****: Monitors MT5 Bridge health and triggers recovery actions.
+    -   **Importance**: Core component of the MT5 auto-healing system.
+    -   **Changes**: Enhanced  to detect a 0% sync rate (all accounts showing /bin/bash balances) as a trigger for a full system restart, and  now dispatches a dedicated GitHub Actions workflow.
+-   ****: React component displaying Google Workspace status.
+    -   **Importance**: Provides the UI for Google service connection status.
+    -   **Changes**: Corrected API call paths by removing a redundant  prefix for Calendar and Drive endpoints ( instead of ).
+-   ****: GitHub Actions workflow for comprehensive MT5 restart.
+    -   **Importance**: Orchestrates the restart of the MT5 Bridge service and terminals on the VPS.
+    -   **Changes**: Created to call the VPS full-restart endpoint on port 8001 via , includes waiting and verification steps.
+-   ****: GitHub Actions workflow for remote VPS troubleshooting.
+    -   **Importance**: Enables remote diagnostics and provides actions (diagnose, fix, restart, full-recovery) for the MT5 Bridge.
+    -   **Changes**: Created to allow remote intervention for VPS-related issues.
+-   ****: GitHub Actions workflow addressing MT5 Bridge user session issues.
+    -   **Importance**: Aims to resolve the IPC timeout by configuring the MT5 Bridge Task Scheduler entry to run as Administrator in the correct user session.
+    -   **Changes**: Created to automate the Task Scheduler configuration on the VPS.
+-   ****: Python script for VPS-side MT5 restart logic.
+    -   **Importance**: Contains the actual commands to shut down, kill, restart MT5 terminals, and re-initialize the Bridge API.
+    -   **Changes**: Created to be deployed once on the Windows VPS.
+-   ****: Python diagnostic script for MT5 connection issues.
+    -   **Importance**: Aids in diagnosing IPC timeout errors and verifying the MetaTrader5 Python library's ability to connect to terminals.
+    -   **Changes**: Created for remote execution on the VPS for troubleshooting.
 </code_architecture>
 
 <pending_tasks>
--   Full end-to-end testing and verification of Gmail/Calendar/Drive functionalities beyond connection status.
--   Deployment and final verification of the Google Workspace integration in the production environment.
--   Implement Phase 2 and 3 of the Prospects Portal.
--   Complete comprehensive system audit and verification of all data flows.
--   **Fix  in  (Gmail API Call).**
--   **Fix frontend API URLs with double  prefix for Calendar and Drive endpoints.**
--   **Fix the Google account disconnect functionality.**
+-   Remove Unicode characters (emojis/special characters) from all log messages within  to prevent service crashes.
+-   Configure the MT5 Bridge service's Task Scheduler task on the VPS to run as Administrator, only when user is logged on (Interactive logon), to resolve session-related IPC timeout issues.
+-   Verify that the MT5 Allow algorithmic trading setting persists across restarts, and document this as a critical startup check.
+-   Create a health check that specifically verifies the MT5 connection to the terminal on startup of the Bridge service.
+-   Test the auto-start of the Bridge service after a VPS reboot to ensure complete automation.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer successfully addressed the display of Google Workspace connection status on the frontend. After diagnosing that MongoDB contained an expired Google OAuth token and that the frontend components were expecting specific string-based statuses, the AI:
-1.  Created the  endpoint in  to allow the frontend to check and refresh Google OAuth tokens.
-2.  Modified the  endpoint in  to return a  as a descriptive string (e.g., ) instead of a boolean, matching the  component's expectations.
-This led to the frontend () correctly displaying All Google services connected (though with a 0% success rate anomaly, later confirmed to be 75% internally) and individual services (Gmail, Calendar, Drive) as connected, with the Gmail inbox content loading.
+Immediately before this summary request, the AI was focused on resolving the persistent MT5 Bridge connection issues that resulted in the dashboard showing /bin/bash balances despite the MT5 terminal running on the VPS. The core problem was identified as an  error when the Python MetaTrader5 library tried to connect to the terminal, rooted in the Bridge service not running in the same user session as the MT5 terminal.
 
-However, the user, upon reviewing logs, immediately identified three critical, lingering issues despite the UI showing 'connected':
-1.  A  occurring when  is called with redundant  arguments in .
-2.   errors for  and  due to a duplicate  prefix in frontend API calls (resulting in ).
-3.  The disconnect function for Google accounts is failing, indicating No Google connection found to disconnect, suggesting an issue with token identification or deletion.
-The AI is currently working on fixing these three identified bugs, starting with the  in the Gmail API call.
+The AI engineer developed and pushed to GitHub a workflow () and documentation () intended to automate the Task Scheduler configuration on the VPS to resolve this session conflict.
+
+However, the user has subsequently outlined three new critical issues that need immediate attention to make the MT5 Bridge fully automatic and stable:
+1.  **Unicode Logging Crash**: The  service crashes on startup due to Unicode characters in log messages, preventing it from starting reliably.
+2.  **Task Scheduler Configuration**: The existing Task Scheduler setup for the MT5 Bridge is incorrect and needs to be properly configured to auto-start as Administrator in the user's logged-on session.
+3.  **MT5 Settings Persistence**: The Allow algorithmic trading setting in the MT5 terminal was manually enabled but its persistence across restarts is uncertain and needs verification/documentation.
+
+The AI is now beginning to address the highest priority task: fixing the Unicode logging crash in the  file.
 </current_work>
 
 <optional_next_step>
-Fix the  in the  call by removing the conflicting  parameter.
+Fix the Unicode logging crash in  by removing problematic characters from log messages.
 </optional_next_step>
+

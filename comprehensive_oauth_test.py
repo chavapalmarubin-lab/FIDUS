@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://oauth-debugger.preview.emergentagent.com/api"
-FRONTEND_URL = "https://oauth-debugger.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com/api"
+FRONTEND_URL = "https://fidus-autofix.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

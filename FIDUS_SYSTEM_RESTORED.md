@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://oauth-debugger.preview.emergentagent.com`
+`https://fidus-autofix.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

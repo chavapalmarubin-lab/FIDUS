@@ -21,7 +21,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://oauth-debugger.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

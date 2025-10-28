@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://oauth-debugger.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and get JWT token"""
