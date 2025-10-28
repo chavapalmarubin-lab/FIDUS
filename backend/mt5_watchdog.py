@@ -41,6 +41,7 @@ class MT5Watchdog:
         self.last_alert_time = None
         self.is_healthy = True
         self.auto_healing_in_progress = False
+        self.needs_full_restart = False  # Flag for full MT5 terminal restart
         
         # GitHub configuration for auto-healing
         self.github_token = os.getenv('GITHUB_TOKEN')
