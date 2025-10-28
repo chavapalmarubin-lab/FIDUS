@@ -18599,7 +18599,7 @@ async def get_drive_files_oauth(
             current_user.get("username") or
             str(current_user.get("user_id", "admin"))  # convert to string if numeric
         )
-        files = await list_drive_files(admin_user_id, db, folder_id=folder_id, max_results=20)
+        files = await list_drive_files(folder_id=folder_id, max_results=20, current_user=current_user)
         
         return {
             "success": True,
