@@ -131,26 +131,50 @@ class MT5Watchdog:
             return False
     
     async def _check_accounts_syncing(self) -> bool:
-        """Check if accounts are actively syncing"""
+        """Check if accounts are actively syncing and detect $0 balance issue"""
         try:
-            # Count total accounts
-            total_accounts = await self.db.mt5_accounts.count_documents({})
+            # Get all accounts
+            accounts = await self.db.mt5_accounts.find().to_list(length=None)
             
-            # Count recently updated accounts (within last 15 minutes)
-            cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=15)
-            recent_updates = await self.db.mt5_accounts.count_documents({
-                'updated_at': {'$gte': cutoff_time}
-            })
-            
-            # Consider healthy if at least 50% of accounts synced recently
-            if total_accounts == 0:
+            if not accounts:
+                logger.warning("[MT5 WATCHDOG] No MT5 accounts found in database")
                 return False
             
-            sync_percentage = (recent_updates / total_accounts) * 100
+            total_accounts = len(accounts)
+            zero_balance_count = 0
+            synced_count = 0
+            cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=15)
+            
+            # Check each account
+            for account in accounts:
+                # Count zero balances (indicates MT5 terminal disconnection)
+                balance = account.get('balance', 0)
+                if balance == 0 or balance == 0.0:
+                    zero_balance_count += 1
+                
+                # Count recently synced
+                updated_at = account.get('updated_at')
+                if updated_at and updated_at >= cutoff_time:
+                    synced_count += 1
+            
+            # CRITICAL: If ALL accounts show $0, MT5 terminals are disconnected!
+            if zero_balance_count == total_accounts and total_accounts > 0:
+                logger.critical(f"🚨 [MT5 WATCHDOG] ALL ACCOUNTS SHOWING $0 BALANCE!")
+                logger.critical(f"🚨 [MT5 WATCHDOG] MT5 Terminals are DISCONNECTED - Need FULL restart!")
+                # Set flag to trigger full restart instead of simple bridge restart
+                self.needs_full_restart = True
+                return False
+            
+            # Check sync percentage
+            sync_percentage = (synced_count / total_accounts) * 100 if total_accounts > 0 else 0
             is_syncing = sync_percentage >= 50
             
             if not is_syncing:
-                logger.warning(f"[MT5 WATCHDOG] Low sync rate: {recent_updates}/{total_accounts} accounts ({sync_percentage:.1f}%)")
+                logger.warning(f"[MT5 WATCHDOG] Low sync rate: {synced_count}/{total_accounts} accounts ({sync_percentage:.1f}%)")
+            
+            # Also warn about zero balances even if not all
+            if zero_balance_count > 0:
+                logger.warning(f"[MT5 WATCHDOG] {zero_balance_count}/{total_accounts} accounts showing $0 balance")
             
             return is_syncing
             
