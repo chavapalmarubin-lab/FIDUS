@@ -33,10 +33,10 @@ This guide implements a complete fix for the MT5 Bridge stability issues that pr
 
 ## 📋 Implementation Phases
 
-### Phase 1: Unicode Logging Fix (2-3 minutes) ⚡ START HERE
+### Phase 1: Unicode Logging Fix (30 seconds) ⚡ START HERE
 
 **Status**: ✅ Ready to deploy  
-**Method**: GitHub Actions workflow  
+**Method**: RDP + PowerShell (VPS is Windows, not Linux)  
 **Risk**: Low (automatic backup created)
 
 **What it does**:
@@ -46,16 +46,13 @@ This guide implements a complete fix for the MT5 Bridge stability issues that pr
 - Verifies Bridge can start without crashes
 
 **Instructions**:
-→ See: [PHASE1_UNICODE_FIX.md](/docs/PHASE1_UNICODE_FIX.md)
+→ See: [PHASE1_QUICK_COMMAND.md](/docs/PHASE1_QUICK_COMMAND.md) ← **FASTEST**  
+→ See: [PHASE1_MANUAL_FIX.md](/docs/PHASE1_MANUAL_FIX.md) ← Detailed guide
 
-**Quick Start**:
-```bash
-# From GitHub Actions web interface:
-# 1. Go to Actions tab
-# 2. Select "Fix MT5 Bridge Unicode Logging"
-# 3. Click "Run workflow"
-# 4. Enable "auto_restart" option
-# 5. Click "Run workflow" button
+**Quick Start** (One Command):
+```powershell
+# RDP to VPS (92.118.45.135), open PowerShell (Admin), run:
+cd C:\mt5_bridge_service && Stop-ScheduledTask -TaskName "MT5 Bridge Service" -ErrorAction SilentlyContinue && Start-Sleep -Seconds 5 && Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*mt5_bridge_service*" } | Stop-Process -Force && python fix_unicode_logging.py && Start-Sleep -Seconds 3 && Start-ScheduledTask -TaskName "MT5 Bridge Service" && Start-Sleep -Seconds 15 && Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health"
 ```
 
 **Success Criteria**:
