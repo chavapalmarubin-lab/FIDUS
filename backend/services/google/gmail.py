@@ -142,15 +142,27 @@ class GmailService:
                 message = service.users().messages().get(
                     userId='me',
                     id=msg['id'],
-                    format='metadata',
-                    metadataHeaders=['Subject', 'From', 'Date']
+                    format='full'  # ✅ Changed from 'metadata' to 'full' to get body content
                 ).execute()
                 
-                # Extract key info
+                # Extract headers
                 headers = message['payload']['headers']
                 subject = next((h['value'] for h in headers if h['name'] == 'Subject'), 'No Subject')
                 from_email = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown')
                 date = next((h['value'] for h in headers if h['name'] == 'Date'), 'Unknown')
+                
+                # Extract message body
+                body = ""
+                if 'parts' in message['payload']:
+                    # Multipart message
+                    for part in message['payload']['parts']:
+                        if part['mimeType'] == 'text/plain' or part['mimeType'] == 'text/html':
+                            if 'data' in part['body']:
+                                body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
+                                break
+                elif 'body' in message['payload'] and 'data' in message['payload']['body']:
+                    # Simple message
+                    body = base64.urlsafe_b64decode(message['payload']['body']['data']).decode('utf-8')
                 
                 full_messages.append({
                     "id": message['id'],
@@ -158,7 +170,8 @@ class GmailService:
                     "subject": subject,
                     "from": from_email,
                     "date": date,
-                    "snippet": message['snippet']
+                    "snippet": message['snippet'],
+                    "body": body  # ✅ Now includes full body content
                 })
             
             return full_messages
