@@ -17,22 +17,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
       
-      - name: Deploy Unicode Fix Script to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: 92.118.45.135
-          username: Administrator
-          password: ${{ secrets.VPS_PASSWORD }}
-          source: "vps-scripts/fix_unicode_logging.py"
-          target: "C:\\mt5_bridge_service\\"
-          strip_components: 1
-      
-      - name: Run Unicode Fix on VPS
+      - name: Deploy and Run Unicode Fix on VPS
         uses: appleboy/ssh-action@master
         with:
           host: 92.118.45.135
           username: Administrator
           password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script_stop: false
+          command_timeout: 120m
           script: |
             Write-Host "========================================" -ForegroundColor Cyan
             Write-Host "MT5 BRIDGE UNICODE LOGGING FIX" -ForegroundColor Cyan
