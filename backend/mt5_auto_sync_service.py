@@ -201,18 +201,18 @@ class MT5AutoSyncService:
                 'error': f"Direct API error: {str(e)}"
             }
     
-    def validate_mt5_data(self, old_data: Dict, new_data: Dict) -> Tuple[bool, str]:
+    def validate_mt5_data(self, old_data: Dict, new_data: Dict, skip_zero_check: bool = False) -> Tuple[bool, str]:
         """Validate new MT5 data before updating database"""
         try:
             # Check if new data is reasonable
             old_balance = float(old_data.get('balance', 0))
             new_balance = float(new_data.get('balance', 0))
             
-            # CRITICAL FIX: Allow $0 balances (indicates MT5 terminal disconnection)
-            # This is needed for auto-healing to detect and fix the issue
-            if new_balance == 0 and old_balance > 0:
-                logging.warning(f"Account balance dropped to $0 (was ${old_balance:.2f}) - MT5 terminal may be disconnected")
-                return True, "Zero balance accepted (terminal disconnection)"
+            # CRITICAL FIX: Reject $0 balances during normal sync (likely account switching)
+            # Only accept $0 if skip_zero_check=True (verified ALL accounts are zero)
+            if new_balance == 0 and old_balance > 0 and not skip_zero_check:
+                logging.warning(f"⚠️ Rejecting $0 balance (was ${old_balance:.2f}) - likely MT5 account switching in progress")
+                return False, "Zero balance rejected (account switching detected)"
             
             if old_balance > 0 and new_balance > 0:
                 balance_change_pct = abs(new_balance - old_balance) / old_balance * 100
