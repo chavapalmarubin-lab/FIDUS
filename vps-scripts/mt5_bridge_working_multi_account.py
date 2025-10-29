@@ -130,10 +130,8 @@ def initialize_mt5_once():
         MT5_INITIALIZED = True
         logger.info(f"[OK] MT5 initialized: {mt5.version()}")
         
-        # Load account passwords from MongoDB
-        if not load_account_passwords():
-            logger.error("[FAIL] Failed to load account passwords")
-            return False
+        # Try to load account passwords from MongoDB
+        load_account_passwords()  # Don't fail if this doesn't work
         
         return True
         
