@@ -51,13 +51,13 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "📦 Creating backup..."
-            if exist C:\mt5_bridge_service\mt5_bridge_api_service.py (
-              copy C:\mt5_bridge_service\mt5_bridge_api_service.py C:\mt5_bridge_service\mt5_bridge_api_service.py.backup
-              echo "✅ Backup created"
-            ) else (
-              echo "No existing file to backup"
-            )
+            Write-Host "Creating backup..."
+            if (Test-Path C:\mt5_bridge_service\mt5_bridge_api_service.py) {
+              Copy-Item C:\mt5_bridge_service\mt5_bridge_api_service.py C:\mt5_bridge_service\mt5_bridge_api_service.py.backup -Force
+              Write-Host "Backup created"
+            } else {
+              Write-Host "No existing file to backup"
+            }
       
       - name: Deploy Complete Bridge Script
         uses: appleboy/scp-action@master
