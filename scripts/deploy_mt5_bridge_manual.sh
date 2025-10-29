@@ -11,7 +11,7 @@
 set -e
 
 VPS_HOST="92.118.45.135"
-VPS_USER="Administrator"
+VPS_USER="trader"
 SSH_KEY_PATH="${1:-~/.ssh/vps_key}"
 
 echo "=========================================="
