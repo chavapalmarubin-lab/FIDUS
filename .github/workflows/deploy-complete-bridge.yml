@@ -38,13 +38,13 @@ jobs:
       - name: Test SSH Connection
         run: |
           echo "🔌 Testing SSH connection to VPS..."
-          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no Administrator@${{ secrets.VPS_HOST }} "echo 'SSH connection successful'"
+          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no trader@${{ secrets.VPS_HOST }} "echo 'SSH connection successful'"
           echo "✅ SSH connection verified"
       
       - name: Stop MT5 Bridge Service
         run: |
           echo "⏹️  Stopping MT5 Bridge service..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+          ssh -i ~/.ssh/vps_key trader@${{ secrets.VPS_HOST }} "
             schtasks /End /TN MT5BridgeService
             timeout /t 3 /nobreak
             taskkill /F /IM python.exe /FI \"WINDOWTITLE eq mt5*\" 2>nul
@@ -55,7 +55,7 @@ jobs:
       - name: Backup Current Bridge Script
         run: |
           echo "📦 Backing up current bridge script..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+          ssh -i ~/.ssh/vps_key trader@${{ secrets.VPS_HOST }} "
             if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
               copy C:\\mt5_bridge_service\\mt5_bridge_api_service.py C:\\mt5_bridge_service\\mt5_bridge_api_service.py.backup.%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
               echo Backup created
@@ -66,13 +66,13 @@ jobs:
       - name: Deploy Complete Bridge Script
         run: |
           echo "📤 Deploying complete MT5 Bridge script..."
-          scp -i ~/.ssh/vps_key vps-scripts/mt5_bridge_complete.py Administrator@${{ secrets.VPS_HOST }}:C:/mt5_bridge_service/mt5_bridge_api_service.py
+          scp -i ~/.ssh/vps_key vps-scripts/mt5_bridge_complete.py trader@${{ secrets.VPS_HOST }}:C:/mt5_bridge_service/mt5_bridge_api_service.py
           echo "✅ File uploaded"
       
       - name: Verify File Upload
         run: |
           echo "🔍 Verifying file on VPS..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+          ssh -i ~/.ssh/vps_key trader@${{ secrets.VPS_HOST }} "
             if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
               echo File exists
               powershell -Command \"(Get-Content C:\\mt5_bridge_service\\mt5_bridge_api_service.py | Select-Object -First 5)\"
@@ -86,14 +86,14 @@ jobs:
       - name: Start MT5 Bridge Service
         run: |
           echo "▶️  Starting MT5 Bridge service..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "schtasks /Run /TN MT5BridgeService"
+          ssh -i ~/.ssh/vps_key trader@${{ secrets.VPS_HOST }} "schtasks /Run /TN MT5BridgeService"
           sleep 15
           echo "✅ Service start command issued"
       
       - name: Verify Service is Running
         run: |
           echo "🔍 Checking if service is running..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+          ssh -i ~/.ssh/vps_key trader@${{ secrets.VPS_HOST }} "
             powershell -Command \"Get-Process python -ErrorAction SilentlyContinue | Where-Object { \\\$_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName\"
           " || echo "⚠️  Could not verify process"
       
