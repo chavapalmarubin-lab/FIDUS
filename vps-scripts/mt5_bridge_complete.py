@@ -435,35 +435,54 @@ async def refresh_account_cache():
             await asyncio.sleep(60)  # Every 60 seconds
             
             if MT5_INITIALIZED:
-                # Query ALL managed accounts and cache them
-                for account_number in MANAGED_ACCOUNTS.keys():
+                logger.info("[CACHE] Starting account refresh cycle")
+                
+                # Remember the current account so we can return to it
+                current_info = mt5.account_info()
+                if not current_info:
+                    logger.error("[CACHE] Cannot get current account info")
+                    continue
+                
+                original_account = current_info.login
+                logger.info(f"[CACHE] Currently on account {original_account}")
+                
+                # Query each managed account
+                for account_number, account_data in MANAGED_ACCOUNTS.items():
                     try:
-                        # Get account info using account_info() while on master account
-                        # This uses the manager credentials to query any account
-                        account_info = mt5.account_info()
-                        
-                        if account_info and account_info.login == account_number:
-                            # We're on this account, cache it
-                            ACCOUNT_CACHE[account_number] = {
-                                "account": account_number,
-                                "balance": float(account_info.balance),
-                                "equity": float(account_info.equity),
-                                "profit": float(account_info.profit),
-                                "margin": float(account_info.margin),
-                                "margin_free": float(account_info.margin_free),
-                                "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
-                                "currency": account_info.currency,
-                                "leverage": account_info.leverage,
-                                "timestamp": datetime.now(timezone.utc).isoformat()
-                            }
-                            logger.info(f"[CACHE] Updated cache for account {account_number}")
+                        # Login to this account
+                        if mt5.login(account_number, password=account_data["password"], server=account_data["server"]):
+                            # Get account info
+                            account_info = mt5.account_info()
+                            if account_info:
+                                # Cache the data
+                                ACCOUNT_CACHE[account_number] = {
+                                    "account": account_number,
+                                    "balance": float(account_info.balance),
+                                    "equity": float(account_info.equity),
+                                    "profit": float(account_info.profit),
+                                    "margin": float(account_info.margin),
+                                    "margin_free": float(account_info.margin_free),
+                                    "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
+                                    "currency": account_info.currency,
+                                    "leverage": account_info.leverage,
+                                    "timestamp": datetime.now(timezone.utc).isoformat()
+                                }
+                                logger.info(f"[CACHE] ✅ Updated account {account_number}: ${account_info.balance}")
+                            else:
+                                logger.warning(f"[CACHE] ⚠️ No account info for {account_number}")
                         else:
-                            # For accounts we're not currently on, we need to query via manager API
-                            # Since we're using single connection, we can only get current account data
-                            # Other accounts will show "No cached data" until we implement proper manager queries
-                            logger.debug(f"[CACHE] Account {account_number} not current, skipping")
+                            logger.error(f"[CACHE] ❌ Failed to login to account {account_number}")
                     except Exception as e:
                         logger.error(f"[CACHE] Error caching account {account_number}: {str(e)}")
+                
+                # Return to original account
+                if mt5.login(original_account, password=MANAGED_ACCOUNTS[original_account]["password"], 
+                           server=MANAGED_ACCOUNTS[original_account]["server"]):
+                    logger.info(f"[CACHE] Returned to original account {original_account}")
+                else:
+                    logger.error(f"[CACHE] Failed to return to account {original_account}")
+                
+                logger.info(f"[CACHE] Refresh cycle complete. Cached {len(ACCOUNT_CACHE)} accounts")
         except Exception as e:
             logger.error(f"[CACHE] Error in refresh task: {str(e)}")
 
