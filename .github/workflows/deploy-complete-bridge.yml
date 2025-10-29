@@ -197,9 +197,3 @@ jobs:
           echo "  2. Check mt5_deals_history collection is populated"
           echo "  3. Verify broker rebates calculation works"
           echo "=========================================="
-      
-      - name: Cleanup SSH Key
-        if: always()
-        run: |
-          rm -f ~/.ssh/vps_key
-          echo "✅ SSH key cleaned up"
