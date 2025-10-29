@@ -152,11 +152,15 @@ def get_all_account_data():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize MT5 on Bridge startup"""
+    """Initialize MT5 on Bridge startup and start background tasks"""
     logger.info("=" * 60)
     logger.info("MT5 BRIDGE STARTING - COMPLETE VERSION")
     logger.info("=" * 60)
     initialize_mt5_once()
+    
+    # Start background cache refresh task
+    asyncio.create_task(refresh_account_cache())
+    logger.info("[STARTUP] Background cache refresh task started")
 
 
 @app.on_event("shutdown")
