@@ -12,6 +12,7 @@ const CredentialsVault = lazy(() => import('./CredentialsVault'));
 const ApiDocumentation = lazy(() => import('./ApiDocumentation'));
 const SystemHealthDashboard = lazy(() => import('./SystemHealthDashboard'));
 const QuickActionsPanel = lazy(() => import('./QuickActionsPanel'));
+const QuickActionsButtons = lazy(() => import('./QuickActionsButtons'));
 
 /**
  * TechnicalDocumentation - Interactive Technical Command Center
