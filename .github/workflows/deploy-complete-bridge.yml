@@ -44,7 +44,11 @@ jobs:
       - name: Stop MT5 Bridge Service
         run: |
           echo "⏹️  Stopping MT5 Bridge service..."
-          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "schtasks /End /TN MT5BridgeService" || echo "Service was not running"
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+            schtasks /End /TN MT5BridgeService
+            timeout /t 3 /nobreak
+            taskkill /F /IM python.exe /FI \"WINDOWTITLE eq mt5*\" 2>nul
+          " || echo "Service stop attempted"
           sleep 5
           echo "✅ Service stopped"
       
