@@ -22,6 +22,7 @@ jobs:
           echo "🚀 DEPLOYING COMPLETE MT5 BRIDGE"
           echo "=========================================="
           echo "VPS: ${{ secrets.VPS_HOST }}"
+          echo "User: ${{ secrets.VPS_USERNAME }}"
           echo "Port: 22 (SSH)"
           echo "Script: mt5_bridge_complete.py"
           echo "Endpoints: /api/mt5/accounts/summary, /account/{id}/info, /account/{id}/trades"
