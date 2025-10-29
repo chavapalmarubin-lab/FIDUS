@@ -78,9 +78,9 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "📝 Renaming file..."
-            move /Y C:\mt5_bridge_service\mt5_bridge_complete.py C:\mt5_bridge_service\mt5_bridge_api_service.py
-            echo "✅ File renamed"
+            Write-Host "Renaming file..."
+            Move-Item C:\mt5_bridge_service\mt5_bridge_complete.py C:\mt5_bridge_service\mt5_bridge_api_service.py -Force
+            Write-Host "File renamed"
       
       - name: Verify File Upload
         uses: appleboy/ssh-action@master
@@ -90,14 +90,14 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "🔍 Verifying file..."
-            if exist C:\mt5_bridge_service\mt5_bridge_api_service.py (
-              echo "✅ File exists"
-              powershell -Command "(Get-Content C:\mt5_bridge_service\mt5_bridge_api_service.py | Select-Object -First 5)"
-            ) else (
-              echo "❌ ERROR: File not found"
+            Write-Host "Verifying file..."
+            if (Test-Path C:\mt5_bridge_service\mt5_bridge_api_service.py) {
+              Write-Host "File exists"
+              Get-Content C:\mt5_bridge_service\mt5_bridge_api_service.py | Select-Object -First 5
+            } else {
+              Write-Host "ERROR: File not found"
               exit 1
-            )
+            }
       
       - name: Start MT5 Bridge Service
         uses: appleboy/ssh-action@master
