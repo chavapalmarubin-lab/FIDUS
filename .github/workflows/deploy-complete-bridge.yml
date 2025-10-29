@@ -23,80 +23,104 @@ jobs:
           echo "=========================================="
           echo "VPS: ${{ secrets.VPS_HOST }}"
           echo "User: ${{ secrets.VPS_USERNAME }}"
-          echo "Port: 22 (SSH)"
+          echo "Port: ${{ secrets.VPS_PORT }}"
           echo "Script: mt5_bridge_complete.py"
           echo "Endpoints: /api/mt5/accounts/summary, /account/{id}/info, /account/{id}/trades"
           echo "=========================================="
       
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          echo "✅ SSH key configured"
-      
-      - name: Test SSH Connection
-        run: |
-          echo "🔌 Testing SSH connection to VPS..."
-          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo 'SSH connection successful'"
-          echo "✅ SSH connection verified"
-      
       - name: Stop MT5 Bridge Service
-        run: |
-          echo "⏹️  Stopping MT5 Bridge service..."
-          ssh -i ~/.ssh/vps_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "
-            schtasks /End /TN MT5BridgeService
-            timeout /t 3 /nobreak
-            taskkill /F /IM python.exe /FI \"WINDOWTITLE eq mt5*\" 2>nul
-          " || echo "Service stop attempted"
-          sleep 5
-          echo "✅ Service stopped"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "⏹️ Stopping MT5 Bridge service..."
+            schtasks /End /TN MT5BridgeService 2>nul || echo "Service not running"
+            timeout /t 3 /nobreak >nul 2>&1
+            taskkill /F /IM python.exe /FI "WINDOWTITLE eq mt5*" 2>nul || echo "No python processes"
+            echo "✅ Service stopped"
       
       - name: Backup Current Bridge Script
-        run: |
-          echo "📦 Backing up current bridge script..."
-          ssh -i ~/.ssh/vps_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "
-            if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
-              copy C:\\mt5_bridge_service\\mt5_bridge_api_service.py C:\\mt5_bridge_service\\mt5_bridge_api_service.py.backup.%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-              echo Backup created
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "📦 Creating backup..."
+            if exist C:\mt5_bridge_service\mt5_bridge_api_service.py (
+              copy C:\mt5_bridge_service\mt5_bridge_api_service.py C:\mt5_bridge_service\mt5_bridge_api_service.py.backup
+              echo "✅ Backup created"
+            ) else (
+              echo "No existing file to backup"
             )
-          " || echo "No existing file to backup"
-          echo "✅ Backup complete"
       
       - name: Deploy Complete Bridge Script
-        run: |
-          echo "📤 Deploying complete MT5 Bridge script..."
-          scp -i ~/.ssh/vps_key vps-scripts/mt5_bridge_complete.py ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:C:/mt5_bridge_service/mt5_bridge_api_service.py
-          echo "✅ File uploaded"
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "vps-scripts/mt5_bridge_complete.py"
+          target: "C:/mt5_bridge_service/"
+          strip_components: 1
+      
+      - name: Rename Uploaded File
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "📝 Renaming file..."
+            move /Y C:\mt5_bridge_service\mt5_bridge_complete.py C:\mt5_bridge_service\mt5_bridge_api_service.py
+            echo "✅ File renamed"
       
       - name: Verify File Upload
-        run: |
-          echo "🔍 Verifying file on VPS..."
-          ssh -i ~/.ssh/vps_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "
-            if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
-              echo File exists
-              powershell -Command \"(Get-Content C:\\mt5_bridge_service\\mt5_bridge_api_service.py | Select-Object -First 5)\"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "🔍 Verifying file..."
+            if exist C:\mt5_bridge_service\mt5_bridge_api_service.py (
+              echo "✅ File exists"
+              powershell -Command "(Get-Content C:\mt5_bridge_service\mt5_bridge_api_service.py | Select-Object -First 5)"
             ) else (
-              echo ERROR: File not found
+              echo "❌ ERROR: File not found"
               exit 1
             )
-          "
-          echo "✅ File verified on VPS"
       
       - name: Start MT5 Bridge Service
-        run: |
-          echo "▶️  Starting MT5 Bridge service..."
-          ssh -i ~/.ssh/vps_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "schtasks /Run /TN MT5BridgeService"
-          sleep 15
-          echo "✅ Service start command issued"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "▶️ Starting MT5 Bridge service..."
+            schtasks /Run /TN MT5BridgeService
+            timeout /t 15 /nobreak
+            echo "✅ Service started"
       
       - name: Verify Service is Running
-        run: |
-          echo "🔍 Checking if service is running..."
-          ssh -i ~/.ssh/vps_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "
-            powershell -Command \"Get-Process python -ErrorAction SilentlyContinue | Where-Object { \\\$_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName\"
-          " || echo "⚠️  Could not verify process"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "🔍 Checking service status..."
+            powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName"
       
       - name: Test Health Endpoint
         run: |
