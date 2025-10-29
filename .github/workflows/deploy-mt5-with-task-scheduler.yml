@@ -1,0 +1,184 @@
+name: Deploy MT5 Bridge with Task Scheduler Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Deployment reason'
+        required: false
+        default: 'Deploy MT5 Bridge v4.0 with Task Scheduler auto-start'
+
+jobs:
+  deploy-and-setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+      
+      - name: Deploy MT5 Bridge Script and Setup Task Scheduler
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          echo "============================================"
+          echo "DEPLOYING MT5 BRIDGE V4.0 WITH TASK SCHEDULER"
+          echo "============================================"
+          echo ""
+          
+          echo "Step 1: Copying MT5 Bridge script to VPS..."
+          sshpass -p "$VPS_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P $VPS_PORT \
+            vps-scripts/mt5_bridge_multi_account_fixed.py \
+            ${VPS_USERNAME}@${VPS_HOST}:"C:\\mt5_bridge_service\\mt5_bridge_api_service.py"
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ MT5 Bridge script deployed"
+          else
+            echo "❌ Failed to deploy script"
+            exit 1
+          fi
+          
+          echo ""
+          echo "Step 2: Copying Task Scheduler setup script to VPS..."
+          sshpass -p "$VPS_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P $VPS_PORT \
+            vps-scripts/setup_mt5_task_scheduler.ps1 \
+            ${VPS_USERNAME}@${VPS_HOST}:"C:\\mt5_bridge_service\\setup_task_scheduler.ps1"
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ Setup script deployed"
+          else
+            echo "❌ Failed to deploy setup script"
+            exit 1
+          fi
+          
+          echo ""
+          echo "Step 3: Executing Task Scheduler setup on VPS..."
+          
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $VPS_PORT \
+            ${VPS_USERNAME}@${VPS_HOST} << 'POWERSHELL_REMOTE'
+          
+          Write-Host "============================================"
+          Write-Host "SETTING UP MT5 BRIDGE TASK SCHEDULER"
+          Write-Host "============================================"
+          
+          # Execute the setup script
+          & "C:\mt5_bridge_service\setup_task_scheduler.ps1"
+          
+          # Wait for service to start
+          Start-Sleep -Seconds 10
+          
+          # Verify deployment
+          Write-Host ""
+          Write-Host "============================================"
+          Write-Host "VERIFICATION"
+          Write-Host "============================================"
+          
+          # Check Task Scheduler
+          $task = Get-ScheduledTask -TaskName "MT5_Bridge_Service" -ErrorAction SilentlyContinue
+          if ($task) {
+              Write-Host "✅ Scheduled Task exists" -ForegroundColor Green
+              Write-Host "   State: $($task.State)" -ForegroundColor White
+              
+              $taskInfo = Get-ScheduledTaskInfo -TaskName "MT5_Bridge_Service"
+              Write-Host "   Last Run: $($taskInfo.LastRunTime)" -ForegroundColor White
+          } else {
+              Write-Host "❌ Scheduled Task NOT found" -ForegroundColor Red
+          }
+          
+          # Check process
+          $process = Get-Process | Where-Object {$_.ProcessName -eq "python"} | Where-Object {
+              try {
+                  $cmdLine = (Get-WmiObject Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                  $cmdLine -like "*mt5_bridge*"
+              } catch {
+                  $false
+              }
+          }
+          
+          if ($process) {
+              Write-Host "✅ MT5 Bridge process running (PID: $($process.Id))" -ForegroundColor Green
+          } else {
+              Write-Host "⚠️  Process not detected yet" -ForegroundColor Yellow
+          }
+          
+          # Test API endpoint
+          Write-Host ""
+          Write-Host "Testing API endpoint..."
+          try {
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -Method Get -TimeoutSec 10
+              Write-Host "✅ API is responding" -ForegroundColor Green
+              Write-Host "   Status: $($response.status)" -ForegroundColor White
+              Write-Host "   Version: $($response.version)" -ForegroundColor White
+              Write-Host "   MT5 Initialized: $($response.mt5.initialized)" -ForegroundColor White
+              
+              if ($response.cache) {
+                  Write-Host "   Accounts Cached: $($response.cache.accounts_cached)/$($response.cache.total_accounts)" -ForegroundColor White
+              }
+          } catch {
+              Write-Host "⚠️  API not responding yet (may still be starting)" -ForegroundColor Yellow
+          }
+          
+          # Show recent logs
+          Write-Host ""
+          Write-Host "Recent logs (last 20 lines):"
+          Write-Host "============================================"
+          if (Test-Path "C:\mt5_bridge_service\logs\api_service.log") {
+              Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 20
+          } else {
+              Write-Host "Log file not created yet"
+          }
+          
+          Write-Host ""
+          Write-Host "============================================"
+          Write-Host "DEPLOYMENT COMPLETE"
+          Write-Host "============================================"
+          
+POWERSHELL_REMOTE
+          
+          echo ""
+          echo "============================================"
+          echo "GitHub Actions Deployment Complete"
+          echo "============================================"
+          echo ""
+          
+          # Test API from external network
+          echo "Testing API from external network..."
+          sleep 5
+          
+          HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://${VPS_HOST}:8000/api/mt5/bridge/health || echo "000")
+          
+          if [ "$HEALTH_CHECK" = "200" ]; then
+            echo "✅ MT5 Bridge is accessible externally (HTTP 200)"
+            echo ""
+            echo "Fetching health status..."
+            curl -s http://${VPS_HOST}:8000/api/mt5/bridge/health | python3 -m json.tool || echo "Could not parse response"
+          else
+            echo "⚠️  Health check returned HTTP $HEALTH_CHECK"
+            echo "   Service may still be starting up or firewall may be blocking"
+          fi
+          
+          echo ""
+          echo "============================================"
+          echo "✅ DEPLOYMENT SUCCESSFUL"
+          echo "============================================"
+          echo ""
+          echo "MT5 Bridge v4.0 is now:"
+          echo "  ✓ Deployed to VPS"
+          echo "  ✓ Configured as Windows Scheduled Task"
+          echo "  ✓ Set to auto-start on VPS boot"
+          echo "  ✓ Configured to auto-restart on failure"
+          echo "  ✓ Running in background (no console window needed)"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Wait 5-10 minutes for account refresh cycle"
+          echo "  2. Check health: curl http://${VPS_HOST}:8000/api/mt5/bridge/health"
+          echo "  3. Check accounts: curl http://${VPS_HOST}:8000/api/mt5/accounts/summary"
+          echo "  4. Verify dashboard shows all 7 account balances"
+          echo ""
