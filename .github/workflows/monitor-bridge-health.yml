@@ -1,0 +1,80 @@
+name: Monitor MT5 Bridge Health
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Bridge Health
+        id: health
+        continue-on-error: true
+        run: |
+          echo "Checking Bridge health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8000/api/mt5/accounts/summary)
+          echo "HTTP Status: $response"
+          
+          if [ "$response" != "200" ]; then
+            echo "health=down" >> $GITHUB_OUTPUT
+            echo "❌ Bridge is DOWN"
+            exit 1
+          fi
+          
+          echo "health=up" >> $GITHUB_OUTPUT
+          echo "✅ Bridge is UP"
+          
+      - name: Restart Bridge if Down
+        if: steps.health.outputs.health == 'down'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Bridge is down - initiating auto-restart..."
+            
+            # Stop existing service
+            schtasks /End /TN MT5BridgeService 2>$null
+            Start-Sleep -Seconds 5
+            Stop-Process -Name python -Force -ErrorAction SilentlyContinue
+            
+            # Start service
+            Write-Host "Starting MT5 Bridge service..."
+            schtasks /Run /TN MT5BridgeService
+            Start-Sleep -Seconds 30
+            
+            Write-Host "Bridge restart complete"
+      
+      - name: Verify Bridge is Back Up
+        if: steps.health.outputs.health == 'down'
+        run: |
+          echo "Waiting for Bridge to come back online..."
+          sleep 10
+          
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8000/api/mt5/accounts/summary)
+          echo "Post-restart HTTP Status: $response"
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Bridge successfully restarted and is now UP"
+          else
+            echo "❌ Bridge restart failed - still returning $response"
+            exit 1
+          fi
+      
+      - name: Send Success Notification
+        if: steps.health.outputs.health == 'up'
+        run: |
+          echo "✅ MT5 Bridge Health Check: PASSED"
+          echo "Bridge is running normally"
+      
+      - name: Send Failure Notification
+        if: failure()
+        run: |
+          echo "🚨 MT5 BRIDGE AUTO-HEALING ALERT"
+          echo "Bridge was down and auto-restart was triggered"
+          echo "Time: $(date)"
+          echo "Check workflow logs for details"
