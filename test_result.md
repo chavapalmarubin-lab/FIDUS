@@ -14,6 +14,37 @@
 # Main and testing agents must follow this exact format to maintain testing data. 
 # The testing data must be entered in yaml format Below is the data structure:
 # 
+## 🔴 MT5 MULTI-ACCOUNT BALANCE FIX - October 29, 2025 🚨
+
+**Issue**: Only master MT5 account (886557) showing real balance. Other 6 accounts showing $0.00 despite having funds.
+
+**Root Cause**: 
+- MT5 Bridge only cached whichever account the Terminal was logged into
+- No active login cycle to fetch data from all 7 accounts
+- Session isolation issue (Python in Session 0, MT5 Terminal in Session 1)
+
+**Fix Applied**:
+1. ✅ Created new `mt5_bridge_multi_account_fixed.py` (v4.0)
+2. ✅ Implemented proper multi-account login cycle
+3. ✅ Added dedicated `login_to_account()` function with investor password
+4. ✅ Background task logs into ALL 7 accounts every 5 minutes
+5. ✅ Task Scheduler configured to run in Interactive session (Session 1)
+
+**Files Created**:
+- `/app/vps-scripts/mt5_bridge_multi_account_fixed.py` - Fixed bridge script
+- `/app/.github/workflows/deploy-mt5-bridge-multi-account-fix.yml` - Deployment workflow
+- `/app/docs/MT5_MULTI_ACCOUNT_FIX.md` - Complete documentation
+
+**Status**: ⚠️ READY FOR DEPLOYMENT - Awaiting GitHub Actions trigger
+
+**Next Steps**:
+1. Trigger GitHub Actions workflow: "Deploy MT5 Bridge - Multi-Account Fixed"
+2. Wait 5-10 minutes for first account refresh cycle
+3. Verify all 7 accounts show real balances (not $0.00)
+4. Test broker rebates calculation with all account data
+
+---
+
 ## 🚀 GOOGLE WORKSPACE BUG FIXES VERIFIED - December 18, 2025 ✅
 
 **Testing Date**: December 18, 2025
