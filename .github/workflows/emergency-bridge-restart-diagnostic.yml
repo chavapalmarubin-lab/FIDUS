@@ -1,0 +1,239 @@
+name: Emergency - Restart MT5 Bridge (Diagnostic + Fix)
+
+on:
+  workflow_dispatch:
+  
+  # Auto-trigger on schedule as last resort (disabled by default)
+  # schedule:
+  #   - cron: '*/30 * * * *'  # Every 30 minutes (uncomment to enable)
+
+jobs:
+  diagnose-and-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Full VPS Diagnostic and Bridge Restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: false
+          script: |
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "MT5 BRIDGE EMERGENCY DIAGNOSTIC & RESTART" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $ErrorActionPreference = "Continue"
+            
+            # STEP 1: Diagnostic
+            Write-Host "[STEP 1/6] DIAGNOSTICS" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            # Check if Bridge process is running
+            Write-Host "Checking Bridge process..." -ForegroundColor White
+            $bridgeProcess = Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*mt5_bridge_service*" }
+            if ($bridgeProcess) {
+                Write-Host "  [FOUND] Bridge process running (PID: $($bridgeProcess.Id))" -ForegroundColor Green
+                Write-Host "  Memory: $([math]::Round($bridgeProcess.WorkingSet64 / 1MB, 2)) MB" -ForegroundColor Gray
+                Write-Host "  Start Time: $($bridgeProcess.StartTime)" -ForegroundColor Gray
+            } else {
+                Write-Host "  [NOT RUNNING] Bridge process not found" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # Check if port 8000 is listening
+            Write-Host "Checking port 8000..." -ForegroundColor White
+            $port8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+            if ($port8000) {
+                Write-Host "  [LISTENING] Port 8000 is open" -ForegroundColor Green
+            } else {
+                Write-Host "  [CLOSED] Port 8000 not listening" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # Check MT5 Terminal
+            Write-Host "Checking MT5 Terminal..." -ForegroundColor White
+            $mt5Process = Get-Process terminal64 -ErrorAction SilentlyContinue
+            if ($mt5Process) {
+                Write-Host "  [RUNNING] MT5 Terminal active (PID: $($mt5Process.Id))" -ForegroundColor Green
+            } else {
+                Write-Host "  [NOT RUNNING] MT5 Terminal not found - CRITICAL!" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # Check Bridge files
+            Write-Host "Checking Bridge files..." -ForegroundColor White
+            if (Test-Path "C:\mt5_bridge_service\mt5_bridge_api_service.py") {
+                Write-Host "  [OK] Bridge script exists" -ForegroundColor Green
+                $fileSize = (Get-Item "C:\mt5_bridge_service\mt5_bridge_api_service.py").Length / 1KB
+                Write-Host "  Size: $([math]::Round($fileSize, 2)) KB" -ForegroundColor Gray
+            } else {
+                Write-Host "  [MISSING] Bridge script not found - CRITICAL!" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # Check recent Windows Event Viewer errors
+            Write-Host "Checking Windows Event Viewer (last 10 Python errors)..." -ForegroundColor White
+            try {
+                $pythonErrors = Get-WinEvent -FilterHashtable @{LogName='Application';ProviderName='Python'} -MaxEvents 10 -ErrorAction SilentlyContinue
+                if ($pythonErrors) {
+                    Write-Host "  [FOUND] Recent Python errors:" -ForegroundColor Yellow
+                    foreach ($error in $pythonErrors | Select-Object -First 3) {
+                        Write-Host "    - $($error.TimeCreated): $($error.Message.Substring(0, [Math]::Min(80, $error.Message.Length)))..." -ForegroundColor Gray
+                    }
+                } else {
+                    Write-Host "  [OK] No recent Python errors" -ForegroundColor Green
+                }
+            } catch {
+                Write-Host "  [INFO] Could not read Event Viewer" -ForegroundColor Gray
+            }
+            Write-Host ""
+            
+            # STEP 2: Stop existing processes
+            Write-Host "[STEP 2/6] STOPPING EXISTING BRIDGE" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*mt5_bridge_service*" } | ForEach-Object {
+                Write-Host "  Stopping PID $($_.Id)..." -ForegroundColor White
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+            }
+            Start-Sleep -Seconds 5
+            Write-Host "  [OK] Cleanup complete" -ForegroundColor Green
+            Write-Host ""
+            
+            # STEP 3: Check MT5 Terminal
+            Write-Host "[STEP 3/6] VERIFYING MT5 TERMINAL" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            if (-not (Get-Process terminal64 -ErrorAction SilentlyContinue)) {
+                Write-Host "  [WARN] MT5 Terminal not running - starting it..." -ForegroundColor Yellow
+                try {
+                    Start-Process "C:\Program Files\MetaTrader 5\terminal64.exe" -ErrorAction Stop
+                    Write-Host "  [OK] MT5 Terminal started" -ForegroundColor Green
+                    Write-Host "  [INFO] Waiting 30 seconds for MT5 to login..." -ForegroundColor Cyan
+                    Start-Sleep -Seconds 30
+                } catch {
+                    Write-Host "  [ERROR] Failed to start MT5: $_" -ForegroundColor Red
+                }
+            } else {
+                Write-Host "  [OK] MT5 Terminal already running" -ForegroundColor Green
+            }
+            Write-Host ""
+            
+            # STEP 4: Start Bridge
+            Write-Host "[STEP 4/6] STARTING MT5 BRIDGE" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            cd C:\mt5_bridge_service
+            
+            try {
+                Start-Process python -ArgumentList "mt5_bridge_api_service.py" -WindowStyle Hidden -WorkingDirectory "C:\mt5_bridge_service" -ErrorAction Stop
+                Write-Host "  [OK] Bridge started" -ForegroundColor Green
+            } catch {
+                Write-Host "  [ERROR] Failed to start Bridge: $_" -ForegroundColor Red
+                Write-Host "  [INFO] Trying alternative startup method..." -ForegroundColor Yellow
+                
+                # Alternative: Run in background
+                $job = Start-Job -ScriptBlock {
+                    cd C:\mt5_bridge_service
+                    python mt5_bridge_api_service.py
+                }
+                Write-Host "  [OK] Bridge started as background job (ID: $($job.Id))" -ForegroundColor Green
+            }
+            
+            Write-Host "  [INFO] Waiting 20 seconds for Bridge initialization..." -ForegroundColor Cyan
+            Start-Sleep -Seconds 20
+            Write-Host ""
+            
+            # STEP 5: Verification
+            Write-Host "[STEP 5/6] VERIFICATION" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            # Check process
+            $bridgeProcess = Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*mt5_bridge_service*" }
+            if ($bridgeProcess) {
+                Write-Host "  [OK] Bridge process running (PID: $($bridgeProcess.Id))" -ForegroundColor Green
+            } else {
+                Write-Host "  [FAIL] Bridge process not found!" -ForegroundColor Red
+            }
+            
+            # Check port
+            Start-Sleep -Seconds 5
+            $port8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+            if ($port8000) {
+                Write-Host "  [OK] Port 8000 is listening" -ForegroundColor Green
+            } else {
+                Write-Host "  [FAIL] Port 8000 not listening!" -ForegroundColor Red
+            }
+            
+            # Test health endpoint
+            Write-Host ""
+            Write-Host "  Testing health endpoint..." -ForegroundColor White
+            try {
+                $health = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                $healthData = $health.Content | ConvertFrom-Json
+                
+                Write-Host ""
+                Write-Host "  ========================================" -ForegroundColor Green
+                Write-Host "  BRIDGE HEALTH CHECK" -ForegroundColor Green
+                Write-Host "  ========================================" -ForegroundColor Green
+                Write-Host "  Status: $($healthData.status)" -ForegroundColor White
+                Write-Host "  MT5 Initialized: $($healthData.mt5.initialized)" -ForegroundColor White
+                Write-Host "  MT5 Available: $($healthData.mt5.available)" -ForegroundColor White
+                Write-Host ""
+                
+                if ($healthData.status -eq "healthy" -and $healthData.mt5.available) {
+                    Write-Host "  [SUCCESS] Bridge is fully operational!" -ForegroundColor Green
+                } elseif ($healthData.status -eq "healthy") {
+                    Write-Host "  [PARTIAL] Bridge running but MT5 connection needs work" -ForegroundColor Yellow
+                } else {
+                    Write-Host "  [DEGRADED] Bridge responding but not healthy" -ForegroundColor Yellow
+                }
+                
+            } catch {
+                Write-Host "  [FAIL] Health check failed: $_" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "  [INFO] Bridge may need more time to start or has errors" -ForegroundColor Yellow
+                Write-Host "  [ACTION] Check C:\mt5_bridge_service logs if available" -ForegroundColor Yellow
+            }
+            Write-Host ""
+            
+            # STEP 6: Setup auto-restart
+            Write-Host "[STEP 6/6] CONFIGURING AUTO-RESTART" -ForegroundColor Yellow
+            Write-Host "=" * 60
+            
+            # Create restart script
+            $restartScript = @"
+cd C:\mt5_bridge_service
+Get-Process python -ErrorAction SilentlyContinue | Where-Object { `$_.Path -like "*mt5_bridge_service*" } | Stop-Process -Force
+Start-Sleep -Seconds 5
+Start-Process python -ArgumentList "mt5_bridge_api_service.py" -WindowStyle Hidden -WorkingDirectory "C:\mt5_bridge_service"
+"@
+            
+            $restartScript | Out-File -FilePath "C:\mt5_bridge_service\restart_bridge.ps1" -Encoding UTF8 -Force
+            Write-Host "  [OK] Created restart script: C:\mt5_bridge_service\restart_bridge.ps1" -ForegroundColor Green
+            
+            # Create Task Scheduler task for auto-restart on failure (optional)
+            Write-Host "  [INFO] To enable auto-restart, configure Task Scheduler manually" -ForegroundColor Cyan
+            Write-Host "  [INFO] Or run: schtasks /create /tn 'MT5 Bridge Watchdog' /tr 'powershell C:\mt5_bridge_service\restart_bridge.ps1' /sc minute /mo 10" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Final summary
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "RESTART COMPLETE" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Next: Monitor dashboard for 5-10 minutes" -ForegroundColor White
+            Write-Host "If issues persist, check:" -ForegroundColor White
+            Write-Host "  - Windows Event Viewer (Application logs)" -ForegroundColor Gray
+            Write-Host "  - MT5 Terminal connection status" -ForegroundColor Gray
+            Write-Host "  - Python dependencies installed" -ForegroundColor Gray
+            Write-Host ""
