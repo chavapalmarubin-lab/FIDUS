@@ -36,13 +36,12 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "Stopping MT5 Bridge service..."
-            schtasks /End /TN MT5BridgeService 2>nul
-            if %errorlevel% neq 0 echo Service not running
-            timeout /t 3 /nobreak >nul 2>&1
-            taskkill /F /IM python.exe 2>nul
-            if %errorlevel% neq 0 echo No python processes to kill
-            echo "Service stopped"
+            Write-Host "Stopping MT5 Bridge service..."
+            schtasks /End /TN MT5BridgeService 2>$null
+            if ($LASTEXITCODE -ne 0) { Write-Host "Service not running" }
+            Start-Sleep -Seconds 3
+            Stop-Process -Name python -Force -ErrorAction SilentlyContinue
+            Write-Host "Service stopped"
       
       - name: Backup Current Bridge Script
         uses: appleboy/ssh-action@master
