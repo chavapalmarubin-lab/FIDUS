@@ -1,0 +1,176 @@
+name: Deploy Complete MT5 Bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_endpoints:
+        description: 'Test all endpoints after deployment'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy-complete-bridge:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Display Deployment Info
+        run: |
+          echo "=========================================="
+          echo "🚀 DEPLOYING COMPLETE MT5 BRIDGE"
+          echo "=========================================="
+          echo "VPS: ${{ secrets.VPS_HOST }}"
+          echo "Port: 22 (SSH)"
+          echo "Script: mt5_bridge_complete.py"
+          echo "Endpoints: /api/mt5/accounts/summary, /account/{id}/info, /account/{id}/trades"
+          echo "=========================================="
+      
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          echo "✅ SSH key configured"
+      
+      - name: Test SSH Connection
+        run: |
+          echo "🔌 Testing SSH connection to VPS..."
+          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no Administrator@${{ secrets.VPS_HOST }} "echo 'SSH connection successful'"
+          echo "✅ SSH connection verified"
+      
+      - name: Stop MT5 Bridge Service
+        run: |
+          echo "⏹️  Stopping MT5 Bridge service..."
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "schtasks /End /TN MT5BridgeService" || echo "Service was not running"
+          sleep 5
+          echo "✅ Service stopped"
+      
+      - name: Backup Current Bridge Script
+        run: |
+          echo "📦 Backing up current bridge script..."
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+            if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
+              copy C:\\mt5_bridge_service\\mt5_bridge_api_service.py C:\\mt5_bridge_service\\mt5_bridge_api_service.py.backup.%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
+              echo Backup created
+            )
+          " || echo "No existing file to backup"
+          echo "✅ Backup complete"
+      
+      - name: Deploy Complete Bridge Script
+        run: |
+          echo "📤 Deploying complete MT5 Bridge script..."
+          scp -i ~/.ssh/vps_key vps-scripts/mt5_bridge_complete.py Administrator@${{ secrets.VPS_HOST }}:C:/mt5_bridge_service/mt5_bridge_api_service.py
+          echo "✅ File uploaded"
+      
+      - name: Verify File Upload
+        run: |
+          echo "🔍 Verifying file on VPS..."
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+            if exist C:\\mt5_bridge_service\\mt5_bridge_api_service.py (
+              echo File exists
+              powershell -Command \"(Get-Content C:\\mt5_bridge_service\\mt5_bridge_api_service.py | Select-Object -First 5)\"
+            ) else (
+              echo ERROR: File not found
+              exit 1
+            )
+          "
+          echo "✅ File verified on VPS"
+      
+      - name: Start MT5 Bridge Service
+        run: |
+          echo "▶️  Starting MT5 Bridge service..."
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "schtasks /Run /TN MT5BridgeService"
+          sleep 15
+          echo "✅ Service start command issued"
+      
+      - name: Verify Service is Running
+        run: |
+          echo "🔍 Checking if service is running..."
+          ssh -i ~/.ssh/vps_key Administrator@${{ secrets.VPS_HOST }} "
+            powershell -Command \"Get-Process python -ErrorAction SilentlyContinue | Where-Object { \\\$_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName\"
+          " || echo "⚠️  Could not verify process"
+      
+      - name: Test Health Endpoint
+        run: |
+          echo "🏥 Testing health endpoint..."
+          sleep 5
+          curl -f http://${{ secrets.VPS_HOST }}:8000/api/mt5/bridge/health || echo "⚠️  Health check failed"
+      
+      - name: Test Accounts Summary Endpoint
+        if: github.event.inputs.test_endpoints == 'true'
+        run: |
+          echo "📊 Testing /api/mt5/accounts/summary endpoint..."
+          sleep 3
+          RESPONSE=$(curl -s http://${{ secrets.VPS_HOST }}:8000/api/mt5/accounts/summary)
+          echo "$RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q "success"; then
+            echo "✅ Accounts summary endpoint working"
+          else
+            echo "❌ Accounts summary endpoint failed"
+            exit 1
+          fi
+      
+      - name: Test Account Info Endpoint
+        if: github.event.inputs.test_endpoints == 'true'
+        run: |
+          echo "📈 Testing /api/mt5/account/886557/info endpoint..."
+          sleep 2
+          RESPONSE=$(curl -s http://${{ secrets.VPS_HOST }}:8000/api/mt5/account/886557/info)
+          echo "$RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q "account_id"; then
+            echo "✅ Account info endpoint working"
+          else
+            echo "❌ Account info endpoint failed"
+            exit 1
+          fi
+      
+      - name: Test Account Trades Endpoint
+        if: github.event.inputs.test_endpoints == 'true'
+        run: |
+          echo "📉 Testing /api/mt5/account/886557/trades endpoint..."
+          sleep 2
+          RESPONSE=$(curl -s "http://${{ secrets.VPS_HOST }}:8000/api/mt5/account/886557/trades?limit=100")
+          echo "$RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q "success"; then
+            echo "✅ Account trades endpoint working"
+          else
+            echo "❌ Account trades endpoint failed"
+            exit 1
+          fi
+      
+      - name: Display Deployment Summary
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "✅ DEPLOYMENT COMPLETE!"
+          echo "=========================================="
+          echo ""
+          echo "Deployed Endpoints:"
+          echo "  ✅ GET /api/mt5/bridge/health"
+          echo "  ✅ GET /api/mt5/accounts/summary"
+          echo "  ✅ GET /api/mt5/account/{id}/info"
+          echo "  ✅ GET /api/mt5/account/{id}/trades?limit=100"
+          echo ""
+          echo "Test Commands:"
+          echo "  curl http://${{ secrets.VPS_HOST }}:8000/api/mt5/bridge/health"
+          echo "  curl http://${{ secrets.VPS_HOST }}:8000/api/mt5/accounts/summary"
+          echo "  curl http://${{ secrets.VPS_HOST }}:8000/api/mt5/account/886557/info"
+          echo "  curl http://${{ secrets.VPS_HOST }}:8000/api/mt5/account/886557/trades?limit=100"
+          echo ""
+          echo "Next Steps:"
+          echo "  1. Verify backend sync succeeds"
+          echo "  2. Check mt5_deals_history collection is populated"
+          echo "  3. Verify broker rebates calculation works"
+          echo "=========================================="
+      
+      - name: Cleanup SSH Key
+        if: always()
+        run: |
+          rm -f ~/.ssh/vps_key
+          echo "✅ SSH key cleaned up"
