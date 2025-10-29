@@ -64,11 +64,21 @@ def load_account_passwords():
         logger.info("[INIT] Loading account passwords from MongoDB...")
         
         # Connect to MongoDB
-        client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
-        db = client.fidus_production
+        try:
+            client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
+            db = client.fidus_production
+        except Exception as mongo_err:
+            logger.error(f"[ERROR] MongoDB connection failed: {mongo_err}")
+            logger.warning("[WARN] Continuing without password loading - will use cached data only")
+            return False
         
         # Initialize encryption
-        fernet = Fernet(ENCRYPTION_KEY.encode())
+        try:
+            fernet = Fernet(ENCRYPTION_KEY.encode())
+        except Exception as enc_err:
+            logger.error(f"[ERROR] Encryption init failed: {enc_err}")
+            client.close()
+            return False
         
         # Load passwords for all managed accounts
         for account_number in MANAGED_ACCOUNTS.keys():
@@ -89,12 +99,17 @@ def load_account_passwords():
             except Exception as e:
                 logger.error(f"[ERROR] Failed to load password for {account_number}: {e}")
         
-        client.close()
+        try:
+            client.close()
+        except:
+            pass
+            
         logger.info(f"[OK] Loaded passwords for {len(ACCOUNT_PASSWORDS)} accounts")
         return len(ACCOUNT_PASSWORDS) > 0
         
     except Exception as e:
-        logger.error(f"[ERROR] MongoDB connection failed: {e}")
+        logger.error(f"[ERROR] Password loading failed: {e}")
+        logger.warning("[WARN] Bridge will start but account refresh will not work")
         return False
 
 
