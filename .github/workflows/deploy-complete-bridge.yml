@@ -107,10 +107,10 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "▶️ Starting MT5 Bridge service..."
+            Write-Host "Starting MT5 Bridge service..."
             schtasks /Run /TN MT5BridgeService
-            timeout /t 15 /nobreak
-            echo "✅ Service started"
+            Start-Sleep -Seconds 15
+            Write-Host "Service started"
       
       - name: Verify Service is Running
         uses: appleboy/ssh-action@master
@@ -120,8 +120,8 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "🔍 Checking service status..."
-            powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName"
+            Write-Host "Checking service status..."
+            Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*mt5_bridge*' } | Format-List Id, ProcessName
       
       - name: Test Health Endpoint
         run: |
