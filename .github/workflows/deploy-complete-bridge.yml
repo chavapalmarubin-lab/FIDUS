@@ -60,17 +60,6 @@ jobs:
             }
       
       - name: Deploy Complete Bridge Script
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          source: "vps-scripts/mt5_bridge_complete.py"
-          target: "C:/mt5_bridge_service/"
-          strip_components: 1
-      
-      - name: Rename Uploaded File
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -78,9 +67,11 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            Write-Host "Renaming file..."
-            Move-Item C:\mt5_bridge_service\mt5_bridge_complete.py C:\mt5_bridge_service\mt5_bridge_api_service.py -Force
-            Write-Host "File renamed"
+            Write-Host "Downloading complete bridge script from GitHub..."
+            $url = "https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps-scripts/mt5_bridge_complete.py"
+            $output = "C:\mt5_bridge_service\mt5_bridge_api_service.py"
+            Invoke-WebRequest -Uri $url -OutFile $output
+            Write-Host "File downloaded and saved"
       
       - name: Verify File Upload
         uses: appleboy/ssh-action@master
