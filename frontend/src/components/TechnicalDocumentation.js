@@ -100,13 +100,11 @@ export default function TechnicalDocumentation() {
       setLoadingDocs(true);
       setDocsError(null);
       
-      // Try to fetch from local file first (for development)
-      fetch('/docs/TECHNICAL_DOCUMENTATION.md')
+      // Fetch from GitHub repository
+      fetch('https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/docs/TECH_DOCUMENTATION.md')
         .then(res => {
           if (!res.ok) {
-            // If local file not found, try GitHub
-            // User can update this URL with their GitHub repo
-            throw new Error('Local file not found, using fallback');
+            throw new Error('Failed to load documentation from GitHub');
           }
           return res.text();
         })
@@ -115,27 +113,12 @@ export default function TechnicalDocumentation() {
           setLoadingDocs(false);
         })
         .catch(err => {
-          console.log('Using embedded documentation');
-          // Fallback to embedded documentation
-          fetch(`${backendUrl}/api/system/documentation`)
-            .then(res => {
-              if (!res.ok) {
-                throw new Error('Documentation not available');
-              }
-              return res.text();
-            })
-            .then(text => {
-              setDocumentation(text);
-              setLoadingDocs(false);
-            })
-            .catch(finalErr => {
-              console.error('Error loading documentation:', finalErr);
-              setDocsError('Documentation could not be loaded. Please check the configuration.');
-              setLoadingDocs(false);
-            });
+          console.error('Error loading documentation:', err);
+          setDocsError('Documentation could not be loaded from GitHub. Please check your network connection.');
+          setLoadingDocs(false);
         });
     }
-  }, [viewMode, documentation, backendUrl]);
+  }, [viewMode, documentation]);
 
   // Get all components as a flat array
   const getAllComponents = () => {
