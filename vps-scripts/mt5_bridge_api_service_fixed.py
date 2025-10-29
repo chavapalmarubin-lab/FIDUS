@@ -289,6 +289,100 @@ async def get_all_accounts():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/mt5/account/{account_number}/trades")
+async def get_account_trades(account_number: int, limit: int = 1000):
+    """
+    Get historical trades/deals for an account
+    CRITICAL for rebate calculation - pulls ALL trading history
+    """
+    try:
+        if not MT5_INITIALIZED:
+            if not initialize_mt5_once():
+                raise HTTPException(status_code=503, detail="MT5 not initialized")
+        
+        logger.info(f"[QUERY] Getting {limit} trades for account {account_number}")
+        
+        # Get deals history from MT5
+        from_date = datetime(2020, 1, 1)  # Get all historical deals
+        to_date = datetime.now()
+        
+        # Get deals for this account
+        deals = mt5.history_deals_get(from_date, to_date, group=f"*{account_number}*")
+        
+        if deals is None:
+            logger.warning(f"[WARN] No deals history available for account {account_number}")
+            return {
+                "success": True,
+                "trades": [],
+                "count": 0,
+                "account_number": account_number,
+                "note": "No trading history or insufficient permissions"
+            }
+        
+        # Convert MT5 deals to dict format
+        trades_list = []
+        for deal in deals[-limit:]:  # Get last N deals
+            trades_list.append({
+                "ticket": deal.ticket,
+                "order": deal.order,
+                "time": datetime.fromtimestamp(deal.time, tz=timezone.utc).isoformat(),
+                "type": deal.type,
+                "entry": deal.entry,
+                "magic": deal.magic,
+                "position_id": deal.position_id,
+                "reason": deal.reason,
+                "volume": float(deal.volume),
+                "price": float(deal.price),
+                "commission": float(deal.commission),
+                "swap": float(deal.swap),
+                "profit": float(deal.profit),
+                "fee": float(deal.fee),
+                "symbol": deal.symbol,
+                "comment": deal.comment,
+                "external_id": deal.external_id
+            })
+        
+        logger.info(f"[OK] Retrieved {len(trades_list)} deals for account {account_number}")
+        
+        return {
+            "success": True,
+            "trades": trades_list,
+            "count": len(trades_list),
+            "account_number": account_number,
+            "total_available": len(deals),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[FAIL] Error getting trades for account {account_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/mt5/accounts/summary")
+async def get_accounts_summary():
+    """Get summary of all accounts (for compatibility)"""
+    try:
+        accounts = []
+        for account_number in MANAGED_ACCOUNTS.keys():
+            account_config = MANAGED_ACCOUNTS[account_number]
+            accounts.append({
+                "account": account_number,
+                "name": account_config["name"],
+                "fund_type": account_config["fund_type"]
+            })
+        
+        return {
+            "success": True,
+            "accounts": accounts,
+            "count": len(accounts)
+        }
+    except Exception as e:
+        logger.error(f"[FAIL] Error in get_accounts_summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     
