@@ -31,7 +31,7 @@ class DetailedMoneyManagersTester:
     """Detailed Money Managers Profile System Tester"""
     
     def __init__(self):
-        self.base_url = "https://mt5-autohealing.preview.emergentagent.com"
+        self.base_url = "https://fidusbridge.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         self.admin_credentials = {

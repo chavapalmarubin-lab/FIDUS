@@ -1,107 +1,88 @@
 <analysis>
-The previous AI engineer’s work focused on stabilizing the FIDUS platform, primarily addressing critical MT5 Bridge auto-healing and data synchronization issues, alongside Google Workspace integration. The trajectory illustrates a highly iterative process, moving from initial fixes (async errors, Google OAuth routing, Gmail content fetching) to more complex infrastructure challenges.
-
-Key challenges revolved around MT5 Bridge instability: consistent  balances,  errors due to session conflicts, Unicode logging crashes, and incorrect Task Scheduler configurations on a Windows VPS. The AI initially attempted GitHub Actions for remote fixes, but this revealed a fundamental disconnect with the Windows VPS (RDP only, no SSH). A significant pivot involved a manual SSH setup by the user, enabling proper GitHub Actions automation.
-
-Despite this, the AI struggled with robust automated deployment and consistently provided manual workarounds, leading to user frustration. The root cause of  balances was identified as the MT5 Bridge forcing account switches for each query. This was partially addressed by a backend fix to ignore temporary zeros, but the user pushed for a complete Bridge code overhaul for single-connection multi-account querying. The final identified problem involves incorrect rebate calculations due to missing historical trade data, caused by an incomplete MT5 Bridge deployment lacking the necessary trade history endpoint. The AI is now working on a complete Bridge script.
+The trajectory details an iterative, often challenging, journey to stabilize the FIDUS MT5 Bridge and enhance its monitoring and management. Initially, the focus was on deploying a complete MT5 Bridge with all endpoints and establishing an auto-healing system. This involved extensive debugging of GitHub Actions deployments to a Windows VPS, grappling with SSH vs. password authentication, and resolving PowerShell/CMD syntax incompatibilities. After successfully deploying the auto-healing and a Quick Actions UI, a critical issue resurfaced: multi-account MT5 balances were zero, except for the master account. This led to a deep dive into the MT5 Bridge's multi-account logic, revealing problems with password loading from MongoDB (due to DNS issues), duplicate startup events, and ultimately, a fundamental MT5 Terminal session isolation problem on the Windows VPS, preventing the Python service from interacting with all MT5 instances. The user has explicitly reiterated the need to fix this and provided comprehensive credentials.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an MT5 investment management system designed for real-time account data and robust automation.
-1.  **MT5 Auto-Healing System**: Monitors MT5 Bridge API for failures (e.g., /bin/bash balances or bridge unavailability), triggers auto-healing via GitHub Actions (restarting Bridge and MT5 terminals), and sends email alerts. Requires robust VPS-level control and automatic recovery without manual intervention.
-    *   **Implementation Done**: Watchdog for 0% sync rate detection, GitHub Actions workflows for full restarts and diagnostics, initial attempts to fix Task Scheduler, and a backend fix to gracefully handle zero balances during MT5 account switching. SSH setup on VPS is complete, enabling automated deployments. A zero-touch auto-healing workflow () has been created.
+The FIDUS platform is an MT5 investment management system requiring real-time data and robust automation.
+
+1.  **MT5 Auto-Healing System**: Monitors the MT5 Bridge API, triggers auto-healing (restarts Bridge/MT5 terminals) via GitHub Actions, and sends alerts. Requires VPS-level control and auto-recovery.
+    *   **Implementation Done**: Watchdog for 0% sync rate, GitHub Actions for restarts/diagnostics, initial Task Scheduler fixes, and a backend fix for zero balances. SSH setup on VPS is complete. A zero-touch auto-healing workflow () has been created, checking health every 15 minutes and auto-restarting if down.
 2.  **Infrastructure Migration**: All references to the old VPS infrastructure must be removed. (No explicit work on this in the trajectory).
-3.  **Prospects Portal**: Development of a  section for lead capture, including an investment simulator with a dark, professional theme. (No explicit work on this in the trajectory).
-4.  **Google Workspace OAuth Integration (Admin Focus)**: A complete rebuild to enable admin users (specifically ) to connect Gmail, Google Calendar, and Google Drive for email, meeting scheduling, event management, and file operations. This includes explicit account selection,  pre-selection, consistent callback URIs, centralized credential management, and robust OAuth state handling.
-    *   **Implementation Done**: Core OAuth flow, token acquisition, storage, frontend connection status display, Gmail message bodies, Calendar events, Drive files, and disconnect functionality are operational.  errors and frontend routing for Google OAuth were fixed. Gmail  modified to . Frontend API call paths for Calendar and Drive corrected.
+3.  **Prospects Portal**: Development of a  section for lead capture, including an investment simulator. (No explicit work on this in the trajectory).
+4.  **Google Workspace OAuth Integration (Admin Focus)**: Rebuild to enable admin users to connect Gmail, Calendar, Drive for email, scheduling, event/file management, with consistent OAuth handling.
+    *   **Implementation Done**: Core OAuth flow, token acquisition, storage, frontend connection status, Gmail message bodies, Calendar events, Drive files, and disconnect functionality are operational.  errors and frontend routing were fixed. Gmail  modified.
+5.  **Quick Actions UI for System Management**: Implement a new Quick Actions tab in the frontend's Tech Documentation section for direct control and monitoring of the MT5 Bridge without manual VPS access.
+    *   **Implementation Done**:  component created,  modified to integrate this component and a Full Documentation tab (rendering ).
+6.  **Multi-Account Balance Synchronization**: Restore proper fetching and display of balances for all 7 MT5 accounts (not just the master), ensuring historical trade data is populated. This was working previously and needs to be re-established.
+    *   **Implementation State**: Identified as a critical regression. Current attempts to fix revealed MT5 Terminal session isolation (Python service in Session 0, Terminal in Session 1), preventing multi-account balance retrieval. This remains an active problem.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, PyMongo, APScheduler, httpx, requests, logging), MongoDB.
--   **Frontend**: React.js, React Router DOM.
--   **Deployment**: GitHub Actions, Supervisor, VPS (Windows, PowerShell, Task Scheduler, OpenSSH).
+-   **Backend**: Python (FastAPI, PyMongo, APScheduler, asyncio, httpx), MongoDB.
+-   **Frontend**: React.js, React Router DOM, .
+-   **Deployment**: GitHub Actions, Supervisor, Windows VPS (PowerShell, Task Scheduler, OpenSSH), SCP, .
 -   **Google APIs**: Gmail, Calendar, Drive.
--   **Architectural Patterns**: Auto-healing, Health Monitoring, Google OAuth 2.0, Service-Oriented Architecture.
+-   **Architectural Patterns**: Auto-healing, Health Monitoring, Google OAuth 2.0, Service-Oriented Architecture, Session Isolation.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: Main FastAPI application.
-    -   **Importance**: Central API entry point.
-    -   **Changes**: Fixed  call parameters. Removed duplicate . Added  endpoint logic.
--   ****: Handles Google Gmail API.
-    -   **Importance**: Fetches and parses email messages.
-    -   **Changes**: Modified  (line 145) from  to .
--   ****: Automated data sync with MT5.
-    -   **Importance**: Critical for real-time trading data.
-    -   **Changes**: Adjusted data validation to initially allow  balances, then updated to *reject*  balances if not all accounts are zero, to mitigate issues from MT5 account switching.
--   ****: Monitors MT5 Bridge health.
-    -   **Importance**: Core of MT5 auto-healing.
-    -   **Changes**: Enhanced  to detect 0% sync rate.  dispatches GitHub Actions. Fixed a datetime comparison bug causing false positives.
--   ****: React component for Google Workspace UI.
-    -   **Importance**: Displays Google service connection status.
-    -   **Changes**: Corrected API call paths by removing redundant  prefix.
--   ****: React component for Broker Rebates.
-    -   **Importance**: Displays rebate information.
-    -   **Changes**: Identified that it defaults to Last 30 Days, potentially missing historical data.
--   ****: Frontend MT5 data service.
-    -   **Importance**: Provides API calls for MT5 data.
-    -   **Changes**: Includes  and  methods for data fetching.
--   ****: Backend rebate calculation logic.
-    -   **Importance**: Calculates rebates based on trading volume.
-    -   **Changes**: Identified that it calculates from , which was empty.
--   ****: Syncs MT5 data from VPS to backend.
-    -   **Importance**: Populates MongoDB with MT5 data.
-    -   **Changes**: Logs showed  errors during trade storage, and was attempting to use  with an endpoint () that was missing from the deployed Bridge.
--   ****: GitHub Actions workflow.
-    -   **Importance**: Automates Unicode fix deployment.
-    -   **Changes**: Created, but initially failed due to incorrect SSH/SCP usage on Windows VPS.
--   ****: GitHub Actions workflow.
-    -   **Importance**: Remote VPS troubleshooting.
-    -   **Changes**: Created.
--   ****: GitHub Actions workflow.
-    -   **Importance**: Addresses IPC timeout by configuring Task Scheduler.
-    -   **Changes**: Created.
--   ****: GitHub Actions workflow.
-    -   **Importance**: Zero-touch auto-healing.
-    -   **Changes**: Created to monitor and potentially trigger restarts.
--   ****: GitHub Actions workflow.
-    -   **Importance**: Deploys a fixed Bridge.
-    -   **Changes**: Created to deploy .
--   ****: Python script for VPS.
-    -   **Importance**: Removes Unicode characters from logs.
-    -   **Changes**: Created.
--   ****: Fixed MT5 Bridge script.
-    -   **Importance**: Contains updated MT5 Bridge logic for single-connection querying.
-    -   **Changes**: Created to address account switching and then later edited to include the  endpoint. Still incomplete.
--   ****: PowerShell script for VPS.
-    -   **Importance**: Automates SSH key generation and setup for GitHub Actions.
-    -   **Changes**: Created to provide a permanent automation solution.
--   ****: Placeholder for the *complete* MT5 Bridge script.
-    -   **Importance**: Intended to be the fully functional Bridge with all necessary endpoints and single-connection logic.
-    -   **Changes**: Created but content not yet detailed in the trajectory.
+-   ****: Main API. Added  endpoint logic.
+-   ****: Handles Gmail API. Modified  to .
+-   ****: Syncs MT5 data. Adjusted validation for  balances to initially allow, then reject if not all accounts are zero.
+-   ****: Monitors MT5 Bridge health. Enhanced  for 0% sync,  via GitHub Actions.
+-   ****: React component for Google Workspace UI. Corrected API call paths.
+-   ****: React component for Broker Rebates. Identified defaulting to Last 30 Days, potentially missing historical data.
+-   ****: **NEW** and **EXTENSIVELY MODIFIED**. Created to deploy the complete MT5 Bridge. Initially used , changed to , then to . Switched from SSH key to password authentication. Fixed PowerShell syntax errors for ,  and . Replaced  with PowerShell's  for file deployment.
+-   ****: **NEW**. Created for auto-healing; checks bridge health every 15 minutes, auto-restarts if down.
+-   ****: Previously deployed Bridge. Identified as incomplete, missing  and  endpoints in deployment despite code presence.
+-   ****: **MODIFIED**. Intended as the fully functional Bridge. Iterated to:
+    *   Include all necessary endpoints (, , ).
+    *   Attempt single-connection multi-account querying logic (background task to cycle through accounts).
+    *   Fixed: Combined duplicate  decorators.
+    *   Identified:  lacked passwords, causing crashes.
+    *   Modified:  to run immediately on startup, then every 60s.
+    *   Modified (temporarily): Reverted  to only cache the master account.
+-   ****: **NEW**. Attempted version to load passwords from MongoDB and cycle through accounts. Failed due to MongoDB DNS issues and missing Python dependencies on VPS.
+-   ****: **NEW**. Attempted version using hardcoded  password for all accounts. Failed  due to session isolation.
+-   **==========================================
+🚀 MT5 BRIDGE COMPLETE - MANUAL DEPLOYMENT
+==========================================
+VPS: 92.118.45.135
+SSH Key: ~/.ssh/vps_key
+
+❌ ERROR: SSH key not found at ~/.ssh/vps_key
+
+Usage: /app/scripts/deploy_mt5_bridge_manual.sh [path_to_ssh_key]
+Example: /app/scripts/deploy_mt5_bridge_manual.sh ~/.ssh/vps_private_key**: **NEW** and **MODIFIED**. Manual deployment script. Updated  to . Also required PowerShell syntax fixes.
+-   ****: **NEW**. Documentation for MT5 Bridge deployment.
+-   ****: **NEW**. Comprehensive system documentation.
+-   ****: **NEW**. React component for Quick Actions (buttons, status display).
+-   ****: **NEW**. Guide for integrating Quick Actions.
+-   ****: **MODIFIED**. Replaced import of  with . Added MT5 Bridge Control tab (new Quick Actions) and Full Documentation tab (rendering ).
 </code_architecture>
 
 <pending_tasks>
--   Complete the  script with all necessary endpoints (, , ) and the correct single-connection multi-account querying logic.
--   Deploy the complete MT5 Bridge script () to the VPS via GitHub Actions.
--   Verify that the backend  can correctly sync historical trade data without duplicate key errors and that the  collection is populated.
--   Fix the broker rebates calculation to accurately reflect all historical trade data, based on lots traded.
+-   Fix the MT5 Terminal session isolation issue on the Windows VPS to allow the Python service (Session 0) to correctly connect and interact with the MT5 Terminal (Session 1).
+-   Re-implement the  script to consistently fetch and cache real-time balances for all 7 MT5 accounts.
+-   Verify that the backend  can correctly sync historical trade data and that the  collection is populated.
+-   Fix the broker rebates calculation to accurately reflect all historical trade data.
 -   Monitor that the watchdog alerts remain fixed (90% reduction).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI was deeply engaged in resolving critical MT5 Bridge issues that impacted data integrity and system stability.
-Initially, the dashboard was showing /bin/bash balances despite the Bridge being healthy. This was traced to the MT5 Terminal aggressively switching accounts when the Bridge queried them individually. An intermediate backend fix was applied in  (lines 213-215) to prevent accepting /bin/bash balances during mid-switch. However, the user clarified the root problem: the Bridge itself was repeatedly calling  for each account, rather than using a single, persistent connection with a manager account to query all data programmatically.
+Immediately before this summary request, the AI was deeply engaged in resolving the multi-account balance synchronization issue in the MT5 Bridge. After a successful deployment of the complete Bridge and auto-healing, the user reported that only the master MT5 account showed a balance, while others displayed /bin/bash.00.
 
-The AI then created and deployed a revised Bridge script, , and a corresponding GitHub Actions workflow (). This successfully resolved the /bin/bash balance issue.
+Investigation revealed that the Bridge, even with a  version of , was not populating cached data for non-master accounts. Multiple attempts were made to fix the  function to cycle through all accounts and login, but these failed due to:
+1.  **Missing Passwords**: The  dictionary in the Bridge script lacked passwords for individual accounts, causing  during  calls. Passwords were meant to be loaded from MongoDB.
+2.  **MongoDB Connection Issues**: Direct attempts to connect to MongoDB from the environment and even the VPS failed due to DNS resolution problems, preventing password retrieval.
+3.  **Deployment Failures**: Attempts to deploy new Bridge versions (e.g., , ) using environment variables or hardcoded passwords led to the Bridge service crashing on startup or failing to initialize MT5.
+4.  **MT5 Terminal Session Isolation**: The root cause of  was traced to the Python Bridge service running in a different Windows session (Session 0) than the MT5 Terminal (Session 1 - interactive desktop). This prevents  from establishing a connection.
 
-However, a new problem immediately arose: broker rebates were incorrect, and historical trade data was missing. Investigation revealed that the  MongoDB collection was empty due to  logs, and, crucially, the *recently deployed fixed Bridge script was incomplete*. It was missing vital endpoints like , and the  endpoint required by the  to fetch historical trades.
-
-The AI is now in the process of creating a *complete* MT5 Bridge script, , which will include all necessary endpoints and the proper single-connection multi-account querying implementation to fully address these issues.
+The AI temporarily reverted  to only cache the master account to achieve a stable, albeit incomplete, state. The user has since provided a comprehensive credential and system guide, including the explicit  investor password for all 7 MT5 accounts, and reiterated the demand to fix the multi-account synchronization issue. The AI has identified that the crucial next step is to address the session isolation problem.
 </current_work>
 
 <optional_next_step>
-Create the complete MT5 Bridge script () with all necessary endpoints and single-connection logic.
+Configure the Task Scheduler on the Windows VPS to run the MT5 Bridge service in the same interactive user session as the MT5 Terminal.
 </optional_next_step>
 
