@@ -345,6 +345,11 @@ class MT5AutoSyncService:
                 error_message=str(e)
             )
     
+    async def _check_if_all_accounts_zero(self, live_data_list: List[Dict]) -> bool:
+        """Check if ALL accounts are showing zero (true MT5 disconnection vs account switching)"""
+        non_zero_count = sum(1 for data in live_data_list if float(data.get('balance', 0)) > 0)
+        return non_zero_count == 0
+    
     async def sync_all_accounts(self) -> Dict[str, Any]:
         """Sync all active MT5 accounts"""
         try:
