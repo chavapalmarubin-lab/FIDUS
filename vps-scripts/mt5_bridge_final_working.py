@@ -249,6 +249,58 @@ async def get_account_trades(account_number: int, limit: int = 100):
     }
 
 
+@app.get("/api/mt5/manual-refresh")
+async def manual_refresh():
+    """Manual trigger for account refresh - for testing"""
+    try:
+        if not MT5_INITIALIZED:
+            return {"error": "MT5 not initialized"}
+        
+        logger.info("[MANUAL] Starting manual refresh...")
+        success_count = 0
+        errors = []
+        
+        for account_number in MANAGED_ACCOUNTS.keys():
+            try:
+                logger.info(f"[MANUAL] Trying account {account_number}...")
+                
+                if mt5.login(account_number, password=MT5_PASSWORD, server=MT5_SERVER):
+                    account_info = mt5.account_info()
+                    if account_info:
+                        ACCOUNT_CACHE[account_number] = {
+                            "account": account_number,
+                            "balance": float(account_info.balance),
+                            "equity": float(account_info.equity),
+                            "profit": float(account_info.profit),
+                            "margin": float(account_info.margin),
+                            "margin_free": float(account_info.margin_free),
+                            "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
+                            "currency": account_info.currency,
+                            "leverage": account_info.leverage,
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        }
+                        logger.info(f"[MANUAL] ✅ Account {account_number}: ${account_info.balance:.2f}")
+                        success_count += 1
+                    else:
+                        errors.append(f"Account {account_number}: No info returned")
+                else:
+                    error = mt5.last_error()
+                    errors.append(f"Account {account_number}: Login failed - {error}")
+                    
+            except Exception as e:
+                errors.append(f"Account {account_number}: Exception - {str(e)}")
+        
+        return {
+            "success": True,
+            "accounts_updated": success_count,
+            "total_accounts": len(MANAGED_ACCOUNTS),
+            "errors": errors,
+            "cache_size": len(ACCOUNT_CACHE)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
