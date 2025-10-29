@@ -436,8 +436,6 @@ async def refresh_account_cache():
     """Background task to keep account cache fresh for ALL accounts"""
     while True:
         try:
-            await asyncio.sleep(60)  # Every 60 seconds
-            
             if MT5_INITIALIZED:
                 logger.info("[CACHE] Starting account refresh cycle")
                 
@@ -445,6 +443,7 @@ async def refresh_account_cache():
                 current_info = mt5.account_info()
                 if not current_info:
                     logger.error("[CACHE] Cannot get current account info")
+                    await asyncio.sleep(60)  # Wait before retry
                     continue
                 
                 original_account = current_info.login
@@ -487,6 +486,8 @@ async def refresh_account_cache():
                     logger.error(f"[CACHE] Failed to return to account {original_account}")
                 
                 logger.info(f"[CACHE] Refresh cycle complete. Cached {len(ACCOUNT_CACHE)} accounts")
+            
+            await asyncio.sleep(60)  # Wait 60 seconds before next cycle
         except Exception as e:
             logger.error(f"[CACHE] Error in refresh task: {str(e)}")
 
