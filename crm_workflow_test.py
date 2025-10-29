@@ -6,7 +6,7 @@ OBJECTIVE: Execute comprehensive end-to-end testing of the prospects-to-client c
 and generate complete test report with all deliverables.
 
 TEST ENVIRONMENT:
-- Backend API: https://fidus-autofix.preview.emergentagent.com/api
+- Backend API: https://mt5-autohealing.preview.emergentagent.com/api
 - MongoDB: fidus_production database
 - Collections: leads, crm_prospects, users
 - Test timestamp: Current datetime for unique identifiers
@@ -39,7 +39,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-autohealing.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

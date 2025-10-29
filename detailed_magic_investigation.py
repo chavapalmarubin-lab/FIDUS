@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-autohealing.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

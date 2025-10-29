@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-autofix.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-autohealing.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"
