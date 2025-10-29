@@ -433,59 +433,29 @@ async def get_account_trades(account_number: int, limit: int = 100):
 
 # Background task to refresh cache periodically
 async def refresh_account_cache():
-    """Background task to keep account cache fresh for ALL accounts"""
+    """Background task to keep account cache fresh for the CURRENT account only"""
     while True:
         try:
             if MT5_INITIALIZED:
-                logger.info("[CACHE] Starting account refresh cycle")
-                
-                # Remember the current account so we can return to it
-                current_info = mt5.account_info()
-                if not current_info:
-                    logger.error("[CACHE] Cannot get current account info")
-                    await asyncio.sleep(60)  # Wait before retry
-                    continue
-                
-                original_account = current_info.login
-                logger.info(f"[CACHE] Currently on account {original_account}")
-                
-                # Query each managed account
-                for account_number, account_data in MANAGED_ACCOUNTS.items():
-                    try:
-                        # Login to this account
-                        if mt5.login(account_number, password=account_data["password"], server=account_data["server"]):
-                            # Get account info
-                            account_info = mt5.account_info()
-                            if account_info:
-                                # Cache the data
-                                ACCOUNT_CACHE[account_number] = {
-                                    "account": account_number,
-                                    "balance": float(account_info.balance),
-                                    "equity": float(account_info.equity),
-                                    "profit": float(account_info.profit),
-                                    "margin": float(account_info.margin),
-                                    "margin_free": float(account_info.margin_free),
-                                    "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
-                                    "currency": account_info.currency,
-                                    "leverage": account_info.leverage,
-                                    "timestamp": datetime.now(timezone.utc).isoformat()
-                                }
-                                logger.info(f"[CACHE] ✅ Updated account {account_number}: ${account_info.balance}")
-                            else:
-                                logger.warning(f"[CACHE] ⚠️ No account info for {account_number}")
-                        else:
-                            logger.error(f"[CACHE] ❌ Failed to login to account {account_number}")
-                    except Exception as e:
-                        logger.error(f"[CACHE] Error caching account {account_number}: {str(e)}")
-                
-                # Return to original account
-                if mt5.login(original_account, password=MANAGED_ACCOUNTS[original_account]["password"], 
-                           server=MANAGED_ACCOUNTS[original_account]["server"]):
-                    logger.info(f"[CACHE] Returned to original account {original_account}")
+                # Get current account info and cache it
+                account_info = mt5.account_info()
+                if account_info:
+                    current_account = account_info.login
+                    ACCOUNT_CACHE[current_account] = {
+                        "account": current_account,
+                        "balance": float(account_info.balance),
+                        "equity": float(account_info.equity),
+                        "profit": float(account_info.profit),
+                        "margin": float(account_info.margin),
+                        "margin_free": float(account_info.margin_free),
+                        "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
+                        "currency": account_info.currency,
+                        "leverage": account_info.leverage,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    logger.info(f"[CACHE] ✅ Updated cache for account {current_account}: ${account_info.balance}")
                 else:
-                    logger.error(f"[CACHE] Failed to return to account {original_account}")
-                
-                logger.info(f"[CACHE] Refresh cycle complete. Cached {len(ACCOUNT_CACHE)} accounts")
+                    logger.warning("[CACHE] ⚠️ No account info available")
             
             await asyncio.sleep(60)  # Wait 60 seconds before next cycle
         except Exception as e:
