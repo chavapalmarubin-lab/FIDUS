@@ -153,10 +153,20 @@ class MT5Watchdog:
                 if balance == 0 or balance == 0.0:
                     zero_balance_count += 1
                 
-                # Count recently synced
+                # Count recently synced - FIX: Handle both datetime and string formats
                 updated_at = account.get('updated_at')
-                if updated_at and updated_at >= cutoff_time:
-                    synced_count += 1
+                if updated_at:
+                    try:
+                        # Convert to timezone-aware datetime if needed
+                        if isinstance(updated_at, str):
+                            updated_at = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        elif isinstance(updated_at, datetime) and updated_at.tzinfo is None:
+                            updated_at = updated_at.replace(tzinfo=timezone.utc)
+                        
+                        if updated_at >= cutoff_time:
+                            synced_count += 1
+                    except (ValueError, AttributeError) as e:
+                        logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
             
             # CRITICAL: If ALL accounts show $0, MT5 terminals are disconnected!
             if zero_balance_count == total_accounts and total_accounts > 0:
