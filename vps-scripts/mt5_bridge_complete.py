@@ -490,13 +490,6 @@ async def refresh_account_cache():
         except Exception as e:
             logger.error(f"[CACHE] Error in refresh task: {str(e)}")
 
-
-@app.on_event("startup")
-async def start_background_tasks():
-    """Start background cache refresh"""
-    asyncio.create_task(refresh_account_cache())
-
-
 if __name__ == "__main__":
     import uvicorn
     
