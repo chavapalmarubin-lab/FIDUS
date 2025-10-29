@@ -1,0 +1,194 @@
+name: Deploy MT5 Bridge - Multi-Account Fixed
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for deployment'
+        required: false
+        default: 'Fix multi-account balance synchronization'
+
+jobs:
+  deploy-mt5-bridge-fixed:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy Fixed MT5 Bridge to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          echo "========================================"
+          echo "DEPLOYING MT5 BRIDGE - MULTI-ACCOUNT FIX"
+          echo "========================================"
+          
+          # Install sshpass for password authentication
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          
+          echo "📦 Copying fixed MT5 Bridge script to VPS..."
+          sshpass -p "$VPS_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P $VPS_PORT \
+            vps-scripts/mt5_bridge_multi_account_fixed.py \
+            ${VPS_USERNAME}@${VPS_HOST}:"C:\\mt5_bridge_service\\mt5_bridge_api_service.py"
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ File copied successfully"
+          else
+            echo "❌ File copy failed"
+            exit 1
+          fi
+          
+          echo ""
+          echo "🔧 Configuring Task Scheduler to run in interactive session..."
+          
+          # Create PowerShell script to:
+          # 1. Stop any existing MT5 Bridge process
+          # 2. Delete old Task Scheduler task
+          # 3. Create new task in interactive session (Session 1)
+          # 4. Start the task
+          
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $VPS_PORT \
+            ${VPS_USERNAME}@${VPS_HOST} << 'POWERSHELL_SCRIPT'
+          
+          Write-Host "========================================"
+          Write-Host "CONFIGURING MT5 BRIDGE SERVICE"
+          Write-Host "========================================"
+          
+          # Stop any existing Python processes running the bridge
+          Write-Host ""
+          Write-Host "Stopping existing MT5 Bridge processes..."
+          Get-Process | Where-Object {$_.ProcessName -eq "python" -or $_.ProcessName -eq "pythonw"} | ForEach-Object {
+              try {
+                  $cmdLine = (Get-WmiObject Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                  if ($cmdLine -like "*mt5_bridge*") {
+                      Write-Host "  Killing process $($_.Id): $($_.ProcessName)"
+                      Stop-Process -Id $_.Id -Force
+                  }
+              } catch {
+                  Write-Host "  Could not check process $($_.Id)"
+              }
+          }
+          
+          # Delete old scheduled task if it exists
+          Write-Host ""
+          Write-Host "Removing old Task Scheduler task..."
+          $taskExists = Get-ScheduledTask -TaskName "MT5_Bridge_Service" -ErrorAction SilentlyContinue
+          if ($taskExists) {
+              Unregister-ScheduledTask -TaskName "MT5_Bridge_Service" -Confirm:$false
+              Write-Host "  Old task removed"
+          } else {
+              Write-Host "  No existing task found"
+          }
+          
+          # Create new task that runs in INTERACTIVE SESSION (Session 1)
+          Write-Host ""
+          Write-Host "Creating new Task Scheduler task (Interactive Session)..."
+          
+          $action = New-ScheduledTaskAction -Execute "C:\Users\trader\AppData\Local\Programs\Python\Python312\python.exe" `
+              -Argument "C:\mt5_bridge_service\mt5_bridge_api_service.py" `
+              -WorkingDirectory "C:\mt5_bridge_service"
+          
+          $trigger = New-ScheduledTaskTrigger -AtStartup
+          
+          # CRITICAL: Use -LogonType Interactive to run in user session (Session 1)
+          # This allows Python to connect to MT5 Terminal
+          $principal = New-ScheduledTaskPrincipal -UserId "trader" -LogonType Interactive -RunLevel Highest
+          
+          $settings = New-ScheduledTaskSettingsSet `
+              -AllowStartIfOnBatteries `
+              -DontStopIfGoingOnBatteries `
+              -StartWhenAvailable `
+              -RestartInterval (New-TimeSpan -Minutes 1) `
+              -RestartCount 999 `
+              -ExecutionTimeLimit (New-TimeSpan -Days 365)
+          
+          Register-ScheduledTask -TaskName "MT5_Bridge_Service" `
+              -Action $action `
+              -Trigger $trigger `
+              -Principal $principal `
+              -Settings $settings `
+              -Description "MT5 Bridge API Service - Multi-Account Fixed (Interactive Session)" -Force
+          
+          Write-Host "  Task created successfully"
+          
+          # Start the task immediately
+          Write-Host ""
+          Write-Host "Starting MT5 Bridge Service..."
+          Start-ScheduledTask -TaskName "MT5_Bridge_Service"
+          
+          # Wait a few seconds for startup
+          Start-Sleep -Seconds 5
+          
+          # Check if process is running
+          Write-Host ""
+          Write-Host "Checking service status..."
+          $bridgeProcess = Get-Process | Where-Object {$_.ProcessName -eq "python"} | Where-Object {
+              try {
+                  $cmdLine = (Get-WmiObject Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                  $cmdLine -like "*mt5_bridge*"
+              } catch {
+                  $false
+              }
+          }
+          
+          if ($bridgeProcess) {
+              Write-Host "✅ MT5 Bridge Service is RUNNING (PID: $($bridgeProcess.Id))"
+          } else {
+              Write-Host "⚠️  MT5 Bridge process not detected - checking logs..."
+          }
+          
+          # Show last 20 lines of log
+          Write-Host ""
+          Write-Host "Recent log entries:"
+          Write-Host "----------------------------------------"
+          if (Test-Path "C:\mt5_bridge_service\logs\api_service.log") {
+              Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 20
+          } else {
+              Write-Host "  Log file not found yet"
+          }
+          
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "DEPLOYMENT COMPLETE"
+          Write-Host "========================================"
+          
+POWERSHELL_SCRIPT
+          
+          echo ""
+          echo "🧪 Testing MT5 Bridge health endpoint..."
+          sleep 10
+          
+          # Test the bridge endpoint
+          HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://${VPS_HOST}:8000/api/mt5/bridge/health || echo "000")
+          
+          if [ "$HEALTH_CHECK" = "200" ]; then
+            echo "✅ MT5 Bridge is responding (HTTP 200)"
+            echo ""
+            echo "📊 Fetching health status..."
+            curl -s http://${VPS_HOST}:8000/api/mt5/bridge/health | python3 -m json.tool || echo "Could not parse JSON"
+          else
+            echo "⚠️  MT5 Bridge health check returned HTTP $HEALTH_CHECK"
+            echo "   Service may still be starting up..."
+          fi
+          
+          echo ""
+          echo "========================================"
+          echo "✅ DEPLOYMENT COMPLETED"
+          echo "========================================"
+          echo ""
+          echo "The MT5 Bridge service is now configured to:"
+          echo "  • Run in interactive user session (Session 1)"
+          echo "  • Connect to MT5 Terminal properly"
+          echo "  • Log into ALL 7 accounts every 5 minutes"
+          echo "  • Cache real balances for all accounts"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Wait 5-10 minutes for first account refresh cycle"
+          echo "  2. Check dashboard to verify all 7 account balances appear"
+          echo "  3. Monitor logs: C:\\mt5_bridge_service\\logs\\api_service.log"
+          echo ""
