@@ -408,7 +408,10 @@ export default function TechnicalDocumentation() {
 
         {/* Conditional View Rendering with Lazy Loading (Phase 7) */}
         <Suspense fallback={<LoadingSpinner size="lg" message="Loading view..." fullPage />}>
-          {viewMode === 'actions' ? (
+          {viewMode === 'mt5-actions' ? (
+            /* MT5 Bridge Control Panel */
+            <QuickActionsButtons />
+          ) : viewMode === 'actions' ? (
             /* Quick Actions Panel View */
             <QuickActionsPanel />
           ) : viewMode === 'health' ? (
