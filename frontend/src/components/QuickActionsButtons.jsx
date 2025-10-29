@@ -5,24 +5,28 @@ const QuickActionsButtons = () => {
   const [lastCheck, setLastCheck] = useState(null);
   const [accounts, setAccounts] = useState(null);
 
-  const VPS_HOST = '92.118.45.135';
-  const BRIDGE_PORT = '8000';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-invest.emergent.host';
   const GITHUB_REPO = 'chavapalmarubin-lab/FIDUS';
 
   const checkBridgeHealth = async () => {
     setBridgeStatus('checking');
     try {
-      const response = await fetch(`http://${VPS_HOST}:${BRIDGE_PORT}/api/mt5/accounts/summary`);
+      // Use backend proxy instead of direct VPS connection to avoid CORS issues
+      const response = await fetch(`${BACKEND_URL}/api/mt5-bridge-proxy/health`);
       if (response.ok) {
         const data = await response.json();
         setBridgeStatus('online');
-        setAccounts(data.count || 0);
+        // Try to get account count from health check
+        if (data.cache && data.cache.accounts_cached) {
+          setAccounts(data.cache.accounts_cached);
+        }
         setLastCheck(new Date());
       } else {
         setBridgeStatus('offline');
         setLastCheck(new Date());
       }
     } catch (error) {
+      console.error('Bridge health check error:', error);
       setBridgeStatus('offline');
       setLastCheck(new Date());
     }
