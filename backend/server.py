@@ -16111,27 +16111,25 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         # Sort by date
         upcoming_redemptions.sort(key=lambda x: x['date'])
         
-        # Get broker rebates from MT5 deals service (FIXED: using same source as /api/mt5/rebates)
+        # Get broker rebates from MT5 deals service (ALL-TIME to match rebate wallet balance)
         from services.mt5_deals_service import MT5DealsService
         mt5_deals_service = MT5DealsService(db)
         
-        # IMPORTANT: Get rebates for LAST 30 DAYS ONLY (same as Broker Rebates page)
-        end_date = datetime.now(timezone.utc)
-        start_date = end_date - timedelta(days=30)
+        # IMPORTANT: Get ALL-TIME rebates to match wallet balance (not just last 30 days)
+        # The rebate wallet accumulates all historical rebates
+        logging.info(f"💰 Calculating ALL-TIME cumulative broker rebates...")
         
-        logging.info(f"💰 Calculating rebates from {start_date.date()} to {end_date.date()}")
-        
-        # Calculate rebates from MT5 deals history at $5.05/lot
+        # Calculate rebates from MT5 deals history at $5.05/lot (NO date filter for all-time)
         rebate_data = await mt5_deals_service.calculate_rebates(
-            start_date=start_date,
-            end_date=end_date,
+            start_date=None,  # No start date = all time
+            end_date=None,  # No end date = all time
             account_number=None,  # All accounts
             rebate_per_lot=5.05
         )
         broker_rebates = rebate_data.get('total_rebates', 0)
         broker_volume = rebate_data.get('total_volume', 0)
         
-        logging.info(f"💰 Cash Flow Overview - Broker Rebates (last 30 days): ${broker_rebates:,.2f} from {broker_volume:.2f} lots")
+        logging.info(f"💰 Cash Flow Overview - Broker Rebates (ALL-TIME cumulative): ${broker_rebates:,.2f} from {broker_volume:.2f} lots")
         
         # Get performance fees from performance fee calculator
         from services.performance_fee_calculator import PerformanceFeeCalculator
