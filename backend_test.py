@@ -244,16 +244,10 @@ class BackendTester:
             data = response.json()
             self.log_test("Money Managers API", "PASS", "Successfully retrieved money managers data")
             
-            # Extract managers list
-            managers = []
-            if isinstance(data, list):
-                managers = data
-            elif isinstance(data, dict) and 'managers' in data:
-                managers = data['managers']
-            elif isinstance(data, dict) and 'data' in data:
-                managers = data['data']
+            # Based on diagnostics, managers are in data['managers']
+            managers = data.get('managers', [])
             
-            # Expected real managers
+            # Expected real managers (updated based on actual API response)
             expected_managers = ["CP Strategy", "TradingHub Gold", "GoldenTrade", "UNO14"]
             excluded_managers = ["Manual Trading", "Manager None"]
             
@@ -265,21 +259,17 @@ class BackendTester:
                 self.log_test("Manager Count", "FAIL", f"Incorrect number of managers", 
                             "4 real managers", f"{manager_count} managers")
             
-            # Check manager names
+            # Check manager names (use manager_name field)
             found_managers = []
             excluded_found = []
             
             for manager in managers:
                 if isinstance(manager, dict):
-                    name = manager.get('name', manager.get('manager_name', 'Unknown'))
+                    name = manager.get('manager_name', manager.get('name', 'Unknown'))
                     found_managers.append(name)
                     
-                    if name in excluded_managers:
+                    if any(exc in name for exc in excluded_managers):
                         excluded_found.append(name)
-                elif isinstance(manager, str):
-                    found_managers.append(manager)
-                    if manager in excluded_managers:
-                        excluded_found.append(manager)
             
             # Check for excluded managers
             if excluded_found:
@@ -292,13 +282,19 @@ class BackendTester:
                             "No excluded managers (Manual Trading, Manager None) found")
                 success = True
             
-            # Check for expected managers
-            expected_found = [m for m in expected_managers if m in found_managers]
+            # Check for expected managers (allow partial matches since names have "Provider" suffix)
+            expected_found = []
+            for expected in expected_managers:
+                for found in found_managers:
+                    if expected in found:
+                        expected_found.append(expected)
+                        break
+            
             if len(expected_found) == 4:
                 self.log_test("Expected Managers Check", "PASS", 
                             f"All expected managers found: {expected_found}")
             else:
-                missing = [m for m in expected_managers if m not in found_managers]
+                missing = [m for m in expected_managers if m not in expected_found]
                 self.log_test("Expected Managers Check", "FAIL", 
                             f"Missing expected managers: {missing}", 
                             expected_managers, found_managers)
