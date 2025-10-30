@@ -74,7 +74,7 @@ class MT5DealsSyncService:
                 }
             
             # Get account info for metadata
-            account_info = await self.db.mt5_account_config.find_one({"account_number": account_number})
+            account_info = self.db.mt5_account_config.find_one({"account_number": account_number})
             
             account_name = "Unknown"
             fund_type = "Unknown"
