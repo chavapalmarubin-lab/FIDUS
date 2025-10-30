@@ -39,15 +39,26 @@ const QuickActionsButtons = () => {
     setSyncMessage('Syncing trade history from all 7 accounts...');
     
     try {
-      // Get auth token from localStorage (correct key is 'fidus_token')
-      const token = localStorage.getItem('fidus_token');
+      // Try all possible token keys
+      const token = localStorage.getItem('fidus_token') || 
+                    localStorage.getItem('token') || 
+                    localStorage.getItem('authToken') ||
+                    sessionStorage.getItem('fidus_token') ||
+                    sessionStorage.getItem('token');
+      
+      console.log('🔍 Quick Actions - Looking for auth token...');
+      console.log('localStorage keys:', Object.keys(localStorage));
+      console.log('Token found:', token ? 'YES' : 'NO');
       
       if (!token) {
         setSyncStatus('error');
-        setSyncMessage('Error: Not authenticated. Please login first.');
+        setSyncMessage('Error: Not authenticated. Please refresh the page and try again.');
+        console.error('❌ No token found in localStorage or sessionStorage');
         setTimeout(() => setSyncStatus('idle'), 5000);
         return;
       }
+
+      console.log('✅ Token found, making API request...');
 
       const response = await fetch(`${BACKEND_URL}/api/admin/mt5-deals/sync-all`, {
         method: 'POST',
@@ -57,8 +68,11 @@ const QuickActionsButtons = () => {
         }
       });
 
+      console.log('📡 API Response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Sync successful:', data);
         setSyncStatus('success');
         const dealsCount = data.total_deals_synced || 0;
         const duration = data.duration_seconds || 0;
@@ -66,12 +80,13 @@ const QuickActionsButtons = () => {
         setTimeout(() => setSyncStatus('idle'), 8000);
       } else {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ API Error:', errorData);
         setSyncStatus('error');
         setSyncMessage(`❌ Error: ${errorData.detail || response.statusText}`);
         setTimeout(() => setSyncStatus('idle'), 5000);
       }
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('❌ Sync error:', error);
       setSyncStatus('error');
       setSyncMessage(`❌ Error: ${error.message}`);
       setTimeout(() => setSyncStatus('idle'), 5000);
