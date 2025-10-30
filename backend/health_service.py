@@ -302,7 +302,7 @@ async def check_github_health() -> Dict[str, Any]:
                 "last_commit": data.get('pushed_at', 'Unknown'),
                 "open_issues": data.get('open_issues_count', 0),
                 "repo_size": data.get('size', 0),
-                "url": "https://github.com/chavapalmarubin/fidus-platform",
+                "url": "https://github.com/chavapalmarubin-lab/FIDUS",
                 "rate_limit": f"{rate_limit_remaining}/{rate_limit}",
                 "last_check": datetime.now(timezone.utc).isoformat(),
                 "message": f"Repository accessible ({round(response_time)}ms)" if status == "healthy" else f"Slow response: {round(response_time)}ms"
