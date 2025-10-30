@@ -74,7 +74,7 @@ class MT5DealsSyncService:
                 }
             
             # Get account info for metadata
-            account_info = self.db.mt5_account_config.find_one({"account_number": account_number})
+            account_info = await self.db.mt5_account_config.find_one({"account_number": account_number})
             
             account_name = "Unknown"
             fund_type = "Unknown"
@@ -119,13 +119,16 @@ class MT5DealsSyncService:
                 }
                 
                 # Upsert to database (update if exists, insert if new)
-                self.db.mt5_deals_history.update_one(
+                result = await self.db.mt5_deals_history.update_one(
                     {"ticket": deal_doc["ticket"], "account_number": account_number},
                     {"$set": deal_doc},
                     upsert=True
                 )
                 
-                deals_synced += 1
+                if result.upserted_id:
+                    deals_synced += 1
+                elif result.modified_count > 0:
+                    deals_updated += 1
             
             logger.info(f"✅ Account {account_number}: {deals_synced} new, {deals_updated} updated")
             
