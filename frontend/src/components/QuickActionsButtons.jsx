@@ -4,6 +4,8 @@ const QuickActionsButtons = () => {
   const [bridgeStatus, setBridgeStatus] = useState('checking');
   const [lastCheck, setLastCheck] = useState(null);
   const [accounts, setAccounts] = useState(null);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [syncMessage, setSyncMessage] = useState('');
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-invest.emergent.host';
   const GITHUB_REPO = 'chavapalmarubin-lab/FIDUS';
@@ -29,6 +31,50 @@ const QuickActionsButtons = () => {
       console.error('Bridge health check error:', error);
       setBridgeStatus('offline');
       setLastCheck(new Date());
+    }
+  };
+
+  const syncTradeHistory = async () => {
+    setSyncStatus('syncing');
+    setSyncMessage('Syncing trade history from all 7 accounts...');
+    
+    try {
+      // Get auth token from localStorage
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      if (!token) {
+        setSyncStatus('error');
+        setSyncMessage('Error: Not authenticated. Please login first.');
+        setTimeout(() => setSyncStatus('idle'), 5000);
+        return;
+      }
+
+      const response = await fetch(`${BACKEND_URL}/api/admin/mt5-deals/sync-all`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSyncStatus('success');
+        const dealsCount = data.total_deals_synced || 0;
+        const duration = data.duration_seconds || 0;
+        setSyncMessage(`✅ Success! Synced ${dealsCount} new deals in ${duration}s. Rebates updated.`);
+        setTimeout(() => setSyncStatus('idle'), 8000);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSyncStatus('error');
+        setSyncMessage(`❌ Error: ${errorData.detail || response.statusText}`);
+        setTimeout(() => setSyncStatus('idle'), 5000);
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      setSyncStatus('error');
+      setSyncMessage(`❌ Error: ${error.message}`);
+      setTimeout(() => setSyncStatus('idle'), 5000);
     }
   };
 
