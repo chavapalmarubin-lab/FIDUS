@@ -25734,6 +25734,27 @@ async def startup_event():
     except Exception as e:
         logging.error(f"❌ MT5 Auto-Sync Service initialization failed: {e}")
     
+    # Initialize MT5 Deals Sync Service (Trade History for Rebates)
+    try:
+        if not mt5_deals_sync.db:
+            await mt5_deals_sync.initialize(db)
+        # Run initial sync on startup
+        logging.info("📊 Running initial MT5 Deals/Trade History sync...")
+        initial_sync_result = await mt5_deals_sync.sync_all_accounts()
+        logging.info(f"✅ Initial MT5 Deals sync complete: {initial_sync_result.get('total_deals_synced', 0)} deals synced")
+        
+        # Schedule automatic syncs every 30 minutes
+        scheduler.add_job(
+            sync_mt5_deals_background,
+            'interval',
+            minutes=30,
+            id='mt5_deals_sync',
+            replace_existing=True
+        )
+        logging.info("✅ MT5 Deals Auto-Sync scheduled: Every 30 minutes")
+    except Exception as e:
+        logging.error(f"❌ MT5 Deals Sync Service initialization failed: {e}")
+    
     # Start automatic VPS sync scheduler
     try:
         scheduler.start()
