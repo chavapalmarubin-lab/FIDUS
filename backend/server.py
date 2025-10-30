@@ -26711,3 +26711,25 @@ except Exception as e:
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
+
+# ===============================================================================
+# SERVER STARTUP
+# ===============================================================================
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    # Use PORT environment variable (required for Render and other cloud platforms)
+    # Falls back to 8000 for local development
+    port = int(os.environ.get("PORT", 8000))
+    
+    logging.info(f"🚀 Starting FIDUS Backend Server on port {port}")
+    logging.info(f"   Environment: {os.environ.get('RENDER', 'local')}")
+    
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False,  # Disable reload in production
+        log_level="info"
+    )
