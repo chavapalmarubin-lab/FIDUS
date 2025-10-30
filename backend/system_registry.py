@@ -369,7 +369,7 @@ SYSTEM_COMPONENTS = {
                 'uptime': '99.99%'
             },
             'management': {
-                'repository': 'https://github.com/chavapalmarubin/fidus-platform',
+                'repository': 'https://github.com/chavapalmarubin-lab/FIDUS',
                 'access': 'Team members with appropriate permissions',
                 'deployment': 'Auto-deploy via Render integration'
             },
