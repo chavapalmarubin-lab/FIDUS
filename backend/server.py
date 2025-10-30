@@ -26691,7 +26691,7 @@ async def sync_mt5_deals_background():
     except Exception as e:
         logging.error(f"❌ Scheduled MT5 Deals sync failed: {e}")
 
-@api_router.post("/api/admin/mt5-deals/sync-all")
+@api_router.post("/admin/mt5-deals/sync-all")
 async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user)):
     """
     Sync trade/deals history from MT5 Bridge for all 7 accounts
