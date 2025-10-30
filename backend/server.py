@@ -103,6 +103,7 @@ from services.google import GoogleOAuthService, GoogleTokenManager
 from services.google.gmail import GmailService
 from services.google.calendar import CalendarService
 from services.google.drive import DriveService
+from services.google.sheets import SheetsService
 
 # Import MT5 Service
 from services.mt5_service import mt5_service
