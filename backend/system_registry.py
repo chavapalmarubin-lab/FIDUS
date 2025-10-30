@@ -336,7 +336,7 @@ SYSTEM_COMPONENTS = {
             'type': 'version_control',
             'category': 'Development & Deployment',
             'status': 'online',
-            'url': 'https://github.com/chavapalmarubin/fidus-platform',
+            'url': 'https://github.com/chavapalmarubin-lab/FIDUS',
             'platform': 'GitHub',
             'description': 'Source of truth for all code. Central repository for version control with auto-deployment to Render.',
             'tech_stack': ['Git', 'GitHub', 'Auto-Deploy'],
