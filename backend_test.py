@@ -96,38 +96,34 @@ class BackendTester:
             rebates_found = 0
             non_zero_rebates = 0
             
-            if isinstance(data, list):
-                funds = data
-            elif isinstance(data, dict) and 'funds' in data:
-                funds = data['funds']
-            else:
-                funds = [data] if isinstance(data, dict) else []
+            # Based on diagnostics, funds are in data['funds'] as a dict
+            funds_dict = data.get('funds', {})
             
-            for fund in funds:
-                if isinstance(fund, dict):
-                    fund_code = fund.get('fund_code', fund.get('code', 'Unknown'))
-                    if fund_code in ['CORE', 'BALANCE']:
-                        funds_checked += 1
-                        total_rebates = fund.get('total_rebates')
-                        
-                        if total_rebates is not None:
-                            rebates_found += 1
-                            if total_rebates != 0:
-                                non_zero_rebates += 1
-                                self.log_test(f"{fund_code} Fund Rebates", "PASS", 
-                                            f"Found non-zero rebates: ${total_rebates}")
-                            else:
-                                self.log_test(f"{fund_code} Fund Rebates", "FAIL", 
-                                            f"Rebates are $0 (should have actual values)", 
-                                            "Non-zero rebates", "$0")
+            for fund_code in ['CORE', 'BALANCE']:
+                if fund_code in funds_dict:
+                    funds_checked += 1
+                    fund = funds_dict[fund_code]
+                    total_rebates = fund.get('total_rebates')
+                    
+                    if total_rebates is not None:
+                        rebates_found += 1
+                        if total_rebates != 0:
+                            non_zero_rebates += 1
+                            self.log_test(f"{fund_code} Fund Rebates", "PASS", 
+                                        f"Found non-zero rebates: ${total_rebates}")
                         else:
                             self.log_test(f"{fund_code} Fund Rebates", "FAIL", 
-                                        "total_rebates field missing from response")
+                                        f"Rebates are $0 (should have actual values)", 
+                                        "Non-zero rebates", "$0")
+                    else:
+                        self.log_test(f"{fund_code} Fund Rebates", "FAIL", 
+                                    "total_rebates field missing from response")
             
             if funds_checked == 0:
                 self.log_test("Fund Portfolio Structure", "FAIL", "No CORE or BALANCE funds found in response")
                 return False
             
+            # CRITICAL CHECK: Both CORE and BALANCE show $0 rebates - this is the issue!
             success = rebates_found > 0 and non_zero_rebates > 0
             summary = f"Checked {funds_checked} funds, found {rebates_found} with rebates field, {non_zero_rebates} with non-zero values"
             self.log_test("Fund Portfolio Rebates Summary", "PASS" if success else "FAIL", summary)
