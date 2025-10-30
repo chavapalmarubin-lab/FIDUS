@@ -4,7 +4,7 @@ import requests
 import json
 
 class AUMFieldMismatchTester:
-    def __init__(self, base_url="https://fidusbridge.preview.emergentagent.com"):
+    def __init__(self, base_url="https://mt5-bridge-system.preview.emergentagent.com"):
         self.base_url = base_url
         
     def test_aum_field_mismatch_issue(self):
