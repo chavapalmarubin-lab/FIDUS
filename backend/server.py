@@ -26712,7 +26712,7 @@ async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
 
 
-@api_router.post("/api/admin/mt5-deals/sync/{account_number}")
+@api_router.post("/admin/mt5-deals/sync/{account_number}")
 async def sync_account_deals(
     account_number: int,
     current_user: dict = Depends(get_current_admin_user)
