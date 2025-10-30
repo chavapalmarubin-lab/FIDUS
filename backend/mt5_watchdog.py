@@ -175,8 +175,8 @@ class MT5Watchdog:
             
             # CRITICAL: If ALL active (non-SEPARATION) accounts show $0, MT5 terminals are disconnected!
             if zero_balance_count == total_active_accounts and total_active_accounts > 0:
-                logger.critical(f"🚨 [MT5 WATCHDOG] ALL ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
-                logger.critical(f"🚨 [MT5 WATCHDOG] MT5 Terminals are DISCONNECTED - Need FULL restart!")
+                logger.critical("🚨 [MT5 WATCHDOG] ALL ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
+                logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals are DISCONNECTED - Need FULL restart!")
                 # Set flag to trigger full restart instead of simple bridge restart
                 self.needs_full_restart = True
                 return False
