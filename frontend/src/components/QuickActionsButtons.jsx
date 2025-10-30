@@ -362,7 +362,7 @@ const QuickActionsButtons = () => {
 
           {/* Test Endpoint Button */}
           <button
-            onClick={() => window.open(`http://${VPS_HOST}:${BRIDGE_PORT}/api/mt5/accounts/summary`, '_blank')}
+            onClick={() => window.open(`${BACKEND_URL}/api/mt5-bridge-proxy/accounts/summary`, '_blank')}
             style={{
               background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
               color: '#fff',
@@ -386,9 +386,53 @@ const QuickActionsButtons = () => {
             }}
           >
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🧪</div>
-            <div style={{ marginBottom: '4px' }}>Test Bridge Endpoint</div>
+            <div style={{ marginBottom: '4px' }}>Test MT5 Endpoint</div>
             <div style={{ fontSize: '12px', opacity: 0.9 }}>
-              Direct API test
+              View current account data
+            </div>
+          </button>
+
+          {/* Sync Trade History Button - NEW */}
+          <button
+            onClick={syncTradeHistory}
+            disabled={syncStatus === 'syncing'}
+            style={{
+              background: syncStatus === 'success' 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : syncStatus === 'error'
+                ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              color: '#fff',
+              border: 'none',
+              padding: '20px',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: syncStatus === 'syncing' ? 'not-allowed' : 'pointer',
+              textAlign: 'left',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
+              opacity: syncStatus === 'syncing' ? 0.7 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (syncStatus !== 'syncing') {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.3)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2)';
+            }}
+          >
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>
+              {syncStatus === 'syncing' ? '⏳' : syncStatus === 'success' ? '✅' : syncStatus === 'error' ? '❌' : '🔄'}
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              {syncStatus === 'syncing' ? 'Syncing...' : 'Sync Trade History'}
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.9 }}>
+              {syncMessage || 'Update rebates from all 7 accounts'}
             </div>
           </button>
         </div>
