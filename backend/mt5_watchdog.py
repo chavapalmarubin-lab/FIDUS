@@ -170,7 +170,7 @@ class MT5Watchdog:
                         
                         if updated_at >= cutoff_time:
                             synced_count += 1
-                    except (ValueError, AttributeError) as e:
+                    except (ValueError, AttributeError):
                         logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
             
             # CRITICAL: If ALL active (non-SEPARATION) accounts show $0, MT5 terminals are disconnected!
