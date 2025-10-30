@@ -1,30 +1,15 @@
 #!/usr/bin/env python3
 """
-Backend API Verification After Data Restoration
+COMPREHENSIVE BACKEND TESTING - 4 PRIORITY ISSUES
+Testing Date: December 18, 2025
+Backend URL: https://mt5-bridge-system.preview.emergentagent.com/api
+Auth: Admin token (username: admin, password: password123)
 
-Context:
-Just restored all MT5 accounts, money managers, and investments data to fix dashboard display issues.
-
-DATABASE STATUS (VERIFIED):
-- ✅ 7 MT5 accounts created (886557, 886066, 886602, 885822, 886528, 891215, 891234)
-- ✅ 4 money managers created with P&L data
-- ✅ Alejandro's investments restored (BALANCE: $100K, CORE: $18K)
-
-TEST OBJECTIVES:
-Test ALL critical endpoints to ensure they return the restored data correctly:
-
-Priority 1 - MT5 Endpoints:
-1. GET /api/mt5/admin/accounts - Should return 7 accounts with correct names, fund_types, equity, P&L
-2. GET /api/fund-portfolio/overview - Should show fund allocation with actual amounts
-
-Priority 2 - Money Managers Endpoints:
-3. GET /api/admin/money-managers/all - Should return 4 managers
-
-Priority 3 - Cash Flow Endpoint:
-4. GET /api/admin/cashflow/overview - Should include account 891215 in separation breakdown
-
-Priority 4 - Investments Endpoint:
-5. GET /api/investments/admin/overview - Should show Alejandro's investments
+Test Cases:
+1. Fund Portfolio - FIDUS Monthly Profit (total_rebates field)
+2. Cash Flow - Fund Obligations (total_client_obligations and total_fund_outflows)
+3. Trading Analytics - CORE Fund Account Count (should be 2 accounts)
+4. Money Managers - Real Managers Only (should return exactly 4 managers)
 """
 
 import requests
