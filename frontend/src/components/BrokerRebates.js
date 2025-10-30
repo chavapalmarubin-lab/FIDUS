@@ -87,19 +87,6 @@ const BrokerRebates = () => {
         </div>
       </div>
 
-      {/* Sync Status Message */}
-      {syncMessage && (
-        <div className={`p-4 rounded-lg mb-4 ${
-          syncStatus === 'success' 
-            ? 'bg-green-900/20 border border-green-500/30 text-green-400' 
-            : syncStatus === 'error'
-            ? 'bg-red-900/20 border border-red-500/30 text-red-400'
-            : 'bg-blue-900/20 border border-blue-500/30 text-blue-400'
-        }`}>
-          <p className="text-sm font-medium">{syncMessage}</p>
-        </div>
-      )}
-
       {/* Filters */}
       <Card className="dashboard-card">
         <CardContent className="pt-6">
