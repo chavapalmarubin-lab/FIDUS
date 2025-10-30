@@ -18621,6 +18621,33 @@ async def get_drive_files_oauth(
         logger.error(f"❌ Drive API error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/admin/google/sheets/spreadsheets")
+async def get_sheets_spreadsheets_oauth(current_user: dict = Depends(get_current_admin_user)):
+    """Get Sheets spreadsheets using OAuth"""
+    try:
+        # Try multiple ways to get admin user ID consistently  
+        admin_user_id = (
+            current_user.get("user_id") or 
+            current_user.get("id") or 
+            current_user.get("_id") or
+            current_user.get("username") or
+            str(current_user.get("user_id", "admin"))  # convert to string if numeric
+        )
+        spreadsheets = await list_sheets_spreadsheets(max_results=20, current_user=current_user)
+        
+        return {
+            "success": True,
+            "spreadsheets": spreadsheets,
+            "count": len(spreadsheets),
+            "source": "oauth_sheets_api"
+        }
+        
+    except Exception as e:
+        if "Google authentication required" in str(e):
+            raise HTTPException(status_code=401, detail="Google not connected. Please authorize.")
+        logger.error(f"❌ Sheets API error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/admin/google/gmail/send")
 async def send_gmail_message_oauth(
     request: Request,
