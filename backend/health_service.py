@@ -261,7 +261,7 @@ async def check_github_health() -> Dict[str, Any]:
     Phase 7: Adjusted thresholds for external service (more lenient)
     """
     start = time.time()
-    repo_url = "https://api.github.com/repos/chavapalmarubin/fidus-platform"
+    repo_url = "https://api.github.com/repos/chavapalmarubin-lab/FIDUS"
     github_token = os.getenv('GITHUB_TOKEN')
     
     try:
