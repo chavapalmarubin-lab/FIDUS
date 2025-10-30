@@ -16115,9 +16115,11 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         from services.mt5_deals_service import MT5DealsService
         mt5_deals_service = MT5DealsService(db)
         
-        # Get rebates for current month (or last 30 days)
+        # IMPORTANT: Get rebates for LAST 30 DAYS ONLY (same as Broker Rebates page)
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=30)
+        
+        logging.info(f"💰 Calculating rebates from {start_date.date()} to {end_date.date()}")
         
         # Calculate rebates from MT5 deals history at $5.05/lot
         rebate_data = await mt5_deals_service.calculate_rebates(
@@ -16127,8 +16129,9 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
             rebate_per_lot=5.05
         )
         broker_rebates = rebate_data.get('total_rebates', 0)
+        broker_volume = rebate_data.get('total_volume', 0)
         
-        logging.info(f"💰 Cash Flow Overview - Broker Rebates for last 30 days: ${broker_rebates:,.2f} from {rebate_data.get('total_volume', 0)} lots (using MT5 deals service)")
+        logging.info(f"💰 Cash Flow Overview - Broker Rebates (last 30 days): ${broker_rebates:,.2f} from {broker_volume:.2f} lots")
         
         # Get performance fees from performance fee calculator
         from services.performance_fee_calculator import PerformanceFeeCalculator
