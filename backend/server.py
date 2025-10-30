@@ -25766,13 +25766,13 @@ async def startup_event():
         logging.info(f"   Email alerts configured: {bool(os.getenv('SMTP_USERNAME'))}")
         logging.info(f"   Alert recipient: {os.getenv('ALERT_RECIPIENT_EMAIL', 'Not configured')}")
         
-        # Run initial sync on startup
-        logging.info("🔄 Running initial VPS→Render sync on startup...")
-        await automatic_vps_sync()
+        # Run initial sync in background (non-blocking for fast startup)
+        logging.info("🔄 Scheduling initial VPS→Render sync in background...")
+        asyncio.create_task(automatic_vps_sync())
         
-        # Run initial health check on startup
-        logging.info("🏥 Running initial health check on startup...")
-        await background_health_check()
+        # Run initial health check in background
+        logging.info("🏥 Scheduling initial health check in background...")
+        asyncio.create_task(background_health_check())
         
         # Initialize MT5 Watchdog
         logging.info("🐕 Initializing MT5 Watchdog and Auto-Healing System...")
