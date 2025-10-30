@@ -84,35 +84,6 @@ const BrokerRebates = () => {
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Loading...' : 'Refresh'}
           </Button>
-          
-          <Button 
-            onClick={syncTradeHistory} 
-            disabled={syncStatus === 'syncing'}
-            className={
-              syncStatus === 'success' 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : syncStatus === 'error'
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }
-          >
-            {syncStatus === 'syncing' ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Syncing...
-              </>
-            ) : syncStatus === 'success' ? (
-              <>
-                <Activity className="mr-2 h-4 w-4" />
-                Synced!
-              </>
-            ) : (
-              <>
-                <Activity className="mr-2 h-4 w-4" />
-                Sync Trade History
-              </>
-            )}
-          </Button>
         </div>
       </div>
 
