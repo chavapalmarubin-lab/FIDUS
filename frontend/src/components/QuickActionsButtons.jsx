@@ -39,8 +39,8 @@ const QuickActionsButtons = () => {
     setSyncMessage('Syncing trade history from all 7 accounts...');
     
     try {
-      // Get auth token from localStorage
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      // Get auth token from localStorage (correct key is 'fidus_token')
+      const token = localStorage.getItem('fidus_token');
       
       if (!token) {
         setSyncStatus('error');
