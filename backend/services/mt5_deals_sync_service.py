@@ -12,7 +12,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-class MT5DealsSync Service:
+class MT5DealsSyncService:
     """Service to sync MT5 deals/trades history from bridge to MongoDB"""
     
     def __init__(self):
