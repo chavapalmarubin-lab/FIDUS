@@ -26540,6 +26540,66 @@ async def get_prospect_lead(lead_id: str):
 
 
 # ===============================================================================
+# MT5 BRIDGE PROXY ENDPOINTS (for frontend to avoid CORS)
+# ===============================================================================
+@api_router.get("/api/mt5-bridge-proxy/health")
+async def mt5_bridge_proxy_health():
+    """
+    Proxy endpoint for MT5 Bridge health check
+    Avoids CORS issues when frontend tries to connect directly to VPS
+    """
+    try:
+        bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{bridge_url}/api/mt5/bridge/health", timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    return {
+                        "status": "unhealthy",
+                        "error": f"HTTP {response.status}",
+                        "mt5": {"initialized": False}
+                    }
+    except Exception as e:
+        logging.error(f"❌ MT5 Bridge proxy error: {str(e)}")
+        return {
+            "status": "offline",
+            "error": str(e),
+            "mt5": {"initialized": False}
+        }
+
+
+@api_router.get("/api/mt5-bridge-proxy/accounts/summary")
+async def mt5_bridge_proxy_accounts():
+    """
+    Proxy endpoint for MT5 accounts summary
+    """
+    try:
+        bridge_url = os.environ.get('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{bridge_url}/api/mt5/accounts/summary", timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    return {
+                        "success": False,
+                        "error": f"HTTP {response.status}",
+                        "accounts": []
+                    }
+    except Exception as e:
+        logging.error(f"❌ MT5 Bridge accounts proxy error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "accounts": []
+        }
+
+
+# ===============================================================================
 # MT5 DEALS HISTORY SYNC ENDPOINTS
 # ===============================================================================
 from services.mt5_deals_sync_service import mt5_deals_sync
