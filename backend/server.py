@@ -26691,6 +26691,19 @@ async def sync_mt5_deals_background():
     except Exception as e:
         logging.error(f"❌ Scheduled MT5 Deals sync failed: {e}")
 
+async def run_initial_mt5_deals_sync():
+    """Run initial MT5 deals sync in background (non-blocking)"""
+    try:
+        await asyncio.sleep(5)  # Wait 5 seconds after startup
+        logging.info("📊 Running initial MT5 Deals/Trade History sync...")
+        if not mt5_deals_sync.db:
+            await mt5_deals_sync.initialize(db)
+        
+        result = await mt5_deals_sync.sync_all_accounts()
+        logging.info(f"✅ Initial MT5 Deals sync complete: {result.get('total_deals_synced', 0)} deals synced")
+    except Exception as e:
+        logging.error(f"❌ Initial MT5 Deals sync failed: {e}")
+
 @api_router.post("/admin/mt5-deals/sync-all")
 async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user)):
     """
