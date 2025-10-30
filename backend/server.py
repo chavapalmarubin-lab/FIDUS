@@ -26679,6 +26679,18 @@ async def mt5_bridge_proxy_accounts():
 # ===============================================================================
 from services.mt5_deals_sync_service import mt5_deals_sync
 
+async def sync_mt5_deals_background():
+    """Background task to sync MT5 deals/trade history automatically"""
+    try:
+        logging.info("🔄 Starting scheduled MT5 Deals sync...")
+        if not mt5_deals_sync.db:
+            await mt5_deals_sync.initialize(db)
+        
+        result = await mt5_deals_sync.sync_all_accounts()
+        logging.info(f"✅ Scheduled MT5 Deals sync complete: {result.get('total_deals_synced', 0)} new deals")
+    except Exception as e:
+        logging.error(f"❌ Scheduled MT5 Deals sync failed: {e}")
+
 @api_router.post("/api/admin/mt5-deals/sync-all")
 async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user)):
     """
