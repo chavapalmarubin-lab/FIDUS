@@ -16,23 +16,66 @@ import requests
 import json
 import sys
 from datetime import datetime
-import pymongo
-from pymongo import MongoClient
-import os
+from typing import Dict, Any, List, Optional
 
-# Backend URL from environment
-BACKEND_URL = "https://mt5-bridge-system.preview.emergentagent.com"
-
-# Admin credentials
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "password123"
-
-# MongoDB connection
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
-
-class DataRestorationVerification:
+class BackendTester:
     def __init__(self):
+        self.base_url = "https://mt5-bridge-system.preview.emergentagent.com/api"
         self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        
+    def log_test(self, test_name: str, status: str, details: str, expected: Any = None, actual: Any = None):
+        """Log test result"""
+        result = {
+            "test_name": test_name,
+            "status": status,  # PASS, FAIL, ERROR
+            "details": details,
+            "expected": expected,
+            "actual": actual,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status_emoji = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
+        print(f"{status_emoji} {test_name}: {details}")
+        
+        if expected is not None and actual is not None:
+            print(f"   Expected: {expected}")
+            print(f"   Actual: {actual}")
+    
+    def authenticate_admin(self) -> bool:
+        """Authenticate as admin user"""
+        try:
+            print("🔐 Authenticating as admin...")
+            
+            login_data = {
+                "username": "admin",
+                "password": "password123",
+                "user_type": "admin"
+            }
+            
+            response = self.session.post(f"{self.base_url}/auth/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get('token')
+                if self.admin_token:
+                    self.session.headers.update({
+                        'Authorization': f'Bearer {self.admin_token}'
+                    })
+                    self.log_test("Admin Authentication", "PASS", "Successfully authenticated as admin")
+                    return True
+                else:
+                    self.log_test("Admin Authentication", "FAIL", "No token received in response")
+                    return False
+            else:
+                self.log_test("Admin Authentication", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
+            return False
         self.token = None
         self.test_results = []
         self.mongo_client = None
