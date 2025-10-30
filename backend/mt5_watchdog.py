@@ -143,15 +143,21 @@ class MT5Watchdog:
             
             total_accounts = len(accounts)
             zero_balance_count = 0
+            total_active_accounts = 0  # Count only non-separation accounts
             synced_count = 0
             cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=15)
             
             # Check each account
             for account in accounts:
-                # Count zero balances (indicates MT5 terminal disconnection)
-                balance = account.get('balance', 0)
-                if balance == 0 or balance == 0.0:
-                    zero_balance_count += 1
+                account_number = account.get('account')
+                balance = float(account.get('balance', 0))
+                fund_type = account.get('fund_type', '')
+                
+                # Only count non-SEPARATION accounts for zero balance check
+                if fund_type not in ['SEPARATION']:
+                    total_active_accounts += 1
+                    if balance == 0:
+                        zero_balance_count += 1
                 
                 # Count recently synced - FIX: Handle both datetime and string formats
                 updated_at = account.get('updated_at')
@@ -168,9 +174,9 @@ class MT5Watchdog:
                     except (ValueError, AttributeError) as e:
                         logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
             
-            # CRITICAL: If ALL accounts show $0, MT5 terminals are disconnected!
-            if zero_balance_count == total_accounts and total_accounts > 0:
-                logger.critical(f"🚨 [MT5 WATCHDOG] ALL ACCOUNTS SHOWING $0 BALANCE!")
+            # CRITICAL: If ALL active (non-SEPARATION) accounts show $0, MT5 terminals are disconnected!
+            if zero_balance_count == total_active_accounts and total_active_accounts > 0:
+                logger.critical(f"🚨 [MT5 WATCHDOG] ALL ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
                 logger.critical(f"🚨 [MT5 WATCHDOG] MT5 Terminals are DISCONNECTED - Need FULL restart!")
                 # Set flag to trigger full restart instead of simple bridge restart
                 self.needs_full_restart = True
@@ -183,9 +189,9 @@ class MT5Watchdog:
             if not is_syncing:
                 logger.warning(f"[MT5 WATCHDOG] Low sync rate: {synced_count}/{total_accounts} accounts ({sync_percentage:.1f}%)")
             
-            # Also warn about zero balances even if not all
+            # Only warn about zero balances if non-SEPARATION accounts affected
             if zero_balance_count > 0:
-                logger.warning(f"[MT5 WATCHDOG] {zero_balance_count}/{total_accounts} accounts showing $0 balance")
+                logger.info(f"[MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} active accounts showing $0 balance (SEPARATION accounts excluded)")
             
             return is_syncing
             
