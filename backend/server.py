@@ -26540,6 +26540,103 @@ async def get_prospect_lead(lead_id: str):
 
 
 # ===============================================================================
+# MT5 DEALS HISTORY SYNC ENDPOINTS
+# ===============================================================================
+from services.mt5_deals_sync_service import mt5_deals_sync
+
+@api_router.post("/api/admin/mt5-deals/sync-all")
+async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Sync trade/deals history from MT5 Bridge for all 7 accounts
+    This populates mt5_deals_history collection for accurate rebates calculation
+    """
+    try:
+        # Initialize sync service if not already done
+        if not mt5_deals_sync.db:
+            await mt5_deals_sync.initialize(db)
+        
+        # Run sync
+        result = await mt5_deals_sync.sync_all_accounts()
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"❌ MT5 deals sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+
+@api_router.post("/api/admin/mt5-deals/sync/{account_number}")
+async def sync_account_deals(
+    account_number: int,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Sync trade/deals history for a specific account
+    """
+    try:
+        # Initialize sync service if not already done
+        if not mt5_deals_sync.db:
+            await mt5_deals_sync.initialize(db)
+        
+        # Run sync for single account
+        result = await mt5_deals_sync.sync_account_deals(account_number)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"❌ MT5 deals sync error for {account_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+
+@api_router.get("/api/admin/mt5-deals/sync-status")
+async def get_deals_sync_status(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get status of mt5_deals_history collection
+    """
+    try:
+        # Get total count
+        total = await db.mt5_deals_history.count_documents({})
+        
+        # Get date range
+        if total > 0:
+            oldest_doc = await db.mt5_deals_history.find_one(sort=[("time", 1)])
+            newest_doc = await db.mt5_deals_history.find_one(sort=[("time", -1)])
+            
+            oldest_time = oldest_doc.get('time') if oldest_doc else None
+            newest_time = newest_doc.get('time') if newest_doc else None
+            
+            # Get counts by account
+            pipeline = [
+                {"$group": {
+                    "_id": "$account_number",
+                    "count": {"$sum": 1},
+                    "volume": {"$sum": "$volume"}
+                }},
+                {"$sort": {"volume": -1}}
+            ]
+            
+            by_account = await db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
+            
+            return {
+                "success": True,
+                "total_deals": total,
+                "oldest_deal": oldest_time.isoformat() if oldest_time else None,
+                "newest_deal": newest_time.isoformat() if newest_time else None,
+                "by_account": by_account
+            }
+        else:
+            return {
+                "success": True,
+                "total_deals": 0,
+                "message": "No deals in database - run sync first"
+            }
+            
+    except Exception as e:
+        logging.error(f"❌ Error getting sync status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===============================================================================
 # INCLUDE ROUTER - MUST BE LAST!
 # ===============================================================================
 # Import and include system test router
