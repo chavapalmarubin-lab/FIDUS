@@ -327,12 +327,11 @@ class VPSSyncService:
                     }
                     
                     # Upsert trade (update if exists, insert if new)
-                    # Use ticket+time as unique identifier
+                    # Use ticket+account_number as unique identifier (matches MongoDB index)
                     await self.db.mt5_deals_history.update_one(
                         {
-                            'account_number': account_id,
                             'ticket': trade_doc['ticket'],
-                            'time': trade_doc['time']
+                            'account_number': account_id
                         },
                         {'$set': trade_doc},
                         upsert=True
