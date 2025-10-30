@@ -205,8 +205,9 @@ class BackendTester:
             data = response.json()
             self.log_test("Trading Analytics API", "PASS", "Successfully retrieved trading analytics data")
             
-            # Check for CORE fund account count
-            by_fund = data.get('by_fund', {})
+            # Based on diagnostics, the structure is data['dashboard']['by_fund']
+            dashboard = data.get('dashboard', {})
+            by_fund = dashboard.get('by_fund', {})
             core_fund = by_fund.get('CORE', {})
             account_count = core_fund.get('account_count')
             
@@ -222,7 +223,7 @@ class BackendTester:
                     return False
             else:
                 self.log_test("CORE Fund Account Count", "FAIL", 
-                            "account_count field missing from by_fund.CORE")
+                            "account_count field missing from dashboard.by_fund.CORE")
                 return False
             
         except Exception as e:
