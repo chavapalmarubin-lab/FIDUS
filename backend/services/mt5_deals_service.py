@@ -403,33 +403,41 @@ class MT5DealsService:
             results = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
             
             # Calculate derived metrics and add manager names
+            # Map of magic numbers to real money managers only
             manager_map = {
-                0: "Manual Trading",
                 100234: "TradingHub Gold",
                 100235: "GoldenTrade",
                 100236: "UNO14 MAM",
                 100237: "CP Strategy"
             }
             
+            # Filter results to only include real managers (exclude manual trading and unknown magic numbers)
+            filtered_results = []
+            
             for item in results:
                 magic = item.pop("_id")
-                item["magic"] = magic
-                item["manager_name"] = manager_map.get(magic, f"Manager {magic}")
                 
-                # Calculate win rate
-                total_trades = item["win_deals"] + item["loss_deals"]
-                item["win_rate"] = round((item["win_deals"] / total_trades * 100) if total_trades > 0 else 0, 2)
-                
-                # Average profit per deal
-                item["avg_profit_per_deal"] = round(item["total_profit"] / item["total_deals"], 2) if item["total_deals"] > 0 else 0
-                
-                # Round values
-                item["total_volume"] = round(item["total_volume"], 2)
-                item["total_profit"] = round(item["total_profit"], 2)
-                item["total_commission"] = round(item["total_commission"], 2)
+                # ONLY include trades from real assigned managers
+                if magic in manager_map:
+                    item["magic"] = magic
+                    item["manager_name"] = manager_map[magic]
+                    
+                    # Calculate win rate
+                    total_trades = item["win_deals"] + item["loss_deals"]
+                    item["win_rate"] = round((item["win_deals"] / total_trades * 100) if total_trades > 0 else 0, 2)
+                    
+                    # Average profit per deal
+                    item["avg_profit_per_deal"] = round(item["total_profit"] / item["total_deals"], 2) if item["total_deals"] > 0 else 0
+                    
+                    # Round values
+                    item["total_volume"] = round(item["total_volume"], 2)
+                    item["total_profit"] = round(item["total_profit"], 2)
+                    item["total_commission"] = round(item["total_commission"], 2)
+                    
+                    filtered_results.append(item)
             
-            logger.info(f"Generated manager performance for {len(results)} managers")
-            return results
+            logger.info(f"Generated manager performance for {len(filtered_results)} real managers (filtered from {len(results)} total)")
+            return filtered_results
             
         except Exception as e:
             logger.error(f"Error getting manager performance: {e}")
