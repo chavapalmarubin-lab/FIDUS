@@ -11,7 +11,7 @@ const REBATE_RATE = 5.05; // $ per lot
 const BrokerRebates = () => {
   const [rebatesData, setRebatesData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState('all'); // Changed from '30d' to 'all' to match wallet balance
   const [selectedAccount, setSelectedAccount] = useState('all');
 
   useEffect(() => {
@@ -21,7 +21,8 @@ const BrokerRebates = () => {
   const fetchRebates = async () => {
     setLoading(true);
     try {
-      const dateRange = mt5Service.getDateRangeForPeriod(period);
+      // For 'all' period, don't send date filters to get all-time rebates
+      const dateRange = period === 'all' ? {} : mt5Service.getDateRangeForPeriod(period);
       
       const response = await mt5Service.getRebates({
         start_date: dateRange.start_date,
