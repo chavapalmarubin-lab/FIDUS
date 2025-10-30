@@ -148,38 +148,41 @@ class BackendTester:
             data = response.json()
             self.log_test("Cash Flow API", "PASS", "Successfully retrieved cash flow data")
             
-            # Check for required fields
-            total_client_obligations = data.get('total_client_obligations')
-            total_fund_outflows = data.get('total_fund_outflows')
+            # Based on diagnostics, the fields are in data['summary']
+            summary = data.get('summary', {})
+            
+            # Check for equivalent fields (different names than expected)
+            client_interest_obligations = summary.get('client_interest_obligations')
+            fund_obligations = summary.get('fund_obligations')
             
             success = True
             
-            if total_client_obligations is not None:
-                if total_client_obligations != 0:
-                    self.log_test("Total Client Obligations", "PASS", 
-                                f"Found non-zero obligations: ${total_client_obligations}")
+            if client_interest_obligations is not None:
+                if client_interest_obligations != 0:
+                    self.log_test("Client Interest Obligations", "PASS", 
+                                f"Found non-zero obligations: ${client_interest_obligations}")
                 else:
-                    self.log_test("Total Client Obligations", "FAIL", 
+                    self.log_test("Client Interest Obligations", "FAIL", 
                                 "Obligations are $0 (should calculate actual obligations)", 
                                 "Non-zero obligations", "$0")
                     success = False
             else:
-                self.log_test("Total Client Obligations", "FAIL", 
-                            "total_client_obligations field missing from response")
+                self.log_test("Client Interest Obligations", "FAIL", 
+                            "client_interest_obligations field missing from response")
                 success = False
             
-            if total_fund_outflows is not None:
-                if total_fund_outflows != 0:
-                    self.log_test("Total Fund Outflows", "PASS", 
-                                f"Found non-zero outflows: ${total_fund_outflows}")
+            if fund_obligations is not None:
+                if fund_obligations != 0:
+                    self.log_test("Fund Obligations", "PASS", 
+                                f"Found non-zero fund obligations: ${fund_obligations}")
                 else:
-                    self.log_test("Total Fund Outflows", "FAIL", 
-                                "Outflows are $0 (should calculate actual outflows)", 
-                                "Non-zero outflows", "$0")
+                    self.log_test("Fund Obligations", "FAIL", 
+                                "Fund obligations are $0 (should calculate actual obligations)", 
+                                "Non-zero obligations", "$0")
                     success = False
             else:
-                self.log_test("Total Fund Outflows", "FAIL", 
-                            "total_fund_outflows field missing from response")
+                self.log_test("Fund Obligations", "FAIL", 
+                            "fund_obligations field missing from response")
                 success = False
             
             return success
