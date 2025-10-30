@@ -26172,6 +26172,27 @@ async def list_drive_files(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================
+# SHEETS API HELPER FUNCTIONS
+# ============================================
+
+async def list_sheets_spreadsheets(
+    max_results: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """List Google Sheets spreadsheets"""
+    try:
+        user_id = str(current_user.get('_id') or current_user.get('id'))
+        spreadsheets = await sheets_service.list_spreadsheets(
+            user_id=user_id,
+            max_results=max_results
+        )
+        return {"success": True, "spreadsheets": spreadsheets}
+    except Exception as e:
+        logger.error(f"❌ Failed to list spreadsheets: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # ===============================================================================
 # PHASE 2 ARCHITECTURAL REFACTOR - NEW CALCULATION ENDPOINTS
