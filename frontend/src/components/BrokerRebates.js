@@ -13,10 +13,6 @@ const BrokerRebates = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('all'); // Changed from '30d' to 'all' to match wallet balance
   const [selectedAccount, setSelectedAccount] = useState('all');
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
-  const [syncMessage, setSyncMessage] = useState('');
-
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-invest.emergent.host';
 
   useEffect(() => {
     fetchRebates();
