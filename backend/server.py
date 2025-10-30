@@ -257,7 +257,11 @@ drive_service = DriveService(
     token_manager=google_token_manager
 )
 
-logger.info("✅ Google Workspace services initialized: OAuth, Gmail, Calendar, Drive")
+sheets_service = SheetsService(
+    token_manager=google_token_manager
+)
+
+logger.info("✅ Google Workspace services initialized: OAuth, Gmail, Calendar, Drive, Sheets")
 
 # JWT and Password Security Configuration
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fidus-production-secret-2025-secure-key')
