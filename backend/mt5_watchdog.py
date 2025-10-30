@@ -149,7 +149,6 @@ class MT5Watchdog:
             
             # Check each account
             for account in accounts:
-                account_number = account.get('account')
                 balance = float(account.get('balance', 0))
                 fund_type = account.get('fund_type', '')
                 
