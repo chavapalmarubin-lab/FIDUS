@@ -125,15 +125,59 @@ const BrokerRebates = () => {
             Rebate Rate: <span className="text-cyan-400 font-semibold">${REBATE_RATE.toFixed(2)} per lot traded</span>
           </p>
         </div>
-        <Button 
-          onClick={fetchRebates} 
-          disabled={loading}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Loading...' : 'Refresh'}
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={fetchRebates} 
+            disabled={loading}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Loading...' : 'Refresh'}
+          </Button>
+          
+          <Button 
+            onClick={syncTradeHistory} 
+            disabled={syncStatus === 'syncing'}
+            className={
+              syncStatus === 'success' 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : syncStatus === 'error'
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }
+          >
+            {syncStatus === 'syncing' ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : syncStatus === 'success' ? (
+              <>
+                <Activity className="mr-2 h-4 w-4" />
+                Synced!
+              </>
+            ) : (
+              <>
+                <Activity className="mr-2 h-4 w-4" />
+                Sync Trade History
+              </>
+            )}
+          </Button>
+        </div>
       </div>
+
+      {/* Sync Status Message */}
+      {syncMessage && (
+        <div className={`p-4 rounded-lg mb-4 ${
+          syncStatus === 'success' 
+            ? 'bg-green-900/20 border border-green-500/30 text-green-400' 
+            : syncStatus === 'error'
+            ? 'bg-red-900/20 border border-red-500/30 text-red-400'
+            : 'bg-blue-900/20 border border-blue-500/30 text-blue-400'
+        }`}>
+          <p className="text-sm font-medium">{syncMessage}</p>
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="dashboard-card">
