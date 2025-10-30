@@ -708,20 +708,57 @@ const FullGoogleWorkspace = () => {
     try {
       console.log('📊 Loading REAL Google Sheets from API...');
       
-      // Call the REAL Google Sheets API endpoint
-      const response = await apiAxios.get('/google/sheets/list');
+      // Call the OAuth Google Sheets API endpoint
+      const response = await apiAxios.get('/admin/google/sheets/spreadsheets');
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ Loaded ${response.data.length} real sheets`);
-        setSheets(response.data);
-        console.log(`✅ Successfully loaded ${response.data.length} sheets from your Google Sheets`);
+      if (response.data.success && response.data.spreadsheets && Array.isArray(response.data.spreadsheets)) {
+        console.log(`✅ Loaded ${response.data.spreadsheets.length} spreadsheets via OAuth API`);
+        
+        // Transform OAuth Sheets data to our format
+        const transformedSheets = response.data.spreadsheets.map(sheet => ({
+          spreadsheetId: sheet.spreadsheetId,
+          name: sheet.name,
+          webLink: sheet.web_link || sheet.webLink,
+          createdTime: sheet.created_time || sheet.createdTime || new Date().toISOString(),
+          modifiedTime: sheet.modified_time || sheet.modifiedTime || new Date().toISOString(),
+          real_sheets_api: true
+        }));
+        
+        setSheets(transformedSheets);
+        console.log(`✅ Successfully loaded ${transformedSheets.length} spreadsheets from your Google Sheets`);
       } else {
-        console.warn('⚠️ No sheets returned from Sheets API, using fallback');
-        setSheets([]);
+        // No spreadsheets - this is normal, not an error
+        console.log('ℹ️ No spreadsheets found');
+        setSheets([{
+          spreadsheetId: 'no-sheets',
+          name: '📊 No Spreadsheets',
+          webLink: '#',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString()
+        }]);
       }
     } catch (error) {
-      console.error('❌ Failed to load real Sheets:', error);
-      setSheets([]);
+      console.error('❌ Failed to load Sheets:', error);
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.response?.data?.auth_required) {
+        setSheets([{
+          spreadsheetId: 'auth-required',
+          name: '🔐 Google Authentication Required',
+          webLink: '#',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString()
+        }]);
+      } else {
+        // Show error message
+        setSheets([{
+          spreadsheetId: 'error-sheets',
+          name: `⚠️ Sheets API Error: ${error.message}`,
+          webLink: '#',
+          createdTime: new Date().toISOString(),
+          modifiedTime: new Date().toISOString()
+        }]);
+      }
     } finally {
       setLoading(false);
     }
