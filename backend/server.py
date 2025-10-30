@@ -26735,7 +26735,7 @@ async def sync_account_deals(
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
 
 
-@api_router.get("/api/admin/mt5-deals/sync-status")
+@api_router.get("/admin/mt5-deals/sync-status")
 async def get_deals_sync_status(current_user: dict = Depends(get_current_admin_user)):
     """
     Get status of mt5_deals_history collection
