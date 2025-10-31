@@ -311,13 +311,16 @@ class MoneyManagersService:
                     equity = account_data.get("equity", 0)
                     profit_withdrawals = account_data.get("profit_withdrawals", 0)
                     balance = account_data.get("balance", 0)
+                    target_amount = account_data.get("target_amount", 0)
                     
-                    total_allocated += balance  # Current balance is the allocation
+                    # FIX: Use target_amount as initial allocation, NOT current balance
+                    # target_amount represents the initial capital allocated to this manager
+                    total_allocated += target_amount if target_amount > 0 else balance
                     total_equity += equity
                     total_withdrawals += profit_withdrawals
                     total_true_pnl += true_pnl
                     
-                    logger.info(f"Account {account_num}: TRUE P&L={true_pnl}, Equity={equity}, Withdrawals={profit_withdrawals}")
+                    logger.info(f"Account {account_num}: Initial=${target_amount}, TRUE P&L={true_pnl}, Equity={equity}, Withdrawals={profit_withdrawals}")
             
             # Get all trades from assigned accounts (last 30 days for trade statistics)
             end_date = datetime.now(timezone.utc)
