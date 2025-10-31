@@ -15928,6 +15928,8 @@ async def get_complete_cashflow(days: int = 30):
             'total_volume_lots': round(total_volume, 2),
             
             # Metadata
+            'calculation_period_days': days,
+            'trades_count': len(deals),
             'mt5_accounts_count': len(mt5_accounts),
             'separation_accounts_count': len(separation_accounts),
             'active_investments_count': len(investments),
