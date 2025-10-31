@@ -86,95 +86,57 @@ class CashFlowBrokerRebatesTest:
             self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_cash_flow_overview_broker_rebates(self):
-        """Test /api/admin/cashflow/overview endpoint for broker rebates fix"""
+    def test_cashflow_overview_default_period(self):
+        """Test /api/admin/cashflow/overview (default period) - should use 30 days or 12 months"""
         try:
             url = f"{BACKEND_URL}/api/admin/cashflow/overview"
-            params = {
-                "timeframe": "12_months",
-                "fund": "all"
-            }
-            response = self.session.get(url, params=params)
+            response = self.session.get(url)  # No parameters = default period
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if response has summary section
-                if 'summary' not in data:
-                    self.log_test("Cash Flow Overview Structure", False, "Missing 'summary' key in response")
-                    return False
-                
-                summary = data['summary']
-                
-                # CRITICAL TEST: Check broker_rebates is NOT 0.0
-                broker_rebates = summary.get('broker_rebates', 0)
-                if broker_rebates == 0.0:
-                    self.log_test("Broker Rebates Fix", False, 
-                                f"broker_rebates is still hardcoded to 0.0 - fix not working")
-                    return False
-                
-                # Check if broker_rebates matches expected value (291.44)
-                expected_rebates = 291.44
-                if abs(broker_rebates - expected_rebates) < 0.01:
-                    self.log_test("Broker Rebates Value", True, 
-                                f"broker_rebates = ${broker_rebates:.2f} (matches expected ${expected_rebates:.2f})")
-                else:
-                    self.log_test("Broker Rebates Value", True, 
-                                f"broker_rebates = ${broker_rebates:.2f} (non-zero, different from expected ${expected_rebates:.2f})")
-                
-                # Check if rebates_summary object is present
+                # Check if response has rebates_summary section
                 if 'rebates_summary' not in data:
-                    self.log_test("Rebates Summary Object", False, "Missing 'rebates_summary' object in response")
+                    self.log_test("Cash Flow Overview Structure", False, "Missing 'rebates_summary' key in response")
                     return False
                 
                 rebates_summary = data['rebates_summary']
-                
-                # Verify rebates_summary structure
-                required_rebate_fields = ['total_rebates', 'total_volume', 'rebate_breakdown']
-                missing_rebate_fields = [field for field in required_rebate_fields if field not in rebates_summary]
-                
-                if missing_rebate_fields:
-                    self.log_test("Rebates Summary Structure", False, 
-                                f"Missing fields in rebates_summary: {missing_rebate_fields}")
-                    return False
-                
-                # Check rebates_summary values
                 total_rebates = rebates_summary.get('total_rebates', 0)
-                total_volume = rebates_summary.get('total_volume', 0)
                 
-                if total_rebates != broker_rebates:
-                    self.log_test("Rebates Summary Consistency", False, 
-                                f"summary.broker_rebates (${broker_rebates:.2f}) != rebates_summary.total_rebates (${total_rebates:.2f})")
+                print(f"   📊 Default Period Total Rebates: ${total_rebates:.2f}")
+                
+                # CRITICAL TEST: Check if it's the problematic all-time value
+                if abs(total_rebates - 9457) < 1:
+                    self.log_test("Default Period All-Time Check", False, 
+                                f"Still showing all-time rebates ${total_rebates:.2f} instead of period-specific")
                     return False
                 
-                # Check fund_revenue includes broker rebates
-                fund_revenue = summary.get('fund_revenue', 0)
-                if fund_revenue == 0:
-                    self.log_test("Fund Revenue Calculation", False, "fund_revenue is 0 - should include broker rebates")
-                    return False
+                # Check if it's in the expected 30-day range (~$8,000-$8,100)
+                if 7500 <= total_rebates <= 8500:
+                    self.log_test("Default Period Range Check", True, 
+                                f"Rebates in expected 30-day range: ${total_rebates:.2f}")
+                    success = True
+                else:
+                    self.log_test("Default Period Range Check", False, 
+                                f"Rebates outside expected 30-day range: ${total_rebates:.2f} (expected $7,500-$8,500)")
+                    success = False
                 
-                # Check net_profit calculation
-                net_profit = summary.get('net_profit', 0)
+                # Store for comparison
+                self.default_rebates = total_rebates
                 
-                # Store for consistency check
-                self.cashflow_broker_rebates = broker_rebates
+                # Check for period information
+                period_info = data.get('period_days') or data.get('calculation_period_days') or "unknown"
+                print(f"   📅 Period Information: {period_info}")
                 
-                details = (f"broker_rebates=${broker_rebates:.2f}, "
-                          f"total_rebates=${total_rebates:.2f}, "
-                          f"total_volume={total_volume:.2f} lots, "
-                          f"fund_revenue=${fund_revenue:.2f}, "
-                          f"net_profit=${net_profit:.2f}")
-                
-                self.log_test("Cash Flow Overview Broker Rebates", True, details)
-                return True
+                return success
                 
             else:
-                self.log_test("Cash Flow Overview Broker Rebates", False, 
+                self.log_test("Cash Flow Overview Default", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Cash Flow Overview Broker Rebates", False, f"Exception: {str(e)}")
+            self.log_test("Cash Flow Overview Default", False, f"Exception: {str(e)}")
             return False
     
     def test_mt5_fund_performance_consistency(self):
