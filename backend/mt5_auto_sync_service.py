@@ -350,6 +350,47 @@ class MT5AutoSyncService:
         non_zero_count = sum(1 for data in live_data_list if float(data.get('balance', 0)) > 0)
         return non_zero_count == 0
     
+    async def _check_bridge_health(self) -> Dict:
+        """Check MT5 Bridge health status"""
+        try:
+            async with self.session.get(f"{self.bridge_url}/health", timeout=10) as response:
+                if response.status == 200:
+                    return await response.json()
+                return {}
+        except Exception as e:
+            logger.error(f"Failed to check bridge health: {str(e)}")
+            return {}
+    
+    async def _trigger_mt5_restart(self):
+        """Trigger MT5 Terminal restart via GitHub Actions"""
+        try:
+            logger.info("🔄 Triggering MT5 Terminal restart via GitHub Actions...")
+            
+            # Trigger GitHub Actions workflow for MT5 restart
+            import httpx
+            github_token = os.getenv('GITHUB_TOKEN')
+            
+            if not github_token:
+                logger.error("❌ GITHUB_TOKEN not found - cannot trigger auto-restart")
+                return
+            
+            url = "https://api.github.com/repos/chavapalmarubin-lab/FIDUS/actions/workflows/mt5-full-restart.yml/dispatches"
+            headers = {
+                "Authorization": f"Bearer {github_token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            data = {"ref": "main"}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, headers=headers, json=data, timeout=30)
+                
+                if response.status_code == 204:
+                    logger.info("✅ MT5 restart workflow triggered successfully")
+                else:
+                    logger.error(f"❌ Failed to trigger MT5 restart: HTTP {response.status_code}")
+        except Exception as e:
+            logger.error(f"❌ Failed to trigger MT5 restart: {str(e)}")
+    
     async def sync_all_accounts(self) -> Dict[str, Any]:
         """Sync all active MT5 accounts"""
         try:
