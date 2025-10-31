@@ -9,12 +9,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";  
-import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, ArrowDownCircle, Wallet } from "lucide-react";
+import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, ArrowDownCircle, Wallet, Globe, Mail } from "lucide-react";
 import { format } from "date-fns";
 import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
 import CurrencySelector from "./CurrencySelector";
 import useCurrency from "../hooks/useCurrency";
+import ClientGoogleWorkspace from "./ClientGoogleWorkspace";
 
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
@@ -31,6 +32,21 @@ const ClientDashboard = ({ user, onLogout }) => {
   const [fundFilter, setFundFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+
+  // Profile editing state
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || ''
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Currency conversion hook
   const { 
@@ -53,6 +69,96 @@ const ClientDashboard = ({ user, onLogout }) => {
       setLoading(false);
     }
   };
+
+  // Profile management functions
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setProfileLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await apiAxios.post('/client/profile/photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Update user profile picture in local state
+        user.profile_picture = response.data.photo_url;
+        alert('Profile photo updated successfully!');
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      alert('Failed to update profile photo: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    setProfileLoading(true);
+    try {
+      const response = await apiAxios.put('/client/profile', profileData);
+
+      if (response.data.success) {
+        // Update user data in local state
+        Object.assign(user, response.data.user);
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      alert('Failed to update profile: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.new !== passwordData.confirm) {
+      alert('New passwords do not match');
+      return;
+    }
+    
+    if (passwordData.new.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const response = await apiAxios.post('/auth/change-password', {
+        username: user.username,
+        current_password: passwordData.current,
+        new_password: passwordData.new
+      });
+
+      if (response.data.success) {
+        alert('Password changed successfully!');
+        setShowPasswordChange(false);
+        setPasswordData({ current: '', new: '', confirm: '' });
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      alert('Failed to change password: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  // Initialize profile data when user data loads
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
 
   const applyFilters = () => {
     if (!clientData) return;
@@ -174,9 +280,14 @@ const ClientDashboard = ({ user, onLogout }) => {
               <CalendarIcon size={16} className="mr-2" />
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
-              <FileText size={16} className="mr-2" />
-              Documents
+            <TabsTrigger value="google-workspace" className="text-white data-[state=active]:bg-cyan-600">
+              <Globe size={16} className="mr-2" />
+              My FIDUS Workspace
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="text-white data-[state=active]:bg-cyan-600">
+              <img src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"} 
+                   alt="Profile" className="w-4 h-4 rounded-full mr-2" />
+              My Profile
             </TabsTrigger>
           </TabsList>
 
@@ -535,11 +646,178 @@ const ClientDashboard = ({ user, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
-            <InvestmentCalendar user={user} />
+            <InvestmentCalendar user={user} userType="client" />
           </TabsContent>
 
-          <TabsContent value="documents" className="mt-6">
-            <DocumentPortal user={user} userType="client" />
+          <TabsContent value="google-workspace" className="mt-6">
+            <ClientGoogleWorkspace user={user} />
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-6">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <img src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"} 
+                         alt="Profile" className="w-8 h-8 rounded-full" />
+                    My Profile Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  
+                  {/* Profile Photo Section */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={user.profile_picture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full object-cover border-4 border-cyan-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Profile Photo</h3>
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handlePhotoUpload}
+                      />
+                      <Button 
+                        onClick={() => document.getElementById('photo-upload').click()}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Change Photo
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Profile Information Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={profileData.name}
+                        onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        value={user.username}
+                        disabled
+                        className="bg-gray-100"
+                        placeholder="Username (cannot be changed)"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      onClick={handleProfileUpdate}
+                      className="bg-cyan-600 hover:bg-cyan-700"
+                      disabled={profileLoading}
+                    >
+                      {profileLoading ? "Updating..." : "Update Profile"}
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => setShowPasswordChange(true)}
+                      variant="outline"
+                    >
+                      Change Password
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Password Change Modal */}
+              {showPasswordChange && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change Password</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={passwordData.current}
+                        onChange={(e) => setPasswordData({...passwordData, current: e.target.value})}
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={passwordData.new}
+                        onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={passwordData.confirm}
+                        onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-4 pt-4">
+                      <Button 
+                        onClick={handlePasswordChange}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                        disabled={passwordLoading}
+                      >
+                        {passwordLoading ? "Changing..." : "Change Password"}
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => setShowPasswordChange(false)}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

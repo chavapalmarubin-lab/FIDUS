@@ -123,6 +123,7 @@ class GoogleAPIsService:
             Dictionary containing tokens and user info
         """
         try:
+            # Create flow without fixed scopes to allow Google to return whatever scopes were granted
             flow = Flow.from_client_config(
                 {
                     "web": {
@@ -133,10 +134,12 @@ class GoogleAPIsService:
                         "redirect_uris": [self.redirect_uri]
                     }
                 },
-                scopes=self.scopes
+                scopes=None  # Don't enforce scopes during token exchange
             )
             
             flow.redirect_uri = self.redirect_uri
+            
+            # Fetch token without scope validation
             flow.fetch_token(code=authorization_code)
             
             credentials = flow.credentials
@@ -144,13 +147,17 @@ class GoogleAPIsService:
             # Get user info
             user_info = self._get_user_info(credentials)
             
+            # Log the actual scopes returned by Google
+            actual_scopes = credentials.scopes or []
+            logger.info(f"Google returned scopes: {actual_scopes}")
+            
             token_data = {
                 'access_token': credentials.token,
                 'refresh_token': credentials.refresh_token,
                 'token_uri': credentials.token_uri,
                 'client_id': credentials.client_id,
                 'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes,
+                'scopes': actual_scopes,  # Use actual scopes returned by Google
                 'expiry': credentials.expiry.isoformat() if credentials.expiry else None,
                 'user_info': user_info
             }
@@ -192,16 +199,21 @@ class GoogleAPIsService:
         """
         try:
             expiry = None
-            if token_data.get('expiry'):
-                expiry = datetime.fromisoformat(token_data['expiry'].replace('Z', '+00:00'))
+            # Handle both 'expiry' and 'expires_at' field names
+            expiry_field = token_data.get('expires_at') or token_data.get('expiry')
+            if expiry_field:
+                if isinstance(expiry_field, str):
+                    expiry = datetime.fromisoformat(expiry_field.replace('Z', '+00:00'))
+                elif isinstance(expiry_field, datetime):
+                    expiry = expiry_field
             
             credentials = Credentials(
-                token=token_data['access_token'],
+                token=token_data.get('access_token'),
                 refresh_token=token_data.get('refresh_token'),
-                token_uri=token_data.get('token_uri'),
+                token_uri=token_data.get('token_uri', 'https://oauth2.googleapis.com/token'),
                 client_id=token_data.get('client_id'),
                 client_secret=token_data.get('client_secret'),
-                scopes=token_data.get('scopes'),
+                scopes=token_data.get('scopes', []),
                 expiry=expiry
             )
             
@@ -538,6 +550,56 @@ class GoogleAPIsService:
                 'modifiedTime': datetime.now(timezone.utc).isoformat(),
                 'error': True
             }]
+
+    async def get_drive_files_in_folder(self, token_data: Dict[str, str], folder_id: str, max_results: int = 50) -> List[Dict]:
+        """
+        Get Drive files from a SPECIFIC folder only
+        
+        Args:
+            token_data: OAuth token data
+            folder_id: Google Drive folder ID to search in
+            max_results: Maximum number of files to retrieve
+            
+        Returns:
+            List of Drive files in the specified folder ONLY
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # Query for files in specific folder only
+            query = f"'{folder_id}' in parents and trashed=false"
+            
+            # Get files from the specific folder
+            results = drive_service.files().list(
+                q=query,
+                pageSize=max_results,
+                fields="nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, parents)"
+            ).execute()
+            
+            files = results.get('files', [])
+            
+            formatted_files = []
+            for file in files:
+                formatted_files.append({
+                    'id': file['id'],
+                    'name': file['name'],
+                    'mimeType': file.get('mimeType'),
+                    'size': file.get('size'),
+                    'modifiedTime': file.get('modifiedTime'),
+                    'createdTime': file.get('createdTime'),
+                    'webViewLink': file.get('webViewLink'),
+                    'parents': file.get('parents', []),
+                    'folder_id': folder_id,
+                    'in_client_folder': True
+                })
+            
+            logger.info(f"Retrieved {len(formatted_files)} files from folder {folder_id}")
+            return formatted_files
+            
+        except Exception as e:
+            logger.error(f"Drive folder API error: {str(e)}")
+            return []
     
     async def upload_drive_file(self, token_data: Dict[str, str], file_data: bytes, filename: str, mime_type: str) -> Dict:
         """
@@ -585,6 +647,264 @@ class GoogleAPIsService:
                 'success': False,
                 'error': str(e)
             }
+
+    async def upload_file_to_folder(self, token_data: Dict[str, str], folder_id: str, filename: str, file_data: bytes, mime_type: str) -> Dict:
+        """
+        Upload file to a specific Google Drive folder (PRIVACY SECURE)
+        
+        Args:
+            token_data: OAuth token data
+            folder_id: Specific Google Drive folder ID to upload to
+            filename: Name of the file
+            file_data: File content as bytes
+            mime_type: MIME type of the file
+            
+        Returns:
+            Upload result with file ID and metadata
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # File metadata with parent folder specified
+            file_metadata = {
+                'name': filename,
+                'parents': [folder_id]  # CRITICAL: Upload to specific client folder ONLY
+            }
+            
+            from googleapiclient.http import MediaIoBaseUpload
+            import io
+            
+            file_io = io.BytesIO(file_data)
+            media = MediaIoBaseUpload(file_io, mimetype=mime_type)
+            
+            file_result = drive_service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id, name, webViewLink, mimeType, size, createdTime, modifiedTime'
+            ).execute()
+            
+            logger.info(f"✅ PRIVACY SECURE: Uploaded '{filename}' to folder {folder_id} (file_id: {file_result['id']})")
+            
+            return {
+                'success': True,
+                'id': file_result['id'],
+                'name': file_result.get('name'),
+                'web_view_link': file_result.get('webViewLink'),
+                'mimeType': file_result.get('mimeType'),
+                'size': file_result.get('size'),
+                'createdTime': file_result.get('createdTime'),
+                'modifiedTime': file_result.get('modifiedTime'),
+                'folder_id': folder_id,
+                'message': f'File uploaded successfully to client folder'
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Drive folder upload error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    async def create_drive_folder(self, token_data: Dict[str, str], folder_name: str, parent_folder_id: str = None) -> Dict:
+        """
+        Create a folder in Google Drive
+        
+        Args:
+            token_data: OAuth token data
+            folder_name: Name of the folder to create
+            parent_folder_id: ID of parent folder (optional)
+            
+        Returns:
+            Folder creation result with folder ID and web view link
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            drive_service = build('drive', 'v3', credentials=credentials)
+            
+            # Create folder metadata
+            folder_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            
+            # Set parent folder if specified
+            if parent_folder_id:
+                folder_metadata['parents'] = [parent_folder_id]
+            
+            # Create the folder
+            folder = drive_service.files().create(
+                body=folder_metadata,
+                fields='id, name, webViewLink, createdTime'
+            ).execute()
+            
+            folder_id = folder.get('id')
+            web_view_link = folder.get('webViewLink', f'https://drive.google.com/drive/folders/{folder_id}')
+            
+            logger.info(f"Successfully created Drive folder: {folder_name} (ID: {folder_id})")
+            
+            return {
+                'success': True,
+                'folder_id': folder_id,
+                'name': folder_name,
+                'web_view_link': web_view_link,
+                'created_time': folder.get('createdTime'),
+                'parent_folder_id': parent_folder_id
+            }
+            
+        except HttpError as error:
+            logger.error(f"Drive folder creation HttpError: {error}")
+            return {
+                'success': False,
+                'error': f'Drive API error: {str(error)}'
+            }
+        except Exception as e:
+            logger.error(f"Drive folder creation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    # ==================== GOOGLE MEET API METHODS ====================
+    
+    async def create_meet_space(self, token_data: Dict[str, str], space_config: Dict = None) -> Dict:
+        """
+        Create a Google Meet space
+        
+        Args:
+            token_data: OAuth token data
+            space_config: Optional space configuration
+            
+        Returns:
+            Meet space information
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            
+            # Note: Google Meet Spaces API is still in development
+            # For now, we'll create a calendar event with Meet link
+            calendar_service = build('calendar', 'v3', credentials=credentials)
+            
+            # Create an event with Google Meet integration
+            event_data = {
+                'summary': space_config.get('name', 'FIDUS Meeting'),
+                'description': space_config.get('description', 'Investment consultation meeting'),
+                'start': {
+                    'dateTime': space_config.get('start_time', (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()),
+                    'timeZone': 'UTC',
+                },
+                'end': {
+                    'dateTime': space_config.get('end_time', (datetime.now(timezone.utc) + timedelta(hours=1, minutes=30)).isoformat()),
+                    'timeZone': 'UTC',
+                },
+                'conferenceData': {
+                    'createRequest': {
+                        'requestId': f"fidus-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        'conferenceSolutionKey': {
+                            'type': 'hangoutsMeet'
+                        }
+                    }
+                },
+                'attendees': space_config.get('attendees', [])
+            }
+            
+            # Create event with conferencing
+            event = calendar_service.events().insert(
+                calendarId='primary',
+                body=event_data,
+                conferenceDataVersion=1
+            ).execute()
+            
+            # Extract Meet link from the created event
+            meet_link = None
+            if 'conferenceData' in event and 'entryPoints' in event['conferenceData']:
+                for entry_point in event['conferenceData']['entryPoints']:
+                    if entry_point['entryPointType'] == 'video':
+                        meet_link = entry_point['uri']
+                        break
+            
+            logger.info(f"Created Google Meet space: {meet_link}")
+            
+            return {
+                'success': True,
+                'space_id': event['id'],
+                'meet_link': meet_link,
+                'calendar_event_id': event['id'],
+                'html_link': event.get('htmlLink'),
+                'message': 'Google Meet space created successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Meet space creation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    async def get_meet_spaces(self, token_data: Dict[str, str]) -> List[Dict]:
+        """
+        Get Google Meet spaces (via Calendar events with Meet links)
+        
+        Args:
+            token_data: OAuth token data
+            
+        Returns:
+            List of Meet spaces
+        """
+        try:
+            credentials = self._get_credentials(token_data)
+            calendar_service = build('calendar', 'v3', credentials=credentials)
+            
+            # Get events with conference data (Meet links)
+            now = datetime.now(timezone.utc).isoformat()
+            future = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+            
+            events_result = calendar_service.events().list(
+                calendarId='primary',
+                timeMin=now,
+                timeMax=future,
+                maxResults=20,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            events = events_result.get('items', [])
+            meet_spaces = []
+            
+            for event in events:
+                if 'conferenceData' in event:
+                    meet_link = None
+                    if 'entryPoints' in event['conferenceData']:
+                        for entry_point in event['conferenceData']['entryPoints']:
+                            if entry_point['entryPointType'] == 'video':
+                                meet_link = entry_point['uri']
+                                break
+                    
+                    if meet_link:
+                        meet_spaces.append({
+                            'id': event['id'],
+                            'name': event.get('summary', 'Untitled Meeting'),
+                            'description': event.get('description', ''),
+                            'meet_link': meet_link,
+                            'start_time': event['start'].get('dateTime', event['start'].get('date')),
+                            'end_time': event['end'].get('dateTime', event['end'].get('date')),
+                            'attendees': [att.get('email') for att in event.get('attendees', [])],
+                            'creator': event.get('creator', {}).get('email'),
+                            'status': event.get('status', 'confirmed')
+                        })
+            
+            logger.info(f"Retrieved {len(meet_spaces)} Meet spaces")
+            return meet_spaces
+            
+        except Exception as e:
+            logger.error(f"Failed to get Meet spaces: {str(e)}")
+            return [{
+                'id': 'error',
+                'name': 'Error loading Meet spaces',
+                'meet_link': '',
+                'start_time': datetime.now(timezone.utc).isoformat(),
+                'error': True
+            }]
 
 # Global instance - lazy initialization to avoid environment variable issues
 _google_apis_service = None

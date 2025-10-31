@@ -18,7 +18,8 @@ import {
     BarChart3,
     AlertCircle,
     CheckCircle,
-    RefreshCw
+    RefreshCw,
+    Eye
 } from 'lucide-react';
 import apiAxios from '../utils/apiAxios';
 
@@ -275,7 +276,7 @@ const MT5Management = () => {
         <div className="mt5-management p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management (Monitoring View)</h2>
                     <div className="flex items-center space-x-4">
                         <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
                         <div className="flex items-center space-x-2">
@@ -290,21 +291,16 @@ const MT5Management = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-400">
+                        📊 View and monitor all MT5 accounts
+                    </span>
                     <Button 
-                        onClick={fetchMT5Data}
-                        variant="outline"
-                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        onClick={() => window.location.reload()}
+                        className="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded flex items-center gap-2"
                     >
-                        <RefreshCw size={16} className="mr-2" />
-                        Refresh Data
-                    </Button>
-                    <Button 
-                        onClick={() => setShowAddAccountModal(true)}
-                        className="bg-cyan-600 hover:bg-cyan-700"
-                    >
-                        <Plus size={16} className="mr-2" />
-                        Add MT5 Account
+                        <RefreshCw className="h-4 w-4" />
+                        Refresh
                     </Button>
                 </div>
             </div>
@@ -422,15 +418,14 @@ const MT5Management = () => {
                                                 <th className="text-left py-3 px-4 text-slate-300">Equity</th>
                                                 <th className="text-left py-3 px-4 text-slate-300">P&L</th>
                                                 <th className="text-left py-3 px-4 text-slate-300">Status</th>
+                                                <th className="text-left py-3 px-4 text-slate-300">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {brokerData.accounts.map((account) => (
                                                 <tr 
                                                     key={account.account_id} 
-                                                    className="border-b border-slate-700 hover:bg-slate-750 cursor-pointer transition-colors"
-                                                    onClick={() => handleAccountClick(account)}
-                                                    title="Click to view account details"
+                                                    className="border-b border-slate-700 hover:bg-slate-750 transition-colors"
                                                 >
                                                     <td className="py-3 px-4 text-white">{account.client_id}</td>
                                                     <td className="py-3 px-4">
@@ -453,6 +448,23 @@ const MT5Management = () => {
                                                             {account.connection_status}
                                                         </Badge>
                                                     </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            <Button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedAccountDetails(account);
+                                                                    setShowAccountDetailsModal(true);
+                                                                }}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                                            >
+                                                                <Eye size={14} className="mr-1" />
+                                                                View Details
+                                                            </Button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -464,121 +476,62 @@ const MT5Management = () => {
                 )}
             </div>
 
-            {/* Add Account Modal */}
-            {showAddAccountModal && (
+            {/* MT5 Account Details Modal - VIEW ONLY */}
+            {showAccountDetailsModal && selectedAccountDetails && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Add MT5 Account</h3>
+                    <div className="bg-slate-800 rounded-lg p-6 w-full max-w-2xl mx-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-white">MT5 Account Details</h3>
+                            <button 
+                                onClick={() => setShowAccountDetailsModal(false)}
+                                className="text-slate-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
                         
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                                <Label className="text-slate-300">Client ID *</Label>
-                                <Input
-                                    value={newAccount.client_id}
-                                    onChange={(e) => setNewAccount(prev => ({ ...prev, client_id: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                    placeholder="client_001"
-                                />
+                                <label className="text-slate-300 font-medium">MT5 Account Number</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.mt5_login}</p>
                             </div>
-                            
                             <div>
-                                <Label className="text-slate-300">Fund Code</Label>
-                                <select
-                                    value={newAccount.fund_code}
-                                    onChange={(e) => setNewAccount(prev => ({ ...prev, fund_code: e.target.value }))}
-                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                                >
-                                    <option value="CORE">CORE</option>
-                                    <option value="BALANCE">BALANCE</option>
-                                    <option value="DYNAMIC">DYNAMIC</option>
-                                    <option value="UNLIMITED">UNLIMITED</option>
-                                </select>
+                                <label className="text-slate-300 font-medium">Broker</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.broker}</p>
                             </div>
-                            
                             <div>
-                                <Label className="text-slate-300">Broker *</Label>
-                                <select
-                                    value={selectedBroker}
-                                    onChange={(e) => handleBrokerSelect(e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                                >
-                                    <option value="">Select Broker</option>
-                                    {availableBrokers.map((broker) => (
-                                        <option key={broker.code} value={broker.code}>
-                                            {broker.name} - {broker.description}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="text-slate-300 font-medium">Status</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.status}</p>
                             </div>
-                            
-                            {brokerServers.length > 0 && (
-                                <div>
-                                    <Label className="text-slate-300">MT5 Server *</Label>
-                                    <select
-                                        value={newAccount.mt5_server}
-                                        onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_server: e.target.value }))}
-                                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                                    >
-                                        <option value="">Select Server</option>
-                                        {brokerServers.map((server) => (
-                                            <option key={server} value={server}>
-                                                {server}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                            
                             <div>
-                                <Label className="text-slate-300">MT5 Login *</Label>
-                                <Input
-                                    value={newAccount.mt5_login}
-                                    onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_login: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                    placeholder="9928326"
-                                />
+                                <label className="text-slate-300 font-medium">Client</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.client_id || 'Not allocated'}</p>
                             </div>
-                            
                             <div>
-                                <Label className="text-slate-300">MT5 Password *</Label>
-                                <Input
-                                    type="password"
-                                    value={newAccount.mt5_password}
-                                    onChange={(e) => setNewAccount(prev => ({ ...prev, mt5_password: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                    placeholder="R1d567j!"
-                                />
+                                <label className="text-slate-300 font-medium">Fund Code</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">{selectedAccountDetails.fund_code || 'N/A'}</p>
                             </div>
-                            
                             <div>
-                                <Label className="text-slate-300">Allocated Amount</Label>
-                                <Input
-                                    type="number"
-                                    value={newAccount.allocated_amount}
-                                    onChange={(e) => setNewAccount(prev => ({ ...prev, allocated_amount: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                    placeholder="0.00"
-                                />
+                                <label className="text-slate-300 font-medium">Allocated Amount</label>
+                                <p className="text-white bg-slate-700 p-2 rounded">
+                                    {selectedAccountDetails.allocated_amount ? `$${Number(selectedAccountDetails.allocated_amount).toLocaleString()}` : 'N/A'}
+                                </p>
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-slate-300 font-medium">Allocation Notes</label>
+                                <p className="text-white bg-slate-700 p-2 rounded min-h-[60px]">
+                                    {selectedAccountDetails.allocation_notes || 'No notes available'}
+                                </p>
                             </div>
                         </div>
                         
-                        <div className="flex gap-3 mt-6">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setShowAddAccountModal(false);
-                                    resetForm();
-                                }}
-                                className="flex-1"
+                        <div className="flex justify-end mt-6">
+                            <button 
+                                onClick={() => setShowAccountDetailsModal(false)}
+                                className="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded"
                             >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleAddAccount}
-                                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                            >
-                                Add Account
-                            </Button>
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

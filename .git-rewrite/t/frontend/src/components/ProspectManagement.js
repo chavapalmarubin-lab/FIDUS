@@ -7,10 +7,13 @@ import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import EnhancedPipelineView from "./EnhancedPipelineView";
+import ClientDetailModal from "./ClientDetailModal";
 import { 
   Users, 
   Plus, 
   Edit2, 
+  Edit,
   Trash2, 
   UserCheck, 
   Send,
@@ -39,11 +42,15 @@ import {
   CreditCard,
   Building,
   Briefcase,
-  Calculator
+  Calculator,
+  MessageSquare,
+  Video,
+  Share2
 } from "lucide-react";
 import axios from "axios";
 import apiAxios from "../utils/apiAxios";
 import InvestmentSimulator from './InvestmentSimulator';
+import googleCRMIntegration from '../services/googleCRMIntegration';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -127,8 +134,28 @@ const ProspectManagement = () => {
   const [success, setSuccess] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [meetingData, setMeetingData] = useState({
+    type: 'consultation',
+    date: '',
+    time: '',
+    duration: 60,
+    notes: ''
+  });
+  const [emailData, setEmailData] = useState({
+    type: 'general',
+    subject: '',
+    body: '',
+    recipient: null
+  });
+  const [activeTab, setActiveTab] = useState("pipeline"); // Changed default to pipeline
+  
+  // Client Detail Modal
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [clientDetailOpen, setClientDetailOpen] = useState(false);
   
   // Document management states
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -153,6 +180,354 @@ const ProspectManagement = () => {
     fetchProspects();
     fetchPipeline();
   }, []);
+
+  // ===== GOOGLE API INTEGRATION FUNCTIONS =====
+  
+  // Email prospect via Gmail API with modal
+  const openEmailModal = (prospect, emailType = 'general') => {
+    setSelectedProspect(prospect);
+    setEmailData({
+      type: emailType,
+      subject: emailType === 'document_request' 
+        ? `Document Request - ${prospect.name}` 
+        : `Investment Opportunity - ${prospect.name}`,
+      body: emailType === 'document_request' 
+        ? `Dear ${prospect.name},\n\nWe need the following documents to proceed with your investment application:\n\n- Government-issued photo ID\n- Proof of residence\n- Bank statement\n- Source of funds documentation\n\nBest regards,\nFIDUS Investment Management Team`
+        : `Dear ${prospect.name},\n\nThank you for your interest in FIDUS Investment Management. We would like to discuss investment opportunities with you.\n\nBest regards,\nFIDUS Investment Management Team`,
+      recipient: prospect
+    });
+    setShowEmailModal(true);
+  };
+
+  // Schedule meeting via Calendar API with modal
+  const openMeetingModal = (prospect, meetingType = 'consultation') => {
+    setSelectedProspect(prospect);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    setMeetingData({
+      type: meetingType,
+      date: tomorrow.toISOString().split('T')[0],
+      time: '14:00',
+      duration: meetingType === 'consultation' ? 60 : 30,
+      notes: `${meetingType === 'consultation' ? 'Investment consultation' : 'Follow-up meeting'} with ${prospect.name}`
+    });
+    setShowMeetingModal(true);
+  };
+
+  // Send email function
+  const sendProspectEmail = async () => {
+    if (!emailData.recipient || !emailData.subject || !emailData.body) {
+      setError('Please fill in all email fields');
+      return;
+    }
+
+    try {
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: emailData.recipient.email,
+        subject: emailData.subject,
+        body: emailData.body,
+        html_body: emailData.body.replace(/\n/g, '<br>')
+      });
+
+      if (response.data.success) {
+        setSuccess(`Email sent successfully to ${emailData.recipient.name}!`);
+        setShowEmailModal(false);
+      } else {
+        setError(`Failed to send email: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Email sending error:', error);
+      setError('Failed to send email. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Schedule meeting function
+  const scheduleProspectMeeting = async () => {
+    if (!meetingData.date || !meetingData.time || !selectedProspect) {
+      setError('Please fill in all meeting details');
+      return;
+    }
+
+    try {
+      const startDateTime = new Date(`${meetingData.date}T${meetingData.time}:00`);
+      const endDateTime = new Date(startDateTime.getTime() + meetingData.duration * 60000);
+
+      const eventData = {
+        summary: `${meetingData.type === 'consultation' ? 'Investment Consultation' : 'Follow-up Meeting'} - ${selectedProspect.name}`,
+        description: `${meetingData.notes}\n\nContact: ${selectedProspect.email}\nPhone: ${selectedProspect.phone || 'N/A'}`,
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        attendees: [{ email: selectedProspect.email }],
+        conferenceData: {
+          createRequest: {
+            requestId: `prospect-meeting-${Date.now()}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' }
+          }
+        }
+      };
+
+      const response = await apiAxios.post('/google/calendar/create-event', eventData);
+      
+      if (response.data.success) {
+        setSuccess(`Meeting scheduled successfully with ${selectedProspect.name}! Calendar invite sent.`);
+        setShowMeetingModal(false);
+      } else {
+        setError(`Failed to schedule meeting: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Meeting scheduling error:', error);
+      setError('Failed to schedule meeting. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Email prospect with different types
+  const emailProspectWithType = async (prospect, emailType = 'general') => {
+    try {
+      let subject, body, htmlBody;
+      
+      switch (emailType) {
+        case 'document_request':
+          subject = 'Document Request - FIDUS Investment Management';
+          body = `Dear ${prospect.name},
+
+Thank you for your interest in FIDUS Investment Management. To proceed with your investment application, we need the following documents:
+
+Required Documents:
+- Government-issued photo ID (passport, driver's license, or national ID)
+- Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)
+- Bank statement (recent statement from your primary bank account)
+- Source of funds documentation (salary slip, business registration, or investment statements)
+
+You can upload these documents securely through our client portal or respond to this email with the attachments.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+FIDUS Investment Management Team`;
+          
+          htmlBody = `<html><body>
+<h2>Document Request - FIDUS Investment Management</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your interest in FIDUS Investment Management. To proceed with your investment application, we need the following documents:</p>
+<h3>Required Documents:</h3>
+<ul>
+<li>Government-issued photo ID (passport, driver's license, or national ID)</li>
+<li>Proof of residence (utility bill, bank statement, or lease agreement - max 3 months old)</li>
+<li>Bank statement (recent statement from your primary bank account)</li>
+<li>Source of funds documentation (salary slip, business registration, or investment statements)</li>
+</ul>
+<p>You can upload these documents securely through our client portal or respond to this email with the attachments.</p>
+<p>If you have any questions, please don't hesitate to contact us.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+          break;
+          
+        case 'meeting_followup':
+          subject = 'Follow-up - Investment Consultation';
+          body = `Dear ${prospect.name},
+
+Thank you for your time during our recent discussion about investment opportunities with FIDUS Investment Management.
+
+As discussed, we believe our investment solutions can help you achieve your financial goals. Here's a summary of what we can offer:
+
+- Personalized portfolio management
+- Risk assessment and mitigation strategies
+- Regular performance reviews and updates
+- Access to institutional-grade investment products
+
+Next steps:
+1. Review the investment proposal we'll send separately
+2. Complete the necessary documentation
+3. Schedule a follow-up meeting if you have questions
+
+We're here to support you every step of the way. Please don't hesitate to reach out with any questions.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+          htmlBody = `<html><body>
+<h2>Follow-up - Investment Consultation</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your time during our recent discussion about investment opportunities with FIDUS Investment Management.</p>
+<p>As discussed, we believe our investment solutions can help you achieve your financial goals. Here's what we can offer:</p>
+<ul>
+<li>Personalized portfolio management</li>
+<li>Risk assessment and mitigation strategies</li>
+<li>Regular performance reviews and updates</li>
+<li>Access to institutional-grade investment products</li>
+</ul>
+<h3>Next steps:</h3>
+<ol>
+<li>Review the investment proposal we'll send separately</li>
+<li>Complete the necessary documentation</li>
+<li>Schedule a follow-up meeting if you have questions</li>
+</ol>
+<p>We're here to support you every step of the way. Please don't hesitate to reach out with any questions.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+          break;
+          
+        default:
+          subject = 'Investment Opportunity - FIDUS Investment Management';
+          body = `Dear ${prospect.name},
+
+Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.
+
+Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer comprehensive portfolio management, risk assessment, and personalized investment strategies.
+
+Would you be available for a brief consultation this week? We can arrange a call at your convenience.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+          htmlBody = `<html><body>
+<h2>Investment Opportunity - FIDUS Investment Management</h2>
+<p>Dear ${prospect.name},</p>
+<p>Thank you for your interest in FIDUS Investment Management. We specialize in creating customized investment solutions that align with your financial goals.</p>
+<p>Our experienced team would love to discuss how we can help you achieve your investment objectives. We offer:</p>
+<ul>
+<li>Comprehensive portfolio management</li>
+<li>Risk assessment and mitigation</li>
+<li>Personalized investment strategies</li>
+</ul>
+<p>Would you be available for a brief consultation this week? We can arrange a call at your convenience.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+          break;
+      }
+
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: prospect.email,
+        subject: subject,
+        body: body,
+        html_body: htmlBody
+      });
+
+      if (response.data.success) {
+        setSuccess(`Email sent successfully to ${prospect.name}!`);
+      } else {
+        setError(`Failed to send email: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Email sending error:', error);
+      setError('Failed to send email. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Share investment report with prospect
+  const shareInvestmentReport = async (prospect) => {
+    try {
+      // Generate personalized investment report data
+      const reportData = {
+        prospect_name: prospect.name,
+        initial_investment: prospect.initial_investment || 'To be determined',
+        risk_tolerance: prospect.risk_tolerance || 'Conservative',
+        investment_timeline: prospect.investment_timeline || '5+ years',
+        recommended_allocation: {
+          conservative: '60% Bonds, 40% Stocks',
+          moderate: '50% Bonds, 50% Stocks', 
+          aggressive: '30% Bonds, 70% Stocks'
+        }
+      };
+
+      // Send personalized investment report via email
+      const subject = `Personalized Investment Report - ${prospect.name}`;
+      const body = `Dear ${prospect.name},
+
+Based on our discussions, we've prepared a personalized investment report for your review.
+
+Investment Profile:
+- Initial Investment: ${reportData.initial_investment}
+- Risk Tolerance: ${reportData.risk_tolerance}
+- Investment Timeline: ${reportData.investment_timeline}
+
+Recommended Portfolio Allocation:
+${reportData.recommended_allocation[prospect.risk_tolerance?.toLowerCase()] || reportData.recommended_allocation.conservative}
+
+Key Benefits of Working with FIDUS:
+- Professional portfolio management
+- Regular performance monitoring
+- Risk management strategies
+- Transparent fee structure
+
+Next Steps:
+1. Review this personalized report
+2. Schedule a detailed consultation
+3. Begin your investment journey with FIDUS
+
+Please don't hesitate to contact us with any questions.
+
+Best regards,
+FIDUS Investment Management Team`;
+
+      const htmlBody = `<html><body>
+<h2>Personalized Investment Report - ${prospect.name}</h2>
+<p>Dear ${prospect.name},</p>
+<p>Based on our discussions, we've prepared a personalized investment report for your review.</p>
+
+<h3>Investment Profile:</h3>
+<ul>
+<li><strong>Initial Investment:</strong> ${reportData.initial_investment}</li>
+<li><strong>Risk Tolerance:</strong> ${reportData.risk_tolerance}</li>
+<li><strong>Investment Timeline:</strong> ${reportData.investment_timeline}</li>
+</ul>
+
+<h3>Recommended Portfolio Allocation:</h3>
+<p><strong>${reportData.recommended_allocation[prospect.risk_tolerance?.toLowerCase()] || reportData.recommended_allocation.conservative}</strong></p>
+
+<h3>Key Benefits of Working with FIDUS:</h3>
+<ul>
+<li>Professional portfolio management</li>
+<li>Regular performance monitoring</li>
+<li>Risk management strategies</li>
+<li>Transparent fee structure</li>
+</ul>
+
+<h3>Next Steps:</h3>
+<ol>
+<li>Review this personalized report</li>
+<li>Schedule a detailed consultation</li>
+<li>Begin your investment journey with FIDUS</li>
+</ol>
+
+<p>Please don't hesitate to contact us with any questions.</p>
+<p>Best regards,<br><strong>FIDUS Investment Management Team</strong></p>
+</body></html>`;
+
+      const response = await apiAxios.post('/google/gmail/send', {
+        to: prospect.email,
+        subject: subject,
+        body: body,
+        html_body: htmlBody
+      });
+
+      if (response.data.success) {
+        setSuccess(`Investment report shared successfully with ${prospect.name}!`);
+      } else {
+        setError(`Failed to share report: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Report sharing error:', error);
+      setError('Failed to share report. Please ensure Google authentication is active.');
+    }
+  };
+
+  // Open client detail modal
+  const openClientDetail = (client) => {
+    setSelectedClient(client);
+    setClientDetailOpen(true);
+  };
+
+  const showProspectDetail = (prospect) => {
+    openClientDetail(prospect);
+  };
 
   const fetchProspects = async () => {
     try {
@@ -395,17 +770,144 @@ const ProspectManagement = () => {
   
   const handleRequestDocument = async (prospectId, documentType) => {
     try {
-      const response = await apiAxios.post(`/crm/prospects/${prospectId}/documents/request`, {
-        document_type: documentType,
-        message: `Please upload your ${KYC_DOCUMENT_TYPES[documentType].label} to complete your KYC verification.`
-      });
-      
-      if (response.data.success) {
-        setSuccess(`Document request sent to ${prospects.find(p => p.id === prospectId)?.name}`);
-        fetchProspectDocuments(prospectId);
+      const prospect = prospects.find(p => p.id === prospectId);
+      if (!prospect) {
+        setError("Prospect not found");
+        return;
       }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to request document");
+
+      const docTypeConfig = KYC_DOCUMENT_TYPES[documentType];
+      if (!docTypeConfig) {
+        setError("Invalid document type");
+        return;
+      }
+
+      // 🔥 GOOGLE INTEGRATION: Send document request email via Google Gmail API
+      console.log('📧 Sending document request via Google Gmail API...');
+      
+      const result = await googleCRMIntegration.sendDocumentRequestToProspect(prospect, documentType);
+      
+      if (result.success) {
+        alert(`✅ Document request sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect status to indicate document requested
+        const updatedProspects = prospects.map(p => 
+          p.id === prospectId 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Document request sent via Gmail: ${docTypeConfig.label}` }
+            : p
+        );
+        setProspects(updatedProspects);
+        
+        setSelectedProspectForDocs(null);
+      } else {
+        setError(`❌ Failed to send document request: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Document request error:', error);
+      setError(`Failed to send document request: ${error.message}`);
+    }
+  };
+
+  // 🔥 GOOGLE INTEGRATION: Send welcome email via Gmail API
+  const handleSendWelcomeEmail = async (prospect) => {
+    try {
+      console.log('📧 Sending welcome email via Google Gmail API...');
+      
+      const result = await googleCRMIntegration.sendWelcomeEmailToProspect(prospect);
+      
+      if (result.success) {
+        alert(`✅ Welcome email sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect with last contact info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Welcome email sent via Gmail` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to send welcome email: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Welcome email error:', error);
+      setError(`Failed to send welcome email: ${error.message}`);
+    }
+  };
+
+  // 🔥 GOOGLE INTEGRATION: Schedule meeting via Google Calendar
+  const handleScheduleMeeting = async (prospect) => {
+    try {
+      console.log('📅 Scheduling meeting via Google Calendar API...');
+      
+      // Create meeting for tomorrow at 2 PM
+      const startTime = new Date();
+      startTime.setDate(startTime.getDate() + 1);
+      startTime.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(startTime);
+      endTime.setHours(15, 0, 0, 0);
+      
+      const meetingData = {
+        title: `Investment Consultation - ${prospect.name}`,
+        description: `Initial investment consultation meeting with ${prospect.name} to discuss portfolio options and investment strategy.`,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString()
+      };
+      
+      const result = await googleCRMIntegration.scheduleProspectMeeting(prospect, meetingData);
+      
+      if (result.success) {
+        alert(`✅ Meeting scheduled successfully with ${prospect.name}!\nGoogle Meet link: ${result.meeting_details?.meet_link || 'Link will be provided'}`);
+        
+        // Update prospect with meeting info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Meeting scheduled via Google Calendar` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to schedule meeting: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Meeting scheduling error:', error);
+      setError(`Failed to schedule meeting: ${error.message}`);
+    }
+  };
+
+  // 🔥 GOOGLE INTEGRATION: Send investment report via Gmail
+  const handleSendInvestmentReport = async (prospect) => {
+    try {
+      console.log('📊 Sending investment report via Google Gmail API...');
+      
+      const reportData = {
+        portfolio: 'Diversified Growth Portfolio',
+        riskLevel: 'Moderate',
+        expectedReturns: '8-12% annually'
+      };
+      
+      const result = await googleCRMIntegration.sendInvestmentReportToProspect(prospect, reportData);
+      
+      if (result.success) {
+        alert(`✅ Investment report sent successfully to ${prospect.name} via Gmail!`);
+        
+        // Update prospect with report sent info
+        const updatedProspects = prospects.map(p => 
+          p.id === prospect.id 
+            ? { ...p, lastContact: new Date().toISOString(), notes: (p.notes || '') + `\n[${new Date().toLocaleDateString()}] Investment report sent via Gmail` }
+            : p
+        );
+        setProspects(updatedProspects);
+      } else {
+        setError(`❌ Failed to send investment report: ${result.error}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Investment report error:', error);
+      setError(`Failed to send investment report: ${error.message}`);
     }
   };
   
@@ -472,8 +974,8 @@ const ProspectManagement = () => {
   };
 
   const renderProspectCard = (prospect) => {
-    const stageConfig = STAGE_CONFIG[prospect.stage] || STAGE_CONFIG.lead;
-    const IconComponent = stageConfig.icon;
+    const stageConfig = STAGE_CONFIG[prospect.stage] || STAGE_CONFIG.lead; // Fallback to lead
+    const IconComponent = stageConfig?.icon || Target; // Fallback to Target icon
 
     return (
       <motion.div
@@ -534,13 +1036,67 @@ const ProspectManagement = () => {
         </div>
 
         <div className="flex gap-1 flex-wrap">
+          {/* Google API Action Buttons */}
+          <div className="w-full grid grid-cols-2 gap-2 mb-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openEmailModal(prospect, 'general')}
+              className="text-xs bg-blue-50 hover:bg-blue-100 border-blue-200"
+            >
+              <MessageSquare size={12} className="mr-1" />
+              Email
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openMeetingModal(prospect, 'consultation')}
+              className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
+            >
+              <Video size={12} className="mr-1" />
+              Meet
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openEmailModal(prospect, 'document_request')}
+              className="text-xs bg-orange-50 hover:bg-orange-100 border-orange-200"
+            >
+              <FileText size={12} className="mr-1" />
+              Docs
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => shareInvestmentReport(prospect)}
+              className="text-xs bg-purple-50 hover:bg-purple-100 border-purple-200"
+            >
+              <Share2 size={12} className="mr-1" />
+              Report
+            </Button>
+          </div>
+          
+          {/* Regular Action Buttons */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => showProspectDetail(prospect)}
+            className="flex-1 min-w-0"
+          >
+            <Edit2 size={14} className="mr-1" />
+            Details
+          </Button>
+          
           <Button
             size="sm"
             variant="outline"
             onClick={() => openEditModal(prospect)}
             className="flex-1 min-w-0"
           >
-            <Edit2 size={14} className="mr-1" />
+            <Edit size={14} className="mr-1" />
             Edit
           </Button>
           
@@ -623,8 +1179,8 @@ const ProspectManagement = () => {
   };
 
   const renderStageColumn = (stage, prospects) => {
-    const stageConfig = STAGE_CONFIG[stage];
-    const IconComponent = stageConfig.icon;
+    const stageConfig = STAGE_CONFIG[stage] || STAGE_CONFIG.lead; // Fallback to lead if stage not found
+    const IconComponent = stageConfig?.icon || Target; // Fallback to Target icon
 
     return (
       <div key={stage} className="min-w-80 bg-slate-50 rounded-lg p-4">
@@ -874,13 +1430,10 @@ const ProspectManagement = () => {
         </TabsContent>
 
         <TabsContent value="pipeline" className="space-y-4">
-          <div className="overflow-x-auto">
-            <div className="flex gap-4 pb-4" style={{ minWidth: 'fit-content' }}>
-              {Object.entries(pipeline).map(([stage, prospects]) => 
-                renderStageColumn(stage, prospects)
-              )}
-            </div>
-          </div>
+          <EnhancedPipelineView 
+            onEmailProspect={openEmailModal}
+            onScheduleMeeting={openMeetingModal}
+          />
         </TabsContent>
 
         <TabsContent value="simulator" className="space-y-4">
@@ -1128,9 +1681,9 @@ const ProspectManagement = () => {
               {/* Document Types Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {Object.entries(KYC_DOCUMENT_TYPES).map(([docType, config]) => {
-                  const IconComponent = config.icon;
+                  const IconComponent = config?.icon || FileText; // Fallback to FileText icon
                   const status = getDocumentStatus(selectedProspectForDocs.id, docType);
-                  const isRequired = config.required;
+                  const isRequired = config?.required || false;
                   
                   return (
                     <Card key={docType} className="relative">
@@ -1385,6 +1938,457 @@ const ProspectManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Prospect Detail Modal with Google Integration */}
+      <AnimatePresence>
+        {showDetailModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowDetailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  {selectedProspect.name} - Prospect Details
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              {/* Prospect Information */}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm">{selectedProspect.country}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Investment Profile</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Initial Investment:</span>
+                      <span className="text-sm ml-2">{selectedProspect.initial_investment || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Risk Tolerance:</span>
+                      <span className="text-sm ml-2">{selectedProspect.risk_tolerance || 'Not assessed'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Timeline:</span>
+                      <span className="text-sm ml-2">{selectedProspect.investment_timeline || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Stage:</span>
+                      <Badge className={`ml-2 ${STAGE_CONFIG[selectedProspect.stage]?.color || 'bg-slate-500'} text-white`}>
+                        {STAGE_CONFIG[selectedProspect.stage]?.label || selectedProspect.stage}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Google API Actions */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">Google API Actions</CardTitle>
+                  <p className="text-sm text-slate-600">Integrated Gmail, Calendar, and Drive actions for this prospect</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      onClick={() => emailProspectWithType(selectedProspect, 'general')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Send Email
+                    </Button>
+                    
+                    <Button
+                      onClick={() => scheduleProspectMeeting(selectedProspect, 'consultation')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Schedule Meet
+                    </Button>
+                    
+                    <Button
+                      onClick={() => emailProspectWithType(selectedProspect, 'document_request')}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Request Docs
+                    </Button>
+                    
+                    <Button
+                      onClick={() => shareInvestmentReport(selectedProspect)}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Report
+                    </Button>
+                  </div>
+
+                  {/* Email Templates */}
+                  <div className="mt-4 pt-4 border-t">
+                    <h4 className="font-medium text-slate-900 mb-3">Quick Email Templates</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => emailProspectWithType(selectedProspect, 'meeting_followup')}
+                        className="text-xs"
+                      >
+                        Meeting Follow-up
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => scheduleProspectMeeting(selectedProspect, 'followup')}
+                        className="text-xs"
+                      >
+                        Schedule Follow-up
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notes Section */}
+              {selectedProspect.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-700">{selectedProspect.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Close Button */}
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setShowDetailModal(false)}
+                  variant="outline"
+                  className="px-6"
+                >
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Meeting Scheduling Modal */}
+      <AnimatePresence>
+        {showMeetingModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowMeetingModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-lg w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  Schedule Meeting - {selectedProspect.name}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMeetingModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Meeting Type */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Meeting Type
+                  </label>
+                  <select
+                    value={meetingData.type}
+                    onChange={(e) => setMeetingData({ ...meetingData, type: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                  >
+                    <option value="consultation">Initial Consultation</option>
+                    <option value="followup">Follow-up Meeting</option>
+                    <option value="review">Portfolio Review</option>
+                    <option value="onboarding">Client Onboarding</option>
+                  </select>
+                </div>
+
+                {/* Date and Time */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={meetingData.date}
+                      onChange={(e) => setMeetingData({ ...meetingData, date: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                      style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      value={meetingData.time}
+                      onChange={(e) => setMeetingData({ ...meetingData, time: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                      style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Duration (minutes)
+                  </label>
+                  <select
+                    value={meetingData.duration}
+                    onChange={(e) => setMeetingData({ ...meetingData, duration: parseInt(e.target.value) })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                  >
+                    <option value={30}>30 minutes</option>
+                    <option value={45}>45 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
+                    <option value={120}>2 hours</option>
+                  </select>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Meeting Notes
+                  </label>
+                  <textarea
+                    value={meetingData.notes}
+                    onChange={(e) => setMeetingData({ ...meetingData, notes: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                    rows="3"
+                    placeholder="Add any specific agenda items or notes for this meeting..."
+                  />
+                </div>
+
+                {/* Prospect Info */}
+                <div className="bg-slate-50 p-3 rounded-md">
+                  <h4 className="font-medium text-slate-900 mb-2">Meeting with:</h4>
+                  <div className="text-sm text-slate-600 space-y-1">
+                    <div><strong>Name:</strong> {selectedProspect.name}</div>
+                    <div><strong>Email:</strong> {selectedProspect.email}</div>
+                    <div><strong>Phone:</strong> {selectedProspect.phone || 'N/A'}</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={scheduleProspectMeeting}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={!meetingData.date || !meetingData.time}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Meeting
+                  </Button>
+                  <Button
+                    onClick={() => setShowMeetingModal(false)}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Email Sending Modal */}
+      <AnimatePresence>
+        {showEmailModal && selectedProspect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowEmailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  Send Email - {selectedProspect.name}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEmailModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Email Type */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Email Type
+                  </label>
+                  <select
+                    value={emailData.type}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      setEmailData({ 
+                        ...emailData, 
+                        type: newType,
+                        subject: newType === 'document_request' 
+                          ? `Document Request - ${selectedProspect.name}` 
+                          : `Investment Opportunity - ${selectedProspect.name}`
+                      });
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                  >
+                    <option value="general">General Investment Inquiry</option>
+                    <option value="document_request">Document Request</option>
+                    <option value="meeting_followup">Meeting Follow-up</option>
+                    <option value="portfolio_update">Portfolio Update</option>
+                  </select>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={emailData.subject}
+                    onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    placeholder="Enter email subject"
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                  />
+                </div>
+
+                {/* Body */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    value={emailData.body}
+                    onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white"
+                    rows="8"
+                    placeholder="Enter your message here..."
+                    style={{ color: '#1e293b', backgroundColor: '#ffffff' }}
+                  />
+                </div>
+
+                {/* Recipient Info */}
+                <div className="bg-slate-50 p-3 rounded-md">
+                  <h4 className="font-medium text-slate-900 mb-2">Sending to:</h4>
+                  <div className="text-sm text-slate-600">
+                    <div><strong>Name:</strong> {selectedProspect.name}</div>
+                    <div><strong>Email:</strong> {selectedProspect.email}</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={sendProspectEmail}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    disabled={!emailData.subject || !emailData.body}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Email
+                  </Button>
+                  <Button
+                    onClick={() => setShowEmailModal(false)}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Client Detail Modal */}
+      <ClientDetailModal
+        client={selectedClient}
+        isOpen={clientDetailOpen}
+        onClose={() => {
+          setClientDetailOpen(false);
+          setSelectedClient(null);
+        }}
+      />
     </div>
   );
 };

@@ -1,0 +1,17 @@
+/* FIDUS Tab Visibility Fix */
+[role="tablist"] [role="tab"][data-state="active"] {
+    background-color: #0891b2 !important;
+    color: white !important;
+    font-weight: bold !important;
+    border: 2px solid #06b6d4 !important;
+}
+
+[role="tablist"] [role="tab"]:not([data-state="active"]) {
+    background-color: #475569 !important;
+    color: white !important;
+}
+
+[role="tablist"] [role="tab"]:hover:not([data-state="active"]) {
+    background-color: #64748b !important;
+    color: white !important;
+}

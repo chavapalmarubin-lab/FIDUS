@@ -1,421 +1,380 @@
 #!/usr/bin/env python3
 """
-SALVADOR PALMA DATABASE RESTORATION VERIFICATION TEST
-====================================================
+URGENT DEBUG: Frontend Data Visibility Testing
+Testing specific endpoints that frontend should be calling but user reports no data visible.
 
-This test verifies the critical database restoration as requested in the urgent review:
-- Clean database of test data contamination
-- Create Salvador's correct client profile (client_003)
-- Create exactly 2 investments: BALANCE ($1,263,485.40) and CORE ($4,000.00)
-- Create 2 MT5 accounts: DooTechnology (9928326) and VT Markets (15759667)
-- Verify all API endpoints work correctly
+Focus Areas:
+1. Admin Authentication 
+2. Investment Admin Overview (dashboard totals)
+3. Ready Clients (investment dropdown)
+4. Client Investments (Alejandro's data)
+5. MT5 Accounts (Alejandro's accounts)
+6. Google Connection Status
 
-Expected Results:
-- Salvador Palma visible in clients
-- Exactly 2 investments with correct amounts
-- Both MT5 accounts properly linked
-- Total AUM: $1,267,485.40 (not millions)
+Context: User reports no investments, MT5 accounts, or Google email functionality visible in frontend.
+Need to verify these specific endpoints are returning correct data for frontend consumption.
 """
 
 import requests
 import json
 import sys
 from datetime import datetime
-import time
 
-# Configuration
-BACKEND_URL = "https://fidus-workspace.preview.emergentagent.com/api"
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "password123"
+# Use the correct backend URL from frontend/.env
+BACKEND_URL = "https://investment-portal-4.preview.emergentagent.com/api"
 
-class SalvadorDataRestorationTest:
+class FrontendDataVisibilityTester:
     def __init__(self):
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []
         
-    def log_result(self, test_name, success, message, details=None):
-        """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
+    def log_test(self, test_name, success, details, response_data=None):
+        """Log test results"""
         result = {
             "test": test_name,
-            "status": status,
             "success": success,
-            "message": message,
-            "details": details or {},
-            "timestamp": datetime.now().isoformat()
+            "details": details,
+            "timestamp": datetime.now().isoformat(),
+            "response_data": response_data
         }
         self.test_results.append(result)
-        print(f"{status}: {test_name} - {message}")
-        if details and not success:
-            print(f"   Details: {details}")
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        
+        if response_data and not success:
+            print(f"   Response: {json.dumps(response_data, indent=2)}")
     
-    def authenticate_admin(self):
-        """Authenticate as admin user"""
+    def test_admin_authentication(self):
+        """Test admin login with credentials admin/password123"""
+        print("\n🔐 TESTING ADMIN AUTHENTICATION")
+        
         try:
-            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
-                "username": ADMIN_USERNAME,
-                "password": ADMIN_PASSWORD,
+            login_data = {
+                "username": "admin",
+                "password": "password123", 
                 "user_type": "admin"
-            })
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json=login_data)
             
             if response.status_code == 200:
                 data = response.json()
-                self.admin_token = data.get("token")
-                if self.admin_token:
+                if data.get("token"):
+                    self.admin_token = data["token"]
                     self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
-                    self.log_result("Admin Authentication", True, "Successfully authenticated as admin")
+                    
+                    self.log_test(
+                        "Admin Authentication",
+                        True,
+                        f"Successfully authenticated as {data.get('name', 'admin')} with JWT token",
+                        {"user_id": data.get("id"), "username": data.get("username"), "type": data.get("type")}
+                    )
                     return True
                 else:
-                    self.log_result("Admin Authentication", False, "No token received", {"response": data})
+                    self.log_test("Admin Authentication", False, "No token in response", data)
                     return False
             else:
-                self.log_result("Admin Authentication", False, f"HTTP {response.status_code}", {"response": response.text})
+                self.log_test("Admin Authentication", False, f"HTTP {response.status_code}", response.json() if response.content else None)
                 return False
                 
         except Exception as e:
-            self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
+            self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
             return False
     
-    def test_database_cleanup_verification(self):
-        """Verify database cleanup was successful"""
-        try:
-            # Check total clients count
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
-            if response.status_code == 200:
-                clients = response.json()
-                client_count = len(clients) if isinstance(clients, list) else clients.get('total_clients', 0)
-                
-                if client_count <= 2:  # Should have admin + Salvador only
-                    self.log_result("Database Cleanup - Client Count", True, 
-                                  f"Client count acceptable: {client_count} (should be ≤2)")
-                else:
-                    self.log_result("Database Cleanup - Client Count", False, 
-                                  f"Too many clients: {client_count} (should be ≤2)", {"clients": clients})
-            else:
-                self.log_result("Database Cleanup - Client Count", False, 
-                              f"Failed to get clients: HTTP {response.status_code}")
-            
-            # Check total investments
-            response = self.session.get(f"{BACKEND_URL}/admin/investments")
-            if response.status_code == 200:
-                investments = response.json()
-                investment_count = len(investments) if isinstance(investments, list) else investments.get('total_investments', 0)
-                
-                if investment_count <= 2:  # Should have exactly Salvador's 2 investments
-                    self.log_result("Database Cleanup - Investment Count", True, 
-                                  f"Investment count correct: {investment_count} (should be ≤2)")
-                else:
-                    self.log_result("Database Cleanup - Investment Count", False, 
-                                  f"Too many investments: {investment_count} (should be ≤2)")
-            else:
-                self.log_result("Database Cleanup - Investment Count", False, 
-                              f"Failed to get investments: HTTP {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Database Cleanup Verification", False, f"Exception: {str(e)}")
-    
-    def test_salvador_client_profile(self):
-        """Test Salvador's client profile exists with correct data"""
-        try:
-            # Get all clients and find Salvador
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
-            if response.status_code == 200:
-                clients = response.json()
-                salvador_found = False
-                
-                if isinstance(clients, list):
-                    for client in clients:
-                        if client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper():
-                            salvador_found = True
-                            expected_data = {
-                                'id': 'client_003',
-                                'name': 'SALVADOR PALMA',
-                                'email': 'chava@alyarglobal.com'
-                            }
-                            
-                            # Verify client data
-                            data_correct = True
-                            issues = []
-                            
-                            for key, expected_value in expected_data.items():
-                                actual_value = client.get(key)
-                                if actual_value != expected_value:
-                                    data_correct = False
-                                    issues.append(f"{key}: expected '{expected_value}', got '{actual_value}'")
-                            
-                            if data_correct:
-                                self.log_result("Salvador Client Profile", True, 
-                                              "Salvador Palma profile found with correct data",
-                                              {"client_data": client})
-                            else:
-                                self.log_result("Salvador Client Profile", False, 
-                                              "Salvador found but data incorrect", 
-                                              {"issues": issues, "client_data": client})
-                            break
-                
-                if not salvador_found:
-                    self.log_result("Salvador Client Profile", False, 
-                                  "Salvador Palma (client_003) not found in clients list",
-                                  {"total_clients": len(clients) if isinstance(clients, list) else "unknown"})
-            else:
-                self.log_result("Salvador Client Profile", False, 
-                              f"Failed to get clients: HTTP {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Salvador Client Profile", False, f"Exception: {str(e)}")
-    
-    def test_salvador_investments(self):
-        """Test Salvador's 2 investments with correct amounts"""
-        try:
-            # Get Salvador's investments
-            response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
-            if response.status_code == 200:
-                investments = response.json()
-                
-                if len(investments) == 2:
-                    # Check for BALANCE and CORE investments
-                    balance_found = False
-                    core_found = False
-                    
-                    for investment in investments:
-                        fund_code = investment.get('fund_code')
-                        principal_amount = investment.get('principal_amount')
-                        
-                        if fund_code == 'BALANCE' and principal_amount == 1263485.40:
-                            balance_found = True
-                            self.log_result("Salvador BALANCE Investment", True, 
-                                          f"BALANCE investment found: ${principal_amount:,.2f}")
-                        elif fund_code == 'CORE' and principal_amount == 4000.00:
-                            core_found = True
-                            self.log_result("Salvador CORE Investment", True, 
-                                          f"CORE investment found: ${principal_amount:,.2f}")
-                    
-                    if balance_found and core_found:
-                        total_amount = 1263485.40 + 4000.00
-                        self.log_result("Salvador Total Investments", True, 
-                                      f"Both investments verified. Total: ${total_amount:,.2f}")
-                    else:
-                        missing = []
-                        if not balance_found:
-                            missing.append("BALANCE ($1,263,485.40)")
-                        if not core_found:
-                            missing.append("CORE ($4,000.00)")
-                        self.log_result("Salvador Investment Verification", False, 
-                                      f"Missing investments: {', '.join(missing)}", 
-                                      {"found_investments": investments})
-                else:
-                    self.log_result("Salvador Investment Count", False, 
-                                  f"Expected 2 investments, found {len(investments)}", 
-                                  {"investments": investments})
-            else:
-                self.log_result("Salvador Investments", False, 
-                              f"Failed to get Salvador's investments: HTTP {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Salvador Investments", False, f"Exception: {str(e)}")
-    
-    def test_salvador_mt5_accounts(self):
-        """Test Salvador's 2 MT5 accounts are properly created and linked"""
-        try:
-            # Get all MT5 accounts for Salvador
-            response = self.session.get(f"{BACKEND_URL}/mt5/admin/accounts")
-            if response.status_code == 200:
-                all_mt5_accounts = response.json()
-                salvador_mt5_accounts = []
-                
-                # Filter for Salvador's accounts
-                if isinstance(all_mt5_accounts, list):
-                    for account in all_mt5_accounts:
-                        if account.get('client_id') == 'client_003':
-                            salvador_mt5_accounts.append(account)
-                
-                if len(salvador_mt5_accounts) == 2:
-                    # Check for DooTechnology and VT Markets accounts
-                    doo_found = False
-                    vt_found = False
-                    
-                    for account in salvador_mt5_accounts:
-                        login = account.get('login')
-                        broker = account.get('broker')
-                        
-                        if login == '9928326' and 'DooTechnology' in str(broker):
-                            doo_found = True
-                            self.log_result("Salvador DooTechnology MT5", True, 
-                                          f"DooTechnology account found: Login {login}")
-                        elif login == '15759667' and 'VT Markets' in str(broker):
-                            vt_found = True
-                            self.log_result("Salvador VT Markets MT5", True, 
-                                          f"VT Markets account found: Login {login}")
-                    
-                    if doo_found and vt_found:
-                        self.log_result("Salvador MT5 Accounts Complete", True, 
-                                      "Both MT5 accounts verified and properly linked")
-                    else:
-                        missing = []
-                        if not doo_found:
-                            missing.append("DooTechnology (Login: 9928326)")
-                        if not vt_found:
-                            missing.append("VT Markets (Login: 15759667)")
-                        self.log_result("Salvador MT5 Account Verification", False, 
-                                      f"Missing MT5 accounts: {', '.join(missing)}", 
-                                      {"found_accounts": salvador_mt5_accounts})
-                else:
-                    self.log_result("Salvador MT5 Account Count", False, 
-                                  f"Expected 2 MT5 accounts, found {len(salvador_mt5_accounts)}", 
-                                  {"accounts": salvador_mt5_accounts})
-            else:
-                self.log_result("Salvador MT5 Accounts", False, 
-                              f"Failed to get MT5 accounts: HTTP {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Salvador MT5 Accounts", False, f"Exception: {str(e)}")
-    
-    def test_total_aum_calculation(self):
-        """Test that total AUM shows correct amount ($1,267,485.40)"""
-        try:
-            # Test fund performance dashboard
-            response = self.session.get(f"{BACKEND_URL}/admin/fund-performance/dashboard")
-            if response.status_code == 200:
-                fund_data = response.json()
-                
-                # Look for total AUM or similar metrics
-                total_aum = None
-                if isinstance(fund_data, dict):
-                    total_aum = fund_data.get('total_aum') or fund_data.get('total_assets')
-                
-                expected_aum = 1267485.40
-                if total_aum and abs(total_aum - expected_aum) < 1.0:  # Allow small rounding differences
-                    self.log_result("Total AUM Calculation", True, 
-                                  f"Total AUM correct: ${total_aum:,.2f}")
-                else:
-                    self.log_result("Total AUM Calculation", False, 
-                                  f"Total AUM incorrect: expected ${expected_aum:,.2f}, got ${total_aum}", 
-                                  {"fund_data": fund_data})
-            else:
-                self.log_result("Total AUM Calculation", False, 
-                              f"Failed to get fund performance data: HTTP {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Total AUM Calculation", False, f"Exception: {str(e)}")
-    
-    def test_critical_api_endpoints(self):
-        """Test all critical API endpoints are responding"""
-        critical_endpoints = [
-            ("/health", "Health Check"),
-            ("/admin/clients", "Admin Clients"),
-            ("/investments/client/client_003", "Salvador Investments"),
-            ("/mt5/admin/accounts", "MT5 Accounts"),
-            ("/admin/fund-performance/dashboard", "Fund Performance"),
-            ("/admin/cashflow/overview", "Cash Flow Management")
-        ]
+    def test_investment_admin_overview(self):
+        """Test investment admin overview for dashboard totals"""
+        print("\n📊 TESTING INVESTMENT ADMIN OVERVIEW")
         
-        for endpoint, name in critical_endpoints:
-            try:
-                response = self.session.get(f"{BACKEND_URL}{endpoint}")
-                if response.status_code == 200:
-                    self.log_result(f"API Endpoint - {name}", True, 
-                                  f"Endpoint responding: {endpoint}")
+        try:
+            response = self.session.get(f"{BACKEND_URL}/investments/admin/overview")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if data structure is correct for frontend
+                required_fields = ["total_aum", "total_investments", "total_clients"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test(
+                        "Investment Admin Overview",
+                        False,
+                        f"Missing required fields: {missing_fields}",
+                        data
+                    )
                 else:
-                    self.log_result(f"API Endpoint - {name}", False, 
-                                  f"HTTP {response.status_code}: {endpoint}")
-            except Exception as e:
-                self.log_result(f"API Endpoint - {name}", False, 
-                              f"Exception on {endpoint}: {str(e)}")
+                    self.log_test(
+                        "Investment Admin Overview", 
+                        True,
+                        f"AUM: {data.get('total_aum', 'N/A')}, Investments: {data.get('total_investments', 'N/A')}, Clients: {data.get('total_clients', 'N/A')}",
+                        data
+                    )
+                    
+                return response.status_code == 200
+            else:
+                self.log_test("Investment Admin Overview", False, f"HTTP {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Investment Admin Overview", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_ready_clients(self):
+        """Test ready clients endpoint for investment dropdown"""
+        print("\n👥 TESTING READY CLIENTS (Investment Dropdown)")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/clients/ready-for-investment")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if Alejandro is in the list
+                ready_clients = data.get("ready_clients", [])
+                alejandro_found = any(
+                    client.get("client_id") == "client_alejandro" or 
+                    "Alejandro" in client.get("name", "") 
+                    for client in ready_clients
+                )
+                
+                if alejandro_found:
+                    alejandro_client = next(
+                        client for client in ready_clients 
+                        if client.get("client_id") == "client_alejandro" or "Alejandro" in client.get("name", "")
+                    )
+                    self.log_test(
+                        "Ready Clients - Alejandro Found",
+                        True,
+                        f"Alejandro found: {alejandro_client.get('name')} ({alejandro_client.get('client_id')})",
+                        alejandro_client
+                    )
+                else:
+                    self.log_test(
+                        "Ready Clients - Alejandro Missing",
+                        False,
+                        f"Alejandro not found in {len(ready_clients)} ready clients",
+                        data
+                    )
+                
+                return response.status_code == 200
+            else:
+                self.log_test("Ready Clients", False, f"HTTP {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Ready Clients", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_client_investments(self):
+        """Test client investments for Alejandro"""
+        print("\n💰 TESTING CLIENT INVESTMENTS (Alejandro)")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/investments/client/client_alejandro")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check for expected investments (BALANCE + CORE)
+                investments = data.get("investments", [])
+                
+                balance_investment = next((inv for inv in investments if inv.get("fund_code") == "BALANCE"), None)
+                core_investment = next((inv for inv in investments if inv.get("fund_code") == "CORE"), None)
+                
+                if balance_investment and core_investment:
+                    total_value = sum(inv.get("current_value", 0) for inv in investments)
+                    self.log_test(
+                        "Client Investments - Complete",
+                        True,
+                        f"Found {len(investments)} investments, Total: ${total_value:,.2f}",
+                        {"investment_count": len(investments), "funds": [inv.get("fund_code") for inv in investments]}
+                    )
+                elif investments:
+                    self.log_test(
+                        "Client Investments - Partial",
+                        False,
+                        f"Found {len(investments)} investments but missing expected BALANCE/CORE funds",
+                        data
+                    )
+                else:
+                    self.log_test(
+                        "Client Investments - Empty",
+                        False,
+                        "No investments found for client_alejandro",
+                        data
+                    )
+                
+                return response.status_code == 200
+            else:
+                self.log_test("Client Investments", False, f"HTTP {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Client Investments", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_mt5_accounts(self):
+        """Test MT5 accounts for Alejandro"""
+        print("\n🏦 TESTING MT5 ACCOUNTS (Alejandro)")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/mt5/accounts/client_alejandro")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check for expected 4 MEXAtlantic accounts
+                accounts = data.get("accounts", [])
+                
+                if accounts:
+                    mexatlantic_accounts = [acc for acc in accounts if "MEXAtlantic" in acc.get("broker_name", "")]
+                    
+                    if len(mexatlantic_accounts) >= 4:
+                        self.log_test(
+                            "MT5 Accounts - Complete",
+                            True,
+                            f"Found {len(mexatlantic_accounts)} MEXAtlantic accounts out of {len(accounts)} total",
+                            {"total_accounts": len(accounts), "mexatlantic_count": len(mexatlantic_accounts)}
+                        )
+                    else:
+                        self.log_test(
+                            "MT5 Accounts - Incomplete",
+                            False,
+                            f"Expected 4 MEXAtlantic accounts, found {len(mexatlantic_accounts)}",
+                            data
+                        )
+                else:
+                    self.log_test(
+                        "MT5 Accounts - Empty",
+                        False,
+                        "No MT5 accounts found for client_alejandro",
+                        data
+                    )
+                
+                return response.status_code == 200
+            else:
+                self.log_test("MT5 Accounts", False, f"HTTP {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("MT5 Accounts", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_google_connection(self):
+        """Test Google connection status"""
+        print("\n🔗 TESTING GOOGLE CONNECTION STATUS")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/google/connection/test-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check overall status and individual services
+                overall_status = data.get("overall_status", "unknown")
+                services = data.get("services", {})
+                
+                connected_services = sum(1 for service, status in services.items() if status.get("status") == "connected")
+                total_services = len(services)
+                
+                success_rate = (connected_services / total_services * 100) if total_services > 0 else 0
+                
+                if success_rate == 0:
+                    self.log_test(
+                        "Google Connection - No Services",
+                        False,
+                        f"0% success rate - no services connected ({connected_services}/{total_services})",
+                        data
+                    )
+                elif success_rate < 50:
+                    self.log_test(
+                        "Google Connection - Poor",
+                        False,
+                        f"{success_rate:.1f}% success rate - most services failing ({connected_services}/{total_services})",
+                        data
+                    )
+                else:
+                    self.log_test(
+                        "Google Connection - Good",
+                        True,
+                        f"{success_rate:.1f}% success rate - {connected_services}/{total_services} services connected",
+                        {"overall_status": overall_status, "connected_services": connected_services}
+                    )
+                
+                return response.status_code == 200
+            else:
+                self.log_test("Google Connection", False, f"HTTP {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Google Connection", False, f"Exception: {str(e)}")
+            return False
     
     def run_all_tests(self):
-        """Run all Salvador data restoration verification tests"""
-        print("🎯 SALVADOR PALMA DATABASE RESTORATION VERIFICATION TEST")
+        """Run all frontend data visibility tests"""
+        print("🚨 URGENT DEBUG: Frontend Data Visibility Testing")
         print("=" * 60)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test Time: {datetime.now().isoformat()}")
-        print()
-        
-        # Authenticate first
-        if not self.authenticate_admin():
-            print("❌ CRITICAL: Admin authentication failed. Cannot proceed with tests.")
-            return False
-        
-        print("\n🔍 Running Database Restoration Verification Tests...")
-        print("-" * 50)
-        
-        # Run all verification tests
-        self.test_database_cleanup_verification()
-        self.test_salvador_client_profile()
-        self.test_salvador_investments()
-        self.test_salvador_mt5_accounts()
-        self.test_total_aum_calculation()
-        self.test_critical_api_endpoints()
-        
-        # Generate summary
-        self.generate_test_summary()
-        
-        return True
-    
-    def generate_test_summary(self):
-        """Generate comprehensive test summary"""
-        print("\n" + "=" * 60)
-        print("🎯 SALVADOR DATA RESTORATION TEST SUMMARY")
         print("=" * 60)
         
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        failed_tests = total_tests - passed_tests
-        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {failed_tests}")
-        print(f"Success Rate: {success_rate:.1f}%")
-        print()
-        
-        # Show failed tests
-        if failed_tests > 0:
-            print("❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result['success']:
-                    print(f"   • {result['test']}: {result['message']}")
-            print()
-        
-        # Show passed tests
-        if passed_tests > 0:
-            print("✅ PASSED TESTS:")
-            for result in self.test_results:
-                if result['success']:
-                    print(f"   • {result['test']}: {result['message']}")
-            print()
-        
-        # Critical assessment
-        critical_tests = [
-            "Salvador Client Profile",
-            "Salvador BALANCE Investment", 
-            "Salvador CORE Investment",
-            "Salvador DooTechnology MT5",
-            "Salvador VT Markets MT5"
+        # Test sequence matching the review request
+        tests = [
+            ("Admin Authentication", self.test_admin_authentication),
+            ("Investment Admin Overview", self.test_investment_admin_overview),
+            ("Ready Clients", self.test_ready_clients),
+            ("Client Investments", self.test_client_investments),
+            ("MT5 Accounts", self.test_mt5_accounts),
+            ("Google Connection", self.test_google_connection)
         ]
         
-        critical_passed = sum(1 for result in self.test_results 
-                            if result['success'] and any(critical in result['test'] for critical in critical_tests))
+        passed_tests = 0
+        total_tests = len(tests)
         
-        print("🚨 CRITICAL ASSESSMENT:")
-        if critical_passed >= 4:  # At least 4 out of 5 critical tests
-            print("✅ SALVADOR DATA RESTORATION: SUCCESSFUL")
-            print("   Salvador's client profile and investments are properly restored.")
-            print("   System ready for production deployment verification.")
-        else:
-            print("❌ SALVADOR DATA RESTORATION: INCOMPLETE")
-            print("   Critical data restoration issues found.")
-            print("   Main agent action required before deployment.")
+        for test_name, test_func in tests:
+            try:
+                if test_func():
+                    passed_tests += 1
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR in {test_name}: {str(e)}")
         
+        # Summary
         print("\n" + "=" * 60)
-
-def main():
-    """Main test execution"""
-    test_runner = SalvadorDataRestorationTest()
-    success = test_runner.run_all_tests()
-    
-    if not success:
-        sys.exit(1)
+        print("🎯 FRONTEND DATA VISIBILITY TEST SUMMARY")
+        print("=" * 60)
+        
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"Overall Success Rate: {success_rate:.1f}% ({passed_tests}/{total_tests})")
+        
+        # Critical findings
+        critical_issues = []
+        for result in self.test_results:
+            if not result["success"] and any(keyword in result["test"].lower() for keyword in ["authentication", "investment", "ready", "mt5"]):
+                critical_issues.append(result["test"])
+        
+        if critical_issues:
+            print(f"\n🚨 CRITICAL ISSUES PREVENTING FRONTEND DATA DISPLAY:")
+            for issue in critical_issues:
+                print(f"   - {issue}")
+        
+        # Recommendations
+        print(f"\n📋 RECOMMENDATIONS:")
+        if not self.admin_token:
+            print("   - Fix admin authentication first - all other tests depend on it")
+        elif success_rate < 50:
+            print("   - Multiple critical endpoints failing - backend infrastructure issue")
+        elif success_rate < 100:
+            print("   - Some endpoints working but missing data - check database setup")
+        else:
+            print("   - All endpoints working - issue may be in frontend integration")
+        
+        return success_rate >= 80  # 80% success rate threshold
 
 if __name__ == "__main__":
-    main()
+    tester = FrontendDataVisibilityTester()
+    success = tester.run_all_tests()
+    
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)

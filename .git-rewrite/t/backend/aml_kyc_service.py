@@ -466,10 +466,12 @@ class AMLKYCService:
             # Save document to file system
             import os
             from pathlib import Path
+            from path_utils import get_base_path
             
             # Create compliance documents directory
-            compliance_dir = Path("/app/compliance_documents")
-            compliance_dir.mkdir(exist_ok=True)
+            base_path = get_base_path()
+            compliance_dir = Path(f"{base_path}/compliance_documents")
+            compliance_dir.mkdir(parents=True, exist_ok=True)
             
             # Generate filename
             filename = f"AML_KYC_APPROVAL_{result.prospect_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"

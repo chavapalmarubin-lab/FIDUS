@@ -100,6 +100,34 @@ Collections:
 
 ## 🔧 **DEPLOYMENT REQUIREMENTS**
 
+### **Environment Variables Configuration**
+**CRITICAL**: Configure all required environment variables before deployment.
+
+**📋 Complete Configuration Guide**: See `/app/ENVIRONMENT_VARIABLES.md`
+
+**Essential Variables:**
+```bash
+# Database Configuration
+MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/fidus-invest
+DB_NAME=fidus-invest-production
+
+# Google OAuth Integration
+GOOGLE_CLIENT_ID=909926639154-r3v0ka9...
+GOOGLE_CLIENT_SECRET=GOCSPX-HQ3ceZZGfnB...
+GOOGLE_OAUTH_REDIRECT_URI=https://fidus-invest.emergent.host
+GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+
+# Authentication & Security
+JWT_SECRET_KEY=your-strong-jwt-secret-key-here-minimum-32-characters
+
+# Frontend/Backend Communication
+FRONTEND_URL=https://fidus-invest.emergent.host
+REACT_APP_BACKEND_URL=https://fidus-invest.emergent.host
+
+# Development Configuration
+WDS_SOCKET_PORT=443
+```
+
 ### **Infrastructure Requirements**
 
 #### **Minimum Server Specifications:**

@@ -10,14 +10,55 @@ from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 import bcrypt
 
-# Get MongoDB URL from environment
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-DB_NAME = os.environ.get('DB_NAME', 'fidus_investment_db')
+# Get MongoDB URL from environment - PRODUCTION: MongoDB Atlas ONLY
+# Get MongoDB URL from environment - PRODUCTION: MongoDB Atlas ONLY
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    # Fallback to check for the connection string directly
+    MONGO_URL = os.environ.get('MONGODB_URL') 
+if not MONGO_URL:
+    print("⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...")
+    import os
+    from pathlib import Path
+    env_file = Path(__file__).parent / '.env'
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                if line.startswith('MONGO_URL='):
+                    MONGO_URL = line.split('=', 1)[1].strip().strip('"')
+                    print(f"✅ Found MONGO_URL in .env file")
+                    break
+    
+if not MONGO_URL:
+    raise Exception("MONGO_URL environment variable is required for production")
+
+if MONGO_URL.startswith('mongodb+srv://'):
+    print("✅ Using MongoDB Atlas connection")
+elif MONGO_URL.startswith('mongodb://'):
+    print("⚠️ Using local MongoDB connection")
+else:
+    raise Exception("Invalid MongoDB connection string format")
+
+DB_NAME = os.environ.get('DB_NAME', 'fidus_production')
 
 class MongoDBManager:
     def __init__(self):
         try:
-            self.client = MongoClient(MONGO_URL)
+            # Configure MongoDB client for Atlas
+            if "mongodb+srv" in MONGO_URL:
+                # MongoDB Atlas connection - let pymongo handle SSL automatically
+                self.client = MongoClient(
+                    MONGO_URL,
+                    serverSelectionTimeoutMS=30000,
+                    connectTimeoutMS=20000,
+                    socketTimeoutMS=20000,
+                    maxPoolSize=10,
+                    retryWrites=True
+                )
+            else:
+                # Local MongoDB connection
+                self.client = MongoClient(MONGO_URL)
+                
             self.db_name = DB_NAME  
             self.db = self.client[self.db_name]
             
@@ -83,16 +124,19 @@ class MongoDBManager:
             clients = []
             
             # Get all client users
-            client_users = self.db.users.find({'user_type': 'client', 'status': 'active'})
+            client_users = self.db.users.find({'type': 'client', 'status': 'active'})
+            print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
             
             for user in client_users:
-                client_id = user['user_id']
+                client_id = user['id']
+                print(f"🔍 DEBUG: Processing client {client_id} - {user.get('name', 'Unknown')}")
                 
                 # Get client profile
                 profile = self.db.client_profiles.find_one({'client_id': client_id})
                 
                 # Get readiness status
                 readiness = self.db.client_readiness.find_one({'client_id': client_id})
+                print(f"🔍 DEBUG: Readiness for {client_id}: {readiness}")
                 
                 # Get investment count
                 investment_count = self.db.investments.count_documents({'client_id': client_id})
@@ -130,7 +174,7 @@ class MongoDBManager:
                     'name': profile.get('name', user['username']) if profile else user['username'],
                     'email': profile.get('email', user['email']) if profile else user['email'],
                     'phone': profile.get('phone', '') if profile else '',
-                    'type': user['user_type'],
+                    'type': user['type'],
                     'status': user['status'],
                     'fidus_account_number': profile.get('fidus_account_number', '') if profile else '',
                     'total_investments': investment_count,
@@ -149,6 +193,8 @@ class MongoDBManager:
             
         except Exception as e:
             print(f"❌ Error getting clients: {str(e)}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
             return []
     
     # ===============================================================================
@@ -346,7 +392,7 @@ class MongoDBManager:
         """Get client by ID"""
         try:
             # Look in users collection with user_id field for clients
-            client = self.db.users.find_one({"user_id": client_id, "user_type": "client"})
+            client = self.db.users.find_one({"id": client_id, "type": "client"})
             if client:
                 # Remove MongoDB _id for JSON serialization
                 client.pop('_id', None)
@@ -360,21 +406,31 @@ class MongoDBManager:
     def update_client_readiness(self, client_id: str, readiness_data: Dict[str, Any]) -> bool:
         """Update client readiness status"""
         try:
-            # Calculate investment_ready status
+            # Calculate investment_ready status - only require AML/KYC and agreement
             investment_ready = (
                 readiness_data.get('aml_kyc_completed', False) and
-                readiness_data.get('agreement_signed', False) and
-                readiness_data.get('account_creation_date') is not None
+                readiness_data.get('agreement_signed', False)
             )
+            
+            # Ensure account_creation_date is a proper datetime for MongoDB schema
+            account_creation_date = readiness_data.get('account_creation_date')
+            if account_creation_date is None:
+                account_creation_date = datetime.now(timezone.utc)
+            elif isinstance(account_creation_date, str):
+                try:
+                    account_creation_date = datetime.fromisoformat(account_creation_date.replace('Z', '+00:00'))
+                except:
+                    account_creation_date = datetime.now(timezone.utc)
             
             update_data = {
                 'client_id': client_id,
                 'aml_kyc_completed': readiness_data.get('aml_kyc_completed', False),
                 'agreement_signed': readiness_data.get('agreement_signed', False),
-                'account_creation_date': readiness_data.get('account_creation_date'),
+                'account_creation_date': account_creation_date,
                 'investment_ready': investment_ready,
                 'notes': readiness_data.get('notes', ''),
-                'updated_at': datetime.now(timezone.utc)
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': readiness_data.get('updated_by', 'system')
             }
             
             # Use upsert to create or update
@@ -598,7 +654,7 @@ class MongoDBManager:
             
             for acc in account_docs:
                 # Get client name
-                client = self.db.users.find_one({'user_id': acc['client_id']})
+                client = self.db.users.find_one({'id': acc['client_id']})
                 client_profile = self.db.client_profiles.find_one({'client_id': acc['client_id']})
                 
                 client_name = client_profile.get('name', client['username']) if client_profile and client else acc['client_id']

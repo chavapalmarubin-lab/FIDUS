@@ -9,7 +9,7 @@ import ClientOnboarding from "./ClientOnboarding";
 import LeadRegistrationForm from "./LeadRegistrationForm";
 import PasswordReset from "./PasswordReset";
 import PasswordChangeModal from "./PasswordChangeModal";
-import GoogleSocialLogin from "./GoogleSocialLogin";
+// Clean imports - removed unused Google components
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -197,6 +197,7 @@ const LoginSelection = ({ onLogin }) => {
                     </div>
                   </div>
                   
+                  {/* Social login disabled - focusing on regular login and Google API integration
                   <div className="google-social-login-wrapper">
                     <GoogleSocialLogin 
                       onLoginSuccess={(user, token) => {
@@ -206,6 +207,7 @@ const LoginSelection = ({ onLogin }) => {
                       redirectTo="/dashboard"
                     />
                   </div>
+                  */}
                 </motion.div>
 
                 {/* Divider */}

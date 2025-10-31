@@ -72,10 +72,15 @@ class FundPerformanceManager:
         self.fund_commitments = self.initialize_fund_commitments()
         
     def setup_database(self):
-        """Setup MongoDB connection - use fidus_investment_db where actual data is stored"""
-        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-        # Use fidus_investment_db where investments and MT5 accounts are actually stored
-        db_name = 'fidus_investment_db'
+        """Setup MongoDB connection - PRODUCTION: MongoDB Atlas ONLY"""
+        mongo_url = os.environ.get('MONGO_URL')
+        if not mongo_url:
+            raise Exception("MONGO_URL environment variable is required for production")
+        if not mongo_url.startswith('mongodb+srv://'):
+            raise Exception("Production requires MongoDB Atlas connection string (mongodb+srv://)")
+            
+        # Use production database name
+        db_name = os.environ.get('DB_NAME', 'fidus_production')
         
         self.client = AsyncIOMotorClient(mongo_url)
         self.db = self.client[db_name]

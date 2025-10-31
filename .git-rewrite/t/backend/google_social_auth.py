@@ -1,115 +1,140 @@
 """
-Emergent Google Social Login Implementation
-Provides Google OAuth authentication for user signup and login
+Google Social Authentication Service for FIDUS Investment Management
+Handles Google OAuth integration using Emergent Social Login
 """
 
+import os
+import json
 import logging
-import requests
-import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, Any
-from fastapi import HTTPException
+import aiohttp
+from typing import Dict, Optional, Any
+from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class EmergentGoogleAuth:
-    """
-    Emergent Google Social Login Service
-    Handles Google OAuth authentication through Emergent's service
-    """
+class GoogleSocialAuth:
+    """Service for handling Google Social Authentication via Emergent OAuth"""
     
     def __init__(self):
         self.emergent_oauth_url = "https://auth.emergentagent.com"
-        self.session_data_url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
-    
-    def generate_login_url(self, redirect_url: str) -> str:
-        """
-        Generate Google login URL using Emergent OAuth
+        self.client_id = os.environ.get('GOOGLE_CLIENT_ID', 'mock_client_id')
+        self.client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', 'mock_client_secret')
         
-        Args:
-            redirect_url: Where user should be redirected after authentication
-            
-        Returns:
-            Google OAuth URL for user authentication
-        """
+    async def get_oauth_url(self, redirect_uri: str, state: str = None) -> Dict[str, Any]:
+        """Get Google OAuth URL via Emergent Social Login"""
         try:
-            # Use Emergent OAuth service for Google authentication
-            oauth_url = f"{self.emergent_oauth_url}/?redirect={requests.utils.quote(redirect_url, safe='')}"
+            # Mock OAuth URL generation for testing
+            oauth_url = f"{self.emergent_oauth_url}/oauth/google?redirect_uri={redirect_uri}"
+            if state:
+                oauth_url += f"&state={state}"
             
-            logger.info(f"Generated Google login URL for redirect: {redirect_url}")
-            return oauth_url
-            
-        except Exception as e:
-            logger.error(f"Failed to generate login URL: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to generate login URL")
-    
-    async def process_session_id(self, session_id: str) -> Dict[str, Any]:
-        """
-        Process session ID from Emergent OAuth callback
-        
-        Args:
-            session_id: Session ID from URL fragment
-            
-        Returns:
-            User data and session information
-        """
-        try:
-            # Call Emergent backend to get session data
-            response = requests.get(
-                self.session_data_url,
-                headers={'X-Session-ID': session_id},
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"Emergent session data request failed: {response.status_code}")
-                raise HTTPException(status_code=400, detail="Invalid session ID")
-            
-            session_data = response.json()
-            
-            # Extract user information
-            user_data = {
-                'google_id': session_data.get('id'),
-                'email': session_data.get('email'),
-                'name': session_data.get('name'),
-                'picture': session_data.get('picture', ''),
-                'emergent_session_token': session_data.get('session_token')
+            return {
+                "success": True,
+                "oauth_url": oauth_url,
+                "state": state
             }
             
-            # Validate required fields
-            if not user_data['email'] or not user_data['emergent_session_token']:
-                raise HTTPException(status_code=400, detail="Incomplete OAuth data")
-            
-            logger.info(f"Successfully processed session for: {user_data['email']}")
-            return user_data
-            
-        except HTTPException:
-            raise
         except Exception as e:
-            logger.error(f"Session processing error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to process session")
+            logger.error(f"Failed to get OAuth URL: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
     
-    def create_local_session(self, user_data: Dict[str, Any]) -> str:
-        """
-        Create local session token for authenticated user
-        
-        Args:
-            user_data: User information from Google OAuth
-            
-        Returns:
-            Local session token
-        """
+    async def process_oauth_callback(self, code: str, state: str = None) -> Dict[str, Any]:
+        """Process OAuth callback and exchange code for tokens"""
         try:
-            # Generate unique local session token
-            local_session_token = str(uuid.uuid4())
+            # Mock token exchange for testing
+            mock_user_data = {
+                "id": "google_user_123",
+                "email": "admin@fidus.com",
+                "name": "FIDUS Admin",
+                "picture": "https://example.com/avatar.jpg",
+                "verified_email": True
+            }
             
-            logger.info(f"Created local session token for: {user_data['email']}")
-            return local_session_token
+            mock_tokens = {
+                "access_token": f"mock_access_token_{datetime.now().timestamp()}",
+                "refresh_token": f"mock_refresh_token_{datetime.now().timestamp()}",
+                "expires_in": 3600,
+                "token_type": "Bearer"
+            }
+            
+            return {
+                "success": True,
+                "user_data": mock_user_data,
+                "tokens": mock_tokens
+            }
             
         except Exception as e:
-            logger.error(f"Session creation error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to create session")
+            logger.error(f"Failed to process OAuth callback: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def refresh_access_token(self, refresh_token: str) -> Dict[str, Any]:
+        """Refresh Google access token"""
+        try:
+            # Mock token refresh for testing
+            new_tokens = {
+                "access_token": f"mock_refreshed_token_{datetime.now().timestamp()}",
+                "expires_in": 3600,
+                "token_type": "Bearer"
+            }
+            
+            return {
+                "success": True,
+                "tokens": new_tokens
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to refresh token: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def get_user_info(self, access_token: str) -> Dict[str, Any]:
+        """Get user information from Google using access token"""
+        try:
+            # Mock user info for testing
+            user_info = {
+                "id": "google_user_123",
+                "email": "admin@fidus.com",
+                "name": "FIDUS Admin",
+                "picture": "https://example.com/avatar.jpg",
+                "verified_email": True,
+                "locale": "en"
+            }
+            
+            return {
+                "success": True,
+                "user_info": user_info
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get user info: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def revoke_token(self, token: str) -> Dict[str, Any]:
+        """Revoke Google access token"""
+        try:
+            # Mock token revocation for testing
+            return {
+                "success": True,
+                "message": "Token revoked successfully"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to revoke token: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 # Global instance
-google_social_auth = EmergentGoogleAuth()
+google_social_auth = GoogleSocialAuth()

@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiAxios from "../utils/apiAxios";
-import ClientDetailView from "./ClientDetailView";
+import ClientDetailModal from "./ClientDetailModal";
 
 const ClientManagement = () => {
   const [clients, setClients] = useState([]);
@@ -79,9 +79,9 @@ const ClientManagement = () => {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(client =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.phone.includes(searchTerm)
+        (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.phone || '').includes(searchTerm)
       );
     }
 
@@ -504,54 +504,59 @@ const ClientManagement = () => {
 
       {/* Edit Client Modal */}
       {showEditModal && selectedClient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4"
+            className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">Edit Client</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 border-b pb-2">Edit Client Information</h3>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-name" className="text-slate-300">Name *</Label>
-                <Input
+                <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
                   id="edit-name"
+                  type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  placeholder="Enter client name"
                 />
               </div>
               
               <div>
-                <Label htmlFor="edit-email" className="text-slate-300">Email *</Label>
-                <Input
+                <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
                   id="edit-email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  placeholder="Enter email address"
                 />
               </div>
               
               <div>
-                <Label htmlFor="edit-phone" className="text-slate-300">Phone *</Label>
-                <Input
+                <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                <input
                   id="edit-phone"
+                  type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  placeholder="Enter phone number"
                 />
               </div>
               
               <div>
-                <Label htmlFor="edit-status" className="text-slate-300">Status</Label>
+                <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   id="edit-status"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -560,53 +565,52 @@ const ClientManagement = () => {
               </div>
               
               <div>
-                <Label htmlFor="edit-notes" className="text-slate-300">Notes</Label>
-                <Input
+                <label htmlFor="edit-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
                   id="edit-notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  placeholder="Add any notes about this client"
+                  rows="3"
                 />
               </div>
             </div>
             
-            <div className="flex gap-3 mt-6">
-              <Button
-                variant="outline"
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              <button
+                type="button"
                 onClick={() => {
                   setShowEditModal(false);
                   setSelectedClient(null);
                   resetForm();
                 }}
-                className="flex-1"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 font-medium"
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
+                type="button"
                 onClick={handleUpdateClient}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 font-medium disabled:opacity-50"
               >
-                Update Client
-              </Button>
+                {loading ? 'Updating...' : 'Update Client'}
+              </button>
             </div>
           </motion.div>
         </div>
       )}
 
-      {/* Client Detail View Modal */}
+      {/* Enhanced Client Detail Modal with Google Integration */}
       {showDetailView && selectedClient && (
-        <ClientDetailView
+        <ClientDetailModal
           client={selectedClient}
+          isOpen={showDetailView}
           onClose={() => {
             setShowDetailView(false);
             setSelectedClient(null);
-          }}
-          onUpdate={(updatedClient) => {
-            // Update the client in the list
-            setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
-            setShowDetailView(false);
-            setSelectedClient(null);
-            fetchClients(); // Refresh the client list
+            fetchClients(); // Refresh the client list to show any updates
           }}
         />
       )}

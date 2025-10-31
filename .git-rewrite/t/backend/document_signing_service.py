@@ -29,8 +29,9 @@ class DocumentSigningService:
     """
     
     def __init__(self):
-        self.upload_directory = "/app/backend/uploads/documents"
-        self.signed_directory = "/app/backend/uploads/signed"
+        from path_utils import get_upload_path
+        self.upload_directory = get_upload_path("documents")
+        self.signed_directory = get_upload_path("signed")
         
         # Create directories if they don't exist
         os.makedirs(self.upload_directory, exist_ok=True)

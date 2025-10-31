@@ -3,13 +3,11 @@
  */
 
 import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { API_BASE_URL } from '../config/config';
 
 // Create axios instance
 const apiAxios = axios.create({
-  baseURL: API,
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -19,7 +17,14 @@ const apiAxios = axios.create({
 // Request interceptor to automatically add JWT token or Google session token
 apiAxios.interceptors.request.use(
   (config) => {
-    // Get JWT token from localStorage first
+    // Get actual JWT token from localStorage (fidus_token)
+    const jwtToken = localStorage.getItem('fidus_token');
+    if (jwtToken) {
+      config.headers['Authorization'] = `Bearer ${jwtToken}`;
+      return config;
+    }
+    
+    // Fallback: Try the old fidus_user format
     try {
       const userDataStr = localStorage.getItem('fidus_user');
       if (userDataStr) {
@@ -33,7 +38,7 @@ apiAxios.interceptors.request.use(
       console.warn('Failed to parse user data from localStorage:', error);
     }
     
-    // Fallback to Google session token
+    // Final fallback to Google session token
     const googleSessionToken = localStorage.getItem('google_session_token');
     if (googleSessionToken) {
       config.headers['Authorization'] = `Bearer ${googleSessionToken}`;
@@ -54,8 +59,9 @@ apiAxios.interceptors.response.use(
   (error) => {
     // Handle 401 errors (token expired or invalid)
     if (error.response?.status === 401) {
-      console.warn('Authentication failed - redirecting to login');
-      // Clear invalid token
+      console.warn('Authentication failed - token invalid or expired');
+      // Clear invalid tokens
+      localStorage.removeItem('fidus_token');
       localStorage.removeItem('fidus_user');
       // Optionally redirect to login page
       // window.location.href = '/';

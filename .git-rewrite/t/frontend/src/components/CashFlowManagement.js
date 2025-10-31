@@ -76,16 +76,16 @@ const CashFlowManagement = () => {
       // Set example fund accounting data
       setFundAccounting({
         assets: {
-          mt5_trading_profits: 500000,
-          broker_rebates: 50000,
-          total_inflows: 550000
+          mt5_trading_profits: 0,
+          broker_rebates: 0,
+          total_inflows: 0
         },
         liabilities: {
-          client_obligations: 300000,
+          client_obligations: 0,
           upcoming_redemptions: 0,
-          total_outflows: 300000
+          total_outflows: 0
         },
-        net_fund_profitability: 250000
+        net_fund_profitability: 0
       });
     } finally {
       setLoading(false);

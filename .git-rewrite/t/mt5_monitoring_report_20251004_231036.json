@@ -1,0 +1,39 @@
+{
+  "monitoring_timestamp": "2025-10-04T23:10:36.096116+00:00",
+  "connectivity": {
+    "status": "timeout",
+    "error": "Connection timeout after 30 seconds",
+    "timestamp": "2025-10-04T23:09:34.091328+00:00"
+  },
+  "service_health": {
+    "status": "unreachable",
+    "error": ""
+  },
+  "mt5_status": {
+    "mt5_available": false,
+    "error": ""
+  },
+  "mt5_terminal": {},
+  "alerts": [
+    {
+      "level": "critical",
+      "type": "connectivity",
+      "message": "MT5 Bridge service unreachable: Connection timeout after 30 seconds",
+      "timestamp": "2025-10-04T23:10:36.096085+00:00"
+    },
+    {
+      "level": "warning",
+      "type": "mt5_connection",
+      "message": "MT5 terminal not available or not connected",
+      "timestamp": "2025-10-04T23:10:36.096112+00:00"
+    }
+  ],
+  "summary": {
+    "overall_status": "degraded",
+    "connectivity_status": "timeout",
+    "mt5_available": false,
+    "service_responsive": false,
+    "alerts_count": 2,
+    "last_updated": "2025-10-04T23:10:36.096126+00:00"
+  }
+}

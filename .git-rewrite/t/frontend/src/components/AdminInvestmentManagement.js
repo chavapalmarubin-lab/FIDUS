@@ -42,6 +42,8 @@ import {
 } from "recharts";
 import apiAxios from "../utils/apiAxios";
 import { format, differenceInDays } from "date-fns";
+import InvestmentCreationWithMT5 from "./InvestmentCreationWithMT5";
+import InvestmentDetailView from "./InvestmentDetailView";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -63,6 +65,8 @@ const AdminInvestmentManagement = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showCreateInvestmentModal, setShowCreateInvestmentModal] = useState(false);
+  const [showNewInvestmentCreation, setShowNewInvestmentCreation] = useState(false);
+  const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [fundConfigs, setFundConfigs] = useState([]);
   const [readyClients, setReadyClients] = useState([]);
 
@@ -94,7 +98,16 @@ const AdminInvestmentManagement = () => {
   useEffect(() => {
     fetchOverviewData();
     fetchFundConfigs();
-    fetchReadyClients();
+    
+    // Delay fetchReadyClients to ensure authentication is established
+    setTimeout(() => {
+      fetchReadyClients();
+    }, 2000); // Increased delay to 2 seconds
+    
+    // Also call fetchReadyClients again after longer delay to catch authentication
+    setTimeout(() => {
+      fetchReadyClients();
+    }, 5000);
   }, []);
 
   const fetchFundConfigs = async () => {
@@ -108,10 +121,21 @@ const AdminInvestmentManagement = () => {
 
   const fetchReadyClients = async () => {
     try {
+      console.log("🔍 Fetching ready clients...");
+      console.log("🔍 Current auth token:", localStorage.getItem('fidus_token'));
+      console.log("🔍 Current user:", localStorage.getItem('fidus_user'));
+      
       const response = await apiAxios.get(`/clients/ready-for-investment`);
-      setReadyClients(response.data.ready_clients);
+      console.log("✅ Ready clients response:", response.data);
+      console.log("✅ Ready clients array:", response.data.ready_clients);
+      
+      setReadyClients(response.data.ready_clients || []);
+      console.log("✅ Set readyClients state to:", response.data.ready_clients || []);
     } catch (err) {
-      console.error("Error fetching ready clients:", err);
+      console.error("❌ Error fetching ready clients:", err);
+      console.error("❌ Error status:", err.response?.status);
+      console.error("❌ Error data:", err.response?.data);
+      setReadyClients([]); // Ensure it's an empty array on error
     }
   };
 
@@ -123,6 +147,13 @@ const AdminInvestmentManagement = () => {
     } catch (err) {
       setError("Failed to fetch investment overview");
       console.error("Error fetching investment overview:", err);
+      // Set minimal default data to prevent blocking UI
+      setOverviewData({
+        total_investments: 0,
+        total_aum: 0,
+        total_clients: 1,
+        ready_for_investment: 1
+      });
     } finally {
       setLoading(false);
     }
@@ -412,11 +443,14 @@ const AdminInvestmentManagement = () => {
             Refresh
           </Button>
           <Button
-            onClick={() => setShowCreateInvestmentModal(true)}
+            onClick={() => {
+              setShowNewInvestmentCreation(true);
+              fetchReadyClients(); // Refresh client list when opening modal
+            }}
             className="bg-cyan-600 hover:bg-cyan-700"
           >
             <Plus size={16} className="mr-2" />
-            Create Investment
+            Create Investment with MT5
           </Button>
           <Button
             variant="outline"
@@ -585,6 +619,7 @@ const AdminInvestmentManagement = () => {
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Interest Earned</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Status</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-medium">Date</th>
+                    <th className="px-4 py-3 text-left text-slate-300 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -604,6 +639,17 @@ const AdminInvestmentManagement = () => {
                       <td className="px-4 py-3 text-green-400">+{formatCurrency(investment.earned_interest)}</td>
                       <td className="px-4 py-3">{getStatusBadge(investment)}</td>
                       <td className="px-4 py-3 text-slate-400">{format(new Date(investment.deposit_date), 'MMM dd, yyyy')}</td>
+                      <td className="px-4 py-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedInvestment(investment.investment_id)}
+                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                        >
+                          <Eye size={16} className="mr-1" />
+                          View Details
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -635,385 +681,79 @@ const AdminInvestmentManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Create Investment Modal */}
+      {/* New Investment Creation with MT5 - Full Screen Modal */}
+      <AnimatePresence>
+        {showNewInvestmentCreation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowNewInvestmentCreation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 rounded-lg w-full max-w-7xl max-h-[95vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white">Create Investment with MT5 Integration</h3>
+                    <p className="text-slate-400">Complete investment creation with just-in-time MT5 account allocation</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowNewInvestmentCreation(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <InvestmentCreationWithMT5 />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Legacy Modal Replaced - Now Opens Enhanced Component */}
       <AnimatePresence>
         {showCreateInvestmentModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
             onClick={() => setShowCreateInvestmentModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-slate-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 rounded-lg w-full max-w-7xl max-h-[95vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Create Client Investment</h3>
-                
-                <div className="space-y-4">
-                  {/* Debug information */}
-                  <div className="mb-2 p-2 bg-blue-900/20 rounded text-xs text-blue-300">
-                    Debug: Ready clients: {readyClients.length} | Selected: {investmentForm.client_id || 'None'}
-                    <br />API Status: {readyClients.length > 0 ? 'Loaded successfully' : 'Loading or no data'}
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white">Create Investment with MT5 Integration</h3>
+                    <p className="text-slate-400">Complete investment creation with just-in-time MT5 account allocation</p>
                   </div>
-                
-                <div>
-                  <Label htmlFor="client-select" className="text-slate-300 text-sm font-medium mb-2 block">Select Client *</Label>
-                  
-                  {/* Fallback HTML select to ensure functionality */}
-                  <select 
-                    id="client-select"
-                    value={investmentForm.client_id}
-                    onChange={(e) => {
-                      console.log('Client selected:', e.target.value);
-                      setInvestmentForm({...investmentForm, client_id: e.target.value});
-                    }}
-                    className="w-full min-h-[42px] px-3 py-2 bg-slate-700 border-2 border-slate-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowCreateInvestmentModal(false)}
+                    className="text-slate-400 hover:text-white"
                   >
-                    <option value="" disabled>Choose a client ready for investment</option>
-                    {(readyClients || []).map(client => (
-                      <option 
-                        key={client.client_id} 
-                        value={client.client_id}
-                        className="bg-slate-700 text-white"
-                      >
-                        {client.name} - {client.email} (Investments: {client.total_investments})
-                      </option>
-                    ))}
-                  </select>
-                  
-                  {readyClients.length === 0 && (
-                    <p className="text-yellow-400 text-sm mt-1">
-                      ⚠️ No clients ready for investment. Complete AML/KYC and Agreement in Client Management.
-                    </p>
-                  )}
+                    ×
+                  </Button>
                 </div>
                 
-                <div>
-                  <Label className="text-slate-300">Select Fund</Label>
-                  <Select value={investmentForm.fund_code} onValueChange={(value) => setInvestmentForm({...investmentForm, fund_code: value})}>
-                    <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
-                      <SelectValue placeholder="Choose a fund" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      {(fundConfigs || []).map(fund => (
-                        <SelectItem key={fund.fund_code} value={fund.fund_code} className="text-white">
-                          <div>
-                            <div className="font-medium">{fund.name}</div>
-                            <div className="text-sm text-slate-400">
-                              {fund.interest_rate > 0 ? `${fund.interest_rate}% monthly` : 'No fixed return'} • 
-                              Min: {formatCurrency(fund.minimum_investment)}
-                              {fund.invitation_only && ' • Invitation Only'}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <InvestmentCreationWithMT5 />
                 
-                <div>
-                  <Label className="text-slate-300">Investment Amount</Label>
-                  <Input
-                    type="number"
-                    value={investmentForm.amount}
-                    onChange={(e) => setInvestmentForm({...investmentForm, amount: e.target.value})}
-                    placeholder="Enter amount in USD"
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  {investmentForm.fund_code && (
-                    <p className="text-slate-400 text-sm mt-1">
-                      Minimum: {formatCurrency(fundConfigs.find(f => f.fund_code === investmentForm.fund_code)?.minimum_investment || 0)}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label className="text-slate-300 flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Date of Deposit (Sets Investment Timeline) *
-                  </Label>
-                  <Input
-                    type="date"
-                    value={investmentForm.deposit_date}
-                    onChange={(e) => setInvestmentForm({...investmentForm, deposit_date: e.target.value})}
-                    className="mt-1 bg-slate-700 border-slate-600 text-white"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    This date determines the 2-month incubation period and all investment timelines
-                  </p>
-                </div>
-                </div>
-
-                {/* Payment Confirmation Section */}
-                <div className="border-t border-slate-600 pt-4">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
-                    <Wallet className="w-5 h-5 mr-2 text-green-400" />
-                    Deposit Payment Confirmation
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-slate-300">Payment Method *</Label>
-                      <Select value={investmentForm.payment_method} onValueChange={(value) => setInvestmentForm({...investmentForm, payment_method: value})}>
-                        <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
-                          <SelectItem value="fiat" className="text-white">💳 FIAT (Bank Wire)</SelectItem>
-                          <SelectItem value="crypto" className="text-white">₿ Crypto Currency</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {investmentForm.payment_method === "fiat" && (
-                      <>
-                        <div>
-                          <Label className="text-slate-300">Wire Confirmation Number *</Label>
-                          <Input
-                            type="text"
-                            value={investmentForm.wire_confirmation_number}
-                            onChange={(e) => setInvestmentForm({...investmentForm, wire_confirmation_number: e.target.value})}
-                            placeholder="Enter wire confirmation number"
-                            className="mt-1 bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label className="text-slate-300">Bank Reference (Optional)</Label>
-                          <Input
-                            type="text"
-                            value={investmentForm.bank_reference}
-                            onChange={(e) => setInvestmentForm({...investmentForm, bank_reference: e.target.value})}
-                            placeholder="Bank reference number"
-                            className="mt-1 bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {investmentForm.payment_method === "crypto" && (
-                      <>
-                        <div>
-                          <Label className="text-slate-300">Transaction Hash *</Label>
-                          <Input
-                            type="text"
-                            value={investmentForm.transaction_hash}
-                            onChange={(e) => setInvestmentForm({...investmentForm, transaction_hash: e.target.value})}
-                            placeholder="Enter blockchain transaction hash"
-                            className="mt-1 bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label className="text-slate-300">Blockchain Network (Optional)</Label>
-                          <Input
-                            type="text"
-                            value={investmentForm.blockchain_network}
-                            onChange={(e) => setInvestmentForm({...investmentForm, blockchain_network: e.target.value})}
-                            placeholder="e.g., Bitcoin, Ethereum, BSC"
-                            className="mt-1 bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label className="text-slate-300">Wallet Address (Optional)</Label>
-                          <Input
-                            type="text"
-                            value={investmentForm.wallet_address}
-                            onChange={(e) => setInvestmentForm({...investmentForm, wallet_address: e.target.value})}
-                            placeholder="Client's wallet address"
-                            className="mt-1 bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <div>
-                      <Label className="text-slate-300">Payment Notes (Optional)</Label>
-                      <textarea
-                        value={investmentForm.payment_notes}
-                        onChange={(e) => setInvestmentForm({...investmentForm, payment_notes: e.target.value})}
-                        placeholder="Additional notes about the payment..."
-                        className="mt-1 w-full min-h-16 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
-                      />
-                    </div>
-
-                    <div className="bg-green-900/20 border border-green-600 rounded-lg p-3">
-                      <div className="flex items-start">
-                        <CheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5" />
-                        <div className="text-sm text-green-300">
-                          <p className="font-medium mb-1">Payment Confirmation Required</p>
-                          <p>Verify payment received before creating investment</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* MT5 Account Mapping Section */}
-                <div className="border-t border-slate-600 pt-4">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
-                    <Target className="w-5 h-5 mr-2 text-cyan-400" />
-                    MT5 Account Mapping & Trading Setup
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="create-mt5"
-                        checked={investmentForm.create_mt5_account}
-                        onChange={(e) => setInvestmentForm({...investmentForm, create_mt5_account: e.target.checked})}
-                        className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
-                      />
-                      <Label htmlFor="create-mt5" className="text-slate-300">
-                        Create MT5 Account Mapping (Required for trading)
-                      </Label>
-                    </div>
-
-                    {investmentForm.create_mt5_account && (
-                      <>
-                        <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
-                          <p className="text-blue-400 text-sm">
-                            <strong>Note:</strong> MT5 account details are required to map client investments to actual trading accounts. 
-                            The MT5 initial balance may differ from FIDUS received amount due to banking/crypto fees.
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-slate-300">MT5 Login ID *</Label>
-                            <Input
-                              type="text"
-                              value={investmentForm.mt5_login}
-                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_login: e.target.value})}
-                              placeholder="e.g., 9928326"
-                              className="mt-1 bg-slate-700 border-slate-600 text-white"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label className="text-slate-300">MT5 Password *</Label>
-                            <Input
-                              type="password"
-                              value={investmentForm.mt5_password}
-                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_password: e.target.value})}
-                              placeholder="Account password"
-                              className="mt-1 bg-slate-700 border-slate-600 text-white"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-slate-300">Broker *</Label>
-                            <Select value={investmentForm.broker_name} onValueChange={(value) => setInvestmentForm({...investmentForm, broker_name: value})}>
-                              <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
-                                <SelectValue placeholder="Select broker" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-700 border-slate-600">
-                                <SelectItem value="DooTechnology" className="text-white">DooTechnology</SelectItem>
-                                <SelectItem value="Multibank" className="text-white">Multibank</SelectItem>
-                                <SelectItem value="IC Markets" className="text-white">IC Markets</SelectItem>
-                                <SelectItem value="FXCM" className="text-white">FXCM</SelectItem>
-                                <SelectItem value="Other" className="text-white">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label className="text-slate-300">MT5 Server *</Label>
-                            <Input
-                              type="text"
-                              value={investmentForm.mt5_server}
-                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_server: e.target.value})}
-                              placeholder="e.g., DooTechnology-Live"
-                              className="mt-1 bg-slate-700 border-slate-600 text-white"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Balance and Fees Section */}
-                        <div className="border border-slate-600 rounded-lg p-4">
-                          <h5 className="text-white font-medium mb-3 flex items-center">
-                            <DollarSign className="w-4 h-4 mr-2 text-green-400" />
-                            Balance & Fee Reconciliation
-                          </h5>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <Label className="text-slate-300">FIDUS Received Amount</Label>
-                              <Input
-                                type="number"
-                                value={investmentForm.amount}
-                                className="mt-1 bg-slate-600 border-slate-500 text-slate-300"
-                                readOnly
-                              />
-                              <p className="text-xs text-slate-400 mt-1">Amount received by FIDUS</p>
-                            </div>
-                            
-                            <div>
-                              <Label className="text-slate-300">MT5 Initial Balance *</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={investmentForm.mt5_initial_balance}
-                                onChange={(e) => setInvestmentForm({...investmentForm, mt5_initial_balance: e.target.value})}
-                                placeholder="Actual MT5 starting balance"
-                                className="mt-1 bg-slate-700 border-slate-600 text-white"
-                              />
-                              <p className="text-xs text-slate-400 mt-1">May differ due to fees</p>
-                            </div>
-                            
-                            <div>
-                              <Label className="text-slate-300">Banking/Crypto Fees</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={investmentForm.banking_fees}
-                                onChange={(e) => setInvestmentForm({...investmentForm, banking_fees: e.target.value})}
-                                placeholder="Fee amount"
-                                className="mt-1 bg-slate-700 border-slate-600 text-white"
-                              />
-                              <p className="text-xs text-slate-400 mt-1">Transfer/conversion fees</p>
-                            </div>
-                          </div>
-
-                          {investmentForm.amount && investmentForm.mt5_initial_balance && (
-                            <div className="mt-3 p-2 bg-slate-700 rounded text-sm">
-                              <p className="text-slate-300">
-                                <strong>Difference:</strong> 
-                                <span className={`ml-2 ${
-                                  (parseFloat(investmentForm.amount) - parseFloat(investmentForm.mt5_initial_balance)) === 0 
-                                    ? 'text-green-400' 
-                                    : 'text-yellow-400'
-                                }`}>
-                                  ${((parseFloat(investmentForm.amount) || 0) - (parseFloat(investmentForm.mt5_initial_balance) || 0)).toFixed(2)}
-                                </span>
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <Label className="text-slate-300">MT5 Setup Notes (Optional)</Label>
-                          <textarea
-                            value={investmentForm.fee_notes}
-                            onChange={(e) => setInvestmentForm({...investmentForm, fee_notes: e.target.value})}
-                            placeholder="Notes about account setup, fees, or any discrepancies..."
-                            className="mt-1 w-full min-h-16 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
               </div>
               
               {/* Fixed Footer with buttons */}
@@ -1041,6 +781,14 @@ const AdminInvestmentManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Investment Detail View */}
+      {selectedInvestment && (
+        <InvestmentDetailView
+          investmentId={selectedInvestment}
+          onBack={() => setSelectedInvestment(null)}
+        />
+      )}
     </div>
   );
 };

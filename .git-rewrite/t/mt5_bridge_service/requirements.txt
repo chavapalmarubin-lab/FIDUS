@@ -1,0 +1,27 @@
+# MT5 Bridge Service Requirements - Windows VPS
+# Install these on Windows VPS (217.197.163.11)
+
+# MetaTrader5 Python API (Windows only)
+MetaTrader5==5.0.47
+
+# FastAPI and dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.25.0
+pydantic==2.5.0
+
+# HTTP client
+aiohttp==3.9.0
+requests==2.31.0
+
+# Utilities
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Date/time
+python-dateutil==2.8.2
+
+# Logging
+loguru==0.7.2
+
+# Environment
+python-decouple==3.8

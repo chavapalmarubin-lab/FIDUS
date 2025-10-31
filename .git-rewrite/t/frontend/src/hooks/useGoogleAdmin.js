@@ -1,136 +1,46 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getAuthHeaders, getCurrentUser, getAuthToken } from '../utils/auth';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { useState, useEffect } from 'react';
+import apiAxios from '../utils/apiAxios';
 
 const useGoogleAdmin = () => {
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check for existing session on mount
+  // Check authentication status on mount
   useEffect(() => {
-    checkExistingSession();
-    
-    // Listen for authentication success events from callback
-    const handleAuthSuccess = (event) => {
-      console.log('✅ Google auth success event received:', event.detail);
-      setProfile(event.detail.profile);
-      setIsAuthenticated(true);
-      setLoading(false);
-      setError(null);
-    };
-    
-    window.addEventListener('googleAuthSuccess', handleAuthSuccess);
-    
-    return () => {
-      window.removeEventListener('googleAuthSuccess', handleAuthSuccess);
-    };
+    checkAuthStatus();
   }, []);
 
-  // Check for session ID in URL fragment (Emergent OAuth callback)
-  useEffect(() => {
-    const processSessionFromURL = async () => {
-      const fragment = window.location.hash;
-      const sessionIdMatch = fragment.match(/session_id=([^&]+)/);
-      
-      if (sessionIdMatch) {
-        const sessionId = sessionIdMatch[1];
-        console.log('Found session_id in URL fragment:', sessionId.substring(0, 20) + '...');
-        
-        setLoading(true);
-        setError(null);
-        
-        try {
-          await processSessionId(sessionId);
-          // Clean URL fragment after processing
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        } catch (err) {
-          console.error('Failed to process session from URL:', err);
-          setError('Failed to process authentication');
-        }
-      }
-    };
-
-    processSessionFromURL();
-  }, []);
-
-  const checkExistingSession = async () => {
+  const checkAuthStatus = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      // Check if we have Google API authentication in localStorage
-      const googleApiAuth = localStorage.getItem('google_api_authenticated');
-      const userData = localStorage.getItem('fidus_user');
+      // Check localStorage for authentication flag
+      const googleAuth = localStorage.getItem('google_api_authenticated');
+      const authCompleted = localStorage.getItem('google_auth_completed');
       
-      // If we have authentication flag and user data, try to validate with backend
-      if (googleApiAuth === 'true' && userData) {
+      console.log('🔍 Checking Google auth status:', { googleAuth, authCompleted });
+      
+      if (googleAuth === 'true') {
+        setIsAuthenticated(true);
+        
+        // Try to get profile from API
         try {
-          const user = JSON.parse(userData);
-          if (user && user.isGoogleAuth && user.googleApiAccess) {
-            console.log('Found Google API session in localStorage:', user.email);
-            
-            // Try to validate with backend using admin session cookies
-            const response = await fetch(`${API}/admin/google/profile`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.profile) {
-                setProfile(data.profile);
-                setIsAuthenticated(true);
-                console.log('✅ Existing Google API session validated:', data.profile.email);
-                return;
-              }
-            }
-            
-            // If backend validation fails but we have local data, use local data
-            console.log('Using local Google API session data');
-            setProfile({
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              picture: user.picture
-            });
-            setIsAuthenticated(true);
-            return;
+          const response = await apiAxios.get('/admin/google/profile');
+          if (response.data.success && response.data.profile) {
+            setProfile(response.data.profile);
+            console.log('✅ Google profile loaded:', response.data.profile);
           }
-        } catch (parseError) {
-          console.error('Error parsing stored user data:', parseError);
+        } catch (err) {
+          console.log('ℹ️ Profile not available, but authentication exists');
+          // Still keep authenticated status but without profile
         }
-      }
-
-      // Fallback to cookie-based authentication
-      const response = await fetch(`${API}/admin/google/profile`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.profile) {
-          setProfile(data.profile);
-          setIsAuthenticated(true);
-          console.log('✅ Existing Google session found via cookies:', data.profile.email);
-        }
-      } else if (response.status !== 401) {
-        console.log('Session check failed:', response.status);
+      } else {
+        setIsAuthenticated(false);
+        setProfile(null);
       }
     } catch (err) {
-      console.error('Session check error:', err);
-    } finally {
-      setLoading(false);
+      console.error('Error checking Google auth status:', err);
+      setError('Failed to check authentication status');
     }
   };
 
@@ -138,76 +48,19 @@ const useGoogleAdmin = () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Get JWT token for admin authentication
-      const jwtToken = localStorage.getItem('fidus_token');
       
-      if (!jwtToken) {
-        throw new Error('Admin authentication required');
-      }
-
-      // Call the new real Google OAuth URL endpoint
-      const response = await fetch(`${API}/admin/google/oauth-url`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${jwtToken}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
+      // Get Google OAuth URL
+      const response = await apiAxios.get('/auth/google/url');
       
-      if (data.success && data.oauth_url) {
-        // Redirect to real Google OAuth for comprehensive API access
-        console.log('Redirecting to real Google OAuth for comprehensive API access...');
-        window.location.href = data.oauth_url;
+      if (response.data.success && response.data.auth_url) {
+        console.log('🚀 Redirecting to Google OAuth...');
+        window.location.href = response.data.auth_url;
       } else {
-        throw new Error(data.detail || 'Failed to get Google OAuth URL');
+        throw new Error(response.data.error || 'Failed to get OAuth URL');
       }
     } catch (err) {
-      console.error('Google OAuth error:', err);
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
-  const processSessionId = async (sessionId) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`${API}/admin/google/process-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': sessionId  // Use X-Session-ID header as per Emergent OAuth spec
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setProfile(data.profile);
-        setIsAuthenticated(true);
-        
-        // Store session data in localStorage for persistence
-        localStorage.setItem('google_session_token', data.session_token);
-        localStorage.setItem('fidus_user', JSON.stringify({
-          ...data.profile,
-          isGoogleAuth: true
-        }));
-        
-        console.log('✅ Emergent OAuth authentication successful:', data.profile.email);
-        
-        return data.profile;
-      } else {
-        throw new Error(data.detail || 'Authentication failed');
-      }
-    } catch (err) {
-      setError(err.message);
-      throw err;
+      console.error('Google login error:', err);
+      setError(err.message || 'Failed to initiate Google login');
     } finally {
       setLoading(false);
     }
@@ -216,63 +69,35 @@ const useGoogleAdmin = () => {
   const logout = async () => {
     try {
       setLoading(true);
+      
+      // Clear local storage
+      localStorage.removeItem('google_api_authenticated');
+      localStorage.removeItem('google_auth_completed');
+      localStorage.removeItem('google_session_token');
+      
+      // Reset state
+      setIsAuthenticated(false);
+      setProfile(null);
       setError(null);
-
-      const response = await fetch(`${API}/admin/google/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        setProfile(null);
-        setIsAuthenticated(false);
-        console.log('✅ Google logout successful');
-      } else {
-        const data = await response.json();
-        throw new Error(data.detail || 'Logout failed');
+      
+      // Call logout endpoint
+      try {
+        await apiAxios.post('/admin/google/logout');
+      } catch (err) {
+        console.log('Logout API call failed, but local state cleared');
       }
+      
+      console.log('✅ Google authentication cleared');
     } catch (err) {
-      setError(err.message);
+      console.error('Logout error:', err);
+      setError('Failed to logout completely');
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshProfile = useCallback(async () => {
-    await checkExistingSession();
-  }, []);
-
-  const logoutGoogle = () => {
-    setProfile(null);
-    setIsAuthenticated(false);
-    setError(null);
-    
-    // Clear Google API authentication data
-    localStorage.removeItem('google_api_authenticated');
-    localStorage.removeItem('google_session_token'); // Legacy cleanup
-    
-    // Keep the main fidus_user if it's not a Google-only login
-    const userData = localStorage.getItem('fidus_user');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        if (user.isGoogleAuth) {
-          // If this was a Google-only login, clear everything
-          localStorage.removeItem('fidus_user');
-        } else {
-          // Otherwise, just remove Google-specific properties
-          delete user.isGoogleAuth;
-          delete user.googleApiAccess;
-          delete user.picture;
-          localStorage.setItem('fidus_user', JSON.stringify(user));
-        }
-      } catch (err) {
-        console.error('Error cleaning up user data:', err);
-      }
-    }
+  const refreshAuth = () => {
+    checkAuthStatus();
   };
 
   return {
@@ -282,9 +107,7 @@ const useGoogleAdmin = () => {
     isAuthenticated,
     loginWithGoogle,
     logout,
-    logoutGoogle,
-    refreshProfile,
-    clearError: () => setError(null)
+    refreshAuth
   };
 };
 

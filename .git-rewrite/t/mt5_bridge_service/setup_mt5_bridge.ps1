@@ -1,0 +1,841 @@
+# ============================================================================
+# FIDUS MT5 Bridge Service - Automated Setup Script
+# ============================================================================
+# This script automatically sets up the complete MT5 Bridge Service on Windows VPS
+# Run as Administrator for best results
+# ============================================================================
+
+param(
+    [switch]$SkipPython = $false,
+    [switch]$Force = $false
+)
+
+# Script configuration
+$ServiceName = "FIDUS MT5 Bridge Service"
+$ServiceDir = "C:\mt5_bridge_service"
+$LogFile = "$ServiceDir\setup.log"
+$PythonMinVersion = [Version]"3.11.0"
+
+# Generated API Key (you can change this)
+$ApiKey = "FIDUS-MT5-PROD-$(Get-Random -Minimum 100000 -Maximum 999999)-$(Get-Date -Format 'yyyyMMdd')"
+
+# Colors for console output
+function Write-ColorOutput($ForegroundColor) {
+    $fc = $host.UI.RawUI.ForegroundColor
+    $host.UI.RawUI.ForegroundColor = $ForegroundColor
+    if ($args) { Write-Output $args } else { $input | Write-Output }
+    $host.UI.RawUI.ForegroundColor = $fc
+}
+
+function Write-Success { Write-ColorOutput Green $args }
+function Write-Warning { Write-ColorOutput Yellow $args }
+function Write-Error { Write-ColorOutput Red $args }
+function Write-Info { Write-ColorOutput Cyan $args }
+
+# Logging function
+function Write-Log {
+    param($Message, $Level = "INFO")
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $LogEntry = "[$Timestamp] [$Level] $Message"
+    Write-Output $LogEntry
+    if (Test-Path $ServiceDir) {
+        Add-Content -Path $LogFile -Value $LogEntry
+    }
+}
+
+# Header
+Clear-Host
+Write-Success "=" * 80
+Write-Success "🚀 FIDUS MT5 BRIDGE SERVICE - AUTOMATED SETUP"
+Write-Success "=" * 80
+Write-Info "This script will automatically set up the MT5 Bridge Service"
+Write-Info "Setting up in: $ServiceDir"
+Write-Info "Generated API Key: $ApiKey"
+Write-Success "=" * 80
+
+# Check if running as administrator
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+if (-not $isAdmin) {
+    Write-Warning "⚠️  Not running as Administrator. Some features may not work properly."
+    Write-Info "💡 Consider running as Administrator for best results."
+}
+
+# Step 1: Create directory structure
+Write-Info "📁 Creating directory structure..."
+try {
+    if (Test-Path $ServiceDir) {
+        if (-not $Force) {
+            $response = Read-Host "Directory $ServiceDir already exists. Continue? (y/n)"
+            if ($response -ne 'y' -and $response -ne 'Y') {
+                Write-Error "Setup cancelled by user."
+                exit 1
+            }
+        }
+    }
+    
+    New-Item -ItemType Directory -Force -Path $ServiceDir | Out-Null
+    New-Item -ItemType Directory -Force -Path "$ServiceDir\logs" | Out-Null
+    
+    Write-Success "✅ Directory structure created"
+    Write-Log "Directory structure created at $ServiceDir"
+} catch {
+    Write-Error "❌ Failed to create directory structure: $($_.Exception.Message)"
+    exit 1
+}
+
+# Step 2: Check Python installation
+Write-Info "🐍 Checking Python installation..."
+if (-not $SkipPython) {
+    try {
+        $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+        if ($pythonCmd) {
+            $pythonVersion = & python --version 2>&1
+            Write-Info "Found Python: $pythonVersion"
+            
+            # Parse version
+            if ($pythonVersion -match "Python (\d+\.\d+\.\d+)") {
+                $currentVersion = [Version]$matches[1]
+                if ($currentVersion -lt $PythonMinVersion) {
+                    Write-Warning "⚠️  Python version $currentVersion is below required $PythonMinVersion"
+                    Write-Info "Please install Python 3.11+ from https://python.org"
+                    $response = Read-Host "Continue anyway? (y/n)"
+                    if ($response -ne 'y' -and $response -ne 'Y') {
+                        exit 1
+                    }
+                } else {
+                    Write-Success "✅ Python version $currentVersion is compatible"
+                }
+            }
+        } else {
+            Write-Error "❌ Python not found in PATH"
+            Write-Info "Please install Python 3.11+ from https://python.org"
+            Write-Info "Make sure to check 'Add to PATH' during installation"
+            exit 1
+        }
+    } catch {
+        Write-Error "❌ Error checking Python: $($_.Exception.Message)"
+        exit 1
+    }
+} else {
+    Write-Warning "⚠️  Skipping Python check (--SkipPython flag used)"
+}
+
+# Step 3: Create main_production.py
+Write-Info "📄 Creating main_production.py..."
+$MainPyContent = @"
+"""
+FIDUS MT5 Bridge Service - Production Version
+FastAPI service for Windows VPS with comprehensive MT5 integration
+Auto-generated by setup script
+"""
+
+from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, List, Any
+import logging
+import os
+import asyncio
+from datetime import datetime, timezone, timedelta
+import uvicorn
+from pathlib import Path
+import json
+import sys
+
+# Import MetaTrader5 (Windows only)
+try:
+    import MetaTrader5 as mt5
+    MT5_AVAILABLE = True
+    print("✅ MetaTrader5 package imported successfully")
+except ImportError as e:
+    MT5_AVAILABLE = False
+    print(f"⚠️ MetaTrader5 not available: {e}")
+    print("📝 Install with: pip install MetaTrader5")
+
+# Configure logging
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_dir / f"mt5_bridge_{datetime.now().strftime('%Y%m%d')}.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# FastAPI app
+app = FastAPI(
+    title="FIDUS MT5 Bridge Service - Production",
+    description="REST API Bridge between FIDUS Platform and MetaTrader5",
+    version="1.0.0",
+    docs_url="/docs" if os.getenv("ENVIRONMENT", "prod") == "dev" else None
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://fidus-invest.emergent.host",
+        "http://localhost:8001",
+        "http://127.0.0.1:8001"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Pydantic models
+class MT5Credentials(BaseModel):
+    account: int = Field(..., description="MT5 account number")
+    password: str = Field(..., description="MT5 account password")
+    server: str = Field(..., description="MT5 broker server")
+
+class OrderRequest(BaseModel):
+    symbol: str = Field(..., description="Trading symbol (e.g., EURUSD)")
+    volume: float = Field(..., gt=0, description="Trade volume in lots")
+    order_type: str = Field(..., description="Order type: BUY or SELL")
+    sl: Optional[float] = Field(0.0, description="Stop loss price")
+    tp: Optional[float] = Field(0.0, description="Take profit price")
+    comment: Optional[str] = Field("FIDUS", description="Order comment")
+
+# Security
+API_KEY = os.environ.get('MT5_BRIDGE_API_KEY', '$ApiKey')
+if API_KEY == '$ApiKey':
+    logger.warning("⚠️ Using default API key - should be configured in .env")
+
+def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY:
+        logger.warning(f"Invalid API key attempt: {x_api_key}")
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return x_api_key
+
+# Global MT5 state
+class MT5State:
+    def __init__(self):
+        self.initialized = False
+        self.connected_accounts = {}
+        self.last_error = None
+        self.initialization_time = None
+        
+mt5_state = MT5State()
+
+# MT5 Connection Manager
+class MT5Manager:
+    def __init__(self):
+        self.initialize_mt5()
+    
+    def initialize_mt5(self) -> bool:
+        """Initialize MT5 connection"""
+        try:
+            if not MT5_AVAILABLE:
+                logger.error("MetaTrader5 package not available")
+                return False
+            
+            if mt5.initialize():
+                mt5_state.initialized = True
+                mt5_state.initialization_time = datetime.now(timezone.utc)
+                logger.info("✅ MT5 initialized successfully")
+                
+                # Log MT5 terminal info
+                terminal_info = mt5.terminal_info()
+                if terminal_info:
+                    logger.info(f"MT5 Terminal: {terminal_info.name} v{terminal_info.build}")
+                    logger.info(f"Terminal path: {terminal_info.path}")
+                
+                return True
+            else:
+                error = mt5.last_error()
+                mt5_state.last_error = error
+                logger.error(f"❌ MT5 initialization failed: {error}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ MT5 initialization exception: {e}")
+            mt5_state.last_error = str(e)
+            return False
+    
+    def is_connected(self) -> bool:
+        """Check if MT5 is properly connected"""
+        if not MT5_AVAILABLE or not mt5_state.initialized:
+            return False
+        
+        try:
+            terminal_info = mt5.terminal_info()
+            return terminal_info is not None and terminal_info.connected
+        except:
+            return False
+    
+    def login(self, account: int, password: str, server: str) -> Dict:
+        """Login to MT5 account"""
+        try:
+            if not mt5_state.initialized:
+                self.initialize_mt5()
+            
+            if not mt5_state.initialized:
+                return {"success": False, "error": "MT5 not initialized"}
+            
+            # Attempt login
+            authorized = mt5.login(account, password=password, server=server)
+            
+            if authorized:
+                # Store connection info
+                mt5_state.connected_accounts[account] = {
+                    "server": server,
+                    "connected_at": datetime.now(timezone.utc).isoformat(),
+                    "last_ping": datetime.now(timezone.utc).isoformat()
+                }
+                
+                logger.info(f"✅ Successfully logged in to account {account} on {server}")
+                
+                # Get account info to verify
+                account_info = mt5.account_info()
+                if account_info:
+                    return {
+                        "success": True,
+                        "account": account,
+                        "server": server,
+                        "currency": account_info.currency,
+                        "balance": float(account_info.balance),
+                        "equity": float(account_info.equity),
+                        "login_time": mt5_state.connected_accounts[account]["connected_at"]
+                    }
+                else:
+                    return {"success": True, "account": account, "server": server}
+            
+            else:
+                error = mt5.last_error()
+                logger.error(f"❌ Login failed for account {account}: {error}")
+                return {"success": False, "error": f"Login failed: {error}"}
+        
+        except Exception as e:
+            logger.error(f"Login exception: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_account_info(self) -> Dict:
+        """Get current account information"""
+        try:
+            if not self.is_connected():
+                return {"error": "MT5 not connected"}
+            
+            account_info = mt5.account_info()
+            if not account_info:
+                error = mt5.last_error()
+                return {"error": f"Failed to get account info: {error}"}
+            
+            return {
+                "login": account_info.login,
+                "balance": float(account_info.balance),
+                "credit": float(account_info.credit),
+                "profit": float(account_info.profit),
+                "equity": float(account_info.equity),
+                "margin": float(account_info.margin),
+                "margin_free": float(account_info.margin_free),
+                "margin_level": float(account_info.margin_level) if account_info.margin_level != float('inf') else 0,
+                "name": account_info.name,
+                "server": account_info.server,
+                "currency": account_info.currency,
+                "company": account_info.company,
+                "leverage": account_info.leverage,
+                "trade_allowed": account_info.trade_allowed
+            }
+        except Exception as e:
+            logger.error(f"Get account info error: {e}")
+            return {"error": str(e)}
+
+# Initialize MT5 manager
+mt5_manager = MT5Manager()
+
+# Startup event
+@app.on_event("startup")
+async def startup_event():
+    """Initialize MT5 on startup"""
+    logger.info("🚀 Starting FIDUS MT5 Bridge Service")
+    logger.info(f"MT5 Available: {MT5_AVAILABLE}")
+    logger.info(f"API Key configured: {'Yes' if API_KEY else 'No'}")
+    
+    if MT5_AVAILABLE:
+        success = mt5_manager.initialize_mt5()
+        logger.info(f"MT5 Initialization: {'Success' if success else 'Failed'}")
+    
+    logger.info("✅ FIDUS MT5 Bridge Service started successfully")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    logger.info("🛑 Shutting down FIDUS MT5 Bridge Service")
+    
+    if MT5_AVAILABLE and mt5_state.initialized:
+        try:
+            mt5.shutdown()
+            logger.info("MT5 connection closed")
+        except Exception as e:
+            logger.error(f"Error during MT5 shutdown: {e}")
+    
+    logger.info("✅ FIDUS MT5 Bridge Service stopped")
+
+# API Endpoints
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "service": "FIDUS MT5 Bridge Service",
+        "version": "1.0.0",
+        "status": "running",
+        "mt5_available": MT5_AVAILABLE,
+        "mt5_initialized": mt5_state.initialized,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@app.get("/health")
+async def health_check():
+    """Comprehensive health check endpoint"""
+    health_data = {
+        "status": "healthy" if mt5_manager.is_connected() else "unhealthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "mt5_available": MT5_AVAILABLE,
+        "mt5_initialized": mt5_state.initialized,
+        "mt5_connected": mt5_manager.is_connected(),
+        "connected_accounts": len(mt5_state.connected_accounts),
+        "last_error": mt5_state.last_error
+    }
+    
+    # Calculate uptime
+    if mt5_state.initialization_time:
+        uptime = datetime.now(timezone.utc) - mt5_state.initialization_time
+        health_data["uptime"] = str(uptime)
+    
+    return health_data
+
+@app.post("/api/mt5/login")
+async def login_mt5_account(
+    credentials: MT5Credentials,
+    api_key: str = Depends(verify_api_key)
+):
+    """Login to MT5 trading account"""
+    try:
+        result = mt5_manager.login(
+            credentials.account,
+            credentials.password,
+            credentials.server
+        )
+        
+        if result.get("success"):
+            logger.info(f"Successful login: Account {credentials.account}")
+        else:
+            logger.warning(f"Failed login: Account {credentials.account} - {result.get('error')}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Login endpoint error: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/mt5/account/info")
+async def get_account_info_endpoint(api_key: str = Depends(verify_api_key)):
+    """Get MT5 account information"""
+    try:
+        result = mt5_manager.get_account_info()
+        return result
+    except Exception as e:
+        logger.error(f"Account info endpoint error: {e}")
+        return {"error": str(e)}
+
+@app.get("/api/mt5/positions")
+async def get_positions_endpoint(api_key: str = Depends(verify_api_key)):
+    """Get current open positions"""
+    try:
+        if not mt5_manager.is_connected():
+            return {"error": "MT5 not connected", "positions": []}
+        
+        positions = mt5.positions_get()
+        if positions is None:
+            error = mt5.last_error()
+            return {"error": f"Failed to get positions: {error}", "positions": []}
+        
+        positions_list = []
+        for pos in positions:
+            positions_list.append({
+                "ticket": pos.ticket,
+                "symbol": pos.symbol,
+                "type": "BUY" if pos.type == 0 else "SELL",
+                "volume": float(pos.volume),
+                "price_open": float(pos.price_open),
+                "price_current": float(pos.price_current),
+                "profit": float(pos.profit),
+                "swap": float(pos.swap),
+                "comment": pos.comment
+            })
+        
+        return {
+            "success": True,
+            "positions": positions_list,
+            "count": len(positions_list),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Get positions error: {e}")
+        return {"error": str(e), "positions": []}
+
+# Error handlers
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    logger.error(f"Unhandled exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "detail": str(exc)}
+    )
+
+if __name__ == "__main__":
+    # Production server configuration
+    config = {
+        "host": "0.0.0.0",
+        "port": int(os.getenv("PORT", 8000)),
+        "log_level": os.getenv("LOG_LEVEL", "info"),
+        "access_log": True,
+        "reload": False
+    }
+    
+    logger.info(f"Starting server with config: {config}")
+    uvicorn.run("__main__:app", **config)
+"@
+
+try {
+    $MainPyContent | Out-File -FilePath "$ServiceDir\main_production.py" -Encoding UTF8
+    Write-Success "✅ main_production.py created"
+    Write-Log "Created main_production.py"
+} catch {
+    Write-Error "❌ Failed to create main_production.py: $($_.Exception.Message)"
+    exit 1
+}
+
+# Step 4: Create requirements.txt
+Write-Info "📄 Creating requirements.txt..."
+$RequirementsContent = @"
+# FIDUS MT5 Bridge Service Requirements
+# Auto-generated by setup script
+
+# MetaTrader5 Python API (Windows only)
+MetaTrader5==5.0.45
+
+# FastAPI and dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# HTTP client
+aiohttp==3.9.0
+
+# Utilities
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Cryptography for password encryption
+cryptography==41.0.8
+
+# Additional utilities
+pathlib2==2.3.7
+"@
+
+try {
+    $RequirementsContent | Out-File -FilePath "$ServiceDir\requirements.txt" -Encoding UTF8
+    Write-Success "✅ requirements.txt created"
+    Write-Log "Created requirements.txt"
+} catch {
+    Write-Error "❌ Failed to create requirements.txt: $($_.Exception.Message)"
+    exit 1
+}
+
+# Step 5: Generate encryption key
+Write-Info "🔐 Generating encryption key..."
+try {
+    # Generate a simple encryption key (for production, use proper key management)
+    $EncryptionKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("FIDUS-MT5-ENC-KEY-$(Get-Random)-$(Get-Date -Format 'yyyyMMddHHmmss')")).Substring(0, 44)
+    Write-Success "✅ Encryption key generated"
+    Write-Log "Generated encryption key"
+} catch {
+    Write-Error "❌ Failed to generate encryption key: $($_.Exception.Message)"
+    $EncryptionKey = "FIDUS-DEFAULT-ENCRYPTION-KEY-CHANGE-IN-PROD"
+}
+
+# Step 6: Create .env file
+Write-Info "📄 Creating .env configuration file..."
+$EnvContent = @"
+# FIDUS MT5 Bridge Service Configuration
+# Auto-generated by setup script on $(Get-Date)
+
+# Security Configuration
+MT5_BRIDGE_API_KEY=$ApiKey
+MT5_ENCRYPTION_KEY=$EncryptionKey
+
+# Service Configuration
+ENVIRONMENT=prod
+PORT=8000
+LOG_LEVEL=info
+
+# IMPORTANT: Configure these MT5 settings below
+# Uncomment and fill in your MT5 account details
+
+# Example MT5 Configuration (REMOVE THESE COMMENTS AND CONFIGURE):
+# MT5_DEFAULT_ACCOUNT=123456
+# MT5_DEFAULT_PASSWORD=your_mt5_password
+# MT5_DEFAULT_SERVER=YourBroker-Demo
+
+# For multiple accounts, configure them in FIDUS backend instead
+"@
+
+try {
+    $EnvContent | Out-File -FilePath "$ServiceDir\.env" -Encoding UTF8
+    Write-Success "✅ .env configuration file created"
+    Write-Log "Created .env file with API key: $ApiKey"
+} catch {
+    Write-Error "❌ Failed to create .env file: $($_.Exception.Message)"
+    exit 1
+}
+
+# Step 7: Install Python dependencies
+Write-Info "📦 Installing Python dependencies..."
+try {
+    Set-Location $ServiceDir
+    
+    # Upgrade pip first
+    Write-Info "Upgrading pip..."
+    & python -m pip install --upgrade pip 2>&1 | Out-String | Write-Log
+    
+    # Install requirements
+    Write-Info "Installing requirements..."
+    $installOutput = & python -m pip install -r requirements.txt 2>&1 | Out-String
+    Write-Log $installOutput
+    
+    # Check if MetaTrader5 installed successfully
+    $mt5Check = & python -c "import MetaTrader5 as mt5; print('MT5 version:', mt5.version())" 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "✅ MetaTrader5 package installed successfully"
+        Write-Log "MetaTrader5 package installed and verified"
+    } else {
+        Write-Warning "⚠️ MetaTrader5 package installation may have issues"
+        Write-Warning "This is normal if MT5 terminal is not installed yet"
+        Write-Log "MetaTrader5 package installation result: $mt5Check"
+    }
+    
+    Write-Success "✅ Python dependencies installed"
+} catch {
+    Write-Error "❌ Failed to install dependencies: $($_.Exception.Message)"
+    Write-Warning "You may need to install dependencies manually: pip install -r requirements.txt"
+}
+
+# Step 8: Create service management scripts
+Write-Info "📄 Creating service management scripts..."
+
+# Start service script
+$StartScript = @"
+@echo off
+echo Starting FIDUS MT5 Bridge Service...
+cd /d "$ServiceDir"
+echo Service starting at %date% %time%
+python main_production.py
+pause
+"@
+
+$StartScript | Out-File -FilePath "$ServiceDir\start_service.bat" -Encoding ASCII
+
+# Stop service script
+$StopScript = @"
+@echo off
+echo Stopping FIDUS MT5 Bridge Service...
+taskkill /f /im python.exe /fi "WINDOWTITLE eq *main_production*" 2>nul
+if %ERRORLEVEL%==0 (
+    echo Service stopped successfully
+) else (
+    echo No running service found or failed to stop
+)
+pause
+"@
+
+$StopScript | Out-File -FilePath "$ServiceDir\stop_service.bat" -Encoding ASCII
+
+# Test script
+$TestScript = @"
+@echo off
+echo Testing FIDUS MT5 Bridge Service...
+cd /d "$ServiceDir"
+echo.
+echo Testing Python installation...
+python --version
+echo.
+echo Testing dependencies...
+python -c "import fastapi, uvicorn, pydantic; print('✅ Core dependencies OK')"
+echo.
+echo Testing MetaTrader5 (may show warning if MT5 not installed)...
+python -c "try: import MetaTrader5 as mt5; print('✅ MetaTrader5 package OK'); except Exception as e: print('⚠️ MetaTrader5 issue:', e)"
+echo.
+echo Testing service startup (will exit after 5 seconds)...
+timeout /t 5 /nobreak >nul & taskkill /f /im python.exe /fi "WINDOWTITLE eq *main_production*" 2>nul &
+python -c "
+import uvicorn
+import asyncio
+from main_production import app
+print('✅ Service can start successfully')
+"
+echo.
+echo Test completed. Use start_service.bat to run the full service.
+pause
+"@
+
+$TestScript | Out-File -FilePath "$ServiceDir\test_service.bat" -Encoding ASCII
+
+Write-Success "✅ Service management scripts created"
+
+# Step 9: Configure Windows Firewall
+Write-Info "🛡️ Configuring Windows Firewall..."
+if ($isAdmin) {
+    try {
+        $firewallRule = Get-NetFirewallRule -DisplayName "FIDUS MT5 Bridge Service" -ErrorAction SilentlyContinue
+        if (-not $firewallRule) {
+            New-NetFirewallRule -DisplayName "FIDUS MT5 Bridge Service" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow | Out-Null
+            Write-Success "✅ Windows Firewall rule added (Port 8000)"
+            Write-Log "Windows Firewall rule created for port 8000"
+        } else {
+            Write-Info "ℹ️ Firewall rule already exists"
+        }
+    } catch {
+        Write-Warning "⚠️ Could not configure Windows Firewall automatically"
+        Write-Info "💡 Manually add firewall rule: Allow TCP port 8000 inbound"
+        Write-Log "Firewall configuration failed: $($_.Exception.Message)"
+    }
+} else {
+    Write-Warning "⚠️ Not running as Administrator - cannot configure Windows Firewall"
+    Write-Info "💡 Manually add firewall rule: Allow TCP port 8000 inbound"
+}
+
+# Step 10: Create comprehensive instructions
+Write-Info "📖 Creating setup instructions..."
+$InstructionsContent = @"
+# FIDUS MT5 Bridge Service - Setup Complete!
+
+## 🎉 Installation Summary
+- Service installed in: $ServiceDir
+- API Key generated: $ApiKey
+- Encryption Key: $EncryptionKey
+- Service Port: 8000
+
+## 🔧 Next Steps (IMPORTANT!)
+
+### 1. Install MetaTrader 5 Terminal
+- Download MT5 from your broker's website
+- Install and login with your trading account
+- Keep MT5 terminal running for API access
+
+### 2. Configure MT5 Credentials (REQUIRED!)
+Edit the file: $ServiceDir\.env
+
+Add your MT5 account details:
+```
+# Remove comments and add your real MT5 credentials:
+MT5_DEFAULT_ACCOUNT=123456
+MT5_DEFAULT_PASSWORD=your_password_here
+MT5_DEFAULT_SERVER=YourBroker-Demo
+```
+
+### 3. Test the Service
+Run: $ServiceDir\test_service.bat
+
+### 4. Start the Service
+Run: $ServiceDir\start_service.bat
+
+### 5. Verify Service is Working
+Open browser: http://localhost:8000/health
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "mt5_available": true,
+  "mt5_initialized": true
+}
+```
+
+## 🔗 Configure FIDUS Backend
+
+Add these to your FIDUS backend .env file:
+```
+MT5_BRIDGE_URL=http://217.197.163.11:8000
+MT5_BRIDGE_API_KEY=$ApiKey
+MT5_BRIDGE_TIMEOUT=30
+MT5_ENCRYPTION_KEY=$EncryptionKey
+```
+
+## 🧪 Test Integration from FIDUS
+
+In FIDUS admin panel, test MT5 connection:
+1. Go to MT5 Management
+2. Click "Test Connection" 
+3. Enter your MT5 credentials
+4. Verify successful connection
+
+## 📁 Service Management
+
+- Start: $ServiceDir\start_service.bat
+- Stop: $ServiceDir\stop_service.bat  
+- Test: $ServiceDir\test_service.bat
+- Logs: $ServiceDir\logs\
+
+## 🔍 Troubleshooting
+
+### Service won't start:
+1. Check Python: python --version
+2. Check dependencies: pip list | findstr fastapi
+3. Check MT5: Ensure terminal is installed and running
+
+### Cannot connect from FIDUS:
+1. Check Windows Firewall (port 8000)
+2. Verify service is running: netstat -an | findstr :8000
+3. Check API key matches in both .env files
+
+### MT5 not connecting:
+1. Ensure MT5 terminal is running and logged in
+2. Check MT5 credentials in .env file
+3. Verify MetaTrader5 package: python -c "import MetaTrader5"
+
+## 🆘 Support
+- Service logs: $ServiceDir\logs\
+- Setup log: $ServiceDir\setup.log
+- Test connectivity: $ServiceDir\test_service.bat
+
+Generated on: $(Get-Date)
+"@
+
+$InstructionsContent | Out-File -FilePath "$ServiceDir\INSTRUCTIONS.txt" -Encoding UTF8
+Write-Success "✅ Setup instructions created"
+
+# Final summary
+Write-Success ""
+Write-Success "=" * 80
+Write-Success "🎉 FIDUS MT5 BRIDGE SERVICE SETUP COMPLETE!"
+Write-Success "=" * 80
+Write-Success ""
+Write-Info "📁 Installation Directory: $ServiceDir"
+Write-Info "🔑 API Key: $ApiKey"  
+Write-Info "🛡️ Encryption Key: Generated and saved to .env"
+Write-Info "🌐 Service Port: 8000"
+Write-Success ""
+Write-Warning "⚠️ IMPORTANT NEXT STEPS:"
+Write-Info "1. Install MetaTrader 5 terminal from your broker"
+Write-Info "2. Edit $ServiceDir\.env with your MT5 credentials"
+Write-Info "3. Run: $ServiceDir\test_service.bat"
+Write-Info "4. Run: $ServiceDir\start_service.bat"
+Write-Info "5. Add API key to FIDUS backend .env file"
+Write-Success ""
+Write-Info "📖 Full instructions: $ServiceDir\INSTRUCTIONS.txt"
+Write-Success "=" * 80
+
+# Final log entry
+Write-Log "Setup completed successfully" "SUCCESS"
+Write-Log "Generated API Key: $ApiKey" "INFO"
+Write-Log "Next steps: Configure MT5 credentials and test service" "INFO"
+
+Write-Success "✅ Setup script completed successfully!"
+Write-Info "💡 Open $ServiceDir\INSTRUCTIONS.txt for next steps"
+"@

@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 """
-FUND PORTFOLIO OVERVIEW & ADMIN CLIENTS ENDPOINT TESTING
-========================================================
+FUND PORTFOLIO ENDPOINT TESTING - Issue #5 Resolution
+====================================================
 
-This test verifies the newly created /fund-portfolio/overview endpoint and 
-the fixed /admin/clients endpoint structure as requested in the review:
+This test verifies the fund portfolio endpoint to resolve Issue #5 (Fund Portfolio Empty):
 
-CRITICAL FIXES TO TEST:
-1. New /api/fund-portfolio/overview endpoint:
-   - Should return fund data with Salvador's $1,371,485.40 investments
-   - Should show proper fund breakdown (BALANCE ~$1.36M, CORE ~$8K)
-   - Should return success=true with non-zero values
+EXPECTED RESULTS (as per review request):
+1. CORE fund: $18,151.41 AUM with 1 MT5 account
+2. BALANCE fund: $100,000.00 AUM with 3 MT5 accounts  
+3. Total AUM: $118,151.41
+4. Total investors: 1 (Alejandro)
+5. Fund count: 2 (CORE + BALANCE)
 
-2. Fixed /api/admin/clients endpoint:
-   - Should return {"clients": [...]} format
-   - Should include Salvador Palma (client_003) with correct balance
-   - Should be compatible with frontend ClientManagement component
+VALIDATION CRITERIA:
+✅ Fund portfolio should NOT be empty anymore
+✅ Both CORE and BALANCE funds should show correct data
+✅ MT5 allocations should match investment amounts
+✅ Issue #5 (Fund Portfolio Empty) should be RESOLVED
 
-3. Data consistency verification:
-   - Fund portfolio totals should match client investment totals
-   - All endpoints should show same $1,371,485.40 total value
-   - No zero values should appear (unless data is actually empty)
-
-4. Frontend API compatibility:
-   - Verify endpoint responses match what frontend components expect
-   - Check that MT5 accounts endpoint works with frontend format
+Authentication: admin/password123
+Backend: https://investment-portal-4.preview.emergentagent.com/api
 """
 
 import requests
@@ -34,7 +29,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-workspace.preview.emergentagent.com/api"
+BACKEND_URL = "https://investment-portal-4.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
@@ -43,7 +38,13 @@ class FundPortfolioEndpointTest:
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []
-        self.expected_salvador_total = 1371485.40  # As specified in review request
+        self.expected_total_aum = 118151.41  # As specified in review request
+        self.expected_core_aum = 18151.41
+        self.expected_balance_aum = 100000.00
+        self.expected_core_mt5_accounts = 1
+        self.expected_balance_mt5_accounts = 3
+        self.expected_total_investors = 1
+        self.expected_fund_count = 2
         
     def log_result(self, test_name, success, message, details=None):
         """Log test result"""
@@ -89,68 +90,107 @@ class FundPortfolioEndpointTest:
             return False
     
     def test_fund_portfolio_overview_endpoint(self):
-        """Test the new /api/fund-portfolio/overview endpoint"""
+        """Test the /api/fund-portfolio/overview endpoint for Issue #5 resolution"""
         try:
             response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if success=true
-                success_flag = data.get('success', False)
-                if success_flag:
-                    self.log_result("Fund Portfolio Overview - Success Flag", True, 
-                                  "Endpoint returns success=true")
-                else:
-                    self.log_result("Fund Portfolio Overview - Success Flag", False, 
-                                  "Endpoint does not return success=true", {"response": data})
-                
-                # Check for Salvador's fund data
-                funds = data.get('funds', {})
+                # Check if portfolio is not empty (Issue #5 resolution)
+                funds = data.get('funds', [])
                 total_aum = data.get('total_aum', 0)
                 
-                # Look for BALANCE fund (~$1.36M)
-                balance_fund_found = False
-                core_fund_found = False
-                balance_amount = 0
-                core_amount = 0
-                
-                # Handle funds as dictionary format
-                if 'BALANCE' in funds:
-                    balance_fund_found = True
-                    balance_amount = funds['BALANCE'].get('aum', 0)
-                    if balance_amount > 1300000:  # Should be around $1.36M
-                        self.log_result("Fund Portfolio - BALANCE Fund", True, 
-                                      f"BALANCE fund found with correct amount: ${balance_amount:,.2f}")
-                    else:
-                        self.log_result("Fund Portfolio - BALANCE Fund", False, 
-                                      f"BALANCE fund amount too low: ${balance_amount:,.2f} (expected ~$1.36M)")
-                
-                if 'CORE' in funds:
-                    core_fund_found = True
-                    core_amount = funds['CORE'].get('aum', 0)
-                    if core_amount > 0:  # Should be around $8K
-                        self.log_result("Fund Portfolio - CORE Fund", True, 
-                                      f"CORE fund found with amount: ${core_amount:,.2f}")
-                    else:
-                        self.log_result("Fund Portfolio - CORE Fund", False, 
-                                      f"CORE fund shows zero amount: ${core_amount:,.2f}")
-                
-                # Check total AUM matches expected
-                if abs(total_aum - self.expected_salvador_total) < 10000:  # Allow $10K variance
-                    self.log_result("Fund Portfolio - Total AUM", True, 
-                                  f"Total AUM matches expected: ${total_aum:,.2f}")
+                if len(funds) == 0:
+                    self.log_result("Issue #5 Resolution", False, 
+                                  "Fund portfolio is still EMPTY - Issue #5 NOT resolved", {"response": data})
+                    return
+                elif total_aum == 0:
+                    self.log_result("Issue #5 Resolution", False, 
+                                  f"Fund portfolio has {len(funds)} funds but $0 AUM - Issue #5 partially resolved", {"response": data})
                 else:
-                    self.log_result("Fund Portfolio - Total AUM", False, 
-                                  f"Total AUM mismatch: got ${total_aum:,.2f}, expected ${self.expected_salvador_total:,.2f}")
+                    self.log_result("Issue #5 Resolution", True, 
+                                  f"Fund portfolio is NOT empty: {len(funds)} funds with ${total_aum:,.2f} total AUM - Issue #5 RESOLVED")
                 
-                # Check no zero values (unless legitimately empty)
-                if total_aum > 0 and len(funds) > 0:
-                    self.log_result("Fund Portfolio - Non-Zero Values", True, 
-                                  "Endpoint returns non-zero values as expected")
+                # Check CORE fund details
+                core_fund = None
+                balance_fund = None
+                
+                # Handle both array and dict formats for funds
+                if isinstance(funds, list):
+                    core_fund = next((f for f in funds if f.get("fund_code") == "CORE"), None)
+                    balance_fund = next((f for f in funds if f.get("fund_code") == "BALANCE"), None)
+                elif isinstance(funds, dict):
+                    core_fund = funds.get("CORE")
+                    balance_fund = funds.get("BALANCE")
+                
+                # Validate CORE fund
+                if core_fund:
+                    core_aum = core_fund.get("total_aum", 0) or core_fund.get("aum", 0)
+                    core_mt5_count = core_fund.get("mt5_accounts_count", 0)
+                    
+                    if abs(core_aum - self.expected_core_aum) < 0.01:
+                        self.log_result("CORE Fund AUM", True, 
+                                      f"CORE fund AUM correct: ${core_aum:,.2f}")
+                    else:
+                        self.log_result("CORE Fund AUM", False, 
+                                      f"CORE fund AUM incorrect: Expected ${self.expected_core_aum:,.2f}, got ${core_aum:,.2f}")
+                    
+                    if core_mt5_count == self.expected_core_mt5_accounts:
+                        self.log_result("CORE Fund MT5 Accounts", True, 
+                                      f"CORE fund MT5 accounts correct: {core_mt5_count}")
+                    else:
+                        self.log_result("CORE Fund MT5 Accounts", False, 
+                                      f"CORE fund MT5 accounts incorrect: Expected {self.expected_core_mt5_accounts}, got {core_mt5_count}")
                 else:
-                    self.log_result("Fund Portfolio - Non-Zero Values", False, 
-                                  "Endpoint returns zero values", {"total_aum": total_aum, "funds_count": len(funds)})
+                    self.log_result("CORE Fund Presence", False, "CORE fund not found in portfolio")
+                
+                # Validate BALANCE fund
+                if balance_fund:
+                    balance_aum = balance_fund.get("total_aum", 0) or balance_fund.get("aum", 0)
+                    balance_mt5_count = balance_fund.get("mt5_accounts_count", 0)
+                    
+                    if abs(balance_aum - self.expected_balance_aum) < 0.01:
+                        self.log_result("BALANCE Fund AUM", True, 
+                                      f"BALANCE fund AUM correct: ${balance_aum:,.2f}")
+                    else:
+                        self.log_result("BALANCE Fund AUM", False, 
+                                      f"BALANCE fund AUM incorrect: Expected ${self.expected_balance_aum:,.2f}, got ${balance_aum:,.2f}")
+                    
+                    if balance_mt5_count == self.expected_balance_mt5_accounts:
+                        self.log_result("BALANCE Fund MT5 Accounts", True, 
+                                      f"BALANCE fund MT5 accounts correct: {balance_mt5_count}")
+                    else:
+                        self.log_result("BALANCE Fund MT5 Accounts", False, 
+                                      f"BALANCE fund MT5 accounts incorrect: Expected {self.expected_balance_mt5_accounts}, got {balance_mt5_count}")
+                else:
+                    self.log_result("BALANCE Fund Presence", False, "BALANCE fund not found in portfolio")
+                
+                # Validate total AUM
+                if abs(total_aum - self.expected_total_aum) < 0.01:
+                    self.log_result("Total AUM", True, 
+                                  f"Total AUM correct: ${total_aum:,.2f}")
+                else:
+                    self.log_result("Total AUM", False, 
+                                  f"Total AUM incorrect: Expected ${self.expected_total_aum:,.2f}, got ${total_aum:,.2f}")
+                
+                # Validate portfolio summary
+                total_investors = data.get("total_investors", 0)
+                fund_count = data.get("fund_count", 0)
+                
+                if total_investors == self.expected_total_investors:
+                    self.log_result("Total Investors", True, 
+                                  f"Total investors correct: {total_investors}")
+                else:
+                    self.log_result("Total Investors", False, 
+                                  f"Total investors incorrect: Expected {self.expected_total_investors}, got {total_investors}")
+                
+                if fund_count == self.expected_fund_count:
+                    self.log_result("Fund Count", True, 
+                                  f"Fund count correct: {fund_count}")
+                else:
+                    self.log_result("Fund Count", False, 
+                                  f"Fund count incorrect: Expected {self.expected_fund_count}, got {fund_count}")
                 
             elif response.status_code == 404:
                 self.log_result("Fund Portfolio Overview Endpoint", False, 
@@ -162,128 +202,118 @@ class FundPortfolioEndpointTest:
         except Exception as e:
             self.log_result("Fund Portfolio Overview Endpoint", False, f"Exception: {str(e)}")
     
-    def test_admin_clients_endpoint_structure(self):
-        """Test the fixed /api/admin/clients endpoint structure"""
+    def test_fund_allocation_details(self):
+        """Test fund allocation details and MT5 mapping"""
         try:
-            response = self.session.get(f"{BACKEND_URL}/admin/clients")
+            response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
+            
+            if response.status_code == 200:
+                data = response.json()
+                funds = data.get('funds', [])
+                
+                allocation_issues = []
+                
+                # Handle both array and dict formats
+                if isinstance(funds, list):
+                    for fund in funds:
+                        fund_code = fund.get("fund_code")
+                        mt5_allocation = fund.get("mt5_allocation", 0)
+                        client_investments = fund.get("client_investments", 0)
+                        allocation_match = fund.get("allocation_match", False)
+                        
+                        if not allocation_match:
+                            allocation_issues.append(f"{fund_code}: MT5 allocation ${mt5_allocation:,.2f} != Client investments ${client_investments:,.2f}")
+                        else:
+                            self.log_result(f"{fund_code} Allocation Match", True, 
+                                          f"MT5 allocation matches client investments: ${mt5_allocation:,.2f}")
+                elif isinstance(funds, dict):
+                    for fund_code, fund_data in funds.items():
+                        mt5_allocation = fund_data.get("mt5_allocation", 0)
+                        client_investments = fund_data.get("client_investments", 0)
+                        allocation_match = fund_data.get("allocation_match", False)
+                        
+                        if not allocation_match:
+                            allocation_issues.append(f"{fund_code}: MT5 allocation ${mt5_allocation:,.2f} != Client investments ${client_investments:,.2f}")
+                        else:
+                            self.log_result(f"{fund_code} Allocation Match", True, 
+                                          f"MT5 allocation matches client investments: ${mt5_allocation:,.2f}")
+                
+                if allocation_issues:
+                    self.log_result("Fund Allocation Details", False, 
+                                  f"Allocation mismatches found: {'; '.join(allocation_issues)}")
+                else:
+                    self.log_result("Fund Allocation Details", True, 
+                                  "All fund allocations match client investments")
+                    
+            else:
+                self.log_result("Fund Allocation Details", False, f"HTTP {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Fund Allocation Details", False, f"Exception: {str(e)}")
+    
+    def test_alejandro_client_investments(self):
+        """Test Alejandro's client investments (should total $118,151.41)"""
+        try:
+            # Get Alejandro's investments
+            response = self.session.get(f"{BACKEND_URL}/investments/client/client_alejandro")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if response has {"clients": [...]} format
-                if isinstance(data, dict) and 'clients' in data:
-                    clients = data['clients']
-                    self.log_result("Admin Clients - Response Format", True, 
-                                  "Endpoint returns correct {'clients': [...]} format")
-                    
-                    # Check if Salvador Palma is included
-                    salvador_found = False
-                    salvador_balance = 0
-                    
-                    for client in clients:
-                        if client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper():
-                            salvador_found = True
-                            salvador_balance = client.get('total_balance', 0) or client.get('balance', 0)
-                            
-                            # Check if balance is correct
-                            if abs(salvador_balance - self.expected_salvador_total) < 10000:
-                                self.log_result("Admin Clients - Salvador Balance", True, 
-                                              f"Salvador balance correct: ${salvador_balance:,.2f}")
-                            else:
-                                self.log_result("Admin Clients - Salvador Balance", False, 
-                                              f"Salvador balance incorrect: ${salvador_balance:,.2f}, expected ${self.expected_salvador_total:,.2f}")
-                            break
-                    
-                    if salvador_found:
-                        self.log_result("Admin Clients - Salvador Present", True, 
-                                      "Salvador Palma (client_003) found in clients list")
-                    else:
-                        self.log_result("Admin Clients - Salvador Present", False, 
-                                      "Salvador Palma (client_003) missing from clients list", 
-                                      {"clients_found": [c.get('name', 'Unknown') for c in clients]})
-                
+                # Handle different response formats
+                investments = []
+                if isinstance(data, dict) and 'investments' in data:
+                    investments = data['investments']
                 elif isinstance(data, list):
-                    # Old format - should be fixed
-                    self.log_result("Admin Clients - Response Format", False, 
-                                  "Endpoint still returns old array format instead of {'clients': [...]}",
-                                  {"response_type": "array", "length": len(data)})
-                    
-                    # Still check for Salvador in the array
-                    salvador_found = any(client.get('id') == 'client_003' or 'SALVADOR' in client.get('name', '').upper() 
-                                       for client in data)
-                    if salvador_found:
-                        self.log_result("Admin Clients - Salvador Present (Old Format)", True, 
-                                      "Salvador found but endpoint needs format fix")
+                    investments = data
+                
+                if len(investments) == 0:
+                    self.log_result("Alejandro Investments", False, 
+                                  "No investments found for client_alejandro")
+                    return
+                
+                # Calculate total and check individual funds
+                total_value = sum(inv.get('current_value', 0) for inv in investments)
+                core_investment = next((inv for inv in investments if inv.get('fund_code') == 'CORE'), None)
+                balance_investment = next((inv for inv in investments if inv.get('fund_code') == 'BALANCE'), None)
+                
+                # Validate total matches expected
+                if abs(total_value - self.expected_total_aum) < 0.01:
+                    self.log_result("Alejandro Total Investments", True, 
+                                  f"Total investment value correct: ${total_value:,.2f}")
+                else:
+                    self.log_result("Alejandro Total Investments", False, 
+                                  f"Total investment value incorrect: Expected ${self.expected_total_aum:,.2f}, got ${total_value:,.2f}")
+                
+                # Validate CORE investment
+                if core_investment:
+                    core_value = core_investment.get('current_value', 0)
+                    if abs(core_value - self.expected_core_aum) < 0.01:
+                        self.log_result("Alejandro CORE Investment", True, 
+                                      f"CORE investment correct: ${core_value:,.2f}")
                     else:
-                        self.log_result("Admin Clients - Salvador Present (Old Format)", False, 
-                                      "Salvador missing and endpoint needs format fix")
-                
+                        self.log_result("Alejandro CORE Investment", False, 
+                                      f"CORE investment incorrect: Expected ${self.expected_core_aum:,.2f}, got ${core_value:,.2f}")
                 else:
-                    self.log_result("Admin Clients - Response Format", False, 
-                                  "Endpoint returns unexpected format", {"response_type": type(data).__name__})
-            
+                    self.log_result("Alejandro CORE Investment", False, "CORE investment not found")
+                
+                # Validate BALANCE investment
+                if balance_investment:
+                    balance_value = balance_investment.get('current_value', 0)
+                    if abs(balance_value - self.expected_balance_aum) < 0.01:
+                        self.log_result("Alejandro BALANCE Investment", True, 
+                                      f"BALANCE investment correct: ${balance_value:,.2f}")
+                    else:
+                        self.log_result("Alejandro BALANCE Investment", False, 
+                                      f"BALANCE investment incorrect: Expected ${self.expected_balance_aum:,.2f}, got ${balance_value:,.2f}")
+                else:
+                    self.log_result("Alejandro BALANCE Investment", False, "BALANCE investment not found")
+                    
             else:
-                self.log_result("Admin Clients Endpoint", False, 
-                              f"HTTP {response.status_code}", {"response": response.text})
+                self.log_result("Alejandro Investments", False, f"HTTP {response.status_code}")
                 
         except Exception as e:
-            self.log_result("Admin Clients Endpoint", False, f"Exception: {str(e)}")
-    
-    def test_data_consistency_verification(self):
-        """Test data consistency between fund portfolio and client totals"""
-        try:
-            # Get fund portfolio total
-            fund_response = self.session.get(f"{BACKEND_URL}/fund-portfolio/overview")
-            fund_total = 0
-            
-            if fund_response.status_code == 200:
-                fund_data = fund_response.json()
-                fund_total = fund_data.get('total_aum', 0)
-            
-            # Get client investment total
-            client_response = self.session.get(f"{BACKEND_URL}/investments/client/client_003")
-            client_total = 0
-            
-            if client_response.status_code == 200:
-                client_data = client_response.json()
-                if isinstance(client_data, dict) and 'investments' in client_data:
-                    investments = client_data['investments']
-                    client_total = sum(inv.get('current_value', 0) for inv in investments)
-                elif isinstance(client_data, list):
-                    client_total = sum(inv.get('current_value', 0) for inv in client_data)
-            
-            # Compare totals
-            if fund_total > 0 and client_total > 0:
-                if abs(fund_total - client_total) < 1000:  # Allow $1K variance
-                    self.log_result("Data Consistency - Fund vs Client Totals", True, 
-                                  f"Totals match: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-                else:
-                    self.log_result("Data Consistency - Fund vs Client Totals", False, 
-                                  f"Totals mismatch: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-            else:
-                self.log_result("Data Consistency - Fund vs Client Totals", False, 
-                              f"One or both totals are zero: Fund ${fund_total:,.2f}, Client ${client_total:,.2f}")
-            
-            # Check expected total value consistency
-            expected_total = self.expected_salvador_total
-            fund_matches = abs(fund_total - expected_total) < 10000
-            client_matches = abs(client_total - expected_total) < 10000
-            
-            if fund_matches and client_matches:
-                self.log_result("Data Consistency - Expected Total", True, 
-                              f"Both endpoints show expected ${expected_total:,.2f} total")
-            else:
-                issues = []
-                if not fund_matches:
-                    issues.append(f"Fund total ${fund_total:,.2f} != expected ${expected_total:,.2f}")
-                if not client_matches:
-                    issues.append(f"Client total ${client_total:,.2f} != expected ${expected_total:,.2f}")
-                
-                self.log_result("Data Consistency - Expected Total", False, 
-                              f"Total value inconsistencies: {'; '.join(issues)}")
-                
-        except Exception as e:
-            self.log_result("Data Consistency Verification", False, f"Exception: {str(e)}")
+            self.log_result("Alejandro Investments", False, f"Exception: {str(e)}")
     
     def test_frontend_api_compatibility(self):
         """Test frontend API compatibility for key endpoints"""
@@ -416,7 +446,9 @@ class FundPortfolioEndpointTest:
         print("🎯 FUND PORTFOLIO OVERVIEW & ADMIN CLIENTS ENDPOINT TESTING")
         print("=" * 70)
         print(f"Backend URL: {BACKEND_URL}")
-        print(f"Expected Salvador Total: ${self.expected_salvador_total:,.2f}")
+        print(f"Expected Total AUM: ${self.expected_total_aum:,.2f}")
+        print(f"Expected CORE Fund: ${self.expected_core_aum:,.2f} with {self.expected_core_mt5_accounts} MT5 account")
+        print(f"Expected BALANCE Fund: ${self.expected_balance_aum:,.2f} with {self.expected_balance_mt5_accounts} MT5 accounts")
         print(f"Test Time: {datetime.now().isoformat()}")
         print()
         
@@ -430,10 +462,8 @@ class FundPortfolioEndpointTest:
         
         # Run all tests
         self.test_fund_portfolio_overview_endpoint()
-        self.test_admin_clients_endpoint_structure()
-        self.test_data_consistency_verification()
-        self.test_frontend_api_compatibility()
-        self.test_zero_values_verification()
+        self.test_fund_allocation_details()
+        self.test_alejandro_client_investments()
         
         # Generate summary
         self.generate_test_summary()
@@ -473,31 +503,27 @@ class FundPortfolioEndpointTest:
                     print(f"   • {result['test']}: {result['message']}")
             print()
         
-        # Critical assessment for review request
-        critical_tests = [
-            "Fund Portfolio Overview - Success Flag",
-            "Fund Portfolio - BALANCE Fund", 
-            "Admin Clients - Response Format",
-            "Admin Clients - Salvador Present",
-            "Data Consistency - Expected Total"
-        ]
+        # Critical assessment for Issue #5 resolution
+        issue_5_resolved = any(result['test'] == "Issue #5 Resolution" and result['success'] 
+                              for result in self.test_results)
         
-        critical_passed = sum(1 for result in self.test_results 
-                            if result['success'] and any(critical in result['test'] for critical in critical_tests))
+        core_tests_passed = sum(1 for result in self.test_results 
+                               if result['success'] and any(test in result['test'] for test in 
+                                   ["CORE Fund AUM", "BALANCE Fund AUM", "Total AUM", "Issue #5 Resolution"]))
         
-        print("🚨 CRITICAL ASSESSMENT FOR REVIEW REQUEST:")
-        if critical_passed >= 4:  # At least 4 out of 5 critical tests
-            print("✅ FUND PORTFOLIO & ADMIN CLIENTS FIXES: SUCCESSFUL")
-            print("   • /api/fund-portfolio/overview endpoint working correctly")
-            print("   • /api/admin/clients endpoint returns proper format")
-            print("   • Salvador's $1,371,485.40 investments properly displayed")
-            print("   • Data consistency verified across endpoints")
-            print("   • Frontend API compatibility confirmed")
+        print("🚨 CRITICAL ASSESSMENT FOR ISSUE #5 RESOLUTION:")
+        if issue_5_resolved and core_tests_passed >= 3:
+            print("✅ ISSUE #5 (FUND PORTFOLIO EMPTY): RESOLVED")
+            print("   • Fund portfolio is no longer empty")
+            print("   • CORE fund shows correct $18,151.41 AUM with 1 MT5 account")
+            print("   • BALANCE fund shows correct $100,000.00 AUM with 3 MT5 accounts")
+            print("   • Total AUM equals $118,151.41 as expected")
+            print("   • Fund allocation details match client investments")
         else:
-            print("❌ FUND PORTFOLIO & ADMIN CLIENTS FIXES: INCOMPLETE")
-            print("   • Critical endpoint issues still exist")
-            print("   • User-reported data display problems not fully resolved")
-            print("   • Main agent action required to complete fixes")
+            print("❌ ISSUE #5 (FUND PORTFOLIO EMPTY): NOT RESOLVED")
+            print("   • Fund portfolio issues still exist")
+            print("   • Expected fund data not matching actual results")
+            print("   • Main agent action required to complete Issue #5 resolution")
         
         print("\n" + "=" * 70)
 

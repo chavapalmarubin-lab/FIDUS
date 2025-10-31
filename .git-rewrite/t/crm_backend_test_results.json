@@ -1,0 +1,173 @@
+{
+  "total_tests": 15,
+  "passed_tests": 11,
+  "failed_tests": 4,
+  "success_rate": 73.33333333333333,
+  "test_categories": {
+    "CRM Pipeline System": 5,
+    "User Administration System": 2,
+    "Document Signing System": 7,
+    "Authentication": 1
+  },
+  "test_results": [
+    {
+      "test_name": "Admin Authentication",
+      "success": true,
+      "details": "JWT token obtained and set in headers. Token: eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...",
+      "timestamp": "2025-09-22T22:05:55.597065",
+      "response_data": null
+    },
+    {
+      "test_name": "GET /api/crm/prospects (fetch all prospects)",
+      "success": true,
+      "details": "Retrieved 14 prospects. Total: 14. Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']",
+      "timestamp": "2025-09-22T22:05:55.612134",
+      "response_data": {
+        "prospect_count": 14,
+        "pipeline_stats": {
+          "lead": 13,
+          "qualified": 0,
+          "proposal": 0,
+          "negotiation": 0,
+          "won": 1,
+          "lost": 0
+        },
+        "total_prospects": 14
+      }
+    },
+    {
+      "test_name": "GET /api/crm/prospects/pipeline (pipeline data)",
+      "success": true,
+      "details": "Pipeline stages: ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']. Stage counts: {'lead': 13, 'qualified': 0, 'proposal': 0, 'negotiation': 0, 'won': 1, 'lost': 0}",
+      "timestamp": "2025-09-22T22:05:55.630869",
+      "response_data": {
+        "pipeline_stages": [
+          "lead",
+          "qualified",
+          "proposal",
+          "negotiation",
+          "won",
+          "lost"
+        ],
+        "stage_counts": {
+          "lead": 13,
+          "qualified": 0,
+          "proposal": 0,
+          "negotiation": 0,
+          "won": 1,
+          "lost": 0
+        }
+      }
+    },
+    {
+      "test_name": "POST /api/crm/prospects (create prospect)",
+      "success": false,
+      "details": "HTTP 500",
+      "timestamp": "2025-09-22T22:05:55.644716",
+      "response_data": "Internal Server Error"
+    },
+    {
+      "test_name": "POST /api/admin/users/create (create new users with temporary passwords)",
+      "success": true,
+      "details": "User created successfully. User ID: client_26a8fbed. Message: User 'CRM Test User' created successfully. Temporary password set.",
+      "timestamp": "2025-09-22T22:05:55.665213",
+      "response_data": {
+        "user_id": "client_26a8fbed",
+        "username": "crmtest_user",
+        "message": "User 'CRM Test User' created successfully. Temporary password set."
+      }
+    },
+    {
+      "test_name": "Verify user creation workflow and password management",
+      "success": true,
+      "details": "Temporary password login successful. Must change password: True, User type: client, Token received: True",
+      "timestamp": "2025-09-22T22:05:55.716685",
+      "response_data": {
+        "must_change_password": true,
+        "user_type": "client",
+        "token_received": true
+      }
+    },
+    {
+      "test_name": "GET /api/documents/categories (document categories)",
+      "success": true,
+      "details": "Retrieved document categories. Shared: 8 categories, Admin: 0 categories",
+      "timestamp": "2025-09-22T22:05:55.727218",
+      "response_data": {
+        "shared_categories": [
+          "loan_agreements",
+          "account_opening",
+          "investment_documents",
+          "insurance_forms",
+          "amendments",
+          "client_statements",
+          "tax_documents",
+          "other"
+        ],
+        "admin_categories": []
+      }
+    },
+    {
+      "test_name": "POST /api/documents/upload (document upload)",
+      "success": true,
+      "details": "Document uploaded successfully. Document ID: acf3a350-3704-4ac8-a8ca-460ba9565e95, File: None, Category: None",
+      "timestamp": "2025-09-22T22:05:55.754503",
+      "response_data": {
+        "document_id": "acf3a350-3704-4ac8-a8ca-460ba9565e95",
+        "file_name": null,
+        "category": null
+      }
+    },
+    {
+      "test_name": "POST /api/documents/{id}/send-for-signature (enhanced signature workflow)",
+      "success": false,
+      "details": "HTTP 404",
+      "timestamp": "2025-09-22T22:05:55.765996",
+      "response_data": "{\"detail\":\"Document not found\"}"
+    },
+    {
+      "test_name": "POST /api/documents/{id}/send-notification (email notifications)",
+      "success": false,
+      "details": "HTTP 404",
+      "timestamp": "2025-09-22T22:05:55.776121",
+      "response_data": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "test_name": "JWT Authentication - CRM prospects endpoint",
+      "success": true,
+      "details": "Endpoint /crm/prospects accessible with JWT token. HTTP 200 OK",
+      "timestamp": "2025-09-22T22:05:55.787782",
+      "response_data": null
+    },
+    {
+      "test_name": "JWT Authentication - CRM pipeline endpoint",
+      "success": true,
+      "details": "Endpoint /crm/prospects/pipeline accessible with JWT token. HTTP 200 OK",
+      "timestamp": "2025-09-22T22:05:55.798740",
+      "response_data": null
+    },
+    {
+      "test_name": "JWT Authentication - Document categories endpoint",
+      "success": true,
+      "details": "Endpoint /documents/categories accessible with JWT token. HTTP 200 OK",
+      "timestamp": "2025-09-22T22:05:55.811327",
+      "response_data": null
+    },
+    {
+      "test_name": "JWT Authentication - Admin documents endpoint",
+      "success": true,
+      "details": "Endpoint /admin/documents accessible with JWT token. HTTP 200 OK",
+      "timestamp": "2025-09-22T22:05:55.824046",
+      "response_data": null
+    },
+    {
+      "test_name": "Document signing workflow with Salvador Palma as default signee",
+      "success": false,
+      "details": "Failed to get document status. HTTP 404",
+      "timestamp": "2025-09-22T22:05:55.835182",
+      "response_data": "{\"detail\":\"Document not found\"}"
+    }
+  ],
+  "backend_url": "https://fidus-invest.emergent.host/api",
+  "completion_time": "2025-09-22T22:05:55.835432"
+}
