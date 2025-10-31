@@ -354,36 +354,38 @@ class CashFlowBrokerRebatesTest:
             return None
     
     def run_all_tests(self):
-        """Run all cash flow broker rebates tests"""
-        print("🎯 CASH FLOW BROKER REBATES FIX TESTING")
+        """Run all broker rebates time period calculation tests"""
+        print("🎯 BROKER REBATES CALCULATION FIX TESTING")
         print("=" * 80)
+        print("ISSUE: Rebates showing $9,457 (all-time) instead of period-specific amounts")
+        print("FIX: Rebates should be calculated for specific time periods")
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Testing Time: {datetime.now().isoformat()}")
-        print()
+        print("=" * 80)
         
         # Step 1: Authenticate
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Step 2: Test Cash Flow Overview Broker Rebates
-        print("📋 STEP 1: Testing Cash Flow Overview Broker Rebates Fix")
-        cashflow_success = self.test_cash_flow_overview_broker_rebates()
+        # Step 2: Test Default Period (should use 30 days, not all-time)
+        print("📋 STEP 1: Testing Cash Flow Overview Default Period")
+        self.test_cashflow_overview_default_period()
         print()
         
-        # Step 3: Test MT5 Fund Performance Consistency
-        print("📋 STEP 2: Testing MT5 Fund Performance Consistency")
-        self.test_mt5_fund_performance_consistency()
+        # Step 3: Test Multiple Time Periods
+        print("📋 STEP 2: Testing Cash Flow Complete Multiple Periods (7d, 30d, 90d)")
+        self.test_cashflow_complete_multiple_periods()
         print()
         
-        # Step 4: Test Broker Rebates Consistency Between Endpoints
-        print("📋 STEP 3: Testing Broker Rebates Consistency")
-        self.test_broker_rebates_consistency()
+        # Step 4: Test Rebate Per Lot Calculation
+        print("📋 STEP 3: Testing Rebate Per Lot Calculation (~$5.05)")
+        self.test_rebate_per_lot_calculation()
         print()
         
-        # Step 5: Test Response Structure
-        print("📋 STEP 4: Testing Response Structure")
-        self.test_response_structure()
+        # Step 5: Test No All-Time Rebates by Default
+        print("📋 STEP 4: Testing No All-Time $9,457 Rebates by Default")
+        self.test_no_all_time_rebates_by_default()
         print()
         
         # Summary
