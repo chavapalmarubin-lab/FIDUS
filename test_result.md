@@ -2093,6 +2093,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Broker Rebates Calculation Fix Testing - COMPLETED"
     - "Cash Flow Obligations Calendar Verification - COMPLETED"
     - "Trading Analytics System Phase 1A Testing - COMPLETED"
     - "Quick Actions API Endpoints Testing (Phase 6) - COMPLETED"
