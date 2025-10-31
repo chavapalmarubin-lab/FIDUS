@@ -25736,7 +25736,7 @@ async def startup_event():
     
     # Initialize MT5 Deals Sync Service (Trade History for Rebates)
     try:
-        if not mt5_deals_sync.db:
+        if mt5_deals_sync.db is None:
             await mt5_deals_sync.initialize(db)
         
         # Schedule automatic syncs every 30 minutes
