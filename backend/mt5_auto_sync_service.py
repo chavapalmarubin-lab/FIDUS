@@ -659,14 +659,17 @@ class MT5AutoSyncService:
         logger.critical(f"🚨 ALERT: {message}")
         
         try:
-            # Try to send email alert
+            # Send alert using AlertService
             from alert_service import AlertService
-            alert_service = AlertService()
+            alert_service = AlertService(self.db)
             
-            await alert_service.send_alert(
-                subject=f"🚨 FIDUS MT5 CRITICAL ALERT",
+            await alert_service.trigger_alert(
+                component="mt5_bridge",
+                component_name="MT5 Bridge",
+                severity="critical",
+                status="DEGRADED",
                 message=message,
-                severity="CRITICAL"
+                details={"sync_rate": self.sync_stats.get('success_rate', 0)}
             )
             logger.info("✅ Alert email sent successfully")
         except Exception as e:
