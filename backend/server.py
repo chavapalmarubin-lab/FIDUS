@@ -35,6 +35,12 @@ import requests
 from collections import defaultdict
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+# ============================================================================
+# FIDUS PLATFORM CONSTANTS
+# ============================================================================
+# THE TRUTH: One client's total investment across all accounts
+FIDUS_CLIENT_TOTAL_INVESTMENT = 118151.41
+
 # JWT Authentication imports
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
