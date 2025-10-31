@@ -3671,6 +3671,165 @@ async def generate_system_report_action(current_user: dict = Depends(get_current
         logger.error(f"Error generating system report: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# P&L CALCULATOR ENDPOINTS - TRUE P&L WITH WITHDRAWALS
+# October 31, 2025 - Critical P&L Calculation Fix
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+from app.services.pnl_calculator import PnLCalculator
+
+@api_router.get("/pnl/accounts")
+async def get_all_accounts_pnl(current_user: dict = Depends(get_current_user)):
+    """
+    Get TRUE P&L for all MT5 accounts
+    Accounts for profit withdrawals to separation accounts
+    """
+    try:
+        calculator = PnLCalculator(db)
+        accounts_pnl = calculator.get_all_accounts_pnl()
+        
+        return {
+            "success": True,
+            "total_accounts": len(accounts_pnl),
+            "accounts": accounts_pnl,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error calculating accounts P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/pnl/account/{account_number}")
+async def get_account_pnl(
+    account_number: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get TRUE P&L for a single MT5 account
+    Includes breakdown of withdrawals and deposits
+    """
+    try:
+        calculator = PnLCalculator(db)
+        pnl = calculator.calculate_account_pnl(account_number)
+        
+        return {
+            "success": True,
+            "account": pnl,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error calculating account P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/pnl/fund/{fund_type}")
+async def get_fund_pnl(
+    fund_type: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get TRUE P&L for entire fund
+    Aggregates all accounts in the fund
+    
+    Fund types: CORE, BALANCE, DYNAMIC, SEPARATION, UNLIMITED
+    """
+    try:
+        calculator = PnLCalculator(db)
+        fund_pnl = calculator.calculate_fund_pnl(fund_type.upper())
+        
+        return {
+            "success": True,
+            "fund": fund_pnl,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error calculating fund P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/pnl/manager/{manager_id}")
+async def get_manager_pnl(
+    manager_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get TRUE P&L for money manager
+    Aggregates all accounts managed by the manager
+    """
+    try:
+        calculator = PnLCalculator(db)
+        manager_pnl = calculator.calculate_manager_pnl(manager_id)
+        
+        return {
+            "success": True,
+            "manager": manager_pnl,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error calculating manager P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/pnl/platform-summary")
+async def get_platform_pnl_summary(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get platform-wide TRUE P&L summary
+    Includes all funds, all managers, all accounts
+    """
+    try:
+        calculator = PnLCalculator(db)
+        
+        # Get all accounts P&L
+        all_accounts = calculator.get_all_accounts_pnl()
+        
+        # Calculate totals
+        total_capital_in = sum(a["total_capital_in"] for a in all_accounts)
+        total_capital_out = sum(a["total_capital_out"] for a in all_accounts)
+        total_pnl = total_capital_out - total_capital_in
+        total_return = (total_pnl / total_capital_in * 100) if total_capital_in > 0 else 0.0
+        
+        # Get fund breakdowns
+        funds = {}
+        for fund_type in ["CORE", "BALANCE", "DYNAMIC", "SEPARATION", "UNLIMITED"]:
+            try:
+                fund_pnl = calculator.calculate_fund_pnl(fund_type)
+                funds[fund_type] = {
+                    "total_accounts": fund_pnl["total_accounts"],
+                    "true_pnl": fund_pnl["fund_true_pnl"],
+                    "return_percentage": fund_pnl["fund_return_percentage"],
+                    "is_profitable": fund_pnl["is_profitable"]
+                }
+            except ValueError:
+                # Fund has no accounts
+                continue
+        
+        return {
+            "success": True,
+            "platform_summary": {
+                "total_accounts": len(all_accounts),
+                "total_capital_in": total_capital_in,
+                "total_capital_out": total_capital_out,
+                "total_true_pnl": total_pnl,
+                "total_return_percentage": total_return,
+                "is_profitable": total_pnl > 0,
+                "profitable_accounts": sum(1 for a in all_accounts if a["is_profitable"])
+            },
+            "funds": funds,
+            "accounts": all_accounts,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error calculating platform P&L summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @api_router.get("/actions/recent")
 async def get_recent_actions(
     limit: int = 20,
