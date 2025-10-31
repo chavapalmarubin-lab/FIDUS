@@ -40,7 +40,7 @@ Remove the token from git history permanently:
 pip install git-filter-repo
 
 # Remove the token from all commits
-git filter-repo --replace-text <(echo "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==>YOUR_TOKEN_HERE")
+git filter-repo --replace-text <(echo "[EXAMPLE_TOKEN_PATTERN]==>YOUR_TOKEN_HERE")
 
 # Force push to replace history
 git push origin main --force
