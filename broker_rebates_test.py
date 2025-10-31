@@ -439,32 +439,41 @@ class CashFlowBrokerRebatesTest:
         print()
         print("🔍 KEY FINDINGS:")
         
-        # Check if the main fix is working
-        rebates_fix_working = any(r['success'] and 'Broker Rebates Fix' in r['test'] 
-                                 for r in self.test_results)
+        # Check if default period is working (not showing all-time)
+        default_period_working = any(r['success'] and 'Default Period' in r['test'] 
+                                   for r in self.test_results)
         
-        if rebates_fix_working:
-            print("   ✅ Broker rebates fix is working - endpoint no longer returns hardcoded 0.0")
+        if default_period_working:
+            print("   ✅ Default period shows time-specific rebates (~$8,000), not all-time $9,457")
         else:
-            print("   ❌ Broker rebates fix may not be working - still returning hardcoded 0.0")
+            print("   ❌ Default period may still be showing all-time rebates instead of period-specific")
         
-        # Check if values are consistent
-        consistency_working = any(r['success'] and 'Consistency' in r['test'] 
-                                 for r in self.test_results)
+        # Check if multiple periods return different values
+        period_differentiation_working = any(r['success'] and 'Period Differentiation' in r['test'] 
+                                           for r in self.test_results)
         
-        if consistency_working:
-            print("   ✅ Broker rebates values are consistent between endpoints")
+        if period_differentiation_working:
+            print("   ✅ Different time periods return different rebate values (period-specific calculation)")
         else:
-            print("   ⚠️ Need to verify broker rebates consistency between endpoints")
+            print("   ❌ All time periods return same values (not calculating period-specific rebates)")
         
-        # Check if response structure is correct
-        structure_working = any(r['success'] and 'Response Structure' in r['test'] 
-                               for r in self.test_results)
+        # Check if rebate per lot is correct
+        rebate_per_lot_working = any(r['success'] and 'Rebate Per Lot' in r['test'] 
+                                   for r in self.test_results)
         
-        if structure_working:
-            print("   ✅ Response structure includes rebates_summary object as expected")
+        if rebate_per_lot_working:
+            print("   ✅ Rebate per lot calculation is correct (~$5.05, no double counting)")
         else:
-            print("   ⚠️ Response structure may be missing required rebates fields")
+            print("   ⚠️ Rebate per lot calculation may need verification")
+        
+        # Check if all-time value is eliminated
+        no_all_time_working = any(r['success'] and 'All-Time Check' in r['test'] 
+                                for r in self.test_results)
+        
+        if no_all_time_working:
+            print("   ✅ No endpoints return the problematic all-time $9,457 value by default")
+        else:
+            print("   ⚠️ Some endpoints may still return all-time values instead of period-specific")
         
         print()
 
