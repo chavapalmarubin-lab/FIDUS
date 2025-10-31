@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 
 # Backend URL from environment
-BACKEND_URL = "https://bridge-guardian.preview.emergentagent.com"
+BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

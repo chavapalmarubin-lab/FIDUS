@@ -37,7 +37,7 @@ import io
 import base64
 
 # Configuration
-BACKEND_URL = "https://bridge-guardian.preview.emergentagent.com/api"
+BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

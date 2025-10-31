@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://bridge-guardian.preview.emergentagent.com/api'
+BACKEND_URL = 'https://finance-calc-hub-1.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

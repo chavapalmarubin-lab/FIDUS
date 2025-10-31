@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://bridge-guardian.preview.emergentagent.com/api/system/status
+   curl https://finance-calc-hub-1.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://bridge-guardian.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://finance-calc-hub-1.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

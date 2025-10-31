@@ -24,7 +24,7 @@ import json
 from dateutil.relativedelta import relativedelta
 
 class FidusFundTester:
-    def __init__(self, base_url="https://bridge-guardian.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-calc-hub-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

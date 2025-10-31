@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://bridge-guardian.preview.emergentagent.com`
+`https://finance-calc-hub-1.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

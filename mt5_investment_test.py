@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Backend URL Configuration
-BACKEND_URL = "https://bridge-guardian.preview.emergentagent.com/api"
+BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
 
 class MT5InvestmentTester:
     def __init__(self):
