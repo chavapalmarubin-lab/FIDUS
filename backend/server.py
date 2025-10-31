@@ -3541,7 +3541,7 @@ async def get_true_pnl_calculation(current_user: dict = Depends(get_current_user
         pnl_calculator = PnLCalculator(db)
         
         # Calculate TRUE P&L for all accounts
-        result = pnl_calculator.calculate_all_accounts_pnl()
+        result = await pnl_calculator.calculate_all_accounts_pnl()
         
         # Convert datetime objects to ISO format
         result['last_updated'] = result['last_updated'].isoformat()
