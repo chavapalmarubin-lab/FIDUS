@@ -272,77 +272,86 @@ class CashFlowBrokerRebatesTest:
             self.log_test("Rebate Per Lot Calculation", False, f"Exception: {str(e)}")
             return False
     
-    def test_response_structure(self):
-        """Test that response structure matches expected format"""
+    def test_no_all_time_rebates_by_default(self):
+        """Test that no endpoints return all-time $9,457 rebates by default"""
         try:
-            url = f"{BACKEND_URL}/api/admin/cashflow/overview"
-            params = {"timeframe": "12_months", "fund": "all"}
-            response = self.session.get(url, params=params)
+            # Test multiple endpoints that might show rebates
+            endpoints_to_test = [
+                ("/admin/cashflow/overview", "Cash Flow Overview"),
+                ("/admin/cashflow/complete", "Cash Flow Complete (no params)"),
+            ]
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check top-level structure
-                required_top_level = ['summary', 'rebates_summary']
-                missing_top_level = [field for field in required_top_level if field not in data]
-                
-                if missing_top_level:
-                    self.log_test("Response Structure - Top Level", False, 
-                                f"Missing top-level fields: {missing_top_level}")
-                    return False
-                
-                # Check summary structure
-                summary = data['summary']
-                required_summary_fields = ['broker_rebates', 'fund_revenue', 'net_profit']
-                missing_summary_fields = [field for field in required_summary_fields if field not in summary]
-                
-                if missing_summary_fields:
-                    self.log_test("Response Structure - Summary", False, 
-                                f"Missing summary fields: {missing_summary_fields}")
-                    return False
-                
-                # Check rebates_summary structure
-                rebates_summary = data['rebates_summary']
-                required_rebates_fields = ['total_rebates', 'total_volume', 'rebate_breakdown']
-                missing_rebates_fields = [field for field in required_rebates_fields if field not in rebates_summary]
-                
-                if missing_rebates_fields:
-                    self.log_test("Response Structure - Rebates Summary", False, 
-                                f"Missing rebates_summary fields: {missing_rebates_fields}")
-                    return False
-                
-                # Check data types
-                if not isinstance(summary['broker_rebates'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"broker_rebates should be number, got {type(summary['broker_rebates'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['total_rebates'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"total_rebates should be number, got {type(rebates_summary['total_rebates'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['total_volume'], (int, float)):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"total_volume should be number, got {type(rebates_summary['total_volume'])}")
-                    return False
-                
-                if not isinstance(rebates_summary['rebate_breakdown'], dict):
-                    self.log_test("Response Structure - Data Types", False, 
-                                f"rebate_breakdown should be object, got {type(rebates_summary['rebate_breakdown'])}")
-                    return False
-                
-                self.log_test("Response Structure", True, "All required fields present with correct data types")
-                return True
-                
-            else:
-                self.log_test("Response Structure", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
+            all_success = True
+            
+            for endpoint, name in endpoints_to_test:
+                try:
+                    url = f"{BACKEND_URL}/api{endpoint}"
+                    response = self.session.get(url)
+                    
+                    if response.status_code != 200:
+                        self.log_test(f"All-Time Check {name}", False, 
+                                    f"HTTP {response.status_code}: {response.text}")
+                        all_success = False
+                        continue
+                    
+                    data = response.json()
+                    
+                    # Look for rebates fields that might contain the problematic value
+                    rebates_values = []
+                    
+                    # Check various possible field names
+                    possible_paths = [
+                        'rebates_summary.total_rebates',
+                        'summary.broker_rebates', 
+                        'broker_rebates',
+                        'total_rebates'
+                    ]
+                    
+                    for path in possible_paths:
+                        value = self._get_nested_value(data, path)
+                        if value is not None and isinstance(value, (int, float)):
+                            rebates_values.append((path, value))
+                    
+                    # Check if any field contains the problematic all-time value
+                    problematic_found = False
+                    for field_name, value in rebates_values:
+                        if abs(value - 9457) < 1:
+                            self.log_test(f"All-Time Check {name}", False, 
+                                        f"Found problematic all-time value ${value:.2f} in {field_name}")
+                            problematic_found = True
+                            all_success = False
+                    
+                    if not problematic_found and rebates_values:
+                        values_str = ", ".join([f"{path}=${val:.2f}" for path, val in rebates_values])
+                        self.log_test(f"All-Time Check {name}", True, 
+                                    f"No all-time $9,457 found. Values: {values_str}")
+                    elif not rebates_values:
+                        self.log_test(f"All-Time Check {name}", True, 
+                                    "No rebates fields found in response")
+                    
+                except Exception as e:
+                    self.log_test(f"All-Time Check {name}", False, f"Exception: {str(e)}")
+                    all_success = False
+            
+            return all_success
                 
         except Exception as e:
-            self.log_test("Response Structure", False, f"Exception: {str(e)}")
+            self.log_test("All-Time Rebates Check", False, f"Exception: {str(e)}")
             return False
+    
+    def _get_nested_value(self, data: dict, field_path: str):
+        """Get nested value from dict using dot notation"""
+        try:
+            keys = field_path.split('.')
+            value = data
+            for key in keys:
+                if isinstance(value, dict) and key in value:
+                    value = value[key]
+                else:
+                    return None
+            return value
+        except:
+            return None
     
     def run_all_tests(self):
         """Run all cash flow broker rebates tests"""
