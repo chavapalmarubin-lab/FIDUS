@@ -243,6 +243,52 @@ Expected response: `HTTP 204 No Content` (success)
 
 ---
 
+## 🔧 RENDER BACKEND ENVIRONMENT VARIABLES
+
+**Critical Configuration for Render Deployment**
+
+### Required Environment Variables
+
+| Variable | Value | Purpose | Status |
+|----------|-------|---------|--------|
+| `MONGO_URL` | `mongodb+srv://chavapalmarubin_db_user:***@fidus.y1p9be2.mongodb.net/fidus_production` | MongoDB Atlas connection | ✅ Set |
+| `GITHUB_TOKEN` | `[REVOKED_TOKEN]` | Auto-healing GitHub Actions trigger | ✅ Set (Oct 31, 2025) |
+| `GITHUB_REPOSITORY` | `chavapalmarubin-lab/FIDUS` | Repository for GitHub Actions | ✅ Set |
+| `PORT` | `8001` | Backend API port (auto-detected by Render) | ✅ Auto |
+| `SMTP_USERNAME` | Email for alerts | Gmail SMTP username | ⚠️ Check |
+| `SMTP_APP_PASSWORD` | Gmail app password | Gmail SMTP authentication | ⚠️ Check |
+| `ALERT_RECIPIENT_EMAIL` | `chavapalmarubin@gmail.com` | Alert destination email | ✅ Set |
+
+### Optional Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MT5_BRIDGE_URL` | `http://92.118.45.135:8000` | VPS MT5 Bridge API URL |
+| `MT5_BRIDGE_API_KEY` | (secret) | Authentication for VPS Bridge |
+| `FRONTEND_URL` | `https://fidus-invest.emergent.host` | Frontend URL for links |
+
+### How to Update Environment Variables in Render
+
+1. Go to https://dashboard.render.com
+2. Select your backend service
+3. Click **Environment** in left sidebar
+4. Click **"Add Environment Variable"**
+5. Enter Key and Value
+6. Click **Save Changes**
+7. Wait for automatic redeploy (2-3 minutes)
+
+### Verifying Environment Variables
+
+After deployment, check backend logs:
+```
+✅ GITHUB_TOKEN configured
+✅ MongoDB Atlas connected
+✅ Auto-healing system ready
+✅ Alert system initialized
+```
+
+---
+
 ### MT5 Bridge Service
 
 **Location:** `C:\mt5_bridge_service`
