@@ -11,13 +11,14 @@ from pymongo.errors import PyMongoError
 import bcrypt
 
 # Get MongoDB URL from environment
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/fidus_investment_db')
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'fidus_investment_db')
 
 class MongoDBManager:
     def __init__(self):
         try:
             self.client = MongoClient(MONGO_URL)
-            self.db_name = MONGO_URL.split('/')[-1]
+            self.db_name = DB_NAME  
             self.db = self.client[self.db_name]
             
             # Test connection
@@ -199,7 +200,8 @@ class MongoDBManager:
                 'incubation_end_date': incubation_end_date,
                 'interest_start_date': interest_start_date,
                 'minimum_hold_end_date': minimum_hold_end_date,
-                'status': 'incubating',
+                'status': 'pending_mt5_validation',  # NEW: Start with pending status until MT5 validation completes
+                'mt5_validation_required': True,
                 'created_at': datetime.now(timezone.utc)
             }
             
@@ -225,60 +227,40 @@ class MongoDBManager:
             return None
     
     def get_client_investments(self, client_id: str) -> List[Dict[str, Any]]:
-        """Get all investments for a specific client"""
+        """Get all investments for a specific client - SIMPLIFIED VERSION"""
         try:
             investments = []
             
-            investment_docs = self.db.investments.find({'client_id': client_id})
+            # Get investments from database
+            investment_docs = list(self.db.investments.find({'client_id': client_id}))
             
             for inv in investment_docs:
-                # Calculate current value (simple interest)
-                principal = inv['principal_amount']
-                deposit_date = inv['deposit_date']
-                interest_start_date = inv['interest_start_date']
+                # Convert ObjectId to string
+                inv['_id'] = str(inv['_id'])
                 
-                # Get fund config for interest rate
-                fund_config = self.db.fund_configurations.find_one({'fund_code': inv['fund_code']})
-                monthly_rate = fund_config.get('monthly_interest_rate', 0) if fund_config else 0
-                
-                # Calculate interest earned
-                current_date = datetime.now(timezone.utc)
-                interest_earned = 0
-                
-                # Ensure interest_start_date is timezone-aware
-                if interest_start_date.tzinfo is None:
-                    interest_start_date = interest_start_date.replace(tzinfo=timezone.utc)
-                
-                if current_date > interest_start_date:
-                    months_earning = max(0, (current_date.year - interest_start_date.year) * 12 + 
-                                          (current_date.month - interest_start_date.month))
-                    interest_earned = principal * monthly_rate * months_earning
-                
-                current_value = principal + interest_earned
-                
+                # Use stored values directly - no complex calculations
                 investment_data = {
                     'investment_id': inv['investment_id'],
                     'fund_code': inv['fund_code'],
                     'fund_name': f"FIDUS {inv['fund_code'].title()} Fund",
-                    'principal_amount': principal,
-                    'current_value': current_value,
-                    'interest_earned': interest_earned,
-                    'deposit_date': inv['deposit_date'].isoformat(),
-                    'incubation_end_date': inv['incubation_end_date'].isoformat(),
-                    'interest_start_date': inv['interest_start_date'].isoformat(),
-                    'minimum_hold_end_date': inv['minimum_hold_end_date'].isoformat(),
-                    'status': 'active' if current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']) else 'incubating',
-                    'monthly_interest_rate': monthly_rate,
-                    'can_redeem_interest': current_date > (inv['interest_start_date'].replace(tzinfo=timezone.utc) if inv['interest_start_date'].tzinfo is None else inv['interest_start_date']),
-                    'can_redeem_principal': current_date > (inv['minimum_hold_end_date'].replace(tzinfo=timezone.utc) if inv['minimum_hold_end_date'].tzinfo is None else inv['minimum_hold_end_date']),
-                    'created_at': inv.get('created_at', datetime.now(timezone.utc)).isoformat()
+                    'principal_amount': inv['principal_amount'],
+                    'current_value': inv.get('current_value', inv['principal_amount']),
+                    'interest_earned': inv.get('interest_earned', 0.0),
+                    'deposit_date': inv['deposit_date'],
+                    'incubation_end_date': inv.get('incubation_end_date', inv['deposit_date']),
+                    'interest_start_date': inv.get('interest_start_date', inv['deposit_date']),
+                    'minimum_hold_end_date': inv.get('minimum_hold_end_date', inv['deposit_date']),
+                    'status': inv.get('status', 'active'),
+                    'can_redeem_interest': inv.get('can_redeem_interest', False),
+                    'can_redeem_principal': inv.get('can_redeem_principal', False),
+                    'monthly_interest_rate': inv.get('monthly_interest_rate', 0.0),
+                    'created_at': inv.get('created_at', ''),
+                    'updated_at': inv.get('updated_at', '')
                 }
                 
                 investments.append(investment_data)
             
-            # Sort by creation date (newest first)
-            investments.sort(key=lambda x: x['created_at'], reverse=True)
-            
+            print(f"✅ Retrieved {len(investments)} investments for client {client_id}")
             return investments
             
         except Exception as e:
@@ -545,9 +527,10 @@ class MongoDBManager:
                     'profit_loss': acc['profit_loss'],
                     'profit_loss_percentage': (acc['profit_loss'] / acc['total_allocated'] * 100) if acc['total_allocated'] > 0 else 0,
                     'investment_count': len(acc.get('investment_ids', [])),
+                    'investment_ids': acc.get('investment_ids', []),  # ADD: Include investment IDs
                     'status': acc['status'],
-                    'created_at': acc['created_at'].isoformat(),
-                    'updated_at': acc['updated_at'].isoformat()
+                    'created_at': acc['created_at'].isoformat() if hasattr(acc['created_at'], 'isoformat') else str(acc['created_at']),
+                    'updated_at': acc['updated_at'].isoformat() if hasattr(acc['updated_at'], 'isoformat') else str(acc['updated_at'])
                 }
                 
                 accounts.append(account_data)
@@ -626,6 +609,8 @@ class MongoDBManager:
                     'client_name': client_name,
                     'fund_code': acc['fund_code'],
                     'fund_name': f"FIDUS {acc['fund_code'].title()} Fund",
+                    'broker_code': acc.get('broker_code', 'unknown'),
+                    'broker_name': acc.get('broker_name', 'Unknown Broker'),
                     'mt5_login': acc['mt5_login'],
                     'mt5_server': acc['mt5_server'],
                     'total_allocated': acc['total_allocated'],
@@ -634,8 +619,8 @@ class MongoDBManager:
                     'profit_loss_percentage': (acc['profit_loss'] / acc['total_allocated'] * 100) if acc['total_allocated'] > 0 else 0,
                     'investment_count': len(acc.get('investment_ids', [])),
                     'status': acc['status'],
-                    'created_at': acc['created_at'].isoformat(),
-                    'updated_at': acc['updated_at'].isoformat()
+                    'created_at': acc['created_at'].isoformat() if hasattr(acc['created_at'], 'isoformat') else str(acc['created_at']),
+                    'updated_at': acc['updated_at'].isoformat() if hasattr(acc['updated_at'], 'isoformat') else str(acc['updated_at'])
                 }
                 
                 accounts.append(account_data)
@@ -683,11 +668,131 @@ class MongoDBManager:
             print(f"❌ Error getting MT5 credentials: {str(e)}")
             return None
 
+    def update_mt5_account(self, account_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update an existing MT5 account"""
+        try:
+            # Prepare update data for MongoDB
+            update_doc = self.prepare_for_mongo(update_data.copy())
+            
+            result = self.db.mt5_accounts.update_one(
+                {'account_id': account_id},
+                {'$set': update_doc}
+            )
+            
+            if result.modified_count > 0:
+                print(f"✅ Updated MT5 account {account_id}")
+                return True
+            else:
+                print(f"❌ MT5 account {account_id} not found or no changes made")
+                return False
+            
+        except Exception as e:
+            print(f"❌ Error updating MT5 account: {str(e)}")
+            return False
+
+    def get_mt5_account_by_login(self, mt5_login: int) -> Optional[Dict[str, Any]]:
+        """Get MT5 account by login ID to prevent duplicates"""
+        try:
+            account = self.db.mt5_accounts.find_one({'mt5_login': mt5_login})
+            
+            if account:
+                # Convert ObjectId to string for JSON serialization
+                account['_id'] = str(account['_id'])
+                return account
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting MT5 account by login: {str(e)}")
+            return None
+    
+    def get_mt5_account(self, account_id: str) -> Optional[Dict[str, Any]]:
+        """Get MT5 account by account ID"""
+        try:
+            account = self.db.mt5_accounts.find_one({'account_id': account_id})
+            
+            if account:
+                # Convert ObjectId to string for JSON serialization
+                account['_id'] = str(account['_id'])
+                return account
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting MT5 account: {str(e)}")
+            return None
     # ===============================================================================
     # DATABASE UTILITIES
     # ===============================================================================
     
+    def prepare_for_mongo(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare data for MongoDB storage by converting datetime objects"""
+        prepared_data = {}
+        for key, value in data.items():
+            if isinstance(value, datetime):
+                prepared_data[key] = value
+            elif isinstance(value, str) and key.endswith('_date'):
+                # Try to parse date strings
+                try:
+                    prepared_data[key] = datetime.fromisoformat(value.replace('Z', '+00:00')).replace(tzinfo=timezone.utc)
+                except:
+                    try:
+                        prepared_data[key] = datetime.strptime(value, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                    except:
+                        prepared_data[key] = value
+            else:
+                prepared_data[key] = value
+        return prepared_data
+    
+    def parse_from_mongo(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Parse data from MongoDB by converting datetime objects to ISO strings"""
+        parsed_data = {}
+        for key, value in data.items():
+            if isinstance(value, datetime):
+                parsed_data[key] = value.isoformat()
+            else:
+                parsed_data[key] = value
+        return parsed_data
+    
     # ===============================================================================
+    def update_investment(self, investment_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update an existing investment"""
+        try:
+            # Prepare update data for MongoDB
+            update_doc = self.prepare_for_mongo(update_data.copy())
+            
+            result = self.db.investments.update_one(
+                {'investment_id': investment_id},
+                {'$set': update_doc}
+            )
+            
+            if result.modified_count > 0:
+                print(f"✅ Updated investment {investment_id}")
+                return True
+            else:
+                print(f"❌ Investment {investment_id} not found or no changes made")
+                return False
+            
+        except Exception as e:
+            print(f"❌ Error updating investment: {str(e)}")
+            return False
+
+    def get_investment(self, investment_id: str) -> Optional[Dict[str, Any]]:
+        """Get investment by ID"""
+        try:
+            investment = self.db.investments.find_one({'investment_id': investment_id})
+            
+            if investment:
+                # Convert ObjectId to string for JSON serialization
+                investment['_id'] = str(investment['_id'])
+                return self.parse_from_mongo(investment)
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error getting investment: {str(e)}")
+            return None
+
     # DOCUMENT MANAGEMENT
     # ===============================================================================
     
@@ -862,7 +967,7 @@ class MongoDBManager:
             collections = ['users', 'client_profiles', 'investments', 'client_readiness', 
                           'fund_configurations', 'activity_logs', 'redemption_requests',
                           'payment_confirmations', 'crm_prospects', 'fund_rebates',
-                          'mt5_accounts', 'mt5_credentials', 'documents']
+                          'mt5_accounts', 'mt5_credentials', 'documents', 'admin_sessions']
             
             for collection_name in collections:
                 count = self.db[collection_name].count_documents({})

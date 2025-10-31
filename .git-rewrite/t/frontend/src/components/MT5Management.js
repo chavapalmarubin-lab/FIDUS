@@ -20,6 +20,7 @@ import {
     CheckCircle,
     RefreshCw
 } from 'lucide-react';
+import apiAxios from '../utils/apiAxios';
 
 const MT5Management = () => {
     const [accountsByBroker, setAccountsByBroker] = useState({});
@@ -56,16 +57,29 @@ const MT5Management = () => {
 
     const fetchMT5Data = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/accounts/by-broker`, {
-                headers: {
-                    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
-                }
-            });
+            const response = await apiAxios.get('/mt5/admin/accounts');
             
-            if (response.ok) {
-                const data = await response.json();
-                setAccountsByBroker(data.accounts_by_broker || {});
-                setTotalStats(data.total_stats || {});
+            if (response.data) {
+                const data = response.data;
+                // Group accounts by broker for display
+                const accountsByBroker = {};
+                let totalStats = { total_accounts: 0, total_balance: 0, total_equity: 0 };
+                
+                if (Array.isArray(data)) {
+                    data.forEach(account => {
+                        const broker = account.broker || 'Unknown';
+                        if (!accountsByBroker[broker]) {
+                            accountsByBroker[broker] = [];
+                        }
+                        accountsByBroker[broker].push(account);
+                        totalStats.total_accounts++;
+                        totalStats.total_balance += account.balance || 0;
+                        totalStats.total_equity += account.equity || 0;
+                    });
+                }
+                
+                setAccountsByBroker(accountsByBroker);
+                setTotalStats(totalStats);
             } else {
                 throw new Error('Failed to fetch MT5 data');
             }
@@ -154,7 +168,7 @@ const MT5Management = () => {
             setSelectedAccountDetails(account);
             setShowAccountDetailsModal(true);
             
-            // Fetch account activity/details
+            // Fetch real account activity from backend
             const activityResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/mt5/admin/account/${account.account_id}/activity`, {
                 headers: {
                     'Authorization': `Bearer ${JSON.parse(localStorage.getItem('fidus_user')).token}`
@@ -163,14 +177,20 @@ const MT5Management = () => {
             
             if (activityResponse.ok) {
                 const activityData = await activityResponse.json();
-                setAccountActivity(activityData.activity || []);
+                if (activityData.success) {
+                    setAccountActivity(activityData.activity || []);
+                    console.log('Real trading activity loaded:', activityData.activity);
+                } else {
+                    console.warn('No real trading activity found, using mock data');
+                    setAccountActivity(generateMockActivity(account));
+                }
             } else {
-                // Generate mock activity data if endpoint doesn't exist yet
+                console.warn('Trading activity API failed, using mock data');
                 setAccountActivity(generateMockActivity(account));
             }
         } catch (err) {
             console.error('Failed to fetch account details:', err);
-            // Generate mock activity data
+            // Fallback to mock data
             setAccountActivity(generateMockActivity(account));
         }
     };
@@ -256,15 +276,37 @@ const MT5Management = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white mb-2">Multi-Broker MT5 Management</h2>
-                    <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
+                    <div className="flex items-center space-x-4">
+                        <p className="text-slate-400">Manage MT5 accounts across multiple brokers</p>
+                        <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-400">Real MT5 Data Available</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                <span className="text-xs text-yellow-400">Simulated Data (Demo)</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <Button 
-                    onClick={() => setShowAddAccountModal(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                >
-                    <Plus size={16} className="mr-2" />
-                    Add MT5 Account
-                </Button>
+                <div className="flex items-center space-x-3">
+                    <Button 
+                        onClick={fetchMT5Data}
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                        <RefreshCw size={16} className="mr-2" />
+                        Refresh Data
+                    </Button>
+                    <Button 
+                        onClick={() => setShowAddAccountModal(true)}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                    >
+                        <Plus size={16} className="mr-2" />
+                        Add MT5 Account
+                    </Button>
+                </div>
             </div>
 
             {/* Error/Success Messages */}
@@ -668,46 +710,81 @@ const MT5Management = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {accountActivity.map((activity, index) => (
-                                            <div key={activity.id || index} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
-                                                <div className="flex items-center space-x-4">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                                        activity.type === 'deposit' ? 'bg-green-600' :
-                                                        activity.type === 'trade' ? 'bg-blue-600' :
-                                                        activity.type === 'profit' ? 'bg-cyan-600' :
-                                                        'bg-slate-600'
-                                                    }`}>
-                                                        {activity.type === 'deposit' ? <DollarSign size={16} /> :
-                                                         activity.type === 'trade' ? <BarChart3 size={16} /> :
-                                                         activity.type === 'profit' ? <TrendingUp size={16} /> :
-                                                         <Activity size={16} />
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-white font-medium">{activity.description}</div>
-                                                        <div className="text-sm text-slate-400">
-                                                            {new Date(activity.timestamp).toLocaleString()}
+                                        {accountActivity.map((activity, index) => {
+                                            // Determine activity icon and color based on type
+                                            let activityIcon, activityColor, activityBg;
+                                            
+                                            if (activity.type === 'deposit') {
+                                                activityIcon = <DollarSign size={16} />;
+                                                activityColor = 'text-green-400';
+                                                activityBg = 'bg-green-600';
+                                            } else if (activity.type === 'trade') {
+                                                activityIcon = <BarChart3 size={16} />;
+                                                if (activity.profit_loss >= 0) {
+                                                    activityColor = 'text-green-400';
+                                                    activityBg = 'bg-green-600';
+                                                } else {
+                                                    activityColor = 'text-red-400';
+                                                    activityBg = 'bg-red-600';
+                                                }
+                                            } else if (activity.type === 'profit') {
+                                                activityIcon = <TrendingUp size={16} />;
+                                                activityColor = 'text-cyan-400';
+                                                activityBg = 'bg-cyan-600';
+                                            } else {
+                                                activityIcon = <Activity size={16} />;
+                                                activityColor = 'text-slate-400';
+                                                activityBg = 'bg-slate-600';
+                                            }
+                                            
+                                            return (
+                                                <div key={activity.activity_id || index} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activityBg}`}>
+                                                            {activityIcon}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-white font-medium">
+                                                                {activity.description}
+                                                            </div>
+                                                            <div className="text-sm text-slate-400">
+                                                                {new Date(activity.timestamp).toLocaleString()}
+                                                            </div>
+                                                            {/* Show additional trading details */}
+                                                            {activity.type === 'trade' && activity.symbol && (
+                                                                <div className="text-xs text-slate-500 mt-1">
+                                                                    {activity.symbol} • Vol: {activity.volume} • 
+                                                                    Open: {activity.opening_price} • 
+                                                                    Current: {activity.current_price}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
+                                                    <div className="text-right">
+                                                        {(activity.amount !== 0 || activity.profit_loss !== 0) && (
+                                                            <div className={`font-semibold ${activityColor}`}>
+                                                                {activity.type === 'trade' ? (
+                                                                    <>
+                                                                        {activity.profit_loss > 0 ? '+' : ''}{formatCurrency(activity.profit_loss)}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        {activity.amount > 0 ? '+' : ''}{formatCurrency(activity.amount)}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        <Badge className={`${
+                                                            activity.status === 'completed' ? 'bg-green-600' :
+                                                            activity.status === 'open' ? 'bg-blue-600' :
+                                                            'bg-slate-600'
+                                                        } text-white text-xs mt-1`}>
+                                                            {activity.status}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    {activity.amount !== 0 && (
-                                                        <div className={`font-semibold ${
-                                                            activity.amount > 0 ? 'text-green-400' : 'text-red-400'
-                                                        }`}>
-                                                            {activity.amount > 0 ? '+' : ''}{formatCurrency(activity.amount)}
-                                                        </div>
-                                                    )}
-                                                    <Badge className={`${
-                                                        activity.status === 'completed' ? 'bg-green-600' :
-                                                        activity.status === 'open' ? 'bg-blue-600' :
-                                                        'bg-slate-600'
-                                                    } text-white text-xs`}>
-                                                        {activity.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </CardContent>

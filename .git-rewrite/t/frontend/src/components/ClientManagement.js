@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiAxios from "../utils/apiAxios";
+import ClientDetailView from "./ClientDetailView";
 
 const ClientManagement = () => {
   const [clients, setClients] = useState([]);
@@ -39,6 +40,7 @@ const ClientManagement = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailView, setShowDetailView] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -60,7 +62,8 @@ const ClientManagement = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await apiAxios.get('/clients/all');
+      const response = await apiAxios.get('/admin/clients');
+      // Handle the wrapped format: response.data = { clients: [...] }
       setClients(response.data.clients || []);
     } catch (err) {
       setError("Failed to fetch clients");
@@ -203,7 +206,7 @@ const ClientManagement = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Client Management</h2>
-          <p className="text-slate-400">Manage client accounts and investment readiness</p>
+          <p className="text-slate-400">Manage client accounts and investments</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="bg-cyan-600 hover:bg-cyan-700">
           <Plus size={16} className="mr-2" />
@@ -341,18 +344,13 @@ const ClientManagement = () => {
                   <tr className="border-b border-slate-600">
                     <th className="text-left py-3 px-4 text-slate-300">Name</th>
                     <th className="text-left py-3 px-4 text-slate-300">Email</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Phone</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Readiness</th>
                     <th className="text-left py-3 px-4 text-slate-300">Investments</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
                     <th className="text-left py-3 px-4 text-slate-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredClients.map((client) => {
-                    const readiness = getReadinessStatus(client);
-                    const ReadinessIcon = readiness.icon;
-                    
                     return (
                       <tr key={client.id} className="border-b border-slate-700 hover:bg-slate-750">
                         <td className="py-3 px-4">
@@ -360,23 +358,28 @@ const ClientManagement = () => {
                           <div className="text-sm text-slate-400">{client.type || 'Individual'}</div>
                         </td>
                         <td className="py-3 px-4 text-slate-300">{client.email}</td>
-                        <td className="py-3 px-4 text-slate-300">{client.phone}</td>
+                        <td className="py-3 px-4 text-slate-300">
+                          {client.total_investments || 0}
+                        </td>
                         <td className="py-3 px-4">
                           <Badge className={`${getStatusColor(client.status)} text-white`}>
                             {client.status || 'Active'}
                           </Badge>
                         </td>
                         <td className="py-3 px-4">
-                          <div className={`flex items-center ${readiness.color}`}>
-                            <ReadinessIcon size={16} className="mr-2" />
-                            {readiness.status}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-300">
-                          {client.total_investments || 0}
-                        </td>
-                        <td className="py-3 px-4">
                           <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setShowDetailView(true);
+                              }}
+                              className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+                              title="View client details, documents, and history"
+                            >
+                              <Eye size={14} />
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
@@ -588,6 +591,24 @@ const ClientManagement = () => {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Client Detail View Modal */}
+      {showDetailView && selectedClient && (
+        <ClientDetailView
+          client={selectedClient}
+          onClose={() => {
+            setShowDetailView(false);
+            setSelectedClient(null);
+          }}
+          onUpdate={(updatedClient) => {
+            // Update the client in the list
+            setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+            setShowDetailView(false);
+            setSelectedClient(null);
+            fetchClients(); // Refresh the client list
+          }}
+        />
       )}
     </div>
   );

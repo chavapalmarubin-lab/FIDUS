@@ -24,8 +24,19 @@ export const getAuthToken = () => {
  * @returns {object} Headers object with Authorization header if token exists
  */
 export const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  // First try to get JWT token for regular admin authentication
+  const jwtToken = getAuthToken();
+  if (jwtToken) {
+    return { Authorization: `Bearer ${jwtToken}` };
+  }
+  
+  // Fallback to Google session token for Google OAuth authenticated requests
+  const googleSessionToken = localStorage.getItem('google_session_token');
+  if (googleSessionToken) {
+    return { Authorization: `Bearer ${googleSessionToken}` };
+  }
+  
+  return {};
 };
 
 /**
@@ -49,23 +60,33 @@ export const getCurrentUser = () => {
  * @returns {boolean} True if user has valid token
  */
 export const isAuthenticated = () => {
+  // Check for JWT token first
   const token = getAuthToken();
-  if (!token) return false;
-  
-  try {
-    // Basic JWT structure check
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
-    
-    // Decode payload to check expiration
-    const payload = JSON.parse(atob(parts[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-    
-    return payload.exp > currentTime;
-  } catch (error) {
-    console.warn('Invalid JWT token format:', error);
-    return false;
+  if (token) {
+    try {
+      // Basic JWT structure check
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+      
+      // Decode payload to check expiration
+      const payload = JSON.parse(atob(parts[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      return payload.exp > currentTime;
+    } catch (error) {
+      console.warn('Invalid JWT token format:', error);
+    }
   }
+  
+  // Check for Google session token
+  const googleSessionToken = localStorage.getItem('google_session_token');
+  if (googleSessionToken) {
+    // If we have a Google session token and user data, consider authenticated
+    const userData = getCurrentUser();
+    return userData && userData.isGoogleAuth;
+  }
+  
+  return false;
 };
 
 /**

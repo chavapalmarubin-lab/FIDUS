@@ -31,14 +31,19 @@ import {
   File,
   Image,
   Shield,
+  ShieldCheck,
   AlertCircle,
+  AlertTriangle,
+  X,
   Home,
   CreditCard,
   Building,
-  Briefcase
+  Briefcase,
+  Calculator
 } from "lucide-react";
 import axios from "axios";
 import apiAxios from "../utils/apiAxios";
+import InvestmentSimulator from './InvestmentSimulator';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -90,22 +95,8 @@ const STAGE_CONFIG = {
     bgColor: "bg-blue-50",
     icon: Target 
   },
-  qualified: { 
-    label: "Qualified", 
-    color: "bg-green-500", 
-    textColor: "text-green-700", 
-    bgColor: "bg-green-50",
-    icon: CheckCircle 
-  },
-  proposal: { 
-    label: "Proposal", 
-    color: "bg-yellow-500", 
-    textColor: "text-yellow-700", 
-    bgColor: "bg-yellow-50",
-    icon: FileText 
-  },
   negotiation: { 
-    label: "Negotiation", 
+    label: "Negotiation/Proposal", 
     color: "bg-orange-500", 
     textColor: "text-orange-700", 
     bgColor: "bg-orange-50",
@@ -229,17 +220,29 @@ const ProspectManagement = () => {
 
   const handleStageChange = async (prospectId, newStage) => {
     try {
+      setLoading(true);
+      console.log(`Updating prospect ${prospectId} to stage: ${newStage}`);
+      
       const response = await apiAxios.put(`/crm/prospects/${prospectId}`, {
-        stage: newStage
+        stage: newStage,
+        notes: `Moved to ${newStage} stage on ${new Date().toLocaleDateString()}`
       });
       
+      console.log('Stage update response:', response.data);
+      
       if (response.data.success) {
-        setSuccess(`Prospect moved to ${STAGE_CONFIG[newStage].label} stage`);
-        fetchProspects();
-        fetchPipeline();
+        setSuccess(`✅ Prospect moved to ${STAGE_CONFIG[newStage].label} stage successfully!`);
+        await fetchProspects();
+        await fetchPipeline();
+      } else {
+        setError(`Failed to update prospect stage: ${response.data.message || 'Unknown error'}`);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to update prospect stage");
+      console.error('Stage change error:', err);
+      const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || "Failed to update prospect stage";
+      setError(`❌ Error: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -261,20 +264,72 @@ const ProspectManagement = () => {
     }
   };
 
+  const handleAMLKYCCheck = async (prospectId) => {
+    try {
+      setLoading(true);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-kyc`);
+      
+      if (response.data.success) {
+        const amlResult = response.data.aml_result;
+        setSuccess(`AML/KYC check completed: ${amlResult.overall_status.toUpperCase()}`);
+        
+        // Show detailed results
+        if (amlResult.ofac_matches > 0) {
+          setError(`⚠️ OFAC Alert: ${amlResult.ofac_matches} potential match(es) found. Status: ${amlResult.ofac_status}`);
+        }
+        
+        fetchProspects();
+        fetchPipeline();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to run AML/KYC check");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualAMLApproval = async (prospectId) => {
+    try {
+      setLoading(true);
+      const response = await apiAxios.post(`/crm/prospects/${prospectId}/aml-approve`, {
+        prospect_id: prospectId,
+        approved: true,
+        admin_notes: "Manual AML/KYC review completed and approved by admin"
+      });
+      
+      if (response.data.success) {
+        setSuccess("AML/KYC status approved manually. Prospect can now be converted to client.");
+        fetchProspects();
+        fetchPipeline();
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to approve AML/KYC manually");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConvertProspect = async (prospectId) => {
     try {
+      setLoading(true);
       const response = await apiAxios.post(`/crm/prospects/${prospectId}/convert`, {
         prospect_id: prospectId,
         send_agreement: true
       });
       
       if (response.data.success) {
-        setSuccess(`Prospect converted to client successfully! ${response.data.message}`);
+        setSuccess(`Prospect converted to client successfully! Username: ${response.data.username}. ${response.data.message}`);
         fetchProspects();
         fetchPipeline();
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to convert prospect");
+      if (err.response?.data?.detail?.includes('AML/KYC compliance required')) {
+        setError(`${err.response.data.detail} Please run AML/KYC check first.`);
+      } else {
+        setError(err.response?.data?.detail || "Failed to convert prospect");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -451,6 +506,25 @@ const ProspectManagement = () => {
             <Calendar className="h-3 w-3" />
             <span>Created: {new Date(prospect.created_at).toLocaleDateString()}</span>
           </div>
+          
+          {/* AML/KYC Status */}
+          {prospect.aml_kyc_status && (
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3" />
+              <span className={`text-xs font-medium ${
+                prospect.aml_kyc_status === 'clear' || prospect.aml_kyc_status === 'approved' 
+                  ? 'text-green-600' 
+                  : prospect.aml_kyc_status === 'manual_review' 
+                  ? 'text-yellow-600' 
+                  : prospect.aml_kyc_status === 'hit' || prospect.aml_kyc_status === 'rejected'
+                  ? 'text-red-600'
+                  : 'text-gray-600'
+              }`}>
+                AML/KYC: {prospect.aml_kyc_status.toUpperCase()}
+              </span>
+            </div>
+          )}
+          
           {prospect.notes && (
             <div className="flex items-start gap-2">
               <FileText className="h-3 w-3 mt-0.5" />
@@ -459,25 +533,79 @@ const ProspectManagement = () => {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1 flex-wrap">
           <Button
             size="sm"
             variant="outline"
             onClick={() => openEditModal(prospect)}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             <Edit2 size={14} className="mr-1" />
             Edit
           </Button>
           
-          {prospect.stage === 'won' && !prospect.converted_to_client && (
+          {/* AML/KYC Check Button - Show for won prospects without AML/KYC status */}
+          {prospect.stage === 'won' && !prospect.aml_kyc_status && (
             <Button
               size="sm"
-              onClick={() => handleConvertProspect(prospect.id)}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              onClick={() => handleAMLKYCCheck(prospect.id)}
+              disabled={loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 min-w-0"
             >
-              <UserCheck size={14} className="mr-1" />
-              Convert
+              <ShieldCheck size={14} className="mr-1" />
+              AML/KYC
+            </Button>
+          )}
+          
+          {/* Convert Button - Show only if AML/KYC is clear/approved - MADE BIGGER AND BOLDER */}
+          {prospect.stage === 'won' && 
+           (prospect.aml_kyc_status === 'clear' || prospect.aml_kyc_status === 'approved') && 
+           !prospect.converted_to_client && (
+            <Button
+              size="lg"
+              onClick={() => handleConvertProspect(prospect.id)}
+              disabled={loading}
+              className="flex-1 bg-green-600 hover:bg-green-700 min-w-0 h-10 px-6 font-bold text-base shadow-lg border-2 border-green-500 hover:border-green-400"
+            >
+              <UserCheck size={18} className="mr-2" />
+              CONVERT TO CLIENT
+            </Button>
+          )}
+          
+          {/* Show AML/KYC status for manual review cases */}
+          {prospect.stage === 'won' && prospect.aml_kyc_status === 'manual_review' && (
+            <div className="flex gap-2 w-full">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 bg-yellow-50 border-yellow-300 text-yellow-800 min-w-0"
+                disabled
+              >
+                <AlertTriangle size={14} className="mr-1" />
+                Manual Review Required
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleManualAMLApproval(prospect.id)}
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4"
+              >
+                <ShieldCheck size={14} className="mr-1" />
+                Approve AML/KYC
+              </Button>
+            </div>
+          )}
+          
+          {/* Show rejected status */}
+          {prospect.stage === 'won' && (prospect.aml_kyc_status === 'hit' || prospect.aml_kyc_status === 'rejected') && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 bg-red-50 border-red-300 text-red-800 min-w-0"
+              disabled
+            >
+              <X size={14} className="mr-1" />
+              Rejected
             </Button>
           )}
           
@@ -557,8 +685,9 @@ const ProspectManagement = () => {
                 <span>{prospect.phone}</span>
               </div>
 
-              {/* Stage progression buttons */}
-              <div className="flex gap-1 flex-wrap">
+              {/* Stage progression buttons - IMPROVED VISIBILITY */}
+              <div className="flex gap-2 flex-wrap mt-3 pt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-500 w-full mb-1">Move to stage:</p>
                 {Object.keys(STAGE_CONFIG).map(nextStage => {
                   if (nextStage === stage) return null;
                   const nextConfig = STAGE_CONFIG[nextStage];
@@ -567,9 +696,15 @@ const ProspectManagement = () => {
                     <Button
                       key={nextStage}
                       size="sm"
-                      variant="outline"
-                      onClick={() => handleStageChange(prospect.id, nextStage)}
-                      className="text-xs h-6 px-2"
+                      variant="default"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`Moving prospect ${prospect.id} to ${nextStage}`);
+                        handleStageChange(prospect.id, nextStage);
+                      }}
+                      disabled={loading}
+                      className="text-xs h-8 px-3 font-medium bg-slate-600 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-700 transition-all hover:scale-105 hover:shadow-md"
                     >
                       {nextConfig.label}
                     </Button>
@@ -709,6 +844,10 @@ const ProspectManagement = () => {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="simulator">
+            <Calculator className="w-4 h-4 mr-2" />
+            Investment Simulator
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -742,6 +881,33 @@ const ProspectManagement = () => {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="simulator" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="w-5 h-5" />
+                Investment Portfolio Simulator
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-blue-900 mb-1">Sales Tool - Investment Simulator</h3>
+                    <p className="text-blue-700 text-sm">
+                      Use this powerful tool during prospect calls to show real-time projections across FIDUS fund combinations. 
+                      Demonstrate potential returns, incubation periods, and redemption schedules to convert leads effectively.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <InvestmentSimulator isPublic={false} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -952,9 +1118,10 @@ const ProspectManagement = () => {
                     setShowDocumentModal(false);
                     setSelectedProspectForDocs(null);
                   }}
-                  className="p-2"
+                  className="p-2 hover:bg-slate-100 rounded-full"
+                  title="Close Modal"
                 >
-                  <XCircle size={24} />
+                  <XCircle size={24} className="text-slate-500 hover:text-slate-700" />
                 </Button>
               </div>
 
@@ -1160,6 +1327,60 @@ const ProspectManagement = () => {
                   </CardContent>
                 </Card>
               )}
+              
+              {/* KYC Completion Action - Show when all required documents are approved */}
+              {(() => {
+                const requiredDocs = Object.entries(KYC_DOCUMENT_TYPES).filter(([key, config]) => config.required);
+                const allRequiredApproved = requiredDocs.every(([docType]) => 
+                  getDocumentStatus(selectedProspectForDocs.id, docType) === 'approved'
+                );
+                
+                if (allRequiredApproved && requiredDocs.length > 0) {
+                  return (
+                    <Card className="mt-6 bg-green-50 border-green-200">
+                      <CardContent className="p-6">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center mb-4">
+                            <div className="bg-green-100 p-3 rounded-full">
+                              <CheckCircle className="h-8 w-8 text-green-600" />
+                            </div>
+                          </div>
+                          <h3 className="text-lg font-semibold text-green-800 mb-2">
+                            KYC Documentation Complete!
+                          </h3>
+                          <p className="text-sm text-green-700 mb-4">
+                            All required documents have been approved. You can now proceed with the client conversion process.
+                          </p>
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              onClick={() => {
+                                setShowDocumentModal(false);
+                                setSelectedProspectForDocs(null);
+                                setSuccess("KYC documentation completed successfully! You can now run AML/KYC check and convert to client.");
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle size={16} className="mr-2" />
+                              Complete KYC Process
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowDocumentModal(false);
+                                setSelectedProspectForDocs(null);
+                              }}
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                            >
+                              Close
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
             </motion.div>
           </motion.div>
         )}

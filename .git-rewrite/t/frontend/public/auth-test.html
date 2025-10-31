@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        function log(message) {
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        // Test what's in localStorage
+        log('=== Testing localStorage ===');
+        log('fidus_user: ' + localStorage.getItem('fidus_user'));
+        log('google_session_token: ' + localStorage.getItem('google_session_token'));
+        
+        // Test if getCurrentUser works
+        function getCurrentUser() {
+            try {
+                const userDataStr = localStorage.getItem('fidus_user');
+                if (userDataStr) {
+                    return JSON.parse(userDataStr);
+                }
+            } catch (error) {
+                log('Failed to parse user data: ' + error);
+            }
+            return null;
+        }
+        
+        // Test if isAuthenticated works
+        function isAuthenticated() {
+            // Check for Google session token
+            const googleSessionToken = localStorage.getItem('google_session_token');
+            if (googleSessionToken) {
+                const userData = getCurrentUser();
+                return userData && userData.isGoogleAuth;
+            }
+            return false;
+        }
+        
+        log('=== Testing Auth Functions ===');
+        const user = getCurrentUser();
+        log('getCurrentUser(): ' + JSON.stringify(user));
+        log('isAuthenticated(): ' + isAuthenticated());
+        
+        // Test setting Google auth data
+        log('=== Setting Test Google Auth Data ===');
+        const testUser = {
+            id: "test123",
+            username: "test@example.com",
+            name: "Test User",
+            email: "test@example.com", 
+            type: "admin",
+            isGoogleAuth: true
+        };
+        
+        localStorage.setItem('fidus_user', JSON.stringify(testUser));
+        localStorage.setItem('google_session_token', 'test_session_token');
+        
+        log('After setting test data:');
+        log('getCurrentUser(): ' + JSON.stringify(getCurrentUser()));
+        log('isAuthenticated(): ' + isAuthenticated());
+    </script>
+</body>
+</html>

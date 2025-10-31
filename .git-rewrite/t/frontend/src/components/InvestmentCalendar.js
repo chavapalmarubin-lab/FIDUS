@@ -25,6 +25,7 @@ const InvestmentCalendar = ({ user }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [viewMode, setViewMode] = useState('month'); // month, upcoming
 
   useEffect(() => {
     fetchInvestmentData();
@@ -39,6 +40,21 @@ const InvestmentCalendar = ({ user }) => {
         const investmentData = response.data.investments;
         setInvestments(investmentData);
         generateCalendarEvents(investmentData);
+        
+        // Set initial view to current month or month with most events
+        if (investmentData.length > 0) {
+          const firstInvestment = investmentData[0];
+          const depositDate = new Date(firstInvestment.deposit_date);
+          const today = new Date();
+          
+          // Show current month if we have recent events, otherwise show investment start month
+          if (today.getFullYear() === depositDate.getFullYear() && 
+              Math.abs(today.getMonth() - depositDate.getMonth()) <= 3) {
+            setCurrentDate(today);
+          } else {
+            setCurrentDate(new Date(depositDate.getFullYear(), depositDate.getMonth(), 1));
+          }
+        }
       }
     } catch (err) {
       setError("Failed to load investment data");
@@ -263,6 +279,33 @@ const InvestmentCalendar = ({ user }) => {
     });
   };
 
+  const getUpcomingEvents = () => {
+    const today = new Date();
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(today.getDate() + 90);
+    
+    return calendarEvents
+      .filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate >= today && eventDate <= ninetyDaysFromNow;
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  };
+
+  const getNextInterestPayment = () => {
+    const today = new Date();
+    return calendarEvents
+      .filter(event => event.type === 'interest_payment' && new Date(event.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  };
+
+  const getNextRedemption = () => {
+    const today = new Date();
+    return calendarEvents
+      .filter(event => event.type === 'interest_redemption' && new Date(event.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  };
+
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + direction);
@@ -344,6 +387,22 @@ const InvestmentCalendar = ({ user }) => {
           <CalendarIcon className="mr-3 h-8 w-8 text-cyan-400" />
           Investment Calendar
         </h2>
+        <div className="flex space-x-2">
+          <Button
+            variant={viewMode === 'upcoming' ? 'default' : 'outline'}
+            onClick={() => setViewMode('upcoming')}
+            className="text-white"
+          >
+            Upcoming Events
+          </Button>
+          <Button
+            variant={viewMode === 'month' ? 'default' : 'outline'}
+            onClick={() => setViewMode('month')}
+            className="text-white"
+          >
+            Monthly View
+          </Button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -353,7 +412,68 @@ const InvestmentCalendar = ({ user }) => {
         </div>
       )}
 
+      {/* Upcoming Events View */}
+      {viewMode === 'upcoming' && (
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Clock className="mr-2 h-5 w-5 text-cyan-400" />
+              Upcoming Events (Next 90 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {getUpcomingEvents().slice(0, 10).map(event => {
+                const config = getEventTypeConfig(event.type);
+                const Icon = config.icon;
+                const daysUntil = Math.ceil((new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <motion.div
+                    key={event.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center p-4 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer"
+                    onClick={() => setSelectedEvent(event)}
+                  >
+                    <div className={`${config.color} p-3 rounded-lg mr-4`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white font-semibold">{event.title}</h3>
+                      <p className="text-slate-400 text-sm">{event.description}</p>
+                      <div className="flex items-center mt-2 space-x-4">
+                        <span className="text-cyan-400 text-sm font-medium">
+                          {formatDate(event.date)}
+                        </span>
+                        {daysUntil >= 0 && (
+                          <Badge variant="outline" className="text-slate-300">
+                            {daysUntil === 0 ? 'Today' : 
+                             daysUntil === 1 ? 'Tomorrow' :
+                             `${daysUntil} days`}
+                          </Badge>
+                        )}
+                        {event.amount && (
+                          <span className="text-green-400 font-semibold">
+                            {formatCurrency(event.amount)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              {getUpcomingEvents().length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">No upcoming events in the next 90 days</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Calendar Navigation */}
+      {viewMode === 'month' && (
       <Card className="dashboard-card">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -393,6 +513,63 @@ const InvestmentCalendar = ({ user }) => {
           </div>
         </CardContent>
       </Card>
+      )}
+
+      {/* Investment Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-green-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Next Interest Payment</p>
+                <p className="text-2xl font-bold text-white">
+                  {getNextInterestPayment() ? formatDate(getNextInterestPayment().date) : 'N/A'}
+                </p>
+                {getNextInterestPayment() && (
+                  <p className="text-green-400 text-sm">
+                    {formatCurrency(getNextInterestPayment().amount)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <ArrowDownCircle className="h-8 w-8 text-orange-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Next Redemption</p>
+                <p className="text-2xl font-bold text-white">
+                  {getNextRedemption() ? formatDate(getNextRedemption().date) : 'N/A'}
+                </p>
+                {getNextRedemption() && (
+                  <p className="text-orange-400 text-sm">
+                    {getNextRedemption().frequency || 'Available'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-cyan-400 mr-3" />
+              <div>
+                <p className="text-slate-400 text-sm">Total Events</p>
+                <p className="text-2xl font-bold text-white">
+                  {getUpcomingEvents().length}
+                </p>
+                <p className="text-cyan-400 text-sm">Next 90 days</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Legend */}
       <Card className="dashboard-card">

@@ -3,174 +3,65 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Mail, Shield, CheckCircle, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
-import axios from "axios";
+import { Mail, Shield, CheckCircle, AlertCircle, RefreshCw, ExternalLink, ArrowRight } from "lucide-react";
+import useGoogleAdmin from '../hooks/useGoogleAdmin';
 
 const GmailSettings = () => {
-  const [gmailStatus, setGmailStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [authenticating, setAuthenticating] = useState(false);
-  const [authError, setAuthError] = useState(null);
+  const {
+    profile,
+    loading,
+    error,
+    isAuthenticated,
+    loginWithGoogle,
+    logout,
+    sendEmail,
+    clearError
+  } = useGoogleAdmin();
 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
 
-  useEffect(() => {
-    // Check authentication status on component mount
-    checkAuthStatus();
-    
-    // Handle OAuth callback parameters
-    handleOAuthCallback();
-  }, []);
-
-  const handleOAuthCallback = () => {
-    console.log("Checking for OAuth callback parameters...");
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const gmailAuth = urlParams.get('gmail_auth');
-    const email = urlParams.get('email');
-    const message = urlParams.get('message');
-    
-    // Check if we were in the middle of OAuth flow
-    const authInProgress = localStorage.getItem('gmail_auth_in_progress');
-    const authTimestamp = localStorage.getItem('gmail_auth_timestamp');
-    
-    console.log(`OAuth callback check: gmail_auth=${gmailAuth}, email=${email}, authInProgress=${authInProgress}`);
-
-    if (gmailAuth === 'success' && email) {
-      // OAuth was successful
-      console.log("OAuth success detected!");
-      
-      setAuthError(null);
-      setAuthenticating(false);
-      
-      // Clear localStorage flags
-      localStorage.removeItem('gmail_auth_in_progress');
-      localStorage.removeItem('gmail_auth_timestamp');
-      
-      // Show success message temporarily with green styling
-      setAuthError(`✅ Gmail authentication successful! Connected as ${email}`);
-      setTimeout(() => {
-        setAuthError(null);
-      }, 5000);
-      
-      // Clean up URL parameters
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      
-      // Refresh status to get updated authentication info
-      setTimeout(() => {
-        console.log("Refreshing Gmail status after successful auth...");
-        checkAuthStatus();
-      }, 1000);
-      
-    } else if (gmailAuth === 'error') {
-      // OAuth failed
-      console.log("OAuth error detected!");
-      
-      setAuthenticating(false);
-      
-      // Clear localStorage flags
-      localStorage.removeItem('gmail_auth_in_progress');
-      localStorage.removeItem('gmail_auth_timestamp');
-      
-      // Show error message
-      const errorMsg = message ? decodeURIComponent(message.replace(/\+/g, ' ')) : 'Unknown authentication error';
-      setAuthError(`❌ Gmail authentication failed: ${errorMsg}`);
-      
-      // Clean up URL parameters
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      
-    } else if (authInProgress) {
-      // We were in OAuth flow but no callback params - might still be in progress
-      const timestamp = parseInt(authTimestamp || '0');
-      const timeElapsed = Date.now() - timestamp;
-      
-      if (timeElapsed > 300000) { // 5 minutes timeout
-        console.log("OAuth timeout detected, clearing state");
-        localStorage.removeItem('gmail_auth_in_progress');
-        localStorage.removeItem('gmail_auth_timestamp');
-        setAuthenticating(false);
-        setAuthError("❌ Authentication timed out. Please try again.");
-      } else {
-        console.log("OAuth still in progress...");
-        setAuthenticating(true);
-      }
+  const testGmailFunctionality = async () => {
+    if (!isAuthenticated || !profile) {
+      setEmailStatus("❌ Please authenticate with Google first");
+      return;
     }
-  };
 
-  const checkAuthStatus = async () => {
     try {
-      setLoading(true);
-      const response = await axios.post(`${backendUrl}/api/gmail/authenticate`);
+      setTestEmailSending(true);
+      setEmailStatus("📧 Sending test email...");
       
-      if (response.data.success) {
-        setGmailStatus(response.data);
-        setAuthError(null);
-      } else {
-        setGmailStatus(null);
-      }
-    } catch (error) {
-      console.error('Error checking Gmail auth status:', error);
-      setGmailStatus(null);
+      await sendEmail({
+        to_email: profile.email,
+        subject: 'FIDUS Gmail Integration Test',
+        body: `Hello ${profile.name},\n\nThis is a test email from FIDUS Investment Management platform to verify Gmail integration is working properly.\n\nBest regards,\nFIDUS Admin Team`,
+        attachments: []
+      });
+      
+      setEmailStatus("✅ Test email sent successfully!");
+      setTimeout(() => setEmailStatus(null), 5000);
+    } catch (err) {
+      setEmailStatus(`❌ Failed to send test email: ${err.message}`);
     } finally {
-      setLoading(false);
+      setTestEmailSending(false);
     }
   };
 
-  const authenticateGmail = async () => {
+  const handleAuthenticate = async () => {
     try {
-      setAuthenticating(true);
-      setAuthError(null);
-      
-      // Always force fresh OAuth flow - no cached credentials
-      console.log("Starting Gmail OAuth flow...");
-      
-      // Get OAuth URL from backend
-      const authUrlResponse = await axios.get(`${backendUrl}/api/gmail/auth-url`);
-      
-      if (authUrlResponse.data.success) {
-        console.log("Got OAuth URL, redirecting...");
-        
-        // Store authentication state in localStorage
-        localStorage.setItem('gmail_auth_in_progress', 'true');
-        localStorage.setItem('gmail_auth_timestamp', Date.now().toString());
-        
-        // Direct redirect to Google OAuth - this is the ONLY reliable method
-        // Popup/iframe approaches are blocked by Google's security policies
-        window.location.href = authUrlResponse.data.authorization_url;
-        
-      } else {
-        throw new Error("Failed to generate OAuth URL: " + (authUrlResponse.data.error || "Unknown error"));
-      }
-      
-    } catch (error) {
-      console.error('Gmail authentication error:', error);
-      setAuthenticating(false);
-      
-      let errorMessage = "Gmail authentication failed. ";
-      if (error.response?.data?.detail) {
-        errorMessage += error.response.data.detail;
-      } else if (error.response?.data?.error) {
-        errorMessage += error.response.data.error;
-      } else if (error.message) {
-        errorMessage += error.message;
-      } else {
-        errorMessage += "Please check your internet connection and try again.";
-      }
-      
-      setAuthError(errorMessage);
+      clearError();
+      await loginWithGoogle();
+    } catch (err) {
+      console.error('Gmail authentication error:', err);
     }
   };
 
-  const refreshStatus = async () => {
-    await checkAuthStatus();
-  };
-
-  const resetAuth = () => {
-    setGmailStatus(null);
-    setAuthError(null);
-    setAuthenticating(false);
+  const handleDisconnect = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Gmail disconnect error:', err);
+    }
   };
 
   return (
@@ -182,11 +73,25 @@ const GmailSettings = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Migration Notice */}
+        <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+          <div className="flex items-start text-blue-400">
+            <ArrowRight className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Updated Gmail Integration</span>
+              <p className="text-sm mt-1">
+                Gmail settings now use the unified Google Integration system. Please use the 
+                <strong> Google Integration tab</strong> to authenticate and manage your Google account.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Status Display */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Gmail Status:</span>
-            {gmailStatus?.success ? (
+            {isAuthenticated && profile ? (
               <Badge className="bg-green-600/20 text-green-400">
                 <CheckCircle className="h-4 w-4 mr-1" />
                 Connected
@@ -199,41 +104,49 @@ const GmailSettings = () => {
             )}
           </div>
 
-          {gmailStatus?.email_address && (
+          {profile?.email && (
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Connected Account:</span>
-              <span className="text-white font-medium">{gmailStatus.email_address}</span>
+              <span className="text-white font-medium">{profile.email}</span>
             </div>
           )}
 
-          {gmailStatus?.messages_total && (
+          {profile?.name && (
             <div className="flex items-center justify-between">
-              <span className="text-gray-400">Total Messages:</span>
-              <span className="text-white">{gmailStatus.messages_total.toLocaleString()}</span>
+              <span className="text-gray-400">Account Name:</span>
+              <span className="text-white">{profile.name}</span>
             </div>
           )}
         </div>
 
-        {/* Error/Success Display */}
-        {authError && (
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+            <div className="flex items-start text-red-400">
+              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Authentication Issue</span>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Status */}
+        {emailStatus && (
           <div className={`border rounded-lg p-4 ${
-            authError.includes('successful') 
+            emailStatus.includes('✅') 
               ? 'bg-green-600/10 border-green-600/20' 
-              : 'bg-red-600/10 border-red-600/20'
+              : emailStatus.includes('❌')
+              ? 'bg-red-600/10 border-red-600/20'
+              : 'bg-blue-600/10 border-blue-600/20'
           }`}>
             <div className={`flex items-start ${
-              authError.includes('successful') ? 'text-green-400' : 'text-red-400'
+              emailStatus.includes('✅') ? 'text-green-400' : 
+              emailStatus.includes('❌') ? 'text-red-400' : 'text-blue-400'
             }`}>
-              {authError.includes('successful') ? (
-                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              )}
               <div>
-                <span className="font-medium">
-                  {authError.includes('successful') ? 'Success' : 'Authentication Issue'}
-                </span>
-                <p className="text-sm mt-1">{authError}</p>
+                <p className="text-sm">{emailStatus}</p>
               </div>
             </div>
           </div>
@@ -241,13 +154,13 @@ const GmailSettings = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          {!gmailStatus?.success ? (
+          {!isAuthenticated ? (
             <Button
-              onClick={authenticateGmail}
-              disabled={authenticating || loading}
+              onClick={handleAuthenticate}
+              disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 flex-1"
             >
-              {authenticating ? (
+              {loading ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   Authenticating...
@@ -260,30 +173,37 @@ const GmailSettings = () => {
               )}
             </Button>
           ) : (
-            <Button
-              onClick={resetAuth}
-              variant="outline"
-              className="border-red-600 text-red-400 hover:bg-red-600/10 flex-1"
-            >
-              Disconnect Gmail
-            </Button>
+            <>
+              <Button
+                onClick={testGmailFunctionality}
+                disabled={testEmailSending}
+                className="bg-green-600 hover:bg-green-700 flex-1"
+              >
+                {testEmailSending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Test Email
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                onClick={handleDisconnect}
+                variant="outline"
+                className="border-red-600 text-red-400 hover:bg-red-600/10"
+              >
+                Disconnect
+              </Button>
+            </>
           )}
-
-          <Button
-            onClick={refreshStatus}
-            disabled={loading}
-            variant="outline"
-            className="border-slate-600 text-slate-300 hover:bg-slate-700"
-          >
-            {loading ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-          </Button>
         </div>
 
-        {/* Information */}
+        {/* Gmail Integration Features */}
         <div className="bg-slate-700/50 rounded-lg p-4">
           <h4 className="text-white font-medium mb-2">Gmail Integration Features:</h4>
           <ul className="text-sm text-gray-400 space-y-1">
@@ -291,34 +211,36 @@ const GmailSettings = () => {
             <li>• Professional FIDUS email templates</li>
             <li>• Document viewing links</li>
             <li>• Email delivery tracking</li>
-            <li>• Secure OAuth2 authentication</li>
+            <li>• Secure OAuth2 authentication via Emergent</li>
+            <li>• Unified Google services (Gmail + Calendar + Drive)</li>
           </ul>
         </div>
 
         {/* Setup Instructions */}
-        {!gmailStatus?.success && !authenticating && (
+        {!isAuthenticated && (
           <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
             <div className="flex items-start text-blue-400">
               <ExternalLink className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="font-medium">Setup Required</span>
                 <p className="text-sm mt-1">
-                  Click "Authenticate Gmail" to connect your Gmail account. You'll be redirected to Google to grant permissions, then automatically returned to this page.
+                  Click "Authenticate Gmail" to connect your Google account using our secure OAuth system. 
+                  This will enable Gmail integration for sending documents and notifications.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {gmailStatus?.success && (
+        {isAuthenticated && profile && (
           <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
             <div className="flex items-center text-green-400 mb-2">
               <CheckCircle className="h-4 w-4 mr-2" />
               <span className="font-medium">Gmail Ready!</span>
             </div>
             <p className="text-sm text-green-300">
-              The Document Portal can now send emails through your Gmail account. 
-              Documents will be sent with professional templates and both attachments and viewing links.
+              Gmail integration is active and ready to use. You can now send documents and notifications 
+              through your Gmail account ({profile.email}) with professional FIDUS templates.
             </p>
           </div>
         )}

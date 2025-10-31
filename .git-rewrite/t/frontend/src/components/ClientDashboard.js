@@ -9,14 +9,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";  
-import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, Target, ArrowDownCircle } from "lucide-react";
+import { LogOut, Search, Calendar as CalendarIcon, DollarSign, TrendingUp, TrendingDown, Filter, FileText, ArrowDownCircle, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import apiAxios from "../utils/apiAxios";
 import DocumentPortal from "./DocumentPortal";
-import InvestmentDashboard from "./InvestmentDashboard";
+import CurrencySelector from "./CurrencySelector";
+import useCurrency from "../hooks/useCurrency";
+
 import RedemptionManagement from "./RedemptionManagement";
 import InvestmentCalendar from "./InvestmentCalendar";
-import ClientMT5View from "./ClientMT5View";
+import ClientWallet from "./ClientWallet";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -28,6 +30,13 @@ const ClientDashboard = ({ user, onLogout }) => {
   const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [fundFilter, setFundFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+
+  // Currency conversion hook
+  const { 
+    convertAmount: convertCurrencyAmount, 
+    formatCurrency: formatCurrencyAmount 
+  } = useCurrency();
 
   useEffect(() => {
     fetchClientData();
@@ -78,11 +87,30 @@ const ClientDashboard = ({ user, onLogout }) => {
   }, [dateRange, fundFilter, searchTerm, clientData]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(Math.abs(amount));
+    if (selectedCurrency === 'USD') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(Math.abs(amount));
+    } else {
+      // Convert to selected currency and format
+      const convertedAmount = convertCurrencyAmount(Math.abs(amount), 'USD', selectedCurrency);
+      return formatCurrencyAmount(convertedAmount, selectedCurrency);
+    }
+  };
+
+  const formatCurrencyWithConversion = (amount) => {
+    const primaryAmount = formatCurrency(amount);
+    if (selectedCurrency !== 'USD') {
+      const usdAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(Math.abs(amount));
+      return { primary: primaryAmount, secondary: usdAmount };
+    }
+    return { primary: primaryAmount, secondary: null };
   };
 
   const formatDate = (dateString) => {
@@ -93,10 +121,17 @@ const ClientDashboard = ({ user, onLogout }) => {
     return (
       <div className="dashboard">
         <div className="dashboard-header">
-          <div className="header-logo">
-            <span className="header-logo-text">
-              <span className="header-logo-f">F</span>IDUS
-            </span>
+          <div className="header-logo flex items-center p-4">
+            <img 
+              src="/fidus-logo.png"
+              alt="FIDUS Logo"
+              style={{ 
+                height: '48px', 
+                width: 'auto',
+                maxWidth: '180px',
+                objectFit: 'contain'
+              }}
+            />
           </div>
         </div>
         <div className="flex items-center justify-center min-h-screen">
@@ -110,11 +145,7 @@ const ClientDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="header-logo">
-          <span className="header-logo-text">
-            <span className="header-logo-f">F</span>IDUS
-          </span>
-        </div>
+
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
           <Button onClick={onLogout} className="logout-btn">
@@ -126,17 +157,14 @@ const ClientDashboard = ({ user, onLogout }) => {
 
       <div className="p-6 max-w-7xl mx-auto">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-slate-600 mb-6">
+          <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-600 mb-6">
             <TabsTrigger value="overview" className="text-white data-[state=active]:bg-cyan-600">
               <DollarSign size={16} className="mr-2" />
               Account Overview
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
-              <Target size={16} className="mr-2" />
-              Investments
-            </TabsTrigger>
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
-              📈 Fund Commitments
+            <TabsTrigger value="wallet" className="text-white data-[state=active]:bg-cyan-600">
+              <Wallet size={16} className="mr-2" />
+              Wallet
             </TabsTrigger>
             <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
               <ArrowDownCircle size={16} className="mr-2" />
@@ -183,9 +211,20 @@ const ClientDashboard = ({ user, onLogout }) => {
           {/* Account Balance */}
           <Card className="dashboard-card lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <DollarSign className="mr-2" size={20} />
-                Account Balance
+              <CardTitle className="text-white flex items-center justify-between">
+                <div className="flex items-center">
+                  <DollarSign className="mr-2" size={20} />
+                  Account Balance
+                </div>
+                <div className="flex-shrink-0">
+                  <CurrencySelector
+                    selectedCurrency={selectedCurrency}
+                    onCurrencyChange={setSelectedCurrency}
+                    showRates={false}
+                    showSummary={false}
+                    size="sm"
+                  />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -194,18 +233,92 @@ const ClientDashboard = ({ user, onLogout }) => {
                   <div className="balance-amount">
                     {clientData && formatCurrency(clientData.balance.total_balance)}
                   </div>
+                  {selectedCurrency !== 'USD' && clientData && (
+                    <div className="text-slate-400 text-sm mt-1">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 2
+                      }).format(clientData.balance.total_balance)} USD
+                    </div>
+                  )}
                 </div>
+                
+                {/* All 4 Fund Balances */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* CORE Fund */}
                   <div>
-                    <div className="balance-label">Core Balance</div>
-                    <div className="text-2xl font-bold text-cyan-400">
+                    <div className="balance-label">CORE Fund</div>
+                    <div className="text-2xl font-bold text-orange-400">
                       {clientData && formatCurrency(clientData.balance.core_balance)}
                     </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.core_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.core_balance)} USD
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.core_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
                   </div>
+                  
+                  {/* BALANCE Fund */}
                   <div>
-                    <div className="balance-label">Dynamic Balance</div>
-                    <div className="text-2xl font-bold text-orange-400">
+                    <div className="balance-label">BALANCE Fund</div>
+                    <div className="text-2xl font-bold text-cyan-400">
+                      {clientData && formatCurrency(clientData.balance.balance_balance)}
+                    </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.balance_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.balance_balance)} USD
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.balance_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
+                  </div>
+                  
+                  {/* DYNAMIC Fund */}
+                  <div>
+                    <div className="balance-label">DYNAMIC Fund</div>
+                    <div className="text-2xl font-bold text-green-400">
                       {clientData && formatCurrency(clientData.balance.dynamic_balance)}
+                    </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.dynamic_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.dynamic_balance)} USD
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.dynamic_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
+                    </div>
+                  </div>
+                  
+                  {/* UNLIMITED Fund */}
+                  <div>
+                    <div className="balance-label">UNLIMITED Fund</div>
+                    <div className="text-2xl font-bold text-purple-400">
+                      {clientData && formatCurrency(clientData.balance.unlimited_balance)}
+                    </div>
+                    {selectedCurrency !== 'USD' && clientData && clientData.balance.unlimited_balance > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                        }).format(clientData.balance.unlimited_balance)} USD
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400">
+                      {clientData && clientData.balance.unlimited_balance > 0 ? 'ACTIVE' : 'NO INVESTMENT'}
                     </div>
                   </div>
                 </div>
@@ -413,12 +526,8 @@ const ClientDashboard = ({ user, onLogout }) => {
         </motion.div>
           </TabsContent>
 
-          <TabsContent value="investments" className="mt-6">
-            <InvestmentDashboard user={user} userType="client" />
-          </TabsContent>
-
-          <TabsContent value="mt5" className="mt-6">
-            <ClientMT5View clientId={user.id} />
+          <TabsContent value="wallet" className="mt-6">
+            <ClientWallet user={user} />
           </TabsContent>
 
           <TabsContent value="redemptions" className="mt-6">

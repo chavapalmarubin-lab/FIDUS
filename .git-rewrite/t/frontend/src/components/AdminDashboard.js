@@ -10,12 +10,16 @@ import { LogOut, Upload, Download, Plus, Trash2, Users, FileText, TrendingUp, Ar
 import ClientManagement from "./ClientManagement";
 import DocumentPortal from "./DocumentPortal";
 import CRMDashboard from "./CRMDashboard";
-import GmailSettings from "./GmailSettings";
+
 import AdminInvestmentManagement from "./AdminInvestmentManagement";
 import AdminRedemptionManagement from "./AdminRedemptionManagement";
 import FundPortfolioManagement from "./FundPortfolioManagement";
 import CashFlowManagement from "./CashFlowManagement";
 import MT5Management from "./MT5Management";
+import FundPerformanceDashboard from "./FundPerformanceDashboard";
+import ApplicationDocuments from "./ApplicationDocuments";
+import GoogleAdminAuth from './GoogleAdminAuth';
+import GoogleWorkspaceIntegration from './GoogleWorkspaceIntegration';
 import {
   LineChart,
   Line,
@@ -283,11 +287,27 @@ const AdminDashboard = ({ user, onLogout }) => {
     <div className="dashboard">
       {/* Header */}
       <div className="dashboard-header">
-        <div className="header-logo">
-          <span className="header-logo-text">
-            <span className="header-logo-f">F</span>IDUS
-          </span>
-          <span className="text-slate-400 ml-4 text-sm">Investment Committee</span>
+        <div className="flex items-center gap-4" style={{ minHeight: '64px' }}>
+          <img 
+            src="/fidus-logo.png"
+            alt="FIDUS Logo"
+            onError={(e) => { 
+              console.error('Top left logo failed to load'); 
+            }}
+            onLoad={() => { 
+              console.log('BIG Top left logo loaded successfully at 64px'); 
+            }}
+            style={{ 
+              height: '64px', 
+              width: 'auto',
+              maxWidth: '200px',
+              objectFit: 'contain',
+              display: 'block !important',
+              visibility: 'visible !important',
+              opacity: '1 !important'
+            }}
+          />
+          <span className="text-slate-400 text-base">Investment Committee</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-300">{user.name}</span>
@@ -317,43 +337,50 @@ const AdminDashboard = ({ user, onLogout }) => {
         </motion.div>
 
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-9 bg-slate-800 border-slate-600">
-            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600">
+          <TabsList className="grid w-full grid-cols-10 bg-slate-800 border-slate-600">
+            <TabsTrigger value="portfolio" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               Fund Portfolio
             </TabsTrigger>
-            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="fund-performance" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+              📊 Fund vs MT5
+            </TabsTrigger>
+            <TabsTrigger value="cashflow" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <DollarSign size={16} className="mr-2" />
               Cash Flow
             </TabsTrigger>
-            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="investments" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="mt5" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               📈 MT5 Accounts
             </TabsTrigger>
-            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="clients" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
-            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="crm" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               CRM Dashboard
             </TabsTrigger>
-            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="redemptions" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
             </TabsTrigger>
-            <TabsTrigger value="gmail" className="text-white data-[state=active]:bg-cyan-600">
-              Gmail Settings
+            <TabsTrigger value="google" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
+              🌐 Google Workspace
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="documents" className="text-white data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:font-semibold">
               <FileText size={16} className="mr-2" />
-              Document Portal
+              📄 App Documents
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="portfolio" className="mt-6">
             <FundPortfolioManagement />
+          </TabsContent>
+
+          <TabsContent value="fund-performance" className="mt-6">
+            <FundPerformanceDashboard />
           </TabsContent>
 
           <TabsContent value="cashflow" className="mt-6">
@@ -380,12 +407,13 @@ const AdminDashboard = ({ user, onLogout }) => {
             <ClientManagement />
           </TabsContent>
 
-          <TabsContent value="gmail" className="mt-6">
-            <GmailSettings />
+          <TabsContent value="google" className="mt-6">
+            <GoogleWorkspaceIntegration />
           </TabsContent>
 
+
           <TabsContent value="documents" className="mt-6">
-            <DocumentPortal user={user} userType="admin" />
+            <ApplicationDocuments />
           </TabsContent>
         </Tabs>
       </div>

@@ -72,8 +72,8 @@ const FundPortfolioManagement = () => {
       setLoading(true);
       
       // Fetch fund overview data
-      const fundsResponse = await apiAxios.get(`/admin/funds-overview`);
-      const portfolioResponse = await apiAxios.get(`/admin/portfolio-summary`);
+      const fundsResponse = await apiAxios.get(`/fund-portfolio/overview`);
+      const portfolioResponse = await apiAxios.get(`/fund-portfolio/overview`);
       
       if (fundsResponse.data.success) {
         setFundData(fundsResponse.data.funds);

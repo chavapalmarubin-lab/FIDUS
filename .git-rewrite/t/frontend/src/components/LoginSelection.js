@@ -6,8 +6,10 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { User, Shield, Loader2 } from "lucide-react";
 import ClientOnboarding from "./ClientOnboarding";
+import LeadRegistrationForm from "./LeadRegistrationForm";
 import PasswordReset from "./PasswordReset";
 import PasswordChangeModal from "./PasswordChangeModal";
+import GoogleSocialLogin from "./GoogleSocialLogin";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -21,6 +23,7 @@ const LoginSelection = ({ onLogin }) => {
   const [passwordResetType, setPasswordResetType] = useState(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [userRequiringPasswordChange, setUserRequiringPasswordChange] = useState(null);
+  const [success, setSuccess] = useState("");
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
@@ -141,7 +144,7 @@ const LoginSelection = ({ onLogin }) => {
               transition={{ delay: 0.3, duration: 0.8 }}
             >
               <img 
-                src="https://customer-assets.emergentagent.com/job_fidus-finance-1/artifacts/3p2t6krj_FIDUS%20ALGO%20LOGO.jpeg"
+                src="/fidus-logo.png"
                 alt="FIDUS Logo"
                 style={{
                   width: "280px",
@@ -178,6 +181,48 @@ const LoginSelection = ({ onLogin }) => {
           <CardContent>
             {!selectedType ? (
               <div className="space-y-4">
+                {/* Google Social Login */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-600" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-3 bg-slate-900 text-slate-400">Quick Access</span>
+                    </div>
+                  </div>
+                  
+                  <div className="google-social-login-wrapper">
+                    <GoogleSocialLogin 
+                      onLoginSuccess={(user, token) => {
+                        console.log('Google login successful:', user);
+                        onLogin({ ...user, type: user.user_type || 'client', isGoogleAuth: true });
+                      }}
+                      redirectTo="/dashboard"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Divider */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative my-6"
+                >
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-600" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-3 bg-slate-900 text-slate-400">Or continue with FIDUS account</span>
+                  </div>
+                </motion.div>
+
                 <motion.button
                   className="login-option"
                   onClick={() => handleTypeSelect("client")}
@@ -219,11 +264,14 @@ const LoginSelection = ({ onLogin }) => {
                 </motion.div>
               </div>
             ) : selectedType === "register" ? (
-              <ClientOnboarding 
+              <LeadRegistrationForm 
                 onBack={() => setSelectedType(null)}
                 onComplete={(userData) => {
-                  // After successful registration, automatically log them in
-                  onLogin(userData);
+                  // After successful lead registration, show success message
+                  setSuccess(`Thank you for your interest, ${userData.name}! We will contact you within 24 hours to discuss your investment opportunities.`);
+                  setTimeout(() => {
+                    setSelectedType(null);
+                  }, 5000);
                 }}
               />
             ) : selectedType === "forgot_password" ? (

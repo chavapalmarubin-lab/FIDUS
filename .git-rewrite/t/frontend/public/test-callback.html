@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Callback Test</title>
+</head>
+<body>
+    <h1>Google OAuth Callback Test</h1>
+    <div id="status">Testing...</div>
+    <div id="logs"></div>
+
+    <script>
+        async function testCallback() {
+            const statusDiv = document.getElementById('status');
+            const logsDiv = document.getElementById('logs');
+            
+            function log(message) {
+                console.log(message);
+                logsDiv.innerHTML += '<p>' + message + '</p>';
+            }
+            
+            try {
+                // Simulate URL parameters
+                const urlParams = new URLSearchParams('?code=test_code_12345&state=test_state');
+                const code = urlParams.get('code');
+                const state = urlParams.get('state');
+                
+                log('Code: ' + code);
+                log('State: ' + state);
+                log('Backend URL: ' + window.location.origin);
+                
+                // Test the actual fetch request
+                const backendUrl = window.location.origin;
+                const requestUrl = `${backendUrl}/api/admin/google/process-callback`;
+                
+                log('Sending request to: ' + requestUrl);
+                
+                const response = await fetch(requestUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        code: code,
+                        state: state 
+                    })
+                });
+                
+                log('Response status: ' + response.status);
+                
+                const data = await response.json();
+                log('Response data: ' + JSON.stringify(data, null, 2));
+                
+                statusDiv.innerHTML = 'Test completed! Check logs below.';
+                
+            } catch (error) {
+                log('Error: ' + error.message);
+                statusDiv.innerHTML = 'Test failed! Error: ' + error.message;
+            }
+        }
+        
+        // Run the test when page loads
+        window.onload = testCallback;
+    </script>
+</body>
+</html>

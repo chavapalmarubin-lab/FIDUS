@@ -1,77 +1,73 @@
 <analysis>
-The AI engineer systematically addressed complex feature additions and critical bug fixes. Initially, MT5 integration was implemented, including a mock service, database schema extensions, backend API endpoints, and frontend components for both admin and client views. This was followed by a document sharing system, unifying client and admin document management with categorization and MongoDB persistence. A comprehensive UX, Security, and Performance audit was then conducted, leading to critical security (headers, API protection, MFA) and UX (page titles, headings, loading states, toast, breadcrumbs) enhancements, alongside performance optimizations (code splitting, caching utilities). The work then pivoted to a persistent login failure bug, which was challenging to diagnose due to intermittent behavior. The root cause was identified as an overly restrictive authentication middleware, temporarily disabled to restore dashboard functionality. The current state is a functional application with enhanced features, but the core authentication middleware needs a proper re-implementation to support the new security features without blocking legitimate access.
+The AI engineer's trajectory showcases a challenging, iterative process to implement Google OAuth and API integrations. Initially, it focused on resolving a persistent sign-in loop caused by  syntax errors in the backend and  issues, transitioning from direct Google OAuth to Emergent OAuth and back again. Key decisions included fixing MongoDB  calls, bypassing JWT for the session creation endpoint, and continually adapting to user feedback. Later, the work shifted to implementing real Gmail, Calendar, Drive, and Meet APIs, including document signing. Frustration from the user led to multiple refactors and suggestions to contact support. The final phase involved integrating Google Social Login with preserved FIDUS branding and debugging recurring authentication issues, such as an admin login routing error and the crucial JWT token not being stored in  after login. The engineer repeatedly confirmed fixes through testing, only to discover new underlying problems reported by the user.
 </analysis>
 
 <product_requirements>
-The FIDUS financial portal is a full-stack platform for investment management, featuring an animated logo, dual Client/Admin login, and role-based dashboards. Key functionalities include user registration with AML/KYC, client management, password reset, and a CRM for investor allocation across CORE, BALANCE, DYNAMIC, and UNLIMITED funds. The system requires automated capital flows, real-time AUM/NAV/performance dashboards, secure document storage with Gmail API, compliance, MT4/MT5 API monitoring, multi-currency support, communication tools, exportable reports, encryption, audit trails, and accounting/n8n integrations. Recent implementations focused on refining AML/KYC, admin CRM with prospect management, detailed fund investment logic, client investment readiness, user creation with temporary passwords, comprehensive redemption systems, payment confirmation, investment calendars, fund portfolio and cash flow management, transitioning to MongoDB, client registration auto-add to CRM leads, and CRM document capabilities.
+The FIDUS financial portal is an investment management platform for clients and admins, featuring AML/KYC, CRM, fund allocation, automated capital flows, real-time AUM/NAV/performance, and MT4/MT5 API monitoring.
+
+**User's Explicit Requests & Intents:**
+1.  **Google OAuth Integration (Primary Priority):** Enable admin users to authenticate with Google for emails, meetings, and documents using a personal Gmail account. This needs to provide consolidated access to Gmail, Calendar, Drive, and Sheets.
+2.  **Gmail Integration:** Allow scheduling calendar meetings and sending/receiving Drive-signed documents to clients.
+3.  **Real Google API Integration:** The system must fetch *real* Gmail, Calendar, and Drive data, not mock data.
+4.  **Document Signing Functionality:** Implement document upload, PDF viewing, electronic signature capture, and email notifications.
+5.  **Google Social Login/Signup:** Integrate Google login/signup functionality for users, preserving existing FIDUS branding (logos, colors, animations).
+6.  **Admin Login Routing:** Ensure admin users are correctly redirected to the admin portal after login, not the client portal.
+7.  **Robust Authentication:** Fix persistent login loops,  errors, and JWT token handling.
 </product_requirements>
 
 <key_technical_concepts>
-- React.js (Frontend, UI, state management, Framer Motion for animations, lazy loading)
-- FastAPI (Python backend, API routes, business logic, security middleware)
-- MongoDB (Database for persistence, UUIDs for IDs, document and MT5 data)
-- Shadcn UI, Tailwind CSS (UI, styling, new components like Toast, Breadcrumb)
-- Complex Financial Logic (Incubation, simple interest, multi-tiered redemptions)
-- Role-Based Access Control (Admin vs. Client)
-- OCR/Document Processing (simulated with backend endpoints, categorization)
-- MT5 API Integration (mocked, planned for real-time)
-- Multi-Factor Authentication (MFA, TOTP, SMS, backup codes, lockout)
+-   **React.js**: Frontend UI.
+-   **FastAPI**: Python backend API.
+-   **MongoDB**: NoSQL database.
+-   **JWT Authentication**: Token-based security.
+-   **Google OAuth 2.0**: Protocol for secure authentication to Google APIs.
+-   **Emergent OAuth**: Custom alternative OAuth service.
+-   **Axios**: HTTP client.
+-   **Service Account/Client ID/Secret**: Google Cloud credentials.
+-   **PyPDF2, lxml, python-docx, reportlab**: Document processing libraries.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: Core backend logic.
-    -   **Changes**: Added MT5 API endpoints and integrated MT5 account creation into investment creation. Added MFA API endpoints. Implemented authentication middleware (temporarily disabled). Added security headers. Modified document endpoints for MongoDB and categorization.
--   ****: Handles MongoDB interactions.
-    -   **Changes**: Extended to include MT5 account collections and document collections for persistent storage and categorization.
--   ** (NEW)**: Mock MT5 integration service.
-    -   **Importance**: Simulates MT5 functionality for testing and demo purposes due to MetaTrader5 package unavailability.
--   ** (NEW)**: Multi-Factor Authentication service.
-    -   **Importance**: Provides logic for TOTP, SMS, backup codes, and account lockout for enhanced security.
--   ****: Main HTML file.
-    -   **Changes**: Updated page title and added SEO-related meta tags.
--   ****: Main React component.
-    -   **Changes**: Implemented dynamic document titles for different views using  hooks. Wrapped the application with . Implemented code splitting and lazy loading for  and .
--   ****: Client/Admin login.
-    -   **Changes**: Added proper heading structure (H1). Removed exposed demo credentials. Implemented loading states with a spinner. Improved error handling, input validation, and trimming for robustness.
--   ****: Document management for clients and admins.
-    -   **Changes**: Modified to allow client document uploads. Added category selection UI based on user type. Updated  to use selected categories and .
--   ****: Admin's main dashboard.
-    -   **Changes**: Integrated the new  component and lazy loaded it.
--   ****: Client's main dashboard.
-    -   **Changes**: Integrated the new  component and lazy loaded it.
--   ** (NEW)**: Admin-side MT5 management interface.
-    -   **Importance**: Allows admins to view MT5 performance, manage accounts, and credentials.
--   ** (NEW)**: Client-side MT5 view.
-    -   **Importance**: Shows only fund commitments, ensuring no sensitive MT5 data is exposed to clients.
--   ** (NEW)**: Comprehensive dashboard analytics component.
-    -   **Importance**: Placeholder for future advanced dashboard analytics.
--   ** (NEW)**: UI component for breadcrumb navigation.
-    -   **Importance**: Improves UX by showing user location in the app.
--   ** (NEW)**: UI component for toast notifications.
-    -   **Importance**: Provides professional in-app feedback to users for various events.
--   ** (NEW)**: Utility for API response caching.
-    -   **Importance**: Improves frontend performance by caching frequently accessed data.
--   ** (NEW)**: Enhanced API client with caching.
-    -   **Importance**: Provides a robust API client with features like retry logic, deduplication, and performance tracking.
--   ** (NEW)**: Utility for advanced form validation.
-    -   **Importance**: Centralizes validation logic for consistency and better user feedback.
--   ****: Python dependencies.
-    -   **Changes**: Added  and  for MFA functionality. (MetaTrader5 installation attempt failed).
+-   ****: Core API routing. Heavily modified for Google OAuth, Emergent OAuth, real Google API integrations, and social login. Fixes for  MongoDB calls, JWT middleware bypass, and endpoint additions for Gmail, Calendar, Drive, and document signing.
+-   ****: Stores backend environment variables. Updated with  and later , , and  for real Google API integration.
+-   ** (NEW)**: Intended for personal Gmail API calls, but its logic was largely integrated into  and later superseded by a broader .
+-   ** (NEW)**: Created to encapsulate actual Google API calls using  and Google SDKs. Used for Gmail messages, sending emails, calendar events, and Drive files.
+-   ** (NEW)**: Manages Emergent Google Social Login backend logic, handling user authentication and token issuance.
+-   ** (NEW)**: Centralizes real Google API interactions for Gmail, Calendar, Drive, etc., using credentials.
+-   ** (NEW)**: Handles logic for document uploads, PDF viewing, signature capture, and generating signed documents.
+-   ****: Main application component. Modified to handle Google OAuth redirects, manage global authentication state, and initially converted to React Router then reverted to a view-based system. Most recently, fixed to correctly store the JWT token from backend login.
+-   ****: Initial login page. Modified to integrate Google Social Login while preserving original FIDUS branding and design, including the logo and animations.
+-   ** (NEW)**: Frontend component for Google social login button and associated UI. Styled to match FIDUS theme.
+-   ** (NEW)**: Separate page for login functionality.
+-   ** (NEW)**: Separate page for signup functionality.
+-   ****: Handles redirects from Google OAuth. Updated multiple times to process authorization codes/session IDs and store tokens. Modified to use the new  endpoint and handle the  response format.
+-   ****: Admin UI for Google Workspace features. Modified to fix tab styling (white-on-white text) and integrate real Gmail/Calendar/Drive functionality. Added a Compose Email modal.
+-   ** (NEW)**: Frontend component to display real Gmail, Calendar, and Drive data.
+-   ** (NEW)**: Frontend component for document signing workflow.
+-   ****: Custom hook for Google admin authentication. Updated to initiate new real Google APIs OAuth flow (), manage session checks, and remove reliance on  for authentication.
+-   ****: Authentication utility.
+-   ****: Updated with custom CSS for Google Social Login button styling.
+-   ****: Downloaded and saved to the public folder.
+
 </code_architecture>
 
 <pending_tasks>
-- Re-implement or properly integrate the authentication middleware to work with the frontend's authentication mechanism without blocking legitimate API calls. This is critical as the middleware was temporarily disabled.
-- Implement API rate limiting and request signing for sensitive operations, as planned in the security roadmap.
-- Complete the integration of the  component with real data and visualizations.
+-   Complete the integration of the  component with real data and visualizations.
+-   Implement the actual MetaTrader5 package integration in .
+-   Automate rebate tracking based on trading volume via an API.
+-   Ensure comprehensive, real-time Gmail, Calendar, Drive, and Meet API data is displayed and functional, moving beyond mock data.
+-   Implement the  function in the frontend.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer was actively debugging a critical issue where the admin dashboard failed to load data, presenting blank sections despite successful login. This bug emerged after implementing extensive security and UX enhancements in Phase 1 and 2, which included adding a robust authentication middleware in . The investigation revealed that this newly introduced middleware was inadvertently blocking all authenticated admin API calls, returning 401 Unauthorized errors, because it was not correctly interpreting the frontend's existing authentication mechanism (which relies on  for user data rather than session cookies or explicit authorization headers for every request).
+Immediately prior to this summary, the AI engineer was addressing a critical authentication issue reported by the user: the Connect Google Workspace button was not initiating the OAuth flow, and the user suspected something was unclickable. Initial investigation revealed the button was clickable, but the subsequent API call to generate the OAuth URL was failing due to an Admin authentication required error.
 
-To resolve this critical blocking issue and restore dashboard functionality, the AI engineer made the immediate decision to **temporarily disable the problematic authentication middleware** in . This temporary fix allowed the backend API endpoints to return data successfully, confirming the middleware as the root cause of the data loading failure. The current state is that the backend API endpoints are functional, and the dashboard should now be able to retrieve data, but the security middleware intended for enhanced protection is currently inactive.
+The root cause identified was that the backend-issued JWT token, which is essential for authenticated API calls, was **not being stored in  as ** during the traditional admin login process in . While  correctly passed  to , the  function itself only set the user data to state () but failed to persist the JWT  (from ) into . This meant subsequent calls requiring authentication, like initiating Google OAuth, lacked the necessary  in their headers, causing them to be rejected.
+
+The AI engineer has successfully edited  to explicitly store  into  within the  function, resolving this critical JWT token storage oversight.
 </current_work>
 
 <optional_next_step>
-Re-implement or properly integrate the authentication middleware to secure API endpoints without blocking legitimate traffic.
+Ensure the logout function in  properly clears the JWT token from .
 </optional_next_step>

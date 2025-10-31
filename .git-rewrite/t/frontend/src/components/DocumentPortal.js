@@ -600,6 +600,300 @@ const DocumentPortal = ({ user, userType }) => {
         </Button>
       </div>
 
+      {/* System Documentation - Admin Only */}
+      {userType === 'admin' && (
+        <Card className="bg-gradient-to-r from-cyan-900/20 to-slate-800 border-cyan-600/30">
+          <CardHeader>
+            <CardTitle className="text-cyan-400 flex items-center gap-2">
+              <Folder size={20} />
+              FIDUS System Documentation v2.0.0
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Production Documents</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-green-400" />
+                    <span>Production Readiness Report v2.0</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-blue-400" />
+                    <span>System Architecture Overview</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileText size={14} className="text-yellow-400" />
+                    <span>API Documentation (FastAPI)</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Environment Configuration</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <h5 className="text-cyan-400 font-medium mb-2">Frontend (.env)</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">REACT_APP_BACKEND_URL</div>
+                      <div className="text-slate-400">→ Production API endpoint</div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <h5 className="text-cyan-400 font-medium mb-2">Backend (.env)</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">MONGO_URL</div>
+                      <div className="text-slate-400">→ MongoDB connection string</div>
+                      <div className="font-mono">DB_NAME</div>
+                      <div className="text-slate-400">→ Database name</div>
+                      <div className="font-mono">JWT_SECRET_KEY</div>
+                      <div className="text-slate-400">→ JWT token signing key</div>
+                      <div className="font-mono">FRONTEND_URL</div>
+                      <div className="text-slate-400">→ Frontend domain URL</div>
+                      <div className="font-mono">CORS_ORIGINS</div>
+                      <div className="text-slate-400">→ Allowed CORS origins</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Recent Updates</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>Investment Simulator with PDF Export</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>MT5 Integration Complete</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>Crypto Wallet System</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <CheckCircle size={14} className="text-green-400" />
+                    <span>AML/KYC Lead Pipeline</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Deployment Secrets</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="bg-red-900/20 p-3 rounded-lg border border-red-600/30">
+                    <h5 className="text-red-400 font-medium mb-2">⚠️ Required Secrets</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono">JWT_SECRET_KEY</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ Secure random string for JWT tokens</div>
+                      
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-mono">MONGO_URL</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ MongoDB connection string from Emergent</div>
+                      
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-mono">FRONTEND_URL</span>
+                        <Badge variant="outline" className="text-red-400 border-red-600">Required</Badge>
+                      </div>
+                      <div className="text-slate-400">→ https://fidus-invest.emergent.host</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-900/20 p-3 rounded-lg border border-yellow-600/30">
+                    <h5 className="text-yellow-400 font-medium mb-2">📧 Optional Gmail Integration</h5>
+                    <div className="space-y-1 text-xs text-slate-300">
+                      <div className="font-mono">GMAIL_CLIENT_ID</div>
+                      <div className="font-mono">GMAIL_CLIENT_SECRET</div>
+                      <div className="text-slate-400">→ For automated email features</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Deployment Configuration Details */}
+            <div className="mt-6 space-y-4">
+              <h4 className="text-white font-medium text-lg border-b border-slate-600 pb-2">
+                📋 Complete Deployment Configuration
+              </h4>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Production Environment Variables */}
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600">
+                  <h5 className="text-cyan-400 font-medium mb-3 flex items-center gap-2">
+                    <FileText size={16} />
+                    Production Environment Variables
+                  </h5>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-green-500">
+                      <div className="font-mono text-green-400 mb-1">REACT_APP_BACKEND_URL</div>
+                      <div className="text-slate-300">Value: <span className="font-mono">https://fidus-invest.emergent.host/api</span></div>
+                      <div className="text-slate-400 text-xs mt-1">Frontend API endpoint for production</div>
+                    </div>
+                    
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-red-500">
+                      <div className="font-mono text-red-400 mb-1">JWT_SECRET_KEY</div>
+                      <div className="text-slate-300">Value: <span className="font-mono text-yellow-400">[AUTO-GENERATED-SECURE-KEY]</span></div>
+                      <div className="text-slate-400 text-xs mt-1">⚠️ Must be cryptographically secure random string</div>
+                    </div>
+                    
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-blue-500">
+                      <div className="font-mono text-blue-400 mb-1">MONGO_URL</div>
+                      <div className="text-slate-300">Value: <span className="font-mono text-yellow-400">[EMERGENT-MANAGED-MONGODB]</span></div>
+                      <div className="text-slate-400 text-xs mt-1">🔗 Provided by Emergent deployment platform</div>
+                    </div>
+                    
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-purple-500">
+                      <div className="font-mono text-purple-400 mb-1">FRONTEND_URL</div>
+                      <div className="text-slate-300">Value: <span className="font-mono">https://fidus-invest.emergent.host</span></div>
+                      <div className="text-slate-400 text-xs mt-1">🌐 Production domain for callbacks and links</div>
+                    </div>
+                    
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-cyan-500">
+                      <div className="font-mono text-cyan-400 mb-1">DB_NAME</div>
+                      <div className="text-slate-300">Value: <span className="font-mono">fidus_investment_db</span></div>
+                      <div className="text-slate-400 text-xs mt-1">📊 MongoDB database name</div>
+                    </div>
+                    
+                    <div className="bg-slate-800/50 p-3 rounded border-l-4 border-orange-500">
+                      <div className="font-mono text-orange-400 mb-1">CORS_ORIGINS</div>
+                      <div className="text-slate-300">Value: <span className="font-mono">https://fidus-invest.emergent.host</span></div>
+                      <div className="text-slate-400 text-xs mt-1">🔒 CORS allowed origins for security</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* New Features & Dependencies */}
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600">
+                  <h5 className="text-cyan-400 font-medium mb-3 flex items-center gap-2">
+                    <CheckCircle size={16} />
+                    Latest Features & Dependencies
+                  </h5>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="bg-green-900/20 p-3 rounded border border-green-600/30">
+                      <div className="text-green-400 font-medium mb-2">🎯 Investment Simulator</div>
+                      <ul className="text-slate-300 space-y-1 text-xs">
+                        <li>• Multi-fund portfolio simulation</li>
+                        <li>• Real-time interest calculations</li>
+                        <li>• Interactive charts and timeline</li>
+                        <li>• Professional PDF export with FIDUS logo</li>
+                      </ul>
+                      <div className="mt-2 text-xs text-slate-400">
+                        Dependencies: jsPDF, html2canvas, recharts
+                      </div>
+                    </div>
+                    
+                    <div className="bg-blue-900/20 p-3 rounded border border-blue-600/30">
+                      <div className="text-blue-400 font-medium mb-2">🔐 AML/KYC Pipeline</div>
+                      <ul className="text-slate-300 space-y-1 text-xs">
+                        <li>• OFAC sanctions screening</li>
+                        <li>• Document verification system</li>
+                        <li>• 5-stage lead progression</li>
+                        <li>• Automated compliance checks</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-purple-900/20 p-3 rounded border border-purple-600/30">
+                      <div className="text-purple-400 font-medium mb-2">📊 MT5 Integration</div>
+                      <ul className="text-slate-300 space-y-1 text-xs">
+                        <li>• Real-time trading data</li>
+                        <li>• Automated profit calculations</li>
+                        <li>• Client account mapping</li>
+                        <li>• Performance monitoring</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-orange-900/20 p-3 rounded border border-orange-600/30">
+                      <div className="text-orange-400 font-medium mb-2">💰 Crypto Wallet System</div>
+                      <ul className="text-slate-300 space-y-1 text-xs">
+                        <li>• Multi-currency support</li>
+                        <li>• Payment instructions management</li>
+                        <li>• Official deposit addresses</li>
+                        <li>• Client wallet CRUD operations</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Deployment Checklist */}
+              <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 p-4 rounded-lg border border-green-600/30">
+                <h5 className="text-green-400 font-medium mb-3 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  ✅ Pre-Deployment Checklist
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">Environment variables configured</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">JWT secret key generated</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">MongoDB connection verified</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">CORS origins configured</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">Frontend dependencies installed</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">Backend dependencies installed</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">FIDUS logo assets included</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-slate-300">Production URLs updated</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-slate-600">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-600">
+                  v2.0.0 Production
+                </Badge>
+                <Badge variant="outline" className="bg-blue-900/20 text-blue-400 border-blue-600">
+                  React 19.0.0
+                </Badge>
+                <Badge variant="outline" className="bg-purple-900/20 text-purple-400 border-purple-600">
+                  FastAPI 0.110.1
+                </Badge>
+                <Badge variant="outline" className="bg-orange-900/20 text-orange-400 border-orange-600">
+                  MongoDB Latest
+                </Badge>
+                <Badge variant="outline" className="bg-cyan-900/20 text-cyan-400 border-cyan-600">
+                  September 2025
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card className="bg-slate-800 border-slate-600">
         <CardContent className="p-4">

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Auth Test</title>
+</head>
+<body>
+    <h1>Manual Authentication Test</h1>
+    <button onclick="setGoogleAuth()">Set Google Auth Data</button>
+    <button onclick="testAuth()">Test Authentication</button>
+    <button onclick="redirectToApp()">Redirect to App</button>
+    <button onclick="clearAuth()">Clear Auth Data</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function log(message) {
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        function setGoogleAuth() {
+            const adminUser = {
+                id: "google123",
+                username: "test@gmail.com",
+                name: "Test Google User",
+                email: "test@gmail.com",
+                type: "admin",
+                picture: "",
+                isGoogleAuth: true
+            };
+            
+            localStorage.setItem('fidus_user', JSON.stringify(adminUser));
+            localStorage.setItem('google_session_token', 'mock_session_token');
+            
+            log('✅ Set Google auth data');
+            log('fidus_user: ' + localStorage.getItem('fidus_user'));
+            log('google_session_token: ' + localStorage.getItem('google_session_token'));
+        }
+        
+        function testAuth() {
+            // Test getCurrentUser
+            function getCurrentUser() {
+                try {
+                    const userDataStr = localStorage.getItem('fidus_user');
+                    if (userDataStr) {
+                        return JSON.parse(userDataStr);
+                    }
+                } catch (error) {
+                    log('Failed to parse user data: ' + error);
+                }
+                return null;
+            }
+            
+            // Test isAuthenticated
+            function isAuthenticated() {
+                const googleSessionToken = localStorage.getItem('google_session_token');
+                if (googleSessionToken) {
+                    const userData = getCurrentUser();
+                    return userData && userData.isGoogleAuth;
+                }
+                return false;
+            }
+            
+            const user = getCurrentUser();
+            const auth = isAuthenticated();
+            
+            log('=== AUTH TEST RESULTS ===');
+            log('getCurrentUser(): ' + JSON.stringify(user));
+            log('isAuthenticated(): ' + auth);
+            
+            if (auth && user && user.type === 'admin') {
+                log('✅ Should redirect to admin dashboard');
+            } else {
+                log('❌ Would redirect to login');
+            }
+        }
+        
+        function redirectToApp() {
+            log('Redirecting to app with skip_animation=true...');
+            setTimeout(() => {
+                window.location.href = '/?skip_animation=true';
+            }, 1000);
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('fidus_user');
+            localStorage.removeItem('google_session_token');
+            log('✅ Cleared auth data');
+        }
+    </script>
+</body>
+</html>

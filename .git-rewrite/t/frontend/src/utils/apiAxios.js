@@ -16,20 +16,27 @@ const apiAxios = axios.create({
   },
 });
 
-// Request interceptor to automatically add JWT token
+// Request interceptor to automatically add JWT token or Google session token
 apiAxios.interceptors.request.use(
   (config) => {
-    // Get JWT token from localStorage
+    // Get JWT token from localStorage first
     try {
       const userDataStr = localStorage.getItem('fidus_user');
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
         if (userData.token) {
           config.headers['Authorization'] = `Bearer ${userData.token}`;
+          return config;
         }
       }
     } catch (error) {
       console.warn('Failed to parse user data from localStorage:', error);
+    }
+    
+    // Fallback to Google session token
+    const googleSessionToken = localStorage.getItem('google_session_token');
+    if (googleSessionToken) {
+      config.headers['Authorization'] = `Bearer ${googleSessionToken}`;
     }
     
     return config;

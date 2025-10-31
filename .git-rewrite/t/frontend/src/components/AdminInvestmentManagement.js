@@ -70,7 +70,7 @@ const AdminInvestmentManagement = () => {
   const [investmentForm, setInvestmentForm] = useState({
     client_id: "",
     fund_code: "",
-    amount: "",
+    amount: "", // Amount received by FIDUS
     deposit_date: "",
     // Payment confirmation fields
     payment_method: "fiat", // fiat or crypto
@@ -79,7 +79,16 @@ const AdminInvestmentManagement = () => {
     transaction_hash: "",
     blockchain_network: "",
     wallet_address: "",
-    payment_notes: ""
+    payment_notes: "",
+    // MT5 Account Mapping Fields (NEW)
+    create_mt5_account: true, // Whether to create MT5 mapping
+    mt5_login: "",
+    mt5_password: "",
+    mt5_server: "",
+    broker_name: "",
+    mt5_initial_balance: "", // Could differ from FIDUS amount due to fees
+    banking_fees: "", // Difference between FIDUS received and MT5 balance
+    fee_notes: ""
   });
 
   useEffect(() => {
@@ -151,13 +160,39 @@ const AdminInvestmentManagement = () => {
         }
       }
 
-      // First create the investment
-      const investmentResponse = await apiAxios.post(`/investments/create`, {
+      // Prepare investment data with MT5 mapping
+      const investmentData = {
         client_id: investmentForm.client_id,
         fund_code: investmentForm.fund_code,
         amount: amount,
         deposit_date: investmentForm.deposit_date
-      });
+      };
+
+      // Add MT5 account mapping data if requested
+      if (investmentForm.create_mt5_account && investmentForm.mt5_login && investmentForm.mt5_password) {
+        investmentData.create_mt5_account = true;
+        investmentData.mt5_login = investmentForm.mt5_login;
+        investmentData.mt5_password = investmentForm.mt5_password;
+        investmentData.mt5_server = investmentForm.mt5_server;
+        investmentData.broker_name = investmentForm.broker_name;
+        
+        // Handle optional balance and fee fields
+        if (investmentForm.mt5_initial_balance) {
+          investmentData.mt5_initial_balance = parseFloat(investmentForm.mt5_initial_balance);
+        }
+        if (investmentForm.banking_fees) {
+          investmentData.banking_fees = parseFloat(investmentForm.banking_fees);
+        }
+        if (investmentForm.fee_notes) {
+          investmentData.fee_notes = investmentForm.fee_notes;
+        }
+      } else if (investmentForm.create_mt5_account) {
+        // Create default MT5 account mapping
+        investmentData.create_mt5_account = true;
+      }
+
+      // First create the investment
+      const investmentResponse = await apiAxios.post(`/investments/create`, investmentData);
 
       if (investmentResponse.data.success) {
         const investmentId = investmentResponse.data.investment_id;
@@ -184,9 +219,25 @@ const AdminInvestmentManagement = () => {
         const confirmationResponse = await apiAxios.post(`/payments/deposit/confirm`, confirmationData);
 
         if (confirmationResponse.data.success) {
-          setSuccess(`Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`);
+          let successMessage = `Investment created and deposit confirmed via ${investmentForm.payment_method.toUpperCase()}: ${investmentResponse.data.message}`;
+          
+          // Add MT5 mapping status to success message
+          if (investmentResponse.data.mt5_mapping_success) {
+            successMessage += " 🔗 MT5 account mapping completed successfully.";
+          } else if (investmentForm.create_mt5_account) {
+            successMessage += " ⚠️ MT5 account mapping was attempted but may have failed.";
+          }
+          
+          setSuccess(successMessage);
         } else {
-          setSuccess(`Investment created but payment confirmation failed: ${investmentResponse.data.message}`);
+          let warningMessage = `Investment created but payment confirmation failed: ${investmentResponse.data.message}`;
+          
+          // Add MT5 mapping status even if payment confirmation failed
+          if (investmentResponse.data.mt5_mapping_success) {
+            warningMessage += " 🔗 MT5 account mapping completed successfully.";
+          }
+          
+          setSuccess(warningMessage);
         }
 
         setShowCreateInvestmentModal(false);
@@ -212,7 +263,16 @@ const AdminInvestmentManagement = () => {
       transaction_hash: "",
       blockchain_network: "",
       wallet_address: "",
-      payment_notes: ""
+      payment_notes: "",
+      // MT5 Account Mapping Fields
+      create_mt5_account: true,
+      mt5_login: "",
+      mt5_password: "",
+      mt5_server: "",
+      broker_name: "",
+      mt5_initial_balance: "",
+      banking_fees: "",
+      fee_notes: ""
     });
   };
 
@@ -789,10 +849,169 @@ const AdminInvestmentManagement = () => {
                         <CheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5" />
                         <div className="text-sm text-green-300">
                           <p className="font-medium mb-1">Payment Confirmation Required</p>
-                          <p>Confirming payment receipt will complete the investment creation process and start the timeline calculations.</p>
+                          <p>Verify payment received before creating investment</p>
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* MT5 Account Mapping Section */}
+                <div className="border-t border-slate-600 pt-4">
+                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
+                    <Target className="w-5 h-5 mr-2 text-cyan-400" />
+                    MT5 Account Mapping & Trading Setup
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="create-mt5"
+                        checked={investmentForm.create_mt5_account}
+                        onChange={(e) => setInvestmentForm({...investmentForm, create_mt5_account: e.target.checked})}
+                        className="w-4 h-4 text-cyan-600 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500"
+                      />
+                      <Label htmlFor="create-mt5" className="text-slate-300">
+                        Create MT5 Account Mapping (Required for trading)
+                      </Label>
+                    </div>
+
+                    {investmentForm.create_mt5_account && (
+                      <>
+                        <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                          <p className="text-blue-400 text-sm">
+                            <strong>Note:</strong> MT5 account details are required to map client investments to actual trading accounts. 
+                            The MT5 initial balance may differ from FIDUS received amount due to banking/crypto fees.
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-slate-300">MT5 Login ID *</Label>
+                            <Input
+                              type="text"
+                              value={investmentForm.mt5_login}
+                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_login: e.target.value})}
+                              placeholder="e.g., 9928326"
+                              className="mt-1 bg-slate-700 border-slate-600 text-white"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label className="text-slate-300">MT5 Password *</Label>
+                            <Input
+                              type="password"
+                              value={investmentForm.mt5_password}
+                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_password: e.target.value})}
+                              placeholder="Account password"
+                              className="mt-1 bg-slate-700 border-slate-600 text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-slate-300">Broker *</Label>
+                            <Select value={investmentForm.broker_name} onValueChange={(value) => setInvestmentForm({...investmentForm, broker_name: value})}>
+                              <SelectTrigger className="mt-1 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Select broker" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="DooTechnology" className="text-white">DooTechnology</SelectItem>
+                                <SelectItem value="Multibank" className="text-white">Multibank</SelectItem>
+                                <SelectItem value="IC Markets" className="text-white">IC Markets</SelectItem>
+                                <SelectItem value="FXCM" className="text-white">FXCM</SelectItem>
+                                <SelectItem value="Other" className="text-white">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label className="text-slate-300">MT5 Server *</Label>
+                            <Input
+                              type="text"
+                              value={investmentForm.mt5_server}
+                              onChange={(e) => setInvestmentForm({...investmentForm, mt5_server: e.target.value})}
+                              placeholder="e.g., DooTechnology-Live"
+                              className="mt-1 bg-slate-700 border-slate-600 text-white"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Balance and Fees Section */}
+                        <div className="border border-slate-600 rounded-lg p-4">
+                          <h5 className="text-white font-medium mb-3 flex items-center">
+                            <DollarSign className="w-4 h-4 mr-2 text-green-400" />
+                            Balance & Fee Reconciliation
+                          </h5>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <Label className="text-slate-300">FIDUS Received Amount</Label>
+                              <Input
+                                type="number"
+                                value={investmentForm.amount}
+                                className="mt-1 bg-slate-600 border-slate-500 text-slate-300"
+                                readOnly
+                              />
+                              <p className="text-xs text-slate-400 mt-1">Amount received by FIDUS</p>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-slate-300">MT5 Initial Balance *</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={investmentForm.mt5_initial_balance}
+                                onChange={(e) => setInvestmentForm({...investmentForm, mt5_initial_balance: e.target.value})}
+                                placeholder="Actual MT5 starting balance"
+                                className="mt-1 bg-slate-700 border-slate-600 text-white"
+                              />
+                              <p className="text-xs text-slate-400 mt-1">May differ due to fees</p>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-slate-300">Banking/Crypto Fees</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={investmentForm.banking_fees}
+                                onChange={(e) => setInvestmentForm({...investmentForm, banking_fees: e.target.value})}
+                                placeholder="Fee amount"
+                                className="mt-1 bg-slate-700 border-slate-600 text-white"
+                              />
+                              <p className="text-xs text-slate-400 mt-1">Transfer/conversion fees</p>
+                            </div>
+                          </div>
+
+                          {investmentForm.amount && investmentForm.mt5_initial_balance && (
+                            <div className="mt-3 p-2 bg-slate-700 rounded text-sm">
+                              <p className="text-slate-300">
+                                <strong>Difference:</strong> 
+                                <span className={`ml-2 ${
+                                  (parseFloat(investmentForm.amount) - parseFloat(investmentForm.mt5_initial_balance)) === 0 
+                                    ? 'text-green-400' 
+                                    : 'text-yellow-400'
+                                }`}>
+                                  ${((parseFloat(investmentForm.amount) || 0) - (parseFloat(investmentForm.mt5_initial_balance) || 0)).toFixed(2)}
+                                </span>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label className="text-slate-300">MT5 Setup Notes (Optional)</Label>
+                          <textarea
+                            value={investmentForm.fee_notes}
+                            onChange={(e) => setInvestmentForm({...investmentForm, fee_notes: e.target.value})}
+                            placeholder="Notes about account setup, fees, or any discrepancies..."
+                            className="mt-1 w-full min-h-16 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
