@@ -16129,25 +16129,34 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         # Sort by date
         upcoming_redemptions.sort(key=lambda x: x['date'])
         
-        # Get broker rebates from MT5 deals service (ALL-TIME to match rebate wallet balance)
+        # Get broker rebates from MT5 deals service for specified timeframe
         from services.mt5_deals_service import MT5DealsService
         mt5_deals_service = MT5DealsService(db)
         
-        # IMPORTANT: Get ALL-TIME rebates to match wallet balance (not just last 30 days)
-        # The rebate wallet accumulates all historical rebates
-        logging.info(f"💰 Calculating ALL-TIME cumulative broker rebates...")
+        # FIXED: Calculate rebates for specified timeframe (not all-time)
+        # Convert timeframe to days for consistent calculation
+        timeframe_days = {
+            "12_months": 365,
+            "6_months": 180,
+            "3_months": 90,
+            "1_month": 30
+        }.get(timeframe, 30)  # Default to 30 days
         
-        # Calculate rebates from MT5 deals history at $5.05/lot (NO date filter for all-time)
+        start_date_rebates = now - timedelta(days=timeframe_days)
+        
+        logging.info(f"💰 Calculating broker rebates for {timeframe} ({timeframe_days} days)...")
+        
+        # Calculate rebates from MT5 deals history at $5.05/lot for specified period
         rebate_data = await mt5_deals_service.calculate_rebates(
-            start_date=None,  # No start date = all time
-            end_date=None,  # No end date = all time
+            start_date=start_date_rebates,  # Filtered by timeframe
+            end_date=now,
             account_number=None,  # All accounts
             rebate_per_lot=5.05
         )
         broker_rebates = rebate_data.get('total_rebates', 0)
         broker_volume = rebate_data.get('total_volume', 0)
         
-        logging.info(f"💰 Cash Flow Overview - Broker Rebates (ALL-TIME cumulative): ${broker_rebates:,.2f} from {broker_volume:.2f} lots")
+        logging.info(f"💰 Cash Flow Overview - Broker Rebates ({timeframe_days} days): ${broker_rebates:,.2f} from {broker_volume:.2f} lots")
         
         # Get performance fees from performance fee calculator
         from services.performance_fee_calculator import PerformanceFeeCalculator
