@@ -67,13 +67,19 @@ class PnLCalculator:
         
         current_equity = float(current.get("equity", 0))
         
-        # Calculate withdrawals (type=2, profit<0)
+        # Calculate withdrawals (type=2, profit<0) - EXCLUDING internal transfers
         withdrawal_pipeline = [
             {
                 "$match": {
                     "account_number": account_number,
                     "type": 2,
-                    "profit": {"$lt": 0}
+                    "profit": {"$lt": 0},
+                    # EXCLUDE internal transfers between FIDUS accounts
+                    "comment": {
+                        "$not": {
+                            "$regex": "Transfer (from|to) #"
+                        }
+                    }
                 }
             },
             {
