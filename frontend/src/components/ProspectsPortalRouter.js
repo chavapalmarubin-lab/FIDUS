@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
-import ProspectsPortal from './ProspectsPortal';
+import ProspectsPortalI18n from './ProspectsPortalI18n';
 import InvestmentSimulator from './InvestmentSimulator';
 
 // Wrapper component to handle prospects portal routes
