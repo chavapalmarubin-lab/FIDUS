@@ -18,12 +18,11 @@ The FIDUS Auto-Healing System provides **99.99% uptime** through automated detec
 ## 🔐 GITHUB_TOKEN CONFIGURATION
 
 ### Token Details
-- **Token:** `[REVOKED_TOKEN]`
 - **Type:** GitHub Personal Access Token (Classic)
+- **Token Value:** `[SECURED IN RENDER ENVIRONMENT - DO NOT STORE IN CODE]`
+- **Token Prefix:** `ghp_****...****` (44 characters total)
 - **Created:** October 31, 2025
-- **Owner:** chavapalmarubin
-- **Repository:** chavapalmarubin-lab/FIDUS
-- **Expiration:** No expiration (permanent)
+- **Owner:** chavapalmarubin GitHub account
 
 ### Required Scopes
 ✅ `repo` - Full control of private repositories
@@ -34,7 +33,13 @@ The FIDUS Auto-Healing System provides **99.99% uptime** through automated detec
 - Service: FIDUS Backend
 - Environment Variables
 - Key: `GITHUB_TOKEN`
-- Value: `[REVOKED_TOKEN]`
+- Value: `[Secured - Only visible in Render Dashboard]`
+
+**⚠️ SECURITY WARNING:**
+- **NEVER** commit the token to GitHub
+- **NEVER** store in plain text in documentation
+- **ONLY** store in Render environment variables (encrypted)
+- Token should only be visible when initially created in GitHub
 
 ---
 
