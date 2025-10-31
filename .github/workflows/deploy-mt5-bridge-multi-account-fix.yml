@@ -7,6 +7,10 @@ on:
         description: 'Reason for deployment'
         required: false
         default: 'Fix multi-account balance synchronization'
+  repository_dispatch:
+    types:
+      - deploy-mt5-bridge-multi-account-fix
+      - deploy-mt5-bridge-magic-fix
 
 jobs:
   deploy-mt5-bridge-fixed:
