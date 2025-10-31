@@ -197,6 +197,31 @@
 - Gesture optimizations (swipe, pinch, etc.)
 
 ## user_problem_statement: 
+CURRENT TASK: Verify 'magic' field in MongoDB Atlas deals to confirm the VPS MT5 Bridge fix is fully operational and populating data correctly. Frontend verification for Money Managers Compare tab pending deployment completion.
+
+## Latest Status - October 31, 2025
+**MT5 Bridge Magic Number Fix - Deployment In Progress** 🔄
+
+**Current Situation:**
+- MongoDB Analysis: Out of 23,184 deals, only 11.8% have magic=0, 88.2% have magic=None
+- VPS MT5 Bridge: Currently returning trades WITHOUT magic field
+- GitHub Actions: Deployment workflow triggered at 16:05 UTC
+- Health Check: Bridge is responding (v4.0-multi-account), all 7 accounts cached
+
+**Actions Taken:**
+1. ✅ Verified MongoDB collection - magic field missing from recent deals
+2. ✅ Confirmed VPS Bridge code has fix at line 449: `"magic": deal.magic`
+3. ✅ Triggered GitHub Actions workflow `deploy-mt5-bridge-magic-fix`
+4. ⏳ Waiting for deployment to complete (2-3 minutes)
+
+**Next Steps:**
+1. Re-run verification script in 3 minutes
+2. Confirm magic field appears in new trades from VPS
+3. Trigger full re-sync: POST /api/admin/mt5-deals/sync-all
+4. Verify Money Managers Compare tab displays 4 managers
+5. Complete frontend dashboard verification
+
+**Previous Context:**
 MT5 CORRECTED P&L INTEGRATION: Integrate corrected MT5 data (TRUE P&L with profit withdrawals) into all frontend components to display accurate fund performance calculations.
 
 **PHASE 3 COMPLETE - Frontend Integration of Corrected MT5 Data** ✅
