@@ -74,11 +74,9 @@ class PnLCalculator:
                     "account_number": account_number,
                     "type": 2,
                     "profit": {"$lt": 0},
-                    # EXCLUDE all types of internal operations
+                    # ONLY include withdrawals that DON'T have these patterns
                     "comment": {
-                        "$not": {
-                            "$regex": "(Transfer|TRF|transfer|P/L Share) (from|to|From|To|:|#)"
-                        }
+                        "$not": {"$regex": "(Transfer|TRF|P/L Share)"}
                     }
                 }
             },
