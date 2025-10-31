@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
 
 def check_mt5_database():
     """Check what MT5 accounts exist in the database"""

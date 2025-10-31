@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://finance-calc-hub-1.preview.emergentagent.com`
+`https://fidus-pnl-fix.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

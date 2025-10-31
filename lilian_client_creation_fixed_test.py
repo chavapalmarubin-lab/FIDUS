@@ -18,7 +18,7 @@ import time
 
 # Configuration - Use PRODUCTION environment as specified in review
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
+PREVIEW_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
 
 BACKEND_URLS = {
     "production": PRODUCTION_URL,

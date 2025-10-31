@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""

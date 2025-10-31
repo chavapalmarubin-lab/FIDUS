@@ -66,7 +66,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from frontend environment
-BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

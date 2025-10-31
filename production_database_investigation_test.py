@@ -31,7 +31,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
+PREVIEW_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

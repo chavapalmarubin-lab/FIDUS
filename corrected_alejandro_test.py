@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
+BASE_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
 CLIENT_ID = "client_alejandro"
 
 class CorrectedAlejandroTest:

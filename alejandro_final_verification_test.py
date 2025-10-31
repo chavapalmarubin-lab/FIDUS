@@ -9,7 +9,7 @@ Expected Results:
 3. MT5 Accounts: Should return 4 MEXAtlantic accounts totaling $118,151.41
 4. Admin Overview: Should show correct AUM
 
-Backend URL: https://finance-calc-hub-1.preview.emergentagent.com/api
+Backend URL: https://fidus-pnl-fix.preview.emergentagent.com/api
 Auth: admin/password123
 """
 
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://finance-calc-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
 
 class AlejandroFinalVerificationTester:
     def __init__(self):
