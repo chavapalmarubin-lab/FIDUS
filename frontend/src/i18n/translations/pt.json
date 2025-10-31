@@ -1,0 +1,98 @@
+{
+  "hero": {
+    "title": "Invista de Forma Inteligente com FIDUS",
+    "subtitle": "Fundos de investimento profissionais com retornos transparentes e acesso em tempo real ao seu portfólio.",
+    "cta": {
+      "start": "Começar a Investir",
+      "learnMore": "Saiba Mais"
+    }
+  },
+  "valueProps": {
+    "title": "Por Que Escolher FIDUS?",
+    "profitability": {
+      "title": "Alta Rentabilidade",
+      "description": "Estratégias diversificadas com retornos anuais competitivos"
+    },
+    "transparency": {
+      "title": "Transparência Total",
+      "description": "Acesso em tempo real aos seus investimentos e desempenho"
+    },
+    "flexibility": {
+      "title": "Flexibilidade Total",
+      "description": "Invista a partir de $100 e retire sem penalidades"
+    }
+  },
+  "funds": {
+    "title": "Nossos Fundos de Investimento",
+    "subtitle": "Escolha o fundo que melhor se adapta ao seu perfil de investimento",
+    "core": {
+      "name": "Fundo CORE",
+      "description": "Estratégia conservadora com retornos mensais de 1,5%-2,5%. Ideal para construir riqueza estável.",
+      "risk": "Risco: Baixo",
+      "returns": "Retornos: 1,5% - 2,5% mensais",
+      "minimumInvestment": "Mín: $100"
+    },
+    "balance": {
+      "name": "Fundo BALANCE",
+      "description": "Estratégia moderada com retornos trimestrais de 7,5%-10%. Equilíbrio ideal entre crescimento e segurança.",
+      "risk": "Risco: Médio",
+      "returns": "Retornos: 7,5% - 10% trimestrais",
+      "minimumInvestment": "Mín: $1.000"
+    },
+    "dynamic": {
+      "name": "Fundo DYNAMIC",
+      "description": "Estratégia agressiva com alto potencial de crescimento. Para investidores experientes.",
+      "risk": "Risco: Alto",
+      "returns": "Retornos: 15% - 30% trimestrais",
+      "minimumInvestment": "Mín: $5.000"
+    },
+    "unlimited": {
+      "name": "Fundo UNLIMITED",
+      "description": "Estratégia ultra-agressiva com potencial de crescimento ilimitado. Apenas investidores institucionais.",
+      "risk": "Risco: Muito Alto",
+      "returns": "Retornos: Potencial ilimitado",
+      "minimumInvestment": "Mín: $25.000"
+    },
+    "interestIncubation": "Juros após 60 dias de incubação",
+    "quarterlyPayments": "Pagamentos de juros trimestrais"
+  },
+  "leadCapture": {
+    "title": "Pronto para Começar?",
+    "subtitle": "Digite suas informações e descubra quanto você poderia ganhar com nosso simulador.",
+    "form": {
+      "emailPlaceholder": "Seu e-mail",
+      "phonePlaceholder": "Seu telefone (com código do país)",
+      "emailRequired": "E-mail é obrigatório",
+      "emailInvalid": "E-mail inválido",
+      "phoneRequired": "Telefone é obrigatório",
+      "phoneInvalid": "Telefone inválido (mínimo 8 dígitos)",
+      "submitError": "Erro ao criar registro. Tente novamente.",
+      "connectionError": "Erro de conexão. Verifique sua internet.",
+      "submit": "Acessar Simulador",
+      "submitting": "Processando..."
+    }
+  },
+  "footer": {
+    "disclaimer": "FIDUS Investments é um fundo de investimento gerenciado por traders profissionais com mais de 10 anos de experiência nos mercados financeiros. Os retornos mostrados são estimativas históricas e não garantem desempenho futuro. Todos os investimentos possuem riscos inerentes."
+  },
+  "simulator": {
+    "title": "Simulador de Investimento",
+    "subtitle": "Descubra seus ganhos potenciais",
+    "selectFund": "Selecionar Fundo",
+    "amount": "Valor do Investimento",
+    "period": "Período de Investimento",
+    "estimatedReturn": "Retorno Estimado",
+    "totalValue": "Valor Total",
+    "monthly": "Mensal",
+    "quarterly": "Trimestral",
+    "annually": "Anual",
+    "months": "meses",
+    "disclaimer": "* Estimativas baseadas em retornos históricos. Desempenho passado não garante resultados futuros.",
+    "contactUs": "Entre em Contato para Começar",
+    "backToHome": "Voltar para Início"
+  },
+  "errors": {
+    "generic": "Ocorreu um erro. Por favor, tente novamente.",
+    "network": "Erro de rede. Por favor, verifique sua conexão."
+  }
+}
