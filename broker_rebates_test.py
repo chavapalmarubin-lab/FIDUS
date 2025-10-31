@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Cash Flow Broker Rebates Fix
-Testing the fixed /api/admin/cashflow/overview endpoint after broker rebates integration.
-Previously hardcoded to return broker_rebates: 0.0, now fetches actual rebates from RebateCalculator.
+BROKER REBATES CALCULATION FIX TESTING
+Testing Date: December 18, 2025
+Backend URL: https://bridge-guardian.preview.emergentagent.com/api
+Auth: Admin token (username: admin, password: password123)
+
+ISSUE: Broker rebates showing $9,457 (all-time) instead of time-period specific amounts
+FIX: Rebates should be calculated for specific time periods, not all-time
 
 Test Objectives:
-1. Test /api/admin/cashflow/overview - Should return broker_rebates = 291.44 (NOT 0.0)
-2. Test /api/mt5/fund-performance/corrected - Should return consistent broker_rebates value
-3. Verify rebates_summary object is present in response
-4. Verify fund_revenue and net_profit calculations include broker rebates
-5. Test response structure matches expected format
+1. GET /api/admin/cashflow/overview (used by frontend) - should use 30 days or 12 months default
+2. GET /api/admin/cashflow/complete?days=30 - test with days=7, 30, 90
+3. Verify rebates_summary.total_rebates value
+4. Check trades_count and calculation_period_days in response
+5. Verify no double counting (rebate per lot should be $5.05)
 
 Expected Results:
-- summary.broker_rebates should be 291.44 (NOT 0.0)
-- rebates_summary.total_rebates should be 291.44
-- rebates_summary.total_volume should show trading volume in lots
-- summary.fund_revenue should include broker rebates in calculation
-- summary.net_profit should include broker rebates
-- Both endpoints should return consistent broker rebates values
+- Default 30-day rebates: ~$8,000-$8,100 (currently showing $8,026.17 ✓)
+- 7-day rebates: ~$6,300
+- 90-day rebates: should be different from all-time $9,457
+- No more $9,457 all-time rebates showing by default
+- Rebate per lot should be ~$5.05
 """
 
 import requests
