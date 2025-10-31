@@ -216,15 +216,30 @@ class TradingAnalyticsService:
                 logger.warning(f"Account {account_num} not found, using zeros")
                 account_data = {}
             
-            # Get TRUE P&L from mt5_accounts
-            true_pnl = account_data.get("true_pnl", 0)
-            current_equity = account_data.get("equity", 0)
-            profit_withdrawals = account_data.get("profit_withdrawals", 0)
+            # FIXED: Get correct allocation and P&L values
             balance = account_data.get("balance", 0)
-            initial_allocation = balance  # Balance is the current allocation
+            equity = account_data.get("equity", 0)
+            target_amount = account_data.get("target_amount", 0)
+            profit_withdrawals = account_data.get("profit_withdrawals", 0)
             
-            # Calculate return percentage
+            # CORRECT CALCULATIONS:
+            # Initial allocation = target_amount (what was originally allocated)
+            initial_allocation = target_amount if target_amount > 0 else balance
+            
+            # TRUE P&L = Current Balance - Initial Allocation
+            true_pnl = balance - initial_allocation
+            
+            # Current equity (for display)
+            current_equity = equity
+            
+            # Calculate return percentage correctly
             return_percentage = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
+            
+            # Calculate drawdown percentage (how much was lost from initial)
+            if initial_allocation > 0 and balance < initial_allocation:
+                drawdown_pct = ((initial_allocation - balance) / initial_allocation * 100)
+            else:
+                drawdown_pct = 0
             
             # Get trades for this account (last N days)
             end_date = datetime.now(timezone.utc)
