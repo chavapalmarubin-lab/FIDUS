@@ -595,9 +595,25 @@ class MT5AutoSyncService:
             logger.error(f"Failed to log sync event: {str(e)}")
     
     async def _send_alert(self, message: str):
-        """Send alert for critical issues (placeholder for email/SMS/Slack)"""
+        """Send alert for critical MT5 issues via email"""
         logger.critical(f"🚨 ALERT: {message}")
-        # TODO: Implement actual alerting (email, Slack, etc.)
+        
+        try:
+            # Try to send email alert
+            from alert_service import AlertService
+            alert_service = AlertService()
+            
+            await alert_service.send_alert(
+                subject=f"🚨 FIDUS MT5 CRITICAL ALERT",
+                message=message,
+                severity="CRITICAL"
+            )
+            logger.info("✅ Alert email sent successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to send alert email: {str(e)}")
+            # Fallback: At least log it prominently
+            logger.critical(f"🚨🚨🚨 UNDELIVERED ALERT: {message}")
+
     
     async def close(self):
         """Clean shutdown"""
