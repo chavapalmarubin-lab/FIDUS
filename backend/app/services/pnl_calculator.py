@@ -67,17 +67,17 @@ class PnLCalculator:
         
         current_equity = float(current.get("equity", 0))
         
-        # Calculate withdrawals (type=2, profit<0) - EXCLUDING internal transfers
+        # Calculate withdrawals (type=2, profit<0) - EXCLUDING internal transfers AND P/L shares
         withdrawal_pipeline = [
             {
                 "$match": {
                     "account_number": account_number,
                     "type": 2,
                     "profit": {"$lt": 0},
-                    # EXCLUDE all types of internal transfers
+                    # EXCLUDE all types of internal operations
                     "comment": {
                         "$not": {
-                            "$regex": "(Transfer|TRF|transfer) (from|to|From|To)"
+                            "$regex": "(Transfer|TRF|transfer|P/L Share) (from|to|From|To|:|#)"
                         }
                     }
                 }
