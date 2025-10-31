@@ -78,6 +78,9 @@
   "simulator": {
     "title": "Investment Simulator",
     "subtitle": "Discover your potential earnings",
+    "setup": "Setup",
+    "results": "Results",
+    "comparison": "Comparison",
     "selectFund": "Select Fund",
     "amount": "Investment Amount",
     "period": "Investment Period",
@@ -89,7 +92,15 @@
     "months": "months",
     "disclaimer": "* Estimates based on historical returns. Past performance does not guarantee future results.",
     "contactUs": "Contact Us to Start",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "calculate": "Calculate Returns",
+    "save": "Save Simulation",
+    "download": "Download Report",
+    "addFund": "Add Another Fund",
+    "totalInvestment": "Total Investment",
+    "projectedReturns": "Projected Returns",
+    "roi": "Return on Investment",
+    "timeframe": "Investment Timeframe"
   },
   "errors": {
     "generic": "An error occurred. Please try again.",
