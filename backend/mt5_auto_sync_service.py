@@ -58,6 +58,10 @@ class MT5AutoSyncService:
             'accounts_synced': set()
         }
         
+        # Alert throttling - prevent duplicate emails
+        self.last_alert_times = {}  # Store last alert time by alert type
+        self.alert_cooldown = 900  # 15 minutes cooldown between same alerts
+        
     async def initialize(self):
         """Initialize the sync service"""
         try:
