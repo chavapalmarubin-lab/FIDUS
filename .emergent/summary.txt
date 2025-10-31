@@ -1,72 +1,98 @@
 <analysis>
-The AI engineer's trajectory chronicles a challenging, iterative process to stabilize the FIDUS MT5 Bridge and its ecosystem. Initially, the focus was on deploying a multi-account MT5 Bridge and auto-healing, which quickly hit roadblocks with Windows VPS SSH/PowerShell deployments and a critical multi-account balance issue due to MT5 Terminal session isolation. Despite multiple attempts to deploy fixes and continuous requests from the AI for manual user intervention, the user (Chava) firmly pushed for automated, end-to-end verification.
+The AI engineer's work involved an intricate debugging and stabilization effort for the FIDUS MT5 Bridge platform. Initially, the focus was on fixing Google Workspace (Drive, Calendar, Sheets) integration, which led to the discovery of mock data, incorrect API calls, and missing service files. The AI then shifted to critical dashboard calculation errors (Fund Portfolio, Cash Flow, Trading Analytics, Money Managers) as prioritized by the user.
 
-The AI then tackled several issues: fixing the multi-account logic within the MT5 Bridge, addressing discrepancies in broker rebates calculation (due to stale MongoDB data and incorrect date ranges), resolving frontend CORS errors preventing real-time bridge status display, and debugging persistent GitHub push failures. The AI identified and fixed a YAML syntax error in a deployment workflow, created new sync services for MT5 deals, and refined frontend components. The most recent efforts involved fixing backend configuration discrepancies (e.g., GitHub repository URL in health checks) and refining the MT5 watchdog logic. A key recurring challenge was the AI's inability to reliably push code to GitHub or perform remote deployments, often resorting to providing manual instructions to the user.
+Key achievements include automating the MT5 trade history sync, rectifying MongoDB index conflicts leading to duplicate key errors, optimizing backend startup for Render deployment, and implementing a robust auto-healing system with email alerts for MT5 Terminal disconnections. Recurring challenges included GitHub token handling in documentation/history and persistent deployment issues, often requiring manual user intervention or workaround strategies like modifying the VPS MT5 Bridge directly. The current state reflects a working auto-healing system, but further refinement of MT5 Bridge logic for magic numbers is ongoing.
 </analysis>
 
 <product_requirements>
-The FIDUS platform is an MT5 investment management system requiring real-time data and robust automation.
+The FIDUS platform is an MT5 investment management system requiring real-time data and robust automation for various financial analytics and integrations.
 
-1.  **MT5 Auto-Healing System**: Monitors the MT5 Bridge API, triggers auto-healing (restarts Bridge/MT5 terminals) via GitHub Actions, and sends alerts. Requires VPS-level control and auto-recovery.
-    *   **Implementation Done**: Watchdog for 0% sync rate, GitHub Actions for restarts/diagnostics, initial Task Scheduler fixes, and a backend fix for zero balances. SSH setup on VPS is complete. A zero-touch auto-healing workflow () has been created, checking health every 15 minutes and auto-restarting if down. The watchdog was later updated to exclude SEPARATION accounts from zero balance warnings.
-2.  **Infrastructure Migration**: All references to the old VPS infrastructure must be removed. (No explicit work on this in the trajectory).
-3.  **Prospects Portal**: Development of a  section for lead capture, including an investment simulator. (No explicit work on this in the trajectory).
-4.  **Google Workspace OAuth Integration (Admin Focus)**: Rebuild to enable admin users to connect Gmail, Calendar, Drive for email, scheduling, event/file management, with consistent OAuth handling.
-    *   **Implementation Done**: Core OAuth flow, token acquisition, storage, frontend connection status, Gmail message bodies, Calendar events, Drive files, and disconnect functionality are operational.  errors and frontend routing were fixed. Gmail  modified.
-5.  **Quick Actions UI for System Management**: Implement a new Quick Actions tab in the frontend's Tech Documentation section for direct control and monitoring of the MT5 Bridge without manual VPS access.
-    *   **Implementation Done**:  component created,  modified to integrate this component and a Full Documentation tab (rendering ). A Sync Trade History button was later requested and moved to the Broker Rebates tab.
-6.  **Multi-Account Balance Synchronization**: Restore proper fetching and display of balances for all 7 MT5 accounts (not just the master), ensuring historical trade data is populated. This was working previously and needs to be re-established.
-    *   **Implementation State**: Identified as a critical regression due to MT5 Terminal session isolation (Python service in Session 0, Terminal in Session 1) and lack of multi-account login. A new MT5 Bridge v4.0 with multi-account logic was created and successfully deployed (likely manually by the user or an auto-commit).
-7.  **Broker Rebates Calculation Fix**: Rectify inconsistencies in broker rebates display and calculation.
-    *   **Implementation Done**: A new  was created to fetch trade history from the MT5 Bridge and populate MongoDB. Broker Rebates and Cash Flow pages were adjusted to consistently use ALL-TIME cumulative rebates.
+1.  **MT5 Auto-Healing System**: Monitors the MT5 Bridge API, triggers auto-healing (restarts Bridge/MT5 terminals) via GitHub Actions, and sends alerts. It was initially failing to trigger alerts and restarts on 0 balance.
+2.  **Google Workspace OAuth Integration (Admin Focus)**: Admin users connect Gmail, Calendar, Drive, and Sheets. Gmail was working; Calendar, Drive, and Sheets were not, with Sheets using mock data.
+3.  **Quick Actions UI for System Management**: Implement a Quick Actions tab. A Sync Trade History button was added here.
+4.  **Multi-Account Balance Synchronization**: Restore proper fetching and display of balances for all 7 MT5 accounts. This was addressed by .
+5.  **Broker Rebates Calculation Fix**: Rectify inconsistencies in broker rebates display and calculation, requiring historical trade data.
+6.  **Fund Portfolio Tab**: FIDUS Monthly Profit showing /bin/bash; Weighted Returns calculation needed verification.
+7.  **Cash Flow & Performance Tab**: Fund Obligations showing /bin/bash; Net Fund Profitability scenario incorrect.
+8.  **Trading Analytics - Fund Performance Tab**: CORE fund showing only 1 account instead of 2.
+9.  **Money Managers - Compare Tab**: Manager None and Manual Trading entries were confusing, and the tab showed no data. This required filtering to show only 4 real managers.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, PyMongo, APScheduler, asyncio, httpx), MongoDB.
--   **Frontend**: React.js, React Router DOM, .
--   **Deployment**: GitHub Actions, Supervisor, Windows VPS (PowerShell, Task Scheduler, OpenSSH), SCP, .
--   **Google APIs**: Gmail, Calendar, Drive.
--   **Architectural Patterns**: Auto-healing, Health Monitoring, Google OAuth 2.0, Service-Oriented Architecture, Session Isolation.
+-   **Backend**: Python (FastAPI, PyMongo, APScheduler, asyncio, httpx), MongoDB Atlas.
+-   **Frontend**: React.js.
+-   **Deployment**: GitHub Actions (, ), Render.
+-   **Google APIs**: Gmail, Calendar, Drive, Sheets.
+-   **Architectural Patterns**: Auto-healing, Health Monitoring, Google OAuth 2.0, Service-Oriented Architecture, Alert Throttling, MongoDB Indexing.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: Main API. Modified to include a new endpoint for MT5 deals sync () and updated the  block to use the  environment variable for local execution, aligning with the Render deployment. Also fixed the Cash Flow endpoint to correctly pass date parameters for rebates calculation.
--   ****: **NEW**. This service was created to fetch historical trade data from the MT5 Bridge and store it in the  MongoDB collection, crucial for accurate rebates calculation. Fixed an  usage issue.
--   ****: Monitors MT5 Bridge health. Modified to update GitHub repository URL from  to  to fix API 404 errors. Enhanced  to exclude 'SEPARATION' fund type accounts from triggering warnings as they are expected to have zero balances.
--   ****: React component for Quick Actions. Modified to fix a CORS error by routing MT5 Bridge health checks through the backend proxy () instead of directly to the VPS IP. Also updated to use  for authentication and included robust token checking, although the Sync Trade History button functionality was later moved.
--   ****: React component for Broker Rebates. Modified to default to All-Time rebates instead of Last 30 Days to match the user's wallet. A Sync Trade History button was added to this component, including logic for fetching  for authentication and triggering the backend deals sync endpoint.
--   ****: React component. Modified to potentially integrate new Quick Actions features. An issue was identified with importing  which might be broken, leading to frontend display errors.
--   ****: **NEW**. This script represents the fixed MT5 Bridge (v4.0) designed to properly log into all 7 MT5 accounts, fetch their real balances, and cache the data. It addresses the session isolation problem and the original /bin/bash.00 balance issue for non-master accounts.
--   ****: **NEW**. A PowerShell script created to configure a Windows Scheduled Task on the VPS to run the MT5 Bridge service automatically in the interactive user session, ensuring it survives reboots and runs in the background.
--   ****: **NEW**. GitHub Actions workflow created to deploy  to the VPS.
--   ****: **NEW/MODIFIED**. This GitHub Actions workflow was created to deploy both the fixed MT5 Bridge script and set up the Windows Task Scheduler on the VPS. It was extensively debugged for YAML syntax errors related to PowerShell commands.
--   ****: **NEW**. A PowerShell script created for manual or remote deployment to the VPS, intended to deploy the fixed MT5 Bridge.
--   ****: **NEW**. Documents the fix for the multi-account balance issue.
--   ****: **NEW**. Provides instructions for manual deployment of the MT5 fix on the VPS.
--   ****: **NEW**. Details the data flow and deployment status for end-to-end verification.
--   ****: **NEW**. Comprehensive guide for the full deployment process.
--   ** / **: **NEW**. Markdown files created to summarize outstanding deployment tasks and locally committed changes, intended for user's Save to GitHub action.
+
+-   ****: Main API.
+    -   **Importance**: Centralizes all backend endpoints and service initialization.
+    -   **Changes**: Modified to incorporate  service, add  endpoint. Automated  as a scheduled background task and removed blocking initial sync calls for faster Render startup. Fixed database truth value testing  to . Corrected API route prefix issue () for .
+-   ****: **NEW**
+    -   **Importance**: Provides Google Sheets API integration to fetch spreadsheets.
+    -   **Changes**: Created to integrate with Google Sheets, similar to Gmail, Calendar, and Drive services.
+-   ****:
+    -   **Importance**: Fetches historical trade data from MT5 Bridge and stores it in MongoDB.
+    -   **Changes**: Fixed  to use  for asynchronous operation, resolving a silent failure to store deals. Now runs as a scheduled background task.
+-   ****:
+    -   **Importance**: Manages MT5 account synchronization and auto-healing.
+    -   **Changes**: Implemented proper email alerting. Added logic to detect MT5 Terminal disconnection (all accounts zero) and trigger auto-restart. Implemented alert throttling to prevent spam. Modified  to use GitHub Actions .
+-   ****:
+    -   **Importance**: Syncs VPS data, including trades, to MongoDB.
+    -   **Changes**: Modified the upsert filter from  to  to match the new MongoDB unique index, resolving duplicate key errors.
+-   ****:
+    -   **Importance**: Provides MT5 deal-related logic, including manager performance calculation.
+    -   **Changes**: Modified filtering logic to exclude  deals from Manual Trading and Manager None in the Money Managers section. This was a temporary fix as the root cause was in the VPS MT5 Bridge.
+-   ****:
+    -   **Importance**: Handles sending email and in-app notifications.
+    -   **Changes**: Enhanced to support  method and used for MT5 critical alerts.
+-   ****: **NEW**
+    -   **Importance**: Utility script to correct MongoDB indexes.
+    -   **Changes**: Created to migrate  collection's unique index from  to a compound index  to prevent duplicate key errors.
+-   ****:
+    -   **Importance**: Main React component for Google Workspace integration.
+    -   **Changes**: Updated Sheets API call to the correct backend endpoint () from the mocked one ().
+-   ****:
+    -   **Importance**: React component for displaying broker rebates.
+    -   **Changes**: Removed the Sync Trade History button as the function was moved to an automatic background task.
+-   ****:
+    -   **Importance**: GitHub Actions workflow for full MT5 system restart.
+    -   **Changes**: Configured to listen for  event type .
+-   ****:
+    -   **Importance**: GitHub Actions workflow to deploy the fixed MT5 Bridge.
+    -   **Changes**: Modified to support  for manual triggering, though triggering this programmatically proved challenging.
+-   ****:
+    -   **Importance**: The Python script running on the VPS for the MT5 Bridge.
+    -   **Changes**: Fixed to properly extract and return the  number field from MT5 trades, which was previously .
+-   ****:
+    -   **Importance**: Central technical documentation for the platform.
+    -   **Changes**: Updated to include details about the GITHUB_TOKEN and auto-healing system (with secure placeholders for tokens).
+-   ****: **NEW**
+    -   **Importance**: Dedicated documentation for the auto-healing system.
+    -   **Changes**: Created to detail the auto-healing mechanism and its configuration.
+-   ****: **NEW**
+    -   **Importance**: Documents the fix for MT5 Bridge not returning magic numbers.
+    -   **Changes**: Created to provide instructions for deploying the VPS MT5 Bridge fix.
 </code_architecture>
 
 <pending_tasks>
--   Deploy all committed changes (backend and frontend) to GitHub and Render.
--   Trigger the GitHub Actions workflow Deploy MT5 Bridge with Task Scheduler Setup (or manually deploy the task scheduler).
--   Verify the Sync Trade History button on the Broker Rebates tab works correctly with authentication.
--   Verify frontend components (System Health tab, Technical Documentation) are visually correct and error-free after deployment.
+-   Frontend verification for the Money Managers Compare tab and other dashboard elements (as the VPS MT5 Bridge fix for magic numbers was just deployed).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI was focused on debugging and fixing several backend and frontend issues reported by the user.
+Immediately before this summary request, the AI was focused on resolving the Money Managers Compare tab has no data issue. It was discovered that the MT5 Bridge on the VPS was not correctly populating the  number field for trades, leading to  in MongoDB Atlas. This caused the backend's manager performance aggregation to return an empty array, as the filter excluded deals without a valid magic number.
 
-1.  **Backend Port Configuration**: The Render backend logs showed No open ports detected and Uvicorn running on 8000. The AI investigated and clarified that the Emergent environment's supervisor uses port 8001, but added an  block to  to use the  environment variable for local consistency.
-2.  **GitHub Repository URL in Health Check**: The backend's health monitor was attempting to access  which resulted in a 404. The AI corrected this URL in  to .
-3.  **MT5 Watchdog Zero Balance Warning**: The watchdog was reporting a warning for 1/7 accounts showing /bin/bash balance. The AI identified that account 886528 (SEPARATION-Reserve) correctly has a /bin/bash balance. The  was updated to explicitly exclude 'SEPARATION' accounts from this warning.
+The AI took ownership of the issue, recognizing it as a critical problem introduced by previous changes. It identified and modified the  file to correctly extract the  field from MT5 trades.
 
-All these backend fixes were committed locally. The AI successfully restarted the backend using backend: stopped
-backend: started. The very last action was to begin verifying these latest backend fixes by checking the backend health.
+Following this code change, the AI attempted to deploy this fix to the VPS via GitHub Actions (specifically ), but encountered persistent issues with  availability and workflow triggering, even after manual updates to the workflow file. The AI then triggered the deployment manually via a background script which reported success.
+
+After the deployment trigger, the AI performed a check and observed that the Money Managers Compare tab was restored, finding 4 managers. This indicates that the fix for  numbers on the VPS MT5 Bridge, and its subsequent deployment, has started to propagate data correctly, allowing the backend aggregation to function as expected.
 </current_work>
 
 <optional_next_step>
-Verify the backend health check to confirm all recently applied fixes are operational.
+Verify the 'magic' field in MongoDB Atlas deals to confirm the VPS MT5 Bridge fix is fully operational and populating data correctly.
 </optional_next_step>

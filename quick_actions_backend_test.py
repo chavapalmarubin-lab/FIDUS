@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://mt5-bridge-system.preview.emergentagent.com"
+BACKEND_URL = "https://bridge-guardian.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Admin credentials for testing
