@@ -290,7 +290,6 @@ class TradingAnalyticsService:
                 # Financial metrics
                 "initial_allocation": round(initial_allocation, 2),
                 "current_equity": round(current_equity, 2),
-                "profit_withdrawals": round(profit_withdrawals, 2),
                 "total_pnl": round(true_pnl, 2),
                 "return_percentage": round(return_percentage, 2),
                 "contribution_to_fund": round(contribution_to_fund, 2),
