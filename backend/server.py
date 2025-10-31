@@ -15841,11 +15841,14 @@ async def calculate_cash_flow_calendar():
 # ===============================================================================
 
 @api_router.get("/admin/cashflow/complete")
-async def get_complete_cashflow():
+async def get_complete_cashflow(days: int = 30):
     """
     Get complete cash flow analysis with all 3 calculations
     ✅ PHASE 1: Replaces frontend calculations in CashFlowManagement.js
     Uses REAL MongoDB data - NO hardcoded values
+    
+    Args:
+        days: Number of days to calculate rebates for (default: 30)
     """
     try:
         # ✅ Get MT5 trading P&L from REAL accounts in MongoDB
@@ -15874,12 +15877,20 @@ async def get_complete_cashflow():
         # Same logic as frontend: separation_balance - profit_withdrawals
         broker_interest = separation_balance - profit_withdrawals
         
-        # ✅ Get broker rebates from REAL deal history in MongoDB
-        # Calculate from actual deal volume: volume * $5.05 per lot
-        deals_cursor = db.mt5_deals_history.find({})
+        # ✅ FIXED: Get broker rebates for SPECIFIC TIME PERIOD (not all time)
+        # Calculate from actual deal volume in last N days: volume * $5.05 per lot
+        from datetime import timedelta
+        start_date = datetime.now(timezone.utc) - timedelta(days=days)
+        
+        deals_cursor = db.mt5_deals_history.find({
+            'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
+            'time': {'$gte': start_date}
+        })
         deals = await deals_cursor.to_list(length=None)
         total_volume = sum(deal.get('volume', 0) for deal in deals)
         broker_rebates = total_volume * 5.05
+        
+        logging.info(f"💰 Broker Rebates: {len(deals)} trades, {total_volume:.2f} lots in last {days} days = ${broker_rebates:,.2f}")
         
         # ✅ CALCULATION #2: Total Inflows (moved from frontend Line 180)
         # Same logic as frontend: mt5_pnl + broker_interest + broker_rebates
