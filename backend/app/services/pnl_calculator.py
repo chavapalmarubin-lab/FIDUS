@@ -103,17 +103,17 @@ class PnLCalculator:
         total_withdrawals = float(w_result[0]["total_withdrawals"]) if w_result else 0.0
         withdrawal_count = int(w_result[0]["count"]) if w_result else 0
         
-        # Calculate deposits (type=2, profit>0) - EXCLUDING internal transfers
+        # Calculate deposits (type=2, profit>0) - EXCLUDING internal transfers AND P/L shares
         deposit_pipeline = [
             {
                 "$match": {
                     "account_number": account_number,
                     "type": 2,
                     "profit": {"$gt": 0},
-                    # EXCLUDE all types of internal transfers
+                    # EXCLUDE all types of internal operations
                     "comment": {
                         "$not": {
-                            "$regex": "(Transfer|TRF|transfer) (from|to|From|To)"
+                            "$regex": "(Transfer|TRF|transfer|P/L Share) (from|to|From|To|:|#)"
                         }
                     }
                 }
