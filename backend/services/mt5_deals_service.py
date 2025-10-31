@@ -350,7 +350,8 @@ class MT5DealsService:
         end_date: Optional[datetime] = None
     ) -> List[Dict]:
         """
-        Get performance attribution by money manager (using magic number)
+        Get performance attribution by money manager
+        WORKAROUND: Uses account_number mapping since VPS magic numbers are broken
         
         Returns:
             [
@@ -369,8 +370,23 @@ class MT5DealsService:
             ]
         """
         try:
-            # Build query filter (only trading deals)
-            query = {"type": {"$in": [0, 1]}}  # 0=buy, 1=sell
+            # WORKAROUND: Map account_number to manager since VPS magic numbers are broken
+            # Based on FIDUS account assignments
+            account_to_manager = {
+                886557: {"magic": 100234, "manager": "TradingHub Gold"},
+                886066: {"magic": 100235, "manager": "GoldenTrade"},
+                886602: {"magic": 100236, "manager": "UNO14 MAM"},
+                885822: {"magic": 100237, "manager": "CP Strategy"},
+                891234: {"magic": 100235, "manager": "GoldenTrade"},  # Also GoldenTrade
+                # 886528 and 891215 are SEPARATION accounts - exclude from manager performance
+            }
+            
+            # Build query filter (only trading deals from managed accounts)
+            managed_accounts = list(account_to_manager.keys())
+            query = {
+                "type": {"$in": [0, 1]},  # 0=buy, 1=sell
+                "account_number": {"$in": managed_accounts}  # Only managed accounts
+            }
             
             if start_date:
                 query.setdefault("time", {})["$gte"] = start_date
@@ -378,12 +394,12 @@ class MT5DealsService:
             if end_date:
                 query.setdefault("time", {})["$lte"] = end_date
             
-            # Aggregation by magic number
+            # Aggregation by account_number (instead of magic)
             pipeline = [
                 {"$match": query},
                 {
                     "$group": {
-                        "_id": "$magic",
+                        "_id": "$account_number",
                         "total_deals": {"$sum": 1},
                         "total_volume": {"$sum": "$volume"},
                         "total_profit": {"$sum": "$profit"},
@@ -393,8 +409,7 @@ class MT5DealsService:
                         },
                         "loss_deals": {
                             "$sum": {"$cond": [{"$lt": ["$profit", 0]}, 1, 0]}
-                        },
-                        "accounts_used": {"$addToSet": "$account_number"}
+                        }
                     }
                 },
                 {"$sort": {"total_profit": -1}}
@@ -402,41 +417,67 @@ class MT5DealsService:
             
             results = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
             
-            # Calculate derived metrics and add manager names
-            # Map of magic numbers to real money managers only
-            manager_map = {
-                100234: "TradingHub Gold",
-                100235: "GoldenTrade",
-                100236: "UNO14 MAM",
-                100237: "CP Strategy"
-            }
+            logger.info(f"Aggregated performance for {len(results)} accounts")
             
-            # Filter results to only include real managers (exclude manual trading and unknown magic numbers)
-            filtered_results = []
+            # Group by manager (combine accounts managed by same manager)
+            manager_performance = {}
             
             for item in results:
-                magic = item.pop("_id")
+                account_number = item["_id"]
                 
-                # ONLY include trades from real assigned managers
-                if magic in manager_map:
-                    item["magic"] = magic
-                    item["manager_name"] = manager_map[magic]
-                    
-                    # Calculate win rate
-                    total_trades = item["win_deals"] + item["loss_deals"]
-                    item["win_rate"] = round((item["win_deals"] / total_trades * 100) if total_trades > 0 else 0, 2)
-                    
-                    # Average profit per deal
-                    item["avg_profit_per_deal"] = round(item["total_profit"] / item["total_deals"], 2) if item["total_deals"] > 0 else 0
-                    
-                    # Round values
-                    item["total_volume"] = round(item["total_volume"], 2)
-                    item["total_profit"] = round(item["total_profit"], 2)
-                    item["total_commission"] = round(item["total_commission"], 2)
-                    
-                    filtered_results.append(item)
+                if account_number not in account_to_manager:
+                    continue  # Skip unknown accounts
+                
+                manager_info = account_to_manager[account_number]
+                manager_name = manager_info["manager"]
+                magic_number = manager_info["magic"]
+                
+                # Initialize manager entry if not exists
+                if manager_name not in manager_performance:
+                    manager_performance[manager_name] = {
+                        "magic": magic_number,
+                        "manager_name": manager_name,
+                        "total_deals": 0,
+                        "total_volume": 0,
+                        "total_profit": 0,
+                        "total_commission": 0,
+                        "win_deals": 0,
+                        "loss_deals": 0,
+                        "accounts_used": []
+                    }
+                
+                # Aggregate values
+                perf = manager_performance[manager_name]
+                perf["total_deals"] += item["total_deals"]
+                perf["total_volume"] += item["total_volume"]
+                perf["total_profit"] += item["total_profit"]
+                perf["total_commission"] += item["total_commission"]
+                perf["win_deals"] += item["win_deals"]
+                perf["loss_deals"] += item["loss_deals"]
+                perf["accounts_used"].append(account_number)
             
-            logger.info(f"Generated manager performance for {len(filtered_results)} real managers (filtered from {len(results)} total)")
+            # Convert to list and calculate derived metrics
+            filtered_results = []
+            
+            for manager_name, item in manager_performance.items():
+                # Calculate win rate
+                total_trades = item["win_deals"] + item["loss_deals"]
+                item["win_rate"] = round((item["win_deals"] / total_trades * 100) if total_trades > 0 else 0, 2)
+                
+                # Average profit per deal
+                item["avg_profit_per_deal"] = round(item["total_profit"] / item["total_deals"], 2) if item["total_deals"] > 0 else 0
+                
+                # Round values
+                item["total_volume"] = round(item["total_volume"], 2)
+                item["total_profit"] = round(item["total_profit"], 2)
+                item["total_commission"] = round(item["total_commission"], 2)
+                
+                filtered_results.append(item)
+            
+            # Sort by profit
+            filtered_results.sort(key=lambda x: x["total_profit"], reverse=True)
+            
+            logger.info(f"Generated manager performance for {len(filtered_results)} managers using account-based mapping (WORKAROUND)")
             return filtered_results
             
         except Exception as e:
