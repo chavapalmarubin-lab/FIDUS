@@ -22,7 +22,7 @@ class PnLCalculator:
     def __init__(self, db):
         self.db = db
         
-    def calculate_account_pnl(self, account_number: int) -> Dict:
+    async def calculate_account_pnl(self, account_number: int) -> Dict:
         """
         Calculate TRUE P&L for a single account
         
