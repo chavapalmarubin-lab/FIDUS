@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIDUS Admin Dashboard - Emergency</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0891b2;
+            padding-bottom: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #0891b2;
+        }
+        .stat-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0891b2;
+        }
+        .section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #0891b2;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+        .investment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #3a3a3a;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .fund-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #3a3a3a;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .loading { color: #f59e0b; }
+        button {
+            background-color: #0891b2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0c7a8a;
+        }
+        .refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <button class="refresh-btn" onclick="loadData()">Refresh Data</button>
+    
+    <div class="header">
+        <h1>FIDUS Admin Dashboard - Emergency Mode</h1>
+        <p>Real-time fund and investment management</p>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-title">Total AUM</div>
+            <div class="stat-value loading" id="totalAUM">Loading...</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Total Investments</div>
+            <div class="stat-value loading" id="totalInvestments">Loading...</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Total Clients</div>
+            <div class="stat-value loading" id="totalClients">Loading...</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Active Funds</div>
+            <div class="stat-value loading" id="activeFunds">Loading...</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Fund Overview</h2>
+        <div id="fundsList">Loading fund data...</div>
+    </div>
+
+    <div class="section">
+        <h2>All Investments</h2>
+        <div id="investmentsList">Loading investment data...</div>
+    </div>
+
+    <div class="section">
+        <h2>Client Management</h2>
+        <div id="clientsList">Loading client data...</div>
+    </div>
+
+    <script>
+        const BACKEND_URL = window.location.origin;
+        
+        async function loadData() {
+            console.log('Loading admin data...');
+            
+            try {
+                // Load overview data
+                await loadOverview();
+                
+                // Load fund data
+                await loadFunds();
+                
+                // Load investments
+                await loadInvestments();
+                
+                // Load clients
+                await loadClients();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('totalAUM').innerHTML = '<span class="error">Error loading data</span>';
+            }
+        }
+        
+        async function loadOverview() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/investments/admin/overview`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalAUM').innerHTML = `<span class="success">$${data.total_aum.toLocaleString()}</span>`;
+                    document.getElementById('totalInvestments').innerHTML = `<span class="success">${data.total_investments}</span>`;
+                    document.getElementById('totalClients').innerHTML = `<span class="success">${data.total_clients}</span>`;
+                    document.getElementById('activeFunds').innerHTML = `<span class="success">${Object.keys(data.fund_summaries).length}</span>`;
+                } else {
+                    throw new Error('Failed to load overview data');
+                }
+            } catch (error) {
+                document.getElementById('totalAUM').innerHTML = '<span class="error">API Error</span>';
+                console.error('Overview error:', error);
+            }
+        }
+        
+        async function loadFunds() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/investments/funds/config`);
+                const data = await response.json();
+                
+                if (data.success && data.funds) {
+                    let html = '';
+                    data.funds.forEach(fund => {
+                        html += `
+                            <div class="fund-item">
+                                <div>
+                                    <strong>${fund.fund_code}</strong> - ${fund.name}<br>
+                                    <small>Interest: ${(fund.monthly_interest_rate * 100).toFixed(1)}% monthly | Min: $${fund.minimum_investment.toLocaleString()}</small>
+                                </div>
+                                <div>
+                                    <div><strong>AUM: $${fund.aum.toLocaleString()}</strong></div>
+                                    <div><small>Investors: ${fund.total_investors || 0}</small></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('fundsList').innerHTML = html;
+                } else {
+                    document.getElementById('fundsList').innerHTML = '<div class="error">No fund data available</div>';
+                }
+            } catch (error) {
+                document.getElementById('fundsList').innerHTML = '<div class="error">Error loading funds</div>';
+                console.error('Funds error:', error);
+            }
+        }
+        
+        async function loadInvestments() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/investments/admin/overview`);
+                const data = await response.json();
+                
+                if (data.success && data.all_investments) {
+                    let html = '';
+                    data.all_investments.forEach(investment => {
+                        html += `
+                            <div class="investment-item">
+                                <div>
+                                    <strong>${investment.client_name}</strong><br>
+                                    <small>${investment.fund_code} Fund | Deposited: ${new Date(investment.deposit_date).toLocaleDateString()}</small>
+                                </div>
+                                <div>
+                                    <div><strong>$${investment.current_value.toLocaleString()}</strong></div>
+                                    <div><small>Principal: $${investment.principal_amount.toLocaleString()}</small></div>
+                                    <div><small>Interest: $${investment.interest_earned.toLocaleString()}</small></div>
+                                </div>
+                                <div>
+                                    <div><small>Status: ${investment.status}</small></div>
+                                    <div><small>Interest: ${investment.can_redeem_interest ? '✅' : '❌'}</small></div>
+                                    <div><small>Principal: ${investment.can_redeem_principal ? '✅' : '❌'}</small></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('investmentsList').innerHTML = html;
+                } else {
+                    document.getElementById('investmentsList').innerHTML = '<div class="error">No investment data available</div>';
+                }
+            } catch (error) {
+                document.getElementById('investmentsList').innerHTML = '<div class="error">Error loading investments</div>';
+                console.error('Investments error:', error);
+            }
+        }
+        
+        async function loadClients() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/clients/all`);
+                const data = await response.json();
+                
+                if (data.success && data.clients) {
+                    let html = '';
+                    data.clients.forEach(client => {
+                        html += `
+                            <div class="investment-item">
+                                <div>
+                                    <strong>${client.name}</strong><br>
+                                    <small>${client.email} | Account: ${client.fidus_account_number || 'N/A'}</small>
+                                </div>
+                                <div>
+                                    <div><strong>$${client.total_invested.toLocaleString()}</strong></div>
+                                    <div><small>Investments: ${client.total_investments}</small></div>
+                                </div>
+                                <div>
+                                    <div><small>Ready: ${client.investment_ready ? '✅' : '❌'}</small></div>
+                                    <div><small>AML/KYC: ${client.readiness_status?.aml_kyc_completed ? '✅' : '❌'}</small></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('clientsList').innerHTML = html;
+                } else {
+                    document.getElementById('clientsList').innerHTML = '<div class="error">No client data available</div>';
+                }
+            } catch (error) {
+                document.getElementById('clientsList').innerHTML = '<div class="error">Error loading clients</div>';
+                console.error('Clients error:', error);
+            }
+        }
+        
+        // Load data when page loads
+        window.addEventListener('load', loadData);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
