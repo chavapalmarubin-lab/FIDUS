@@ -374,6 +374,25 @@ class MT5AutoSyncService:
             successful_syncs = 0
             failed_syncs = 0
             
+            # CRITICAL: First check MT5 Bridge health to detect Terminal disconnection
+            try:
+                bridge_health = await self._check_bridge_health()
+                if not bridge_health.get('mt5', {}).get('terminal_info', {}).get('connected'):
+                    logger.critical("🚨 MT5 Terminal NOT CONNECTED to broker - initiating auto-restart")
+                    await self._send_alert("MT5 Terminal disconnected from broker. All accounts showing $0. Auto-restart initiated.")
+                    await self._trigger_mt5_restart()
+                    # Wait for restart and return early
+                    return {
+                        'total_accounts': len(accounts),
+                        'successful_syncs': 0,
+                        'failed_syncs': len(accounts),
+                        'sync_results': [],
+                        'overall_status': 'mt5_disconnected_restart_triggered',
+                        'sync_timestamp': datetime.now(timezone.utc).isoformat()
+                    }
+            except Exception as e:
+                logger.error(f"Failed to check MT5 Bridge health: {str(e)}")
+            
             for account in accounts:
                 mt5_login = str(account.get('account') or account.get('mt5_login') or account.get('login', ''))
                 if mt5_login and mt5_login != 'None':
