@@ -1,0 +1,98 @@
+{
+  "hero": {
+    "title": "Invest Smartly with FIDUS",
+    "subtitle": "Professional investment funds with transparent returns and real-time access to your portfolio.",
+    "cta": {
+      "start": "Start Investing",
+      "learnMore": "Learn More"
+    }
+  },
+  "valueProps": {
+    "title": "Why Choose FIDUS?",
+    "profitability": {
+      "title": "High Profitability",
+      "description": "Diversified strategies with competitive annual returns"
+    },
+    "transparency": {
+      "title": "Total Transparency",
+      "description": "Real-time access to your investments and performance"
+    },
+    "flexibility": {
+      "title": "Total Flexibility",
+      "description": "Invest from $100 and withdraw without penalties"
+    }
+  },
+  "funds": {
+    "title": "Our Investment Funds",
+    "subtitle": "Choose the fund that best suits your investment profile",
+    "core": {
+      "name": "CORE Fund",
+      "description": "Conservative strategy with monthly returns of 1.5%-2.5%. Ideal for building stable wealth.",
+      "risk": "Risk: Low",
+      "returns": "Returns: 1.5% - 2.5% monthly",
+      "minimumInvestment": "Min: $100"
+    },
+    "balance": {
+      "name": "BALANCE Fund",
+      "description": "Moderate strategy with quarterly returns of 7.5%-10%. Optimal balance between growth and security.",
+      "risk": "Risk: Medium",
+      "returns": "Returns: 7.5% - 10% quarterly",
+      "minimumInvestment": "Min: $1,000"
+    },
+    "dynamic": {
+      "name": "DYNAMIC Fund",
+      "description": "Aggressive strategy with high growth potential. For experienced investors.",
+      "risk": "Risk: High",
+      "returns": "Returns: 15% - 30% quarterly",
+      "minimumInvestment": "Min: $5,000"
+    },
+    "unlimited": {
+      "name": "UNLIMITED Fund",
+      "description": "Ultra-aggressive strategy with unlimited growth potential. Institutional investors only.",
+      "risk": "Risk: Very High",
+      "returns": "Returns: Unlimited potential",
+      "minimumInvestment": "Min: $25,000"
+    },
+    "interestIncubation": "Interest after 60-day incubation",
+    "quarterlyPayments": "Quarterly interest payments"
+  },
+  "leadCapture": {
+    "title": "Ready to Start?",
+    "subtitle": "Enter your information and discover how much you could earn with our simulator.",
+    "form": {
+      "emailPlaceholder": "Your email",
+      "phonePlaceholder": "Your phone (with country code)",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email",
+      "phoneRequired": "Phone is required",
+      "phoneInvalid": "Invalid phone (minimum 8 digits)",
+      "submitError": "Error creating record. Try again.",
+      "connectionError": "Connection error. Check your internet.",
+      "submit": "Access Simulator",
+      "submitting": "Processing..."
+    }
+  },
+  "footer": {
+    "disclaimer": "FIDUS Investments is an investment fund managed by professional traders with over 10 years of experience in financial markets. Returns shown are historical estimates and do not guarantee future performance. All investments carry inherent risks."
+  },
+  "simulator": {
+    "title": "Investment Simulator",
+    "subtitle": "Discover your potential earnings",
+    "selectFund": "Select Fund",
+    "amount": "Investment Amount",
+    "period": "Investment Period",
+    "estimatedReturn": "Estimated Return",
+    "totalValue": "Total Value",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "annually": "Annually",
+    "months": "months",
+    "disclaimer": "* Estimates based on historical returns. Past performance does not guarantee future results.",
+    "contactUs": "Contact Us to Start",
+    "backToHome": "Back to Home"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection."
+  }
+}
