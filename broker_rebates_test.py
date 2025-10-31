@@ -237,19 +237,39 @@ class CashFlowBrokerRebatesTest:
             self.log_test("Cash Flow Complete Multiple Periods", False, f"Exception: {str(e)}")
             return False
     
-    def test_broker_rebates_consistency(self):
-        """Test consistency between both endpoints"""
-        if hasattr(self, 'mt5_broker_rebates') and hasattr(self, 'cashflow_broker_rebates'):
-            if abs(self.mt5_broker_rebates - self.cashflow_broker_rebates) < 0.01:
-                self.log_test("Broker Rebates Consistency", True, 
-                            f"Both endpoints return consistent broker_rebates: ${self.cashflow_broker_rebates:.2f}")
-                return True
+    def test_rebate_per_lot_calculation(self):
+        """Test rebate per lot calculation (should be ~$5.05, no double counting)"""
+        try:
+            if hasattr(self, 'period_results') and 30 in self.period_results:
+                result_30d = self.period_results[30]
+                broker_rebates = result_30d['broker_rebates']
+                trades_count = result_30d['trades_count']
+                
+                if trades_count > 0:
+                    rebate_per_lot = broker_rebates / trades_count
+                    print(f"   📊 Rebate per lot (30d): ${rebate_per_lot:.2f}")
+                    
+                    # Expected rebate per lot is $5.05
+                    expected_rebate_per_lot = 5.05
+                    tolerance = 0.50  # Allow 50 cent variance
+                    
+                    if abs(rebate_per_lot - expected_rebate_per_lot) <= tolerance:
+                        self.log_test("Rebate Per Lot Calculation", True, 
+                                    f"Rebate per lot within expected range: ${rebate_per_lot:.2f} (expected ~${expected_rebate_per_lot})")
+                        return True
+                    else:
+                        self.log_test("Rebate Per Lot Calculation", False, 
+                                    f"Rebate per lot outside expected range: ${rebate_per_lot:.2f} (expected ~${expected_rebate_per_lot} ± ${tolerance})")
+                        return False
+                else:
+                    self.log_test("Rebate Per Lot Calculation", False, "No trades found for 30-day period")
+                    return False
             else:
-                self.log_test("Broker Rebates Consistency", False, 
-                            f"Inconsistent values: Cash Flow=${self.cashflow_broker_rebates:.2f}, MT5=${self.mt5_broker_rebates:.2f}")
+                self.log_test("Rebate Per Lot Calculation", False, "No 30-day period data available")
                 return False
-        else:
-            self.log_test("Broker Rebates Consistency", False, "Cannot compare - missing data from previous tests")
+                
+        except Exception as e:
+            self.log_test("Rebate Per Lot Calculation", False, f"Exception: {str(e)}")
             return False
     
     def test_response_structure(self):
