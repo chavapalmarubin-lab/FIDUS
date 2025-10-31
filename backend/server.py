@@ -97,6 +97,9 @@ from credentials_registry import (
 )
 from credentials_service import CredentialsService
 
+# P&L Calculator Service - TRUE P&L calculations with profit withdrawals
+from services.pnl_calculator import PnLCalculator
+
 # AML/KYC Service Integration
 from aml_kyc_service import aml_kyc_service, PersonData, KYCDocument, AMLStatus
 from currency_service import currency_service
