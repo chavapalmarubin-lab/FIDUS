@@ -266,7 +266,8 @@ class TradingAnalyticsService:
             # Calculate risk-adjusted returns
             sharpe_ratio = await self.calculate_sharpe_ratio(trades, initial_allocation)
             sortino_ratio = await self.calculate_sortino_ratio(trades, initial_allocation)
-            max_drawdown = await self.calculate_max_drawdown(trades, initial_allocation)
+            # Use calculated drawdown from balance, not from trades
+            max_drawdown = drawdown_pct
             calmar_ratio = await self.calculate_calmar_ratio(return_percentage, max_drawdown, period_days)
             
             # Calculate contribution to fund
