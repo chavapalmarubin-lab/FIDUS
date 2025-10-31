@@ -3608,7 +3608,7 @@ async def get_account_true_pnl(account_number: int, current_user: dict = Depends
     """
     try:
         pnl_calculator = PnLCalculator(db)
-        result = pnl_calculator.calculate_account_pnl(account_number)
+        result = await pnl_calculator.calculate_account_pnl(account_number)
         
         if not result:
             raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
