@@ -3519,6 +3519,118 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/mt5/true-pnl")
+async def get_true_pnl_calculation(current_user: dict = Depends(get_current_user)):
+    """
+    🎯 TRUE P&L CALCULATION - FIXED & ACCURATE
+    
+    This endpoint uses the PnLCalculator service to provide accurate P&L calculations:
+    - Correct initial allocations from user investments
+    - Includes profit withdrawals to separation accounts
+    - Excludes internal transfers and P/L Share operations
+    
+    Formula: TRUE P&L = (Current Equity + Profit Withdrawals) - Initial Allocation
+    
+    Returns:
+    - Portfolio summary with TRUE P&L (+20.59% for Alejandro)
+    - Fund breakdown (BALANCE, CORE, SEPARATION)
+    - Individual account details with profit withdrawals
+    """
+    try:
+        # Initialize P&L Calculator
+        pnl_calculator = PnLCalculator(db)
+        
+        # Calculate TRUE P&L for all accounts
+        result = pnl_calculator.calculate_all_accounts_pnl()
+        
+        # Convert datetime objects to ISO format
+        result['last_updated'] = result['last_updated'].isoformat()
+        for account in result['accounts']:
+            if 'last_updated' in account:
+                account['last_updated'] = account['last_updated'].isoformat()
+        for fund in result['funds']:
+            # Round all fund values
+            for key in ['initial_allocation', 'current_equity', 'profit_withdrawals', 'true_pnl', 'pnl_percent']:
+                if key in fund:
+                    fund[key] = round(fund[key], 2)
+        
+        return {
+            'success': True,
+            'message': 'TRUE P&L calculation with profit withdrawals',
+            'data': result,
+            'calculation_method': '(Current Equity + Profit Withdrawals) - Initial Allocation',
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error calculating TRUE P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate TRUE P&L: {str(e)}")
+
+
+@api_router.get("/mt5/fund-pnl/{fund_code}")
+async def get_fund_true_pnl(fund_code: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get TRUE P&L for a specific fund (BALANCE, CORE, SEPARATION)
+    
+    Returns aggregated P&L for all accounts in the fund
+    """
+    try:
+        pnl_calculator = PnLCalculator(db)
+        result = pnl_calculator.calculate_fund_pnl(fund_code.upper())
+        
+        # Convert datetime to ISO format
+        result['last_updated'] = result['last_updated'].isoformat()
+        for account in result.get('accounts', []):
+            if 'last_updated' in account:
+                account['last_updated'] = account['last_updated'].isoformat()
+        
+        return {
+            'success': True,
+            'fund': result,
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error calculating fund P&L for {fund_code}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate fund P&L: {str(e)}")
+
+
+@api_router.get("/mt5/account-pnl/{account_number}")
+async def get_account_true_pnl(account_number: int, current_user: dict = Depends(get_current_user)):
+    """
+    Get TRUE P&L for a specific MT5 account
+    
+    Returns:
+    - Initial allocation
+    - Current equity
+    - Profit withdrawals
+    - TRUE P&L with percentage return
+    """
+    try:
+        pnl_calculator = PnLCalculator(db)
+        result = pnl_calculator.calculate_account_pnl(account_number)
+        
+        if not result:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
+        
+        # Convert datetime to ISO format
+        if 'last_updated' in result:
+            result['last_updated'] = result['last_updated'].isoformat()
+        
+        return {
+            'success': True,
+            'account': result,
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error calculating account P&L for {account_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate account P&L: {str(e)}")
+
+
+
 @api_router.post("/mt5/sync-enhanced")
 async def sync_mt5_enhanced(current_user: dict = Depends(get_current_admin_user)):
     """
