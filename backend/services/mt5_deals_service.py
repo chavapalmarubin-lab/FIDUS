@@ -375,9 +375,9 @@ class MT5DealsService:
             account_to_manager = {
                 886557: {"magic": 100234, "manager": "TradingHub Gold"},
                 886066: {"magic": 100235, "manager": "GoldenTrade"},
-                886602: {"magic": 100236, "manager": "UNO14 MAM"},
                 885822: {"magic": 100237, "manager": "CP Strategy"},
                 891234: {"magic": 100235, "manager": "GoldenTrade"},  # Also GoldenTrade
+                # 886602 (UNO14) removed - has 0 actual trades, only balance operations
                 # 886528 and 891215 are SEPARATION accounts - exclude from manager performance
             }
             
