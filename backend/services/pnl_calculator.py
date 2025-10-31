@@ -46,13 +46,13 @@ class PnLCalculator:
         }
         """
         # Get account data
-        account = self.db.mt5_accounts.find_one({'account': account_number})
+        account = await self.db.mt5_accounts.find_one({'account': account_number})
         if not account:
             logger.warning(f"Account {account_number} not found in mt5_accounts")
             return None
             
         # Get initial allocation from config
-        config = self.db.mt5_account_config.find_one({'account': account_number})
+        config = await self.db.mt5_account_config.find_one({'account': account_number})
         initial_allocation = config.get('initial_allocation', 0) if config else 0
         
         # Get current state
@@ -60,7 +60,7 @@ class PnLCalculator:
         displayed_pnl = account.get('profit', 0)
         
         # Get profit withdrawals from corrected data
-        corrected = self.db.mt5_corrected_data.find_one({'account_number': account_number})
+        corrected = await self.db.mt5_corrected_data.find_one({'account_number': account_number})
         profit_withdrawals = corrected.get('profit_withdrawals', 0) if corrected else 0
         
         # Calculate TRUE P&L
@@ -80,14 +80,14 @@ class PnLCalculator:
             'last_updated': datetime.utcnow()
         }
     
-    def calculate_fund_pnl(self, fund_code: str) -> Dict:
+    async def calculate_fund_pnl(self, fund_code: str) -> Dict:
         """
         Calculate TRUE P&L for all accounts in a fund
         
         Returns aggregated P&L for the fund
         """
         # Get all accounts for this fund
-        configs = list(self.db.mt5_account_config.find({'fund_type': fund_code, 'is_active': True}))
+        configs = await self.db.mt5_account_config.find({'fund_type': fund_code, 'is_active': True}).to_list(length=100)
         
         total_initial = 0
         total_equity = 0
@@ -96,7 +96,7 @@ class PnLCalculator:
         accounts_data = []
         
         for config in configs:
-            account_pnl = self.calculate_account_pnl(config['account'])
+            account_pnl = await self.calculate_account_pnl(config['account'])
             if account_pnl:
                 accounts_data.append(account_pnl)
                 total_initial += account_pnl['initial_allocation']
@@ -118,14 +118,14 @@ class PnLCalculator:
             'last_updated': datetime.utcnow()
         }
     
-    def calculate_all_accounts_pnl(self) -> Dict:
+    async def calculate_all_accounts_pnl(self) -> Dict:
         """
         Calculate TRUE P&L for ALL active accounts across all funds
         
         Returns comprehensive portfolio P&L
         """
         # Get all active accounts
-        configs = list(self.db.mt5_account_config.find({'is_active': True}))
+        configs = await self.db.mt5_account_config.find({'is_active': True}).to_list(length=100)
         
         total_initial = 0
         total_equity = 0
@@ -136,7 +136,7 @@ class PnLCalculator:
         funds_summary = {}
         
         for config in configs:
-            account_pnl = self.calculate_account_pnl(config['account'])
+            account_pnl = await self.calculate_account_pnl(config['account'])
             if account_pnl:
                 accounts_data.append(account_pnl)
                 
@@ -190,7 +190,7 @@ class PnLCalculator:
             'last_updated': datetime.utcnow()
         }
 
-    def set_initial_allocations(self, allocations: Dict[int, float]):
+    async def set_initial_allocations(self, allocations: Dict[int, float]):
         """
         Update initial allocations for accounts
         
@@ -208,7 +208,7 @@ class PnLCalculator:
         logger.info(f"Updating initial allocations for {len(allocations)} accounts")
         
         for account_number, amount in allocations.items():
-            result = self.db.mt5_account_config.update_one(
+            result = await self.db.mt5_account_config.update_one(
                 {'account': account_number},
                 {'$set': {
                     'initial_allocation': amount,
