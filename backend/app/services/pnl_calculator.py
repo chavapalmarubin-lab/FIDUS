@@ -74,10 +74,10 @@ class PnLCalculator:
                     "account_number": account_number,
                     "type": 2,
                     "profit": {"$lt": 0},
-                    # EXCLUDE internal transfers between FIDUS accounts
+                    # EXCLUDE all types of internal transfers
                     "comment": {
                         "$not": {
-                            "$regex": "Transfer (from|to) #"
+                            "$regex": "(Transfer|TRF|transfer) (from|to|From|To)"
                         }
                     }
                 }
