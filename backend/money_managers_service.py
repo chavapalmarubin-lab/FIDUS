@@ -306,21 +306,28 @@ class MoneyManagersService:
                 account_data = await self.db.mt5_accounts.find_one({"account": account_num})
                 
                 if account_data:
-                    # Use corrected TRUE P&L that includes profit withdrawals
-                    true_pnl = account_data.get("true_pnl", 0)
-                    equity = account_data.get("equity", 0)
-                    profit_withdrawals = account_data.get("profit_withdrawals", 0)
                     balance = account_data.get("balance", 0)
-                    target_amount = account_data.get("target_amount", 0)
+                    equity = account_data.get("equity", 0)
                     
-                    # FIX: Use target_amount as initial allocation, NOT current balance
-                    # target_amount represents the initial capital allocated to this manager
-                    total_allocated += target_amount if target_amount > 0 else balance
+                    # CORRECT: Calculate net deposits from deal history
+                    deals_cursor = self.db.mt5_deals_history.find({
+                        "account_number": account_num,
+                        "type": 2  # Balance operations only
+                    })
+                    deals = await deals_cursor.to_list(length=None)
+                    
+                    deposits_account = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) > 0)
+                    withdrawals_account = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) < 0)
+                    net_deposits_account = deposits_account + withdrawals_account
+                    
+                    # TRUE P&L for this account
+                    pnl_account = balance - net_deposits_account
+                    
+                    total_allocated += net_deposits_account
                     total_equity += equity
-                    total_withdrawals += profit_withdrawals
-                    total_true_pnl += true_pnl
+                    total_true_pnl += pnl_account
                     
-                    logger.info(f"Account {account_num}: Initial=${target_amount}, TRUE P&L={true_pnl}, Equity={equity}, Withdrawals={profit_withdrawals}")
+                    logger.info(f"Account {account_num}: NetDeposits=${net_deposits_account:,.2f}, Balance=${balance:,.2f}, TRUE P&L={pnl_account:,.2f}")
             
             # Get all trades from assigned accounts (last 30 days for trade statistics)
             end_date = datetime.now(timezone.utc)
