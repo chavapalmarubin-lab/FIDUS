@@ -446,6 +446,7 @@ async def get_account_trades(account_number: int, limit: int = 100):
                 "time": datetime.fromtimestamp(deal.time, tz=timezone.utc).isoformat(),
                 "type": deal.type,
                 "entry": deal.entry,
+                "magic": deal.magic,  # CRITICAL: Magic number identifies the manager/EA
                 "volume": float(deal.volume),
                 "price": float(deal.price),
                 "commission": float(deal.commission),
@@ -453,6 +454,7 @@ async def get_account_trades(account_number: int, limit: int = 100):
                 "profit": float(deal.profit),
                 "symbol": deal.symbol,
                 "comment": deal.comment,
+                "position_id": deal.position_id if hasattr(deal, 'position_id') else 0,
                 "account_number": account_number
             })
         
