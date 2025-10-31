@@ -203,7 +203,7 @@ curl -X POST \
 **Or via API (if token works):**
 ```bash
 curl -X POST \
-  -H "Authorization: Bearer ghp_WDF5Z9md1OqLI91vEZtJiJRRxiu2hk23vzxk" \
+  -H "Authorization: Bearer [GITHUB_TOKEN_FROM_RENDER_ENV]" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{"ref":"main","inputs":{"reason":"Testing after fixes"}}' \
