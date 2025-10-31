@@ -124,8 +124,11 @@ class PnLCalculator:
         
         Returns comprehensive portfolio P&L
         """
-        # Get all active accounts
-        configs = await self.db.mt5_account_config.find({'is_active': True}).to_list(length=100)
+        # Get all active TRADING accounts (exclude SEPARATION accounts)
+        configs = await self.db.mt5_account_config.find({
+            'is_active': True,
+            'fund_type': {'$nin': ['SEPARATION']}  # Exclude separation accounts
+        }).to_list(length=100)
         
         total_initial = 0
         total_equity = 0
