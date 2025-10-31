@@ -9,6 +9,7 @@ Calculates accurate Profit & Loss for MT5 accounts by:
 Formula: TRUE P&L = (Current Equity + Profit Withdrawals) - Initial Allocation
 """
 
+from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 import os
 import logging
@@ -20,7 +21,14 @@ logger = logging.getLogger(__name__)
 
 class PnLCalculator:
     def __init__(self, db):
+        """
+        Initialize PnLCalculator with async motor database
+        
+        Args:
+            db: AsyncIOMotorDatabase instance
+        """
         self.db = db
+        self.is_async = hasattr(db, 'command')  # Motor has command, sync doesn't
         
     async def calculate_account_pnl(self, account_number: int) -> Dict:
         """
