@@ -26683,7 +26683,7 @@ async def sync_mt5_deals_background():
     """Background task to sync MT5 deals/trade history automatically"""
     try:
         logging.info("🔄 Starting scheduled MT5 Deals sync...")
-        if not mt5_deals_sync.db:
+        if mt5_deals_sync.db is None:
             await mt5_deals_sync.initialize(db)
         
         result = await mt5_deals_sync.sync_all_accounts()
@@ -26696,7 +26696,7 @@ async def run_initial_mt5_deals_sync():
     try:
         await asyncio.sleep(5)  # Wait 5 seconds after startup
         logging.info("📊 Running initial MT5 Deals/Trade History sync...")
-        if not mt5_deals_sync.db:
+        if mt5_deals_sync.db is None:
             await mt5_deals_sync.initialize(db)
         
         result = await mt5_deals_sync.sync_all_accounts()
