@@ -216,28 +216,31 @@ class TradingAnalyticsService:
                 logger.warning(f"Account {account_num} not found, using zeros")
                 account_data = {}
             
-            # FIXED: Get correct allocation and P&L values
             balance = account_data.get("balance", 0)
             equity = account_data.get("equity", 0)
-            target_amount = account_data.get("target_amount", 0)
-            profit_withdrawals = account_data.get("profit_withdrawals", 0)
             
-            # CORRECT CALCULATIONS:
-            # Initial allocation = target_amount (what was originally allocated)
-            initial_allocation = target_amount if target_amount > 0 else balance
+            # CORRECT: Calculate net deposits from actual deal history
+            deals_cursor = self.db.mt5_deals_history.find({
+                "account_number": account_num,
+                "type": 2  # Balance operations only
+            })
+            deals = await deals_cursor.to_list(length=None)
             
-            # TRUE P&L = Current Balance - Initial Allocation
-            true_pnl = balance - initial_allocation
+            deposits = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) > 0)
+            withdrawals = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) < 0)
+            net_deposits = deposits + withdrawals  # withdrawals are negative
             
-            # Current equity (for display)
+            # TRUE P&L = Current Balance - Net Deposits
+            initial_allocation = net_deposits if net_deposits > 0 else balance
+            true_pnl = balance - net_deposits
             current_equity = equity
             
-            # Calculate return percentage correctly
-            return_percentage = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
+            # Calculate return percentage
+            return_percentage = (true_pnl / net_deposits * 100) if net_deposits > 0 else 0
             
-            # Calculate drawdown percentage (how much was lost from initial)
-            if initial_allocation > 0 and balance < initial_allocation:
-                drawdown_pct = ((initial_allocation - balance) / initial_allocation * 100)
+            # Calculate drawdown percentage
+            if net_deposits > 0 and balance < net_deposits:
+                drawdown_pct = ((net_deposits - balance) / net_deposits * 100)
             else:
                 drawdown_pct = 0
             
