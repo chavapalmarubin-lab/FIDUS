@@ -139,44 +139,102 @@ class CashFlowBrokerRebatesTest:
             self.log_test("Cash Flow Overview Default", False, f"Exception: {str(e)}")
             return False
     
-    def test_mt5_fund_performance_consistency(self):
-        """Test /api/mt5/fund-performance/corrected for consistent broker rebates"""
+    def test_cashflow_complete_multiple_periods(self):
+        """Test /api/admin/cashflow/complete with different time periods"""
         try:
-            url = f"{BACKEND_URL}/api/mt5/fund-performance/corrected"
-            response = self.session.get(url)
+            test_periods = [7, 30, 90]
+            expected_ranges = {
+                7: (6000, 6600),    # ~$6,300 for 7 days
+                30: (7500, 8500),   # ~$8,000-$8,100 for 30 days  
+                90: (8000, 10000)   # Should be different from all-time $9,457
+            }
             
-            if response.status_code == 200:
-                data = response.json()
+            period_results = {}
+            all_success = True
+            
+            for days in test_periods:
+                try:
+                    print(f"\n   🔍 Testing {days}-day period...")
+                    
+                    url = f"{BACKEND_URL}/api/admin/cashflow/complete"
+                    params = {"days": days}
+                    response = self.session.get(url, params=params)
+                    
+                    if response.status_code != 200:
+                        self.log_test(f"Cash Flow Complete {days}d API", False, 
+                                    f"HTTP {response.status_code}: {response.text}")
+                        all_success = False
+                        continue
+                    
+                    data = response.json()
+                    
+                    # Extract broker rebates value
+                    broker_rebates = data.get('broker_rebates', 0)
+                    trades_count = data.get('trades_count', 0)
+                    calculation_period_days = data.get('calculation_period_days', 0)
+                    
+                    period_results[days] = {
+                        'broker_rebates': broker_rebates,
+                        'trades_count': trades_count,
+                        'calculation_period_days': calculation_period_days
+                    }
+                    
+                    print(f"      💰 Broker Rebates ({days}d): ${broker_rebates:.2f}")
+                    print(f"      📊 Trades Count: {trades_count}")
+                    print(f"      📅 Period Days: {calculation_period_days}")
+                    
+                    # Verify calculation period matches request
+                    if calculation_period_days == days:
+                        self.log_test(f"Period Verification {days}d", True, 
+                                    f"Calculation period matches request: {days} days")
+                    else:
+                        self.log_test(f"Period Verification {days}d", False, 
+                                    f"Period mismatch - expected {days}, got {calculation_period_days}")
+                        all_success = False
+                    
+                    # Check if rebates are in expected range
+                    expected_min, expected_max = expected_ranges[days]
+                    if expected_min <= broker_rebates <= expected_max:
+                        self.log_test(f"Rebates Range {days}d", True, 
+                                    f"Rebates in expected range: ${broker_rebates:.2f}")
+                    else:
+                        self.log_test(f"Rebates Range {days}d", False, 
+                                    f"Rebates outside expected range ${expected_min}-${expected_max}: ${broker_rebates:.2f}")
+                        all_success = False
+                    
+                    # Check for problematic all-time value
+                    if abs(broker_rebates - 9457) < 1:
+                        self.log_test(f"All-Time Check {days}d", False, 
+                                    "Still returning all-time rebates instead of period-specific")
+                        all_success = False
+                    else:
+                        self.log_test(f"All-Time Check {days}d", True, 
+                                    "Not returning problematic all-time value")
+                    
+                except Exception as e:
+                    self.log_test(f"Cash Flow Complete {days}d Test", False, f"Exception: {str(e)}")
+                    all_success = False
+            
+            # Store results for later comparison
+            self.period_results = period_results
+            
+            # Verify different periods return different values (period-specific calculation)
+            if len(period_results) >= 2:
+                rebates_values = [result['broker_rebates'] for result in period_results.values()]
+                unique_values = len(set(rebates_values))
                 
-                # Check if response has fund_assets section
-                if 'fund_assets' not in data:
-                    self.log_test("MT5 Fund Performance Structure", False, "Missing 'fund_assets' key in response")
-                    return False
-                
-                fund_assets = data['fund_assets']
-                
-                # Check broker_rebates in fund_assets
-                broker_rebates = fund_assets.get('broker_rebates', 0)
-                
-                if broker_rebates == 0.0:
-                    self.log_test("MT5 Fund Performance Broker Rebates", False, 
-                                f"broker_rebates is 0.0 in MT5 fund performance endpoint")
-                    return False
-                
-                details = f"fund_assets.broker_rebates = ${broker_rebates:.2f}"
-                self.log_test("MT5 Fund Performance Broker Rebates", True, details)
-                
-                # Store for consistency check
-                self.mt5_broker_rebates = broker_rebates
-                return True
-                
-            else:
-                self.log_test("MT5 Fund Performance Broker Rebates", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
+                if unique_values > 1:
+                    self.log_test("Period Differentiation", True, 
+                                f"Different periods return different rebates: {rebates_values}")
+                else:
+                    self.log_test("Period Differentiation", False, 
+                                f"All periods return same rebates (not period-specific): {rebates_values}")
+                    all_success = False
+            
+            return all_success
                 
         except Exception as e:
-            self.log_test("MT5 Fund Performance Broker Rebates", False, f"Exception: {str(e)}")
+            self.log_test("Cash Flow Complete Multiple Periods", False, f"Exception: {str(e)}")
             return False
     
     def test_broker_rebates_consistency(self):
