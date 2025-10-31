@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
 import ProspectsPortalI18n from './ProspectsPortalI18n';
 import InvestmentSimulator from './InvestmentSimulator';
+import LanguageSelector from './LanguageSelector';
 
 // Wrapper component to handle prospects portal routes
 const ProspectsPortalRouter = () => {
