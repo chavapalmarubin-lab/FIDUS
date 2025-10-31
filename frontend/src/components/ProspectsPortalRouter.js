@@ -7,7 +7,7 @@ import InvestmentSimulator from './InvestmentSimulator';
 const ProspectsPortalRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<ProspectsPortal />} />
+      <Route path="/" element={<ProspectsPortalI18n />} />
       <Route path="/simulator/:leadId" element={<SimulatorPage />} />
     </Routes>
   );
