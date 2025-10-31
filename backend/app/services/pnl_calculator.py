@@ -101,14 +101,14 @@ class PnLCalculator:
         deposit_pipeline = [
             {
                 "$match": {
-                    "account": account_number,
+                    "account_number": account_number,
                     "type": 2,
                     "profit": {"$gt": 0}
                 }
             },
             {
                 "$group": {
-                    "_id": "$account",
+                    "_id": "$account_number",
                     "total_deposits": {"$sum": "$profit"},
                     "count": {"$sum": 1}
                 }
