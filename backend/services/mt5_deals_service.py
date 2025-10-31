@@ -459,6 +459,29 @@ class MT5DealsService:
             # Convert to list and calculate derived metrics
             filtered_results = []
             
+            # IMPORTANT: Ensure ALL managers from mapping appear, even with zero trades
+            all_managers = {
+                "TradingHub Gold": {"magic": 100234},
+                "GoldenTrade": {"magic": 100235},
+                "UNO14 MAM": {"magic": 100236},
+                "CP Strategy": {"magic": 100237}
+            }
+            
+            # Add any managers with zero trades
+            for manager_name, info in all_managers.items():
+                if manager_name not in manager_performance:
+                    manager_performance[manager_name] = {
+                        "magic": info["magic"],
+                        "manager_name": manager_name,
+                        "total_deals": 0,
+                        "total_volume": 0,
+                        "total_profit": 0,
+                        "total_commission": 0,
+                        "win_deals": 0,
+                        "loss_deals": 0,
+                        "accounts_used": []
+                    }
+            
             for manager_name, item in manager_performance.items():
                 # Calculate win rate
                 total_trades = item["win_deals"] + item["loss_deals"]
@@ -477,7 +500,7 @@ class MT5DealsService:
             # Sort by profit
             filtered_results.sort(key=lambda x: x["total_profit"], reverse=True)
             
-            logger.info(f"Generated manager performance for {len(filtered_results)} managers using account-based mapping (WORKAROUND)")
+            logger.info(f"Generated manager performance for {len(filtered_results)} managers (including zero-trade managers) using account-based mapping (WORKAROUND)")
             return filtered_results
             
         except Exception as e:
