@@ -191,7 +191,7 @@ Match Group administrators
 **Configuration Location:**
 - **Render Dashboard:** Backend Service → Environment Variables
 - **Variable Name:** `GITHUB_TOKEN`
-- **Variable Value:** `[REVOKED_TOKEN]`
+- **Variable Value:** `[SECURED - Only visible in Render Dashboard]`
 
 **How It Works:**
 1. Backend `mt5_auto_sync_service.py` detects MT5 Terminal disconnection
