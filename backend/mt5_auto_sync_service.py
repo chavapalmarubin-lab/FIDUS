@@ -671,7 +671,24 @@ class MT5AutoSyncService:
             logger.error(f"Failed to log sync event: {str(e)}")
     
     async def _send_alert(self, message: str):
-        """Send alert for critical MT5 issues via email"""
+        """Send alert for critical MT5 issues via email (with throttling to prevent spam)"""
+        
+        # Check if we've sent this alert recently (throttling)
+        from datetime import datetime, timezone
+        
+        alert_key = message[:50]  # Use first 50 chars as unique key
+        current_time = datetime.now(timezone.utc).timestamp()
+        last_alert_time = self.last_alert_times.get(alert_key, 0)
+        
+        # If we sent the same alert within cooldown period, skip it
+        if current_time - last_alert_time < self.alert_cooldown:
+            time_since_last = int(current_time - last_alert_time)
+            logger.info(f"⏭️ Skipping duplicate alert (sent {time_since_last}s ago): {alert_key}...")
+            return
+        
+        # Record this alert time
+        self.last_alert_times[alert_key] = current_time
+        
         logger.critical(f"🚨 ALERT: {message}")
         
         try:
