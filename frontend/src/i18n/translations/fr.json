@@ -1,0 +1,98 @@
+{
+  "hero": {
+    "title": "Investissez Intelligemment avec FIDUS",
+    "subtitle": "Fonds d'investissement professionnels avec des rendements transparents et un accès en temps réel à votre portefeuille.",
+    "cta": {
+      "start": "Commencer à Investir",
+      "learnMore": "En Savoir Plus"
+    }
+  },
+  "valueProps": {
+    "title": "Pourquoi Choisir FIDUS?",
+    "profitability": {
+      "title": "Haute Rentabilité",
+      "description": "Stratégies diversifiées avec des rendements annuels compétitifs"
+    },
+    "transparency": {
+      "title": "Transparence Totale",
+      "description": "Accès en temps réel à vos investissements et performances"
+    },
+    "flexibility": {
+      "title": "Flexibilité Totale",
+      "description": "Investissez à partir de $100 et retirez sans pénalités"
+    }
+  },
+  "funds": {
+    "title": "Nos Fonds d'Investissement",
+    "subtitle": "Choisissez le fonds qui correspond le mieux à votre profil d'investissement",
+    "core": {
+      "name": "Fonds CORE",
+      "description": "Stratégie conservatrice avec des rendements mensuels de 1,5%-2,5%. Idéal pour construire une richesse stable.",
+      "risk": "Risque: Faible",
+      "returns": "Rendements: 1,5% - 2,5% mensuels",
+      "minimumInvestment": "Min: $100"
+    },
+    "balance": {
+      "name": "Fonds BALANCE",
+      "description": "Stratégie modérée avec des rendements trimestriels de 7,5%-10%. Équilibre optimal entre croissance et sécurité.",
+      "risk": "Risque: Moyen",
+      "returns": "Rendements: 7,5% - 10% trimestriels",
+      "minimumInvestment": "Min: $1 000"
+    },
+    "dynamic": {
+      "name": "Fonds DYNAMIC",
+      "description": "Stratégie agressive avec un fort potentiel de croissance. Pour investisseurs expérimentés.",
+      "risk": "Risque: Élevé",
+      "returns": "Rendements: 15% - 30% trimestriels",
+      "minimumInvestment": "Min: $5 000"
+    },
+    "unlimited": {
+      "name": "Fonds UNLIMITED",
+      "description": "Stratégie ultra-agressive avec un potentiel de croissance illimité. Investisseurs institutionnels uniquement.",
+      "risk": "Risque: Très Élevé",
+      "returns": "Rendements: Potentiel illimité",
+      "minimumInvestment": "Min: $25 000"
+    },
+    "interestIncubation": "Intérêts après 60 jours d'incubation",
+    "quarterlyPayments": "Paiements d'intérêts trimestriels"
+  },
+  "leadCapture": {
+    "title": "Prêt à Commencer?",
+    "subtitle": "Entrez vos informations et découvrez combien vous pourriez gagner avec notre simulateur.",
+    "form": {
+      "emailPlaceholder": "Votre e-mail",
+      "phonePlaceholder": "Votre téléphone (avec indicatif pays)",
+      "emailRequired": "L'e-mail est requis",
+      "emailInvalid": "E-mail invalide",
+      "phoneRequired": "Le téléphone est requis",
+      "phoneInvalid": "Téléphone invalide (minimum 8 chiffres)",
+      "submitError": "Erreur lors de la création de l'enregistrement. Réessayez.",
+      "connectionError": "Erreur de connexion. Vérifiez votre internet.",
+      "submit": "Accéder au Simulateur",
+      "submitting": "Traitement en cours..."
+    }
+  },
+  "footer": {
+    "disclaimer": "FIDUS Investments est un fonds d'investissement géré par des traders professionnels avec plus de 10 ans d'expérience sur les marchés financiers. Les rendements affichés sont des estimations historiques et ne garantissent pas les performances futures. Tous les investissements comportent des risques inhérents."
+  },
+  "simulator": {
+    "title": "Simulateur d'Investissement",
+    "subtitle": "Découvrez vos gains potentiels",
+    "selectFund": "Sélectionner le Fonds",
+    "amount": "Montant de l'Investissement",
+    "period": "Période d'Investissement",
+    "estimatedReturn": "Rendement Estimé",
+    "totalValue": "Valeur Totale",
+    "monthly": "Mensuel",
+    "quarterly": "Trimestriel",
+    "annually": "Annuel",
+    "months": "mois",
+    "disclaimer": "* Estimations basées sur les rendements historiques. Les performances passées ne garantissent pas les résultats futurs.",
+    "contactUs": "Contactez-nous pour Commencer",
+    "backToHome": "Retour à l'Accueil"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Erreur réseau. Veuillez vérifier votre connexion."
+  }
+}
