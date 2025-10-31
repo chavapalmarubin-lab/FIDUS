@@ -463,8 +463,8 @@ class MT5DealsService:
             all_managers = {
                 "TradingHub Gold": {"magic": 100234},
                 "GoldenTrade": {"magic": 100235},
-                "UNO14 MAM": {"magic": 100236},
                 "CP Strategy": {"magic": 100237}
+                # UNO14 removed - has 0 trades ever, only balance operations
             }
             
             # Add any managers with zero trades
