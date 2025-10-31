@@ -71,14 +71,14 @@ class PnLCalculator:
         withdrawal_pipeline = [
             {
                 "$match": {
-                    "account": account_number,
+                    "account_number": account_number,
                     "type": 2,
                     "profit": {"$lt": 0}
                 }
             },
             {
                 "$group": {
-                    "_id": "$account",
+                    "_id": "$account_number",
                     "total_withdrawals": {"$sum": {"$abs": "$profit"}},
                     "count": {"$sum": 1}
                 }
