@@ -362,34 +362,46 @@ class MT5AutoSyncService:
             return {}
     
     async def _trigger_mt5_restart(self):
-        """Trigger MT5 Terminal restart via GitHub Actions"""
+        """Trigger MT5 Terminal restart via GitHub Actions repository_dispatch"""
         try:
-            logger.info("🔄 Triggering MT5 Terminal restart via GitHub Actions...")
+            logger.info("🔄 Triggering MT5 FULL SYSTEM restart via GitHub Actions...")
             
-            # Trigger GitHub Actions workflow for MT5 restart
             import httpx
             github_token = os.getenv('GITHUB_TOKEN')
+            github_repo = os.getenv('GITHUB_REPOSITORY', 'chavapalmarubin-lab/FIDUS')
             
             if not github_token:
                 logger.error("❌ GITHUB_TOKEN not found - cannot trigger auto-restart")
+                logger.critical("🚨 MANUAL INTERVENTION REQUIRED: Restart MT5 Terminal on VPS manually")
                 return
             
-            url = "https://api.github.com/repos/chavapalmarubin-lab/FIDUS/actions/workflows/mt5-full-restart.yml/dispatches"
+            # Use repository_dispatch for full restart
+            url = f"https://api.github.com/repos/{github_repo}/dispatches"
             headers = {
                 "Authorization": f"Bearer {github_token}",
-                "Accept": "application/vnd.github.v3+json"
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
             }
-            data = {"ref": "main"}
+            data = {
+                "event_type": "mt5-full-restart",
+                "client_payload": {
+                    "trigger": "auto_sync_service",
+                    "reason": "MT5 Terminal disconnected from broker - all accounts showing $0",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            }
             
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, headers=headers, json=data, timeout=30)
                 
                 if response.status_code == 204:
-                    logger.info("✅ MT5 restart workflow triggered successfully")
+                    logger.info("✅ MT5 FULL RESTART workflow triggered successfully via repository_dispatch")
                 else:
-                    logger.error(f"❌ Failed to trigger MT5 restart: HTTP {response.status_code}")
+                    logger.error(f"❌ Failed to trigger MT5 restart: HTTP {response.status_code} - {response.text}")
+                    logger.critical("🚨 MANUAL INTERVENTION REQUIRED: Check GitHub Actions or restart MT5 manually")
         except Exception as e:
             logger.error(f"❌ Failed to trigger MT5 restart: {str(e)}")
+            logger.critical("🚨 MANUAL INTERVENTION REQUIRED: Restart MT5 Terminal on VPS manually")
     
     async def sync_all_accounts(self) -> Dict[str, Any]:
         """Sync all active MT5 accounts"""
