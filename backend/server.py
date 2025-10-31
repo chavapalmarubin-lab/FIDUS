@@ -3576,7 +3576,7 @@ async def get_fund_true_pnl(fund_code: str, current_user: dict = Depends(get_cur
     """
     try:
         pnl_calculator = PnLCalculator(db)
-        result = pnl_calculator.calculate_fund_pnl(fund_code.upper())
+        result = await pnl_calculator.calculate_fund_pnl(fund_code.upper())
         
         # Convert datetime to ISO format
         result['last_updated'] = result['last_updated'].isoformat()
