@@ -337,7 +337,13 @@ class TradingAnalyticsService:
                         manager_config["account"],
                         period_days
                     )
-                    all_managers.append(manager_perf)
+                    
+                    # FIXED: Only include managers with actual trading activity
+                    # Managers with 0 trades shouldn't appear in rankings/compare tab
+                    if manager_perf["total_trades"] > 0:
+                        all_managers.append(manager_perf)
+                    else:
+                        logger.info(f"⏭️  Skipping {manager_perf['manager_name']} - 0 trades")
             
             # Sort by return percentage (highest first)
             all_managers.sort(key=lambda x: x["return_percentage"], reverse=True)
