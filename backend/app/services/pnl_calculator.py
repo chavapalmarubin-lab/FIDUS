@@ -111,10 +111,37 @@ class PnLCalculator:
                     "type": 2,
                     "profit": {"$gt": 0},
                     # EXCLUDE all types of internal operations
+                    "$or": [
+                        {"comment": {"$regex": "Transfer"}},
+                        {"comment": {"$regex": "TRF"}},
+                        {"comment": {"$regex": "P/L Share"}}
+                    ]
+                }
+            },
+            {
+                "$match": {
+                    "$expr": {"$eq": [1, 0]}  # Match nothing - we're inverting the logic above
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$account_number",
+                    "total_deposits": {"$sum": "$profit"},
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        
+        # Actually, let me use the simpler approach - just match what we WANT
+        deposit_pipeline = [
+            {
+                "$match": {
+                    "account_number": account_number,
+                    "type": 2,
+                    "profit": {"$gt": 0},
+                    # ONLY include deposits that DON'T have these patterns
                     "comment": {
-                        "$not": {
-                            "$regex": "(Transfer|TRF|transfer|P/L Share) (from|to|From|To|:|#)"
-                        }
+                        "$not": {"$regex": "(Transfer|TRF|P/L Share)"}
                     }
                 }
             },
