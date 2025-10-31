@@ -78,6 +78,9 @@
   "simulator": {
     "title": "Simulador de Investimento",
     "subtitle": "Descubra seus ganhos potenciais",
+    "setup": "Configurar",
+    "results": "Resultados",
+    "comparison": "Comparação",
     "selectFund": "Selecionar Fundo",
     "amount": "Valor do Investimento",
     "period": "Período de Investimento",
@@ -89,7 +92,15 @@
     "months": "meses",
     "disclaimer": "* Estimativas baseadas em retornos históricos. Desempenho passado não garante resultados futuros.",
     "contactUs": "Entre em Contato para Começar",
-    "backToHome": "Voltar para Início"
+    "backToHome": "Voltar para Início",
+    "calculate": "Calcular Retornos",
+    "save": "Salvar Simulação",
+    "download": "Baixar Relatório",
+    "addFund": "Adicionar Outro Fundo",
+    "totalInvestment": "Investimento Total",
+    "projectedReturns": "Retornos Projetados",
+    "roi": "Retorno sobre Investimento",
+    "timeframe": "Prazo de Investimento"
   },
   "errors": {
     "generic": "Ocorreu um erro. Por favor, tente novamente.",
