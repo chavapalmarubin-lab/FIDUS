@@ -24,6 +24,7 @@ const SimulatorPage = () => {
       background: '#0f1419',
       padding: '2rem 1rem'
     }}>
+      <LanguageSelector position="fixed" />
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
