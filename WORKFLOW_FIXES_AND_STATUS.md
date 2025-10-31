@@ -221,8 +221,8 @@ curl -X POST \
 
 ## 📊 GITHUB TOKEN STATUS
 
-**Token:** `ghp_WDF5Z9md1OqLI91vEZtJiJRRxiu2hk23vzxk`  
-**Status:** ❌ Returns 401 Unauthorized
+**Token:** `[SECURED - ghp_****...****]`  
+**Status:** ❌ Returns 401 Unauthorized (Token was revoked for security)
 
 ### Issue Analysis:
 
