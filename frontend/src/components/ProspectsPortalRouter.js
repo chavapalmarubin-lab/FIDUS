@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
-import ProspectsPortalI18n from './ProspectsPortalI18n';
+import ProspectsPortalNew from './ProspectsPortal';
 import InvestmentSimulator from './InvestmentSimulator';
 import LanguageSelector from './LanguageSelector';
 
@@ -8,7 +8,7 @@ import LanguageSelector from './LanguageSelector';
 const ProspectsPortalRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<ProspectsPortalI18n />} />
+      <Route path="/" element={<ProspectsPortalNew />} />
       <Route path="/simulator/:leadId" element={<SimulatorPage />} />
     </Routes>
   );
