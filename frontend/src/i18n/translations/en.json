@@ -22,37 +22,110 @@
       "description": "Invest from $100 and withdraw without penalties"
     }
   },
+  "prospects": {
+    "hero": {
+      "title": "Invest in Your Future with FIDUS",
+      "subtitle": "Professional Forex Investment Management with Consistent Returns",
+      "cta": "Start Now"
+    },
+    "benefits": {
+      "title": "Why Choose FIDUS?",
+      "transparency": {
+        "title": "Total Transparency",
+        "description": "24/7 access to your MT5 account, detailed reports and real-time tracking"
+      },
+      "expertise": {
+        "title": "Proven Expertise",
+        "description": "Team of professional traders with years of experience in financial markets"
+      },
+      "security": {
+        "title": "Guaranteed Security",
+        "description": "Your funds are safe with internationally regulated brokers"
+      },
+      "flexibility": {
+        "title": "Flexibility",
+        "description": "Multiple investment options tailored to your risk profile"
+      }
+    },
+    "products": {
+      "title": "Our Investment Funds",
+      "subtitle": "Choose the fund that best fits your financial goals",
+      "core": {
+        "name": "FIDUS CORE",
+        "tagline": "Stability and Growth",
+        "rate": "1.5%",
+        "annualRate": "18%",
+        "minInvestment": "$10,000",
+        "redemption": "Monthly",
+        "features": [
+          "Ideal for beginners",
+          "Monthly liquidity",
+          "Lower risk"
+        ]
+      },
+      "balance": {
+        "name": "FIDUS BALANCE",
+        "tagline": "Perfect Balance",
+        "rate": "2.5%",
+        "annualRate": "30%",
+        "minInvestment": "$50,000",
+        "redemption": "Quarterly",
+        "popular": "Most Popular",
+        "features": [
+          "Most popular",
+          "Balanced returns",
+          "Diversified strategy"
+        ]
+      },
+      "dynamic": {
+        "name": "FIDUS DYNAMIC",
+        "tagline": "Maximum Returns",
+        "rate": "3.5%",
+        "annualRate": "42%",
+        "minInvestment": "$250,000",
+        "redemption": "Semi-annual",
+        "features": [
+          "For advanced investors",
+          "Maximum potential",
+          "Active management"
+        ]
+      },
+      "unlimited": {
+        "name": "FIDUS UNLIMITED",
+        "tagline": "Exclusive and Premium",
+        "rate": "Custom",
+        "annualRate": "45%+",
+        "minInvestment": "$1,000,000",
+        "redemption": "Annual",
+        "features": [
+          "Exclusive access",
+          "Dedicated manager",
+          "Custom strategies"
+        ]
+      },
+      "monthlyReturn": "monthly",
+      "annualReturn": "annual",
+      "minInvest": "Minimum Investment",
+      "redemptionPeriod": "Redemption Period",
+      "learnMore": "Learn More"
+    },
+    "contact": {
+      "title": "Start Your Investment Today",
+      "subtitle": "Leave your information and an advisor will contact you",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 123 456 7890",
+      "submit": "Request Information",
+      "submitting": "Sending...",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email",
+      "phoneRequired": "Phone is required",
+      "phoneInvalid": "Invalid phone (minimum 8 digits)",
+      "submitError": "Error sending. Try again."
+    }
+  },
   "funds": {
-    "title": "Our Investment Funds",
-    "subtitle": "Choose the fund that best suits your investment profile",
-    "core": {
-      "name": "CORE Fund",
-      "description": "Conservative strategy with monthly returns of 1.5%-2.5%. Ideal for building stable wealth.",
-      "risk": "Risk: Low",
-      "returns": "Returns: 1.5% - 2.5% monthly",
-      "minimumInvestment": "Min: $100"
-    },
-    "balance": {
-      "name": "BALANCE Fund",
-      "description": "Moderate strategy with quarterly returns of 7.5%-10%. Optimal balance between growth and security.",
-      "risk": "Risk: Medium",
-      "returns": "Returns: 7.5% - 10% quarterly",
-      "minimumInvestment": "Min: $1,000"
-    },
-    "dynamic": {
-      "name": "DYNAMIC Fund",
-      "description": "Aggressive strategy with high growth potential. For experienced investors.",
-      "risk": "Risk: High",
-      "returns": "Returns: 15% - 30% quarterly",
-      "minimumInvestment": "Min: $5,000"
-    },
-    "unlimited": {
-      "name": "UNLIMITED Fund",
-      "description": "Ultra-aggressive strategy with unlimited growth potential. Institutional investors only.",
-      "risk": "Risk: Very High",
-      "returns": "Returns: Unlimited potential",
-      "minimumInvestment": "Min: $25,000"
-    },
     "interestIncubation": "Interest after 60-day incubation",
     "quarterlyPayments": "Quarterly interest payments"
   },
