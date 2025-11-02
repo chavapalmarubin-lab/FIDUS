@@ -129,25 +129,6 @@
     "interestIncubation": "Interest after 60-day incubation",
     "quarterlyPayments": "Quarterly interest payments"
   },
-  "leadCapture": {
-    "title": "Ready to Start?",
-    "subtitle": "Enter your information and discover how much you could earn with our simulator.",
-    "form": {
-      "emailPlaceholder": "Your email",
-      "phonePlaceholder": "Your phone (with country code)",
-      "emailRequired": "Email is required",
-      "emailInvalid": "Invalid email",
-      "phoneRequired": "Phone is required",
-      "phoneInvalid": "Invalid phone (minimum 8 digits)",
-      "submitError": "Error creating record. Try again.",
-      "connectionError": "Connection error. Check your internet.",
-      "submit": "Access Simulator",
-      "submitting": "Processing..."
-    }
-  },
-  "footer": {
-    "disclaimer": "FIDUS Investments is an investment fund managed by professional traders with over 10 years of experience in financial markets. Returns shown are historical estimates and do not guarantee future performance. All investments carry inherent risks."
-  },
   "simulator": {
     "title": "Investment Simulator",
     "subtitle": "Discover your potential earnings",
@@ -174,6 +155,9 @@
     "projectedReturns": "Projected Returns",
     "roi": "Return on Investment",
     "timeframe": "Investment Timeframe"
+  },
+  "footer": {
+    "disclaimer": "FIDUS Investments is an investment fund managed by professional traders with over 10 years of experience in financial markets. Returns shown are historical estimates and do not guarantee future performance. All investments carry inherent risks."
   },
   "errors": {
     "generic": "An error occurred. Please try again.",
