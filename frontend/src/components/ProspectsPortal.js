@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
 
-// Main Prospects Portal Component - Matching Client Portal Dark Theme
 const ProspectsPortalNew = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ email: '', phone: '' });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Smooth scroll function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -16,38 +17,28 @@ const ProspectsPortalNew = () => {
     }
   };
 
-  // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email) {
-      newErrors.email = 'El correo es requerido';
+      newErrors.email = t('prospects.contact.emailRequired');
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Correo inválido';
+      newErrors.email = t('prospects.contact.emailInvalid');
     }
-
-    // Phone validation - more flexible
     const phoneRegex = /^[+]?[0-9\s\-().]{8,20}$/;
     if (!formData.phone) {
-      newErrors.phone = 'El teléfono es requerido';
+      newErrors.phone = t('prospects.contact.phoneRequired');
     } else if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'Teléfono inválido (mínimo 8 dígitos)';
+      newErrors.phone = t('prospects.contact.phoneInvalid');
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-
     setIsSubmitting(true);
-
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
       const response = await fetch(`${backendUrl}/api/prospects/lead`, {
@@ -59,27 +50,115 @@ const ProspectsPortalNew = () => {
           source: 'prospects_portal'
         })
       });
-
       const data = await response.json();
-
       if (data.success || response.ok) {
         const leadId = data.leadId || data.lead_id || data.id;
         if (leadId) {
           localStorage.setItem('fidus_lead_id', leadId);
           navigate(`/prospects/simulator/${leadId}`);
         } else {
-          setErrors({ submit: 'Error al crear registro. Intenta de nuevo.' });
+          setErrors({ submit: t('prospects.contact.submitError') });
         }
       } else {
-        setErrors({ submit: data.message || 'Error al crear registro. Intenta de nuevo.' });
+        setErrors({ submit: data.message || t('prospects.contact.submitError') });
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      setErrors({ submit: 'Error de conexión. Verifica tu internet.' });
+      setErrors({ submit: t('prospects.contact.submitError') });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const products = [
+    {
+      name: t('prospects.products.core.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/uibusrfk_FIDUS%20CORE.png',
+      tagline: t('prospects.products.core.tagline'),
+      rate: t('prospects.products.core.rate'),
+      annualRate: t('prospects.products.core.annualRate'),
+      minInvestment: t('prospects.products.core.minInvestment'),
+      redemption: t('prospects.products.core.redemption'),
+      color: '#ffffff',
+      textColor: '#1e293b',
+      buttonColor: '#1e3a8a',
+      features: t('prospects.products.core.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.balance.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/yav4r65z_FIDUS%20BALANCE.png',
+      tagline: t('prospects.products.balance.tagline'),
+      rate: t('prospects.products.balance.rate'),
+      annualRate: t('prospects.products.balance.annualRate'),
+      minInvestment: t('prospects.products.balance.minInvestment'),
+      redemption: t('prospects.products.balance.redemption'),
+      color: '#0891b2',
+      textColor: '#ffffff',
+      buttonColor: '#0891b2',
+      popular: true,
+      popularText: t('prospects.products.balance.popular'),
+      features: t('prospects.products.balance.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.dynamic.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/u4yztdby_FIDUS%20DYNAMIC.png',
+      tagline: t('prospects.products.dynamic.tagline'),
+      rate: t('prospects.products.dynamic.rate'),
+      annualRate: t('prospects.products.dynamic.annualRate'),
+      minInvestment: t('prospects.products.dynamic.minInvestment'),
+      redemption: t('prospects.products.dynamic.redemption'),
+      color: '#1e3a8a',
+      textColor: '#ffffff',
+      buttonColor: '#1e3a8a',
+      features: t('prospects.products.dynamic.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.unlimited.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png',
+      tagline: t('prospects.products.unlimited.tagline'),
+      rate: t('prospects.products.unlimited.rate'),
+      annualRate: t('prospects.products.unlimited.annualRate'),
+      minInvestment: t('prospects.products.unlimited.minInvestment'),
+      redemption: t('prospects.products.unlimited.redemption'),
+      color: '#7c3aed',
+      textColor: '#ffffff',
+      buttonColor: '#7c3aed',
+      features: t('prospects.products.unlimited.features', { returnObjects: true })
+    }
+  ];
+
+  const benefits = [
+    { 
+      icon: '🎯', 
+      title: t('prospects.benefits.experience.title'), 
+      desc: t('prospects.benefits.experience.description') 
+    },
+    { 
+      icon: '💎', 
+      title: t('prospects.benefits.transparency.title'), 
+      desc: t('prospects.benefits.transparency.description') 
+    },
+    { 
+      icon: '📈', 
+      title: t('prospects.benefits.returns.title'), 
+      desc: t('prospects.benefits.returns.description') 
+    },
+    { 
+      icon: '🔒', 
+      title: t('prospects.benefits.security.title'), 
+      desc: t('prospects.benefits.security.description') 
+    },
+    { 
+      icon: '💰', 
+      title: t('prospects.benefits.accessible.title'), 
+      desc: t('prospects.benefits.accessible.description') 
+    },
+    { 
+      icon: '⚡', 
+      title: t('prospects.benefits.simple.title'), 
+      desc: t('prospects.benefits.simple.description') 
+    }
+  ];
 
   return (
     <div style={{ 
@@ -87,7 +166,6 @@ const ProspectsPortalNew = () => {
       background: '#0f1419',
       minHeight: '100vh'
     }}>
-      {/* SECTION 1: Hero Section */}
       <section style={{
         background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%)',
         minHeight: '70vh',
@@ -99,7 +177,6 @@ const ProspectsPortalNew = () => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Logo */}
         <div style={{
           position: 'absolute',
           top: '2rem',
@@ -113,26 +190,21 @@ const ProspectsPortalNew = () => {
           <img 
             src="https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png" 
             alt="FIDUS Investment Management"
-            style={{
-              height: 'auto',
-              width: '200px',
-              display: 'block'
-            }}
+            style={{ height: 'auto', width: '200px', display: 'block' }}
           />
         </div>
 
-        {/* Decorative elements */}
+        <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>
+          <LanguageSelector position="relative" />
+        </div>
+
         <div style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: 0, left: 0, right: 0, bottom: 0,
           opacity: 0.1,
           background: 'radial-gradient(circle at 30% 50%, #06b6d4 0%, transparent 50%), radial-gradient(circle at 70% 80%, #3b82f6 0%, transparent 50%)'
         }} />
 
-        {/* Main Content */}
         <div style={{ position: 'relative', zIndex: 5, maxWidth: '900px', width: '100%' }}>
           <h1 style={{
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
@@ -143,8 +215,7 @@ const ProspectsPortalNew = () => {
             letterSpacing: '-0.02em',
             lineHeight: '1.2'
           }}>
-            DEMOCRATIZAMOS EL MUNDO<br />
-            FINANCIERO PARA TODOS
+            {t('prospects.hero.title').toUpperCase()}
           </h1>
 
           <p style={{
@@ -155,8 +226,7 @@ const ProspectsPortalNew = () => {
             margin: '0 auto 2.5rem',
             lineHeight: '1.6'
           }}>
-            Invierte con transparencia total y rendimientos profesionales.<br />
-            30 años de experiencia en trading algorítmico a tu alcance.
+            {t('prospects.hero.subtitle')}
           </p>
 
           <div style={{ textAlign: 'center' }}>
@@ -183,39 +253,13 @@ const ProspectsPortalNew = () => {
                 e.target.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.3)';
               }}
             >
-              Simula Tu Inversión →
+              {t('prospects.hero.cta')} →
             </button>
-          </div>
-
-          {/* Trust Indicators */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '2rem',
-            marginTop: '3rem',
-            flexWrap: 'wrap'
-          }}>
-            {['Sin compromiso', 'Gratis', 'En 2 minutos'].map((text, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.95rem'
-              }}>
-                <span style={{ fontSize: '1.25rem' }}>✓</span>
-                <span>{text}</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 2: Value Propositions */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#0f1419'
-      }}>
+      <section style={{ padding: '5rem 2rem', background: '#0f1419' }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
           fontWeight: '600',
@@ -223,7 +267,7 @@ const ProspectsPortalNew = () => {
           textAlign: 'center',
           marginBottom: '3rem'
         }}>
-          Por Qué Elegir FIDUS
+          {t('prospects.benefits.title')}
         </h2>
 
         <div style={{
@@ -233,14 +277,7 @@ const ProspectsPortalNew = () => {
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
-          {[
-            { icon: '🎯', title: '30 Años de Experiencia', desc: 'Trading algorítmico profesional con historial comprobado en mercados globales.' },
-            { icon: '💎', title: 'Transparencia Total', desc: 'Acceso completo a tu cuenta, portal de cliente. Ve tus inversiones en tiempo real, 24/7.' },
-            { icon: '📈', title: 'Rendimientos Profesionales', desc: 'Desde 1.5% hasta 4% mensual según tu perfil de inversión y capital.' },
-            { icon: '🔒', title: 'Seguridad Garantizada', desc: 'Brokers regulados internacionalmente. Tu capital siempre protegido.' },
-            { icon: '💰', title: 'Desde $10,000 USD', desc: 'Acceso a inversiones institucionales con montos accesibles.' },
-            { icon: '⚡', title: 'Proceso Simple', desc: 'Apertura de cuenta 100% digital. Invierte en menos de 48 horas.' }
-          ].map((benefit, index) => (
+          {benefits.map((benefit, index) => (
             <div key={index} style={{
               padding: '2rem',
               background: '#1f2937',
@@ -259,22 +296,11 @@ const ProspectsPortalNew = () => {
               e.currentTarget.style.boxShadow = 'none';
             }}
             >
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-                {benefit.icon}
-              </div>
-              <h3 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#ffffff',
-                marginBottom: '0.75rem'
-              }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{benefit.icon}</div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#ffffff', marginBottom: '0.75rem' }}>
                 {benefit.title}
               </h3>
-              <p style={{
-                fontSize: '0.95rem',
-                color: '#9ca3af',
-                lineHeight: '1.6'
-              }}>
+              <p style={{ fontSize: '0.95rem', color: '#9ca3af', lineHeight: '1.6' }}>
                 {benefit.desc}
               </p>
             </div>
@@ -282,11 +308,7 @@ const ProspectsPortalNew = () => {
         </div>
       </section>
 
-      {/* SECTION 3: Fund Showcase */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#1a1f2e'
-      }}>
+      <section style={{ padding: '5rem 2rem', background: '#1a1f2e' }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
           fontWeight: '600',
@@ -294,7 +316,7 @@ const ProspectsPortalNew = () => {
           textAlign: 'center',
           marginBottom: '1rem'
         }}>
-          Nuestros Fondos de Inversión
+          {t('prospects.products.title')}
         </h2>
         <p style={{
           fontSize: '1.125rem',
@@ -304,58 +326,17 @@ const ProspectsPortalNew = () => {
           maxWidth: '700px',
           margin: '0 auto 3rem'
         }}>
-          Elige el fondo que mejor se adapte a tu perfil de riesgo y objetivos financieros
+          {t('prospects.products.subtitle')}
         </p>
 
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '2rem',
-          maxWidth: '1200px',
+          maxWidth: '1400px',
           margin: '0 auto'
         }}>
-          {[
-            {
-              name: 'FIDUS CORE',
-              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/uibusrfk_FIDUS%20CORE.png',
-              tagline: 'Estabilidad y Crecimiento',
-              rate: '1.5%',
-              annualRate: '18%',
-              minInvestment: '$10,000',
-              redemption: 'Mensual',
-              color: '#ffffff',
-              textColor: '#1e293b',
-              buttonColor: '#1e3a8a',
-              features: ['Ideal para principiantes', 'Liquidez mensual', 'Menor riesgo']
-            },
-            {
-              name: 'FIDUS BALANCE',
-              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/yav4r65z_FIDUS%20BALANCE.png',
-              tagline: 'Equilibrio Perfecto',
-              rate: '2.5%',
-              annualRate: '30%',
-              minInvestment: '$50,000',
-              redemption: 'Trimestral',
-              color: '#0891b2',
-              textColor: '#ffffff',
-              buttonColor: '#0891b2',
-              popular: true,
-              features: ['Más popular', 'Rendimiento balanceado', 'Estrategia diversificada']
-            },
-            {
-              name: 'FIDUS DYNAMIC',
-              logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/u4yztdby_FIDUS%20DYNAMIC.png',
-              tagline: 'Máximo Rendimiento',
-              rate: '3.5%',
-              annualRate: '42%',
-              minInvestment: '$250,000',
-              redemption: 'Semestral',
-              color: '#1e3a8a',
-              textColor: '#ffffff',
-              buttonColor: '#1e3a8a',
-              features: ['Para inversionistas avanzados', 'Máximo potencial', 'Gestión activa']
-            }
-          ].map((fund, index) => (
+          {products.map((fund, index) => (
             <div key={index} style={{
               background: '#1f2937',
               borderRadius: '16px',
@@ -381,60 +362,32 @@ const ProspectsPortalNew = () => {
                   letterSpacing: '0.5px',
                   zIndex: 1
                 }}>
-                  Más Popular
+                  {fund.popularText}
                 </div>
               )}
 
-              <div style={{
-                background: fund.color,
-                padding: '2rem',
-                color: fund.textColor || 'white'
-              }}>
-                {/* Fund Logo */}
-                <div style={{
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}>
+              <div style={{ background: fund.color, padding: '2rem', color: fund.textColor || 'white' }}>
+                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
                   <img 
                     src={fund.logo}
                     alt={fund.name}
-                    style={{
-                      height: '80px',
-                      width: 'auto',
-                      objectFit: 'contain'
-                    }}
+                    style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
                   />
                 </div>
                 
-                <h3 style={{
-                  fontSize: '1.75rem',
-                  fontWeight: '700',
-                  marginBottom: '0.5rem'
-                }}>
+                <h3 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.5rem' }}>
                   {fund.name}
                 </h3>
-                <p style={{
-                  fontSize: '1rem',
-                  opacity: 0.9,
-                  marginBottom: '1.5rem'
-                }}>
+                <p style={{ fontSize: '1rem', opacity: 0.9, marginBottom: '1.5rem' }}>
                   {fund.tagline}
                 </p>
 
                 <div style={{ marginBottom: '1rem' }}>
-                  <div style={{
-                    fontSize: '3rem',
-                    fontWeight: '700',
-                    lineHeight: '1'
-                  }}>
+                  <div style={{ fontSize: '3rem', fontWeight: '700', lineHeight: '1' }}>
                     {fund.rate}
                   </div>
-                  <div style={{
-                    fontSize: '1rem',
-                    opacity: 0.9
-                  }}>
-                    mensual ({fund.annualRate} anual)
+                  <div style={{ fontSize: '1rem', opacity: 0.9' }}>
+                    {t('prospects.products.monthlyReturn')} ({fund.annualRate} {t('prospects.products.annualReturn')})
                   </div>
                 </div>
 
@@ -446,22 +399,18 @@ const ProspectsPortalNew = () => {
                   fontSize: '0.9rem'
                 }}>
                   <div>
-                    <div style={{ opacity: 0.8 }}>Mínimo</div>
+                    <div style={{ opacity: 0.8 }}>{t('prospects.products.minInvest')}</div>
                     <div style={{ fontWeight: '600' }}>{fund.minInvestment}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ opacity: 0.8 }}>Redención</div>
+                    <div style={{ opacity: 0.8 }}>{t('prospects.products.redemptionPeriod')}</div>
                     <div style={{ fontWeight: '600' }}>{fund.redemption}</div>
                   </div>
                 </div>
               </div>
 
               <div style={{ padding: '2rem', background: '#1f2937' }}>
-                <ul style={{
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: '0 0 2rem 0'
-                }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0' }}>
                   {fund.features.map((feature, idx) => (
                     <li key={idx} style={{
                       display: 'flex',
@@ -500,7 +449,7 @@ const ProspectsPortalNew = () => {
                     e.target.style.boxShadow = 'none';
                   }}
                 >
-                  Simular Inversión
+                  {t('prospects.hero.cta')}
                 </button>
               </div>
             </div>
@@ -508,11 +457,7 @@ const ProspectsPortalNew = () => {
         </div>
       </section>
 
-      {/* SECTION 4: Lead Capture Form */}
-      <section id="lead-capture" style={{
-        padding: '5rem 2rem',
-        background: '#0f1419'
-      }}>
+      <section id="lead-capture" style={{ padding: '5rem 2rem', background: '#0f1419' }}>
         <div style={{ maxWidth: '550px', margin: '0 auto' }}>
           <h2 style={{
             fontSize: 'clamp(1.75rem, 3vw, 2rem)',
@@ -521,15 +466,10 @@ const ProspectsPortalNew = () => {
             textAlign: 'center',
             marginBottom: '0.5rem'
           }}>
-            Comienza Tu Simulación de Inversión
+            {t('prospects.contact.title')}
           </h2>
-          <p style={{
-            fontSize: '1rem',
-            color: '#9ca3af',
-            textAlign: 'center',
-            marginBottom: '2rem'
-          }}>
-            Ingresa tus datos para acceder al simulador interactivo
+          <p style={{ fontSize: '1rem', color: '#9ca3af', textAlign: 'center', marginBottom: '2rem' }}>
+            {t('prospects.contact.subtitle')}
           </p>
 
           <form onSubmit={handleSubmit} style={{
@@ -539,7 +479,6 @@ const ProspectsPortalNew = () => {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            {/* Email Field */}
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{
                 display: 'block',
@@ -548,13 +487,13 @@ const ProspectsPortalNew = () => {
                 color: '#ffffff',
                 marginBottom: '0.5rem'
               }}>
-                📧 Correo Electrónico
+                📧 {t('prospects.contact.email')}
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="tu@email.com"
+                placeholder={t('prospects.contact.emailPlaceholder')}
                 style={{
                   width: '100%',
                   padding: '0.875rem',
@@ -577,7 +516,6 @@ const ProspectsPortalNew = () => {
               )}
             </div>
 
-            {/* Phone Field */}
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{
                 display: 'block',
@@ -586,13 +524,13 @@ const ProspectsPortalNew = () => {
                 color: '#ffffff',
                 marginBottom: '0.5rem'
               }}>
-                📱 Teléfono (WhatsApp)
+                📱 {t('prospects.contact.phone')} (WhatsApp)
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+1917-456-2151"
+                placeholder={t('prospects.contact.phonePlaceholder')}
                 style={{
                   width: '100%',
                   padding: '0.875rem',
@@ -615,7 +553,6 @@ const ProspectsPortalNew = () => {
               )}
             </div>
 
-            {/* Submit Error */}
             {errors.submit && (
               <div style={{
                 padding: '1rem',
@@ -630,7 +567,6 @@ const ProspectsPortalNew = () => {
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -648,23 +584,21 @@ const ProspectsPortalNew = () => {
                 marginBottom: '1rem'
               }}
             >
-              {isSubmitting ? 'Procesando...' : 'Acceder al Simulador →'}
+              {isSubmitting ? t('prospects.contact.submitting') : t('prospects.contact.submit')}
             </button>
 
-            {/* Privacy Notice */}
             <p style={{
               fontSize: '0.75rem',
               color: '#9ca3af',
               textAlign: 'center',
               lineHeight: '1.4'
             }}>
-              Al continuar, aceptas nuestra política de privacidad y términos de uso
+              {t('prospects.contact.privacyNotice')}
             </p>
           </form>
         </div>
       </section>
 
-      {/* SECTION 5: Footer */}
       <footer style={{
         padding: '3rem 2rem 2rem',
         background: '#1a1f2e',
@@ -674,7 +608,7 @@ const ProspectsPortalNew = () => {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <img 
-            src="/assets/LOGO_FULL_FIDUS.png" 
+            src="https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png" 
             alt="FIDUS Investment Management"
             style={{
               height: '50px',
@@ -684,12 +618,8 @@ const ProspectsPortalNew = () => {
             }}
           />
 
-          <p style={{
-            fontSize: '1.125rem',
-            marginBottom: '2rem',
-            color: '#9ca3af'
-          }}>
-            Democratizamos el mundo financiero para todos
+          <p style={{ fontSize: '1.125rem', marginBottom: '2rem', color: '#9ca3af' }}>
+            {t('prospects.footer.tagline')}
           </p>
 
           <div style={{
@@ -711,7 +641,7 @@ const ProspectsPortalNew = () => {
             fontSize: '0.875rem',
             color: '#6b7280'
           }}>
-            © 2025 FIDUS Investment Management. Todos los derechos reservados.
+            {t('prospects.footer.copyright')}
           </div>
         </div>
       </footer>
