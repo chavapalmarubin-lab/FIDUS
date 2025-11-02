@@ -8,21 +8,6 @@
       "learnMore": "Learn More"
     }
   },
-  "valueProps": {
-    "title": "Why Choose FIDUS?",
-    "profitability": {
-      "title": "High Profitability",
-      "description": "Diversified strategies with competitive annual returns"
-    },
-    "transparency": {
-      "title": "Total Transparency",
-      "description": "Real-time access to your investments and performance"
-    },
-    "flexibility": {
-      "title": "Total Flexibility",
-      "description": "Invest from $100 and withdraw without penalties"
-    }
-  },
   "prospects": {
     "hero": {
       "title": "Invest in Your Future with FIDUS",
