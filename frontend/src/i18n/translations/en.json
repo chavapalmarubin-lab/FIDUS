@@ -1,6 +1,7 @@
 {
-  "hero": {
-    "title": "Invest Smartly with FIDUS",
+  "prospects": {
+    "hero": {
+      "title": "Invest in Your Future with FIDUS",
     "subtitle": "Professional investment funds with transparent returns and real-time access to your portfolio.",
     "cta": {
       "start": "Start Investing",
