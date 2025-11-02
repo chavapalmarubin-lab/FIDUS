@@ -386,7 +386,7 @@ const ProspectsPortalNew = () => {
                   <div style={{ fontSize: '3rem', fontWeight: '700', lineHeight: '1' }}>
                     {fund.rate}
                   </div>
-                  <div style={{ fontSize: '1rem', opacity: 0.9' }}>
+                  <div style={{ fontSize: '1rem', opacity: 0.9 }}>
                     {t('prospects.products.monthlyReturn')} ({fund.annualRate} {t('prospects.products.annualReturn')})
                   </div>
                 </div>
