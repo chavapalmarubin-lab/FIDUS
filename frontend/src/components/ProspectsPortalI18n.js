@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
 
-// Main Prospects Portal Component - With i18n Support
 const ProspectsPortalNew = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -11,7 +10,6 @@ const ProspectsPortalNew = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Smooth scroll function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -19,38 +17,28 @@ const ProspectsPortalNew = () => {
     }
   };
 
-  // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email) {
-      newErrors.email = t('leadCapture.form.emailRequired');
+      newErrors.email = t('prospects.contact.emailRequired');
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = t('leadCapture.form.emailInvalid');
+      newErrors.email = t('prospects.contact.emailInvalid');
     }
-
-    // Phone validation - more flexible
     const phoneRegex = /^[+]?[0-9\s\-().]{8,20}$/;
     if (!formData.phone) {
-      newErrors.phone = t('leadCapture.form.phoneRequired');
+      newErrors.phone = t('prospects.contact.phoneRequired');
     } else if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = t('leadCapture.form.phoneInvalid');
+      newErrors.phone = t('prospects.contact.phoneInvalid');
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-
     setIsSubmitting(true);
-
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
       const response = await fetch(`${backendUrl}/api/prospects/lead`, {
@@ -62,27 +50,115 @@ const ProspectsPortalNew = () => {
           source: 'prospects_portal'
         })
       });
-
       const data = await response.json();
-
       if (data.success || response.ok) {
         const leadId = data.leadId || data.lead_id || data.id;
         if (leadId) {
           localStorage.setItem('fidus_lead_id', leadId);
           navigate(`/prospects/simulator/${leadId}`);
         } else {
-          setErrors({ submit: t('leadCapture.form.submitError') });
+          setErrors({ submit: t('prospects.contact.submitError') });
         }
       } else {
-        setErrors({ submit: data.message || t('leadCapture.form.submitError') });
+        setErrors({ submit: data.message || t('prospects.contact.submitError') });
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      setErrors({ submit: t('leadCapture.form.connectionError') });
+      setErrors({ submit: t('prospects.contact.submitError') });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const products = [
+    {
+      name: t('prospects.products.core.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/uibusrfk_FIDUS%20CORE.png',
+      tagline: t('prospects.products.core.tagline'),
+      rate: t('prospects.products.core.rate'),
+      annualRate: t('prospects.products.core.annualRate'),
+      minInvestment: t('prospects.products.core.minInvestment'),
+      redemption: t('prospects.products.core.redemption'),
+      color: '#ffffff',
+      textColor: '#1e293b',
+      buttonColor: '#1e3a8a',
+      features: t('prospects.products.core.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.balance.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/yav4r65z_FIDUS%20BALANCE.png',
+      tagline: t('prospects.products.balance.tagline'),
+      rate: t('prospects.products.balance.rate'),
+      annualRate: t('prospects.products.balance.annualRate'),
+      minInvestment: t('prospects.products.balance.minInvestment'),
+      redemption: t('prospects.products.balance.redemption'),
+      color: '#0891b2',
+      textColor: '#ffffff',
+      buttonColor: '#0891b2',
+      popular: true,
+      popularText: t('prospects.products.balance.popular'),
+      features: t('prospects.products.balance.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.dynamic.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/u4yztdby_FIDUS%20DYNAMIC.png',
+      tagline: t('prospects.products.dynamic.tagline'),
+      rate: t('prospects.products.dynamic.rate'),
+      annualRate: t('prospects.products.dynamic.annualRate'),
+      minInvestment: t('prospects.products.dynamic.minInvestment'),
+      redemption: t('prospects.products.dynamic.redemption'),
+      color: '#1e3a8a',
+      textColor: '#ffffff',
+      buttonColor: '#1e3a8a',
+      features: t('prospects.products.dynamic.features', { returnObjects: true })
+    },
+    {
+      name: t('prospects.products.unlimited.name'),
+      logo: 'https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png',
+      tagline: t('prospects.products.unlimited.tagline'),
+      rate: t('prospects.products.unlimited.rate'),
+      annualRate: t('prospects.products.unlimited.annualRate'),
+      minInvestment: t('prospects.products.unlimited.minInvestment'),
+      redemption: t('prospects.products.unlimited.redemption'),
+      color: '#7c3aed',
+      textColor: '#ffffff',
+      buttonColor: '#7c3aed',
+      features: t('prospects.products.unlimited.features', { returnObjects: true })
+    }
+  ];
+
+  const benefits = [
+    { 
+      icon: '🎯', 
+      title: t('prospects.benefits.experience.title'), 
+      desc: t('prospects.benefits.experience.description') 
+    },
+    { 
+      icon: '💎', 
+      title: t('prospects.benefits.transparency.title'), 
+      desc: t('prospects.benefits.transparency.description') 
+    },
+    { 
+      icon: '📈', 
+      title: t('prospects.benefits.returns.title'), 
+      desc: t('prospects.benefits.returns.description') 
+    },
+    { 
+      icon: '🔒', 
+      title: t('prospects.benefits.security.title'), 
+      desc: t('prospects.benefits.security.description') 
+    },
+    { 
+      icon: '💰', 
+      title: t('prospects.benefits.accessible.title'), 
+      desc: t('prospects.benefits.accessible.description') 
+    },
+    { 
+      icon: '⚡', 
+      title: t('prospects.benefits.simple.title'), 
+      desc: t('prospects.benefits.simple.description') 
+    }
+  ];
 
   return (
     <div style={{ 
@@ -90,10 +166,6 @@ const ProspectsPortalNew = () => {
       background: '#0f1419',
       minHeight: '100vh'
     }}>
-      {/* Language Selector */}
-      <LanguageSelector position="fixed" />
-
-      {/* SECTION 1: Hero Section */}
       <section style={{
         background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%)',
         minHeight: '70vh',
@@ -105,7 +177,6 @@ const ProspectsPortalNew = () => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Logo */}
         <div style={{
           position: 'absolute',
           top: '2rem',
@@ -119,26 +190,21 @@ const ProspectsPortalNew = () => {
           <img 
             src="https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png" 
             alt="FIDUS Investment Management"
-            style={{
-              height: 'auto',
-              width: '200px',
-              display: 'block'
-            }}
+            style={{ height: 'auto', width: '200px', display: 'block' }}
           />
         </div>
 
-        {/* Decorative elements */}
+        <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>
+          <LanguageSelector position="relative" />
+        </div>
+
         <div style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: 0, left: 0, right: 0, bottom: 0,
           opacity: 0.1,
           background: 'radial-gradient(circle at 30% 50%, #06b6d4 0%, transparent 50%), radial-gradient(circle at 70% 80%, #3b82f6 0%, transparent 50%)'
         }} />
 
-        {/* Main Content */}
         <div style={{ position: 'relative', zIndex: 5, maxWidth: '900px', width: '100%' }}>
           <h1 style={{
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
@@ -149,7 +215,7 @@ const ProspectsPortalNew = () => {
             letterSpacing: '-0.02em',
             lineHeight: '1.2'
           }}>
-            {t('hero.title')}
+            {t('prospects.hero.title').toUpperCase()}
           </h1>
 
           <p style={{
@@ -160,7 +226,7 @@ const ProspectsPortalNew = () => {
             margin: '0 auto 2.5rem',
             lineHeight: '1.6'
           }}>
-            {t('hero.subtitle')}
+            {t('prospects.hero.subtitle')}
           </p>
 
           <div style={{ textAlign: 'center' }}>
@@ -187,17 +253,13 @@ const ProspectsPortalNew = () => {
                 e.target.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.3)';
               }}
             >
-              {t('hero.cta.start')} →
+              {t('prospects.hero.cta')} →
             </button>
           </div>
         </div>
       </section>
 
-      {/* SECTION 2: Value Propositions */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#0f1419'
-      }}>
+      <section style={{ padding: '5rem 2rem', background: '#0f1419' }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
           fontWeight: '600',
@@ -205,7 +267,7 @@ const ProspectsPortalNew = () => {
           textAlign: 'center',
           marginBottom: '3rem'
         }}>
-          {t('valueProps.title')}
+          {t('prospects.benefits.title')}
         </h2>
 
         <div style={{
@@ -215,11 +277,7 @@ const ProspectsPortalNew = () => {
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
-          {[
-            { icon: '📈', title: t('valueProps.profitability.title'), desc: t('valueProps.profitability.description') },
-            { icon: '💎', title: t('valueProps.transparency.title'), desc: t('valueProps.transparency.description') },
-            { icon: '⚡', title: t('valueProps.flexibility.title'), desc: t('valueProps.flexibility.description') }
-          ].map((benefit, index) => (
+          {benefits.map((benefit, index) => (
             <div key={index} style={{
               padding: '2rem',
               background: '#1f2937',
@@ -227,29 +285,30 @@ const ProspectsPortalNew = () => {
               textAlign: 'center',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
               cursor: 'pointer',
-              border: '1px solid rgba(255, 255, 255, 0.05)'
+              border: '1px solid rgba(59, 130, 246, 0.1)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.2)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.2)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = 'none';
-            }}>
+            }}
+            >
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{benefit.icon}</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1rem' }}>{benefit.title}</h3>
-              <p style={{ color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>{benefit.desc}</p>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#ffffff', marginBottom: '0.75rem' }}>
+                {benefit.title}
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#9ca3af', lineHeight: '1.6' }}>
+                {benefit.desc}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* SECTION 3: Fund Showcase */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: '#1a1f2e'
-      }}>
+      <section style={{ padding: '5rem 2rem', background: '#1a1f2e' }}>
         <h2 style={{
           fontSize: 'clamp(2rem, 4vw, 2.5rem)',
           fontWeight: '600',
@@ -257,17 +316,17 @@ const ProspectsPortalNew = () => {
           textAlign: 'center',
           marginBottom: '1rem'
         }}>
-          {t('funds.title')}
+          {t('prospects.products.title')}
         </h2>
-        
         <p style={{
           fontSize: '1.125rem',
-          color: 'rgba(255, 255, 255, 0.7)',
+          color: '#9ca3af',
           textAlign: 'center',
+          marginBottom: '3rem',
           maxWidth: '700px',
           margin: '0 auto 3rem'
         }}>
-          {t('funds.subtitle')}
+          {t('prospects.products.subtitle')}
         </p>
 
         <div style={{
@@ -277,217 +336,232 @@ const ProspectsPortalNew = () => {
           maxWidth: '1400px',
           margin: '0 auto'
         }}>
-          {[
-            {
-              name: t('funds.core.name'),
-              risk: t('funds.core.risk'),
-              returns: t('funds.core.returns'),
-              minInvestment: t('funds.core.minimumInvestment'),
-              description: t('funds.core.description'),
-              color: '#10b981',
-              gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-            },
-            {
-              name: t('funds.balance.name'),
-              risk: t('funds.balance.risk'),
-              returns: t('funds.balance.returns'),
-              minInvestment: t('funds.balance.minimumInvestment'),
-              description: t('funds.balance.description'),
-              color: '#3b82f6',
-              gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-            },
-            {
-              name: t('funds.dynamic.name'),
-              risk: t('funds.dynamic.risk'),
-              returns: t('funds.dynamic.returns'),
-              minInvestment: t('funds.dynamic.minimumInvestment'),
-              description: t('funds.dynamic.description'),
-              color: '#f59e0b',
-              gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-            },
-            {
-              name: t('funds.unlimited.name'),
-              risk: t('funds.unlimited.risk'),
-              returns: t('funds.unlimited.returns'),
-              minInvestment: t('funds.unlimited.minimumInvestment'),
-              description: t('funds.unlimited.description'),
-              color: '#ef4444',
-              gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-            }
-          ].map((fund, index) => (
+          {products.map((fund, index) => (
             <div key={index} style={{
               background: '#1f2937',
               borderRadius: '16px',
-              padding: '2rem',
-              border: `2px solid ${fund.color}20`,
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.boxShadow = `0 12px 40px ${fund.color}40`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              position: 'relative',
+              border: fund.popular ? `2px solid ${fund.color}` : '1px solid rgba(255,255,255,0.1)',
+              transform: fund.popular ? 'scale(1.02)' : 'scale(1)',
+              transition: 'all 0.3s ease'
             }}>
-              <div style={{
-                background: fund.gradient,
-                borderRadius: '8px',
-                padding: '0.75rem 1.5rem',
-                marginBottom: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  color: '#ffffff',
-                  fontWeight: '700',
-                  margin: 0
+              {fund.popular && (
+                <div style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: fund.color,
+                  color: 'white',
+                  padding: '0.375rem 0.875rem',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  zIndex: 1
                 }}>
+                  {fund.popularText}
+                </div>
+              )}
+
+              <div style={{ background: fund.color, padding: '2rem', color: fund.textColor || 'white' }}>
+                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                  <img 
+                    src={fund.logo}
+                    alt={fund.name}
+                    style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
+                  />
+                </div>
+                
+                <h3 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.5rem' }}>
                   {fund.name}
                 </h3>
-              </div>
+                <p style={{ fontSize: '1rem', opacity: 0.9, marginBottom: '1.5rem' }}>
+                  {fund.tagline}
+                </p>
 
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.85)',
-                fontSize: '1rem',
-                lineHeight: '1.6',
-                marginBottom: '1.5rem'
-              }}>
-                {fund.description}
-              </p>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '3rem', fontWeight: '700', lineHeight: '1' }}>
+                    {fund.rate}
+                  </div>
+                  <div style={{ fontSize: '1rem', opacity: 0.9 }}>
+                    {t('prospects.products.monthlyReturn')} ({fund.annualRate} {t('prospects.products.annualReturn')})
+                  </div>
+                </div>
 
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem'
-              }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  paddingTop: '1rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '0.9rem'
                 }}>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>{fund.risk}</span>
+                  <div>
+                    <div style={{ opacity: 0.8 }}>{t('prospects.products.minInvest')}</div>
+                    <div style={{ fontWeight: '600' }}>{fund.minInvestment}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ opacity: 0.8 }}>{t('prospects.products.redemptionPeriod')}</div>
+                    <div style={{ fontWeight: '600' }}>{fund.redemption}</div>
+                  </div>
                 </div>
+              </div>
 
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '0.75rem',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: fund.color, fontWeight: '600' }}>{fund.returns}</span>
-                </div>
+              <div style={{ padding: '2rem', background: '#1f2937' }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0' }}>
+                  {fund.features.map((feature, idx) => (
+                    <li key={idx} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem',
+                      color: '#9ca3af',
+                      fontSize: '0.95rem'
+                    }}>
+                      <span style={{ color: fund.color, fontSize: '1.25rem', fontWeight: 'bold' }}>✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
 
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '0.75rem',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: '600' }}>{fund.minInvestment}</span>
-                </div>
+                <button
+                  onClick={() => scrollToSection('lead-capture')}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    color: 'white',
+                    background: fund.buttonColor || fund.color,
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  {t('prospects.hero.cta')}
+                </button>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* SECTION 4: Lead Capture Form */}
-      <section id="lead-capture" style={{
-        padding: '5rem 2rem',
-        background: '#0f1419'
-      }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <section id="lead-capture" style={{ padding: '5rem 2rem', background: '#0f1419' }}>
+        <div style={{ maxWidth: '550px', margin: '0 auto' }}>
           <h2 style={{
-            fontSize: 'clamp(2rem, 4vw, 2.5rem)',
+            fontSize: 'clamp(1.75rem, 3vw, 2rem)',
             fontWeight: '600',
             color: '#ffffff',
             textAlign: 'center',
-            marginBottom: '1rem'
+            marginBottom: '0.5rem'
           }}>
-            {t('leadCapture.title')}
+            {t('prospects.contact.title')}
           </h2>
-          
-          <p style={{
-            fontSize: '1.125rem',
-            color: 'rgba(255, 255, 255, 0.7)',
-            textAlign: 'center',
-            marginBottom: '2.5rem'
-          }}>
-            {t('leadCapture.subtitle')}
+          <p style={{ fontSize: '1rem', color: '#9ca3af', textAlign: 'center', marginBottom: '2rem' }}>
+            {t('prospects.contact.subtitle')}
           </p>
 
           <form onSubmit={handleSubmit} style={{
             background: '#1f2937',
             padding: '2.5rem',
-            borderRadius: '16px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
             <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                color: '#ffffff',
+                marginBottom: '0.5rem'
+              }}>
+                📧 {t('prospects.contact.email')}
+              </label>
               <input
                 type="email"
-                placeholder={t('leadCapture.form.emailPlaceholder')}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder={t('prospects.contact.emailPlaceholder')}
                 style={{
                   width: '100%',
-                  padding: '1rem',
+                  padding: '0.875rem',
                   fontSize: '1rem',
-                  border: errors.email ? '2px solid #ef4444' : '2px solid rgba(255, 255, 255, 0.1)',
+                  border: errors.email ? '2px solid #ef4444' : '2px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '8px',
-                  background: '#0f1419',
-                  color: '#ffffff',
                   outline: 'none',
-                  transition: 'border-color 0.3s ease'
+                  transition: 'border-color 0.3s ease',
+                  boxSizing: 'border-box',
+                  background: '#0f1419',
+                  color: '#ffffff'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                onBlur={(e) => e.target.style.borderColor = errors.email ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}
+                onBlur={(e) => e.target.style.borderColor = errors.email ? '#ef4444' : 'rgba(59, 130, 246, 0.3)'}
               />
               {errors.email && (
-                <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                   {errors.email}
-                </p>
+                </span>
               )}
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                color: '#ffffff',
+                marginBottom: '0.5rem'
+              }}>
+                📱 {t('prospects.contact.phone')} (WhatsApp)
+              </label>
               <input
                 type="tel"
-                placeholder={t('leadCapture.form.phonePlaceholder')}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder={t('prospects.contact.phonePlaceholder')}
                 style={{
                   width: '100%',
-                  padding: '1rem',
+                  padding: '0.875rem',
                   fontSize: '1rem',
-                  border: errors.phone ? '2px solid #ef4444' : '2px solid rgba(255, 255, 255, 0.1)',
+                  border: errors.phone ? '2px solid #ef4444' : '2px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '8px',
-                  background: '#0f1419',
-                  color: '#ffffff',
                   outline: 'none',
-                  transition: 'border-color 0.3s ease'
+                  transition: 'border-color 0.3s ease',
+                  boxSizing: 'border-box',
+                  background: '#0f1419',
+                  color: '#ffffff'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}
+                onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : 'rgba(59, 130, 246, 0.3)'}
               />
               {errors.phone && (
-                <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                   {errors.phone}
-                </p>
+                </span>
               )}
             </div>
 
             {errors.submit && (
               <div style={{
+                padding: '1rem',
                 background: 'rgba(239, 68, 68, 0.1)',
                 border: '1px solid #ef4444',
                 borderRadius: '8px',
-                padding: '1rem',
                 marginBottom: '1.5rem',
                 color: '#ef4444',
-                textAlign: 'center'
+                fontSize: '0.9rem'
               }}>
                 {errors.submit}
               </div>
@@ -501,49 +575,74 @@ const ProspectsPortalNew = () => {
                 padding: '1rem',
                 fontSize: '1.125rem',
                 fontWeight: '600',
-                color: '#ffffff',
-                background: isSubmitting ? 'rgba(59, 130, 246, 0.5)' : '#3b82f6',
+                color: 'white',
+                background: isSubmitting ? '#6b7280' : '#3b82f6',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.background = '#2563eb';
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.background = '#3b82f6';
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
-                }
+                transition: 'all 0.3s ease',
+                marginBottom: '1rem'
               }}
             >
-              {isSubmitting ? t('leadCapture.form.submitting') : t('leadCapture.form.submit')}
+              {isSubmitting ? t('prospects.contact.submitting') : t('prospects.contact.submit')}
             </button>
+
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#9ca3af',
+              textAlign: 'center',
+              lineHeight: '1.4'
+            }}>
+              {t('prospects.contact.privacyNotice')}
+            </p>
           </form>
         </div>
       </section>
 
-      {/* SECTION 5: Footer */}
       <footer style={{
+        padding: '3rem 2rem 2rem',
         background: '#1a1f2e',
-        padding: '3rem 2rem',
+        color: 'white',
         textAlign: 'center',
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '0.875rem',
-            lineHeight: '1.6'
-          }}>
-            {t('footer.disclaimer')}
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_prospects-portal/artifacts/5wp93uqz_FIDUS%20LOGO%20COMPLETE.png" 
+            alt="FIDUS Investment Management"
+            style={{
+              height: '50px',
+              width: 'auto',
+              marginBottom: '1.5rem',
+              filter: 'brightness(0) invert(1)'
+            }}
+          />
+
+          <p style={{ fontSize: '1.125rem', marginBottom: '2rem', color: '#9ca3af' }}>
+            {t('prospects.footer.tagline')}
           </p>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '2rem',
+            marginBottom: '2rem',
+            flexWrap: 'wrap',
+            fontSize: '0.95rem',
+            color: '#9ca3af'
+          }}>
+            <div>📧 hq@getfidus.com</div>
+            <div>📱 WhatsApp: +1917-456-2151</div>
+          </div>
+
+          <div style={{
+            paddingTop: '2rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            fontSize: '0.875rem',
+            color: '#6b7280'
+          }}>
+            {t('prospects.footer.copyright')}
+          </div>
         </div>
       </footer>
     </div>
