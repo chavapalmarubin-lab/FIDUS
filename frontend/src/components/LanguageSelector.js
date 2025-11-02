@@ -10,6 +10,7 @@ const LanguageSelector = ({ position = 'fixed' }) => {
   };
 
   const languages = [
+    { code: 'es', flag: '🇪🇸', name: 'Español' },
     { code: 'en', flag: '🇬🇧', name: 'English' },
     { code: 'pt', flag: '🇧🇷', name: 'Português' },
     { code: 'fr', flag: '🇫🇷', name: 'Français' }
