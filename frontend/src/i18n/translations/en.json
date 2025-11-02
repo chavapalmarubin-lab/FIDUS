@@ -2,35 +2,34 @@
   "prospects": {
     "hero": {
       "title": "Invest in Your Future with FIDUS",
-    "subtitle": "Professional investment funds with transparent returns and real-time access to your portfolio.",
-    "cta": {
-      "start": "Start Investing",
-      "learnMore": "Learn More"
-    }
-  },
-  "prospects": {
-    "hero": {
-      "title": "Invest in Your Future with FIDUS",
-      "subtitle": "Professional Forex Investment Management with Consistent Returns",
-      "cta": "Start Now"
+      "subtitle": "We democratize the financial world for everyone",
+      "cta": "Simulate Your Investment"
     },
     "benefits": {
       "title": "Why Choose FIDUS?",
+      "experience": {
+        "title": "30 Years of Experience",
+        "description": "Professional algorithmic trading with proven track record in global markets."
+      },
       "transparency": {
         "title": "Total Transparency",
         "description": "24/7 access to your MT5 account, detailed reports and real-time tracking"
       },
-      "expertise": {
-        "title": "Proven Expertise",
-        "description": "Team of professional traders with years of experience in financial markets"
+      "returns": {
+        "title": "Professional Returns",
+        "description": "From 1.5% to 3.5% monthly based on your investment profile and capital."
       },
       "security": {
         "title": "Guaranteed Security",
-        "description": "Your funds are safe with internationally regulated brokers"
+        "description": "Your capital managed by Multibank Group, one of the world's most prestigious brokers."
       },
-      "flexibility": {
-        "title": "Flexibility",
-        "description": "Multiple investment options tailored to your risk profile"
+      "accessible": {
+        "title": "From $10,000 USD",
+        "description": "Access to institutional investments with accessible amounts."
+      },
+      "simple": {
+        "title": "Simple Process",
+        "description": "100% digital account opening. Invest in less than 48 hours."
       }
     },
     "products": {
@@ -38,51 +37,61 @@
       "subtitle": "Choose the fund that best fits your financial goals",
       "core": {
         "name": "FIDUS CORE",
-        "tagline": "Stability and Growth",
+        "tagline": "Conservative",
         "rate": "1.5%",
         "annualRate": "18%",
         "minInvestment": "$10,000",
         "redemption": "Monthly",
+        "contract": "Annual Contract",
+        "incubation": "2 month incubation",
+        "performanceFee": "No performance fee",
         "features": [
           "Ideal for beginners",
-          "Monthly liquidity",
+          "Monthly distribution",
           "Lower risk"
         ]
       },
       "balance": {
         "name": "FIDUS BALANCE",
-        "tagline": "Perfect Balance",
+        "tagline": "Moderate",
         "rate": "2.5%",
         "annualRate": "30%",
         "minInvestment": "$50,000",
         "redemption": "Quarterly",
+        "contract": "Annual Contract",
+        "incubation": "2 month incubation",
+        "performanceFee": "No performance fee",
         "popular": "Most Popular",
         "features": [
           "Most popular",
-          "Balanced returns",
-          "Diversified strategy"
+          "Quarterly distribution",
+          "Balanced strategy"
         ]
       },
       "dynamic": {
         "name": "FIDUS DYNAMIC",
-        "tagline": "Maximum Returns",
+        "tagline": "Aggressive",
         "rate": "3.5%",
         "annualRate": "42%",
-        "minInvestment": "$250,000",
+        "minInvestment": "$500,000",
         "redemption": "Semi-annual",
+        "contract": "Annual Contract",
+        "incubation": "2 month incubation",
+        "performanceFee": "No performance fee",
         "features": [
           "For advanced investors",
-          "Maximum potential",
-          "Active management"
+          "Semi-annual distribution",
+          "Maximum potential"
         ]
       },
       "unlimited": {
         "name": "FIDUS UNLIMITED",
-        "tagline": "Exclusive and Premium",
+        "tagline": "VIP By Invitation Only",
         "rate": "Custom",
         "annualRate": "45%+",
-        "minInvestment": "$1,000,000",
-        "redemption": "Annual",
+        "minInvestment": "By Invitation",
+        "redemption": "Custom",
+        "contract": "Custom Terms",
         "features": [
           "Exclusive access",
           "Dedicated manager",
@@ -92,7 +101,7 @@
       "monthlyReturn": "monthly",
       "annualReturn": "annual",
       "minInvest": "Minimum Investment",
-      "redemptionPeriod": "Redemption Period",
+      "redemptionPeriod": "Distribution",
       "learnMore": "Learn More"
     },
     "contact": {
@@ -102,51 +111,18 @@
       "emailPlaceholder": "your@email.com",
       "phone": "Phone",
       "phonePlaceholder": "+1 123 456 7890",
-      "submit": "Request Information",
+      "submit": "Access Simulator",
       "submitting": "Sending...",
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email",
       "phoneRequired": "Phone is required",
       "phoneInvalid": "Invalid phone (minimum 8 digits)",
-      "submitError": "Error sending. Try again."
+      "submitError": "Error sending. Try again.",
+      "privacyNotice": "By continuing, you accept our privacy policy and terms of use"
+    },
+    "footer": {
+      "tagline": "We democratize the financial world for everyone",
+      "copyright": "© 2025 FIDUS Investment Management. All rights reserved."
     }
-  },
-  "funds": {
-    "interestIncubation": "Interest after 60-day incubation",
-    "quarterlyPayments": "Quarterly interest payments"
-  },
-  "simulator": {
-    "title": "Investment Simulator",
-    "subtitle": "Discover your potential earnings",
-    "setup": "Setup",
-    "results": "Results",
-    "comparison": "Comparison",
-    "selectFund": "Select Fund",
-    "amount": "Investment Amount",
-    "period": "Investment Period",
-    "estimatedReturn": "Estimated Return",
-    "totalValue": "Total Value",
-    "monthly": "Monthly",
-    "quarterly": "Quarterly",
-    "annually": "Annually",
-    "months": "months",
-    "disclaimer": "* Estimates based on historical returns. Past performance does not guarantee future results.",
-    "contactUs": "Contact Us to Start",
-    "backToHome": "Back to Home",
-    "calculate": "Calculate Returns",
-    "save": "Save Simulation",
-    "download": "Download Report",
-    "addFund": "Add Another Fund",
-    "totalInvestment": "Total Investment",
-    "projectedReturns": "Projected Returns",
-    "roi": "Return on Investment",
-    "timeframe": "Investment Timeframe"
-  },
-  "footer": {
-    "disclaimer": "FIDUS Investments is an investment fund managed by professional traders with over 10 years of experience in financial markets. Returns shown are historical estimates and do not guarantee future performance. All investments carry inherent risks."
-  },
-  "errors": {
-    "generic": "An error occurred. Please try again.",
-    "network": "Network error. Please check your connection."
   }
 }

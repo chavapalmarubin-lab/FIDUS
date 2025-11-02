@@ -2,26 +2,34 @@
   "prospects": {
     "hero": {
       "title": "Investissez dans Votre Avenir avec FIDUS",
-      "subtitle": "Gestion Professionnelle d'Investissements Forex avec des Rendements Cohérents",
-      "cta": "Commencer Maintenant"
+      "subtitle": "Nous démocratisons le monde financier pour tous",
+      "cta": "Simulez Votre Investissement"
     },
     "benefits": {
       "title": "Pourquoi Choisir FIDUS?",
+      "experience": {
+        "title": "30 Ans d'Expérience",
+        "description": "Trading algorithmique professionnel avec historique prouvé sur les marchés mondiaux."
+      },
       "transparency": {
         "title": "Transparence Totale",
         "description": "Accès 24/7 à votre compte MT5, rapports détaillés et suivi en temps réel"
       },
-      "expertise": {
-        "title": "Expertise Prouvée",
-        "description": "Équipe de traders professionnels avec des années d'expérience sur les marchés financiers"
+      "returns": {
+        "title": "Rendements Professionnels",
+        "description": "De 1.5% à 3.5% mensuel selon votre profil d'investissement et capital."
       },
       "security": {
         "title": "Sécurité Garantie",
-        "description": "Vos fonds sont en sécurité avec des courtiers réglementés internationalement"
+        "description": "Votre capital géré par Multibank Group, l'un des courtiers les plus prestigieux au monde."
       },
-      "flexibility": {
-        "title": "Flexibilité",
-        "description": "Plusieurs options d'investissement adaptées à votre profil de risque"
+      "accessible": {
+        "title": "À partir de $10,000 USD",
+        "description": "Accès aux investissements institutionnels avec des montants accessibles."
+      },
+      "simple": {
+        "title": "Processus Simple",
+        "description": "Ouverture de compte 100% numérique. Investissez en moins de 48 heures."
       }
     },
     "products": {
@@ -29,51 +37,61 @@
       "subtitle": "Choisissez le fonds qui correspond le mieux à vos objectifs financiers",
       "core": {
         "name": "FIDUS CORE",
-        "tagline": "Stabilité et Croissance",
+        "tagline": "Conservateur",
         "rate": "1.5%",
         "annualRate": "18%",
         "minInvestment": "$10,000",
         "redemption": "Mensuel",
+        "contract": "Contrat Annuel",
+        "incubation": "2 mois d'incubation",
+        "performanceFee": "Sans frais de performance",
         "features": [
           "Idéal pour les débutants",
-          "Liquidité mensuelle",
+          "Distribution mensuelle",
           "Risque moindre"
         ]
       },
       "balance": {
         "name": "FIDUS BALANCE",
-        "tagline": "Équilibre Parfait",
+        "tagline": "Modéré",
         "rate": "2.5%",
         "annualRate": "30%",
         "minInvestment": "$50,000",
         "redemption": "Trimestriel",
+        "contract": "Contrat Annuel",
+        "incubation": "2 mois d'incubation",
+        "performanceFee": "Sans frais de performance",
         "popular": "Le Plus Populaire",
         "features": [
           "Le plus populaire",
-          "Rendement équilibré",
-          "Stratégie diversifiée"
+          "Distribution trimestrielle",
+          "Stratégie équilibrée"
         ]
       },
       "dynamic": {
         "name": "FIDUS DYNAMIC",
-        "tagline": "Rendement Maximum",
+        "tagline": "Agressif",
         "rate": "3.5%",
         "annualRate": "42%",
-        "minInvestment": "$250,000",
+        "minInvestment": "$500,000",
         "redemption": "Semestriel",
+        "contract": "Contrat Annuel",
+        "incubation": "2 mois d'incubation",
+        "performanceFee": "Sans frais de performance",
         "features": [
           "Pour investisseurs avancés",
-          "Potentiel maximum",
-          "Gestion active"
+          "Distribution semestrielle",
+          "Potentiel maximum"
         ]
       },
       "unlimited": {
         "name": "FIDUS UNLIMITED",
-        "tagline": "Exclusif et Premium",
+        "tagline": "VIP Sur Invitation Uniquement",
         "rate": "Personnalisé",
         "annualRate": "45%+",
-        "minInvestment": "$1,000,000",
-        "redemption": "Annuel",
+        "minInvestment": "Sur Invitation",
+        "redemption": "Personnalisé",
+        "contract": "Conditions Personnalisées",
         "features": [
           "Accès exclusif",
           "Gestionnaire dédié",
@@ -83,7 +101,7 @@
       "monthlyReturn": "mensuel",
       "annualReturn": "annuel",
       "minInvest": "Investissement Minimum",
-      "redemptionPeriod": "Période de Rachat",
+      "redemptionPeriod": "Distribution",
       "learnMore": "En Savoir Plus"
     },
     "contact": {
@@ -93,13 +111,18 @@
       "emailPlaceholder": "votre@email.com",
       "phone": "Téléphone",
       "phonePlaceholder": "+33 1 23 45 67 89",
-      "submit": "Demander des Informations",
+      "submit": "Accéder au Simulateur",
       "submitting": "Envoi en cours...",
       "emailRequired": "L'e-mail est requis",
       "emailInvalid": "E-mail invalide",
       "phoneRequired": "Le téléphone est requis",
       "phoneInvalid": "Téléphone invalide (minimum 8 chiffres)",
-      "submitError": "Erreur lors de l'envoi. Réessayez."
+      "submitError": "Erreur lors de l'envoi. Réessayez.",
+      "privacyNotice": "En continuant, vous acceptez notre politique de confidentialité et nos conditions d'utilisation"
+    },
+    "footer": {
+      "tagline": "Nous démocratisons le monde financier pour tous",
+      "copyright": "© 2025 FIDUS Investment Management. Tous droits réservés."
     }
   }
 }
