@@ -432,13 +432,15 @@ class MT5AutoSyncService:
             failed_syncs = 0
             
             # CRITICAL: First check MT5 Bridge health to detect Terminal disconnection
+            # BUT: Be smart about capital reallocation periods (end of month)
             try:
                 bridge_health = await self._check_bridge_health()
                 terminal_connected = bridge_health.get('mt5', {}).get('terminal_info', {}).get('connected')
                 
                 # Only trigger restart if BOTH conditions are true:
                 # 1. Terminal reports as disconnected
-                # 2. ALL accounts show $0 balance (checked separately)
+                # 2. >80% of accounts show $0 balance
+                # 3. Accounts are NOT syncing successfully (rules out reallocation)
                 if not terminal_connected:
                     # Check if ALL non-separation accounts actually have $0
                     accounts_list = await self.db.mt5_accounts.find({
@@ -448,12 +450,21 @@ class MT5AutoSyncService:
                     
                     zero_balance_count = sum(1 for acc in accounts_list if acc.get('balance', 0) == 0)
                     total_active = len(accounts_list)
+                    zero_balance_pct = (zero_balance_count / total_active) if total_active > 0 else 0
                     
-                    # Only restart if >80% of accounts show $0 (more realistic threshold)
-                    if total_active > 0 and (zero_balance_count / total_active) > 0.8:
+                    # Check if accounts are syncing (updated recently)
+                    from datetime import timedelta
+                    recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
+                    recently_synced = sum(1 for acc in accounts_list 
+                                        if acc.get('updated_at') and 
+                                        (isinstance(acc['updated_at'], datetime) and acc['updated_at'] >= recent_cutoff))
+                    
+                    # Only restart if >80% show $0 AND accounts are NOT syncing (real disconnect)
+                    if zero_balance_pct > 0.8 and recently_synced == 0:
                         logger.critical("🚨 MT5 Terminal NOT CONNECTED to broker - initiating auto-restart")
                         logger.critical(f"   {zero_balance_count}/{total_active} accounts showing $0 balance")
-                        await self._send_alert(f"MT5 Terminal disconnected. {zero_balance_count}/{total_active} accounts showing $0. Auto-restart initiated.")
+                        logger.critical(f"   {recently_synced}/{total_active} accounts recently synced")
+                        await self._send_alert(f"MT5 Terminal disconnected. {zero_balance_count}/{total_active} accounts showing $0 and NOT syncing. Auto-restart initiated.")
                         await self._trigger_mt5_restart()
                         # Wait for restart and return early
                         return {
@@ -464,6 +475,8 @@ class MT5AutoSyncService:
                             'overall_status': 'mt5_disconnected_restart_triggered',
                             'sync_timestamp': datetime.now(timezone.utc).isoformat()
                         }
+                    elif zero_balance_pct > 0.8 and recently_synced > 0:
+                        logger.info(f"ℹ️ {zero_balance_count}/{total_active} accounts at $0 but {recently_synced} syncing recently - likely capital reallocation, not disconnection")
                     else:
                         logger.warning(f"⚠️ Terminal reports disconnected but only {zero_balance_count}/{total_active} accounts at $0 - not triggering restart")
             except Exception as e:
