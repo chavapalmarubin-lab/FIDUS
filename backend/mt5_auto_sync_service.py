@@ -566,10 +566,29 @@ class MT5AutoSyncService:
                         logger.error(f"❌ Account 886528 sync failed: {account_886528_result.get('error', 'Unknown error')}")
                 
                 # Alert if sync success rate is low (below 50% is concerning)
+                # BUT: Don't alert if syncs are succeeding but accounts just have $0 (capital reallocation)
                 success_rate = result.get('success_rate', 0)
-                if success_rate < 50 and result.get('total_accounts', 0) > 0:
-                    logger.warning(f"⚠️ Low sync success rate: {success_rate:.1f}%")
-                    await self._send_alert(f"MT5 sync success rate critically low: {success_rate:.1f}%")
+                total_accounts = result.get('total_accounts', 0)
+                successful_syncs = result.get('successful_syncs', 0)
+                
+                if success_rate < 50 and total_accounts > 0:
+                    # Check if this is a FALSE POSITIVE: syncs working but accounts have $0
+                    # This happens during monthly capital reallocation
+                    zero_balance_but_synced = 0
+                    for sync_result in result.get('sync_results', []):
+                        if sync_result.get('success') and sync_result.get('new_balance', 0) == 0:
+                            zero_balance_but_synced += 1
+                    
+                    # If accounts are syncing successfully (just showing $0), this is NOT a problem
+                    actual_failures = total_accounts - successful_syncs
+                    if actual_failures > 0 and (actual_failures / total_accounts) > 0.5:
+                        # Real failure: accounts not syncing at all
+                        logger.warning(f"⚠️ Critically low sync success rate: {success_rate:.1f}% ({actual_failures} real failures)")
+                        await self._send_alert(f"MT5 sync failures: {actual_failures}/{total_accounts} accounts failed to sync")
+                    else:
+                        # False positive: syncs working, accounts just have $0 (reallocation)
+                        logger.info(f"ℹ️ Low success rate ({success_rate:.1f}%) but syncs are working - {zero_balance_but_synced} accounts with $0 (likely capital reallocation)")
+
                 
             except Exception as e:
                 logger.error(f"❌ Background sync error: {str(e)}")
