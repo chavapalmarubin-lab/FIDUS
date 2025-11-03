@@ -26071,9 +26071,9 @@ async def startup_event():
         logging.info("🔄 Scheduling initial VPS→Render sync in background...")
         asyncio.create_task(automatic_vps_sync())
         
-        # Run initial health check in background
-        logging.info("🏥 Scheduling initial health check in background...")
-        asyncio.create_task(background_health_check())
+        # Health check will run automatically via scheduler (every 5 minutes)
+        # No need to run manually on startup to avoid duplicates
+        logging.info("🏥 Health check scheduled to run every 5 minutes via scheduler")
         
         # Initialize MT5 Watchdog
         logging.info("🐕 Initializing MT5 Watchdog and Auto-Healing System...")
