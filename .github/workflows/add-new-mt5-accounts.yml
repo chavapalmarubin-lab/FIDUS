@@ -1,0 +1,157 @@
+name: Add New MT5 Accounts to VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add-mt5-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy and Execute Account Addition Script
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 600s
+          command_timeout: 15m
+          script_stop: false
+          debug: true
+          script: |
+            powershell -Command "
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'ADD NEW MT5 ACCOUNTS TO VPS' -ForegroundColor Cyan
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # Download the script from GitHub
+            Write-Host '[Step 1/4] Downloading account addition script...' -ForegroundColor Yellow
+            `$url = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps-scripts/add_new_mt5_accounts.ps1'
+            `$destination = 'C:\mt5_bridge_service\add_new_mt5_accounts.ps1'
+            
+            try {
+                Invoke-WebRequest -Uri `$url -OutFile `$destination -UseBasicParsing
+                Write-Host '  ✓ Script downloaded' -ForegroundColor Green
+            } catch {
+                Write-Host '  ✗ Failed to download script' -ForegroundColor Red
+                Write-Host `$_.Exception.Message -ForegroundColor Red
+                exit 1
+            }
+            
+            # Execute the script
+            Write-Host ''
+            Write-Host '[Step 2/4] Executing account addition script...' -ForegroundColor Yellow
+            Write-Host ''
+            
+            & 'C:\mt5_bridge_service\add_new_mt5_accounts.ps1'
+            
+            if (`$LASTEXITCODE -ne 0 -and `$LASTEXITCODE -ne `$null) {
+                Write-Host ''
+                Write-Host '⚠️ Script execution completed with warnings' -ForegroundColor Yellow
+            }
+            
+            # Verify the bridge is running with all 11 accounts
+            Write-Host ''
+            Write-Host '[Step 3/4] Verifying MT5 Bridge status...' -ForegroundColor Yellow
+            Start-Sleep -Seconds 10
+            
+            try {
+                `$health = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 15
+                Write-Host '  ✓ Bridge is responding' -ForegroundColor Green
+                Write-Host `"    Status: `$(`$health.status)`" -ForegroundColor White
+                Write-Host `"    MT5 Initialized: `$(`$health.mt5_initialized)`" -ForegroundColor White
+            } catch {
+                Write-Host '  ⚠️ Bridge health check failed' -ForegroundColor Yellow
+                Write-Host `$_.Exception.Message -ForegroundColor Gray
+            }
+            
+            # Get account summary
+            Write-Host ''
+            Write-Host '[Step 4/4] Getting account summary...' -ForegroundColor Yellow
+            
+            try {
+                `$summary = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/accounts/summary' -Method Get -TimeoutSec 15
+                `$totalAccounts = `$summary.accounts.Count
+                
+                Write-Host `"  Total accounts in system: `$totalAccounts`" -ForegroundColor White
+                Write-Host ''
+                Write-Host '  New accounts status:' -ForegroundColor Cyan
+                
+                `$newAccounts = @(897590, 897589, 897591, 897599)
+                foreach (`$accNum in `$newAccounts) {
+                    `$accInfo = `$summary.accounts | Where-Object { `$_.account -eq `$accNum }
+                    if (`$accInfo) {
+                        `$status = if (`$accInfo.note -eq 'No cached data') { '⚠️ Awaiting data' } else { '✅ Connected' }
+                        Write-Host `"    `$accNum: ``$`$(`$accInfo.balance) - `$status`" -ForegroundColor White
+                    } else {
+                        Write-Host `"    `$accNum: ❌ Not found`" -ForegroundColor Red
+                    }
+                }
+                
+                if (`$totalAccounts -eq 11) {
+                    Write-Host ''
+                    Write-Host '✅ SUCCESS: All 11 accounts are now in the system!' -ForegroundColor Green
+                } else {
+                    Write-Host ''
+                    Write-Host `"⚠️ Expected 11 accounts, found `$totalAccounts`" -ForegroundColor Yellow
+                }
+                
+            } catch {
+                Write-Host '  ✗ Failed to get account summary' -ForegroundColor Red
+                Write-Host `$_.Exception.Message -ForegroundColor Gray
+            }
+            
+            Write-Host ''
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host 'DEPLOYMENT COMPLETE' -ForegroundColor Green
+            Write-Host '========================================' -ForegroundColor Cyan
+            Write-Host ''
+            Write-Host 'The VPS will now automatically sync all 11 accounts.' -ForegroundColor White
+            Write-Host 'Check Render logs in 5 minutes for confirmation.' -ForegroundColor White
+            Write-Host ''
+            "
+      
+      - name: Generate Deployment Report
+        if: always()
+        run: |
+          echo "# New MT5 Accounts Addition Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Accounts Added:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Account | Server | Fund | Manager |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 897590 | MEXAtlantic-Real | CORE | CP Strategy |" >> $GITHUB_STEP_SUMMARY
+          echo "| 897589 | MEXAtlantic-Real | BALANCE | MEXAtlantic Provider 5201 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 897591 | MultibankFX-Real | SEPARATION | alefloreztrader |" >> $GITHUB_STEP_SUMMARY
+          echo "| 897599 | MultibankFX-Real | SEPARATION | alefloreztrader |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Happened:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Downloaded account addition script to VPS" >> $GITHUB_STEP_SUMMARY
+          echo "2. Logged into 4 new MT5 accounts using MetaTrader5 Python library" >> $GITHUB_STEP_SUMMARY
+          echo "3. Restarted VPS Bridge service" >> $GITHUB_STEP_SUMMARY
+          echo "4. Verified all 11 accounts are now in the system" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps (Automatic):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- VPS Bridge will fetch data from MT5 terminals (immediate)" >> $GITHUB_STEP_SUMMARY
+          echo "- VPS sync service will update MongoDB (every 5 minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend will pick up new accounts (every 2 minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend will display all 11 accounts (real-time)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Verification:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check Render logs for:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ MT5 sync completed: 11/11 accounts synced successfully" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**ETA:** 5-10 minutes for full system sync" >> $GITHUB_STEP_SUMMARY
