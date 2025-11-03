@@ -434,19 +434,38 @@ class MT5AutoSyncService:
             # CRITICAL: First check MT5 Bridge health to detect Terminal disconnection
             try:
                 bridge_health = await self._check_bridge_health()
-                if not bridge_health.get('mt5', {}).get('terminal_info', {}).get('connected'):
-                    logger.critical("🚨 MT5 Terminal NOT CONNECTED to broker - initiating auto-restart")
-                    await self._send_alert("MT5 Terminal disconnected from broker. All accounts showing $0. Auto-restart initiated.")
-                    await self._trigger_mt5_restart()
-                    # Wait for restart and return early
-                    return {
-                        'total_accounts': len(accounts),
-                        'successful_syncs': 0,
-                        'failed_syncs': len(accounts),
-                        'sync_results': [],
-                        'overall_status': 'mt5_disconnected_restart_triggered',
-                        'sync_timestamp': datetime.now(timezone.utc).isoformat()
-                    }
+                terminal_connected = bridge_health.get('mt5', {}).get('terminal_info', {}).get('connected')
+                
+                # Only trigger restart if BOTH conditions are true:
+                # 1. Terminal reports as disconnected
+                # 2. ALL accounts show $0 balance (checked separately)
+                if not terminal_connected:
+                    # Check if ALL non-separation accounts actually have $0
+                    accounts_list = await self.db.mt5_accounts.find({
+                        'fund_code': {'$nin': ['SEPARATION', None]},
+                        'is_active': True
+                    }).to_list(length=100)
+                    
+                    zero_balance_count = sum(1 for acc in accounts_list if acc.get('balance', 0) == 0)
+                    total_active = len(accounts_list)
+                    
+                    # Only restart if >80% of accounts show $0 (more realistic threshold)
+                    if total_active > 0 and (zero_balance_count / total_active) > 0.8:
+                        logger.critical("🚨 MT5 Terminal NOT CONNECTED to broker - initiating auto-restart")
+                        logger.critical(f"   {zero_balance_count}/{total_active} accounts showing $0 balance")
+                        await self._send_alert(f"MT5 Terminal disconnected. {zero_balance_count}/{total_active} accounts showing $0. Auto-restart initiated.")
+                        await self._trigger_mt5_restart()
+                        # Wait for restart and return early
+                        return {
+                            'total_accounts': len(accounts),
+                            'successful_syncs': 0,
+                            'failed_syncs': len(accounts),
+                            'sync_results': [],
+                            'overall_status': 'mt5_disconnected_restart_triggered',
+                            'sync_timestamp': datetime.now(timezone.utc).isoformat()
+                        }
+                    else:
+                        logger.warning(f"⚠️ Terminal reports disconnected but only {zero_balance_count}/{total_active} accounts at $0 - not triggering restart")
             except Exception as e:
                 logger.error(f"Failed to check MT5 Bridge health: {str(e)}")
             
