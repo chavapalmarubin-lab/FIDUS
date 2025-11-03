@@ -465,15 +465,21 @@ class MT5AutoSyncService:
                 # 2. >80% of accounts show $0 balance
                 # 3. Accounts are NOT syncing successfully (rules out reallocation)
                 if not terminal_connected:
-                    # Check if ALL non-separation accounts actually have $0
+                    # Check ALL active non-separation accounts
                     accounts_list = await self.db.mt5_accounts.find({
-                        'fund_code': {'$nin': ['SEPARATION', None]},
-                        'is_active': True
+                        'fund_code': {'$nin': ['SEPARATION']}
                     }).to_list(length=100)
                     
-                    zero_balance_count = sum(1 for acc in accounts_list if acc.get('balance', 0) == 0)
-                    total_active = len(accounts_list)
+                    # Filter out None fund_code and get active accounts
+                    active_accounts = [acc for acc in accounts_list if acc.get('fund_code') not in [None, 'SEPARATION']]
+                    zero_balance_count = sum(1 for acc in active_accounts if acc.get('balance', 0) == 0)
+                    total_active = len(active_accounts)
                     zero_balance_pct = (zero_balance_count / total_active) if total_active > 0 else 0
+                    
+                    if total_active == 0:
+                        logger.info("ℹ️ No active trading accounts found for terminal check")
+                    else:
+                        logger.debug(f"Terminal check: {zero_balance_count}/{total_active} accounts at $0 ({zero_balance_pct*100:.0f}%)")
                     
                     # Check if accounts are syncing (updated recently)
                     from datetime import timedelta
