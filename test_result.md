@@ -197,7 +197,7 @@
 - Gesture optimizations (swipe, pinch, etc.)
 
 ## user_problem_statement: 
-CURRENT TASK: Verify 'magic' field in MongoDB Atlas deals to confirm the VPS MT5 Bridge fix is fully operational and populating data correctly. Frontend verification for Money Managers Compare tab pending deployment completion.
+CURRENT TASK: New Month Allocation - Add 4 new MT5 accounts (897590, 897589, 897591, 897599), add 2 new Money Managers, and update allocations for CORE and BALANCE funds.
 
 ## Latest Status - October 31, 2025
 **MT5 Bridge Magic Number Fix - Deployment In Progress** 🔄
