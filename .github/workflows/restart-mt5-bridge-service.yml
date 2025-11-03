@@ -1,0 +1,55 @@
+name: Restart MT5 Bridge Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Restart MT5 Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Stopping MT5 Bridge Service..."
+            schtasks /End /TN MT5BridgeService 2>$null
+            Start-Sleep -Seconds 5
+            
+            Write-Host "Starting MT5 Bridge Service..."
+            schtasks /Run /TN MT5BridgeService
+            Start-Sleep -Seconds 15
+            
+            Write-Host "Checking service status..."
+            try {
+              $health = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -Method Get -TimeoutSec 10
+              Write-Host "Bridge Status: $($health.status)"
+              
+              $summary = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 10
+              $accountsWithData = ($summary.accounts | Where-Object { $_.balance -gt 0 -or -not $_.note }).Count
+              Write-Host "Accounts with data: $accountsWithData / $($summary.accounts.Count)"
+              
+              if ($accountsWithData -ge 10) {
+                Write-Host "SUCCESS: Most accounts have data"
+              } else {
+                Write-Host "WARNING: Only $accountsWithData accounts have data"
+              }
+            } catch {
+              Write-Host "ERROR: Could not verify service status"
+            }
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "# MT5 Bridge Restart Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The MT5 Bridge service has been restarted." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above to verify account data is flowing." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If accounts still show no data, the MT5 terminals may need to be restarted on the VPS." >> $GITHUB_STEP_SUMMARY
