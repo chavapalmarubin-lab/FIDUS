@@ -295,81 +295,68 @@ class BackendTester:
             self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_money_managers_real_only(self) -> bool:
-        """Test 4: Money Managers - Real Managers Only (should return exactly 4)"""
+    def test_vps_sync_capability(self) -> bool:
+        """Test 4: VPS Sync - verify sync service can handle new accounts"""
         try:
-            print("\n👥 Testing Money Managers - Real Managers Only...")
+            print("\n🔄 Testing VPS Sync Capability...")
             
-            response = self.session.get(f"{self.base_url}/admin/trading-analytics/managers")
+            response = self.session.get(f"{self.base_url}/mt5/status")
             
             if response.status_code != 200:
-                self.log_test("Money Managers API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Status API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            self.log_test("Money Managers API", "PASS", "Successfully retrieved money managers data")
+            bridge_status = data.get("bridge_status", "unknown")
             
-            # Based on diagnostics, managers are in data['managers']
-            managers = data.get('managers', [])
+            success = True
             
-            # Expected real managers (updated based on actual API response)
-            expected_managers = ["CP Strategy", "TradingHub Gold", "GoldenTrade", "UNO14"]
-            excluded_managers = ["Manual Trading", "Manager None"]
-            
-            # Check manager count
-            manager_count = len(managers)
-            if manager_count == 4:
-                self.log_test("Manager Count", "PASS", f"Correct number of managers: {manager_count}")
+            if bridge_status in ["connected", "active", "online"]:
+                self.log_test("VPS Bridge Status", "PASS", f"MT5 bridge status: {bridge_status}")
             else:
-                self.log_test("Manager Count", "FAIL", f"Incorrect number of managers", 
-                            "4 real managers", f"{manager_count} managers")
-            
-            # Check manager names (use manager_name field)
-            found_managers = []
-            excluded_found = []
-            
-            for manager in managers:
-                if isinstance(manager, dict):
-                    name = manager.get('manager_name', manager.get('name', 'Unknown'))
-                    found_managers.append(name)
-                    
-                    if any(exc in name for exc in excluded_managers):
-                        excluded_found.append(name)
-            
-            # Check for excluded managers
-            if excluded_found:
-                self.log_test("Excluded Managers Check", "FAIL", 
-                            f"Found excluded managers: {excluded_found}", 
-                            "No excluded managers", excluded_found)
-                success = False
-            else:
-                self.log_test("Excluded Managers Check", "PASS", 
-                            "No excluded managers (Manual Trading, Manager None) found")
-                success = True
-            
-            # Check for expected managers (allow partial matches since names have "Provider" suffix)
-            expected_found = []
-            for expected in expected_managers:
-                for found in found_managers:
-                    if expected in found:
-                        expected_found.append(expected)
-                        break
-            
-            if len(expected_found) == 4:
-                self.log_test("Expected Managers Check", "PASS", 
-                            f"All expected managers found: {expected_found}")
-            else:
-                missing = [m for m in expected_managers if m not in expected_found]
-                self.log_test("Expected Managers Check", "FAIL", 
-                            f"Missing expected managers: {missing}", 
-                            expected_managers, found_managers)
+                self.log_test("VPS Bridge Status", "FAIL", f"MT5 bridge status: {bridge_status}")
                 success = False
             
-            # Summary
-            summary = f"Found {manager_count} managers: {found_managers}"
-            self.log_test("Money Managers Summary", "PASS" if success and manager_count == 4 else "FAIL", summary)
+            # Check if sync can handle multiple accounts
+            total_accounts = data.get("total_accounts", 0)
+            if total_accounts >= 11:
+                self.log_test("VPS Multi-Account Sync", "PASS", f"VPS sync handling {total_accounts} accounts")
+            else:
+                self.log_test("VPS Multi-Account Sync", "FAIL", f"VPS sync handling {total_accounts} accounts, expected 11+")
+                success = False
             
-            return success and manager_count == 4
+            return success
+            
+        except Exception as e:
+            self.log_test("VPS Sync Test", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_mt5_config_mongodb(self) -> bool:
+        """Test 5: MT5 Account Config in MongoDB via API"""
+        try:
+            print("\n📊 Testing MT5 MongoDB Configuration...")
+            
+            response = self.session.get(f"{self.base_url}/mt5/accounts/all")
+            
+            if response.status_code != 200:
+                self.log_test("MT5 MongoDB Config", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            accounts = data.get("accounts", [])
+            
+            if len(accounts) >= 11:
+                self.log_test("MT5 MongoDB Configuration", "PASS", f"MongoDB contains {len(accounts)} MT5 accounts")
+                
+                # Check for proper manager assignments
+                accounts_with_managers = [acc for acc in accounts if acc.get("manager_name")]
+                self.log_test("MT5 Manager Assignments", "PASS" if len(accounts_with_managers) >= 8 else "FAIL", 
+                            f"{len(accounts_with_managers)} accounts have manager assignments")
+                
+                return True
+            else:
+                self.log_test("MT5 MongoDB Configuration", "FAIL", f"MongoDB contains {len(accounts)} accounts, expected 11+")
+                return False
             
         except Exception as e:
             self.log_test("Money Managers Test", "ERROR", f"Exception: {str(e)}")
