@@ -35,7 +35,7 @@ app.add_middleware(
 MT5_INITIALIZED = False
 MANAGER_ACCOUNT = 886557
 
-# Account configuration
+# Account configuration (Updated for November 2025 allocation)
 MANAGED_ACCOUNTS = {
     886557: {"name": "BALANCE Master", "fund_type": "BALANCE"},
     886066: {"name": "BALANCE-01", "fund_type": "BALANCE"},
@@ -43,7 +43,12 @@ MANAGED_ACCOUNTS = {
     885822: {"name": "CORE-01", "fund_type": "CORE"},
     886528: {"name": "CORE-02", "fund_type": "CORE"},
     891215: {"name": "SEPARATION-01", "fund_type": "SEPARATION"},
-    891234: {"name": "SEPARATION-02", "fund_type": "SEPARATION"}
+    891234: {"name": "SEPARATION-02", "fund_type": "SEPARATION"},
+    # NEW ACCOUNTS - November 2025
+    897590: {"name": "CORE-03", "fund_type": "CORE"},
+    897589: {"name": "BALANCE-03", "fund_type": "BALANCE"},
+    897591: {"name": "SEPARATION-03", "fund_type": "SEPARATION"},
+    897599: {"name": "SEPARATION-04", "fund_type": "SEPARATION"}
 }
 
 # Cache for account data
