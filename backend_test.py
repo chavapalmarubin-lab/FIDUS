@@ -233,40 +233,63 @@ class BackendTester:
             self.log_test("Cash Flow Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_trading_analytics_core_accounts(self) -> bool:
-        """Test 3: Trading Analytics - CORE Fund Account Count (should be 2)"""
+    def test_fund_allocations(self) -> bool:
+        """Test 3: Fund Allocations - verify fund totals are correct"""
         try:
-            print("\n📈 Testing Trading Analytics - CORE Fund Account Count...")
+            print("\n💰 Testing Fund Allocations...")
             
-            response = self.session.get(f"{self.base_url}/admin/fund-performance/dashboard")
+            response = self.session.get(f"{self.base_url}/fund-portfolio/overview")
             
             if response.status_code != 200:
-                self.log_test("Trading Analytics API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Fund Portfolio API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            self.log_test("Trading Analytics API", "PASS", "Successfully retrieved trading analytics data")
+            funds = data.get("funds", [])
             
-            # Based on diagnostics, the structure is data['dashboard']['by_fund']
-            dashboard = data.get('dashboard', {})
-            by_fund = dashboard.get('by_fund', {})
-            core_fund = by_fund.get('CORE', {})
-            account_count = core_fund.get('account_count')
+            # Expected fund totals
+            expected_totals = {
+                "CORE": 18151.41,  # accounts: 885822, 897590, 891234
+                "BALANCE": 100979,  # accounts: 886557, 886602, 886066, 891215, 897589 (approx)
+                "SEPARATION": 20653  # accounts: 886528, 897591, 897599
+            }
             
-            if account_count is not None:
-                if account_count == 2:
-                    self.log_test("CORE Fund Account Count", "PASS", 
-                                f"Correct account count: {account_count} (accounts 891234 and 885822)")
-                    return True
-                else:
-                    self.log_test("CORE Fund Account Count", "FAIL", 
-                                f"Incorrect account count", 
-                                "2 accounts (891234 and 885822)", f"{account_count} accounts")
-                    return False
+            fund_totals = {}
+            for fund in funds:
+                fund_code = fund.get("fund_code")
+                total_allocated = fund.get("total_allocated", 0)
+                fund_totals[fund_code] = total_allocated
+            
+            success = True
+            
+            # Check CORE fund
+            core_total = fund_totals.get("CORE", 0)
+            expected_core = expected_totals["CORE"]
+            if abs(core_total - expected_core) < 100:  # Allow small variance
+                self.log_test("CORE Fund Allocation", "PASS", f"CORE fund total: ${core_total:,.2f}")
             else:
-                self.log_test("CORE Fund Account Count", "FAIL", 
-                            "account_count field missing from dashboard.by_fund.CORE")
-                return False
+                self.log_test("CORE Fund Allocation", "FAIL", f"CORE fund total: ${core_total:,.2f}, expected: ${expected_core:,.2f}")
+                success = False
+            
+            # Check BALANCE fund (approximate)
+            balance_total = fund_totals.get("BALANCE", 0)
+            expected_balance = expected_totals["BALANCE"]
+            if abs(balance_total - expected_balance) < 5000:  # Allow larger variance for BALANCE
+                self.log_test("BALANCE Fund Allocation", "PASS", f"BALANCE fund total: ${balance_total:,.2f}")
+            else:
+                self.log_test("BALANCE Fund Allocation", "FAIL", f"BALANCE fund total: ${balance_total:,.2f}, expected: ~${expected_balance:,.2f}")
+                success = False
+            
+            # Check SEPARATION fund
+            separation_total = fund_totals.get("SEPARATION", 0)
+            expected_separation = expected_totals["SEPARATION"]
+            if abs(separation_total - expected_separation) < 1000:  # Allow moderate variance
+                self.log_test("SEPARATION Fund Allocation", "PASS", f"SEPARATION fund total: ${separation_total:,.2f}")
+            else:
+                self.log_test("SEPARATION Fund Allocation", "FAIL", f"SEPARATION fund total: ${separation_total:,.2f}, expected: ${expected_separation:,.2f}")
+                success = False
+            
+            return success
             
         except Exception as e:
             self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
