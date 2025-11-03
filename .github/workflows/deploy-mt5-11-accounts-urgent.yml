@@ -1,0 +1,122 @@
+name: Deploy MT5 Bridge with 11 Accounts - URGENT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-11-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Stop MT5 Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Stopping MT5 Bridge Service..."
+            schtasks /End /TN MT5BridgeService
+            Start-Sleep -Seconds 3
+      
+      - name: Backup Current Script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Backing up current script..."
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            Copy-Item "C:\mt5_bridge_service\mt5_bridge_api_service.py" "C:\mt5_bridge_service\backups\mt5_bridge_api_service_$timestamp.py"
+            Write-Host "Backup created"
+      
+      - name: Deploy Updated Script with 11 Accounts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Downloading updated script with 11 accounts..."
+            $url = "https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps-scripts/mt5_bridge_complete.py"
+            $output = "C:\mt5_bridge_service\mt5_bridge_api_service.py"
+            
+            Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
+            Write-Host "Script deployed"
+            
+            Write-Host "`nVerifying account count in deployed script..."
+            $content = Get-Content $output -Raw
+            if ($content -match "897590.*897589.*897591.*897599") {
+              Write-Host "✓ All 4 new accounts found in script"
+            } else {
+              Write-Host "✗ WARNING: New accounts may be missing"
+            }
+            
+            $accountMatches = ([regex]::Matches($content, '\d{6}:\s*\{.*?name')).Count
+            Write-Host "Total accounts in script: $accountMatches"
+      
+      - name: Start MT5 Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "Starting MT5 Bridge Service..."
+            schtasks /Run /TN MT5BridgeService
+            Start-Sleep -Seconds 20
+            Write-Host "Service started, waiting for initialization..."
+      
+      - name: Verify All 11 Accounts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            Write-Host "`nVerifying accounts via API..."
+            Start-Sleep -Seconds 10
+            
+            try {
+              $summary = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 15
+              $totalAccounts = $summary.accounts.Count
+              
+              Write-Host "Total accounts in VPS Bridge: $totalAccounts"
+              
+              if ($totalAccounts -eq 11) {
+                Write-Host "✓ SUCCESS: All 11 accounts present!"
+              } else {
+                Write-Host "✗ WARNING: Expected 11, found $totalAccounts"
+              }
+              
+              Write-Host "`nAccount list:"
+              foreach ($acc in $summary.accounts | Sort-Object account) {
+                $status = if ($acc.balance -gt 0) { "✓ ${acc.balance}" } else { "○ No data" }
+                Write-Host "  $($acc.account): $status"
+              }
+            } catch {
+              Write-Host "✗ ERROR: Could not verify - $_"
+            }
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "# MT5 Bridge Deployment - 11 Accounts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Deployed and restarted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Accounts Configured:** 11" >> $GITHUB_STEP_SUMMARY
+          echo "- 886557, 886066, 886602, 885822, 886528, 891215, 891234" >> $GITHUB_STEP_SUMMARY
+          echo "- 897590, 897589, 897591, 897599 (NEW)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above to verify all accounts are present." >> $GITHUB_STEP_SUMMARY
