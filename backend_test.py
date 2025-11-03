@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE BACKEND TESTING - 4 PRIORITY ISSUES
+MT5 SYSTEM BACKEND TESTING - Complete System Verification After Adding 4 New Accounts
 Testing Date: December 18, 2025
 Backend URL: https://fintech-monitor-2.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
-Test Cases:
-1. Fund Portfolio - FIDUS Monthly Profit (total_rebates field)
-2. Cash Flow - Fund Obligations (total_client_obligations and total_fund_outflows)
-3. Trading Analytics - CORE Fund Account Count (should be 2 accounts)
-4. Money Managers - Real Managers Only (should return exactly 4 managers)
+Test Objectives:
+1. Verify MT5 Account Config in MongoDB - All 11 accounts should be present
+2. Test MT5 Admin Accounts API - GET /api/mt5/admin/accounts should return all 11 accounts  
+3. Test Money Managers API - GET /api/admin/money-managers should return 6 managers
+4. Verify Fund Allocations - Check fund totals for CORE, BALANCE, SEPARATION
+5. Test VPS Sync - Verify VPS sync service can handle new accounts
+
+Expected Results:
+- MongoDB should have all 11 accounts configured
+- APIs should return all accounts and managers correctly
+- All new accounts should have proper manager assignments
+- Initial allocations should match the real MT5 balances from screenshot
+
+New Accounts Added: 897590, 897589, 897591, 897599
+New Managers Added: MEXAtlantic Provider 5201, alefloreztrader
 """
 
 import requests
