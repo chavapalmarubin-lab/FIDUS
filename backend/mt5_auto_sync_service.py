@@ -158,12 +158,19 @@ class MT5AutoSyncService:
                     try:
                         data = await response.json()
                         logger.info(f"✅ Bridge returned data keys: {list(data.keys())}")
+                        
+                        # CRITICAL FIX: Extract from live_data nested object
+                        live_data = data.get('live_data', {})
+                        if not live_data:
+                            # Fallback: Try root level (old format compatibility)
+                            live_data = data
+                        
                         return {
                             'success': True,
-                            'balance': float(data.get('balance', 0)),
-                            'equity': float(data.get('equity', 0)),
-                            'profit': float(data.get('profit', 0)),
-                            'margin': float(data.get('margin', 0)),
+                            'balance': float(live_data.get('balance', 0)),
+                            'equity': float(live_data.get('equity', 0)),
+                            'profit': float(live_data.get('profit', 0)),
+                            'margin': float(live_data.get('margin', 0)),
                             'data_source': 'mt5_bridge'
                         }
                     except Exception as json_error:
