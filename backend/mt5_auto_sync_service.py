@@ -724,6 +724,14 @@ class MT5AutoSyncService:
     async def _send_alert(self, message: str):
         """Send alert for critical MT5 issues via email (with throttling to prevent spam)"""
         
+        # Check if alerts are enabled (can be disabled during capital reallocation)
+        import os
+        alerts_enabled = os.getenv('MT5_ALERTS_ENABLED', 'true').lower() == 'true'
+        
+        if not alerts_enabled:
+            logger.info(f"ℹ️ Alert suppressed (MT5_ALERTS_ENABLED=false): {message}")
+            return
+        
         # Check if we've sent this alert recently (throttling)
         from datetime import datetime, timezone
         
