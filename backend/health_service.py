@@ -453,9 +453,18 @@ async def check_all_components(db, trigger_alerts: bool = True) -> Dict[str, Any
         overall_status = "degraded"
         degraded_count = sum(1 for s in statuses if s in ["degraded", "slow"])
         overall_message = f"{degraded_count} component(s) experiencing degraded performance"
+    elif any(s == "not_configured" for s in statuses):
+        # Some components not configured but others working - still operational
+        configured_count = sum(1 for s in statuses if s != "not_configured")
+        if configured_count > 0:
+            overall_status = "healthy"  # System works with configured components
+            overall_message = f"{configured_count} component(s) operational (some not configured)"
+        else:
+            overall_status = "unknown"
+            overall_message = "No components configured"
     else:
         overall_status = "unknown"
-        overall_message = "System status unknown"
+        overall_message = f"System status unknown - unexpected statuses: {set(statuses)}"
     
     # Calculate statistics
     healthy_count = sum(1 for s in statuses if s == "healthy")
