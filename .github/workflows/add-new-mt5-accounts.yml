@@ -12,7 +12,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Deploy and Execute Account Addition Script
+      - name: Upload Script to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          source: "vps-scripts/add_new_mt5_accounts.ps1"
+          target: "C:/mt5_bridge_service/"
+          strip_components: 1
+      
+      - name: Execute Account Addition Script
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -21,101 +32,8 @@ jobs:
           port: 22
           timeout: 600s
           command_timeout: 15m
-          script_stop: false
-          debug: true
           script: |
-            powershell -Command "
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host 'ADD NEW MT5 ACCOUNTS TO VPS' -ForegroundColor Cyan
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host ''
-            
-            # Download the script from GitHub
-            Write-Host '[Step 1/4] Downloading account addition script...' -ForegroundColor Yellow
-            `$url = 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps-scripts/add_new_mt5_accounts.ps1'
-            `$destination = 'C:\mt5_bridge_service\add_new_mt5_accounts.ps1'
-            
-            try {
-                Invoke-WebRequest -Uri `$url -OutFile `$destination -UseBasicParsing
-                Write-Host '  ✓ Script downloaded' -ForegroundColor Green
-            } catch {
-                Write-Host '  ✗ Failed to download script' -ForegroundColor Red
-                Write-Host `$_.Exception.Message -ForegroundColor Red
-                exit 1
-            }
-            
-            # Execute the script
-            Write-Host ''
-            Write-Host '[Step 2/4] Executing account addition script...' -ForegroundColor Yellow
-            Write-Host ''
-            
-            & 'C:\mt5_bridge_service\add_new_mt5_accounts.ps1'
-            
-            if (`$LASTEXITCODE -ne 0 -and `$LASTEXITCODE -ne `$null) {
-                Write-Host ''
-                Write-Host '⚠️ Script execution completed with warnings' -ForegroundColor Yellow
-            }
-            
-            # Verify the bridge is running with all 11 accounts
-            Write-Host ''
-            Write-Host '[Step 3/4] Verifying MT5 Bridge status...' -ForegroundColor Yellow
-            Start-Sleep -Seconds 10
-            
-            try {
-                `$health = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -Method Get -TimeoutSec 15
-                Write-Host '  ✓ Bridge is responding' -ForegroundColor Green
-                Write-Host `"    Status: `$(`$health.status)`" -ForegroundColor White
-                Write-Host `"    MT5 Initialized: `$(`$health.mt5_initialized)`" -ForegroundColor White
-            } catch {
-                Write-Host '  ⚠️ Bridge health check failed' -ForegroundColor Yellow
-                Write-Host `$_.Exception.Message -ForegroundColor Gray
-            }
-            
-            # Get account summary
-            Write-Host ''
-            Write-Host '[Step 4/4] Getting account summary...' -ForegroundColor Yellow
-            
-            try {
-                `$summary = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/accounts/summary' -Method Get -TimeoutSec 15
-                `$totalAccounts = `$summary.accounts.Count
-                
-                Write-Host `"  Total accounts in system: `$totalAccounts`" -ForegroundColor White
-                Write-Host ''
-                Write-Host '  New accounts status:' -ForegroundColor Cyan
-                
-                `$newAccounts = @(897590, 897589, 897591, 897599)
-                foreach (`$accNum in `$newAccounts) {
-                    `$accInfo = `$summary.accounts | Where-Object { `$_.account -eq `$accNum }
-                    if (`$accInfo) {
-                        `$status = if (`$accInfo.note -eq 'No cached data') { '⚠️ Awaiting data' } else { '✅ Connected' }
-                        Write-Host `"    `$accNum: ``$`$(`$accInfo.balance) - `$status`" -ForegroundColor White
-                    } else {
-                        Write-Host `"    `$accNum: ❌ Not found`" -ForegroundColor Red
-                    }
-                }
-                
-                if (`$totalAccounts -eq 11) {
-                    Write-Host ''
-                    Write-Host '✅ SUCCESS: All 11 accounts are now in the system!' -ForegroundColor Green
-                } else {
-                    Write-Host ''
-                    Write-Host `"⚠️ Expected 11 accounts, found `$totalAccounts`" -ForegroundColor Yellow
-                }
-                
-            } catch {
-                Write-Host '  ✗ Failed to get account summary' -ForegroundColor Red
-                Write-Host `$_.Exception.Message -ForegroundColor Gray
-            }
-            
-            Write-Host ''
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host 'DEPLOYMENT COMPLETE' -ForegroundColor Green
-            Write-Host '========================================' -ForegroundColor Cyan
-            Write-Host ''
-            Write-Host 'The VPS will now automatically sync all 11 accounts.' -ForegroundColor White
-            Write-Host 'Check Render logs in 5 minutes for confirmation.' -ForegroundColor White
-            Write-Host ''
-            "
+            powershell.exe -ExecutionPolicy Bypass -File C:\mt5_bridge_service\add_new_mt5_accounts.ps1
       
       - name: Generate Deployment Report
         if: always()
