@@ -484,12 +484,12 @@ class MT5AutoSyncService:
                     # Check if accounts are syncing (updated recently)
                     from datetime import timedelta
                     recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
-                    recently_synced = sum(1 for acc in accounts_list 
+                    recently_synced = sum(1 for acc in active_accounts 
                                         if acc.get('updated_at') and 
                                         (isinstance(acc['updated_at'], datetime) and acc['updated_at'] >= recent_cutoff))
                     
                     # Only restart if >80% show $0 AND accounts are NOT syncing (real disconnect)
-                    if zero_balance_pct > 0.8 and recently_synced == 0:
+                    if total_active > 0 and zero_balance_pct > 0.8 and recently_synced == 0:
                         logger.critical("🚨 MT5 Terminal NOT CONNECTED to broker - initiating auto-restart")
                         logger.critical(f"   {zero_balance_count}/{total_active} accounts showing $0 balance")
                         logger.critical(f"   {recently_synced}/{total_active} accounts recently synced")
@@ -504,10 +504,10 @@ class MT5AutoSyncService:
                             'overall_status': 'mt5_disconnected_restart_triggered',
                             'sync_timestamp': datetime.now(timezone.utc).isoformat()
                         }
-                    elif zero_balance_pct > 0.8 and recently_synced > 0:
-                        logger.info(f"ℹ️ {zero_balance_count}/{total_active} accounts at $0 but {recently_synced} syncing recently - likely capital reallocation, not disconnection")
-                    else:
-                        logger.warning(f"⚠️ Terminal reports disconnected but only {zero_balance_count}/{total_active} accounts at $0 - not triggering restart")
+                    elif total_active > 0 and zero_balance_pct > 0.8 and recently_synced > 0:
+                        logger.info(f"ℹ️ {zero_balance_count}/{total_active} accounts at $0 but {recently_synced} syncing recently - likely capital reallocation")
+                    elif total_active > 0:
+                        logger.debug(f"ℹ️ Terminal disconnected warning but only {zero_balance_pct*100:.0f}% at $0 - not critical")
             except Exception as e:
                 logger.error(f"Failed to check MT5 Bridge health: {str(e)}")
             
