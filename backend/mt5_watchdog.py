@@ -173,21 +173,28 @@ class MT5Watchdog:
                     except (ValueError, AttributeError):
                         logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
             
-            # CRITICAL: Only trigger restart if >80% of active accounts show $0
-            # (Some accounts legitimately have $0, so don't panic on 100%)
+            # SMART CRITICAL CHECK: Only trigger if $0 balances AND accounts NOT syncing
+            # This prevents false alarms during capital reallocation (accounts sync fine but show $0)
             zero_balance_percentage = (zero_balance_count / total_active_accounts) if total_active_accounts > 0 else 0
-            
-            if zero_balance_percentage > 0.8 and total_active_accounts >= 3:  # Need at least 3 accounts to be reliable
-                logger.critical(f"🚨 [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
-                logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals likely DISCONNECTED - Need FULL restart!")
-                # Set flag to trigger full restart instead of simple bridge restart
-                self.needs_full_restart = True
-                return False
-            
-            # Check sync percentage (lowered threshold to 40% to reduce false positives)
             sync_percentage = (synced_count / total_accounts) * 100 if total_accounts > 0 else 0
-            is_syncing = sync_percentage >= 40  # Reduced from 50%
+            is_syncing = sync_percentage >= 40  # At least 40% of accounts recently synced
             
+            # CRITICAL CONDITION: >80% accounts at $0 AND low sync activity
+            if zero_balance_percentage > 0.8 and total_active_accounts >= 3:
+                if not is_syncing:
+                    # REAL PROBLEM: Terminals disconnected
+                    logger.critical(f"🚨 [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
+                    logger.critical(f"🚨 [MT5 WATCHDOG] AND only {synced_count}/{total_accounts} accounts syncing ({sync_percentage:.1f}%)")
+                    logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals likely DISCONNECTED - Need FULL restart!")
+                    self.needs_full_restart = True
+                    return False
+                else:
+                    # FALSE POSITIVE: Accounts syncing fine, just showing $0 (capital reallocation)
+                    logger.info(f"ℹ️ [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} accounts at $0 BUT {synced_count}/{total_accounts} syncing ({sync_percentage:.1f}%)")
+                    logger.info("ℹ️ [MT5 WATCHDOG] Likely capital reallocation - accounts syncing normally, not disconnected")
+                    return True  # System is healthy
+            
+            # Check sync percentage for normal operations
             if not is_syncing:
                 logger.warning(f"[MT5 WATCHDOG] Low sync rate: {synced_count}/{total_accounts} accounts ({sync_percentage:.1f}%)")
             
