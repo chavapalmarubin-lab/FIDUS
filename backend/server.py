@@ -26027,13 +26027,14 @@ async def startup_event():
     # Individual Google OAuth - no automatic startup needed
     logging.info("💡 Individual Google OAuth system ready")
     
-    # Initialize MT5 Auto-Sync Service
-    try:
-        from mt5_auto_sync_service import start_mt5_sync_service
-        await start_mt5_sync_service()
-        logging.info("🔄 MT5 Auto-Sync Service initialized and background sync started")
-    except Exception as e:
-        logging.error(f"❌ MT5 Auto-Sync Service initialization failed: {e}")
+    # Initialize MT5 Auto-Sync Service - DISABLED (VPS Sync handles this)
+    # try:
+    #     from mt5_auto_sync_service import start_mt5_sync_service
+    #     await start_mt5_sync_service()
+    #     logging.info("🔄 MT5 Auto-Sync Service initialized and background sync started")
+    # except Exception as e:
+    #     logging.error(f"❌ MT5 Auto-Sync Service initialization failed: {e}")
+    logging.info("ℹ️ MT5 Auto-Sync Service disabled - VPS Sync Service handles account syncing")
     
     # Initialize MT5 Deals Sync Service (Trade History for Rebates)
     try:
