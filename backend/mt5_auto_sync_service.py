@@ -435,8 +435,8 @@ class MT5AutoSyncService:
         try:
             logger.info("🔄 Starting MT5 sync for all accounts...")
             
-            # Get all MT5 accounts (since status field might not exist)
-            accounts_cursor = self.db.mt5_accounts.find({})
+            # CRITICAL FIX: Read from mt5_account_config (source of truth) not mt5_accounts
+            accounts_cursor = self.db.mt5_account_config.find({"is_active": True})
             accounts = await accounts_cursor.to_list(length=100)
             
             if accounts is None or len(accounts) == 0:
