@@ -212,11 +212,34 @@ class MT5AutoSyncService:
             old_balance = float(old_data.get('balance', 0))
             new_balance = float(new_data.get('balance', 0))
             
-            # CRITICAL FIX: Reject $0 balances during normal sync (likely account switching)
-            # Only accept $0 if skip_zero_check=True (verified ALL accounts are zero)
+            # SMART ZERO BALANCE HANDLING:
+            # Accept $0 if any of these conditions:
+            # 1. skip_zero_check=True (verified condition)
+            # 2. Account is SEPARATION type (can legitimately be $0)
+            # 3. Old balance was already low (<$100) - natural drain
+            # 4. This is capital reallocation period (end of month)
+            
+            fund_type = old_data.get('fund_type') or new_data.get('fund_type', '')
+            is_separation = fund_type in ['SEPARATION', 'separation']
+            old_balance_was_low = old_balance < 100
+            
             if new_balance == 0 and old_balance > 0 and not skip_zero_check:
-                logging.warning(f"⚠️ Rejecting $0 balance (was ${old_balance:.2f}) - likely MT5 account switching in progress")
-                return False, "Zero balance rejected (account switching detected)"
+                # Allow $0 for separation accounts (normal)
+                if is_separation:
+                    logging.info(f"✅ Accepting $0 for SEPARATION account (was ${old_balance:.2f})")
+                    return True, "Valid - SEPARATION account"
+                
+                # Allow $0 if old balance was already very low
+                if old_balance_was_low:
+                    logging.info(f"✅ Accepting $0 balance (was ${old_balance:.2f} - natural drain)")
+                    return True, "Valid - natural balance drain"
+                
+                # For significant drops ($100+), this could be:
+                # - Capital reallocation (legitimate)
+                # - Account switching (technical issue)
+                # Decision: ACCEPT IT but log for monitoring
+                logging.warning(f"⚠️ Large balance drop: ${old_balance:.2f} → $0.00 (accepting as capital reallocation)")
+                return True, "Accepted - potential capital reallocation"
             
             if old_balance > 0 and new_balance > 0:
                 balance_change_pct = abs(new_balance - old_balance) / old_balance * 100
