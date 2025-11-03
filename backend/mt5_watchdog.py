@@ -173,24 +173,27 @@ class MT5Watchdog:
                     except (ValueError, AttributeError):
                         logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
             
-            # CRITICAL: If ALL active (non-SEPARATION) accounts show $0, MT5 terminals are disconnected!
-            if zero_balance_count == total_active_accounts and total_active_accounts > 0:
-                logger.critical("🚨 [MT5 WATCHDOG] ALL ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
-                logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals are DISCONNECTED - Need FULL restart!")
+            # CRITICAL: Only trigger restart if >80% of active accounts show $0
+            # (Some accounts legitimately have $0, so don't panic on 100%)
+            zero_balance_percentage = (zero_balance_count / total_active_accounts) if total_active_accounts > 0 else 0
+            
+            if zero_balance_percentage > 0.8 and total_active_accounts >= 3:  # Need at least 3 accounts to be reliable
+                logger.critical(f"🚨 [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
+                logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals likely DISCONNECTED - Need FULL restart!")
                 # Set flag to trigger full restart instead of simple bridge restart
                 self.needs_full_restart = True
                 return False
             
-            # Check sync percentage
+            # Check sync percentage (lowered threshold to 40% to reduce false positives)
             sync_percentage = (synced_count / total_accounts) * 100 if total_accounts > 0 else 0
-            is_syncing = sync_percentage >= 50
+            is_syncing = sync_percentage >= 40  # Reduced from 50%
             
             if not is_syncing:
                 logger.warning(f"[MT5 WATCHDOG] Low sync rate: {synced_count}/{total_accounts} accounts ({sync_percentage:.1f}%)")
             
-            # Only warn about zero balances if non-SEPARATION accounts affected
-            if zero_balance_count > 0:
-                logger.info(f"[MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} active accounts showing $0 balance (SEPARATION accounts excluded)")
+            # Only log (not alarm) about zero balances if some accounts affected but not critical
+            if zero_balance_count > 0 and zero_balance_percentage <= 0.8:
+                logger.info(f"[MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} active accounts showing $0 balance (normal, SEPARATION excluded)")
             
             return is_syncing
             
