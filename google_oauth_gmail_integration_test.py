@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration - Use from frontend/.env
-BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://financesyncpro.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {

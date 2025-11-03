@@ -27,7 +27,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use correct backend URL from frontend/.env
-BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://financesyncpro.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

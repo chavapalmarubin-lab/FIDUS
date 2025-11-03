@@ -2,7 +2,7 @@
 """
 BROKER REBATES CALCULATION FIX TESTING
 Testing Date: December 18, 2025
-Backend URL: https://fintech-monitor-2.preview.emergentagent.com/api
+Backend URL: https://financesyncpro.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 ISSUE: Broker rebates showing $9,457 (all-time) instead of time-period specific amounts
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com"
+BACKEND_URL = "https://financesyncpro.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

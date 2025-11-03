@@ -6,7 +6,7 @@ Context:
 Testing all Google Workspace OAuth endpoints to verify Calendar, Drive, and Sheets APIs 
 are working correctly after recent fixes.
 
-Backend URL: https://fintech-monitor-2.preview.emergentagent.com/api
+Backend URL: https://financesyncpro.preview.emergentagent.com/api
 Auth: Admin token (login with username: admin, password: password123)
 
 Test Endpoints:
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com"
+BACKEND_URL = "https://financesyncpro.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
