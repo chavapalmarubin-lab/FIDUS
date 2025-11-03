@@ -20,8 +20,8 @@ class MT5DealsSyncService:
         self.session = None
         self.db = None
         
-        # All 7 managed accounts
-        self.managed_accounts = [885822, 886066, 886528, 886557, 886602, 891215, 891234]
+        # All 11 managed accounts (updated for new month allocation)
+        self.managed_accounts = [885822, 886066, 886528, 886557, 886602, 891215, 891234, 897590, 897589, 897591, 897599]
         
     async def initialize(self, db):
         """Initialize with database connection"""
