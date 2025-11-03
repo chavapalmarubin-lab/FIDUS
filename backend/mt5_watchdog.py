@@ -32,7 +32,7 @@ class MT5Watchdog:
         self.check_interval = 60  # Check every 60 seconds
         self.data_freshness_threshold = 15  # Alert if no data in 15 minutes
         self.failure_threshold = 3  # Attempt healing after 3 failures
-        self.healing_cooldown = 300  # 5 minutes between healing attempts
+        self.healing_cooldown = 900  # 15 minutes between healing attempts (reduced false alerts)
         
         # State tracking
         self.consecutive_failures = 0
