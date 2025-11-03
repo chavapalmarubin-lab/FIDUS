@@ -167,58 +167,67 @@ class BackendTester:
             self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_cashflow_obligations(self) -> bool:
-        """Test 2: Cash Flow - Fund Obligations"""
+    def test_money_managers_api(self) -> bool:
+        """Test 2: Money Managers API - should return 6 managers including 2 new ones"""
         try:
-            print("\n💰 Testing Cash Flow - Fund Obligations...")
+            print("\n👥 Testing Money Managers API...")
             
-            response = self.session.get(f"{self.base_url}/admin/cashflow/overview?timeframe=3months&fund=all")
+            response = self.session.get(f"{self.base_url}/admin/money-managers")
             
             if response.status_code != 200:
-                self.log_test("Cash Flow API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Money Managers API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            self.log_test("Cash Flow API", "PASS", "Successfully retrieved cash flow data")
+            managers = data.get("managers", [])
             
-            # Based on diagnostics, the fields are in data['summary']
-            summary = data.get('summary', {})
+            # Expected managers (6 total including 2 new ones)
+            expected_managers = [
+                "CP Strategy",
+                "TradingHub Gold", 
+                "GoldenTrade",
+                "UNO14 MAM Manager",
+                "MEXAtlantic Provider 5201",  # New manager
+                "alefloreztrader"  # New manager
+            ]
             
-            # Check for equivalent fields (different names than expected)
-            client_interest_obligations = summary.get('client_interest_obligations')
-            fund_obligations = summary.get('fund_obligations')
-            
-            success = True
-            
-            if client_interest_obligations is not None:
-                if client_interest_obligations != 0:
-                    self.log_test("Client Interest Obligations", "PASS", 
-                                f"Found non-zero obligations: ${client_interest_obligations}")
-                else:
-                    self.log_test("Client Interest Obligations", "FAIL", 
-                                "Obligations are $0 (should calculate actual obligations)", 
-                                "Non-zero obligations", "$0")
-                    success = False
+            # Check total count
+            if len(managers) == 6:
+                self.log_test("Money Managers Count", "PASS", f"Found expected 6 money managers")
             else:
-                self.log_test("Client Interest Obligations", "FAIL", 
-                            "client_interest_obligations field missing from response")
-                success = False
+                self.log_test("Money Managers Count", "FAIL", f"Expected 6 managers, found {len(managers)}")
+                return False
             
-            if fund_obligations is not None:
-                if fund_obligations != 0:
-                    self.log_test("Fund Obligations", "PASS", 
-                                f"Found non-zero fund obligations: ${fund_obligations}")
-                else:
-                    self.log_test("Fund Obligations", "FAIL", 
-                                "Fund obligations are $0 (should calculate actual obligations)", 
-                                "Non-zero obligations", "$0")
-                    success = False
+            # Check specific managers exist
+            found_managers = [mgr.get("name") or mgr.get("manager_name") for mgr in managers]
+            missing_managers = []
+            
+            for expected_manager in expected_managers:
+                # Allow partial matching for manager names
+                found = any(expected_manager in found_name for found_name in found_managers if found_name)
+                if not found:
+                    missing_managers.append(expected_manager)
+            
+            if missing_managers:
+                self.log_test("Money Managers Verification", "FAIL", f"Missing managers: {missing_managers}")
+                return False
+            
+            # Check new managers specifically
+            new_managers = ["MEXAtlantic Provider 5201", "alefloreztrader"]
+            found_new_managers = []
+            for new_mgr in new_managers:
+                found = any(new_mgr in found_name for found_name in found_managers if found_name)
+                if found:
+                    found_new_managers.append(new_mgr)
+            
+            if len(found_new_managers) == 2:
+                self.log_test("New Money Managers", "PASS", f"Both new managers found: {found_new_managers}")
             else:
-                self.log_test("Fund Obligations", "FAIL", 
-                            "fund_obligations field missing from response")
-                success = False
+                self.log_test("New Money Managers", "FAIL", f"Expected 2 new managers, found {len(found_new_managers)}")
+                return False
             
-            return success
+            self.log_test("Money Managers API", "PASS", "All money managers verified successfully")
+            return True
             
         except Exception as e:
             self.log_test("Cash Flow Test", "ERROR", f"Exception: {str(e)}")
