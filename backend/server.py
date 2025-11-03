@@ -24415,7 +24415,9 @@ async def api_authentication_middleware(request: Request, call_next):
         return await call_next(request)
     
     # DEBUG: Log all Google OAuth checks
-    logging.info(f"🔍 MIDDLEWARE: Checking path: {path}")
+    # Only log path checks for non-health endpoints (reduce log noise)
+    if not path.endswith('/health'):
+        logging.debug(f"🔍 MIDDLEWARE: Checking path: {path}")  # Changed to DEBUG level
     
     # Check if this is a Google OAuth endpoint (use session tokens, not JWT)
     is_google_oauth = any(path.startswith(endpoint) for endpoint in GOOGLE_OAUTH_ENDPOINTS)
