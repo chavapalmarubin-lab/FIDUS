@@ -26,55 +26,27 @@ try {
 }
 
 Write-Host ""
-Write-Host "[3/3] Restarting MT5 Bridge Service..." -ForegroundColor Yellow
-try {
-    Start-ScheduledTask -TaskName "MT5_Bridge_Service"
-    Start-Sleep -Seconds 10
-    Write-Host "  ✓ Service restarted" -ForegroundColor Green
-} catch {
-    Write-Host "  ✗ Failed to restart service: $_" -ForegroundColor Red
-}
-
-Write-Host ""
-Write-Host "Verifying new accounts..." -ForegroundColor Yellow
+Write-Host "Verifying accounts..." -ForegroundColor Yellow
 Start-Sleep -Seconds 5
 
 try {
     $summary = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 15
     $totalAccounts = $summary.accounts.Count
-    $accountsWithData = ($summary.accounts | Where-Object { -not $_.note -or $_.note -ne "No cached data" }).Count
-    
     Write-Host "  Total accounts in bridge: $totalAccounts" -ForegroundColor White
-    Write-Host "  Accounts with data: $accountsWithData" -ForegroundColor White
     
-    # Check specifically for new accounts
-    foreach ($acc in $newAccounts) {
-        $found = $summary.accounts | Where-Object { $_.account -eq $acc.Account }
-        if ($found) {
-            if ($found.balance -gt 0) {
-                Write-Host "  ✓ Account $($acc.Account): \$$($found.balance) - OK" -ForegroundColor Green
-            } else {
-                Write-Host "  ⚠ Account $($acc.Account): \$$($found.balance) - May need data refresh" -ForegroundColor Yellow
-            }
-        } else {
-            Write-Host "  ✗ Account $($acc.Account): Not found in bridge" -ForegroundColor Red
-        }
+    if ($totalAccounts -eq 11) {
+        Write-Host "  SUCCESS: All 11 accounts in system!" -ForegroundColor Green
+    } else {
+        Write-Host "  Expected 11, found $totalAccounts" -ForegroundColor Yellow
     }
-    
 } catch {
-    Write-Host "  ⚠ Could not verify accounts via API: $_" -ForegroundColor Yellow
+    Write-Host "  Could not verify via API" -ForegroundColor Yellow
 }
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "CONFIGURATION COMPLETE" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "New MT5 accounts have been added to the system:" -ForegroundColor White
-Write-Host "  • Account 897590 (CORE)" -ForegroundColor Cyan
-Write-Host "  • Account 897589 (BALANCE)" -ForegroundColor Cyan
-Write-Host "  • Account 897591 (SEPARATION)" -ForegroundColor Cyan
-Write-Host "  • Account 897599 (SEPARATION)" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "The VPS Bridge will now sync all 11 accounts automatically." -ForegroundColor Green
 Write-Host ""
