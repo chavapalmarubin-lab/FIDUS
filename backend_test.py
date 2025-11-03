@@ -99,46 +99,69 @@ class BackendTester:
                 return False
             
             data = response.json()
-            self.log_test("Fund Portfolio API", "PASS", "Successfully retrieved fund portfolio data")
+            accounts = data.get("accounts", [])
             
-            # Check for total_rebates field in CORE and BALANCE funds
-            funds_checked = 0
-            rebates_found = 0
-            non_zero_rebates = 0
+            # Expected MT5 accounts (11 total: 7 original + 4 new)
+            expected_accounts = [
+                {"account": "885822", "fund_code": "CORE"},
+                {"account": "886557", "fund_code": "BALANCE"}, 
+                {"account": "886066", "fund_code": "BALANCE"},
+                {"account": "886602", "fund_code": "BALANCE"},
+                {"account": "886528", "fund_code": "SEPARATION"},
+                {"account": "891215", "fund_code": "SEPARATION"},
+                {"account": "891234", "fund_code": "CORE"},
+                # New accounts
+                {"account": "897590", "fund_code": "CORE"},
+                {"account": "897589", "fund_code": "BALANCE"},
+                {"account": "897591", "fund_code": "SEPARATION"},
+                {"account": "897599", "fund_code": "SEPARATION"}
+            ]
             
-            # Based on diagnostics, funds are in data['funds'] as a dict
-            funds_dict = data.get('funds', {})
-            
-            for fund_code in ['CORE', 'BALANCE']:
-                if fund_code in funds_dict:
-                    funds_checked += 1
-                    fund = funds_dict[fund_code]
-                    total_rebates = fund.get('total_rebates')
-                    
-                    if total_rebates is not None:
-                        rebates_found += 1
-                        if total_rebates != 0:
-                            non_zero_rebates += 1
-                            self.log_test(f"{fund_code} Fund Rebates", "PASS", 
-                                        f"Found non-zero rebates: ${total_rebates}")
-                        else:
-                            self.log_test(f"{fund_code} Fund Rebates", "FAIL", 
-                                        f"Rebates are $0 (should have actual values)", 
-                                        "Non-zero rebates", "$0")
-                    else:
-                        self.log_test(f"{fund_code} Fund Rebates", "FAIL", 
-                                    "total_rebates field missing from response")
-            
-            if funds_checked == 0:
-                self.log_test("Fund Portfolio Structure", "FAIL", "No CORE or BALANCE funds found in response")
+            # Check total count
+            if len(accounts) == 11:
+                self.log_test("MT5 Account Count", "PASS", f"Found expected 11 MT5 accounts")
+            else:
+                self.log_test("MT5 Account Count", "FAIL", f"Expected 11 accounts, found {len(accounts)}")
                 return False
             
-            # CRITICAL CHECK: Both CORE and BALANCE show $0 rebates - this is the issue!
-            success = rebates_found > 0 and non_zero_rebates > 0
-            summary = f"Checked {funds_checked} funds, found {rebates_found} with rebates field, {non_zero_rebates} with non-zero values"
-            self.log_test("Fund Portfolio Rebates Summary", "PASS" if success else "FAIL", summary)
+            # Check specific accounts exist
+            found_accounts = {acc.get("account"): acc.get("fund_code") for acc in accounts}
+            missing_accounts = []
+            wrong_fund_codes = []
             
-            return success
+            for expected in expected_accounts:
+                account_num = expected["account"]
+                expected_fund = expected["fund_code"]
+                
+                if account_num not in found_accounts:
+                    missing_accounts.append(account_num)
+                elif found_accounts[account_num] != expected_fund:
+                    wrong_fund_codes.append({
+                        "account": account_num,
+                        "expected": expected_fund,
+                        "actual": found_accounts[account_num]
+                    })
+            
+            if missing_accounts:
+                self.log_test("MT5 Account Verification", "FAIL", f"Missing accounts: {missing_accounts}")
+                return False
+                
+            if wrong_fund_codes:
+                self.log_test("MT5 Fund Code Verification", "FAIL", f"Wrong fund codes: {wrong_fund_codes}")
+                return False
+            
+            # Check new accounts specifically
+            new_accounts = ["897590", "897589", "897591", "897599"]
+            found_new = [acc for acc in found_accounts.keys() if acc in new_accounts]
+            
+            if len(found_new) == 4:
+                self.log_test("New MT5 Accounts", "PASS", f"All 4 new accounts found: {found_new}")
+            else:
+                self.log_test("New MT5 Accounts", "FAIL", f"Expected 4 new accounts, found {len(found_new)}: {found_new}")
+                return False
+            
+            self.log_test("MT5 Admin Accounts API", "PASS", "All MT5 accounts verified successfully")
+            return True
             
         except Exception as e:
             self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
