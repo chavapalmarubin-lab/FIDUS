@@ -6,114 +6,23 @@ Write-Host "ADD NEW MT5 ACCOUNTS TO VPS" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Account configurations
-$newAccounts = @(
-    @{Account=897590; Password="Fidus13!"; Server="MEXAtlantic-Real"; Name="CORE-03"},
-    @{Account=897589; Password="Fidus13!"; Server="MEXAtlantic-Real"; Name="BALANCE-03"},
-    @{Account=897591; Password="Fidus13!"; Server="MultibankFX-Real"; Name="SEPARATION-03"},
-    @{Account=897599; Password="Fidus13!"; Server="MultibankFX-Real"; Name="SEPARATION-04"}
-)
-
-Write-Host "[1/3] Stopping MT5 Bridge Service..." -ForegroundColor Yellow
+Write-Host "[1/2] Stopping MT5 Bridge Service..." -ForegroundColor Yellow
 try {
-    Stop-ScheduledTask -TaskName "MT5_Bridge_Service" -ErrorAction SilentlyContinue
+    schtasks /End /TN MT5BridgeService 2>$null
     Start-Sleep -Seconds 3
-    Write-Host "  ✓ Service stopped" -ForegroundColor Green
+    Write-Host "  Service stopped" -ForegroundColor Green
 } catch {
-    Write-Host "  ℹ Service not running or already stopped" -ForegroundColor Gray
+    Write-Host "  Service not running" -ForegroundColor Gray
 }
 
 Write-Host ""
-Write-Host "[2/3] Configuring new MT5 accounts..." -ForegroundColor Yellow
-
-# Import MT5 library
+Write-Host "[2/2] Restarting MT5 Bridge Service (will pick up new accounts)..." -ForegroundColor Yellow
 try {
-    Import-Module MetaTrader5 -ErrorAction Stop
+    schtasks /Run /TN MT5BridgeService
+    Start-Sleep -Seconds 10
+    Write-Host "  Service restarted" -ForegroundColor Green
 } catch {
-    Write-Host "  ⚠ MetaTrader5 module not found, installing..." -ForegroundColor Yellow
-    pip install MetaTrader5 --quiet
-    Import-Module MetaTrader5
-}
-
-# Try to initialize MT5
-try {
-    $mt5Path = "C:\Program Files\MetaTrader 5\terminal64.exe"
-    if (-not (Test-Path $mt5Path)) {
-        $mt5Path = "C:\Program Files (x86)\MetaTrader 5\terminal64.exe"
-    }
-    
-    Write-Host "  Initializing MT5 terminal..." -ForegroundColor Gray
-    
-    # Python script to login to accounts
-    $pythonScript = @"
-import MetaTrader5 as mt5
-import sys
-
-# Initialize MT5
-if not mt5.initialize():
-    print(f"ERROR: MT5 initialization failed: {mt5.last_error()}")
-    sys.exit(1)
-
-print("MT5 initialized successfully")
-
-# Account configurations
-accounts = [
-    {"account": 897590, "password": "Fidus13!", "server": "MEXAtlantic-Real"},
-    {"account": 897589, "password": "Fidus13!", "server": "MEXAtlantic-Real"},
-    {"account": 897591, "password": "Fidus13!", "server": "MultibankFX-Real"},
-    {"account": 897599, "password": "Fidus13!", "server": "MultibankFX-Real"}
-]
-
-success_count = 0
-for acc in accounts:
-    print(f"\nAttempting login to account {acc['account']}...")
-    
-    authorized = mt5.login(
-        login=acc['account'],
-        password=acc['password'],
-        server=acc['server']
-    )
-    
-    if authorized:
-        print(f"  ✓ Successfully logged into account {acc['account']}")
-        
-        # Get account info
-        account_info = mt5.account_info()
-        if account_info:
-            print(f"    Balance: \${account_info.balance:.2f}")
-            print(f"    Equity: \${account_info.equity:.2f}")
-            print(f"    Server: {account_info.server}")
-        
-        success_count += 1
-    else:
-        error = mt5.last_error()
-        print(f"  ✗ Failed to login to account {acc['account']}: {error}")
-
-print(f"\n{success_count}/{len(accounts)} accounts logged in successfully")
-
-# Shutdown MT5
-mt5.shutdown()
-sys.exit(0 if success_count == len(accounts) else 1)
-"@
-    
-    # Save Python script
-    $scriptPath = "C:\mt5_bridge_service\login_new_accounts.py"
-    $pythonScript | Out-File -FilePath $scriptPath -Encoding UTF8
-    
-    # Execute Python script
-    Write-Host "  Executing account login script..." -ForegroundColor Gray
-    $pythonPath = "C:\Users\trader\AppData\Local\Programs\Python\Python312\python.exe"
-    & $pythonPath $scriptPath
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "  ✓ All 4 new accounts logged in successfully" -ForegroundColor Green
-    } else {
-        Write-Host "  ⚠ Some accounts may have failed to login" -ForegroundColor Yellow
-        Write-Host "    Check the output above for details" -ForegroundColor Gray
-    }
-    
-} catch {
-    Write-Host "  ✗ Error during MT5 account configuration: $_" -ForegroundColor Red
+    Write-Host "  Failed to restart service" -ForegroundColor Red
 }
 
 Write-Host ""
