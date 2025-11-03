@@ -146,7 +146,7 @@ async def check_mt5_bridge_health() -> Dict[str, Any]:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{vps_url}/health",
+                f"{vps_url}/api/mt5/bridge/health",  # Correct endpoint
                 timeout=5.0
             )
         response_time = (time.time() - start) * 1000
