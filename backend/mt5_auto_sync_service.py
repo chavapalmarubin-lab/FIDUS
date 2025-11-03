@@ -165,9 +165,12 @@ class MT5AutoSyncService:
                             # Fallback: Try root level (old format compatibility)
                             live_data = data
                         
+                        balance = float(live_data.get('balance', 0))
+                        logger.info(f"🔍 Extracted balance for {mt5_login}: ${balance:,.2f} from live_data")
+                        
                         return {
                             'success': True,
-                            'balance': float(live_data.get('balance', 0)),
+                            'balance': balance,
                             'equity': float(live_data.get('equity', 0)),
                             'profit': float(live_data.get('profit', 0)),
                             'margin': float(live_data.get('margin', 0)),
