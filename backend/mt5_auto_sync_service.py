@@ -102,7 +102,7 @@ class MT5AutoSyncService:
                 logger.info(f"🔗 Attempt {attempt + 1}: Trying MT5 Bridge for {mt5_login}")
                 result = await self._fetch_via_bridge(mt5_login)
                 if result.get('success') and 'balance' in result:
-                    logger.info(f"✅ Bridge success for {mt5_login}: Balance = ${result['balance']}")
+                    logger.debug(f"✅ Bridge success for {mt5_login}: Balance = ${result['balance']}")  # DEBUG level for noise reduction
                     return result
                 else:
                     logger.warning(f"⚠️ Bridge failed for {mt5_login}: {result.get('error', 'Unknown error')}")
