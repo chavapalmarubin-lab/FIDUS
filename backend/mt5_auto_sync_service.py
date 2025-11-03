@@ -60,7 +60,7 @@ class MT5AutoSyncService:
         
         # Alert throttling - prevent duplicate emails
         self.last_alert_times = {}  # Store last alert time by alert type
-        self.alert_cooldown = 900  # 15 minutes cooldown between same alerts
+        self.alert_cooldown = 1800  # 30 minutes cooldown between same alerts (reduced email spam)
         
     async def initialize(self):
         """Initialize the sync service"""
