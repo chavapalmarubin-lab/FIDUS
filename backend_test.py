@@ -87,15 +87,15 @@ class BackendTester:
             self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
             return False
     
-    def test_fund_portfolio_rebates(self) -> bool:
-        """Test 1: Fund Portfolio - FIDUS Monthly Profit (total_rebates field)"""
+    def test_mt5_admin_accounts_api(self) -> bool:
+        """Test 1: MT5 Admin Accounts API - should return all 11 accounts"""
         try:
-            print("\n📊 Testing Fund Portfolio - FIDUS Monthly Profit...")
+            print("\n📊 Testing MT5 Admin Accounts API...")
             
-            response = self.session.get(f"{self.base_url}/fund-portfolio/overview")
+            response = self.session.get(f"{self.base_url}/mt5/admin/accounts")
             
             if response.status_code != 200:
-                self.log_test("Fund Portfolio API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Admin Accounts API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
