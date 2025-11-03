@@ -6,7 +6,7 @@ Database Check for Alejandro Mariscal Production Setup
 import requests
 import json
 
-BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com/api"
 
 def authenticate():
     """Get admin token"""

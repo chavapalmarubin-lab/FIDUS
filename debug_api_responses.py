@@ -9,7 +9,7 @@ from pprint import pprint
 
 def authenticate():
     """Get admin token"""
-    base_url = "https://fidus-pnl-fix.preview.emergentagent.com/api"
+    base_url = "https://fintech-monitor-2.preview.emergentagent.com/api"
     
     login_data = {
         "username": "admin",
@@ -28,7 +28,7 @@ def authenticate():
 
 def debug_endpoint(endpoint, token, description):
     """Debug a specific endpoint"""
-    base_url = "https://fidus-pnl-fix.preview.emergentagent.com/api"
+    base_url = "https://fintech-monitor-2.preview.emergentagent.com/api"
     
     headers = {
         "Authorization": f"Bearer {token}",

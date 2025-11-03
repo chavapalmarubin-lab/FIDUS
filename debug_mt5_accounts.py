@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

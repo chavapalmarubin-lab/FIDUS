@@ -14,7 +14,7 @@ import requests
 import json
 
 def analyze_salvador_data():
-    base_url = "https://fidus-pnl-fix.preview.emergentagent.com"
+    base_url = "https://fintech-monitor-2.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from review request
-BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class AlejandroFinalTest:

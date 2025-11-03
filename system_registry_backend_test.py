@@ -24,7 +24,7 @@ from datetime import datetime
 import sys
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com"
 BASE_API_URL = f"{BACKEND_URL}/api"
 
 def print_header(title):

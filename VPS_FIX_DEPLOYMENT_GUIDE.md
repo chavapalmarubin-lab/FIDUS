@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://fidus-pnl-fix.preview.emergentagent.com/api/system/status
+   curl https://fintech-monitor-2.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://fidus-pnl-fix.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://fintech-monitor-2.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

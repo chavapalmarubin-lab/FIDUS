@@ -35,7 +35,7 @@ from datetime import datetime, timezone, timedelta
 import time
 
 # Configuration
-BACKEND_URL = "https://fidus-pnl-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://fintech-monitor-2.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

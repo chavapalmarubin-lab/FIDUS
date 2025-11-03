@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "https://fidus-pnl-fix.preview.emergentagent.com"
+    base_url = "https://fintech-monitor-2.preview.emergentagent.com"
     
     print("🔍 DETAILED ENDPOINT ANALYSIS")
     print("=" * 60)

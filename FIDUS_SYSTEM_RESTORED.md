@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidus-pnl-fix.preview.emergentagent.com`
+`https://fintech-monitor-2.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
