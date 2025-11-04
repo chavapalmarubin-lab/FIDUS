@@ -171,6 +171,36 @@ def transform_fund_pnl(fund_dict: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def transform_salesperson(db_salesperson: Dict[str, Any]) -> Dict[str, Any]:
+    """Transform MongoDB salesperson to API format"""
+    from bson.decimal128 import Decimal128
+    
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, Decimal128):
+            return float(val.to_decimal())
+        return float(val)
+    
+    return {
+        "id": str(db_salesperson.get("_id")),
+        "referralCode": db_salesperson.get("referral_code"),
+        "name": db_salesperson.get("name"),
+        "email": db_salesperson.get("email"),
+        "phone": db_salesperson.get("phone"),
+        "active": db_salesperson.get("active", True),
+        "totalSalesVolume": to_float(db_salesperson.get("total_sales_volume")),
+        "totalClientsReferred": db_salesperson.get("total_clients_referred", 0),
+        "totalCommissionsEarned": to_float(db_salesperson.get("total_commissions_earned")),
+        "commissionsPaidToDate": to_float(db_salesperson.get("commissions_paid_to_date")),
+        "commissionsPending": to_float(db_salesperson.get("commissions_pending")),
+        "activeClients": db_salesperson.get("active_clients", 0),
+        "activeInvestments": db_salesperson.get("active_investments", 0),
+        "createdAt": db_salesperson.get("created_at").isoformat() if db_salesperson.get("created_at") else None,
+        "updatedAt": db_salesperson.get("updated_at").isoformat() if db_salesperson.get("updated_at") else None
+    }
+
+
 def safe_float(value: Any, default: float = 0.0) -> float:
     """Safely convert value to float with default"""
     try:
