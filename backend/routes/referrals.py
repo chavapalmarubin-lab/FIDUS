@@ -578,7 +578,7 @@ async def approve_commission_payment(commission_id: str):
     
     return {"success": True, "message": "Commission approved for payment"}
 
-@router.post("/commissions/{commission_id}/mark-paid")
+@router.post("/admin/referrals/commissions/{commission_id}/mark-paid")
 async def mark_commission_paid(commission_id: str, payment_details: CommissionPaymentDetails):
     """Admin marks commission as paid after executing payment"""
     commission = await db.referral_commissions.find_one({"_id": ObjectId(commission_id)})
