@@ -67,6 +67,50 @@ const Referrals = () => {
     }).format(value || 0);
   };
 
+  const handleViewSalesperson = (salespersonId) => {
+    setSelectedSalespersonId(salespersonId);
+    setCurrentView('detail');
+  };
+
+  const handleBackToList = () => {
+    setCurrentView('list');
+    setSelectedSalespersonId(null);
+    loadData(); // Refresh data when returning to list
+  };
+
+  // Show detail view if selected
+  if (currentView === 'detail' && selectedSalespersonId) {
+    return (
+      <SalespersonDetail 
+        salespersonId={selectedSalespersonId}
+        onBack={handleBackToList}
+      />
+    );
+  }
+
+  // Show full calendar view if selected
+  if (currentView === 'calendar') {
+    return (
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentView('list')}
+            className="flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Referrals
+          </Button>
+          <h1 className="text-3xl font-bold text-gray-900">Commission Payment Calendar</h1>
+        </div>
+        <CommissionCalendar compact={false} />
+      </div>
+    );
+  }
+
+  // Show main list view
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
