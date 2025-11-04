@@ -769,6 +769,14 @@ async def get_salesperson_by_code_public(referral_code: str):
     if not salesperson:
         raise HTTPException(status_code=404, detail="Invalid referral code")
     
+    # Helper to convert Decimal128 to float
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if hasattr(val, 'to_decimal'):
+            return float(val.to_decimal())
+        return float(val)
+    
     # Return public-safe data (no sensitive info like wallet details)
     return {
         "id": str(salesperson["_id"]),
@@ -779,7 +787,7 @@ async def get_salesperson_by_code_public(referral_code: str):
         "active": salesperson.get("active", True),
         # Public stats for transparency
         "total_clients_referred": salesperson.get("total_clients_referred", 0),
-        "total_sales_volume": float(salesperson.get("total_sales_volume", 0))
+        "total_sales_volume": to_float(salesperson.get("total_sales_volume", 0))
     }
 
 
