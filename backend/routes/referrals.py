@@ -860,6 +860,12 @@ async def fix_salvador_data():
         # Verify update
         updated_salvador = await db.salespeople.find_one({"_id": salvador_id})
         
+        # Convert Decimal128 for verification
+        def to_float(val):
+            if hasattr(val, 'to_decimal'):
+                return float(val.to_decimal())
+            return float(val or 0)
+        
         return {
             "success": True,
             "message": "Salvador's data updated successfully",
@@ -875,8 +881,8 @@ async def fix_salvador_data():
                 "commissions_paid": commissions_paid,
                 "commissions_pending": commissions_pending,
                 "verification": {
-                    "sales_in_db": float(updated_salvador.get("total_sales_volume", 0)),
-                    "commissions_in_db": float(updated_salvador.get("total_commissions_earned", 0))
+                    "sales_in_db": to_float(updated_salvador.get("total_sales_volume", 0)),
+                    "commissions_in_db": to_float(updated_salvador.get("total_commissions_earned", 0))
                 }
             }
         }
