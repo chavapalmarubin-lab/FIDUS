@@ -74,6 +74,8 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
     phone: leadInfo?.phone || ""
   });
   const [activeTab, setActiveTab] = useState("setup");
+  const [salesperson, setSalesperson] = useState(null);
+  const [referralCode, setReferralCode] = useState(null);
 
   // Currency conversion hook
   const { 
