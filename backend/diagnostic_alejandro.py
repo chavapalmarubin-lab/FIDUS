@@ -346,14 +346,14 @@ def run_diagnostic_sync():
                     })
         
         print(f"✅ Found {len(all_investments)} investments")
-        total_amount = 0
+        total_principal = 0
         for inv in all_investments:
-            total_amount += inv['amount']
-            print(f"   - {inv['fund']}: ${inv['amount']:,.2f}")
+            total_principal += inv['principal_amount']  # STANDARD FIELD
+            print(f"   - {inv['fund_type']}: ${inv['principal_amount']:,.2f}")  # STANDARD FIELDS
             print(f"     ID: {inv['id']}")
             print(f"     Client ID: {inv['client_id']}")
             print(f"     Referred By: {inv['referred_by']}")
-        print(f"   TOTAL: ${total_amount:,.2f}")
+        print(f"   TOTAL: ${total_principal:,.2f}")
         
         # 5. Check commissions
         print("\n5️⃣ Checking existing commissions for Salvador...")
