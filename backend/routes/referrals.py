@@ -494,7 +494,7 @@ async def get_commission_calendar(
     
     return {"calendar": sorted(monthly_calendar.values(), key=lambda x: x["month"])}
 
-@router.get("/commissions/pending")
+@router.get("/admin/referrals/commissions/pending")
 async def get_pending_commissions(
     salesperson_id: Optional[str] = None,
     status_filter: str = "all",
