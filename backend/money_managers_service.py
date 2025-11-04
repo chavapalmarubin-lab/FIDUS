@@ -193,28 +193,44 @@ class MoneyManagersService:
             managers = await managers_cursor.to_list(length=None)
             
             # Calculate performance for each manager
+            result_managers = []
             for manager in managers:
-                # Remove MongoDB ObjectId for JSON serialization
-                if "_id" in manager:
-                    del manager["_id"]
-                
-                # Convert dates to ISO strings
-                if isinstance(manager.get("start_date"), datetime):
-                    manager["start_date"] = manager["start_date"].isoformat()
-                if isinstance(manager.get("created_at"), datetime):
-                    manager["created_at"] = manager["created_at"].isoformat()
-                if isinstance(manager.get("updated_at"), datetime):
-                    manager["updated_at"] = manager["updated_at"].isoformat()
-                
-                # Calculate performance metrics
-                performance = await self.calculate_manager_performance(manager["manager_id"])
-                manager["performance"] = performance
-                
-                # Add account details
-                account_details = await self.get_account_details(manager["assigned_accounts"])
-                manager["account_details"] = account_details
+                try:
+                    # Remove MongoDB ObjectId for JSON serialization
+                    if "_id" in manager:
+                        del manager["_id"]
+                    
+                    # Convert dates to ISO strings
+                    if isinstance(manager.get("start_date"), datetime):
+                        manager["start_date"] = manager["start_date"].isoformat()
+                    if isinstance(manager.get("created_at"), datetime):
+                        manager["created_at"] = manager["created_at"].isoformat()
+                    if isinstance(manager.get("updated_at"), datetime):
+                        manager["updated_at"] = manager["updated_at"].isoformat()
+                    
+                    # Calculate performance metrics (with error handling)
+                    try:
+                        performance = await self.calculate_manager_performance(manager["manager_id"])
+                        manager["performance"] = performance
+                    except Exception as perf_error:
+                        logger.error(f"Performance calculation failed for {manager.get('name')}: {str(perf_error)}")
+                        manager["performance"] = self.get_empty_performance()
+                    
+                    # Add account details (with error handling)
+                    try:
+                        account_details = await self.get_account_details(manager.get("assigned_accounts", []))
+                        manager["account_details"] = account_details
+                    except Exception as acc_error:
+                        logger.error(f"Account details failed for {manager.get('name')}: {str(acc_error)}")
+                        manager["account_details"] = []
+                    
+                    result_managers.append(manager)
+                except Exception as mgr_error:
+                    logger.error(f"Failed to process manager {manager.get('name', 'unknown')}: {str(mgr_error)}")
+                    # Continue to next manager instead of failing completely
+                    continue
             
-            return managers
+            return result_managers
             
         except Exception as e:
             logger.error(f"Failed to get all managers: {str(e)}")
