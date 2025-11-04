@@ -165,9 +165,9 @@ class VPSSyncService:
                     
                     if update_result.modified_count > 0 or update_result.matched_count > 0:
                         accounts_synced += 1
-                        logger.info(f"✅ Synced account {account_id}: ${balance:,.2f} (live: {bool(live_data)})")
+                        logger.info(f"✅ Synced account {account_id}: ${balance:,.2f} (live: {bool(live_data)}) - Modified: {update_result.modified_count}, Matched: {update_result.matched_count}")
                     else:
-                        logger.warning(f"⚠️  Account {account_id} not found in database")
+                        logger.warning(f"⚠️  Account {account_id} update failed - Modified: {update_result.modified_count}, Matched: {update_result.matched_count}, Upserted: {update_result.upserted_id}")
                         failed_accounts.append(account_id)
                 
                 except Exception as e:
