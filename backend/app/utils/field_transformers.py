@@ -54,17 +54,27 @@ def transform_mt5_account(db_account: Dict[str, Any]) -> Dict[str, Any]:
 
 def transform_investment(db_investment: Dict[str, Any]) -> Dict[str, Any]:
     """Transform MongoDB investment to API format"""
+    from bson.decimal128 import Decimal128
+    
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, Decimal128):
+            return float(val.to_decimal())
+        return float(val)
+    
     return {
         "investmentId": str(db_investment.get("_id")),
         "clientId": db_investment.get("client_id"),
-        "principalAmount": db_investment.get("principal_amount"),
-        "currentValue": db_investment.get("current_value"),
-        "interestRate": db_investment.get("interest_rate"),
-        "interestEarned": db_investment.get("interest_earned"),
-        "investmentDate": db_investment.get("investment_date").isoformat() if db_investment.get("investment_date") else None,
-        "maturityDate": db_investment.get("maturity_date").isoformat() if db_investment.get("maturity_date") else None,
-        "fundType": db_investment.get("fund_type"),
-        "status": db_investment.get("status")
+        "principalAmount": to_float(db_investment.get("principal_amount")),
+        "currentValue": to_float(db_investment.get("current_value")),
+        "totalInterestEarned": to_float(db_investment.get("total_interest_earned")),
+        "depositDate": db_investment.get("deposit_date").isoformat() if db_investment.get("deposit_date") else None,
+        "interestStartDate": db_investment.get("interest_start_date").isoformat() if db_investment.get("interest_start_date") else None,
+        "fundCode": db_investment.get("fund_code"),
+        "status": db_investment.get("status"),
+        "referredBy": db_investment.get("referred_by"),
+        "referredByName": db_investment.get("referred_by_name")
     }
 
 
