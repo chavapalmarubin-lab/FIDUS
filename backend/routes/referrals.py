@@ -275,7 +275,7 @@ async def create_salesperson(data: SalespersonCreate):
         "referral_link": salesperson["referral_link"]
     }
 
-@router.get("/salespeople/{salesperson_id}")
+@router.get("/admin/referrals/salespeople/{salesperson_id}")
 async def get_salesperson_dashboard(salesperson_id: str):
     """Get complete salesperson dashboard with details"""
     salesperson = await db.salespeople.find_one({"_id": ObjectId(salesperson_id)})
