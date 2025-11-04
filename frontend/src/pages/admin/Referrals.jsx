@@ -122,12 +122,68 @@ const Referrals = () => {
           <h1 className="text-3xl font-bold text-gray-900">Referrals & Commissions</h1>
           <p className="text-gray-600 mt-1">Manage salespeople and track commission payments</p>
         </div>
-        <Button
-          onClick={() => alert('Add Salesperson feature coming soon')}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </div>
+
+      {/* Sub-Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setActiveSubTab('overview')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeSubTab === 'overview'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveSubTab('manage')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeSubTab === 'manage'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Manage Salespeople
+          </button>
+          <button
+            onClick={() => setActiveSubTab('calendar')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeSubTab === 'calendar'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Commission Calendar
+          </button>
+        </div>
+      </div>
+
+      {/* Sub-Tab Content */}
+      {activeSubTab === 'manage' && (
+        <ManageSalespeople />
+      )}
+
+      {activeSubTab === 'calendar' && (
+        <div className="space-y-6">
+          <CommissionCalendar compact={false} />
+        </div>
+      )}
+
+      {activeSubTab === 'overview' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Quick Overview</h2>
+              <p className="text-sm text-gray-600">Key metrics across all salespeople</p>
+            </div>
+            <Button
+              onClick={() => setActiveSubTab('manage')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add Salesperson
         </Button>
