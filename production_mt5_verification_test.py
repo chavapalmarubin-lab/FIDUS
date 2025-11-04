@@ -115,9 +115,9 @@ class ProductionMT5Verifier:
                 self.log_test("Database Account Count", "FAIL", f"Expected 11 accounts, found {len(accounts)}", 11, len(accounts))
                 return False
             
-            # Check for new accounts specifically
-            new_accounts = ["897590", "897589", "897591", "897599"]
-            found_accounts = [str(acc.get("account")) for acc in accounts]
+            # Check for new accounts specifically (use account_number field)
+            new_accounts = [897590, 897589, 897591, 897599]
+            found_accounts = [acc.get("account_number") for acc in accounts]
             found_new = [acc for acc in new_accounts if acc in found_accounts]
             
             if len(found_new) == 4:
@@ -131,7 +131,10 @@ class ProductionMT5Verifier:
             zero_balance_accounts = [acc for acc in accounts if acc.get("equity", 0) < 100]
             
             if len(high_balance_accounts) >= 1:
-                self.log_test("Balance Distribution", "PASS", f"Found {len(high_balance_accounts)} account(s) with high balance")
+                high_account = high_balance_accounts[0]
+                balance = high_account.get("equity", 0)
+                account_num = high_account.get("account_number")
+                self.log_test("Balance Distribution", "PASS", f"Found account {account_num} with balance ${balance:,.2f}")
             else:
                 self.log_test("Balance Distribution", "FAIL", f"Expected at least 1 account with ~$10K balance")
                 return False
