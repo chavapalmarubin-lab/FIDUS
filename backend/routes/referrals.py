@@ -195,6 +195,48 @@ async def generate_payment_schedule_for_investment(investment: dict) -> list:
 # SALESPEOPLE MANAGEMENT ENDPOINTS
 # ============================================================================
 
+@router.get("/admin/referrals/overview")
+async def get_referrals_overview():
+    """Get overview statistics for referral system"""
+    try:
+        # Count active salespeople
+        active_salespeople = await db.salespeople.count_documents({"active": True})
+        
+        # Calculate total sales volume from all salespeople
+        pipeline = [
+            {"$match": {"active": True}},
+            {"$group": {
+                "_id": None,
+                "total_sales": {"$sum": "$total_sales_volume"}
+            }}
+        ]
+        sales_result = await db.salespeople.aggregate(pipeline).to_list(1)
+        total_sales = float(sales_result[0]["total_sales"]) if sales_result and sales_result[0].get("total_sales") else 0
+        
+        # Calculate total commissions (all statuses)
+        commission_pipeline = [
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": "$commission_amount"}
+            }}
+        ]
+        commission_result = await db.referral_commissions.aggregate(commission_pipeline).to_list(1)
+        total_commissions = float(commission_result[0]["total"]) if commission_result and commission_result[0].get("total") else 0
+        
+        # Count pending commissions
+        pending_commissions = await db.referral_commissions.count_documents({
+            "status": {"$in": ["pending", "ready_to_pay", "approved"]}
+        })
+        
+        return {
+            "active_salespeople": active_salespeople,
+            "total_sales_volume": total_sales,
+            "total_commissions": total_commissions,
+            "pending_commissions": pending_commissions
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting overview: {str(e)}")
+
 @router.get("/admin/referrals/salespeople")
 async def get_all_salespeople(active_only: bool = True):
     """Get all salespeople with performance metrics"""
