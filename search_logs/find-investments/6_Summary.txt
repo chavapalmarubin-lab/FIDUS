@@ -1,0 +1,23 @@
+﻿2025-11-04T19:48:50.5779220Z ##[group]Run echo "### 🔍 Investment Search Results" >> $GITHUB_STEP_SUMMARY
+2025-11-04T19:48:50.5779719Z [36;1mecho "### 🔍 Investment Search Results" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5780250Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5780803Z [36;1mecho "Check the logs above for detailed investment search results." >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5781215Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5781504Z [36;1mecho "The search looked for:" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5782103Z [36;1mecho "- Investments with amount ~$18,151 (CORE fund)" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5782571Z [36;1mecho "- Investments with amount ~$100,000 (BALANCE fund)" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5783121Z [36;1mecho "- Investments created around the same time as Alejandro's client record" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5783555Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5783849Z [36;1mecho "📋 Next Steps:" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5784217Z [36;1mecho "1. Review the found investments in the logs" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5784687Z [36;1mecho "2. Identify which investments belong to Alejandro" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5785143Z [36;1mecho "3. Run the fix script to link them correctly" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:48:50.5817936Z shell: /usr/bin/bash -e {0}
+2025-11-04T19:48:50.5818159Z env:
+2025-11-04T19:48:50.5818402Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:48:50.5818796Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T19:48:50.5819174Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:48:50.5819502Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:48:50.5819838Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:48:50.5820344Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T19:48:50.5820699Z ##[endgroup]
