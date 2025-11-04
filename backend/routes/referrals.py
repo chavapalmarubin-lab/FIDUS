@@ -781,7 +781,12 @@ async def fix_salvador_data():
         
         # Update each investment to link to Salvador
         for inv in investments:
-            amount = float(inv.get("amount", 0))
+            # Handle Decimal128
+            amount_raw = inv.get("amount", 0)
+            if hasattr(amount_raw, 'to_decimal'):
+                amount = float(amount_raw.to_decimal())
+            else:
+                amount = float(amount_raw)
             total_sales += amount
             fund = inv.get("fund_type", "unknown")
             
