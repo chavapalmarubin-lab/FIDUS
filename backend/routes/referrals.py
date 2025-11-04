@@ -9,6 +9,9 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel
+import sys
+sys.path.append('/app/backend')
+from app.utils.field_transformers import transform_salesperson
 
 router = APIRouter(prefix="/api", tags=["Referrals"])
 
