@@ -1,0 +1,79 @@
+name: Diagnose MT5 Terminals on VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Deploy Diagnostic Script to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Create diagnostic script
+            @"
+            import MetaTrader5 as mt5
+            import sys
+            
+            print("=" * 80)
+            print("MT5 TERMINALS DIAGNOSTIC")
+            print("=" * 80)
+            
+            # List of all 11 accounts
+            accounts = [
+                886557, 886066, 886602, 885822, 886528,
+                891215, 891234, 897590, 897589, 897591, 897599
+            ]
+            
+            # Try to initialize MT5
+            if not mt5.initialize():
+                print("ERROR: Failed to initialize MT5")
+                print(f"Error code: {mt5.last_error()}")
+                sys.exit(1)
+            
+            print(f"✅ MT5 Initialized")
+            print(f"Terminal Info: {mt5.terminal_info()}")
+            print(f"Version: {mt5.version()}")
+            
+            print("\n" + "=" * 80)
+            print("CHECKING EACH ACCOUNT")
+            print("=" * 80)
+            
+            connected_accounts = []
+            disconnected_accounts = []
+            
+            for account_num in accounts:
+                print(f"\nChecking account {account_num}...")
+                
+                # Try to get account info
+                account_info = mt5.account_info()
+                if account_info and account_info.login == account_num:
+                    print(f"  ✅ CONNECTED: {account_num}")
+                    print(f"     Balance: ${account_info.balance:,.2f}")
+                    print(f"     Equity: ${account_info.equity:,.2f}")
+                    print(f"     Server: {account_info.server}")
+                    connected_accounts.append(account_num)
+                else:
+                    print(f"  ❌ NOT CONNECTED: {account_num}")
+                    disconnected_accounts.append(account_num)
+            
+            print("\n" + "=" * 80)
+            print("SUMMARY")
+            print("=" * 80)
+            print(f"Connected: {len(connected_accounts)}/{len(accounts)}")
+            print(f"  Accounts: {connected_accounts}")
+            print(f"\nDisconnected: {len(disconnected_accounts)}/{len(accounts)}")
+            print(f"  Accounts: {disconnected_accounts}")
+            
+            mt5.shutdown()
+            
+            "@ | Out-File -FilePath "C:\MT5_Bridge\diagnose_terminals.py" -Encoding UTF8
+            
+            # Run diagnostic
+            cd C:\MT5_Bridge
+            python diagnose_terminals.py
