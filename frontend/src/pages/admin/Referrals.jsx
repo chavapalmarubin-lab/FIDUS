@@ -275,7 +275,7 @@ const Referrals = () => {
           <div className="mt-4 text-center">
             <Button
               variant="outline"
-              onClick={() => navigate('/admin/referrals/calendar')}
+              onClick={() => setCurrentView('calendar')}
             >
               View Full Calendar
             </Button>
