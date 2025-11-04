@@ -572,6 +572,32 @@ const ProspectsPortalNew = () => {
               )}
             </div>
 
+            {/* Referral Code Input */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <ReferralCodeInput
+                value={formData.referral_code}
+                onChange={handleReferralChange}
+                autoFocus={!!searchParams.get('ref')}
+              />
+            </div>
+
+            {/* Show salesperson preview if valid */}
+            {salesperson && (
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                color: '#93c5fd'
+              }}>
+                <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                  <strong>Great!</strong> {salesperson.name} will be your dedicated advisor 
+                  throughout the investment process.
+                </p>
+              </div>
+            )}
+
             {errors.submit && (
               <div style={{
                 padding: '1rem',
