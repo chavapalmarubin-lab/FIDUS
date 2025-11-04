@@ -745,7 +745,7 @@ async def get_salesperson_by_code_public(referral_code: str):
 # DATA FIX ENDPOINTS (One-time use)
 # ============================================================================
 
-@router.post("/admin/referrals/fix-salvador-data", tags=["Admin"])
+@router.post("/public/fix-salvador-data-temp", tags=["Public"])
 async def fix_salvador_data():
     """
     One-time fix to update Salvador Palma's statistics
