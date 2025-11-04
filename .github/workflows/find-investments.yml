@@ -1,0 +1,48 @@
+name: Find Alejandro's Investments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  find-investments:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pymongo motor
+      
+      - name: Find Alejandro's Investments
+        env:
+          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+        run: |
+          cd backend
+          echo "🔍 Searching for Alejandro's investments..."
+          echo "======================================"
+          python find_alejandro_investments.py
+          echo "======================================"
+          echo "✅ Search Complete"
+      
+      - name: Summary
+        run: |
+          echo "### 🔍 Investment Search Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for detailed investment search results." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The search looked for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Investments with amount ~$18,151 (CORE fund)" >> $GITHUB_STEP_SUMMARY
+          echo "- Investments with amount ~$100,000 (BALANCE fund)" >> $GITHUB_STEP_SUMMARY
+          echo "- Investments created around the same time as Alejandro's client record" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the found investments in the logs" >> $GITHUB_STEP_SUMMARY
+          echo "2. Identify which investments belong to Alejandro" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run the fix script to link them correctly" >> $GITHUB_STEP_SUMMARY
