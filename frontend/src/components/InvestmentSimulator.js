@@ -851,6 +851,20 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                 </Card>
               </div>
 
+              {/* Commission Preview for Salesperson */}
+              {salesperson && simulationResult && (
+                <CommissionPreview
+                  salesperson={salesperson}
+                  investment={{
+                    amount: simulationResult.summary.total_investment,
+                    monthlyRate: 0.025, // Average rate, can be refined
+                    term: timeframeMonths,
+                    frequency: 'monthly',
+                    totalInterest: simulationResult.summary.total_interest_earned
+                  }}
+                />
+              )}
+
               {/* Fund Breakdown */}
               <Card>
                 <CardHeader>
