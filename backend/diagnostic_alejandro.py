@@ -214,9 +214,9 @@ async def run_diagnostic():
             print("   - FIDUS CORE: $18,151.41")
             print("   - FIDUS BALANCE: $100,000")
         
-        if total_amount > 0 and len(commissions) == 0:
+        if total_principal > 0 and len(commissions) == 0:
             print(f"\n🔧 ACTION 4: GENERATE COMMISSIONS")
-            print(f"   Found ${total_amount:,.2f} in investments but 0 commissions")
+            print(f"   Found ${total_principal:,.2f} in investments but 0 commissions")
             print(f"   Need to run commission generation script")
         
         print("\n" + "=" * 80)
@@ -225,10 +225,10 @@ async def run_diagnostic():
         print(f"Salvador Found: ✅")
         print(f"User Found: {'✅' if results.get('user_found') else '❌'}")
         print(f"Client Found: {'✅' if results.get('client_found') else '❌'}")
-        print(f"Investments Found: {len(all_investments)} (${total_amount:,.2f})")
+        print(f"Investments Found: {len(all_investments)} (${total_principal:,.2f})")
         print(f"Commissions Found: {len(commissions)} (${total_comm:,.2f})")
         print(f"Expected Total: $118,151.41")
-        print(f"Gap: ${118151.41 - total_amount:,.2f}")
+        print(f"Gap: ${118151.41 - total_principal:,.2f}")
         print("=" * 80)
         
     except Exception as e:
