@@ -360,7 +360,7 @@ async def update_salesperson(salesperson_id: str, data: SalespersonUpdate):
 # COMMISSION MANAGEMENT ENDPOINTS
 # ============================================================================
 
-@router.post("/commissions/generate/{investment_id}")
+@router.post("/admin/referrals/commissions/generate/{investment_id}")
 async def generate_commission_schedule(investment_id: str):
     """Generate full commission schedule for an investment"""
     COMMISSION_RATE = 0.10
