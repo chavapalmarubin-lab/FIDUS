@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/admin/referrals", tags=["Referrals"])
+router = APIRouter(prefix="/api", tags=["Referrals"])
 
 # Database will be injected via init_db()
 db = None
