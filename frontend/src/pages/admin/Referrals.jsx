@@ -7,8 +7,12 @@ import referralService from '../../services/referralService';
 import SalespersonCard from '../../components/referrals/SalespersonCard';
 import CommissionCalendar from '../../components/referrals/CommissionCalendar';
 import SalespersonDetail from './SalespersonDetail';
+import ManageSalespeople from '../../components/referrals/ManageSalespeople';
 
 const Referrals = () => {
+  // Sub-tab navigation
+  const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'manage' | 'commissions' | 'calendar'
+  
   // View state management for tab-based navigation
   const [currentView, setCurrentView] = useState('list'); // 'list' | 'detail' | 'calendar' | 'new'
   const [selectedSalespersonId, setSelectedSalespersonId] = useState(null);
