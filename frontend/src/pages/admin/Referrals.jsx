@@ -240,7 +240,7 @@ const Referrals = () => {
               </svg>
               <p className="text-gray-600">No salespeople found</p>
               <Button
-                onClick={() => navigate('/admin/referrals/new')}
+                onClick={() => alert('Add Salesperson feature coming soon')}
                 className="mt-4"
                 variant="outline"
               >
