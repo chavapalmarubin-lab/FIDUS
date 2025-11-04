@@ -1,0 +1,94 @@
+{
+  "success": true,
+  "accounts": [
+    {
+      "account": 886557,
+      "name": "BALANCE Master",
+      "fund_type": "BALANCE",
+      "balance": 10054.27,
+      "equity": 10054.27
+    },
+    {
+      "account": 886066,
+      "name": "BALANCE-01",
+      "fund_type": "BALANCE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 886602,
+      "name": "BALANCE-02",
+      "fund_type": "BALANCE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 885822,
+      "name": "CORE-01",
+      "fund_type": "CORE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 886528,
+      "name": "CORE-02",
+      "fund_type": "CORE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 891215,
+      "name": "SEPARATION-01",
+      "fund_type": "SEPARATION",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 891234,
+      "name": "SEPARATION-02",
+      "fund_type": "SEPARATION",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 897590,
+      "name": "CORE-03",
+      "fund_type": "CORE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 897589,
+      "name": "BALANCE-03",
+      "fund_type": "BALANCE",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 897591,
+      "name": "SEPARATION-03",
+      "fund_type": "SEPARATION",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    },
+    {
+      "account": 897599,
+      "name": "SEPARATION-04",
+      "fund_type": "SEPARATION",
+      "balance": 0.0,
+      "equity": 0.0,
+      "note": "No cached data"
+    }
+  ],
+  "count": 11,
+  "timestamp": "2025-11-04T01:43:29.453027+00:00"
+}

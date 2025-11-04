@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "fund_code": "BALANCE",
+  "total_aum": 10054.27,
+  "weighted_return": 49.47,
+  "total_true_pnl": 4973.56,
+  "account_count": 1,
+  "accounts": [
+    {
+      "account_id": 886557,
+      "account_name": "886557 - BALANCE",
+      "manager_name": "MEXAtlantic",
+      "initial_deposit": 10054.27,
+      "current_equity": 10054.27,
+      "profit_withdrawals": 4643.98,
+      "true_pnl": 4973.56,
+      "return_pct": 49.47,
+      "weight": 100.0,
+      "contribution": 49.47,
+      "status": "excellent"
+    }
+  ],
+  "best_performer": {
+    "account_id": 886557,
+    "return_pct": 49.47
+  },
+  "worst_performer": {
+    "account_id": 886557,
+    "return_pct": 49.47
+  },
+  "largest_contributor": {
+    "account_id": 886557,
+    "contribution": 49.47
+  },
+  "last_updated": "2025-11-04T01:43:28.984095+00:00"
+}

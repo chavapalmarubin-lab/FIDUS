@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "bridge_health": {
+    "success": false,
+    "error": "HTTP 404: {\"detail\":\"Not Found\"}"
+  },
+  "total_accounts": 0,
+  "broker_statistics": {
+    "MEX": {
+      "account_count": 5,
+      "active_accounts": 0,
+      "total_balance": 10054.27,
+      "total_equity": 10054.27,
+      "total_allocated": 0
+    },
+    "null": {
+      "account_count": 6,
+      "active_accounts": 0,
+      "total_balance": 0,
+      "total_equity": 0,
+      "total_allocated": 0
+    }
+  },
+  "sync_status": {
+    "last_sync": null,
+    "next_sync": null,
+    "sync_interval": 300
+  },
+  "timestamp": "2025-11-04T01:43:28.475712+00:00"
+}
