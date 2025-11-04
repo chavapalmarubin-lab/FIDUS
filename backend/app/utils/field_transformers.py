@@ -11,22 +11,43 @@ from datetime import datetime
 
 
 def transform_mt5_account(db_account: Dict[str, Any]) -> Dict[str, Any]:
-    """Transform MongoDB MT5 account to API format (camelCase)"""
+    """Transform MongoDB MT5 account to API format (camelCase)
+    
+    STANDARD FIELDS (as per FIELD_STANDARDS.md):
+    - balance (not accountBalance)
+    - equity (not accountEquity)  
+    - profit (not profitLoss)
+    - truePnl (calculated true P&L)
+    """
+    from bson.decimal128 import Decimal128
+    
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, Decimal128):
+            return float(val.to_decimal())
+        return float(val)
+    
     return {
         "accountNumber": db_account.get("account"),
-        "accountBalance": db_account.get("balance"),
-        "accountEquity": db_account.get("equity"),
-        "profitLoss": db_account.get("profit"),
-        "usedMargin": db_account.get("margin"),
-        "freeMargin": db_account.get("margin_free"),
-        "marginLevel": db_account.get("margin_level"),
-        "accountLeverage": db_account.get("leverage"),
+        "balance": to_float(db_account.get("balance")),
+        "equity": to_float(db_account.get("equity")),
+        "profit": to_float(db_account.get("profit")),
+        "truePnl": to_float(db_account.get("true_pnl")),
+        "displayedPnl": to_float(db_account.get("displayed_pnl")),
+        "usedMargin": to_float(db_account.get("margin")),
+        "freeMargin": to_float(db_account.get("margin_free")),
+        "marginLevel": to_float(db_account.get("margin_level")),
+        "leverage": db_account.get("leverage"),
         "currency": db_account.get("currency"),
-        "serverName": db_account.get("server"),
-        "brokerName": db_account.get("company"),
+        "server": db_account.get("server"),
+        "broker": db_account.get("broker"),
         "fundType": db_account.get("fund_type"),
-        "managerName": db_account.get("manager_name") or db_account.get("money_manager"),
-        "targetAmount": db_account.get("target_amount"),
+        "fundCode": db_account.get("fund_code"),
+        "initialAllocation": to_float(db_account.get("initial_allocation")),
+        "clientName": db_account.get("client_name"),
+        "clientId": db_account.get("client_id"),
+        "manager": db_account.get("manager"),
         "lastUpdate": db_account.get("updated_at").isoformat() if db_account.get("updated_at") else None
     }
 
