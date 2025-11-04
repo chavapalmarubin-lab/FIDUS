@@ -191,9 +191,12 @@ async def migrate_referral_system():
         print("   ⚠️  No investments found for Alejandro")
         print("   Creating sample investments for testing...")
         
+        import uuid
+        
         # Create sample investments
         sample_investments = [
             {
+                "investment_id": str(uuid.uuid4()),
                 "client_id": alejandro["_id"],
                 "product": "FIDUS_CORE",
                 "amount": 18151.41,
@@ -202,6 +205,7 @@ async def migrate_referral_system():
                 "created_at": datetime.now(timezone.utc)
             },
             {
+                "investment_id": str(uuid.uuid4()),
                 "client_id": alejandro["_id"],
                 "product": "FIDUS_BALANCE",
                 "amount": 100000.00,
