@@ -1,0 +1,24 @@
+﻿2025-11-04T19:37:32.4744646Z ##[group]Run echo "### 📊 Diagnostic Results" >> $GITHUB_STEP_SUMMARY
+2025-11-04T19:37:32.4745087Z [36;1mecho "### 📊 Diagnostic Results" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4745399Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4745782Z [36;1mecho "Check the logs above for detailed diagnostic output." >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4746173Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4746489Z [36;1mecho "The diagnostic searched for:" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4746914Z [36;1mecho "- Salvador Palma in salespeople collection" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4747601Z [36;1mecho "- Alejandro Mariscal in users and clients collections" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4748089Z [36;1mecho "- All investments linked to Alejandro" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4748675Z [36;1mecho "- Existing commission records" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4749002Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4749310Z [36;1mecho "📋 Next Steps:" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4749687Z [36;1mecho "1. Review the recommendations in the logs" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4750125Z [36;1mecho "2. Apply the suggested MongoDB commands" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4750553Z [36;1mecho "3. Re-run this diagnostic to verify fixes" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T19:37:32.4784780Z shell: /usr/bin/bash -e {0}
+2025-11-04T19:37:32.4785005Z env:
+2025-11-04T19:37:32.4785237Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:32.4785642Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T19:37:32.4786037Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:32.4786373Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:32.4786708Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:32.4787059Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T19:37:32.4787341Z ##[endgroup]

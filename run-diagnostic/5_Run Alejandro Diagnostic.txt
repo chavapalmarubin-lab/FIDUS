@@ -1,0 +1,97 @@
+﻿2025-11-04T19:37:31.9206286Z ##[group]Run cd backend
+2025-11-04T19:37:31.9206568Z [36;1mcd backend[0m
+2025-11-04T19:37:31.9206846Z [36;1mecho "🔍 Running Alejandro Data Diagnostic..."[0m
+2025-11-04T19:37:31.9207154Z [36;1mecho "======================================"[0m
+2025-11-04T19:37:31.9207433Z [36;1mpython diagnostic_alejandro.py[0m
+2025-11-04T19:37:31.9207700Z [36;1mecho "======================================"[0m
+2025-11-04T19:37:31.9207987Z [36;1mecho "✅ Diagnostic Complete"[0m
+2025-11-04T19:37:31.9242790Z shell: /usr/bin/bash -e {0}
+2025-11-04T19:37:31.9243013Z env:
+2025-11-04T19:37:31.9243246Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:31.9243651Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T19:37:31.9244045Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:31.9244399Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:31.9244761Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:37:31.9245268Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T19:37:31.9246070Z   MONGO_URL: ***fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+2025-11-04T19:37:31.9246522Z   DB_NAME: fidus_production
+2025-11-04T19:37:31.9246860Z ##[endgroup]
+2025-11-04T19:37:31.9303524Z 🔍 Running Alejandro Data Diagnostic...
+2025-11-04T19:37:31.9303966Z ======================================
+2025-11-04T19:37:32.4404421Z Traceback (most recent call last):
+2025-11-04T19:37:32.4416531Z   File "/home/runner/work/FIDUS/FIDUS/backend/diagnostic_alejandro.py", line 41, in run_diagnostic
+2025-11-04T19:37:32.4417179Z     salvador = await db.salespeople.find_one({"referral_code": "SP-2025"})
+2025-11-04T19:37:32.4417579Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4418126Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+2025-11-04T19:37:32.4418914Z     result = self.fn(*self.args, **self.kwargs)
+2025-11-04T19:37:32.4419208Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4419811Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/collection.py", line 1755, in find_one
+2025-11-04T19:37:32.4420388Z     for result in cursor.limit(-1):
+2025-11-04T19:37:32.4420965Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/cursor.py", line 1289, in __next__
+2025-11-04T19:37:32.4421516Z     return self.next()
+2025-11-04T19:37:32.4421704Z            ^^^^^^^^^^^
+2025-11-04T19:37:32.4422207Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/cursor.py", line 1265, in next
+2025-11-04T19:37:32.4422736Z     if len(self._data) or self._refresh():
+2025-11-04T19:37:32.4422978Z                           ^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4423525Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/cursor.py", line 1213, in _refresh
+2025-11-04T19:37:32.4424073Z     self._send_message(q)
+2025-11-04T19:37:32.4424617Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/cursor.py", line 1108, in _send_message
+2025-11-04T19:37:32.4425160Z     response = client._run_operation(
+2025-11-04T19:37:32.4425389Z                ^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4425885Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+2025-11-04T19:37:32.4426381Z     return func(self, *args, **kwargs)
+2025-11-04T19:37:32.4426603Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4427217Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 1938, in _run_operation
+2025-11-04T19:37:32.4427808Z     return self._retryable_read(
+2025-11-04T19:37:32.4428022Z            ^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4428928Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 2047, in _retryable_read
+2025-11-04T19:37:32.4429871Z     return self._retry_internal(
+2025-11-04T19:37:32.4430081Z            ^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4430577Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+2025-11-04T19:37:32.4431072Z     return func(self, *args, **kwargs)
+2025-11-04T19:37:32.4431295Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4431875Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 2014, in _retry_internal
+2025-11-04T19:37:32.4432428Z     ).run()
+2025-11-04T19:37:32.4432571Z       ^^^^^
+2025-11-04T19:37:32.4433038Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+2025-11-04T19:37:32.4433606Z     return self._read() if self._is_read else self._write()
+2025-11-04T19:37:32.4433882Z            ^^^^^^^^^^^^
+2025-11-04T19:37:32.4434411Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 2910, in _read
+2025-11-04T19:37:32.4434944Z     self._server = self._get_server()
+2025-11-04T19:37:32.4435165Z                    ^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4435713Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 2858, in _get_server
+2025-11-04T19:37:32.4436434Z     return self._client._select_server(
+2025-11-04T19:37:32.4436661Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4437233Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 1820, in _select_server
+2025-11-04T19:37:32.4437805Z     topology = self._get_topology()
+2025-11-04T19:37:32.4438015Z                ^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4439049Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 1758, in _get_topology
+2025-11-04T19:37:32.4439621Z     self._resolve_srv()
+2025-11-04T19:37:32.4440160Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/mongo_client.py", line 910, in _resolve_srv
+2025-11-04T19:37:32.4440719Z     res = uri_parser._parse_srv(
+2025-11-04T19:37:32.4440928Z           ^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4441475Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/uri_parser.py", line 168, in _parse_srv
+2025-11-04T19:37:32.4442036Z     nodes = dns_resolver.get_hosts()
+2025-11-04T19:37:32.4442253Z             ^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4442797Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/srv_resolver.py", line 157, in get_hosts
+2025-11-04T19:37:32.4443378Z     _, nodes = self._get_srv_response_and_hosts(True)
+2025-11-04T19:37:32.4443650Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4444287Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/srv_resolver.py", line 131, in _get_srv_response_and_hosts
+2025-11-04T19:37:32.4444923Z     results = self._resolve_uri(encapsulate_errors)
+2025-11-04T19:37:32.4445179Z               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-04T19:37:32.4445758Z   File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pymongo/synchronous/srv_resolver.py", line 125, in _resolve_uri
+2025-11-04T19:37:32.4446367Z     raise ConfigurationError(str(exc)) from None
+2025-11-04T19:37:32.4446851Z pymongo.errors.ConfigurationError: The DNS query name does not exist: _mongodb._tcp.fidus.ylp9be2.mongodb.net.
+2025-11-04T19:37:32.4447345Z ================================================================================
+2025-11-04T19:37:32.4447936Z 🔍 ALEJANDRO DATA DIAGNOSTIC
+2025-11-04T19:37:32.4448722Z ================================================================================
+2025-11-04T19:37:32.4449880Z MongoDB: ***fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+2025-11-04T19:37:32.4450511Z Database: fidus_production
+2025-11-04T19:37:32.4450835Z ================================================================================
+2025-11-04T19:37:32.4451220Z Running async version (Motor)
+2025-11-04T19:37:32.4451440Z 
+2025-11-04T19:37:32.4451730Z 1️⃣ Searching for Salvador Palma...
+2025-11-04T19:37:32.4452012Z 
+2025-11-04T19:37:32.4452486Z ❌ Error: The DNS query name does not exist: _mongodb._tcp.fidus.ylp9be2.mongodb.net.
+2025-11-04T19:37:32.4716942Z ======================================
+2025-11-04T19:37:32.4717852Z ✅ Diagnostic Complete
