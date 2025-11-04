@@ -1,0 +1,32 @@
+name: Update Salvador Total
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-salvador:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pymongo motor
+      
+      - name: Update Salvador's Total
+        env:
+          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+        run: |
+          cd backend
+          echo "🔧 Updating Salvador's total sales volume..."
+          echo "======================================"
+          python update_salvador_total.py
+          echo "======================================"
+          echo "✅ Update Complete"
