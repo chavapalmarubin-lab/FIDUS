@@ -551,7 +551,7 @@ async def get_pending_commissions(
         "total_count": len(commissions)
     }
 
-@router.post("/commissions/{commission_id}/approve")
+@router.post("/admin/referrals/commissions/{commission_id}/approve")
 async def approve_commission_payment(commission_id: str):
     """Admin approves commission for payment"""
     commission = await db.referral_commissions.find_one({"_id": ObjectId(commission_id)})
