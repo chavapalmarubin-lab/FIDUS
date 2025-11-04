@@ -739,3 +739,143 @@ async def get_salesperson_by_code_public(referral_code: str):
         "total_clients_referred": salesperson.get("total_clients_referred", 0),
         "total_sales_volume": float(salesperson.get("total_sales_volume", 0))
     }
+
+
+# ============================================================================
+# DATA FIX ENDPOINTS (One-time use)
+# ============================================================================
+
+@router.post("/admin/referrals/fix-salvador-data", tags=["Admin"])
+async def fix_salvador_data():
+    """
+    One-time fix to update Salvador Palma's statistics
+    Links ALL of Alejandro's investments and recalculates totals
+    """
+    try:
+        from bson.decimal128 import Decimal128
+        
+        print("🔧 Starting Salvador data fix...")
+        
+        # Find Salvador Palma
+        salvador = await db.salespeople.find_one({"referral_code": "SP-2025"})
+        if not salvador:
+            raise HTTPException(404, "Salvador Palma not found")
+        
+        salvador_id = salvador["_id"]
+        print(f"✅ Found Salvador: {salvador_id}")
+        
+        # Find Alejandro
+        alejandro = await db.clients.find_one({"name": {"$regex": "Alejandro", "$options": "i"}})
+        if not alejandro:
+            raise HTTPException(404, "Alejandro not found")
+        
+        alejandro_id = str(alejandro["_id"])
+        print(f"✅ Found Alejandro: {alejandro_id}")
+        
+        # Find ALL of Alejandro's investments
+        investments = await db.investments.find({"client_id": alejandro_id}).to_list(None)
+        print(f"📊 Found {len(investments)} investments")
+        
+        total_sales = 0
+        investment_details = []
+        
+        # Update each investment to link to Salvador
+        for inv in investments:
+            amount = float(inv.get("amount", 0))
+            total_sales += amount
+            fund = inv.get("fund_type", "unknown")
+            
+            investment_details.append({
+                "fund": fund,
+                "amount": amount
+            })
+            
+            # Link to Salvador if not already
+            if inv.get("referred_by") != salvador_id:
+                await db.investments.update_one(
+                    {"_id": inv["_id"]},
+                    {
+                        "$set": {
+                            "referred_by": salvador_id,
+                            "referred_by_name": "Salvador Palma",
+                            "updated_at": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+                print(f"  ✅ Linked {fund} (${amount:,.2f}) to Salvador")
+        
+        print(f"💰 Total Sales Volume: ${total_sales:,.2f}")
+        
+        # Find all commissions for Salvador
+        commissions = await db.referral_commissions.find({
+            "salesperson_id": str(salvador_id)
+        }).to_list(None)
+        
+        print(f"💵 Found {len(commissions)} commission records")
+        
+        total_commissions = 0
+        commissions_paid = 0
+        commissions_pending = 0
+        
+        for comm in commissions:
+            amount = float(comm.get("amount", 0))
+            total_commissions += amount
+            
+            if comm.get("status") == "paid":
+                commissions_paid += amount
+            else:
+                commissions_pending += amount
+        
+        print(f"💰 Total Commissions: ${total_commissions:,.2f}")
+        print(f"   Paid: ${commissions_paid:,.2f}")
+        print(f"   Pending: ${commissions_pending:,.2f}")
+        
+        # Update Salvador's statistics
+        update_data = {
+            "total_sales_volume": Decimal128(str(total_sales)),
+            "total_commissions_earned": Decimal128(str(total_commissions)),
+            "commissions_paid_to_date": Decimal128(str(commissions_paid)),
+            "commissions_pending": Decimal128(str(commissions_pending)),
+            "active_investments": len(investments),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        await db.salespeople.update_one(
+            {"_id": salvador_id},
+            {"$set": update_data}
+        )
+        
+        print("✅ Updated Salvador's statistics")
+        
+        # Verify update
+        updated_salvador = await db.salespeople.find_one({"_id": salvador_id})
+        
+        return {
+            "success": True,
+            "message": "Salvador's data updated successfully",
+            "data": {
+                "salesperson_id": str(salvador_id),
+                "salesperson_name": "Salvador Palma",
+                "investments_found": len(investments),
+                "investments_linked": len(investments),
+                "investment_details": investment_details,
+                "total_sales_volume": total_sales,
+                "commission_records": len(commissions),
+                "total_commissions_earned": total_commissions,
+                "commissions_paid": commissions_paid,
+                "commissions_pending": commissions_pending,
+                "verification": {
+                    "sales_in_db": float(updated_salvador.get("total_sales_volume", 0)),
+                    "commissions_in_db": float(updated_salvador.get("total_commissions_earned", 0))
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"Fix failed: {str(e)}")
+
