@@ -716,16 +716,26 @@ async def get_active_salespeople_public():
 
 @router.get("/public/salespeople/{referral_code}", tags=["Public"])
 async def get_salesperson_by_code_public(referral_code: str):
-    """Get salesperson by referral code (no auth required)"""
+    """
+    Public endpoint to validate referral code and get salesperson info.
+    No authentication required - used by prospects form.
+    """
     salesperson = await db.salespeople.find_one(
-        {"referral_code": referral_code, "active": True}
+        {"referral_code": referral_code.upper(), "active": True}
     )
     
     if not salesperson:
         raise HTTPException(status_code=404, detail="Invalid referral code")
     
+    # Return public-safe data (no sensitive info like wallet details)
     return {
         "id": str(salesperson["_id"]),
         "name": salesperson["name"],
-        "referral_code": salesperson["referral_code"]
+        "email": salesperson.get("email"),
+        "phone": salesperson.get("phone"),
+        "referral_code": salesperson["referral_code"],
+        "active": salesperson.get("active", True),
+        # Public stats for transparency
+        "total_clients_referred": salesperson.get("total_clients_referred", 0),
+        "total_sales_volume": float(salesperson.get("total_sales_volume", 0))
     }
