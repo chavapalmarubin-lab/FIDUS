@@ -1,0 +1,19 @@
+﻿2025-11-04T20:06:37.5796563Z ##[group]Run echo "### ✅ Data Fix Complete" >> $GITHUB_STEP_SUMMARY
+2025-11-04T20:06:37.5797055Z [36;1mecho "### ✅ Data Fix Complete" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5797572Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5797941Z [36;1mecho "Check the logs above for detailed results." >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5798307Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5798593Z [36;1mecho "What was fixed:" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5798974Z [36;1mecho "- Added fund_type field to investments" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5799400Z [36;1mecho "- Added amount field to investments" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5799815Z [36;1mecho "- Linked investments to Salvador" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5800243Z [36;1mecho "- Updated Salvador's total_sales_volume" >> $GITHUB_STEP_SUMMARY[0m
+2025-11-04T20:06:37.5833649Z shell: /usr/bin/bash -e {0}
+2025-11-04T20:06:37.5833938Z env:
+2025-11-04T20:06:37.5834194Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T20:06:37.5834630Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T20:06:37.5835026Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T20:06:37.5835382Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T20:06:37.5835733Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T20:06:37.5836090Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T20:06:37.5836390Z ##[endgroup]
