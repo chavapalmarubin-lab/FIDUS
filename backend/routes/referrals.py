@@ -633,7 +633,7 @@ async def mark_commission_paid(commission_id: str, payment_details: CommissionPa
 # CLIENT REFERRAL MANAGEMENT
 # ============================================================================
 
-@router.put("/clients/{client_id}/referral")
+@router.put("/admin/referrals/clients/{client_id}/referral")
 async def update_client_referral(client_id: str, salesperson_id: str):
     """Assign or update client referral"""
     client = await db.clients.find_one({"_id": ObjectId(client_id)})
