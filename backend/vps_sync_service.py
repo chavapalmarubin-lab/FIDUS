@@ -124,6 +124,7 @@ class VPSSyncService:
                     
                     # Prepare update data with live MT5 data
                     update_data = {
+                        'account': account_id,  # Ensure account number is set
                         'balance': balance,
                         'equity': equity,
                         'profit': profit,
@@ -141,6 +142,7 @@ class VPSSyncService:
                     
                     # Add configuration fields from mt5_account_config if they exist
                     if account_config:
+                        logger.info(f"📋 Config found for {account_id}: fund_type={account_config.get('fund_type')}, manager={account_config.get('money_manager_url', 'N/A')[:20]}")
                         if 'fund_type' in account_config:
                             update_data['fund_type'] = account_config['fund_type']
                         if 'name' in account_config:
@@ -151,6 +153,8 @@ class VPSSyncService:
                             update_data['server'] = account_config['server']
                         if 'broker_name' in account_config:
                             update_data['broker_name'] = account_config['broker_name']
+                    else:
+                        logger.warning(f"⚠️  No config found for account {account_id} in mt5_account_config")
                     
                     # Update MongoDB with LIVE data + config
                     update_result = await self.db.mt5_accounts.update_one(
