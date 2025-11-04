@@ -1,0 +1,42 @@
+﻿2025-11-04T20:29:19.9056173Z Current runner version: '2.329.0'
+2025-11-04T20:29:19.9080940Z ##[group]Runner Image Provisioner
+2025-11-04T20:29:19.9081753Z Hosted Compute Agent
+2025-11-04T20:29:19.9082309Z Version: 20251016.436
+2025-11-04T20:29:19.9082925Z Commit: 8ab8ac8bfd662a3739dab9fe09456aba92132568
+2025-11-04T20:29:19.9083634Z Build Date: 2025-10-15T20:44:12Z
+2025-11-04T20:29:19.9084182Z ##[endgroup]
+2025-11-04T20:29:19.9084784Z ##[group]Operating System
+2025-11-04T20:29:19.9085369Z Ubuntu
+2025-11-04T20:29:19.9085812Z 24.04.3
+2025-11-04T20:29:19.9086318Z LTS
+2025-11-04T20:29:19.9086755Z ##[endgroup]
+2025-11-04T20:29:19.9087436Z ##[group]Runner Image
+2025-11-04T20:29:19.9087977Z Image: ubuntu-24.04
+2025-11-04T20:29:19.9088571Z Version: 20251030.96.2
+2025-11-04T20:29:19.9089563Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251030.96/images/ubuntu/Ubuntu2404-Readme.md
+2025-11-04T20:29:19.9090942Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251030.96
+2025-11-04T20:29:19.9092221Z ##[endgroup]
+2025-11-04T20:29:19.9094736Z ##[group]GITHUB_TOKEN Permissions
+2025-11-04T20:29:19.9097406Z Actions: write
+2025-11-04T20:29:19.9097973Z Attestations: write
+2025-11-04T20:29:19.9098570Z Checks: write
+2025-11-04T20:29:19.9099061Z Contents: write
+2025-11-04T20:29:19.9099532Z Deployments: write
+2025-11-04T20:29:19.9100103Z Discussions: write
+2025-11-04T20:29:19.9100609Z Issues: write
+2025-11-04T20:29:19.9101085Z Metadata: read
+2025-11-04T20:29:19.9101621Z Models: read
+2025-11-04T20:29:19.9102069Z Packages: write
+2025-11-04T20:29:19.9102571Z Pages: write
+2025-11-04T20:29:19.9103065Z PullRequests: write
+2025-11-04T20:29:19.9103647Z RepositoryProjects: write
+2025-11-04T20:29:19.9104171Z SecurityEvents: write
+2025-11-04T20:29:19.9104840Z Statuses: write
+2025-11-04T20:29:19.9105363Z ##[endgroup]
+2025-11-04T20:29:19.9108006Z Secret source: Actions
+2025-11-04T20:29:19.9109033Z Prepare workflow directory
+2025-11-04T20:29:19.9456541Z Prepare all required actions
+2025-11-04T20:29:19.9535751Z Getting action download info
+2025-11-04T20:29:20.4198181Z Download action repository 'actions/checkout@v3' (SHA:f43a0e5ff2bd294095638e18286ca9a3d1956744)
+2025-11-04T20:29:20.6279703Z Download action repository 'actions/setup-python@v4' (SHA:7f4fc3e22c37d6ff65e88745f38bd3157c663f7c)
+2025-11-04T20:29:20.8160594Z Complete job name: fix-client-id
