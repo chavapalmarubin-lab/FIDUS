@@ -33,7 +33,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://fidusrefs.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
 
 class ReviewRequestTester:
     def __init__(self):

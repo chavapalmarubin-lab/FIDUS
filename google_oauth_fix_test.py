@@ -22,7 +22,7 @@ import time
 import uuid
 
 # Configuration
-BACKEND_URL = "https://fidusrefs.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

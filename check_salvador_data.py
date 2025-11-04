@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://fidusrefs.preview.emergentagent.com'
+base_url = 'https://referral-tracker-8.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

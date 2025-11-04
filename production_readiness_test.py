@@ -565,7 +565,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 class ProductionReadinessTester:
-    def __init__(self, base_url="https://fidusrefs.preview.emergentagent.com"):
+    def __init__(self, base_url="https://referral-tracker-8.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

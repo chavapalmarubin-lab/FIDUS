@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL
-BACKEND_URL = "https://fidusrefs.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
 
 class AlejandroDataCleanup:
     def __init__(self):

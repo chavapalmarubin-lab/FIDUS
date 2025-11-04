@@ -1,21 +1,18 @@
 <analysis>
-The previous AI engineer initially focused on critical fixes, including P&L calculation accuracy, multi-language support for the frontend, and robust MT5 Bridge health monitoring. A significant task was the New month allocation, which involved syncing 11 MT5 accounts. This phase faced numerous challenges:  conflicts,  upsert failures, timezone issues, and the MT5 Bridge's inability to switch accounts, leading to the development of . The last action in this phase was changing an account's fund type to BALANCE.
+The AI engineer's previous work transitioned from foundational fixes (P&L, localization, MT5 monitoring) and New month allocation to a comprehensive Referral System feature. Initial backend and database work for the referral system was completed, despite challenges with migration scripts and database connections. The AI then focused on building the Admin Frontend UI, including routing, salesperson cards, and commission calendar components, while the user handled backend deployment.
 
-Subsequently, a major Referral System feature was requested, involving extensive backend and frontend development. The AI engineer proceeded with Phase 1 (Backend & Database), creating new collections and endpoints. This phase encountered persistent issues with the migration script, particularly database connection (due to quoted  in ) and the initial failure to find all client investments. After resolving these, Salvador Palma was created as a salesperson and Alejandro Mariscal Romero's investments were linked, generating 16 commission records. Despite local verification, deployment issues prevented the backend changes from going live on Render, prompting a parallel approach. The AI is now developing Phase 2 (Admin Frontend) while the user handles the backend deployment.
+A key issue emerged: frontend deployment to production was lagging behind backend, and a 500 error on the salesperson detail endpoint on preview backend required debugging. After successfully implementing and testing Phase 3 (Prospects & Simulator integration) including referral code input and commission preview, a critical backend validation endpoint was fixed by removing a redundant  prefix. Phase 4, a full salesperson management interface with add/edit modals and a dynamic table, was then built and verified locally. The most recent task involves diagnosing a data discrepancy on production: Salvador Palma's reported total sales are incorrect. The AI is now working with the user to run a diagnostic script via GitHub Actions to get precise production database information for a targeted data fix.
 </analysis>
 
 <product_requirements>
-The FIDUS platform needs accurate financial tracking and enhanced user features. Initial requirements included:
-1.  **Accurate P&L Calculations**: Correcting the formula to account for all external movements.
-2.  **Frontend Localization and Fund Details**: Implementing multi-language support (ES, EN, PT, FR) for  and updating fund details with new minimum investments (CORE 00k, BALANCE 50k, DYNAMIC 00k) and removing MT5 references.
-3.  **Robust MT5 Bridge Health Monitoring**: Improving monitoring to prevent false positives and ensure reliable syncing and alerts.
-The **New month allocation** task involved adding four new MT5 accounts and two new Money Managers, updating existing allocations, and ensuring all 11 MT5 accounts synced correctly and displayed balances. This included changing account 891215's fund type from  to .
-The **Referral System** is a comprehensive new feature: tracking salespeople and referred clients, calculating 10% commissions on interest payments, integrating commissions into cash flow projections, and providing an admin interface for management. This includes creating Salvador Palma as a salesperson and updating Alejandro Mariscal Romero as a client with referral links and commissions.
+The FIDUS platform requires robust financial tracking and enhanced user engagement. Initial product goals included accurate P&L calculations (accounting for external movements), comprehensive frontend localization (ES, EN, PT, FR) for the  with updated fund minimums (00k CORE, 50k BALANCE, 00k DYNAMIC) and removal of MT5 references, and improved MT5 Bridge health monitoring for reliable syncing. The New month allocation involved integrating new MT5 accounts and Money Managers, updating existing allocations, and ensuring all 11 MT5 accounts synced, notably changing account 891215's fund type to .
+
+The Referral System is a new, multi-phase feature. It aims to track salespeople, link referred clients, calculate 10% commissions on interest payments, integrate these into cash flow, and provide a full admin management interface. This includes setting up Salvador Palma as a salesperson and linking Alejandro Mariscal Romero's investments (CORE 8k, BALANCE 00k) to Salvador, generating 16 commission records. The system also needs public-facing integration for prospects to enter referral codes and for the investment simulator to preview commissions, with auto-population from referral links ().
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, PyMongo/Motor), MongoDB (Atlas), Decimal128, ObjectId, asynchronous programming.
--   **Frontend**: React.js, shadcn/ui components, react-router-dom, axios.
+-   **Backend**: Python (FastAPI, PyMongo/Motor), MongoDB (Decimal128, ObjectId), asynchronous programming.
+-   **Frontend**: React.js (functional components, hooks), , shadcn/ui components, .
 -   **Deployment**: Kubernetes, Supervisor, GitHub Actions, Render.com.
 -   **MT5 Bridge**: VPS-based Python scripts ().
 -   **Internationalization**: i18n for localization.
@@ -23,44 +20,44 @@ The **Referral System** is a comprehensive new feature: tracking salespeople and
 
 <code_architecture>
 
--   ****: The main FastAPI application. Modified to include the new  router. Previously disabled .
--   ****: Syncs MT5 data from VPS to MongoDB. Modified to correctly handle  values in update operations, resolving s related to MongoDB  operators.
--   ****: Service to sync MT5 data. Was found to conflict with  and was ultimately disabled in  to prevent data overwrites.
--   ****: **NEW file**. Contains all backend API endpoints for the new referral system (CRUD for salespeople, commission management, cash flow integration, public endpoints). This was created to modularize the large .
--   ****: **NEW file**. A one-time script for setting up the initial referral data. It creates Salvador Palma as a salesperson, updates Alejandro's client record with referral information, and generates commission schedules for his investments. This script was significantly debugged to handle Alejandro existing as a user but not a client, and to fix issues with a quoted  environment variable preventing correct collection creation.
--   ****: **NEW file (temporary)**. A script created to specifically address the issue of Alejandro's BALANCE investment commissions being missed by the initial migration. It finds the BALANCE investment, regenerates its commissions, and updates relevant totals.
--   ****: **NEW file (temporary)**. A script to perform comprehensive verification of the backend referral system and its data, including MongoDB checks and API endpoint tests.
--   ****: **NEW file**. A critical script for the VPS that sequentially logs into each of the 11 MT5 accounts, replacing  to ensure all accounts cache their live balances.
--   ****: **NEW file**. This JavaScript file acts as the API service layer for the frontend, encapsulating all calls to the backend  and  endpoints.
--   ****: **NEW file**. The main React page for the Admin dashboard's new Referrals tab, displaying quick stats, a list of salespeople, and a commission calendar preview.
--   ****: **NEW file**. A reusable React component to display individual salesperson details and key metrics in a card format within the Referrals page.
--   ****: **NEW file**. A React component to display commission payments in a calendar-like view, showing monthly breakdowns and payment details.
--   ****: **NEW file**. The React page for viewing detailed information about a specific salesperson, including their profile, performance metrics, client portfolio, and commission history.
--   ****: **NEW file**. A React modal component for approving pending commission payments through the admin interface.
--   ****: **NEW file**. A React modal component with a form for marking approved commissions as paid, including payment details like method, reference, and hash.
--   **MongoDB Collections**:  (fund type for 891215 updated to BALANCE),  (stores live account data), and **NEW collections**:  (stores salesperson info),  (stores detailed commission records). , , and  collections were updated with new fields for referral tracking.
+-   ****: Main FastAPI application. Includes referral router.
+-   ****: Contains all API endpoints for the referral system. Recent changes include a public endpoint  to validate referral codes and a temporary diagnostic endpoint  (then removed and moved to a standalone script) and  endpoint (also for data fix).
+-   ****: Modified to accept , , and  when creating a new prospect, and updates salesperson stats.
+-   ****: Initial script for setting up referral data. Was debugged to correctly create Salvador Palma and link Alejandro's investments.
+-   ****: **NEW file**. A standalone Python script to diagnose Alejandro's data (users, clients, investments, commissions, Salvador's data) directly on MongoDB. Created after issues arose with endpoint-based diagnostics.
+-   ****: **MODIFIED**. The main Admin Referrals page. Updated to include sub-tab navigation (, , , ) and to render the  component when its tab is active. Also modified to handle internal view states instead of  for salesperson details.
+-   ****: **MODIFIED**. Updated to accept  and  props, adapting it for internal navigation within the  tab instead of being a direct route.
+-   ****: **MODIFIED**. The public-facing prospects form component. Updated to include the  component, handle referral code changes, and pass salesperson data during form submission.
+-   ****: **MODIFIED**. The public investment simulator. Updated to parse referral codes from URL parameters (), fetch salesperson data, and conditionally render the  component.
+-   ****: **MODIFIED**. Frontend API service for referrals. Crucially, all endpoint paths were adjusted to remove a redundant  prefix, as  already provides it in its base URL, resolving 404 errors. Includes .
+-   ****: **NEW file**. A React component for entering and validating referral codes, with real-time feedback and salesperson display.
+-   ****: **NEW file**. A React component to display estimated commissions for a salesperson based on investment details in the simulator.
+-   ****: **NEW file**. The main React component for managing salespeople, including stats cards, search, filters, and rendering .
+-   ****: **NEW file**. A React modal for adding new salespeople or editing existing ones, featuring auto-generated referral codes.
+-   ****: **NEW file**. A React component displaying a table of salespeople with their details, performance metrics, and quick actions (copy link, edit, toggle active, open link).
+-   ****: The Axios instance for API calls. Its  already contains .
+-   ****: **NEW file**. A GitHub Actions workflow for manually triggering the  script on the production MongoDB.
+-   **MongoDB Collections**: , ,  (updated with referral fields),  (updated with referral fields).
+
 </code_architecture>
 
 <pending_tasks>
--   **Field Standardization Project**: A comprehensive system audit to define naming standards and refactor all layers.
--   **Frontend Fund Type Update Verification**: Verify account 891215 correctly displays as BALANCE on the frontend after the initial backend update. (This was pre-referral system).
--   **Backend Referral System Deployment**: Ensure the new referral system backend (endpoints, database changes) is fully deployed to the Render production environment and accessible.
--   **Frontend Referral System Integration**: Integrate the newly built frontend components with the live backend APIs, including dynamic data fetching, approval workflows, and display.
+-   **Backend Referral System Deployment**: Ensure the entire referral system backend (endpoints, database changes, migration scripts) is fully deployed and stable on Render.
+-   **Frontend Referral System Deployment**: The frontend changes (Admin UI, Prospects, Simulator) need to be deployed to production.
 -   **Complete Admin UI**: Build remaining components for  and  to integrate referral information.
--   **Prospects & Simulator Integration (Phase 3)**: Implement salesperson selection in prospect forms and commission previews in the investment simulator.
+-   **Data Synchronization**: Resolve the data discrepancy for Alejandro's investments and Salvador Palma's sales volume in production.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively working on Phase 2: Admin Frontend UI for the Referral System. The user (Chava) took over the task of pushing the backend referral system code to GitHub to trigger a Render auto-deployment, expecting it to be live within minutes. In parallel, the AI engineer was tasked with rapidly building the remaining frontend components.
+Immediately before this summary request, the AI engineer was engaged in diagnosing a critical data discrepancy in the production environment. While all frontend and backend code for the comprehensive referral system (Phases 1-4) has been built and verified locally (Admin UI, Prospect/Simulator integration, Salesperson Management), the user identified that Salvador Palma's total sales volume on the production admin dashboard was incorrectly displaying only 8,151.41 (CORE investment) and missing the 00,000 BALANCE investment, which should total 18,151.41.
 
-The AI engineer has just completed building three critical React components:
-1.  ****: This page will display a comprehensive dashboard for individual salespeople, showing their performance, clients, and commission history.
-2.  ****: This modal component facilitates the admin approval process for commissions.
-3.  ****: This modal component provides the interface for marking commissions as paid, capturing payment details like method, reference, and transaction hash.
+The AI engineer attempted to fix this by adding a temporary API endpoint () to  and debugging  conversion issues. However, this script reported 0 investments found for Alejandro, indicating that Alejandro's investments were not correctly linked to his client record in production MongoDB.
 
-This means that the AI engineer has completed the core UI components for the referral system frontend, and the next immediate step is to integrate these components by adding the necessary routing. The backend deployment is ongoing, and once complete, the frontend components will be ready for full end-to-end testing with the live APIs.
+To precisely understand the production data state, the AI engineer created a standalone diagnostic script, . After initial attempts to run this as an endpoint or locally failed due to deployment/environment issues, the user confirmed that the AI has access to GitHub Actions. Consequently, the AI engineer created a GitHub Actions workflow () to run  directly against the production MongoDB using GitHub secrets.
+
+The user then reported ran alejandros and provided a screenshot, indicating the GitHub Action has been triggered and completed. The AI engineer is now in the process of analyzing the results from this diagnostic run to determine the exact steps needed to fix the data discrepancy in production.
 </current_work>
 
 <optional_next_step>
-Add routing for the newly created frontend pages and components.
+Analyze the output from the GitHub Actions diagnostic run for Alejandro's data to formulate the precise fix.
 </optional_next_step>

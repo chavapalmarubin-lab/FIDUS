@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class EmergentGoogleAuthTester:
     def __init__(self):
         # Use REACT_APP_BACKEND_URL from frontend/.env if available
-        self.backend_url = "https://fidusrefs.preview.emergentagent.com/api"
+        self.backend_url = "https://referral-tracker-8.preview.emergentagent.com/api"
         
         # Try to read from frontend/.env
         try:

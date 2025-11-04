@@ -35,7 +35,7 @@ import uuid
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://fidusrefs.preview.emergentagent.com"
+BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

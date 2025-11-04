@@ -31,7 +31,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://fidusrefs.preview.emergentagent.com/api"
+PREVIEW_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

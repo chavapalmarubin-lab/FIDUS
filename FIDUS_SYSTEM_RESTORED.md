@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidusrefs.preview.emergentagent.com`
+`https://referral-tracker-8.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
