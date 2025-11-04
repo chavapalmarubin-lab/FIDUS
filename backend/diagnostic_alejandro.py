@@ -6,9 +6,18 @@ Finds where data exists and provides exact fix recommendations
 
 import asyncio
 import os
+import sys
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 from bson import ObjectId
+
+# Support both Motor (async) and PyMongo (sync) for GitHub Actions
+try:
+    from motor.motor_asyncio import AsyncIOMotorClient
+    USE_ASYNC = True
+except ImportError:
+    from pymongo import MongoClient
+    USE_ASYNC = False
 
 MONGO_URL = os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME", "fidus_db").strip('"').strip("'")
