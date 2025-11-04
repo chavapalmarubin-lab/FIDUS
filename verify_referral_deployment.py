@@ -126,7 +126,7 @@ def test_backend_api():
         print("\n2️⃣ Testing admin login...")
         login_response = requests.post(
             f"{BACKEND_URL}/api/auth/login",
-            json={"username": "admin", "password": "password123"},
+            json={"username": "admin", "password": "password123", "user_type": "admin"},
             timeout=10
         )
         
