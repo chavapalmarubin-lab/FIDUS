@@ -916,25 +916,6 @@ async def fix_salvador_data():
                 "salesperson_name": "Salvador Palma",
                 "investments_found": len(investments),
                 "investments_linked": len(investments),
-            "investments_found": len(all_investments),
-            "total_investment_amount": total_investment_amount,
-            "commissions_found": len(commissions),
-            "issues_to_fix": len(results["recommendations"])
-        }
-        
-        print("✅ Diagnostic complete")
-        return results
-        
-    except Exception as e:
-        print(f"❌ Diagnostic error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return {
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
-
-                "investment_details": investment_details,
                 "total_sales_volume": total_sales,
                 "commission_records": len(commissions),
                 "total_commissions_earned": total_commissions,
