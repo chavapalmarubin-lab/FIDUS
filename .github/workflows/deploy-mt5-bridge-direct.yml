@@ -1,0 +1,320 @@
+name: Deploy MT5 Bridge Account Switching to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_restart:
+        description: 'Force restart even if service running'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 60m
+          script: |
+            Write-Host "=========================================="
+            Write-Host "MT5 BRIDGE DEPLOYMENT - ACCOUNT SWITCHING"
+            Write-Host "=========================================="
+            
+            # Stop existing MT5 Bridge service
+            Write-Host "`n[STEP 1] Stopping existing MT5 Bridge..."
+            Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*MT5_Bridge*" -or $_.CommandLine -like "*mt5_bridge*"} | Stop-Process -Force
+            Start-Sleep -Seconds 3
+            Write-Host "✅ Existing services stopped"
+            
+            # Create directory if needed
+            $bridgeDir = "C:\MT5_Bridge"
+            if (!(Test-Path $bridgeDir)) {
+                New-Item -Path $bridgeDir -ItemType Directory
+                Write-Host "✅ Created directory: $bridgeDir"
+            }
+            
+            # Download the new script from GitHub
+            Write-Host "`n[STEP 2] Downloading new MT5 Bridge script from GitHub..."
+            $scriptContent = @"
+            """
+            MT5 Bridge API Service - ACCOUNT SWITCHING VERSION
+            Logs into each account sequentially to retrieve balances
+            """
+            
+            from fastapi import FastAPI, HTTPException
+            from fastapi.middleware.cors import CORSMiddleware
+            import MetaTrader5 as mt5
+            from datetime import datetime, timezone
+            import logging
+            from pymongo import MongoClient
+            import asyncio
+            import time
+            
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+            logger = logging.getLogger(__name__)
+            
+            app = FastAPI(title="MT5 Bridge API - Account Switching", version="4.0-switching")
+            
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            
+            MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+            mongo_client = None
+            db = None
+            MT5_INITIALIZED = False
+            ACCOUNT_CACHE = {}
+            ACCOUNT_CREDENTIALS = {}
+            
+            def initialize_mt5():
+                global MT5_INITIALIZED
+                if MT5_INITIALIZED:
+                    return True
+                try:
+                    logger.info("[INIT] Initializing MT5...")
+                    if not mt5.initialize():
+                        error = mt5.last_error()
+                        logger.error(f"[FAIL] MT5 initialization failed: {error}")
+                        return False
+                    MT5_INITIALIZED = True
+                    logger.info(f"[OK] MT5 initialized - Version: {mt5.version()}")
+                    return True
+                except Exception as e:
+                    logger.error(f"[FAIL] MT5 initialization error: {str(e)}")
+                    return False
+            
+            def load_account_credentials():
+                global ACCOUNT_CREDENTIALS
+                try:
+                    logger.info("[LOAD] Loading account credentials from MongoDB...")
+                    accounts = list(db.mt5_account_config.find({"is_active": True}))
+                    for acc in accounts:
+                        account_num = acc.get('account')
+                        ACCOUNT_CREDENTIALS[account_num] = {
+                            'password': acc.get('password'),
+                            'server': acc.get('server'),
+                            'name': acc.get('name'),
+                            'fund_type': acc.get('fund_type')
+                        }
+                    logger.info(f"[OK] Loaded credentials for {len(ACCOUNT_CREDENTIALS)} accounts")
+                    logger.info(f"[INFO] Accounts: {list(ACCOUNT_CREDENTIALS.keys())}")
+                    return True
+                except Exception as e:
+                    logger.error(f"[FAIL] Error loading credentials: {str(e)}")
+                    return False
+            
+            def login_to_account(account_number: int) -> bool:
+                try:
+                    if account_number not in ACCOUNT_CREDENTIALS:
+                        logger.error(f"[FAIL] No credentials for account {account_number}")
+                        return False
+                    creds = ACCOUNT_CREDENTIALS[account_number]
+                    password = creds['password']
+                    server = creds['server']
+                    logger.info(f"[LOGIN] Attempting to login to account {account_number} on {server}...")
+                    authorized = mt5.login(account_number, password=password, server=server)
+                    if not authorized:
+                        error = mt5.last_error()
+                        logger.error(f"[FAIL] Login failed for {account_number}: {error}")
+                        return False
+                    logger.info(f"[OK] Successfully logged into account {account_number}")
+                    return True
+                except Exception as e:
+                    logger.error(f"[FAIL] Exception during login to {account_number}: {str(e)}")
+                    return False
+            
+            def get_account_data_after_login():
+                try:
+                    account_info = mt5.account_info()
+                    if not account_info:
+                        logger.error("[FAIL] Failed to get account info")
+                        return None
+                    data = {
+                        "account": account_info.login,
+                        "balance": float(account_info.balance),
+                        "equity": float(account_info.equity),
+                        "profit": float(account_info.profit),
+                        "margin": float(account_info.margin),
+                        "margin_free": float(account_info.margin_free),
+                        "margin_level": float(account_info.margin_level) if account_info.margin_level else 0.0,
+                        "currency": account_info.currency,
+                        "leverage": account_info.leverage,
+                        "server": account_info.server,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    logger.info(f"[DATA] Account {data['account']}: Balance=${data['balance']:,.2f}, Equity=${data['equity']:,.2f}")
+                    return data
+                except Exception as e:
+                    logger.error(f"[FAIL] Error getting account data: {str(e)}")
+                    return None
+            
+            def refresh_all_accounts():
+                global ACCOUNT_CACHE
+                try:
+                    logger.info("[REFRESH] Starting account refresh cycle...")
+                    logger.info(f"[REFRESH] Will login to {len(ACCOUNT_CREDENTIALS)} accounts")
+                    if not MT5_INITIALIZED:
+                        if not initialize_mt5():
+                            logger.error("[FAIL] MT5 not initialized")
+                            return False
+                    success_count = 0
+                    fail_count = 0
+                    for account_number in ACCOUNT_CREDENTIALS.keys():
+                        logger.info(f"[CYCLE] Processing account {account_number}...")
+                        if login_to_account(account_number):
+                            data = get_account_data_after_login()
+                            if data:
+                                ACCOUNT_CACHE[account_number] = data
+                                success_count += 1
+                            else:
+                                fail_count += 1
+                        else:
+                            fail_count += 1
+                        time.sleep(0.5)
+                    logger.info(f"[OK] Refresh complete: {success_count} success, {fail_count} failed")
+                    return True
+                except Exception as e:
+                    logger.error(f"[FAIL] Error refreshing accounts: {str(e)}")
+                    return False
+            
+            async def background_refresh():
+                while True:
+                    try:
+                        logger.info("[BACKGROUND] Starting scheduled refresh...")
+                        refresh_all_accounts()
+                        logger.info("[BACKGROUND] Refresh complete, sleeping for 120 seconds...")
+                        await asyncio.sleep(120)
+                    except Exception as e:
+                        logger.error(f"[BACKGROUND] Error in refresh task: {str(e)}")
+                        await asyncio.sleep(120)
+            
+            @app.on_event("startup")
+            async def startup_event():
+                global mongo_client, db
+                logger.info("=" * 60)
+                logger.info("MT5 BRIDGE STARTING - ACCOUNT SWITCHING VERSION")
+                logger.info("=" * 60)
+                try:
+                    mongo_client = MongoClient(MONGO_URL)
+                    db = mongo_client['fidus_production']
+                    logger.info("[OK] Connected to MongoDB")
+                except Exception as e:
+                    logger.error(f"[FAIL] MongoDB connection failed: {str(e)}")
+                initialize_mt5()
+                load_account_credentials()
+                logger.info("[STARTUP] Performing initial account refresh...")
+                refresh_all_accounts()
+                asyncio.create_task(background_refresh())
+                logger.info("[STARTUP] Background refresh task started (every 2 minutes)")
+            
+            @app.on_event("shutdown")
+            async def shutdown_event():
+                global MT5_INITIALIZED, mongo_client
+                if MT5_INITIALIZED:
+                    mt5.shutdown()
+                    MT5_INITIALIZED = False
+                    logger.info("[OK] MT5 connection closed")
+                if mongo_client:
+                    mongo_client.close()
+                    logger.info("[OK] MongoDB connection closed")
+            
+            @app.get("/api/mt5/bridge/health")
+            async def health_check():
+                return {
+                    "status": "healthy",
+                    "mt5": {"initialized": MT5_INITIALIZED, "cached_accounts": len(ACCOUNT_CACHE), "configured_accounts": len(ACCOUNT_CREDENTIALS)},
+                    "mongodb": {"connected": mongo_client is not None},
+                    "version": "4.0-switching",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            
+            @app.get("/api/mt5/accounts/summary")
+            async def get_accounts_summary():
+                accounts = []
+                for account_number in ACCOUNT_CREDENTIALS.keys():
+                    if account_number in ACCOUNT_CACHE:
+                        cached = ACCOUNT_CACHE[account_number]
+                        accounts.append({"account": account_number, "name": ACCOUNT_CREDENTIALS[account_number]['name'], "fund_type": ACCOUNT_CREDENTIALS[account_number]['fund_type'], "balance": cached['balance'], "equity": cached['equity']})
+                    else:
+                        accounts.append({"account": account_number, "name": ACCOUNT_CREDENTIALS[account_number]['name'], "fund_type": ACCOUNT_CREDENTIALS[account_number]['fund_type'], "balance": 0.0, "equity": 0.0, "note": "Pending first refresh"})
+                return {"success": True, "accounts": accounts, "count": len(accounts), "timestamp": datetime.now(timezone.utc).isoformat()}
+            
+            @app.get("/api/mt5/account/{account_id}/info")
+            async def get_account_info(account_id: int):
+                if account_id not in ACCOUNT_CREDENTIALS:
+                    raise HTTPException(status_code=404, detail=f"Account {account_id} not found")
+                if account_id in ACCOUNT_CACHE:
+                    live_data = ACCOUNT_CACHE[account_id]
+                else:
+                    live_data = None
+                return {"account_id": account_id, "name": ACCOUNT_CREDENTIALS[account_id]['name'], "fund_type": ACCOUNT_CREDENTIALS[account_id]['fund_type'], "provider": ACCOUNT_CREDENTIALS[account_id]['server'], "target_amount": 0, "live_data": live_data, "last_sync": datetime.now(timezone.utc).isoformat(), "stored_data": None}
+            
+            @app.get("/api/mt5/account/{account_id}/trades")
+            async def get_account_trades(account_id: int, limit: int = 100):
+                if account_id not in ACCOUNT_CREDENTIALS:
+                    raise HTTPException(status_code=404, detail=f"Account {account_id} not found")
+                try:
+                    if login_to_account(account_id):
+                        trades = mt5.history_deals_get(0, datetime.now())
+                        if trades is None:
+                            trades = []
+                        trades_list = []
+                        for trade in list(trades)[:limit]:
+                            trades_list.append({"ticket": trade.ticket, "order": trade.order, "time": trade.time, "type": trade.type, "entry": trade.entry, "volume": trade.volume, "price": trade.price, "profit": trade.profit, "symbol": trade.symbol, "comment": trade.comment})
+                        return {"success": True, "account": account_id, "trades": trades_list, "count": len(trades_list)}
+                    else:
+                        raise HTTPException(status_code=500, detail="Failed to login to account")
+                except Exception as e:
+                    logger.error(f"[FAIL] Error getting trades for {account_id}: {str(e)}")
+                    raise HTTPException(status_code=500, detail=str(e))
+            
+            if __name__ == "__main__":
+                import uvicorn
+                uvicorn.run(app, host="0.0.0.0", port=8000)
+            "@
+            
+            $scriptContent | Out-File -FilePath "$bridgeDir\mt5_bridge_service.py" -Encoding UTF8
+            Write-Host "✅ Script deployed to $bridgeDir\mt5_bridge_service.py"
+            
+            # Install required packages
+            Write-Host "`n[STEP 3] Installing Python packages..."
+            pip install fastapi uvicorn MetaTrader5 pymongo python-multipart --quiet
+            Write-Host "✅ Packages installed"
+            
+            # Start the service
+            Write-Host "`n[STEP 4] Starting MT5 Bridge service..."
+            Start-Process python -ArgumentList "$bridgeDir\mt5_bridge_service.py" -WorkingDirectory $bridgeDir
+            Start-Sleep -Seconds 5
+            
+            # Verify
+            Write-Host "`n[STEP 5] Verifying deployment..."
+            try {
+                $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -Method Get
+                Write-Host "✅ SERVICE IS RUNNING!"
+                Write-Host "   MT5 Initialized: $($response.mt5.initialized)"
+                Write-Host "   Cached Accounts: $($response.mt5.cached_accounts)"
+                Write-Host "   Configured Accounts: $($response.mt5.configured_accounts)"
+            } catch {
+                Write-Host "⚠️ Service started but health check failed. May need a few seconds to initialize."
+            }
+            
+            Write-Host "`n=========================================="
+            Write-Host "DEPLOYMENT COMPLETE"
+            Write-Host "=========================================="
+            Write-Host "Service URL: http://92.118.45.135:8000"
+            Write-Host "Wait 2-3 minutes for all accounts to refresh"
+            Write-Host "=========================================="
