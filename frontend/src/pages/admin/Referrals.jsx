@@ -119,7 +119,7 @@ const Referrals = () => {
           <p className="text-gray-600 mt-1">Manage salespeople and track commission payments</p>
         </div>
         <Button
-          onClick={() => navigate('/admin/referrals/new')}
+          onClick={() => alert('Add Salesperson feature coming soon')}
           className="bg-blue-600 hover:bg-blue-700"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
