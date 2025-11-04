@@ -254,7 +254,7 @@ const Referrals = () => {
               <SalespersonCard
                 key={salesperson.id || salesperson._id}
                 salesperson={salesperson}
-                onClick={() => navigate(`/admin/referrals/salesperson/${salesperson.id || salesperson._id}`)}
+                onClick={() => handleViewSalesperson(salesperson.id || salesperson._id)}
               />
             ))}
           </div>
