@@ -1,0 +1,59 @@
+name: Run Alejandro Data Diagnostic
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub Actions tab
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'diagnostic'
+        type: choice
+        options:
+          - diagnostic
+          - diagnostic-verbose
+
+jobs:
+  run-diagnostic:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pymongo motor
+      
+      - name: Run Alejandro Diagnostic
+        env:
+          MONGO_URL: mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+          DB_NAME: fidus_production
+        run: |
+          cd backend
+          echo "🔍 Running Alejandro Data Diagnostic..."
+          echo "======================================"
+          python diagnostic_alejandro.py
+          echo "======================================"
+          echo "✅ Diagnostic Complete"
+      
+      - name: Summary
+        run: |
+          echo "### 📊 Diagnostic Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for detailed diagnostic output." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The diagnostic searched for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Salvador Palma in salespeople collection" >> $GITHUB_STEP_SUMMARY
+          echo "- Alejandro Mariscal in users and clients collections" >> $GITHUB_STEP_SUMMARY
+          echo "- All investments linked to Alejandro" >> $GITHUB_STEP_SUMMARY
+          echo "- Existing commission records" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the recommendations in the logs" >> $GITHUB_STEP_SUMMARY
+          echo "2. Apply the suggested MongoDB commands" >> $GITHUB_STEP_SUMMARY
+          echo "3. Re-run this diagnostic to verify fixes" >> $GITHUB_STEP_SUMMARY
