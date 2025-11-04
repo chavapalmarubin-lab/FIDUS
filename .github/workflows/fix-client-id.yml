@@ -1,0 +1,32 @@
+name: Fix Client ID Mismatch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-client-id:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pymongo motor
+      
+      - name: Fix Client ID Mismatch
+        env:
+          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+        run: |
+          cd backend
+          echo "🔧 Fixing client_id mismatch..."
+          echo "======================================"
+          python fix_client_id_mismatch.py
+          echo "======================================"
+          echo "✅ Fix Complete"
