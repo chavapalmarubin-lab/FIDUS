@@ -229,7 +229,7 @@ async def get_all_salespeople(active_only: bool = True):
     
     return {"salespeople": [serialize_doc(sp) for sp in salespeople]}
 
-@router.post("/salespeople")
+@router.post("/admin/referrals/salespeople")
 async def create_salesperson(data: SalespersonCreate):
     """Create new salesperson with unique referral code"""
     # Generate unique referral code
