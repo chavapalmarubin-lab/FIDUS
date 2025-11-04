@@ -1,0 +1,44 @@
+name: Fix Alejandro Data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pymongo motor
+      
+      - name: Fix Alejandro's Data
+        env:
+          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+        run: |
+          cd backend
+          echo "🔧 Fixing Alejandro's data..."
+          echo "======================================"
+          python fix_alejandro_data.py
+          echo "======================================"
+          echo "✅ Fix Complete"
+      
+      - name: Summary
+        run: |
+          echo "### ✅ Data Fix Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for detailed results." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "What was fixed:" >> $GITHUB_STEP_SUMMARY
+          echo "- Added fund_type field to investments" >> $GITHUB_STEP_SUMMARY
+          echo "- Added amount field to investments" >> $GITHUB_STEP_SUMMARY
+          echo "- Linked investments to Salvador" >> $GITHUB_STEP_SUMMARY
+          echo "- Updated Salvador's total_sales_volume" >> $GITHUB_STEP_SUMMARY
