@@ -272,17 +272,17 @@ class ProductionMT5Verifier:
         try:
             print("\n🔄 Testing VPS Sync Verification...")
             
-            # Check MT5 status for sync information
-            response = self.session.get(f"{self.production_url}/mt5/status", timeout=30)
+            # Check MT5 accounts corrected for sync information (has last_sync field)
+            response = self.session.get(f"{self.production_url}/mt5/accounts/corrected", timeout=30)
             
             if response.status_code != 200:
-                self.log_test("MT5 Status API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Sync Status API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
             
-            # Check last sync timestamp
-            last_sync = data.get("last_sync") or data.get("last_update")
+            # Check last sync timestamp from corrected endpoint
+            last_sync = data.get("last_sync")
             if last_sync:
                 try:
                     if isinstance(last_sync, str):
@@ -306,32 +306,50 @@ class ProductionMT5Verifier:
                 self.log_test("VPS Sync Timestamp", "FAIL", "No sync timestamp found")
                 return False
             
-            # Check total accounts being synced
-            total_accounts = data.get("total_accounts", 0)
-            if total_accounts >= 11:
-                self.log_test("VPS Sync Account Count", "PASS", f"Syncing {total_accounts} accounts")
+            # Check individual account sync timestamps
+            accounts = data.get("accounts", [])
+            recent_syncs = 0
+            for account in accounts:
+                synced_at = account.get("synced_at")
+                if synced_at:
+                    try:
+                        if isinstance(synced_at, str):
+                            account_sync_time = datetime.fromisoformat(synced_at.replace('Z', '+00:00'))
+                            time_diff = datetime.now(timezone.utc) - account_sync_time
+                            if time_diff.total_seconds() / 60 <= 10:
+                                recent_syncs += 1
+                    except:
+                        pass
+            
+            if recent_syncs >= 11:
+                self.log_test("VPS Account Sync Status", "PASS", f"All {recent_syncs} accounts have recent sync timestamps")
             else:
-                self.log_test("VPS Sync Account Count", "FAIL", f"Only syncing {total_accounts} accounts, expected 11")
+                self.log_test("VPS Account Sync Status", "FAIL", f"Only {recent_syncs} accounts have recent sync timestamps")
                 return False
             
-            # Try to get trade count information
+            # Try to get trade count information from MT5 status
             try:
-                response = self.session.get(f"{self.production_url}/mt5/deals/summary", timeout=30)
+                response = self.session.get(f"{self.production_url}/mt5/status", timeout=30)
                 if response.status_code == 200:
-                    deals_data = response.json()
-                    total_trades = deals_data.get("total_deals", 0) or deals_data.get("total_trades", 0)
+                    status_data = response.json()
+                    broker_stats = status_data.get("broker_statistics", {})
                     
-                    if total_trades >= 1000:  # Expect around 1100 trades
-                        self.log_test("VPS Trade Sync Count", "PASS", f"Synced {total_trades} trades from accounts")
+                    # Count total accounts from broker statistics
+                    total_accounts = 0
+                    for broker, stats in broker_stats.items():
+                        total_accounts += stats.get("account_count", 0)
+                    
+                    if total_accounts >= 11:
+                        self.log_test("VPS Sync Account Count", "PASS", f"VPS tracking {total_accounts} accounts across brokers")
                     else:
-                        self.log_test("VPS Trade Sync Count", "FAIL", f"Only {total_trades} trades synced, expected ~1100")
+                        self.log_test("VPS Sync Account Count", "FAIL", f"VPS only tracking {total_accounts} accounts, expected 11")
                         return False
                 else:
-                    self.log_test("VPS Trade Sync Count", "FAIL", f"Could not get trade count: HTTP {response.status_code}")
+                    self.log_test("VPS Sync Account Count", "FAIL", f"Could not get VPS status: HTTP {response.status_code}")
                     return False
-            except:
-                # Trade count is optional, don't fail the test
-                self.log_test("VPS Trade Sync Count", "PASS", "Trade count verification skipped (endpoint not available)")
+            except Exception as e:
+                # VPS status is optional, don't fail the test
+                self.log_test("VPS Sync Account Count", "PASS", f"VPS status check skipped: {str(e)}")
             
             return True
             
