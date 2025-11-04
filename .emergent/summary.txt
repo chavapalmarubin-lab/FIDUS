@@ -1,0 +1,57 @@
+<analysis>
+The previous AI engineer completed an initial diagnostic phase, fixing P&L calculation, adding multi-language support, and improving MT5 Bridge health monitoring. The current phase, passed to me, focuses on New month allocation, involving adding new MT5 accounts and Money Managers, and updating allocations. A major challenge was ensuring all 11 MT5 accounts were correctly synced from the VPS Bridge to MongoDB and then to the backend and frontend.
+
+Initial issues included  only recognizing 7 accounts, a timezone-naive datetime error in the backend,  failing to upsert new accounts, and the VPS running an outdated Bridge script. I systematically addressed these by updating MongoDB configuration, fixing the  upsert logic, deploying an updated  to the VPS, and disabling the conflicting . A critical discovery was that the VPS Bridge itself wasn't logging into each MT5 account sequentially. I implemented an  script for the VPS to log into all 11 accounts. Finally, the user requested a fund type change for account 891215 from SEPARATION to BALANCE, which I have just applied in MongoDB and restarted the backend.
+</analysis>
+
+<product_requirements>
+The FIDUS platform requires accurate financial tracking and user-facing features. The initial problems included:
+1.  **Inaccurate P&L Calculations**: The original formula was incorrect, failing to account for external profit movements and misclassifying internal transfers. The correct formula is .
+2.  **Frontend Localization and Fund Details**: The  needed multi-language support (Spanish, English, Portuguese, French) and precise display of four investment funds (CORE 1.5%/0k, BALANCE 2.5%/0k, DYNAMIC 3.5%/00k, UNLIMITED VIP) with updated minimum investments and rates.
+3.  **Robust MT5 Bridge Health Monitoring**: The system required better monitoring to prevent false positives during monthly capital reallocations, ensuring reliable syncing, logging, and accurate alerts, distinguishing true disconnections from /bin/bash balances.
+The **Current Task (Ongoing)** is New month allocation: Add four new MT5 accounts (897590, 897589, 897591, 897599) and two new Money Managers with their profile URLs. Update allocations for existing CORE and BALANCE funds to reflect real MT5 data, ensuring all 11 accounts sync correctly across the system and display proper balances on the frontend.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Backend**: Python (FastAPI, PyMongo/Motor for async DB ops), MongoDB (Atlas), regex, async/await, cron jobs.
+-   **Frontend**: React.js, i18n (localization), component-based architecture.
+-   **System Monitoring**: Health checks, watchdog patterns, alert management for MT5 Bridge.
+-   **Financial Logic**: True P&L calculation, initial allocation, deposits/withdrawals.
+-   **Deployment & Automation**: Kubernetes, Supervisor, GitHub Actions (for VPS deployments), PowerShell scripting.
+</key_technical_concepts>
+
+<code_architecture>
+
+-   ****: A new script responsible for systematically adding new MT5 accounts and Money Managers to the  collection in MongoDB. It was executed to onboard the new accounts.
+-   ****: This service syncs data from the VPS Bridge to MongoDB. It was modified to change  to  (implied by fixing the problem where new accounts weren't added to ) to ensure new accounts are created or updated.
+-   ****: Previously, this service was improved for terminal connection logic. It was discovered to conflict with  by overwriting correct balances with /bin/bash. It was modified to correctly extract  from  and later **disabled** in  to prevent data overwrites.
+-   ****: The main API server. It was modified to **disable**  to resolve conflicts with .
+-   ****: This is the MT5 Bridge script deployed to the VPS. It was initially modified to include all 11 accounts but later identified as having a Single Connection Method - No Account Switching, leading to No cached data for inactive MT5 terminals.
+-   ****: A *new* critical script created to replace  on the VPS. It implements sequential login to each of the 11 MT5 accounts using credentials from MongoDB to fetch and cache their live balances.
+-   ****: These JSON files contain translation strings, including fund minimum investment amounts. , , ,  were updated to reflect new minimums for CORE (00k), BALANCE (50k), and DYNAMIC (00k), and to update the accessible benefit text.
+-   ****: Several GitHub Actions workflows were created and modified for deployment and diagnostics, including  (for initial bridge deployment),  (diagnostic),  (for the new bridge script),  (to create a downloadable script), and  (direct VPS deployment). These primarily manage the deployment of VPS scripts.
+-   ** collection (MongoDB)**: Stores MT5 account configurations, including fund type, server, and login credentials (now updated to be consistent across accounts). Account 891215 was most recently updated from  to .
+-   ** collection (MongoDB)**: Stores live MT5 account data synced from the VPS Bridge. This collection now contains all 11 accounts and their dynamically updated balances.
+</code_architecture>
+
+<pending_tasks>
+-   **Field Standardization Project**: A comprehensive system audit to define naming standards and refactor all layers.
+-   **Frontend Fund Type Update Verification**: Verify that account 891215 correctly displays as BALANCE on the frontend after the recent backend update.
+</pending_tasks>
+
+<current_work>
+Immediately before this summary request, the AI engineer was addressing the New month allocation task. The initial challenges included the backend incorrectly syncing only 7 accounts, backend API errors due to timezone issues, and the  failing to upsert new accounts into MongoDB. These were resolved by running , fixing  to , and deploying an updated  to the VPS.
+
+The primary issue then shifted to incorrect balance reporting (all accounts showing /bin/bash). This was traced to  incorrectly extracting data and then conflicting with , overwriting correct balances. The  was fixed to extract from  but was ultimately **disabled** in  as  was correctly populating balances.
+
+A major breakthrough occurred when it was discovered the  script on the VPS was not designed for account switching. A new script, , was developed and deployed to the VPS. This new script sequentially logs into each of the 11 MT5 accounts using updated, consistent credentials (all using  server and Fidus13! password).
+Logs indicate that this new VPS Bridge script is successfully fetching non-zero balances for multiple accounts (e.g., 886557: 0,054.27, 886602: 5,960.34, 891215: 0,000.00, etc.), and these are being persisted to MongoDB.
+
+The frontend was also updated to reflect new minimum investment amounts for various funds and to remove MT5 references. While these changes were committed, frontend screenshots initially showed old data due to deployment caching issues on Render.
+
+The most recent user request was to change account 891215's fund type from  to , which has been updated in the  collection in MongoDB, and the backend has been restarted.
+</current_work>
+
+<optional_next_step>
+Verify the frontend correctly displays account 891215 as part of the BALANCE fund.
+</optional_next_step>

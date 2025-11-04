@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://financesyncpro.preview.emergentagent.com/api"
+    base_url = "https://mt5-sync-hub.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate

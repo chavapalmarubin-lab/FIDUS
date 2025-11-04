@@ -243,7 +243,7 @@ RENDER_API_KEY=rnd_...
 
 **Frontend (`.env`):**
 ```bash
-REACT_APP_BACKEND_URL=https://financesyncpro.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://mt5-sync-hub.preview.emergentagent.com
 ```
 
 ### MongoDB Indexes
@@ -317,14 +317,14 @@ yarn start
 **Health Checks:**
 ```bash
 # Test all health endpoints
-curl -X GET https://financesyncpro.preview.emergentagent.com/api/system/health/all \
+curl -X GET https://mt5-sync-hub.preview.emergentagent.com/api/system/health/all \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Quick Actions:**
 ```bash
 # Test MT5 sync action
-curl -X POST https://financesyncpro.preview.emergentagent.com/api/actions/sync-mt5 \
+curl -X POST https://mt5-sync-hub.preview.emergentagent.com/api/actions/sync-mt5 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json"
 ```
@@ -472,7 +472,7 @@ Open browser DevTools (F12) → Console
 tail -n 100 /var/log/supervisor/backend.err.log
 
 # Test health endpoint directly
-curl https://financesyncpro.preview.emergentagent.com/api/system/health/all
+curl https://mt5-sync-hub.preview.emergentagent.com/api/system/health/all
 ```
 
 **Solutions:**
