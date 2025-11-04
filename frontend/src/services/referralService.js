@@ -65,7 +65,7 @@ export const markCommissionPaid = async (commissionId, paymentDetails) => {
 // Client Referral
 export const updateClientReferral = async (clientId, salespersonId) => {
   const response = await apiAxios.put(
-    `/api/admin/referrals/clients/${clientId}/referral`,
+    `/admin/referrals/clients/${clientId}/referral`,
     { salesperson_id: salespersonId }
   );
   return response.data;
