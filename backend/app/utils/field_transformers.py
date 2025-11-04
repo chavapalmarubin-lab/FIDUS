@@ -95,12 +95,30 @@ def transform_client(db_client: Dict[str, Any]) -> Dict[str, Any]:
 
 def transform_manager(db_manager: Dict[str, Any]) -> Dict[str, Any]:
     """Transform MongoDB money manager to API format"""
+    from bson.decimal128 import Decimal128
+    
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, Decimal128):
+            return float(val.to_decimal())
+        return float(val)
+    
     return {
         "managerId": db_manager.get("manager_id"),
-        "managerName": db_manager.get("manager_name"),
-        "strategy": db_manager.get("strategy"),
-        "riskLevel": db_manager.get("risk_level"),
-        "assignedAccounts": db_manager.get("assigned_accounts", [])
+        "name": db_manager.get("name"),
+        "displayName": db_manager.get("display_name"),
+        "status": db_manager.get("status"),
+        "executionType": db_manager.get("execution_type"),
+        "strategyName": db_manager.get("strategy_name"),
+        "riskProfile": db_manager.get("risk_profile"),
+        "assignedAccounts": db_manager.get("assigned_accounts", []),
+        "performanceFeeRate": to_float(db_manager.get("performance_fee_rate")),
+        "currentMonthProfit": to_float(db_manager.get("current_month_profit")),
+        "currentMonthFeeAccrued": to_float(db_manager.get("current_month_fee_accrued")),
+        "profileUrl": db_manager.get("profile_url"),
+        "broker": db_manager.get("broker"),
+        "notes": db_manager.get("notes")
     }
 
 
