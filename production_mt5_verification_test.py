@@ -371,7 +371,7 @@ class ProductionMT5Verifier:
             data = response.json()
             accounts = data.get("accounts", [])
             
-            # Group accounts by fund
+            # Group accounts by fund (use account_number field)
             actual_distribution = {
                 "CORE": [],
                 "BALANCE": [],
@@ -379,7 +379,7 @@ class ProductionMT5Verifier:
             }
             
             for account in accounts:
-                account_num = str(account.get("account"))
+                account_num = str(account.get("account_number"))
                 fund_code = account.get("fund_code") or account.get("fund_type")
                 
                 if fund_code in actual_distribution:
@@ -389,7 +389,7 @@ class ProductionMT5Verifier:
             
             # Check CORE fund (expected 3 accounts)
             core_accounts = actual_distribution["CORE"]
-            expected_core = self.expected_accounts["CORE"]
+            expected_core = [str(acc) for acc in self.expected_accounts["CORE"]]
             
             if len(core_accounts) == 3:
                 self.log_test("CORE Fund Account Count", "PASS", f"CORE fund has 3 accounts: {core_accounts}")
@@ -407,7 +407,7 @@ class ProductionMT5Verifier:
             
             # Check BALANCE fund (expected 4 accounts)
             balance_accounts = actual_distribution["BALANCE"]
-            expected_balance = self.expected_accounts["BALANCE"]
+            expected_balance = [str(acc) for acc in self.expected_accounts["BALANCE"]]
             
             if len(balance_accounts) == 4:
                 self.log_test("BALANCE Fund Account Count", "PASS", f"BALANCE fund has 4 accounts: {balance_accounts}")
@@ -425,7 +425,7 @@ class ProductionMT5Verifier:
             
             # Check SEPARATION fund (expected 4 accounts)
             separation_accounts = actual_distribution["SEPARATION"]
-            expected_separation = self.expected_accounts["SEPARATION"]
+            expected_separation = [str(acc) for acc in self.expected_accounts["SEPARATION"]]
             
             if len(separation_accounts) == 4:
                 self.log_test("SEPARATION Fund Account Count", "PASS", f"SEPARATION fund has 4 accounts: {separation_accounts}")
