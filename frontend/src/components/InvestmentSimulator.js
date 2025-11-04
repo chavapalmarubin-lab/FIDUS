@@ -89,7 +89,26 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
 
   useEffect(() => {
     fetchFundConfigurations();
+    
+    // Check for referral code in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+      loadSalesperson(refCode);
+    }
   }, []);
+
+  const loadSalesperson = async (code) => {
+    try {
+      const data = await referralService.getSalespersonByCode(code);
+      if (data && data.active) {
+        setSalesperson(data);
+      }
+    } catch (error) {
+      console.error('Failed to load salesperson:', error);
+    }
+  };
 
   const fetchFundConfigurations = async () => {
     try {
