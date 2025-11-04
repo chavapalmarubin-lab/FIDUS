@@ -84,7 +84,7 @@ const SalespersonDetail = ({ salespersonId, onBack }) => {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-gray-600">Salesperson not found</p>
-            <Button onClick={() => navigate('/admin/referrals')} className="mt-4" variant="outline">
+            <Button onClick={onBack} className="mt-4" variant="outline">
               Back to Referrals
             </Button>
           </CardContent>
