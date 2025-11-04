@@ -22,7 +22,7 @@ const SalespersonDetail = ({ salespersonId, onBack }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const response = await referralService.getSalespersonById(id);
+      const response = await referralService.getSalespersonById(salespersonId);
       setData(response);
     } catch (error) {
       console.error('Failed to load salesperson:', error);
