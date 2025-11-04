@@ -212,32 +212,35 @@ class ProductionMT5Verifier:
             response = self.session.get(f"{self.production_url}/fund-portfolio/overview", timeout=30)
             if response.status_code == 200:
                 data = response.json()
-                funds = data.get("funds", [])
+                funds = data.get("funds", {})  # funds is a dict, not list
                 
                 # Check fund structure
-                fund_codes = [fund.get("fund_code") for fund in funds]
-                expected_funds = ["BALANCE", "CORE", "SEPARATION"]
-                
-                found_balance = any("BALANCE" in code for code in fund_codes)
-                found_core = any("CORE" in code for code in fund_codes)
-                
-                if found_balance and found_core:
-                    self.log_test("Fund Portfolio Overview API", "PASS", "Shows BALANCE and CORE funds with accounts")
+                if isinstance(funds, dict):
+                    fund_codes = list(funds.keys())
                     
-                    # Check for account counts
-                    total_accounts = 0
-                    for fund in funds:
-                        accounts_in_fund = fund.get("mt5_accounts", [])
-                        total_accounts += len(accounts_in_fund)
+                    found_balance = "BALANCE" in fund_codes
+                    found_core = "CORE" in fund_codes
                     
-                    if total_accounts >= 11:
-                        self.log_test("Fund Portfolio Account Distribution", "PASS", f"Total of {total_accounts} accounts across all funds")
-                    else:
-                        self.log_test("Fund Portfolio Account Distribution", "FAIL", f"Only {total_accounts} accounts found across funds")
-                        success = False
+                    if found_balance and found_core:
+                        self.log_test("Fund Portfolio Overview API", "PASS", f"Shows funds: {fund_codes}")
                         
+                        # Check total accounts across all funds
+                        total_accounts = 0
+                        for fund_code, fund_data in funds.items():
+                            accounts_in_fund = fund_data.get("mt5_accounts", [])
+                            total_accounts += len(accounts_in_fund)
+                        
+                        if total_accounts >= 11:
+                            self.log_test("Fund Portfolio Account Distribution", "PASS", f"Total of {total_accounts} accounts across all funds")
+                        else:
+                            self.log_test("Fund Portfolio Account Distribution", "FAIL", f"Only {total_accounts} accounts found across funds")
+                            success = False
+                            
+                    else:
+                        self.log_test("Fund Portfolio Overview API", "FAIL", f"Missing BALANCE or CORE fund data. Found: {fund_codes}")
+                        success = False
                 else:
-                    self.log_test("Fund Portfolio Overview API", "FAIL", "Missing BALANCE or CORE fund data")
+                    self.log_test("Fund Portfolio Overview API", "FAIL", f"Funds data is not a dict: {type(funds)}")
                     success = False
             else:
                 self.log_test("Fund Portfolio Overview API", "FAIL", f"HTTP {response.status_code}")
@@ -247,10 +250,12 @@ class ProductionMT5Verifier:
             response = self.session.get(f"{self.production_url}/funds/BALANCE/performance", timeout=30)
             if response.status_code == 200:
                 data = response.json()
-                if data and isinstance(data, dict):
-                    self.log_test("BALANCE Fund Performance API", "PASS", "Returns performance data")
+                if data and isinstance(data, dict) and data.get("success"):
+                    total_aum = data.get("total_aum", 0)
+                    account_count = data.get("account_count", 0)
+                    self.log_test("BALANCE Fund Performance API", "PASS", f"Returns performance data: AUM ${total_aum:,.2f}, {account_count} accounts")
                 else:
-                    self.log_test("BALANCE Fund Performance API", "FAIL", "No performance data returned")
+                    self.log_test("BALANCE Fund Performance API", "FAIL", "No valid performance data returned")
                     success = False
             else:
                 self.log_test("BALANCE Fund Performance API", "FAIL", f"HTTP {response.status_code}")
