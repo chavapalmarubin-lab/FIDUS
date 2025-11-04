@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
+import ReferralCodeInput from './referrals/ReferralCodeInput';
 
 const ProspectsPortalNew = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({ email: '', phone: '' });
+  const [searchParams] = useSearchParams();
+  const [formData, setFormData] = useState({ email: '', phone: '', referral_code: '' });
+  const [salesperson, setSalesperson] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referral_code: refCode }));
+    }
+  }, [searchParams]);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
