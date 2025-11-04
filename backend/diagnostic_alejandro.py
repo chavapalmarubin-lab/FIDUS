@@ -338,8 +338,8 @@ def run_diagnostic_sync():
                         amount = float(amount.to_decimal())
                     all_investments.append({
                         'id': inv_id,
-                        'fund': inv.get('fund_type'),
-                        'amount': amount,
+                        'fund_type': inv.get('fund_type'),  # STANDARD FIELD
+                        'principal_amount': amount,         # STANDARD FIELD
                         'status': inv.get('status'),
                         'client_id': str(inv.get('client_id')) if inv.get('client_id') else None,
                         'referred_by': str(inv.get('referred_by')) if inv.get('referred_by') else None
