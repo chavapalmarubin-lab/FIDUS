@@ -342,6 +342,8 @@ const Referrals = () => {
           </div>
         </CardContent>
       </Card>
+        </div>
+      )}
     </div>
   );
 };
