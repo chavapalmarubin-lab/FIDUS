@@ -122,13 +122,14 @@ async def run_diagnostic():
                 inv_id = str(inv['_id'])
                 if inv_id not in seen_ids:
                     seen_ids.add(inv_id)
-                    amount = inv.get('amount', 0)
-                    if hasattr(amount, 'to_decimal'):
-                        amount = float(amount.to_decimal())
+                    # USE STANDARD FIELD: principal_amount
+                    principal = inv.get('principal_amount', 0)
+                    if hasattr(principal, 'to_decimal'):
+                        principal = float(principal.to_decimal())
                     all_investments.append({
                         'id': inv_id,
-                        'fund': inv.get('fund_type'),
-                        'amount': amount,
+                        'fund_type': inv.get('fund_type'),  # STANDARD FIELD
+                        'principal_amount': principal,       # STANDARD FIELD
                         'status': inv.get('status'),
                         'client_id': str(inv.get('client_id')) if inv.get('client_id') else None,
                         'referred_by': str(inv.get('referred_by')) if inv.get('referred_by') else None
