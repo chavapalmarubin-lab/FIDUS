@@ -1,0 +1,80 @@
+﻿2025-11-04T19:43:19.3907873Z ##[group]Run cd backend
+2025-11-04T19:43:19.3908139Z [36;1mcd backend[0m
+2025-11-04T19:43:19.3908398Z [36;1mecho "🔍 Running Alejandro Data Diagnostic..."[0m
+2025-11-04T19:43:19.3908713Z [36;1mecho "======================================"[0m
+2025-11-04T19:43:19.3908986Z [36;1mpython diagnostic_alejandro.py[0m
+2025-11-04T19:43:19.3909244Z [36;1mecho "======================================"[0m
+2025-11-04T19:43:19.3909508Z [36;1mecho "✅ Diagnostic Complete"[0m
+2025-11-04T19:43:19.3943927Z shell: /usr/bin/bash -e {0}
+2025-11-04T19:43:19.3944167Z env:
+2025-11-04T19:43:19.3944410Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:19.3944791Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T19:43:19.3945170Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:19.3945523Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:19.3945864Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:19.3946238Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T19:43:19.3947010Z   MONGO_URL: ***fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+2025-11-04T19:43:19.3947392Z   DB_NAME: fidus_production
+2025-11-04T19:43:19.3947590Z ##[endgroup]
+2025-11-04T19:43:19.4001742Z 🔍 Running Alejandro Data Diagnostic...
+2025-11-04T19:43:19.4002187Z ======================================
+2025-11-04T19:43:20.3799404Z ================================================================================
+2025-11-04T19:43:20.3800630Z 🔍 ALEJANDRO DATA DIAGNOSTIC
+2025-11-04T19:43:20.3800998Z ================================================================================
+2025-11-04T19:43:20.3801888Z MongoDB: ***fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+2025-11-04T19:43:20.3802274Z Database: fidus_production
+2025-11-04T19:43:20.3802504Z ================================================================================
+2025-11-04T19:43:20.3802819Z Running async version (Motor)
+2025-11-04T19:43:20.3802967Z 
+2025-11-04T19:43:20.3803134Z 1️⃣ Searching for Salvador Palma...
+2025-11-04T19:43:20.3803643Z ✅ Found Salvador
+2025-11-04T19:43:20.3803853Z    ID: 6909e8eaaaf69606babea151
+2025-11-04T19:43:20.3804072Z    Email: chava@alyarglobal.com
+2025-11-04T19:43:20.3804288Z    Current Sales: $0.00
+2025-11-04T19:43:20.3804406Z 
+2025-11-04T19:43:20.3804584Z 2️⃣ Searching for Alejandro in 'users' collection...
+2025-11-04T19:43:20.3804877Z ✅ Found in USERS
+2025-11-04T19:43:20.3805057Z    ID: 68e137f2272c6a55ec3edd7d
+2025-11-04T19:43:20.3805279Z    Name: Alejandro Mariscal Romero
+2025-11-04T19:43:20.3805517Z    Email: alejandro.mariscal@email.com
+2025-11-04T19:43:20.3805749Z    User Type: client
+2025-11-04T19:43:20.3805868Z 
+2025-11-04T19:43:20.3806034Z 3️⃣ Searching for Alejandro in 'clients' collection...
+2025-11-04T19:43:20.3806331Z ✅ Found in CLIENTS
+2025-11-04T19:43:20.3806506Z    ID: 6909e8ebaaf69606babea152
+2025-11-04T19:43:20.3806721Z    Name: Alejandro Mariscal Romero
+2025-11-04T19:43:20.3806968Z    Email: alejandro.mariscal@email.com
+2025-11-04T19:43:20.3807196Z    User ID: None
+2025-11-04T19:43:20.3807375Z    Referred By: 6909e8eaaaf69606babea151
+2025-11-04T19:43:20.3807618Z    Referred By Name: Salvador Palma
+2025-11-04T19:43:20.3807770Z 
+2025-11-04T19:43:20.3807903Z 4️⃣ Searching for Alejandro's investments...
+2025-11-04T19:43:20.3808181Z ✅ Found 0 investments
+2025-11-04T19:43:20.3808361Z    TOTAL: $0.00
+2025-11-04T19:43:20.3808462Z 
+2025-11-04T19:43:20.3808610Z 5️⃣ Checking existing commissions for Salvador...
+2025-11-04T19:43:20.3808920Z ✅ Found 0 commission records
+2025-11-04T19:43:20.3809132Z    Total Commission Amount: $0.00
+2025-11-04T19:43:20.3809287Z 
+2025-11-04T19:43:20.3809377Z ================================================================================
+2025-11-04T19:43:20.3809652Z 💡 RECOMMENDATIONS:
+2025-11-04T19:43:20.3809850Z ================================================================================
+2025-11-04T19:43:20.3810021Z 
+2025-11-04T19:43:20.3810396Z ❌ CRITICAL: NO INVESTMENTS FOUND
+2025-11-04T19:43:20.3810616Z    Need to manually locate:
+2025-11-04T19:43:20.3810842Z    - FIDUS CORE: $18,151.41
+2025-11-04T19:43:20.3811062Z    - FIDUS BALANCE: $100,000
+2025-11-04T19:43:20.3811198Z 
+2025-11-04T19:43:20.3811279Z ================================================================================
+2025-11-04T19:43:20.3811531Z 📊 SUMMARY
+2025-11-04T19:43:20.3811703Z ================================================================================
+2025-11-04T19:43:20.3811957Z Salvador Found: ✅
+2025-11-04T19:43:20.3812138Z User Found: ✅
+2025-11-04T19:43:20.3812311Z Client Found: ✅
+2025-11-04T19:43:20.3812482Z Investments Found: 0 ($0.00)
+2025-11-04T19:43:20.3812687Z Commissions Found: 0 ($0.00)
+2025-11-04T19:43:20.3812890Z Expected Total: $118,151.41
+2025-11-04T19:43:20.3813080Z Gap: $118,151.41
+2025-11-04T19:43:20.3813255Z ================================================================================
+2025-11-04T19:43:20.8539794Z ======================================
+2025-11-04T19:43:20.8541211Z ✅ Diagnostic Complete

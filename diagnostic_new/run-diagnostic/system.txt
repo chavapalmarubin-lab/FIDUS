@@ -1,0 +1,5 @@
+2025-11-04T19:43:12.7800000Z Job is about to start running on the hosted runner: GitHub Actions 1000006786
+2025-11-04T19:43:12.7790000Z Requested labels: ubuntu-latest
+2025-11-04T19:43:12.7790000Z Job defined at: chavapalmarubin-lab/FIDUS/.github/workflows/diagnostic-alejandro.yml@refs/heads/main
+2025-11-04T19:43:12.7790000Z Waiting for a runner to pick up this job...
+2025-11-04T19:43:12.7810000Z Job is waiting for a hosted runner to come online.

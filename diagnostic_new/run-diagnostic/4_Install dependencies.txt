@@ -1,0 +1,24 @@
+﻿2025-11-04T19:43:16.9008097Z ##[group]Run pip install pymongo motor
+2025-11-04T19:43:16.9008439Z [36;1mpip install pymongo motor[0m
+2025-11-04T19:43:16.9059200Z shell: /usr/bin/bash -e {0}
+2025-11-04T19:43:16.9059440Z env:
+2025-11-04T19:43:16.9059685Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:16.9060102Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2025-11-04T19:43:16.9060508Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:16.9060871Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:16.9061210Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2025-11-04T19:43:16.9061547Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2025-11-04T19:43:16.9061824Z ##[endgroup]
+2025-11-04T19:43:18.3572653Z Collecting pymongo
+2025-11-04T19:43:18.4271964Z   Downloading pymongo-4.15.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2025-11-04T19:43:18.4754068Z Collecting motor
+2025-11-04T19:43:18.4828273Z   Downloading motor-3.7.1-py3-none-any.whl.metadata (21 kB)
+2025-11-04T19:43:18.5232955Z Collecting dnspython<3.0.0,>=1.16.0 (from pymongo)
+2025-11-04T19:43:18.5308646Z   Downloading dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+2025-11-04T19:43:18.5563194Z Downloading pymongo-4.15.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.5 MB)
+2025-11-04T19:43:18.5897683Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 67.4 MB/s  0:00:00
+2025-11-04T19:43:18.5976625Z Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+2025-11-04T19:43:18.6081910Z Downloading motor-3.7.1-py3-none-any.whl (74 kB)
+2025-11-04T19:43:18.6361071Z Installing collected packages: dnspython, pymongo, motor
+2025-11-04T19:43:19.2121001Z 
+2025-11-04T19:43:19.2130963Z Successfully installed dnspython-2.8.0 motor-3.7.1 pymongo-4.15.3
