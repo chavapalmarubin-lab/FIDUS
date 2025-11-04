@@ -711,6 +711,15 @@ const AdminDashboard = ({ user, onLogout }) => {
             <ClientManagement />
           </TabsContent>
 
+          <TabsContent value="referrals" className="mt-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-white">Referral System Management</h2>
+              </div>
+              <Referrals />
+            </div>
+          </TabsContent>
+
           <TabsContent value="users" className="mt-6">
             <UserAdministration />
           </TabsContent>
