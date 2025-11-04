@@ -51,6 +51,8 @@ class CommissionPaymentDetails(BaseModel):
 
 def serialize_doc(doc):
     """Convert MongoDB document to JSON-serializable format"""
+    from bson.decimal128 import Decimal128
+    
     if doc is None:
         return None
     
@@ -64,8 +66,15 @@ def serialize_doc(doc):
                 result["id"] = str(value)
             elif isinstance(value, ObjectId):
                 result[key] = str(value)
+            elif isinstance(value, Decimal128):
+                # Convert Decimal128 to float
+                result[key] = float(value.to_decimal())
             elif isinstance(value, datetime):
                 result[key] = value.isoformat()
+            elif isinstance(value, dict):
+                result[key] = serialize_doc(value)
+            elif isinstance(value, list):
+                result[key] = serialize_doc(value)
             elif hasattr(value, "__dict__"):
                 result[key] = str(value)
             else:
