@@ -1,0 +1,57 @@
+name: Deploy MT5 Bridge with Account Switching
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deploy even if service is running'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Stop existing service
+            Write-Host "Stopping MT5 Bridge service..."
+            Stop-Process -Name "python" -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            
+            # Create directory if it doesn't exist
+            if (!(Test-Path "C:\MT5_Bridge")) {
+                New-Item -Path "C:\MT5_Bridge" -ItemType Directory
+            }
+            
+            # Download the new script
+            Write-Host "Downloading new MT5 Bridge script..."
+            $script = @"
+            ${{ steps.get-script.outputs.script_content }}
+            "@
+            $script | Out-File -FilePath "C:\MT5_Bridge\mt5_bridge_service.py" -Encoding UTF8
+            
+            # Install required packages
+            Write-Host "Installing Python packages..."
+            pip install fastapi uvicorn MetaTrader5 pymongo python-multipart
+            
+            # Start the service
+            Write-Host "Starting MT5 Bridge service..."
+            Start-Process python -ArgumentList "C:\MT5_Bridge\mt5_bridge_service.py" -WindowStyle Hidden
+            
+            Write-Host "✅ MT5 Bridge deployed and started with account switching!"
+      
+      - name: Get script content
+        id: get-script
+        run: |
+          SCRIPT_CONTENT=$(cat vps-scripts/mt5_bridge_account_switching.py | base64 -w 0)
+          echo "script_content=$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
