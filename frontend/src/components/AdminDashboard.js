@@ -555,6 +555,10 @@ const AdminDashboard = ({ user, onLogout }) => {
               <Users size={16} className="mr-2" />
               Clients
             </TabsTrigger>
+            <TabsTrigger value="referrals" className="flex-shrink-0">
+              <Users2 size={16} className="mr-2" />
+              Referrals
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex-shrink-0">
               <Users size={16} className="mr-2" />
               User Admin
