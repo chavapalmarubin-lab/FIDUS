@@ -8,23 +8,23 @@ import apiAxios from '../utils/apiAxios';
 // Salespeople Management
 export const getSalespeople = async (activeOnly = true) => {
   const response = await apiAxios.get(
-    `/api/admin/referrals/salespeople?active_only=${activeOnly}`
+    `/admin/referrals/salespeople?active_only=${activeOnly}`
   );
   return response.data;
 };
 
 export const getSalespersonById = async (id) => {
-  const response = await apiAxios.get(`/api/admin/referrals/salespeople/${id}`);
+  const response = await apiAxios.get(`/admin/referrals/salespeople/${id}`);
   return response.data;
 };
 
 export const createSalesperson = async (data) => {
-  const response = await apiAxios.post('/api/admin/referrals/salespeople', data);
+  const response = await apiAxios.post('/admin/referrals/salespeople', data);
   return response.data;
 };
 
 export const updateSalesperson = async (id, data) => {
-  const response = await apiAxios.put(`/api/admin/referrals/salespeople/${id}`, data);
+  const response = await apiAxios.put(`/admin/referrals/salespeople/${id}`, data);
   return response.data;
 };
 
