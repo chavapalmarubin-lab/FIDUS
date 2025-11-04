@@ -37,7 +37,7 @@ import io
 import base64
 
 # Configuration
-BACKEND_URL = "https://mt5-sync-hub.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidusrefs.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

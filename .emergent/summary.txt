@@ -1,57 +1,66 @@
 <analysis>
-The previous AI engineer completed an initial diagnostic phase, fixing P&L calculation, adding multi-language support, and improving MT5 Bridge health monitoring. The current phase, passed to me, focuses on New month allocation, involving adding new MT5 accounts and Money Managers, and updating allocations. A major challenge was ensuring all 11 MT5 accounts were correctly synced from the VPS Bridge to MongoDB and then to the backend and frontend.
+The previous AI engineer initially focused on critical fixes, including P&L calculation accuracy, multi-language support for the frontend, and robust MT5 Bridge health monitoring. A significant task was the New month allocation, which involved syncing 11 MT5 accounts. This phase faced numerous challenges:  conflicts,  upsert failures, timezone issues, and the MT5 Bridge's inability to switch accounts, leading to the development of . The last action in this phase was changing an account's fund type to BALANCE.
 
-Initial issues included  only recognizing 7 accounts, a timezone-naive datetime error in the backend,  failing to upsert new accounts, and the VPS running an outdated Bridge script. I systematically addressed these by updating MongoDB configuration, fixing the  upsert logic, deploying an updated  to the VPS, and disabling the conflicting . A critical discovery was that the VPS Bridge itself wasn't logging into each MT5 account sequentially. I implemented an  script for the VPS to log into all 11 accounts. Finally, the user requested a fund type change for account 891215 from SEPARATION to BALANCE, which I have just applied in MongoDB and restarted the backend.
+Subsequently, a major Referral System feature was requested, involving extensive backend and frontend development. The AI engineer proceeded with Phase 1 (Backend & Database), creating new collections and endpoints. This phase encountered persistent issues with the migration script, particularly database connection (due to quoted  in ) and the initial failure to find all client investments. After resolving these, Salvador Palma was created as a salesperson and Alejandro Mariscal Romero's investments were linked, generating 16 commission records. Despite local verification, deployment issues prevented the backend changes from going live on Render, prompting a parallel approach. The AI is now developing Phase 2 (Admin Frontend) while the user handles the backend deployment.
 </analysis>
 
 <product_requirements>
-The FIDUS platform requires accurate financial tracking and user-facing features. The initial problems included:
-1.  **Inaccurate P&L Calculations**: The original formula was incorrect, failing to account for external profit movements and misclassifying internal transfers. The correct formula is .
-2.  **Frontend Localization and Fund Details**: The  needed multi-language support (Spanish, English, Portuguese, French) and precise display of four investment funds (CORE 1.5%/0k, BALANCE 2.5%/0k, DYNAMIC 3.5%/00k, UNLIMITED VIP) with updated minimum investments and rates.
-3.  **Robust MT5 Bridge Health Monitoring**: The system required better monitoring to prevent false positives during monthly capital reallocations, ensuring reliable syncing, logging, and accurate alerts, distinguishing true disconnections from /bin/bash balances.
-The **Current Task (Ongoing)** is New month allocation: Add four new MT5 accounts (897590, 897589, 897591, 897599) and two new Money Managers with their profile URLs. Update allocations for existing CORE and BALANCE funds to reflect real MT5 data, ensuring all 11 accounts sync correctly across the system and display proper balances on the frontend.
+The FIDUS platform needs accurate financial tracking and enhanced user features. Initial requirements included:
+1.  **Accurate P&L Calculations**: Correcting the formula to account for all external movements.
+2.  **Frontend Localization and Fund Details**: Implementing multi-language support (ES, EN, PT, FR) for  and updating fund details with new minimum investments (CORE 00k, BALANCE 50k, DYNAMIC 00k) and removing MT5 references.
+3.  **Robust MT5 Bridge Health Monitoring**: Improving monitoring to prevent false positives and ensure reliable syncing and alerts.
+The **New month allocation** task involved adding four new MT5 accounts and two new Money Managers, updating existing allocations, and ensuring all 11 MT5 accounts synced correctly and displayed balances. This included changing account 891215's fund type from  to .
+The **Referral System** is a comprehensive new feature: tracking salespeople and referred clients, calculating 10% commissions on interest payments, integrating commissions into cash flow projections, and providing an admin interface for management. This includes creating Salvador Palma as a salesperson and updating Alejandro Mariscal Romero as a client with referral links and commissions.
 </product_requirements>
 
 <key_technical_concepts>
--   **Backend**: Python (FastAPI, PyMongo/Motor for async DB ops), MongoDB (Atlas), regex, async/await, cron jobs.
--   **Frontend**: React.js, i18n (localization), component-based architecture.
--   **System Monitoring**: Health checks, watchdog patterns, alert management for MT5 Bridge.
--   **Financial Logic**: True P&L calculation, initial allocation, deposits/withdrawals.
--   **Deployment & Automation**: Kubernetes, Supervisor, GitHub Actions (for VPS deployments), PowerShell scripting.
+-   **Backend**: Python (FastAPI, PyMongo/Motor), MongoDB (Atlas), Decimal128, ObjectId, asynchronous programming.
+-   **Frontend**: React.js, shadcn/ui components, react-router-dom, axios.
+-   **Deployment**: Kubernetes, Supervisor, GitHub Actions, Render.com.
+-   **MT5 Bridge**: VPS-based Python scripts ().
+-   **Internationalization**: i18n for localization.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****: A new script responsible for systematically adding new MT5 accounts and Money Managers to the  collection in MongoDB. It was executed to onboard the new accounts.
--   ****: This service syncs data from the VPS Bridge to MongoDB. It was modified to change  to  (implied by fixing the problem where new accounts weren't added to ) to ensure new accounts are created or updated.
--   ****: Previously, this service was improved for terminal connection logic. It was discovered to conflict with  by overwriting correct balances with /bin/bash. It was modified to correctly extract  from  and later **disabled** in  to prevent data overwrites.
--   ****: The main API server. It was modified to **disable**  to resolve conflicts with .
--   ****: This is the MT5 Bridge script deployed to the VPS. It was initially modified to include all 11 accounts but later identified as having a Single Connection Method - No Account Switching, leading to No cached data for inactive MT5 terminals.
--   ****: A *new* critical script created to replace  on the VPS. It implements sequential login to each of the 11 MT5 accounts using credentials from MongoDB to fetch and cache their live balances.
--   ****: These JSON files contain translation strings, including fund minimum investment amounts. , , ,  were updated to reflect new minimums for CORE (00k), BALANCE (50k), and DYNAMIC (00k), and to update the accessible benefit text.
--   ****: Several GitHub Actions workflows were created and modified for deployment and diagnostics, including  (for initial bridge deployment),  (diagnostic),  (for the new bridge script),  (to create a downloadable script), and  (direct VPS deployment). These primarily manage the deployment of VPS scripts.
--   ** collection (MongoDB)**: Stores MT5 account configurations, including fund type, server, and login credentials (now updated to be consistent across accounts). Account 891215 was most recently updated from  to .
--   ** collection (MongoDB)**: Stores live MT5 account data synced from the VPS Bridge. This collection now contains all 11 accounts and their dynamically updated balances.
+-   ****: The main FastAPI application. Modified to include the new  router. Previously disabled .
+-   ****: Syncs MT5 data from VPS to MongoDB. Modified to correctly handle  values in update operations, resolving s related to MongoDB  operators.
+-   ****: Service to sync MT5 data. Was found to conflict with  and was ultimately disabled in  to prevent data overwrites.
+-   ****: **NEW file**. Contains all backend API endpoints for the new referral system (CRUD for salespeople, commission management, cash flow integration, public endpoints). This was created to modularize the large .
+-   ****: **NEW file**. A one-time script for setting up the initial referral data. It creates Salvador Palma as a salesperson, updates Alejandro's client record with referral information, and generates commission schedules for his investments. This script was significantly debugged to handle Alejandro existing as a user but not a client, and to fix issues with a quoted  environment variable preventing correct collection creation.
+-   ****: **NEW file (temporary)**. A script created to specifically address the issue of Alejandro's BALANCE investment commissions being missed by the initial migration. It finds the BALANCE investment, regenerates its commissions, and updates relevant totals.
+-   ****: **NEW file (temporary)**. A script to perform comprehensive verification of the backend referral system and its data, including MongoDB checks and API endpoint tests.
+-   ****: **NEW file**. A critical script for the VPS that sequentially logs into each of the 11 MT5 accounts, replacing  to ensure all accounts cache their live balances.
+-   ****: **NEW file**. This JavaScript file acts as the API service layer for the frontend, encapsulating all calls to the backend  and  endpoints.
+-   ****: **NEW file**. The main React page for the Admin dashboard's new Referrals tab, displaying quick stats, a list of salespeople, and a commission calendar preview.
+-   ****: **NEW file**. A reusable React component to display individual salesperson details and key metrics in a card format within the Referrals page.
+-   ****: **NEW file**. A React component to display commission payments in a calendar-like view, showing monthly breakdowns and payment details.
+-   ****: **NEW file**. The React page for viewing detailed information about a specific salesperson, including their profile, performance metrics, client portfolio, and commission history.
+-   ****: **NEW file**. A React modal component for approving pending commission payments through the admin interface.
+-   ****: **NEW file**. A React modal component with a form for marking approved commissions as paid, including payment details like method, reference, and hash.
+-   **MongoDB Collections**:  (fund type for 891215 updated to BALANCE),  (stores live account data), and **NEW collections**:  (stores salesperson info),  (stores detailed commission records). , , and  collections were updated with new fields for referral tracking.
 </code_architecture>
 
 <pending_tasks>
 -   **Field Standardization Project**: A comprehensive system audit to define naming standards and refactor all layers.
--   **Frontend Fund Type Update Verification**: Verify that account 891215 correctly displays as BALANCE on the frontend after the recent backend update.
+-   **Frontend Fund Type Update Verification**: Verify account 891215 correctly displays as BALANCE on the frontend after the initial backend update. (This was pre-referral system).
+-   **Backend Referral System Deployment**: Ensure the new referral system backend (endpoints, database changes) is fully deployed to the Render production environment and accessible.
+-   **Frontend Referral System Integration**: Integrate the newly built frontend components with the live backend APIs, including dynamic data fetching, approval workflows, and display.
+-   **Complete Admin UI**: Build remaining components for  and  to integrate referral information.
+-   **Prospects & Simulator Integration (Phase 3)**: Implement salesperson selection in prospect forms and commission previews in the investment simulator.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing the New month allocation task. The initial challenges included the backend incorrectly syncing only 7 accounts, backend API errors due to timezone issues, and the  failing to upsert new accounts into MongoDB. These were resolved by running , fixing  to , and deploying an updated  to the VPS.
+Immediately before this summary request, the AI engineer was actively working on Phase 2: Admin Frontend UI for the Referral System. The user (Chava) took over the task of pushing the backend referral system code to GitHub to trigger a Render auto-deployment, expecting it to be live within minutes. In parallel, the AI engineer was tasked with rapidly building the remaining frontend components.
 
-The primary issue then shifted to incorrect balance reporting (all accounts showing /bin/bash). This was traced to  incorrectly extracting data and then conflicting with , overwriting correct balances. The  was fixed to extract from  but was ultimately **disabled** in  as  was correctly populating balances.
+The AI engineer has just completed building three critical React components:
+1.  ****: This page will display a comprehensive dashboard for individual salespeople, showing their performance, clients, and commission history.
+2.  ****: This modal component facilitates the admin approval process for commissions.
+3.  ****: This modal component provides the interface for marking commissions as paid, capturing payment details like method, reference, and transaction hash.
 
-A major breakthrough occurred when it was discovered the  script on the VPS was not designed for account switching. A new script, , was developed and deployed to the VPS. This new script sequentially logs into each of the 11 MT5 accounts using updated, consistent credentials (all using  server and Fidus13! password).
-Logs indicate that this new VPS Bridge script is successfully fetching non-zero balances for multiple accounts (e.g., 886557: 0,054.27, 886602: 5,960.34, 891215: 0,000.00, etc.), and these are being persisted to MongoDB.
-
-The frontend was also updated to reflect new minimum investment amounts for various funds and to remove MT5 references. While these changes were committed, frontend screenshots initially showed old data due to deployment caching issues on Render.
-
-The most recent user request was to change account 891215's fund type from  to , which has been updated in the  collection in MongoDB, and the backend has been restarted.
+This means that the AI engineer has completed the core UI components for the referral system frontend, and the next immediate step is to integrate these components by adding the necessary routing. The backend deployment is ongoing, and once complete, the frontend components will be ready for full end-to-end testing with the live APIs.
 </current_work>
 
 <optional_next_step>
-Verify the frontend correctly displays account 891215 as part of the BALANCE fund.
+Add routing for the newly created frontend pages and components.
 </optional_next_step>

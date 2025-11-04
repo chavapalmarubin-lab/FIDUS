@@ -138,7 +138,7 @@ Redirect URI: https://fidus-invest.emergent.host/admin/google-callback
 **Solution**: Updated backend .env configuration
 ```bash
 # Before (incorrect)
-GOOGLE_OAUTH_REDIRECT_URI="https://mt5-sync-hub.preview.emergentagent.com/admin/google-callback"
+GOOGLE_OAUTH_REDIRECT_URI="https://fidusrefs.preview.emergentagent.com/admin/google-callback"
 
 # After (correct)  
 GOOGLE_OAUTH_REDIRECT_URI="https://fidus-invest.emergent.host/admin/google-callback"

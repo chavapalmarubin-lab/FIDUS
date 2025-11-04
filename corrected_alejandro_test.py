@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://mt5-sync-hub.preview.emergentagent.com/api"
+BASE_URL = "https://fidusrefs.preview.emergentagent.com/api"
 CLIENT_ID = "client_alejandro"
 
 class CorrectedAlejandroTest:

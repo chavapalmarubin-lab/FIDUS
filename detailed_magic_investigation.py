@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 
 # Backend URL from environment
-BACKEND_URL = "https://mt5-sync-hub.preview.emergentagent.com"
+BACKEND_URL = "https://fidusrefs.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

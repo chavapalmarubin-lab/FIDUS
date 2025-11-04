@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "https://mt5-sync-hub.preview.emergentagent.com"
+    base_url = "https://fidusrefs.preview.emergentagent.com"
     
     print("🔍 DETAILED ENDPOINT ANALYSIS")
     print("=" * 60)

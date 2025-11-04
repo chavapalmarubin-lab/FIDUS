@@ -16,7 +16,7 @@ load_dotenv('/app/backend/.env')
 load_dotenv('/app/frontend/.env')
 
 # Get backend URL from frontend environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://mt5-sync-hub.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://fidusrefs.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class GoogleConnectionMonitorTester:

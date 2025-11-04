@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://mt5-sync-hub.preview.emergentagent.com`
+`https://fidusrefs.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

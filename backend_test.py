@@ -2,7 +2,7 @@
 """
 MT5 SYSTEM BACKEND TESTING - Complete System Verification After Adding 4 New Accounts
 Testing Date: December 18, 2025
-Backend URL: https://mt5-sync-hub.preview.emergentagent.com/api
+Backend URL: https://fidusrefs.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 Test Objectives:
@@ -30,7 +30,7 @@ from typing import Dict, Any, List, Optional
 
 class BackendTester:
     def __init__(self):
-        self.base_url = "https://mt5-sync-hub.preview.emergentagent.com/api"
+        self.base_url = "https://fidusrefs.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []
