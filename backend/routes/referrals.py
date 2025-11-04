@@ -823,7 +823,12 @@ async def fix_salvador_data():
         commissions_pending = 0
         
         for comm in commissions:
-            amount = float(comm.get("amount", 0))
+            # Handle Decimal128
+            amount_raw = comm.get("amount", 0)
+            if hasattr(amount_raw, 'to_decimal'):
+                amount = float(amount_raw.to_decimal())
+            else:
+                amount = float(amount_raw)
             total_commissions += amount
             
             if comm.get("status") == "paid":
