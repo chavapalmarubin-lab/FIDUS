@@ -46,6 +46,11 @@ const ProspectsPortalNew = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleReferralChange = (code, salespersonData) => {
+    setFormData(prev => ({ ...prev, referral_code: code }));
+    setSalesperson(salespersonData);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -58,7 +63,10 @@ const ProspectsPortalNew = () => {
         body: JSON.stringify({
           email: formData.email,
           phone: formData.phone,
-          source: 'prospects_portal'
+          source: 'prospects_portal',
+          referral_code: formData.referral_code || null,
+          referred_by: salesperson?.id || null,
+          referred_by_name: salesperson?.name || null
         })
       });
       const data = await response.json();
