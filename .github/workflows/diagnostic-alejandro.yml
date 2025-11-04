@@ -31,7 +31,7 @@ jobs:
       
       - name: Run Alejandro Diagnostic
         env:
-          MONGO_URL: mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
           DB_NAME: fidus_production
         run: |
           cd backend
