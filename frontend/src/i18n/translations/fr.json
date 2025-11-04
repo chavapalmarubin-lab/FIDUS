@@ -24,8 +24,8 @@
         "description": "Votre capital géré par Multibank Group, l'un des courtiers les plus prestigieux au monde."
       },
       "accessible": {
-        "title": "À partir de $10,000 USD",
-        "description": "Accès aux investissements institutionnels avec des montants accessibles."
+        "title": "À partir de $100,000 USD",
+        "description": "Accès aux investissements institutionnels avec un capital significatif."
       },
       "simple": {
         "title": "Processus Simple",
@@ -40,7 +40,7 @@
         "tagline": "Conservateur",
         "rate": "1.5%",
         "annualRate": "18%",
-        "minInvestment": "$10,000",
+        "minInvestment": "$100,000",
         "redemption": "Mensuel",
         "contract": "Contrat Annuel",
         "incubation": "2 mois d'incubation",
@@ -56,7 +56,7 @@
         "tagline": "Modéré",
         "rate": "2.5%",
         "annualRate": "30%",
-        "minInvestment": "$50,000",
+        "minInvestment": "$250,000",
         "redemption": "Trimestriel",
         "contract": "Contrat Annuel",
         "incubation": "2 mois d'incubation",
