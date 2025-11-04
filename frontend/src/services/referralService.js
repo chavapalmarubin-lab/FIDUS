@@ -30,7 +30,7 @@ export const updateSalesperson = async (id, data) => {
 
 // Commission Management
 export const getCommissionCalendar = async (startDate, endDate, salespersonId = null) => {
-  let url = `/api/admin/referrals/commissions/calendar?start_date=${startDate}&end_date=${endDate}`;
+  let url = `/admin/referrals/commissions/calendar?start_date=${startDate}&end_date=${endDate}`;
   if (salespersonId) {
     url += `&salesperson_id=${salespersonId}`;
   }
@@ -39,7 +39,7 @@ export const getCommissionCalendar = async (startDate, endDate, salespersonId = 
 };
 
 export const getPendingCommissions = async (salespersonId = null, statusFilter = 'all') => {
-  let url = `/api/admin/referrals/commissions/pending?status_filter=${statusFilter}`;
+  let url = `/admin/referrals/commissions/pending?status_filter=${statusFilter}`;
   if (salespersonId) {
     url += `&salesperson_id=${salespersonId}`;
   }
@@ -49,14 +49,14 @@ export const getPendingCommissions = async (salespersonId = null, statusFilter =
 
 export const approveCommission = async (commissionId) => {
   const response = await apiAxios.post(
-    `/api/admin/referrals/commissions/${commissionId}/approve`
+    `/admin/referrals/commissions/${commissionId}/approve`
   );
   return response.data;
 };
 
 export const markCommissionPaid = async (commissionId, paymentDetails) => {
   const response = await apiAxios.post(
-    `/api/admin/referrals/commissions/${commissionId}/mark-paid`,
+    `/admin/referrals/commissions/${commissionId}/mark-paid`,
     paymentDetails
   );
   return response.data;
