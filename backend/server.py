@@ -27109,6 +27109,15 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include System Test router: {e}")
 
+# Import and include referrals router
+try:
+    from routes.referrals import router as referrals_router, init_db as init_referrals_db
+    init_referrals_db(db)
+    app.include_router(referrals_router)
+    logging.info("✅ Referrals router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Referrals router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
