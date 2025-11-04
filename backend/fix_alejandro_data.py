@@ -89,17 +89,23 @@ async def fix_data():
                 else:
                     fund_type = 'DYNAMIC'
             
-            result = await db.investments.update_one(
-                {"_id": inv['_id']},
-                {
-                    "$set": {
-                        "fund_type": fund_type,
-                        "amount": inv.get('principal_amount', 0),
-                        "referred_by": salvador_id,
-                        "referred_by_name": "Salvador Palma"
-                    }
-                }
-            )
+            # ONLY update fund_type if missing - DO NOT create "amount" field
+            update_fields = {}
+            
+            if not inv.get('fund_type'):
+                update_fields['fund_type'] = fund_type
+            
+            if str(inv.get('referred_by')) != salvador_id:
+                update_fields['referred_by'] = salvador_id
+                update_fields['referred_by_name'] = "Salvador Palma"
+            
+            if update_fields:
+                result = await db.investments.update_one(
+                    {"_id": inv['_id']},
+                    {"$set": update_fields}
+                )
+            else:
+                result = type('obj', (object,), {'modified_count': 0})
             
             if result.modified_count > 0:
                 print(f"   ✅ Updated {inv['_id']} - Set fund_type to {fund_type}")
