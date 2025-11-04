@@ -447,7 +447,7 @@ async def generate_commission_schedule(investment_id: str):
         "first_payment_date": commissions[0]["commission_due_date"].isoformat() if commissions else None
     }
 
-@router.get("/commissions/calendar")
+@router.get("/admin/referrals/commissions/calendar")
 async def get_commission_calendar(
     start_date: str,
     end_date: str,
