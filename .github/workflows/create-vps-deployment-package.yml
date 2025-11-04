@@ -1,0 +1,155 @@
+name: Generate VPS Deployment Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Deployment version'
+        required: false
+        default: 'v4.0-switching'
+
+jobs:
+  create-package:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deployment_package
+          
+          # Copy the MT5 Bridge script
+          cp vps-scripts/mt5_bridge_account_switching.py deployment_package/mt5_bridge_service.py
+          
+          # Create a simple deployment script
+          cat > deployment_package/DEPLOY_ON_VPS.ps1 << 'EOF'
+          # MT5 Bridge Deployment Script
+          # Run this script on your Windows VPS
+          
+          Write-Host "=" * 80
+          Write-Host "DEPLOYING MT5 BRIDGE WITH ACCOUNT SWITCHING"
+          Write-Host "Version: 4.0-switching"
+          Write-Host "=" * 80
+          
+          # Stop existing service
+          Write-Host "`nStopping existing MT5 Bridge service..."
+          Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.CommandLine -like "*mt5_bridge*"} | Stop-Process -Force
+          Start-Sleep -Seconds 2
+          
+          # Create directory
+          $bridgeDir = "C:\MT5_Bridge"
+          if (!(Test-Path $bridgeDir)) {
+              New-Item -Path $bridgeDir -ItemType Directory
+              Write-Host "Created directory: $bridgeDir"
+          }
+          
+          # Copy script
+          $scriptPath = "$bridgeDir\mt5_bridge_service.py"
+          Copy-Item -Path ".\mt5_bridge_service.py" -Destination $scriptPath -Force
+          Write-Host "✅ Script copied to $scriptPath"
+          
+          # Install dependencies
+          Write-Host "`nInstalling Python packages..."
+          pip install fastapi uvicorn MetaTrader5 pymongo python-multipart --quiet
+          
+          # Start service
+          Write-Host "`nStarting MT5 Bridge service..."
+          Start-Process python -ArgumentList $scriptPath -WorkingDirectory $bridgeDir
+          
+          Start-Sleep -Seconds 5
+          
+          # Verify
+          Write-Host "`nVerifying service..."
+          try {
+              $response = Invoke-WebRequest -Uri "http://localhost:8000/api/mt5/bridge/health" -UseBasicParsing
+              $health = $response.Content | ConvertFrom-Json
+              Write-Host "✅ Service is running!"
+              Write-Host "   Cached accounts: $($health.mt5.cached_accounts)"
+              Write-Host "   Configured accounts: $($health.mt5.configured_accounts)"
+          } catch {
+              Write-Host "⚠️  Service started but health check failed. Check logs."
+          }
+          
+          Write-Host "`n" + ("=" * 80)
+          Write-Host "DEPLOYMENT COMPLETE"
+          Write-Host "Service URL: http://localhost:8000"
+          Write-Host "Wait 2-3 minutes for all accounts to refresh"
+          Write-Host ("=" * 80)
+          EOF
+          
+          # Create README
+          cat > deployment_package/README.md << 'EOF'
+          # MT5 Bridge Deployment Package
+          
+          ## Quick Start
+          
+          1. Download this entire folder to your Windows VPS
+          2. Open PowerShell as Administrator
+          3. Navigate to this folder
+          4. Run: `.\DEPLOY_ON_VPS.ps1`
+          
+          ## What This Does
+          
+          - Stops the old MT5 Bridge service
+          - Installs the new account-switching version
+          - Starts the service
+          - The service will automatically:
+            - Login to all 11 MT5 accounts
+            - Retrieve their balances
+            - Cache the data
+            - Refresh every 2 minutes
+          
+          ## Verification
+          
+          After deployment, check:
+          ```powershell
+          curl http://localhost:8000/api/mt5/bridge/health
+          curl http://localhost:8000/api/mt5/accounts/summary
+          ```
+          
+          Within 2-3 minutes, all 11 accounts should show real balances!
+          EOF
+          
+          # Create zip
+          cd deployment_package
+          zip -r ../mt5_bridge_deployment.zip .
+          cd ..
+          
+          echo "✅ Deployment package created: mt5_bridge_deployment.zip"
+          ls -lh mt5_bridge_deployment.zip
+      
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v3
+        with:
+          name: mt5-bridge-deployment-package
+          path: mt5_bridge_deployment.zip
+          retention-days: 30
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: mt5-bridge-${{ github.event.inputs.version }}
+          name: MT5 Bridge - Account Switching Version
+          body: |
+            ## MT5 Bridge with Account Switching
+            
+            ### What's New
+            - ✅ Automatically logs into all 11 MT5 accounts
+            - ✅ Retrieves real balances for each account
+            - ✅ Refreshes every 2 minutes
+            - ✅ Fixes the "all accounts at $0" issue
+            
+            ### Installation
+            1. Download `mt5_bridge_deployment.zip` below
+            2. Extract on your Windows VPS
+            3. Run `DEPLOY_ON_VPS.ps1` as Administrator
+            
+            ### Files Included
+            - `mt5_bridge_service.py` - The main service script
+            - `DEPLOY_ON_VPS.ps1` - Automated deployment script
+            - `README.md` - Detailed instructions
+          files: mt5_bridge_deployment.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
