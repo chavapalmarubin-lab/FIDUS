@@ -73,12 +73,12 @@ export const updateClientReferral = async (clientId, salespersonId) => {
 
 // Public endpoints (no auth needed)
 export const getPublicSalespeople = async () => {
-  const response = await apiAxios.get('/api/public/salespeople');
+  const response = await apiAxios.get('/public/salespeople');
   return response.data;
 };
 
 export const getSalespersonByCode = async (referralCode) => {
-  const response = await apiAxios.get(`/api/public/salespeople/${referralCode}`);
+  const response = await apiAxios.get(`/public/salespeople/${referralCode}`);
   return response.data;
 };
 
