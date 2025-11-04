@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -7,9 +6,13 @@ import { Badge } from '../../components/ui/badge';
 import referralService from '../../services/referralService';
 import SalespersonCard from '../../components/referrals/SalespersonCard';
 import CommissionCalendar from '../../components/referrals/CommissionCalendar';
+import SalespersonDetail from './SalespersonDetail';
 
 const Referrals = () => {
-  const navigate = useNavigate();
+  // View state management for tab-based navigation
+  const [currentView, setCurrentView] = useState('list'); // 'list' | 'detail' | 'calendar' | 'new'
+  const [selectedSalespersonId, setSelectedSalespersonId] = useState(null);
+  
   const [salespeople, setSalespeople] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
