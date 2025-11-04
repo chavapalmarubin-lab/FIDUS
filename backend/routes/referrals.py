@@ -336,7 +336,7 @@ async def get_salesperson_dashboard(salesperson_id: str):
         }
     }
 
-@router.put("/salespeople/{salesperson_id}")
+@router.put("/admin/referrals/salespeople/{salesperson_id}")
 async def update_salesperson(salesperson_id: str, data: SalespersonUpdate):
     """Update salesperson details"""
     update_data = {k: v for k, v in data.dict(exclude_unset=True).items() if v is not None}
