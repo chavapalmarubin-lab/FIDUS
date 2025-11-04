@@ -281,7 +281,7 @@ async def get_all_salespeople(active_only: bool = True):
         ]).to_list(1)
         sp["actual_pending"] = float(pending[0]["total"]) if pending else 0
     
-    return {"salespeople": [serialize_doc(sp) for sp in salespeople]}
+    return {"salespeople": [transform_salesperson(sp) for sp in salespeople]}
 
 @router.post("/admin/referrals/salespeople")
 async def create_salesperson(data: SalespersonCreate):
