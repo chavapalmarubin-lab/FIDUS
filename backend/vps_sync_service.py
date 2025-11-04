@@ -119,27 +119,44 @@ class VPSSyncService:
                         equity = live_data.get('equity', 0)
                         profit = live_data.get('profit', 0)
                     
-                    # Update MongoDB with LIVE data
+                    # Fetch account configuration from mt5_account_config to get fund_type, name, etc.
+                    account_config = await self.db.mt5_account_config.find_one({'account': account_id})
+                    
+                    # Prepare update data with live MT5 data
+                    update_data = {
+                        'balance': balance,
+                        'equity': equity,
+                        'profit': profit,
+                        'margin': live_data.get('margin'),
+                        'margin_free': live_data.get('margin_free'),
+                        'margin_level': live_data.get('margin_level'),
+                        'leverage': live_data.get('leverage'),
+                        'currency': live_data.get('currency', 'USD'),
+                        'trade_allowed': live_data.get('trade_allowed'),
+                        'updated_at': start_time,
+                        'synced_from_vps': True,
+                        'vps_sync_timestamp': start_time,
+                        'data_source': 'VPS_LIVE_MT5' if live_data else 'VPS_STORED'
+                    }
+                    
+                    # Add configuration fields from mt5_account_config if they exist
+                    if account_config:
+                        if 'fund_type' in account_config:
+                            update_data['fund_type'] = account_config['fund_type']
+                        if 'name' in account_config:
+                            update_data['name'] = account_config['name']
+                        if 'money_manager_url' in account_config:
+                            update_data['money_manager_url'] = account_config['money_manager_url']
+                        if 'server' in account_config:
+                            update_data['server'] = account_config['server']
+                        if 'broker_name' in account_config:
+                            update_data['broker_name'] = account_config['broker_name']
+                    
+                    # Update MongoDB with LIVE data + config
                     update_result = await self.db.mt5_accounts.update_one(
                         {'account': account_id},
-                        {
-                            '$set': {
-                                'balance': balance,
-                                'equity': equity,
-                                'profit': profit,
-                                'margin': live_data.get('margin'),
-                                'margin_free': live_data.get('margin_free'),
-                                'margin_level': live_data.get('margin_level'),
-                                'leverage': live_data.get('leverage'),
-                                'currency': live_data.get('currency', 'USD'),
-                                'trade_allowed': live_data.get('trade_allowed'),
-                                'updated_at': start_time,
-                                'synced_from_vps': True,
-                                'vps_sync_timestamp': start_time,
-                                'data_source': 'VPS_LIVE_MT5' if live_data else 'VPS_STORED'
-                            }
-                        },
-                        upsert=False  # Don't create new accounts, only update existing
+                        {'$set': update_data},
+                        upsert=True  # Changed to True to create accounts from config if they don't exist
                     )
                     
                     if update_result.modified_count > 0 or update_result.matched_count > 0:
