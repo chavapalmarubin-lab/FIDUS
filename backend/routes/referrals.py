@@ -195,7 +195,7 @@ async def generate_payment_schedule_for_investment(investment: dict) -> list:
 # SALESPEOPLE MANAGEMENT ENDPOINTS
 # ============================================================================
 
-@router.get("/salespeople")
+@router.get("/admin/referrals/salespeople")
 async def get_all_salespeople(active_only: bool = True):
     """Get all salespeople with performance metrics"""
     query = {}
