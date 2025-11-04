@@ -158,8 +158,9 @@ async def fix_data():
         
         print(f"\n✅ Alejandro's Investments: {len(alejandro_investments_after)}")
         for inv in alejandro_investments_after:
-            amount = inv.get('amount', 0)
-            print(f"   - {inv.get('fund_type', 'N/A')}: ${amount:,.2f}")
+            # USE STANDARD FIELD: principal_amount
+            principal = inv.get('principal_amount', 0)
+            print(f"   - {inv.get('fund_type', 'N/A')}: ${principal:,.2f}")
         
         print("\n" + "=" * 80)
         print("✅ FIX COMPLETE!")
