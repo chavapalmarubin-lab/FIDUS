@@ -188,7 +188,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Sales Volume</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.total_sales_volume)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.totalSalesVolume)}</p>
               <p className="text-xs text-gray-500 mt-1">{investments.length || 0} investments</p>
             </div>
           </CardContent>
@@ -198,8 +198,8 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Total Commissions</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.total_commissions_earned)}</p>
-              <p className="text-xs text-gray-500 mt-1">{formatCurrency(salesperson.commissions_paid_to_date)} paid</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.totalCommissionsEarned)}</p>
+              <p className="text-xs text-gray-500 mt-1">{formatCurrency(salesperson.commissionsPaidToDate)} paid</p>
             </div>
           </CardContent>
         </Card>
@@ -208,7 +208,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Pending Commissions</p>
-              <p className="text-3xl font-bold text-blue-600">{formatCurrency(salesperson.commissions_pending)}</p>
+              <p className="text-3xl font-bold text-blue-600">{formatCurrency(salesperson.commissionsPending)}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {commissions.length} payments
               </p>
