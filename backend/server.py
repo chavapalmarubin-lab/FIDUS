@@ -3315,13 +3315,14 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         accounts = await db.mt5_accounts.find({}).to_list(length=20)
         
         # Separate trading accounts from separation accounts
-        # SEPARATION accounts are: 886528, 891215
-        separation_account_numbers = [886528, 891215]
+        # SEPARATION accounts are: 897591, 897599 (per SYSTEM_MASTER.md Section 4.1)
+        # NOTE: 886528 is NO LONGER a separation account
+        separation_account_numbers = [897591, 897599]
         trading_accounts = [a for a in accounts if a.get('account') not in separation_account_numbers]
         separation_accounts = [a for a in accounts if a.get('account') in separation_account_numbers]
         
-        # Get primary separation account (886528) for backwards compatibility
-        separation_account = next((a for a in accounts if a.get('account') == 886528), None)
+        # Get primary separation account (897591) for reference
+        separation_account = next((a for a in accounts if a.get('account') == 897591), None)
         
         # Calculate totals
         total_true_pnl = sum(a.get('true_pnl', 0) for a in trading_accounts)
