@@ -246,10 +246,15 @@ class BackendTester:
             
             data = response.json()
             
-            # Check for real portfolio data (flexible field names)
-            total_portfolio_value = data.get("total_portfolio_value", 0) or data.get("portfolio_value", 0) or data.get("total_equity", 0)
-            total_pnl = data.get("total_pnl", 0) or data.get("total_profit_loss", 0) or data.get("net_pnl", 0)
-            active_accounts = data.get("active_accounts", 0) or data.get("account_count", 0) or len(data.get("accounts", []))
+            # Parse the correct structure from trading analytics API
+            analytics = data.get("analytics", {})
+            overview = analytics.get("overview", {})
+            accounts_included = data.get("accounts_included", [])
+            
+            # Check for real portfolio data using correct field names
+            total_pnl = overview.get("total_pnl", 0)
+            total_trades = overview.get("total_trades", 0)
+            active_accounts = len(accounts_included)
             
             success = True
             
