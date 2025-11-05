@@ -160,12 +160,12 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Joined</p>
-              <p className="font-medium">{formatDate(salesperson.joined_date)}</p>
+              <p className="font-medium">{formatDate(salesperson.joinedDate)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Referral Link</p>
-              <a href={salesperson.referral_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
-                {salesperson.referral_link?.substring(0, 40)}...
+              <a href={salesperson.referralLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                {salesperson.referralLink?.substring(0, 40)}...
               </a>
             </div>
           </div>
