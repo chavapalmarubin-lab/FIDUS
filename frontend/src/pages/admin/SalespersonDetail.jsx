@@ -98,15 +98,28 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
     );
   }
 
-  // API returns data at root level, not nested under 'salesperson'
-  const salesperson = data;
+  // API returns data at root level with correct field names (camelCase)
+  const salesperson = {
+    ...data,
+    referral_code: data.referralCode,
+    referral_link: data.referralLink,
+    total_sales_volume: data.totalSalesVolume,
+    total_commissions_earned: data.totalCommissions,
+    commissions_pending: data.pendingCommissions,
+    commissions_paid_to_date: data.paidCommissions
+  };
+  
+  // Extract data from response
+  const clients = data.clients || [];
+  const investments = data.investments || [];
+  const commissions = data.commissions || [];
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" onClick={onBack || (() => navigate('/referrals'))}>
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -124,7 +137,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
         </div>
         <Button variant="outline">
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
           Edit
         </Button>
@@ -165,8 +178,8 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Total Clients</p>
-              <p className="text-3xl font-bold text-gray-900">{summary.total_clients || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">{summary.active_clients || 0} active</p>
+              <p className="text-3xl font-bold text-gray-900">{clients.length || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">{clients.length || 0} active</p>
             </div>
           </CardContent>
         </Card>
