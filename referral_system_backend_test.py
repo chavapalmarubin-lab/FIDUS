@@ -2,7 +2,7 @@
 """
 FIDUS REFERRAL SYSTEM BACKEND TESTING
 Testing Date: December 18, 2025
-Backend URL: https://data-consistency-4.preview.emergentagent.com/api
+Backend URL: https://referral-rescue.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 Test Objectives:
@@ -37,7 +37,7 @@ from typing import Dict, Any, List, Optional
 
 class ReferralSystemTester:
     def __init__(self):
-        self.base_url = "https://data-consistency-4.preview.emergentagent.com/api"
+        self.base_url = "https://referral-rescue.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

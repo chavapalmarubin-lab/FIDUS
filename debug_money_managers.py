@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://data-consistency-4.preview.emergentagent.com/api"
+    base_url = "https://referral-rescue.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate

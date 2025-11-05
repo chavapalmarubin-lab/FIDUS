@@ -66,7 +66,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from frontend environment
-BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com"
+BACKEND_URL = "https://referral-rescue.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

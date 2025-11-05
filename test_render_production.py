@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Production Backend URL
-PROD_BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com"
+PROD_BACKEND_URL = "https://referral-rescue.preview.emergentagent.com"
 
 print("=" * 80)
 print("🌐 TESTING PRODUCTION RENDER DEPLOYMENT")

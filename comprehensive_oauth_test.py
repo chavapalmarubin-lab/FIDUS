@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com/api"
-FRONTEND_URL = "https://data-consistency-4.preview.emergentagent.com"
+BACKEND_URL = "https://referral-rescue.preview.emergentagent.com/api"
+FRONTEND_URL = "https://referral-rescue.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
