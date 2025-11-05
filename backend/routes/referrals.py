@@ -11,7 +11,9 @@ from decimal import Decimal
 from pydantic import BaseModel
 import sys
 sys.path.append('/app/backend')
-from app.utils.field_transformers import transform_salesperson
+
+# Use new field_registry for authoritative transformations
+from validation.field_registry import transform_salesperson, transform_investment, transform_to_api_format
 
 router = APIRouter(prefix="/api", tags=["Referrals"])
 
