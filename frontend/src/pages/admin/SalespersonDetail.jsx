@@ -336,17 +336,17 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-600">Payment Method</p>
-                  <p className="font-medium">{salesperson.preferred_payment_method?.replace('_', ' ') || 'Not set'}</p>
+                  <p className="font-medium">{salesperson.preferredPaymentMethod?.replace('_', ' ') || 'Not set'}</p>
                 </div>
-                {salesperson.wallet_details && (
+                {salesperson.walletDetails && (
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-600">Wallet Type</p>
-                      <p className="font-medium">{salesperson.wallet_details.wallet_type || 'N/A'}</p>
+                      <p className="font-medium">{salesperson.walletDetails.wallet_type || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Wallet Address</p>
-                      <p className="font-mono text-sm">{salesperson.wallet_details.wallet_address || 'Not provided'}</p>
+                      <p className="font-mono text-sm">{salesperson.walletDetails.wallet_address || 'Not provided'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Network</p>
