@@ -19350,19 +19350,51 @@ async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str =
     try:
         logging.info(f"🔄 Redirecting /cashflow/overview to /cashflow/complete (timeframe: {timeframe}, fund: {fund})")
         
-        # Calculate timeframe dates
+        # Call the working /cashflow/complete endpoint
         from datetime import datetime, timedelta
-        end_date = datetime.now()
-        if timeframe == "1month":
-            start_date = end_date - timedelta(days=30)
-        elif timeframe == "3months":
-            start_date = end_date - timedelta(days=90)
-        elif timeframe == "6months":
-            start_date = end_date - timedelta(days=180)
-        elif timeframe == "1year":
-            start_date = end_date - timedelta(days=365)
-        else:
-            start_date = end_date - timedelta(days=90)
+        
+        # Convert timeframe to days
+        days_map = {
+            "1month": 30,
+            "3months": 90,
+            "6months": 180,
+            "1year": 365
+        }
+        days = days_map.get(timeframe, 90)
+        
+        # Get data from the WORKING endpoint
+        complete_data = await get_complete_cashflow(days=days)
+        
+        # Transform to match old format (for backward compatibility)
+        return {
+            "success": True,
+            "summary": {
+                "total_profit_loss": complete_data.get('total_profit_loss', 0),
+                "broker_interest": complete_data.get('broker_interest', 0),
+                "broker_rebates": complete_data.get('broker_rebates', 0),
+                "total_inflows": complete_data.get('total_inflows', 0),
+                "net_profit": complete_data.get('net_profit', 0),
+                "client_obligations": complete_data.get('client_interest_obligations', 0),
+                "total_liabilities": complete_data.get('total_liabilities', 0)
+            },
+            "fund_accounting": {
+                "assets": {
+                    "mt5_trading_profits": complete_data.get('total_profit_loss', 0),
+                    "broker_interest": complete_data.get('broker_interest', 0),
+                    "broker_rebates": complete_data.get('broker_rebates', 0),
+                    "total_inflows": complete_data.get('total_inflows', 0)
+                },
+                "liabilities": {
+                    "client_obligations": complete_data.get('client_interest_obligations', 0),
+                    "total_outflows": complete_data.get('total_liabilities', 0)
+                },
+                "net_fund_profitability": complete_data.get('net_profit', 0)
+            },
+            "monthly_breakdown": [],
+            "fund_breakdown": {},
+            "timeframe": timeframe,
+            "selected_fund": fund
+        }
         
         # =================================================================
         # FUND ASSETS (Money Coming Into Fund)
