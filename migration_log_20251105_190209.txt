@@ -1,0 +1,50 @@
+[2025-11-05T19:02:06.136730] ✅ Connected to MongoDB: fidus_production
+[2025-11-05T19:02:06.136746] 
+============================================================
+[2025-11-05T19:02:06.136751] PHASE 2: DATABASE MIGRATION
+[2025-11-05T19:02:06.136754] ============================================================
+[2025-11-05T19:02:06.136758] Mode: EXECUTE
+[2025-11-05T19:02:06.136762] Database: fidus_production
+[2025-11-05T19:02:06.976654] 📊 Pre-migration counts: {'mt5_accounts': 11, 'money_managers': 7, 'investments': 3, 'clients': 1, 'salespeople': 3, 'referral_commissions': 16}
+[2025-11-05T19:02:06.976675] 
+============================================================
+[2025-11-05T19:02:06.976680] MIGRATION 1: Remove duplicate manager_name fields
+[2025-11-05T19:02:06.976684] ============================================================
+[2025-11-05T19:02:07.006597] 📊 Found 0 mt5_accounts with manager_name field
+[2025-11-05T19:02:07.036101] 📊 Found 1 money_managers with manager_name field
+[2025-11-05T19:02:07.087956] ✅ Removed manager_name from 1 money_managers
+[2025-11-05T19:02:07.147093] ✅ Migration 1 completed successfully
+[2025-11-05T19:02:07.147114] 
+============================================================
+[2025-11-05T19:02:07.147119] MIGRATION 2: Remove duplicate amount, investment_date, referred_by fields
+[2025-11-05T19:02:07.147123] ============================================================
+[2025-11-05T19:02:07.947295] 📊 Found 1 investments with 'amount' field
+[2025-11-05T19:02:07.947309] 📊 Found 1 investments with 'investment_date' field
+[2025-11-05T19:02:07.947314] 📊 Found 3 investments with 'referred_by' field
+[2025-11-05T19:02:08.003525] ✅ Copied amount to principal_amount for 1 investments
+[2025-11-05T19:02:08.055480] ✅ Removed deprecated fields from 3 investments
+[2025-11-05T19:02:08.085252] ✅ Migration 2 completed successfully
+[2025-11-05T19:02:08.085273] 
+============================================================
+[2025-11-05T19:02:08.085278] MIGRATION 3: Remove deprecated last_sync field
+[2025-11-05T19:02:08.085282] ============================================================
+[2025-11-05T19:02:08.114975] 📊 Found 11 mt5_accounts with 'last_sync' field
+[2025-11-05T19:02:08.169944] ✅ Removed last_sync from 11 mt5_accounts
+[2025-11-05T19:02:08.199921] ✅ Migration 3 completed successfully
+[2025-11-05T19:02:08.199942] 
+🔍 Verifying no data loss...
+[2025-11-05T19:02:08.917436]   ✅ mt5_accounts: 11 docs (no loss)
+[2025-11-05T19:02:08.946858]   ✅ money_managers: 7 docs (no loss)
+[2025-11-05T19:02:08.976315]   ✅ investments: 3 docs (no loss)
+[2025-11-05T19:02:09.006028]   ✅ clients: 1 docs (no loss)
+[2025-11-05T19:02:09.035403]   ✅ salespeople: 3 docs (no loss)
+[2025-11-05T19:02:09.064880]   ✅ referral_commissions: 16 docs (no loss)
+[2025-11-05T19:02:09.064896] 
+============================================================
+[2025-11-05T19:02:09.064910] MIGRATION SUMMARY
+[2025-11-05T19:02:09.064914] ============================================================
+[2025-11-05T19:02:09.064919] ✅ Migration 1
+[2025-11-05T19:02:09.064923] ✅ Migration 2
+[2025-11-05T19:02:09.064928] ✅ Migration 3
+[2025-11-05T19:02:09.064936] 
+✅ ALL MIGRATIONS COMPLETED SUCCESSFULLY
