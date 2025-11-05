@@ -19341,9 +19341,8 @@ async def get_all_rebates():
         raise HTTPException(status_code=500, detail="Failed to fetch rebates")
 
 # Cash Flow Management Endpoints
-# ⚠️ DISABLED: This duplicate endpoint had hardcoded data - use /admin/cashflow/complete instead
-# @api_router.get("/admin/cashflow/overview")
-# async def get_cashflow_overview(timeframe: str = "3months", fund: str = "all"):
+@api_router.get("/admin/cashflow/overview")
+async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str = "all"):
     """Get proper fund cash flow overview based on fund accounting principles"""
     try:
         logging.info(f"Getting cash flow overview for timeframe: {timeframe}, fund: {fund}")
