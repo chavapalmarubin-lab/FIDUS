@@ -15904,6 +15904,10 @@ def generate_payment_schedule(investment):
     # Generate regular payments
     current_date = first_payment_date
     
+    # Get referral info for commission calculations
+    investment_id = investment.get('investment_id', str(investment.get('_id')))
+    referral_salesperson_id = investment.get('referral_salesperson_id')
+    
     for i in range(1, number_of_payments + 1):
         schedule.append({
             'payment_number': i,
@@ -15913,7 +15917,9 @@ def generate_payment_schedule(investment):
             'product': product,
             'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
             'fund_code': fund_code,
-            'days_from_investment': (current_date - investment_date).days
+            'days_from_investment': (current_date - investment_date).days,
+            'investment_id': investment_id,  # NEW: For commission tracking
+            'referral_salesperson_id': referral_salesperson_id  # NEW: For commission calculation
         })
         
         current_date = add_days(current_date, interval)
@@ -15929,7 +15935,9 @@ def generate_payment_schedule(investment):
         'product': product,
         'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
         'fund_code': fund_code,
-        'days_from_investment': 426
+        'days_from_investment': 426,
+        'investment_id': investment_id,  # NEW: For commission tracking
+        'referral_salesperson_id': referral_salesperson_id  # NEW: For commission calculation
     })
     
     return schedule
