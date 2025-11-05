@@ -32,23 +32,34 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping
+        # Fund structure mapping - UPDATED 2025-11-05
+        # Based on FIDUS Platform Master Reference
         self.FUND_STRUCTURE = {
             "BALANCE": {
                 "aum": 100000,
-                "accounts": [886557, 886066, 886602],
+                "accounts": [886602, 886557, 891215, 897589],  # 4 active accounts
                 "managers": [
+                    {"id": "manager_uno14", "account": 886602},
                     {"id": "manager_tradinghub_gold", "account": 886557},
-                    {"id": "manager_goldentrade", "account": 886066},
-                    {"id": "manager_uno14", "account": 886602}
+                    {"id": "manager_tradinghub_gold", "account": 891215},
+                    {"id": "manager_provider1_assev", "account": 897589}
                 ]
             },
             "CORE": {
                 "aum": 18151.41,
-                "accounts": [885822, 891234],
+                "accounts": [885822, 897590],  # 2 active accounts
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 885822}
-                    # 891234 is unassigned
+                    {"id": "manager_cp_strategy", "account": 885822},
+                    {"id": "manager_cp_strategy", "account": 897590}
+                ]
+            },
+            "SEPARATION": {
+                "aum": 0,  # Interest earnings only, no principal tracked
+                "accounts": [897591, 897599, 886528],  # 3 active accounts
+                "managers": [
+                    {"id": "manager_alefloreztrader", "account": 897591},
+                    {"id": "manager_alefloreztrader", "account": 897599},
+                    {"id": "main_separation", "account": 886528}
                 ]
             }
         }
