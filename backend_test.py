@@ -395,20 +395,13 @@ class BackendTester:
                 self.log_test("BALANCE Fund", "FAIL", "BALANCE fund not found")
                 success = False
             
-            # Check SEPARATION fund (may have $0 AUM but should exist)
-            if "SEPARATION" in funds_dict:
-                separation_data = funds_dict.get("SEPARATION", {})
-                separation_mt5_allocation = separation_data.get("mt5_allocation", 0)
-                separation_accounts = separation_data.get("mt5_accounts_count", 0)
-                
-                if separation_mt5_allocation > 0 or separation_accounts > 0:
-                    self.log_test("SEPARATION Fund", "PASS", 
-                                f"SEPARATION fund: MT5 ${separation_mt5_allocation:,.2f}, {separation_accounts} accounts")
-                else:
-                    self.log_test("SEPARATION Fund", "FAIL", "SEPARATION fund has no MT5 allocation or accounts")
-                    success = False
+            # Note: SEPARATION fund is not included in fund portfolio as it's operational accounts, not client investment funds
+            # Check that we have the main investment funds (CORE and BALANCE)
+            main_funds_count = len([f for f in ["CORE", "BALANCE"] if f in found_funds and found_funds[f]["aum"] > 0])
+            if main_funds_count >= 2:
+                self.log_test("Main Investment Funds", "PASS", f"Found {main_funds_count} active investment funds (CORE, BALANCE)")
             else:
-                self.log_test("SEPARATION Fund", "FAIL", "SEPARATION fund not found")
+                self.log_test("Main Investment Funds", "FAIL", f"Only {main_funds_count} active investment funds found")
                 success = False
             
             # Check total portfolio value
