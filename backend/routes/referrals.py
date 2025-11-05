@@ -417,49 +417,79 @@ async def get_salesperson_dashboard(salesperson_id: str):
         all_commissions = await db.referral_commissions.find(
             {"salesperson_id": query_id}
         ).sort("payment_date", 1).to_list(None)
-    
-    # Calculate upcoming commissions (next 90 days)
-    today = datetime.now(timezone.utc)
-    ninety_days = today + timedelta(days=90)
-    upcoming = [
-        c for c in all_commissions 
-        if c.get("status") in ["pending", "ready_to_pay"] 
-        and today <= c.get("commission_due_date", datetime.max) <= ninety_days
-    ]
-    
-    # Group by status
-    by_status = {
-        "pending": [c for c in all_commissions if c.get("status") == "pending"],
-        "ready_to_pay": [c for c in all_commissions if c.get("status") == "ready_to_pay"],
-        "approved": [c for c in all_commissions if c.get("status") == "approved"],
-        "paid": [c for c in all_commissions if c.get("status") == "paid"],
-        "cancelled": [c for c in all_commissions if c.get("status") == "cancelled"]
-    }
-    
-    return {
-        "salesperson": transform_salesperson(salesperson),
-        "clients": [serialize_doc(c) for c in clients],
-        "investments": [serialize_doc(inv) for inv in investments],
-        "commissions": {
-            "all": [serialize_doc(c) for c in all_commissions],
-            "upcoming": [serialize_doc(c) for c in upcoming],
-            "by_status": {k: [serialize_doc(c) for c in v] for k, v in by_status.items()}
-        },
-        "summary": {
-            "total_clients": len(clients),
-            "active_clients": len([c for c in clients if c.get("status") == "active"]),
-            "total_investments": len(investments),
-            "total_sales_volume": sum(float(inv.get("principal_amount", 0)) for inv in investments),
-            "total_commissions_earned": sum(float(c.get("commission_amount", 0)) for c in all_commissions),
-            "commissions_paid": sum(float(c.get("commission_amount", 0)) for c in by_status["paid"]),
-            "commissions_pending": sum(
-                float(c.get("commission_amount", 0)) 
-                for c in by_status["pending"] + by_status["ready_to_pay"] + by_status["approved"]
-            ),
-            "next_payment_date": upcoming[0].get("commission_due_date").isoformat() if upcoming else None,
-            "next_payment_amount": float(upcoming[0].get("commission_amount", 0)) if upcoming else 0
+        
+        # Calculate upcoming commissions (next 90 days)
+        today = datetime.now(timezone.utc)
+        ninety_days = today + timedelta(days=90)
+        upcoming = [
+            c for c in all_commissions 
+            if c.get("status") in ["pending", "ready_to_pay"] 
+            and today <= c.get("payment_date", datetime.max.replace(tzinfo=timezone.utc)) <= ninety_days
+        ]
+        
+        # Group by status
+        by_status = {
+            "pending": [c for c in all_commissions if c.get("status") == "pending"],
+            "ready_to_pay": [c for c in all_commissions if c.get("status") == "ready_to_pay"],
+            "approved": [c for c in all_commissions if c.get("status") == "approved"],
+            "paid": [c for c in all_commissions if c.get("status") == "paid"],
+            "cancelled": [c for c in all_commissions if c.get("status") == "cancelled"]
         }
-    }
+        
+        # Calculate summary statistics
+        from bson import Decimal128
+        
+        def get_amount(item, field="principal_amount"):
+            val = item.get(field)
+            if isinstance(val, Decimal128):
+                return float(val.to_decimal())
+            return float(val) if val else 0
+        
+        total_sales = sum(get_amount(inv, "amount") or get_amount(inv, "principal_amount") for inv in investments)
+        total_commissions = sum(get_amount(c, "commission_amount") for c in all_commissions)
+        commissions_paid = sum(get_amount(c, "commission_amount") for c in by_status["paid"])
+        commissions_pending = sum(
+            get_amount(c, "commission_amount") 
+            for c in by_status["pending"] + by_status["ready_to_pay"] + by_status["approved"]
+        )
+        
+        return {
+            "salespersonId": query_id,
+            "name": salesperson.get("name"),
+            "email": salesperson.get("email"),
+            "phone": salesperson.get("phone"),
+            "referralCode": salesperson.get("referral_code"),
+            "referralLink": salesperson.get("referral_link"),
+            "totalSalesVolume": total_sales,
+            "totalCommissions": total_commissions,
+            "pendingCommissions": commissions_pending,
+            "paidCommissions": commissions_paid,
+            "clients": [{"clientId": str(c.get("_id")), "name": c.get("name", "Unknown")} for c in clients],
+            "investments": [
+                {
+                    "investmentId": inv.get("investment_id"),
+                    "clientId": str(inv.get("client_id")),
+                    "fundType": inv.get("fund_type"),
+                    "amount": get_amount(inv, "amount") or get_amount(inv, "principal_amount"),
+                    "startDate": inv.get("start_date").isoformat() if inv.get("start_date") else None
+                }
+                for inv in investments
+            ],
+            "commissions": [
+                {
+                    "commissionId": c.get("commission_id"),
+                    "investmentId": c.get("investment_id"),
+                    "fundType": c.get("fund_type"),
+                    "commissionAmount": get_amount(c, "commission_amount"),
+                    "paymentMonth": c.get("payment_month"),
+                    "paymentDate": c.get("payment_date").isoformat() if c.get("payment_date") else None,
+                    "status": c.get("status")
+                }
+                for c in all_commissions
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting salesperson dashboard: {str(e)}")
 
 @router.put("/admin/referrals/salespeople/{salesperson_id}")
 async def update_salesperson(salesperson_id: str, data: SalespersonUpdate):
