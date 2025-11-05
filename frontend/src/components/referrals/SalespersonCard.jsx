@@ -76,7 +76,7 @@ const SalespersonCard = ({ salesperson, onClick }) => {
               <span>Clients</span>
             </div>
             <p className="font-semibold text-gray-900">
-              {salesperson.total_clients_referred || 0}
+              {salesperson.totalClientsReferred || 0}
             </p>
           </div>
 
@@ -88,7 +88,7 @@ const SalespersonCard = ({ salesperson, onClick }) => {
               <span>Sales</span>
             </div>
             <p className="font-semibold text-gray-900">
-              {formatCurrency(salesperson.total_sales_volume)}
+              {formatCurrency(salesperson.totalSalesVolume)}
             </p>
           </div>
         </div>
@@ -98,23 +98,23 @@ const SalespersonCard = ({ salesperson, onClick }) => {
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Total Commissions</span>
             <span className="font-semibold text-gray-900">
-              {formatCurrency(salesperson.total_commissions_earned)}
+              {formatCurrency(salesperson.totalCommissionsEarned)}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Pending</span>
             <span className="font-semibold text-orange-600">
-              {formatCurrency(salesperson.commissions_pending)}
+              {formatCurrency(salesperson.commissionsPending)}
             </span>
           </div>
-          {salesperson.next_commission_date && (
+          {salesperson.nextCommissionDate && (
             <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>
-                Next: {formatDate(salesperson.next_commission_date)} 
-                ({formatCurrency(salesperson.next_commission_amount)})
+                Next: {formatDate(salesperson.nextCommissionDate)} 
+                ({formatCurrency(salesperson.nextCommissionAmount)})
               </span>
             </div>
           )}
