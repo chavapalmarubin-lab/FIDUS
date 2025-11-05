@@ -188,8 +188,8 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Sales Volume</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(summary.total_sales_volume)}</p>
-              <p className="text-xs text-gray-500 mt-1">{summary.total_investments || 0} investments</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.total_sales_volume)}</p>
+              <p className="text-xs text-gray-500 mt-1">{investments.length || 0} investments</p>
             </div>
           </CardContent>
         </Card>
@@ -198,8 +198,8 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-gray-600">Total Commissions</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(summary.total_commissions_earned)}</p>
-              <p className="text-xs text-green-600 mt-1">{formatCurrency(summary.commissions_paid)} paid</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(salesperson.total_commissions_earned)}</p>
+              <p className="text-xs text-gray-500 mt-1">{formatCurrency(salesperson.commissions_paid_to_date)} paid</p>
             </div>
           </CardContent>
         </Card>
@@ -207,11 +207,11 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-3xl font-bold text-orange-600">{formatCurrency(summary.commissions_pending)}</p>
-              {summary.next_payment_date && (
-                <p className="text-xs text-gray-500 mt-1">Next: {formatDate(summary.next_payment_date)}</p>
-              )}
+              <p className="text-sm text-gray-600">Pending Commissions</p>
+              <p className="text-3xl font-bold text-blue-600">{formatCurrency(salesperson.commissions_pending)}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {commissions.length} payments
+              </p>
             </div>
           </CardContent>
         </Card>
