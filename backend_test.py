@@ -217,62 +217,49 @@ class BackendTester:
             self.log_test("Money Managers Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_fund_allocations(self) -> bool:
-        """Test 3: Fund Allocations - verify fund totals are correct"""
+    def test_trading_analytics(self) -> bool:
+        """Test 3: Trading Analytics - should return real portfolio data (not 404)"""
         try:
-            print("\n💰 Testing Fund Allocations...")
+            print("\n📈 Testing Trading Analytics...")
             
-            response = self.session.get(f"{self.base_url}/fund-portfolio/overview")
+            response = self.session.get(f"{self.base_url}/trading-analytics/overview")
             
-            if response.status_code != 200:
-                self.log_test("Fund Portfolio API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+            if response.status_code == 404:
+                self.log_test("Trading Analytics API", "FAIL", "Trading Analytics endpoint returns 404 - not found")
+                return False
+            elif response.status_code != 200:
+                self.log_test("Trading Analytics API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            funds = data.get("funds", [])
             
-            # Expected fund totals
-            expected_totals = {
-                "CORE": 18151.41,  # accounts: 885822, 897590, 891234
-                "BALANCE": 100979,  # accounts: 886557, 886602, 886066, 891215, 897589 (approx)
-                "SEPARATION": 20653  # accounts: 886528, 897591, 897599
-            }
-            
-            fund_totals = {}
-            for fund in funds:
-                fund_code = fund.get("fund_code")
-                total_allocated = fund.get("total_allocated", 0)
-                fund_totals[fund_code] = total_allocated
+            # Check for real portfolio data
+            total_portfolio_value = data.get("total_portfolio_value", 0)
+            total_pnl = data.get("total_pnl", 0)
+            active_accounts = data.get("active_accounts", 0)
             
             success = True
             
-            # Check CORE fund
-            core_total = fund_totals.get("CORE", 0)
-            expected_core = expected_totals["CORE"]
-            if abs(core_total - expected_core) < 100:  # Allow small variance
-                self.log_test("CORE Fund Allocation", "PASS", f"CORE fund total: ${core_total:,.2f}")
+            if total_portfolio_value > 0:
+                self.log_test("Portfolio Value", "PASS", f"Total portfolio value: ${total_portfolio_value:,.2f}")
             else:
-                self.log_test("CORE Fund Allocation", "FAIL", f"CORE fund total: ${core_total:,.2f}, expected: ${expected_core:,.2f}")
+                self.log_test("Portfolio Value", "FAIL", "Total portfolio value is $0 - expected real data")
                 success = False
             
-            # Check BALANCE fund (approximate)
-            balance_total = fund_totals.get("BALANCE", 0)
-            expected_balance = expected_totals["BALANCE"]
-            if abs(balance_total - expected_balance) < 5000:  # Allow larger variance for BALANCE
-                self.log_test("BALANCE Fund Allocation", "PASS", f"BALANCE fund total: ${balance_total:,.2f}")
+            if total_pnl != 0:
+                self.log_test("Portfolio P&L", "PASS", f"Total P&L: ${total_pnl:,.2f} (not $0)")
             else:
-                self.log_test("BALANCE Fund Allocation", "FAIL", f"BALANCE fund total: ${balance_total:,.2f}, expected: ~${expected_balance:,.2f}")
+                self.log_test("Portfolio P&L", "FAIL", "Total P&L is $0 - expected real data")
                 success = False
             
-            # Check SEPARATION fund
-            separation_total = fund_totals.get("SEPARATION", 0)
-            expected_separation = expected_totals["SEPARATION"]
-            if abs(separation_total - expected_separation) < 1000:  # Allow moderate variance
-                self.log_test("SEPARATION Fund Allocation", "PASS", f"SEPARATION fund total: ${separation_total:,.2f}")
+            if active_accounts > 0:
+                self.log_test("Active Accounts", "PASS", f"Active accounts: {active_accounts}")
             else:
-                self.log_test("SEPARATION Fund Allocation", "FAIL", f"SEPARATION fund total: ${separation_total:,.2f}, expected: ${expected_separation:,.2f}")
+                self.log_test("Active Accounts", "FAIL", "No active accounts found")
                 success = False
             
+            self.log_test("Trading Analytics API", "PASS" if success else "FAIL", 
+                        "Trading Analytics endpoint accessible with real data" if success else "Trading Analytics has data issues")
             return success
             
         except Exception as e:
