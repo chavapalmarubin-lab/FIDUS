@@ -412,8 +412,8 @@ class BackendTester:
             return False
     
     def run_all_tests(self) -> Dict[str, Any]:
-        """Run all MT5 system tests"""
-        print("🚀 Starting MT5 System Backend Testing - Complete System Verification")
+        """Run all critical backend endpoint tests"""
+        print("🚀 Starting Comprehensive Backend Testing - All Critical Endpoints")
         print("=" * 80)
         
         # Authenticate first
