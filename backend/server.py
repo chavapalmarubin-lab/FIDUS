@@ -15973,10 +15973,16 @@ async def calculate_cash_flow_calendar():
         current_date = datetime.now()
         month_counter = 0  # Track which month we're on
         
+        logging.info(f"📅 Processing {len(all_schedules)} total payment schedules")
+        
         for payment in all_schedules:
             # Only include future payments
             if payment['date'] > current_date:
                 month_key = payment['date'].strftime('%Y-%m')
+                
+                # Debug: Log if payment has referral data
+                if payment.get('referral_salesperson_id'):
+                    logging.info(f"   Payment has referral: {payment.get('referral_salesperson_id')}")
                 
                 if month_key not in monthly_obligations:
                     # Determine if this is current/next month (actual) or future month (estimate)
