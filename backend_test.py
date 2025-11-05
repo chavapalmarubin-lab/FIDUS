@@ -435,7 +435,7 @@ class BackendTester:
         success_rate = (passed_tests / total_tests) * 100
         
         print("\n" + "=" * 80)
-        print("📊 MT5 SYSTEM TEST SUMMARY")
+        print("📊 COMPREHENSIVE BACKEND TEST SUMMARY")
         print("=" * 80)
         
         for test_name, result in test_results.items():
@@ -445,17 +445,18 @@ class BackendTester:
         print(f"\n🎯 Overall Success Rate: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
         
         if success_rate == 100:
-            print("🎉 MT5 SYSTEM VERIFICATION: EXCELLENT - All 11 accounts configured correctly!")
-            print("   ✅ All 4 new accounts (897590, 897589, 897591, 897599) added successfully")
-            print("   ✅ All 6 money managers including 2 new ones operational")
-            print("   ✅ Fund allocations match expected totals")
-            print("   ✅ VPS sync service handling all accounts")
+            print("🎉 BACKEND VERIFICATION: EXCELLENT - All critical endpoints working correctly!")
+            print("   ✅ Cash Flow System showing real fund revenue and MT5 profits")
+            print("   ✅ Money Managers with real performance data (not $0)")
+            print("   ✅ Trading Analytics accessible with real portfolio data")
+            print("   ✅ MT5 Accounts with real balances from 11 accounts")
+            print("   ✅ Fund Portfolio with real allocations for CORE, BALANCE, SEPARATION")
         elif success_rate >= 80:
-            print("✅ MT5 SYSTEM VERIFICATION: GOOD - Minor issues to address")
+            print("✅ BACKEND VERIFICATION: GOOD - Minor issues to address")
         elif success_rate >= 60:
-            print("⚠️ MT5 SYSTEM VERIFICATION: NEEDS ATTENTION - Several issues found")
+            print("⚠️ BACKEND VERIFICATION: NEEDS ATTENTION - Several issues found")
         else:
-            print("🚨 MT5 SYSTEM VERIFICATION: CRITICAL ISSUES - Major problems detected")
+            print("🚨 BACKEND VERIFICATION: CRITICAL ISSUES - Major problems detected")
         
         return {
             "success": success_rate >= 80,
