@@ -16033,6 +16033,57 @@ async def calculate_cash_flow_calendar():
                     'amount': payment['amount'],
                     'payment_type': payment['type']
                 })
+                
+                # NEW: Add 10% referral commission if investment has salesperson
+                if payment.get('referral_salesperson_id'):
+                    try:
+                        # Get salesperson details
+                        salesperson = await db.salespeople.find_one({
+                            'salesperson_id': payment['referral_salesperson_id']
+                        })
+                        
+                        if salesperson:
+                            salesperson_name = salesperson.get('name', 'Unknown')
+                            
+                            # Calculate 10% commission on the interest payment
+                            # For final payments, only commission on interest portion (not principal)
+                            if payment['type'] == 'final_payment':
+                                commission_base = payment.get('interest', 0)
+                            else:
+                                commission_base = payment['amount']
+                            
+                            commission_amount = commission_base * 0.10
+                            
+                            # Get client name for description
+                            client = await db.clients.find_one({
+                                '_id': ObjectId(payment['client_id'])
+                            })
+                            client_name = client.get('name', 'Unknown Client') if client else 'Unknown Client'
+                            
+                            # Create commission payment entry
+                            commission_payment = {
+                                'type': 'referral_commission',
+                                'salesperson_id': payment['referral_salesperson_id'],
+                                'salesperson_name': salesperson_name,
+                                'client_id': payment['client_id'],
+                                'client_name': client_name,
+                                'investment_id': payment.get('investment_id'),
+                                'fund_code': payment['fund_code'],
+                                'amount': commission_amount,
+                                'date': payment['date'],
+                                'payment_number': payment.get('payment_number'),
+                                'description': f"10% commission on {payment['fund_code']} interest to {client_name}"
+                            }
+                            
+                            # Add commission to month
+                            monthly_obligations[month_key]['commissions'].append(commission_payment)
+                            monthly_obligations[month_key]['referral_commissions'] += commission_amount
+                            monthly_obligations[month_key]['total_due'] += commission_amount
+                            
+                            logging.info(f"💰 Added commission: ${commission_amount:.2f} to {salesperson_name} for {client_name}'s payment")
+                    except Exception as e:
+                        logging.error(f"Error adding commission for payment: {str(e)}")
+                        # Continue without commission if error occurs
         
         # Add performance fees to all future months (even months without client payments)
         # Generate next 12 months
