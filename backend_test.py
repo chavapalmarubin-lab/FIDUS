@@ -325,35 +325,90 @@ class BackendTester:
             self.log_test("MT5 Accounts Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_mt5_config_mongodb(self) -> bool:
-        """Test 5: MT5 Account Config in MongoDB via API"""
+    def test_fund_portfolio(self) -> bool:
+        """Test 5: Fund Portfolio - should return real fund allocations for CORE, BALANCE, SEPARATION"""
         try:
-            print("\n📊 Testing MT5 MongoDB Configuration...")
+            print("\n📊 Testing Fund Portfolio...")
             
-            response = self.session.get(f"{self.base_url}/mt5/accounts/all")
+            response = self.session.get(f"{self.base_url}/fund-portfolio/overview")
             
             if response.status_code != 200:
-                self.log_test("MT5 MongoDB Config", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Fund Portfolio API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            accounts = data.get("accounts", [])
+            funds = data.get("funds", [])
             
-            if len(accounts) >= 11:
-                self.log_test("MT5 MongoDB Configuration", "PASS", f"MongoDB contains {len(accounts)} MT5 accounts")
+            # Expected funds
+            expected_funds = ["CORE", "BALANCE", "SEPARATION"]
+            found_funds = {}
+            
+            for fund in funds:
+                fund_code = fund.get("fund_code")
+                total_allocated = fund.get("total_allocated", 0)
+                mt5_accounts_count = fund.get("mt5_accounts_count", 0)
                 
-                # Check for proper manager assignments
-                accounts_with_managers = [acc for acc in accounts if acc.get("manager_name")]
-                self.log_test("MT5 Manager Assignments", "PASS" if len(accounts_with_managers) >= 8 else "FAIL", 
-                            f"{len(accounts_with_managers)} accounts have manager assignments")
-                
-                return True
+                if fund_code in expected_funds:
+                    found_funds[fund_code] = {
+                        "total_allocated": total_allocated,
+                        "mt5_accounts_count": mt5_accounts_count
+                    }
+            
+            success = True
+            
+            # Check CORE fund
+            if "CORE" in found_funds:
+                core_data = found_funds["CORE"]
+                if core_data["total_allocated"] > 0:
+                    self.log_test("CORE Fund Allocation", "PASS", 
+                                f"CORE fund: ${core_data['total_allocated']:,.2f}, {core_data['mt5_accounts_count']} accounts")
+                else:
+                    self.log_test("CORE Fund Allocation", "FAIL", "CORE fund has $0 allocation")
+                    success = False
             else:
-                self.log_test("MT5 MongoDB Configuration", "FAIL", f"MongoDB contains {len(accounts)} accounts, expected 11+")
-                return False
+                self.log_test("CORE Fund", "FAIL", "CORE fund not found")
+                success = False
+            
+            # Check BALANCE fund
+            if "BALANCE" in found_funds:
+                balance_data = found_funds["BALANCE"]
+                if balance_data["total_allocated"] > 0:
+                    self.log_test("BALANCE Fund Allocation", "PASS", 
+                                f"BALANCE fund: ${balance_data['total_allocated']:,.2f}, {balance_data['mt5_accounts_count']} accounts")
+                else:
+                    self.log_test("BALANCE Fund Allocation", "FAIL", "BALANCE fund has $0 allocation")
+                    success = False
+            else:
+                self.log_test("BALANCE Fund", "FAIL", "BALANCE fund not found")
+                success = False
+            
+            # Check SEPARATION fund
+            if "SEPARATION" in found_funds:
+                separation_data = found_funds["SEPARATION"]
+                if separation_data["total_allocated"] > 0:
+                    self.log_test("SEPARATION Fund Allocation", "PASS", 
+                                f"SEPARATION fund: ${separation_data['total_allocated']:,.2f}, {separation_data['mt5_accounts_count']} accounts")
+                else:
+                    self.log_test("SEPARATION Fund Allocation", "FAIL", "SEPARATION fund has $0 allocation")
+                    success = False
+            else:
+                self.log_test("SEPARATION Fund", "FAIL", "SEPARATION fund not found")
+                success = False
+            
+            # Check total portfolio value
+            total_portfolio = sum(fund_data["total_allocated"] for fund_data in found_funds.values())
+            if total_portfolio > 100000:  # Expect at least $100K total
+                self.log_test("Total Portfolio Value", "PASS", f"Total portfolio: ${total_portfolio:,.2f}")
+            else:
+                self.log_test("Total Portfolio Value", "FAIL", f"Total portfolio: ${total_portfolio:,.2f} - expected more substantial amount")
+                success = False
+            
+            self.log_test("Fund Portfolio API", "PASS" if success else "FAIL", 
+                        "Fund portfolio with real allocations verified" if success else "Fund portfolio has allocation issues")
+            return success
             
         except Exception as e:
-            self.log_test("Money Managers Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def run_all_tests(self) -> Dict[str, Any]:
