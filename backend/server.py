@@ -16035,14 +16035,17 @@ async def calculate_cash_flow_calendar():
                 })
                 
                 # NEW: Add 10% referral commission if investment has salesperson
-                if payment.get('referral_salesperson_id'):
+                referral_id = payment.get('referral_salesperson_id')
+                if referral_id:
                     try:
+                        logging.info(f"🔍 Processing commission for payment with referral_id: {referral_id}")
                         # Get salesperson details
                         salesperson = await db.salespeople.find_one({
-                            'salesperson_id': payment['referral_salesperson_id']
+                            'salesperson_id': referral_id
                         })
                         
                         if salesperson:
+                            logging.info(f"✅ Found salesperson: {salesperson.get('name')}")
                             salesperson_name = salesperson.get('name', 'Unknown')
                             
                             # Calculate 10% commission on the interest payment
