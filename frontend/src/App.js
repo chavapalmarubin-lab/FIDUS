@@ -5,6 +5,8 @@ import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import ProspectsPortal from "./components/ProspectsPortal";
+import Referrals from "./pages/admin/Referrals";
+import SalespersonDetail from "./pages/admin/SalespersonDetail";
 // Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
