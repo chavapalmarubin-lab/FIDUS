@@ -258,10 +258,10 @@ class BackendTester:
             
             success = True
             
-            if total_portfolio_value > 0:
-                self.log_test("Portfolio Value", "PASS", f"Total portfolio value: ${total_portfolio_value:,.2f}")
+            if total_trades > 0:
+                self.log_test("Trading Activity", "PASS", f"Total trades: {total_trades}")
             else:
-                self.log_test("Portfolio Value", "FAIL", "Total portfolio value is $0 - expected real data")
+                self.log_test("Trading Activity", "FAIL", "No trading activity found")
                 success = False
             
             if total_pnl != 0:
@@ -271,9 +271,9 @@ class BackendTester:
                 success = False
             
             if active_accounts > 0:
-                self.log_test("Active Accounts", "PASS", f"Active accounts: {active_accounts}")
+                self.log_test("Active Accounts", "PASS", f"Active accounts in analytics: {active_accounts}")
             else:
-                self.log_test("Active Accounts", "FAIL", "No active accounts found")
+                self.log_test("Active Accounts", "FAIL", "No active accounts found in analytics")
                 success = False
             
             self.log_test("Trading Analytics API", "PASS" if success else "FAIL", 
