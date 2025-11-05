@@ -24336,10 +24336,23 @@ async def get_all_client_wallets(current_user: dict = Depends(get_current_admin_
         logging.error(f"Error fetching all client wallets: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client wallets")
 
+# CORS Configuration - Allow requests from frontend domains
+cors_origins = os.environ.get('CORS_ORIGINS', '')
+if not cors_origins or cors_origins == '*':
+    # Default allowed origins if not specified
+    cors_origins = [
+        "https://fidus-investment-platform.onrender.com",
+        "https://referral-tracker-8.preview.emergentagent.com",
+        "http://localhost:3000",
+        "http://localhost:3001"
+    ]
+else:
+    cors_origins = cors_origins.split(',')
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
