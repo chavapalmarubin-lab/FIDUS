@@ -83,7 +83,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
     );
   }
 
-  if (!data || !data.salesperson) {
+  if (!data || !data.name) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <Card>
@@ -98,7 +98,8 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
     );
   }
 
-  const { salesperson, clients, investments, commissions, summary } = data;
+  // API returns data at root level, not nested under 'salesperson'
+  const salesperson = data;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
