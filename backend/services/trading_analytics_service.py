@@ -77,23 +77,27 @@ class TradingAnalyticsService:
         try:
             logger.info(f"📊 Calculating portfolio analytics for {period_days} days")
             
-            # Get all funds performance
+            # Get all funds performance (including SEPARATION)
             balance_fund = await self.get_fund_analytics("BALANCE", period_days)
             core_fund = await self.get_fund_analytics("CORE", period_days)
+            separation_fund = await self.get_fund_analytics("SEPARATION", period_days)
             
-            # Calculate portfolio totals
+            # Calculate portfolio totals (SEPARATION doesn't count toward AUM)
             total_aum = balance_fund["aum"] + core_fund["aum"]
-            total_pnl = balance_fund["total_pnl"] + core_fund["total_pnl"]
-            total_equity = balance_fund["total_equity"] + core_fund["total_equity"]
+            total_pnl = balance_fund["total_pnl"] + core_fund["total_pnl"] + separation_fund["total_pnl"]
+            total_equity = balance_fund["total_equity"] + core_fund["total_equity"] + separation_fund["total_equity"]
             
-            # Calculate blended return
-            balance_weight = balance_fund["aum"] / total_aum
-            core_weight = core_fund["aum"] / total_aum
-            blended_return = (balance_fund["weighted_return"] * balance_weight +
-                            core_fund["weighted_return"] * core_weight)
+            # Calculate blended return (excluding SEPARATION from AUM weight)
+            if total_aum > 0:
+                balance_weight = balance_fund["aum"] / total_aum
+                core_weight = core_fund["aum"] / total_aum
+                blended_return = (balance_fund["weighted_return"] * balance_weight +
+                                core_fund["weighted_return"] * core_weight)
+            else:
+                blended_return = 0
             
             # Get all managers for portfolio stats
-            all_managers = balance_fund["managers"] + core_fund["managers"]
+            all_managers = balance_fund["managers"] + core_fund["managers"] + separation_fund["managers"]
             total_managers = len(all_managers)
             active_managers = len([m for m in all_managers if m["total_pnl"] != 0])
             
