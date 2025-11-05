@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
 """
-MT5 SYSTEM BACKEND TESTING - Complete System Verification After Adding 4 New Accounts
+COMPREHENSIVE BACKEND TESTING - ALL CRITICAL ENDPOINTS
 Testing Date: December 18, 2025
 Backend URL: https://data-consistency-4.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
-Test Objectives:
-1. Verify MT5 Account Config in MongoDB - All 11 accounts should be present
-2. Test MT5 Admin Accounts API - GET /api/mt5/admin/accounts should return all 11 accounts  
-3. Test Money Managers API - GET /api/admin/money-managers should return 6 managers
-4. Verify Fund Allocations - Check fund totals for CORE, BALANCE, SEPARATION
-5. Test VPS Sync - Verify VPS sync service can handle new accounts
+CRITICAL ENDPOINTS TO TEST:
+1. Cash Flow System: GET /api/admin/cashflow/overview & GET /api/admin/cashflow/calendar
+2. Money Managers: GET /api/admin/money-managers (5 active managers expected)
+3. Trading Analytics: GET /api/trading-analytics/overview
+4. MT5 Accounts: GET /api/mt5/admin/accounts (11 accounts expected)
+5. Fund Portfolio: GET /api/fund-portfolio/overview
 
-Expected Results:
-- MongoDB should have all 11 accounts configured
-- APIs should return all accounts and managers correctly
-- All new accounts should have proper manager assignments
-- Initial allocations should match the real MT5 balances from screenshot
+EXPECTED RESULTS:
+- Cash Flow: Real fund revenue, MT5 profits (not $0)
+- Money Managers: 5 active managers with real performance data
+- Trading Analytics: Real portfolio data (not 404)
+- MT5 Accounts: 11 accounts with real balances
+- Fund Portfolio: Real fund allocations for CORE, BALANCE, SEPARATION
 
-New Accounts Added: 897590, 897589, 897591, 897599
-New Managers Added: MEXAtlantic Provider 5201, alefloreztrader
+MONGODB DATA AVAILABLE:
+- 11 MT5 accounts with real equity ($9,924, $15,576, etc.)
+- 5 active money managers with assigned accounts
+- 2 investments for Alejandro ($18K CORE, $100K BALANCE)
+- 16 referral commissions (verified working)
 """
 
 import requests
