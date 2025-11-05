@@ -16104,10 +16104,12 @@ async def calculate_cash_flow_calendar():
                     'performance_fees_is_estimate': not is_current_month,  # Flag if estimate
                     'performance_fees_note': 'Current month accrued' if is_current_month else 'Estimated (varies by performance)',
                     'principal_redemptions': 0,
+                    'referral_commissions': 0,  # NEW: 10% commissions to salespeople
                     'total_due': current_month_performance_fee,  # Only performance fees for this month
                     'days_away': (future_date - current_date).days,
                     'clients_due': [],
-                    'payments': []
+                    'payments': [],
+                    'commissions': []  # NEW: Array of commission payment objects
                 }
         
         # Calculate running balance
