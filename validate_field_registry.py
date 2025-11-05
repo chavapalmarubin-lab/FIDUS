@@ -187,8 +187,16 @@ def check_referral_system(db):
         errors.append("❌ Salvador Palma not found in salespeople collection")
     else:
         print(f"  ✅ Salvador Palma found: {salvador['salesperson_id']}")
-        print(f"     Total Sales: ${float(salvador.get('total_sales_volume', 0)):,.2f}")
-        print(f"     Commissions: ${float(salvador.get('total_commissions_earned', 0)):,.2f}")
+        
+        # Convert Decimal128 to float
+        from bson import Decimal128
+        def to_float(val):
+            if isinstance(val, Decimal128):
+                return float(val.to_decimal())
+            return float(val) if val else 0.0
+        
+        print(f"     Total Sales: ${to_float(salvador.get('total_sales_volume', 0)):,.2f}")
+        print(f"     Commissions: ${to_float(salvador.get('total_commissions_earned', 0)):,.2f}")
         print(f"     Clients: {salvador.get('total_clients_referred', 0)}")
         
         # Verify expected values
@@ -196,8 +204,8 @@ def check_referral_system(db):
         expected_commissions = 3272.27
         expected_clients = 1
         
-        actual_sales = float(salvador.get('total_sales_volume', 0))
-        actual_commissions = float(salvador.get('total_commissions_earned', 0))
+        actual_sales = to_float(salvador.get('total_sales_volume', 0))
+        actual_commissions = to_float(salvador.get('total_commissions_earned', 0))
         actual_clients = salvador.get('total_clients_referred', 0)
         
         if abs(actual_sales - expected_sales) > 0.01:
