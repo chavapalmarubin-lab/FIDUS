@@ -20407,10 +20407,17 @@ async def get_all_mt5_accounts():
             data_age_minutes = None
             
             if last_update:
-                age = now - last_update
-                data_age_minutes = round(age.total_seconds() / 60, 1)
-                is_fresh = age < stale_threshold
-                connection_status = 'active' if is_fresh else 'stale'
+                # FIXED: Make last_update timezone-aware if it's naive
+                if isinstance(last_update, datetime):
+                    if last_update.tzinfo is None:
+                        # Make naive datetime aware (assume UTC)
+                        last_update = last_update.replace(tzinfo=timezone.utc)
+                    age = now - last_update
+                    data_age_minutes = round(age.total_seconds() / 60, 1)
+                    is_fresh = age < stale_threshold
+                    connection_status = 'active' if is_fresh else 'stale'
+                else:
+                    connection_status = 'disconnected'
             else:
                 connection_status = 'disconnected'
             
