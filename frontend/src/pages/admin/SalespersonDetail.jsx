@@ -321,7 +321,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
               <CardTitle>Commission Calendar</CardTitle>
             </CardHeader>
             <CardContent>
-              <CommissionCalendar salespersonId={id} compact={false} />
+              <CommissionCalendar salespersonId={salespersonId} compact={false} />
             </CardContent>
           </Card>
         </TabsContent>
