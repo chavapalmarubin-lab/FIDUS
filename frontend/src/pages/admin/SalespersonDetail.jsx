@@ -244,7 +244,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">{formatDate(commission.commission_due_date)}</p>
+                          <p className="font-medium text-gray-900">{formatDate(commission.paymentDate)}</p>
                           <Badge
                             variant={
                               commission.status === 'paid' ? 'success' :
@@ -253,11 +253,11 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                               'default'
                             }
                           >
-                            {commission.status.replace('_', ' ')}
+                            {commission.status ? commission.status.replace('_', ' ') : 'pending'}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600 mt-1">
-                          {commission.client_name} - {commission.product_type.replace('FIDUS_', '')} - Payment #{commission.payment_number}
+                          {commission.fundType ? commission.fundType.replace('FIDUS_', '') : 'Unknown'} - {commission.paymentMonth}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
