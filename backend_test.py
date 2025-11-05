@@ -91,84 +91,59 @@ class BackendTester:
             self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
             return False
     
-    def test_mt5_admin_accounts_api(self) -> bool:
-        """Test 1: MT5 Admin Accounts API - should return all 11 accounts"""
+    def test_cashflow_system(self) -> bool:
+        """Test 1: Cash Flow System - Overview and Calendar endpoints"""
         try:
-            print("\n📊 Testing MT5 Admin Accounts API...")
+            print("\n💰 Testing Cash Flow System...")
             
-            response = self.session.get(f"{self.base_url}/mt5/admin/accounts")
+            # Test Cash Flow Overview
+            response = self.session.get(f"{self.base_url}/admin/cashflow/overview")
             
             if response.status_code != 200:
-                self.log_test("MT5 Admin Accounts API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Cash Flow Overview API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            accounts = data.get("accounts", [])
             
-            # Expected MT5 accounts (11 total: 7 original + 4 new)
-            expected_accounts = [
-                {"account": "885822", "fund_code": "CORE"},
-                {"account": "886557", "fund_code": "BALANCE"}, 
-                {"account": "886066", "fund_code": "BALANCE"},
-                {"account": "886602", "fund_code": "BALANCE"},
-                {"account": "886528", "fund_code": "SEPARATION"},
-                {"account": "891215", "fund_code": "SEPARATION"},
-                {"account": "891234", "fund_code": "CORE"},
-                # New accounts
-                {"account": "897590", "fund_code": "CORE"},
-                {"account": "897589", "fund_code": "BALANCE"},
-                {"account": "897591", "fund_code": "SEPARATION"},
-                {"account": "897599", "fund_code": "SEPARATION"}
-            ]
+            # Check for real fund revenue (not $0)
+            fund_revenue = data.get("fund_revenue", 0)
+            mt5_trading_profits = data.get("mt5_trading_profits", 0)
+            separation_interest = data.get("separation_interest", 0)
             
-            # Check total count
-            if len(accounts) == 11:
-                self.log_test("MT5 Account Count", "PASS", f"Found expected 11 MT5 accounts")
+            success = True
+            
+            if fund_revenue != 0:
+                self.log_test("Fund Revenue", "PASS", f"Fund revenue: ${fund_revenue:,.2f} (not $0)")
             else:
-                self.log_test("MT5 Account Count", "FAIL", f"Expected 11 accounts, found {len(accounts)}")
-                return False
+                self.log_test("Fund Revenue", "FAIL", "Fund revenue is $0 - expected real data")
+                success = False
             
-            # Check specific accounts exist
-            found_accounts = {acc.get("account"): acc.get("fund_code") for acc in accounts}
-            missing_accounts = []
-            wrong_fund_codes = []
-            
-            for expected in expected_accounts:
-                account_num = expected["account"]
-                expected_fund = expected["fund_code"]
-                
-                if account_num not in found_accounts:
-                    missing_accounts.append(account_num)
-                elif found_accounts[account_num] != expected_fund:
-                    wrong_fund_codes.append({
-                        "account": account_num,
-                        "expected": expected_fund,
-                        "actual": found_accounts[account_num]
-                    })
-            
-            if missing_accounts:
-                self.log_test("MT5 Account Verification", "FAIL", f"Missing accounts: {missing_accounts}")
-                return False
-                
-            if wrong_fund_codes:
-                self.log_test("MT5 Fund Code Verification", "FAIL", f"Wrong fund codes: {wrong_fund_codes}")
-                return False
-            
-            # Check new accounts specifically
-            new_accounts = ["897590", "897589", "897591", "897599"]
-            found_new = [acc for acc in found_accounts.keys() if acc in new_accounts]
-            
-            if len(found_new) == 4:
-                self.log_test("New MT5 Accounts", "PASS", f"All 4 new accounts found: {found_new}")
+            if mt5_trading_profits != 0:
+                self.log_test("MT5 Trading Profits", "PASS", f"MT5 profits: ${mt5_trading_profits:,.2f} (not $0)")
             else:
-                self.log_test("New MT5 Accounts", "FAIL", f"Expected 4 new accounts, found {len(found_new)}: {found_new}")
-                return False
+                self.log_test("MT5 Trading Profits", "FAIL", "MT5 trading profits is $0 - expected real data")
+                success = False
             
-            self.log_test("MT5 Admin Accounts API", "PASS", "All MT5 accounts verified successfully")
-            return True
+            # Test Cash Flow Calendar
+            calendar_response = self.session.get(f"{self.base_url}/admin/cashflow/calendar")
+            
+            if calendar_response.status_code != 200:
+                self.log_test("Cash Flow Calendar API", "FAIL", f"HTTP {calendar_response.status_code}: {calendar_response.text}")
+                success = False
+            else:
+                calendar_data = calendar_response.json()
+                monthly_obligations = calendar_data.get("monthly_obligations", [])
+                
+                if len(monthly_obligations) > 0:
+                    self.log_test("Cash Flow Calendar", "PASS", f"Calendar has {len(monthly_obligations)} monthly obligations")
+                else:
+                    self.log_test("Cash Flow Calendar", "FAIL", "Calendar has no monthly obligations")
+                    success = False
+            
+            return success
             
         except Exception as e:
-            self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Cash Flow System Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_money_managers_api(self) -> bool:
