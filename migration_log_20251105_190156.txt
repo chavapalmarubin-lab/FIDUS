@@ -1,0 +1,39 @@
+[2025-11-05T19:01:55.297428] ✅ Connected to MongoDB: fidus_production
+[2025-11-05T19:01:55.297443] 
+============================================================
+[2025-11-05T19:01:55.297448] PHASE 2: DATABASE MIGRATION
+[2025-11-05T19:01:55.297452] ============================================================
+[2025-11-05T19:01:55.297456] Mode: DRY RUN
+[2025-11-05T19:01:55.297460] Database: fidus_production
+[2025-11-05T19:01:56.040493] 📊 Pre-migration counts: {'mt5_accounts': 11, 'money_managers': 7, 'investments': 3, 'clients': 1, 'salespeople': 3, 'referral_commissions': 16}
+[2025-11-05T19:01:56.040512] 
+============================================================
+[2025-11-05T19:01:56.040517] MIGRATION 1: Remove duplicate manager_name fields
+[2025-11-05T19:01:56.040521] ============================================================
+[2025-11-05T19:01:56.072429] 📊 Found 0 mt5_accounts with manager_name field
+[2025-11-05T19:01:56.104326] 📊 Found 1 money_managers with manager_name field
+[2025-11-05T19:01:56.104341] 🔍 DRY RUN - Would remove manager_name fields
+[2025-11-05T19:01:56.104349] 
+============================================================
+[2025-11-05T19:01:56.104353] MIGRATION 2: Remove duplicate amount, investment_date, referred_by fields
+[2025-11-05T19:01:56.104356] ============================================================
+[2025-11-05T19:01:56.203302] 📊 Found 1 investments with 'amount' field
+[2025-11-05T19:01:56.203325] 📊 Found 1 investments with 'investment_date' field
+[2025-11-05T19:01:56.203330] 📊 Found 3 investments with 'referred_by' field
+[2025-11-05T19:01:56.203335] 🔍 DRY RUN - Would remove deprecated fields
+[2025-11-05T19:01:56.203343] 
+============================================================
+[2025-11-05T19:01:56.203347] MIGRATION 3: Remove deprecated last_sync field
+[2025-11-05T19:01:56.203351] ============================================================
+[2025-11-05T19:01:56.914407] 📊 Found 11 mt5_accounts with 'last_sync' field
+[2025-11-05T19:01:56.914423] 🔍 DRY RUN - Would remove last_sync fields
+[2025-11-05T19:01:56.914430] 
+============================================================
+[2025-11-05T19:01:56.914435] MIGRATION SUMMARY
+[2025-11-05T19:01:56.914439] ============================================================
+[2025-11-05T19:01:56.914444] ✅ Migration 1
+[2025-11-05T19:01:56.914449] ✅ Migration 2
+[2025-11-05T19:01:56.914452] ✅ Migration 3
+[2025-11-05T19:01:56.914459] 
+✅ DRY RUN COMPLETE - All migrations validated
+[2025-11-05T19:01:56.914463]    Run with --execute to apply changes
