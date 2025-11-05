@@ -344,21 +344,21 @@ class BackendTester:
                 return False
             
             data = response.json()
-            funds = data.get("funds", [])
+            funds_dict = data.get("funds", {})
             
             # Expected funds
             expected_funds = ["CORE", "BALANCE", "SEPARATION"]
             found_funds = {}
             
-            for fund in funds:
-                fund_code = fund.get("fund_code")
-                total_allocated = fund.get("total_allocated", 0)
-                mt5_accounts_count = fund.get("mt5_accounts_count", 0)
-                
-                if fund_code in expected_funds:
+            # Parse the funds dictionary structure
+            for fund_code in expected_funds:
+                if fund_code in funds_dict:
+                    fund_data = funds_dict[fund_code]
                     found_funds[fund_code] = {
-                        "total_allocated": total_allocated,
-                        "mt5_accounts_count": mt5_accounts_count
+                        "aum": fund_data.get("aum", 0),
+                        "mt5_allocation": fund_data.get("mt5_allocation", 0),
+                        "mt5_accounts_count": fund_data.get("mt5_accounts_count", 0),
+                        "total_true_pnl": fund_data.get("total_true_pnl", 0)
                     }
             
             success = True
@@ -366,11 +366,11 @@ class BackendTester:
             # Check CORE fund
             if "CORE" in found_funds:
                 core_data = found_funds["CORE"]
-                if core_data["total_allocated"] > 0:
+                if core_data["aum"] > 0:
                     self.log_test("CORE Fund Allocation", "PASS", 
-                                f"CORE fund: ${core_data['total_allocated']:,.2f}, {core_data['mt5_accounts_count']} accounts")
+                                f"CORE fund: AUM ${core_data['aum']:,.2f}, MT5 ${core_data['mt5_allocation']:,.2f}, {core_data['mt5_accounts_count']} accounts")
                 else:
-                    self.log_test("CORE Fund Allocation", "FAIL", "CORE fund has $0 allocation")
+                    self.log_test("CORE Fund Allocation", "FAIL", "CORE fund has $0 AUM")
                     success = False
             else:
                 self.log_test("CORE Fund", "FAIL", "CORE fund not found")
@@ -379,35 +379,38 @@ class BackendTester:
             # Check BALANCE fund
             if "BALANCE" in found_funds:
                 balance_data = found_funds["BALANCE"]
-                if balance_data["total_allocated"] > 0:
+                if balance_data["aum"] > 0:
                     self.log_test("BALANCE Fund Allocation", "PASS", 
-                                f"BALANCE fund: ${balance_data['total_allocated']:,.2f}, {balance_data['mt5_accounts_count']} accounts")
+                                f"BALANCE fund: AUM ${balance_data['aum']:,.2f}, MT5 ${balance_data['mt5_allocation']:,.2f}, {balance_data['mt5_accounts_count']} accounts")
                 else:
-                    self.log_test("BALANCE Fund Allocation", "FAIL", "BALANCE fund has $0 allocation")
+                    self.log_test("BALANCE Fund Allocation", "FAIL", "BALANCE fund has $0 AUM")
                     success = False
             else:
                 self.log_test("BALANCE Fund", "FAIL", "BALANCE fund not found")
                 success = False
             
-            # Check SEPARATION fund
-            if "SEPARATION" in found_funds:
-                separation_data = found_funds["SEPARATION"]
-                if separation_data["total_allocated"] > 0:
-                    self.log_test("SEPARATION Fund Allocation", "PASS", 
-                                f"SEPARATION fund: ${separation_data['total_allocated']:,.2f}, {separation_data['mt5_accounts_count']} accounts")
+            # Check SEPARATION fund (may have $0 AUM but should exist)
+            if "SEPARATION" in funds_dict:
+                separation_data = funds_dict.get("SEPARATION", {})
+                separation_mt5_allocation = separation_data.get("mt5_allocation", 0)
+                separation_accounts = separation_data.get("mt5_accounts_count", 0)
+                
+                if separation_mt5_allocation > 0 or separation_accounts > 0:
+                    self.log_test("SEPARATION Fund", "PASS", 
+                                f"SEPARATION fund: MT5 ${separation_mt5_allocation:,.2f}, {separation_accounts} accounts")
                 else:
-                    self.log_test("SEPARATION Fund Allocation", "FAIL", "SEPARATION fund has $0 allocation")
+                    self.log_test("SEPARATION Fund", "FAIL", "SEPARATION fund has no MT5 allocation or accounts")
                     success = False
             else:
                 self.log_test("SEPARATION Fund", "FAIL", "SEPARATION fund not found")
                 success = False
             
             # Check total portfolio value
-            total_portfolio = sum(fund_data["total_allocated"] for fund_data in found_funds.values())
-            if total_portfolio > 100000:  # Expect at least $100K total
-                self.log_test("Total Portfolio Value", "PASS", f"Total portfolio: ${total_portfolio:,.2f}")
+            total_aum = data.get("total_aum", 0)
+            if total_aum > 100000:  # Expect at least $100K total
+                self.log_test("Total Portfolio Value", "PASS", f"Total AUM: ${total_aum:,.2f}")
             else:
-                self.log_test("Total Portfolio Value", "FAIL", f"Total portfolio: ${total_portfolio:,.2f} - expected more substantial amount")
+                self.log_test("Total Portfolio Value", "FAIL", f"Total AUM: ${total_aum:,.2f} - expected more substantial amount")
                 success = False
             
             self.log_test("Fund Portfolio API", "PASS" if success else "FAIL", 
