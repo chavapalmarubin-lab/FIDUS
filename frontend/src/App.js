@@ -367,6 +367,16 @@ function App() {
             element={<ProspectsPortal />} 
           />
           
+          {/* REFERRALS ROUTES: Admin referral system */}
+          <Route 
+            path="/referrals" 
+            element={<Referrals />} 
+          />
+          <Route 
+            path="/referrals/salespeople/:salespersonId" 
+            element={<SalespersonDetail />} 
+          />
+          
           {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}
           <Route 
             path="/admin" 
