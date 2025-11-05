@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -8,7 +9,11 @@ import CommissionCalendar from '../../components/referrals/CommissionCalendar';
 import ApproveModal from '../../components/referrals/ApproveModal';
 import MarkPaidModal from '../../components/referrals/MarkPaidModal';
 
-const SalespersonDetail = ({ salespersonId, onBack }) => {
+const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
+  // Get salesperson ID from URL parameter or prop
+  const { salespersonId: urlSalespersonId } = useParams();
+  const navigate = useNavigate();
+  const salespersonId = urlSalespersonId || propSalespersonId;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCommission, setSelectedCommission] = useState(null);
