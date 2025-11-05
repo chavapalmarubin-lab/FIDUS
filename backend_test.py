@@ -422,11 +422,11 @@ class BackendTester:
         
         # Run all tests
         test_results = {
-            "mt5_admin_accounts_api": self.test_mt5_admin_accounts_api(),
+            "cashflow_system": self.test_cashflow_system(),
             "money_managers_api": self.test_money_managers_api(),
-            "fund_allocations": self.test_fund_allocations(),
-            "vps_sync_capability": self.test_vps_sync_capability(),
-            "mt5_config_mongodb": self.test_mt5_config_mongodb()
+            "trading_analytics": self.test_trading_analytics(),
+            "mt5_accounts": self.test_mt5_accounts(),
+            "fund_portfolio": self.test_fund_portfolio()
         }
         
         # Calculate summary
