@@ -261,7 +261,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <p className="font-semibold text-gray-900">{formatCurrency(commission.commission_amount)}</p>
+                        <p className="font-semibold text-gray-900">{formatCurrency(commission.commissionAmount)}</p>
                         {commission.status === 'pending' && (
                           <Button size="sm" onClick={() => handleApprove(commission)}>
                             Approve
