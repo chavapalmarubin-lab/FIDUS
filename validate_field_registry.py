@@ -270,7 +270,7 @@ def main():
     
     # Test connection
     db = test_connection()
-    if not db:
+    if db is None:
         print("\n❌ VALIDATION FAILED: Cannot connect to database")
         return 1
     
