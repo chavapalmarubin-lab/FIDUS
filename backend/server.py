@@ -19343,9 +19343,12 @@ async def get_all_rebates():
 # Cash Flow Management Endpoints
 @api_router.get("/admin/cashflow/overview")
 async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str = "all"):
-    """Get proper fund cash flow overview based on fund accounting principles"""
+    """
+    ⚠️ REDIRECTED: This endpoint now uses the working /cashflow/complete endpoint
+    Old version had hardcoded data - now using real MongoDB data
+    """
     try:
-        logging.info(f"Getting cash flow overview for timeframe: {timeframe}, fund: {fund}")
+        logging.info(f"🔄 Redirecting /cashflow/overview to /cashflow/complete (timeframe: {timeframe}, fund: {fund})")
         
         # Calculate timeframe dates
         from datetime import datetime, timedelta
