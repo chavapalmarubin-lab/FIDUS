@@ -19149,10 +19149,11 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         mt5_cursor = db.mt5_accounts.find({})
         mt5_accounts = await mt5_cursor.to_list(length=None)
         
-        # Account 886528 is the separation/interest account  
+        # Separation accounts are 897591 and 897599 (per SYSTEM_MASTER.md Section 4.1)
         separation_equity = 0
         trading_accounts = []
         total_trading_equity = 0
+        separation_account_numbers = [897591, 897599]
         
         # CRITICAL: Track initial deposits to calculate actual P&L
         total_initial_deposits = 0
@@ -19161,13 +19162,12 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         for acc in mt5_accounts:
             account_num = acc.get("account", acc.get("account_id", acc.get("mt5_login")))
             
-            if str(account_num) == "886528" or account_num == 886528:
-                # SPECIAL CASE: Separation account (886528)
-                # After emergency manual update, use BALANCE field as it has the correct value
-                # Balance field contains the actual accumulated interest: $3,927.41
-                separation_equity = float(acc.get("balance", acc.get("equity", 0)))
-                logging.info(f"   💰 Separation Interest (886528) BALANCE: ${separation_equity:.2f}")
-                logging.info(f"      (Using BALANCE field due to emergency update - equity field is stale)")
+            if account_num in separation_account_numbers or str(account_num) in [str(n) for n in separation_account_numbers]:
+                # SPECIAL CASE: Separation accounts (897591, 897599)
+                # Use BALANCE field for accumulated interest
+                acc_balance = float(acc.get("balance", acc.get("equity", 0)))
+                separation_equity += acc_balance
+                logging.info(f"   💰 Separation Account {account_num} BALANCE: ${acc_balance:.2f}")
             else:
                 # Trading accounts - Calculate actual P&L
                 initial_deposit = float(acc.get("target_amount", 0))  # Initial principal
