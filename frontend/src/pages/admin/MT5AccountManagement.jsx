@@ -59,7 +59,7 @@ const MT5AccountManagement = () => {
     is_active: true
   });
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://referral-rescue.preview.emergentagent.com';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://fidus-integration-1.preview.emergentagent.com';
 
   const loadAccounts = async () => {
     setLoading(true);

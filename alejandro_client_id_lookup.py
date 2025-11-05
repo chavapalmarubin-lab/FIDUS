@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://referral-rescue.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-integration-1.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv
