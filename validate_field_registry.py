@@ -9,7 +9,14 @@ Usage:
 
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 from pymongo import MongoClient
+
+# Load environment variables
+backend_env = Path(__file__).parent / "backend" / ".env"
+if backend_env.exists():
+    load_dotenv(backend_env)
 from backend.validation.field_registry import (
     validate_manager_name,
     validate_fund_type,
