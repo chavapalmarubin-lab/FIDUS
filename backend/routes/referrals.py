@@ -375,24 +375,48 @@ async def create_salesperson(data: SalespersonCreate):
 async def get_salesperson_dashboard(salesperson_id: str):
     """Get complete salesperson dashboard with details"""
     try:
-        salesperson_id_obj = ObjectId(salesperson_id) if not isinstance(salesperson_id, ObjectId) else salesperson_id
-        salesperson = await db.salespeople.find_one({"_id": salesperson_id_obj})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid salesperson ID format: {str(e)}")
-    
-    if not salesperson:
-        raise HTTPException(status_code=404, detail="Salesperson not found")
-    
-    # Get all clients referred
-    clients = await db.clients.find({"referred_by": ObjectId(salesperson_id)}).to_list(None)
-    
-    # Get all investments
-    investments = await db.investments.find({"referred_by": ObjectId(salesperson_id)}).to_list(None)
-    
-    # Get all commissions
-    all_commissions = await db.referral_commissions.find(
-        {"salesperson_id": ObjectId(salesperson_id)}
-    ).sort("commission_due_date", 1).to_list(None)
+        # Try to find salesperson by either salesperson_id field or MongoDB _id
+        salesperson = None
+        
+        # First try by salesperson_id field (e.g., "sp_123")
+        salesperson = await db.salespeople.find_one({"salesperson_id": salesperson_id})
+        
+        # If not found and it looks like an ObjectId, try by _id
+        if not salesperson:
+            try:
+                salesperson_id_obj = ObjectId(salesperson_id)
+                salesperson = await db.salespeople.find_one({"_id": salesperson_id_obj})
+            except:
+                pass
+                
+        if not salesperson:
+            raise HTTPException(status_code=404, detail="Salesperson not found")
+        
+        # Use the salesperson_id field for queries, or fall back to _id
+        query_id = salesperson.get('salesperson_id') or str(salesperson['_id'])
+        
+        # Get all clients referred (using referral_salesperson_id on investments)
+        client_ids = set()
+        investments = await db.investments.find({"referral_salesperson_id": query_id}).to_list(None)
+        for inv in investments:
+            client_id = inv.get('client_id')
+            if client_id:
+                client_ids.add(str(client_id))
+        
+        # Get client details
+        clients = []
+        for client_id in client_ids:
+            try:
+                client = await db.clients.find_one({"_id": ObjectId(client_id)})
+                if client:
+                    clients.append(client)
+            except:
+                pass
+        
+        # Get all commissions for this salesperson
+        all_commissions = await db.referral_commissions.find(
+            {"salesperson_id": query_id}
+        ).sort("payment_date", 1).to_list(None)
     
     # Calculate upcoming commissions (next 90 days)
     today = datetime.now(timezone.utc)
