@@ -19278,7 +19278,12 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
                 "trading_return_pct": round((mt5_trading_pnl / total_initial_deposits * 100), 4) if total_initial_deposits > 0 else 0
             },
             "account_breakdown": {
-                "separation_accounts": [{"account": 886528, "balance": separation_equity}],
+                "separation_accounts": [
+                    {"account": acc_num, "balance": float(a.get("balance", 0))} 
+                    for a in mt5_accounts 
+                    for acc_num in [a.get("account", a.get("account_id"))]
+                    if acc_num in [897591, 897599]
+                ],
                 "trading_accounts": trading_accounts,
                 "total_accounts": len(mt5_accounts)
             },
