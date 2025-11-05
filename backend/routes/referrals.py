@@ -211,8 +211,11 @@ async def generate_payment_schedule_for_investment(investment: dict) -> list:
 async def get_referrals_overview():
     """Get overview statistics for referral system"""
     try:
-        # Count active salespeople
+        from bson import Decimal128
+        
+        # Count active salespeople  
         active_salespeople = await db.salespeople.count_documents({"active": True})
+        total_salespeople = await db.salespeople.count_documents({})
         
         # Calculate total sales volume from all salespeople
         pipeline = [
@@ -223,28 +226,67 @@ async def get_referrals_overview():
             }}
         ]
         sales_result = await db.salespeople.aggregate(pipeline).to_list(1)
-        total_sales = float(sales_result[0]["total_sales"]) if sales_result and sales_result[0].get("total_sales") else 0
+        
+        if sales_result and sales_result[0].get("total_sales"):
+            total_sales_raw = sales_result[0]["total_sales"]
+            if isinstance(total_sales_raw, Decimal128):
+                total_sales = float(total_sales_raw.to_decimal())
+            else:
+                total_sales = float(total_sales_raw)
+        else:
+            total_sales = 0
         
         # Calculate total commissions (all statuses)
         commission_pipeline = [
             {"$group": {
                 "_id": None,
-                "total": {"$sum": "$commission_amount"}
+                "total": {"$sum": "$commission_amount"},
+                "pending_total": {
+                    "$sum": {
+                        "$cond": [
+                            {"$in": ["$status", ["pending", "ready_to_pay", "approved"]]},
+                            "$commission_amount",
+                            0
+                        ]
+                    }
+                }
             }}
         ]
         commission_result = await db.referral_commissions.aggregate(commission_pipeline).to_list(1)
-        total_commissions = float(commission_result[0]["total"]) if commission_result and commission_result[0].get("total") else 0
         
-        # Count pending commissions
-        pending_commissions = await db.referral_commissions.count_documents({
-            "status": {"$in": ["pending", "ready_to_pay", "approved"]}
-        })
+        if commission_result and commission_result[0].get("total"):
+            total_comm_raw = commission_result[0]["total"]
+            if isinstance(total_comm_raw, Decimal128):
+                total_commissions = float(total_comm_raw.to_decimal())
+            else:
+                total_commissions = float(total_comm_raw)
+        else:
+            total_commissions = 0
+            
+        if commission_result and commission_result[0].get("pending_total"):
+            pending_comm_raw = commission_result[0]["pending_total"]
+            if isinstance(pending_comm_raw, Decimal128):
+                pending_commissions = float(pending_comm_raw.to_decimal())
+            else:
+                pending_commissions = float(pending_comm_raw)
+        else:
+            pending_commissions = 0
+        
+        # Get top salespeople
+        top_salespeople = []
+        salespeople = await db.salespeople.find({"active": True}).sort("total_sales_volume", -1).limit(10).to_list(10)
+        
+        for sp in salespeople:
+            sp_data = transform_salesperson(sp)
+            top_salespeople.append(sp_data)
         
         return {
-            "active_salespeople": active_salespeople,
-            "total_sales_volume": total_sales,
-            "total_commissions": total_commissions,
-            "pending_commissions": pending_commissions
+            "totalSalespeople": total_salespeople,
+            "activeSalespeople": active_salespeople,
+            "totalSalesVolume": total_sales,
+            "totalCommissions": total_commissions,
+            "pendingCommissions": pending_commissions,
+            "topSalespeople": top_salespeople
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting overview: {str(e)}")
