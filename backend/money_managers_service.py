@@ -233,7 +233,10 @@ class MoneyManagersService:
                     # Continue to next manager instead of failing completely
                     continue
             
-            return result_managers
+            # Transform all managers to API format (camelCase)
+            transformed_managers = [transform_manager(mgr) for mgr in result_managers]
+            
+            return transformed_managers
             
         except Exception as e:
             logger.error(f"Failed to get all managers: {str(e)}")
