@@ -266,40 +266,63 @@ class BackendTester:
             self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_vps_sync_capability(self) -> bool:
-        """Test 4: VPS Sync - verify sync service can handle new accounts"""
+    def test_mt5_accounts(self) -> bool:
+        """Test 4: MT5 Accounts - should return 11 accounts with real balances"""
         try:
-            print("\n🔄 Testing VPS Sync Capability...")
+            print("\n🏦 Testing MT5 Accounts...")
             
-            response = self.session.get(f"{self.base_url}/mt5/status")
+            response = self.session.get(f"{self.base_url}/mt5/admin/accounts")
             
             if response.status_code != 200:
-                self.log_test("MT5 Status API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Admin Accounts API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            bridge_status = data.get("bridge_status", "unknown")
+            accounts = data.get("accounts", [])
             
-            success = True
-            
-            if bridge_status in ["connected", "active", "online"]:
-                self.log_test("VPS Bridge Status", "PASS", f"MT5 bridge status: {bridge_status}")
+            # Check total count
+            if len(accounts) == 11:
+                self.log_test("MT5 Account Count", "PASS", f"Found expected 11 MT5 accounts")
             else:
-                self.log_test("VPS Bridge Status", "FAIL", f"MT5 bridge status: {bridge_status}")
-                success = False
+                self.log_test("MT5 Account Count", "FAIL", f"Expected 11 accounts, found {len(accounts)}")
+                return False
             
-            # Check if sync can handle multiple accounts
-            total_accounts = data.get("total_accounts", 0)
-            if total_accounts >= 11:
-                self.log_test("VPS Multi-Account Sync", "PASS", f"VPS sync handling {total_accounts} accounts")
+            # Check for real balances (not all $0)
+            accounts_with_real_balance = 0
+            total_equity = 0
+            
+            for acc in accounts:
+                equity = acc.get("equity", 0) or acc.get("balance", 0)
+                account_num = acc.get("account", "Unknown")
+                
+                if equity > 0:
+                    accounts_with_real_balance += 1
+                    total_equity += equity
+                
+                self.log_test(f"Account {account_num} Balance", 
+                            "PASS" if equity > 0 else "FAIL",
+                            f"Equity: ${equity:,.2f}")
+            
+            if accounts_with_real_balance >= 8:  # At least 8 out of 11 should have real balances
+                self.log_test("Accounts Real Balances", "PASS", 
+                            f"{accounts_with_real_balance}/11 accounts have real balances")
             else:
-                self.log_test("VPS Multi-Account Sync", "FAIL", f"VPS sync handling {total_accounts} accounts, expected 11+")
-                success = False
+                self.log_test("Accounts Real Balances", "FAIL", 
+                            f"Only {accounts_with_real_balance}/11 accounts have real balances")
+                return False
             
-            return success
+            # Check total equity is substantial
+            if total_equity > 50000:  # Expect at least $50K total
+                self.log_test("Total MT5 Equity", "PASS", f"Total equity: ${total_equity:,.2f}")
+            else:
+                self.log_test("Total MT5 Equity", "FAIL", f"Total equity: ${total_equity:,.2f} - expected more substantial amounts")
+                return False
+            
+            self.log_test("MT5 Admin Accounts API", "PASS", "MT5 accounts with real balances verified")
+            return True
             
         except Exception as e:
-            self.log_test("VPS Sync Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("MT5 Accounts Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_mt5_config_mongodb(self) -> bool:
