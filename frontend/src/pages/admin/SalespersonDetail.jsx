@@ -301,7 +301,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            {formatCurrency(client.total_commissions_generated)}
+                            {formatCurrency(client.totalCommissionsGenerated)}
                           </p>
                           <p className="text-xs text-gray-500">commissions generated</p>
                         </div>
