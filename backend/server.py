@@ -19397,7 +19397,9 @@ async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str =
         }
         # ✅ Using real MongoDB data from /cashflow/complete endpoint
         
-        # Use the already imported MT5 service for real-time data
+    except Exception as e:
+        logging.error(f"Get cash flow overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch cash flow overview: {str(e)}")
         # (mt5_service is already imported at the top of the file)
         
         for client in all_clients:
