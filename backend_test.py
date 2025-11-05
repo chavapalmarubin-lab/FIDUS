@@ -180,26 +180,27 @@ class BackendTester:
                 self.log_test("Money Managers Count", "PASS", f"Found expected 5 money managers")
             else:
                 self.log_test("Money Managers Count", "FAIL", f"Expected 5 managers, found {len(managers)}")
-                print(f"   Found managers: {[mgr.get('name') or mgr.get('manager_name') for mgr in managers]}")
+                print(f"   Found managers: {[mgr.get('name') for mgr in managers]}")
                 return False
             
-            # Check for real performance data (not $0)
+            # Check for real performance data (using correct field names)
             managers_with_real_data = 0
-            total_pnl = 0
+            total_current_profit = 0
             
             for mgr in managers:
-                pnl = mgr.get("total_pnl", 0) or mgr.get("profit_loss", 0)
-                equity = mgr.get("total_equity", 0) or mgr.get("current_equity", 0)
-                initial_allocation = mgr.get("initial_allocation", 0)
+                current_month_profit = mgr.get("currentMonthProfit", 0)
+                assigned_accounts = mgr.get("assignedAccounts", [])
+                performance_fee_rate = mgr.get("performanceFeeRate", 0)
                 
-                if pnl != 0 or equity > 0 or initial_allocation > 0:
+                # Manager has real data if they have profit or assigned accounts
+                if current_month_profit != 0 or len(assigned_accounts) > 0:
                     managers_with_real_data += 1
-                    total_pnl += pnl
+                    total_current_profit += current_month_profit
                 
-                manager_name = mgr.get("name") or mgr.get("manager_name", "Unknown")
+                manager_name = mgr.get("name", "Unknown")
                 self.log_test(f"Manager {manager_name} Data", 
-                            "PASS" if (pnl != 0 or equity > 0) else "FAIL",
-                            f"P&L: ${pnl:,.2f}, Equity: ${equity:,.2f}, Allocation: ${initial_allocation:,.2f}")
+                            "PASS" if (current_month_profit != 0 or len(assigned_accounts) > 0) else "FAIL",
+                            f"Current Profit: ${current_month_profit:,.2f}, Accounts: {len(assigned_accounts)}, Fee Rate: {performance_fee_rate*100}%")
             
             if managers_with_real_data >= 4:  # At least 4 out of 5 should have real data
                 self.log_test("Managers Real Performance Data", "PASS", 
@@ -209,11 +210,11 @@ class BackendTester:
                             f"Only {managers_with_real_data}/5 managers have real data")
                 return False
             
-            # Check total P&L is not $0
-            if total_pnl != 0:
-                self.log_test("Total Manager P&L", "PASS", f"Total P&L: ${total_pnl:,.2f} (not $0)")
+            # Check total current month profit is not $0
+            if total_current_profit != 0:
+                self.log_test("Total Manager Current Profit", "PASS", f"Total current month profit: ${total_current_profit:,.2f} (not $0)")
             else:
-                self.log_test("Total Manager P&L", "FAIL", "Total P&L is $0 - expected real data")
+                self.log_test("Total Manager Current Profit", "FAIL", "Total current month profit is $0 - expected real data")
                 return False
             
             self.log_test("Money Managers API", "PASS", "Money managers with real performance data verified")
