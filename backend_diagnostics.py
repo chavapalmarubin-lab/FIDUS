@@ -11,7 +11,7 @@ from datetime import datetime
 
 class BackendDiagnostics:
     def __init__(self):
-        self.base_url = "https://referral-tracker-8.preview.emergentagent.com/api"
+        self.base_url = "https://data-consistency-4.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

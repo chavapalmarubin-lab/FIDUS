@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Backend URL Configuration
-BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
+BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com/api"
 
 class MT5InvestmentTester:
     def __init__(self):

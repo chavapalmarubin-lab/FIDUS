@@ -2,7 +2,7 @@
 """
 COMPREHENSIVE SYSTEM VERIFICATION - AUTO-HEALING & ALL SYSTEMS
 Testing Date: December 18, 2025
-Backend URL: https://referral-tracker-8.preview.emergentagent.com/api
+Backend URL: https://data-consistency-4.preview.emergentagent.com/api
 Auth: Admin (username: admin, password: password123)
 
 Test Suite:
@@ -31,7 +31,7 @@ from typing import Dict, Any, List, Optional
 
 class ComprehensiveSystemVerifier:
     def __init__(self):
-        self.base_url = "https://referral-tracker-8.preview.emergentagent.com/api"
+        self.base_url = "https://data-consistency-4.preview.emergentagent.com/api"
         self.mt5_bridge_url = "http://92.118.45.135:8000/api/mt5/bridge/health"
         self.session = requests.Session()
         self.admin_token = None

@@ -24,7 +24,7 @@ from datetime import datetime
 import sys
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com"
+BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com"
 BASE_API_URL = f"{BACKEND_URL}/api"
 
 def print_header(title):

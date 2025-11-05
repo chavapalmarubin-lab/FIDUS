@@ -26,7 +26,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
+BACKEND_URL = "https://data-consistency-4.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {

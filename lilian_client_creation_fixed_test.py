@@ -18,7 +18,7 @@ import time
 
 # Configuration - Use PRODUCTION environment as specified in review
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://referral-tracker-8.preview.emergentagent.com/api"
+PREVIEW_URL = "https://data-consistency-4.preview.emergentagent.com/api"
 
 BACKEND_URLS = {
     "production": PRODUCTION_URL,

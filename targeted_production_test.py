@@ -7,7 +7,7 @@ import requests
 import json
 
 class TargetedTester:
-    def __init__(self, base_url="https://referral-tracker-8.preview.emergentagent.com"):
+    def __init__(self, base_url="https://data-consistency-4.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.client_token = None
