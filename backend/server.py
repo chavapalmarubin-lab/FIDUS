@@ -16015,9 +16015,9 @@ async def calculate_cash_flow_calendar():
                     else:
                         monthly_obligations[month_key]['dynamic_interest'] += payment['amount']
                 
-                # Add client info
+                # Add client info (convert ObjectId to string for JSON serialization)
                 monthly_obligations[month_key]['clients_due'].append({
-                    'client_id': payment['client_id'],
+                    'client_id': str(payment['client_id']),
                     'fund_code': payment['fund_code'],
                     'amount': payment['amount'],
                     'payment_type': payment['type']
