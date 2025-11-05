@@ -188,8 +188,8 @@ class MoneyManagersService:
             List of manager documents with calculated performance
         """
         try:
-            # Get all managers from database
-            managers_cursor = self.db.money_managers.find({"status": {"$ne": "deleted"}})
+            # FILTER: Get ONLY active managers (hides GoldenTrade and other inactive managers)
+            managers_cursor = self.db.money_managers.find({"status": "active"})
             managers = await managers_cursor.to_list(length=None)
             
             # Calculate performance for each manager
