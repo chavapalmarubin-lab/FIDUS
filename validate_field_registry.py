@@ -227,8 +227,13 @@ def check_referral_system(db):
         errors.append(f"❌ Expected 2 investments for Alejandro, found {len(alejandro_investments)}")
     else:
         print(f"  ✅ Found {len(alejandro_investments)} investments for Alejandro")
+        from bson import Decimal128
+        def to_float(val):
+            if isinstance(val, Decimal128):
+                return float(val.to_decimal())
+            return float(val) if val else 0.0
         for inv in alejandro_investments:
-            print(f"     {inv.get('fund_type')}: ${float(inv.get('principal_amount', 0)):,.2f}")
+            print(f"     {inv.get('fund_type')}: ${to_float(inv.get('principal_amount', 0)):,.2f}")
     
     # Check commissions
     print("\n📊 Checking referral commissions...")
