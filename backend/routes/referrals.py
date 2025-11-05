@@ -419,13 +419,18 @@ async def get_salesperson_dashboard(salesperson_id: str):
         ).sort("payment_date", 1).to_list(None)
         
         # Calculate upcoming commissions (next 90 days)
-        today = datetime.now(timezone.utc)
+        today = datetime.now(timezone.utc).replace(tzinfo=None)  # Make naive for comparison
         ninety_days = today + timedelta(days=90)
-        upcoming = [
-            c for c in all_commissions 
-            if c.get("status") in ["pending", "ready_to_pay"] 
-            and today <= c.get("payment_date", datetime.max.replace(tzinfo=timezone.utc)) <= ninety_days
-        ]
+        upcoming = []
+        for c in all_commissions:
+            if c.get("status") in ["pending", "ready_to_pay"]:
+                pay_date = c.get("payment_date")
+                if pay_date:
+                    # Make sure payment_date is naive for comparison
+                    if hasattr(pay_date, 'tzinfo') and pay_date.tzinfo:
+                        pay_date = pay_date.replace(tzinfo=None)
+                    if today <= pay_date <= ninety_days:
+                        upcoming.append(c)
         
         # Group by status
         by_status = {
