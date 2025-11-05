@@ -19395,17 +19395,7 @@ async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str =
             "timeframe": timeframe,
             "selected_fund": fund
         }
-        
-        # =================================================================
-        # FUND ASSETS (Money Coming Into Fund)
-        # =================================================================
-        
-        # 1. MT5 Trading Profits/Losses (Fund's actual investments)
-        all_clients = mongodb_manager.get_all_clients()
-        mt5_profits = 0
-        mt5_breakdown = {
-            "CORE": 0, "BALANCE": 0, "DYNAMIC": 0, "UNLIMITED": 0
-        }
+        # ✅ Using real MongoDB data from /cashflow/complete endpoint
         
         # Use the already imported MT5 service for real-time data
         # (mt5_service is already imported at the top of the file)
