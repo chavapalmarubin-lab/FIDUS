@@ -15910,7 +15910,7 @@ def generate_payment_schedule(investment):
             'amount': interest_per_payment,
             'type': 'interest_payment',
             'product': product,
-            'client_id': investment.get('client_id'),
+            'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
             'fund_code': fund_code,
             'days_from_investment': (current_date - investment_date).days
         })
@@ -15926,7 +15926,7 @@ def generate_payment_schedule(investment):
         'principal': amount,
         'interest': interest_per_payment,
         'product': product,
-        'client_id': investment.get('client_id'),
+        'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
         'fund_code': fund_code,
         'days_from_investment': 426
     })
