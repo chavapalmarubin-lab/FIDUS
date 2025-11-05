@@ -1574,7 +1574,37 @@ const CashFlowManagement = () => {
                               <span className="text-red-400 ml-2 font-medium">{formatCurrency(monthData.principal_redemptions)}</span>
                             </div>
                           )}
+                          {monthData.referral_commissions > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">Referral Commissions:</span>
+                              <span className="text-green-400 ml-2 font-medium">{formatCurrency(monthData.referral_commissions)}</span>
+                            </div>
+                          )}
                         </div>
+                        
+                        {/* NEW: Display individual commission payments */}
+                        {monthData.commissions && monthData.commissions.length > 0 && (
+                          <div className="mt-3 p-3 bg-slate-700/30 rounded border border-green-500/20">
+                            <p className="text-xs font-semibold text-green-400 mb-2">💰 Referral Commissions (10%):</p>
+                            <div className="space-y-2">
+                              {monthData.commissions.map((comm, idx) => (
+                                <div key={idx} className="flex justify-between items-center text-xs">
+                                  <div className="flex-1">
+                                    <span className="text-slate-300">{comm.salesperson_name || comm.salespersonName}</span>
+                                    <span className="text-slate-500 mx-2">•</span>
+                                    <span className="text-slate-400">{comm.fund_code || comm.fundCode}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-green-400 font-medium">{formatCurrency(comm.amount)}</div>
+                                    <div className="text-[10px] text-slate-500">
+                                      (10% of {comm.client_name || comm.clientName}'s payment)
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Running Balance */}
                         <div className="flex justify-between items-center pt-3 border-t border-slate-600/30">
