@@ -59,7 +59,7 @@ class TradingAnalyticsService:
                 "managers": [
                     {"id": "manager_alefloreztrader", "account": 897591},
                     {"id": "manager_alefloreztrader", "account": 897599},
-                    {"id": "main_separation", "account": 886528}
+                    {"id": "manager_alefloreztrader", "account": 886528}
                 ]
             }
         }
