@@ -120,6 +120,12 @@ class TradingAnalyticsService:
                         "pnl": core_fund["total_pnl"],
                         "return_pct": core_fund["weighted_return"],
                         "managers_count": len(core_fund["managers"])
+                    },
+                    "SEPARATION": {
+                        "aum": separation_fund["aum"],
+                        "pnl": separation_fund["total_pnl"],
+                        "return_pct": separation_fund["weighted_return"],
+                        "managers_count": len(separation_fund["managers"])
                     }
                 },
                 "period_days": period_days,
