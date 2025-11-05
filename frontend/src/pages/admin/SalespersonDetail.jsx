@@ -128,7 +128,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{salesperson.name}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline">{salesperson.referral_code}</Badge>
+              <Badge variant="outline">{salesperson.referralCode}</Badge>
               {salesperson.active && (
                 <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>
               )}
