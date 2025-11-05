@@ -16136,9 +16136,10 @@ async def get_complete_cashflow(days: int = 30):
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         mt5_trading_pnl = sum(acc.get('profit', 0) for acc in mt5_accounts)
         
-        # ✅ FIX ISSUE #2: Get BOTH separation accounts (886528 AND 891215) from MongoDB
+        # ✅ CORRECTED: Get current separation accounts (897591 AND 897599) from MongoDB
+        # NOTE: Account 886528 is NO LONGER a separation account per SYSTEM_MASTER.md Section 4.1
         separation_accounts = await db.mt5_accounts.find({
-            'account': {'$in': [886528, 891215]}
+            'account': {'$in': [897591, 897599]}
         }).to_list(length=10)
         separation_balance = sum(acc.get('balance', 0) for acc in separation_accounts)
         
