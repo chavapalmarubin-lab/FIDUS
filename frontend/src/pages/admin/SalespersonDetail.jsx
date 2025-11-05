@@ -293,7 +293,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                   <p className="text-center text-gray-500 py-8">No clients yet</p>
                 ) : (
                   clients?.map((client) => (
-                    <div key={client.id} className="p-4 border rounded-lg">
+                    <div key={client.clientId} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium text-gray-900">{client.name}</p>
