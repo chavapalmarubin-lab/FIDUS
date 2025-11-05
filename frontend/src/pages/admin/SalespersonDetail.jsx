@@ -350,7 +350,7 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Network</p>
-                      <p className="font-medium">{salesperson.wallet_details.network || 'N/A'}</p>
+                      <p className="font-medium">{salesperson.walletDetails.network || 'N/A'}</p>
                     </div>
                   </div>
                 )}
