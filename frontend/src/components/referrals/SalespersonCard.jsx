@@ -37,7 +37,7 @@ const SalespersonCard = ({ salesperson, onClick }) => {
             <div>
               <h3 className="font-semibold text-gray-900">{salesperson.name}</h3>
               <Badge variant="outline" className="mt-1">
-                {salesperson.referral_code}
+                {salesperson.referralCode}
               </Badge>
             </div>
           </div>
