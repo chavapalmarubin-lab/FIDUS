@@ -378,7 +378,7 @@ async def get_salesperson_dashboard(salesperson_id: str):
             "total_clients": len(clients),
             "active_clients": len([c for c in clients if c.get("status") == "active"]),
             "total_investments": len(investments),
-            "total_sales_volume": sum(float(inv.get("amount", 0)) for inv in investments),
+            "total_sales_volume": sum(float(inv.get("principal_amount", 0)) for inv in investments),
             "total_commissions_earned": sum(float(c.get("commission_amount", 0)) for c in all_commissions),
             "commissions_paid": sum(float(c.get("commission_amount", 0)) for c in by_status["paid"]),
             "commissions_pending": sum(
