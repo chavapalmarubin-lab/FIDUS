@@ -332,7 +332,12 @@ async def create_salesperson(data: SalespersonCreate):
 @router.get("/admin/referrals/salespeople/{salesperson_id}")
 async def get_salesperson_dashboard(salesperson_id: str):
     """Get complete salesperson dashboard with details"""
-    salesperson = await db.salespeople.find_one({"_id": ObjectId(salesperson_id)})
+    try:
+        salesperson_id_obj = ObjectId(salesperson_id) if not isinstance(salesperson_id, ObjectId) else salesperson_id
+        salesperson = await db.salespeople.find_one({"_id": salesperson_id_obj})
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid salesperson ID format: {str(e)}")
+    
     if not salesperson:
         raise HTTPException(status_code=404, detail="Salesperson not found")
     
