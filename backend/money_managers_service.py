@@ -18,6 +18,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 import os
 from motor.motor_asyncio import AsyncIOMotorDatabase
+import sys
+sys.path.append('/app/backend')
+from app.utils.field_transformers import transform_manager
 
 from config.database import get_database
 
