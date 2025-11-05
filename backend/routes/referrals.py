@@ -371,7 +371,7 @@ async def get_salesperson_dashboard(salesperson_id: str):
     }
     
     return {
-        "salesperson": serialize_doc(salesperson),
+        "salesperson": transform_salesperson(salesperson),
         "clients": [serialize_doc(c) for c in clients],
         "investments": [serialize_doc(inv) for inv in investments],
         "commissions": {
