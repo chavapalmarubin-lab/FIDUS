@@ -230,7 +230,7 @@ class ReferralSystemTester:
             
             # Check financial summary
             total_sales = data.get('totalSalesVolume', 0)
-            total_commissions = data.get('totalCommissionsEarned', 0)
+            total_commissions = data.get('totalCommissions', 0)
             
             success = True
             
