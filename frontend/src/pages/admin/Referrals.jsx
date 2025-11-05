@@ -42,11 +42,11 @@ const Referrals = () => {
       
       const stats = {
         totalSalespeople: data.salespeople?.length || 0,
-        totalClients: data.salespeople?.reduce((sum, sp) => sum + (sp.total_clients_referred || 0), 0),
-        totalSales: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.total_sales_volume || 0), 0),
-        totalCommissions: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.total_commissions_earned || 0), 0),
-        commissionsPaid: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.commissions_paid_to_date || 0), 0),
-        commissionsPending: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.commissions_pending || 0), 0)
+        totalClients: data.salespeople?.reduce((sum, sp) => sum + (sp.totalClientsReferred || 0), 0),
+        totalSales: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.totalSalesVolume || 0), 0),
+        totalCommissions: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.totalCommissionsEarned || 0), 0),
+        commissionsPaid: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.commissionsPaidToDate || 0), 0),
+        commissionsPending: data.salespeople?.reduce((sum, sp) => sum + parseFloat(sp.commissionsPending || 0), 0)
       };
       setStats(stats);
     } catch (error) {
