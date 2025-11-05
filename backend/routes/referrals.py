@@ -294,6 +294,8 @@ async def get_referrals_overview():
 @router.get("/admin/referrals/salespeople")
 async def get_all_salespeople(active_only: bool = True):
     """Get all salespeople with performance metrics"""
+    from bson import Decimal128
+    
     query = {}
     if active_only:
         query["active"] = True
@@ -302,15 +304,23 @@ async def get_all_salespeople(active_only: bool = True):
     
     # Enrich with real-time metrics
     for sp in salespeople:
-        # Get actual client count
-        client_count = await db.clients.count_documents({"referred_by": sp["_id"]})
-        sp["actual_client_count"] = client_count
+        # Use salesperson_id field (not MongoDB _id)
+        sp_id = sp.get("salesperson_id") or str(sp["_id"])
+        
+        # Get actual client count from investments
+        client_ids = set()
+        investments = await db.investments.find({"referral_salesperson_id": sp_id}).to_list(None)
+        for inv in investments:
+            client_id = inv.get("client_id")
+            if client_id:
+                client_ids.add(str(client_id))
+        sp["actual_client_count"] = len(client_ids)
         
         # Get pending commissions
         pending = await db.referral_commissions.aggregate([
             {
                 "$match": {
-                    "salesperson_id": sp["_id"],
+                    "salesperson_id": sp_id,
                     "status": {"$in": ["pending", "ready_to_pay", "approved"]}
                 }
             },
@@ -321,7 +331,15 @@ async def get_all_salespeople(active_only: bool = True):
                 }
             }
         ]).to_list(1)
-        sp["actual_pending"] = float(pending[0]["total"]) if pending else 0
+        
+        if pending and pending[0].get("total"):
+            pending_total = pending[0]["total"]
+            if isinstance(pending_total, Decimal128):
+                sp["actual_pending"] = float(pending_total.to_decimal())
+            else:
+                sp["actual_pending"] = float(pending_total)
+        else:
+            sp["actual_pending"] = 0
     
     return {"salespeople": [transform_salesperson(sp) for sp in salespeople]}
 
