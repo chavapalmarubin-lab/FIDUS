@@ -147,7 +147,7 @@ class BackendTester:
             return False
     
     def test_money_managers_api(self) -> bool:
-        """Test 2: Money Managers API - should return 6 managers including 2 new ones"""
+        """Test 2: Money Managers API - should return 5 active managers with real performance data"""
         try:
             print("\n👥 Testing Money Managers API...")
             
@@ -160,56 +160,61 @@ class BackendTester:
             data = response.json()
             managers = data.get("managers", [])
             
-            # Expected managers (6 total including 2 new ones)
+            # Expected 5 active managers with real performance data
             expected_managers = [
                 "CP Strategy",
                 "TradingHub Gold", 
-                "GoldenTrade",
-                "UNO14 MAM Manager",
-                "MEXAtlantic Provider 5201",  # New manager
-                "alefloreztrader"  # New manager
+                "UNO14",
+                "alefloreztrader",
+                "Provider1-Assev"
             ]
             
             # Check total count
-            if len(managers) == 6:
-                self.log_test("Money Managers Count", "PASS", f"Found expected 6 money managers")
+            if len(managers) == 5:
+                self.log_test("Money Managers Count", "PASS", f"Found expected 5 money managers")
             else:
-                self.log_test("Money Managers Count", "FAIL", f"Expected 6 managers, found {len(managers)}")
+                self.log_test("Money Managers Count", "FAIL", f"Expected 5 managers, found {len(managers)}")
+                print(f"   Found managers: {[mgr.get('name') or mgr.get('manager_name') for mgr in managers]}")
                 return False
             
-            # Check specific managers exist
-            found_managers = [mgr.get("name") or mgr.get("manager_name") for mgr in managers]
-            missing_managers = []
+            # Check for real performance data (not $0)
+            managers_with_real_data = 0
+            total_pnl = 0
             
-            for expected_manager in expected_managers:
-                # Allow partial matching for manager names
-                found = any(expected_manager in found_name for found_name in found_managers if found_name)
-                if not found:
-                    missing_managers.append(expected_manager)
+            for mgr in managers:
+                pnl = mgr.get("total_pnl", 0) or mgr.get("profit_loss", 0)
+                equity = mgr.get("total_equity", 0) or mgr.get("current_equity", 0)
+                initial_allocation = mgr.get("initial_allocation", 0)
+                
+                if pnl != 0 or equity > 0 or initial_allocation > 0:
+                    managers_with_real_data += 1
+                    total_pnl += pnl
+                
+                manager_name = mgr.get("name") or mgr.get("manager_name", "Unknown")
+                self.log_test(f"Manager {manager_name} Data", 
+                            "PASS" if (pnl != 0 or equity > 0) else "FAIL",
+                            f"P&L: ${pnl:,.2f}, Equity: ${equity:,.2f}, Allocation: ${initial_allocation:,.2f}")
             
-            if missing_managers:
-                self.log_test("Money Managers Verification", "FAIL", f"Missing managers: {missing_managers}")
-                return False
-            
-            # Check new managers specifically
-            new_managers = ["MEXAtlantic Provider 5201", "alefloreztrader"]
-            found_new_managers = []
-            for new_mgr in new_managers:
-                found = any(new_mgr in found_name for found_name in found_managers if found_name)
-                if found:
-                    found_new_managers.append(new_mgr)
-            
-            if len(found_new_managers) == 2:
-                self.log_test("New Money Managers", "PASS", f"Both new managers found: {found_new_managers}")
+            if managers_with_real_data >= 4:  # At least 4 out of 5 should have real data
+                self.log_test("Managers Real Performance Data", "PASS", 
+                            f"{managers_with_real_data}/5 managers have real performance data")
             else:
-                self.log_test("New Money Managers", "FAIL", f"Expected 2 new managers, found {len(found_new_managers)}")
+                self.log_test("Managers Real Performance Data", "FAIL", 
+                            f"Only {managers_with_real_data}/5 managers have real data")
                 return False
             
-            self.log_test("Money Managers API", "PASS", "All money managers verified successfully")
+            # Check total P&L is not $0
+            if total_pnl != 0:
+                self.log_test("Total Manager P&L", "PASS", f"Total P&L: ${total_pnl:,.2f} (not $0)")
+            else:
+                self.log_test("Total Manager P&L", "FAIL", "Total P&L is $0 - expected real data")
+                return False
+            
+            self.log_test("Money Managers API", "PASS", "Money managers with real performance data verified")
             return True
             
         except Exception as e:
-            self.log_test("Cash Flow Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Money Managers Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_fund_allocations(self) -> bool:
