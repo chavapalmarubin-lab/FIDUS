@@ -19400,7 +19400,15 @@ async def get_cashflow_overview_redirect(timeframe: str = "3months", fund: str =
     except Exception as e:
         logging.error(f"Get cash flow overview error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch cash flow overview: {str(e)}")
+
+@api_router.get("/admin/cashflow/redemption-schedule")
+async def get_redemption_schedule(timeframe: str = "3months"):
+    """Get upcoming redemption schedule"""
+    try:
+        upcoming_redemptions = []
         
+        # Get all client investments from MongoDB and calculate upcoming redemption opportunities
+        all_clients = mongodb_manager.get_all_clients()
         for client in all_clients:
             client_id = client['id']
             client_investments = mongodb_manager.get_client_investments(client_id)
