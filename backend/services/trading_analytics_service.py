@@ -132,12 +132,25 @@ class TradingAnalyticsService:
             active_managers = len([m for m in all_managers if m["total_pnl"] != 0])
             
             return {
+                # CLIENT METRICS (Alejandro's investment)
+                "client_aum": round(client_aum, 2),
+                "client_equity": round(client_equity, 2),
+                "client_pnl": round(client_pnl, 2),
+                "client_return": round((client_pnl / client_aum * 100) if client_aum > 0 else 0, 2),
+                
+                # TOTAL FUND METRICS (includes FIDUS + reinvested)
                 "total_aum": round(total_aum, 2),
                 "total_equity": round(total_equity, 2),
                 "total_pnl": round(total_pnl, 2),
                 "blended_return": round(blended_return, 2),
                 "total_managers": total_managers,
                 "active_managers": active_managers,
+                
+                # FIDUS CAPITAL METRICS
+                "fidus_aum": round(balance_fidus["aum"], 2),
+                "fidus_equity": round(balance_fidus["total_equity"], 2),
+                "fidus_pnl": round(balance_fidus["total_pnl"], 2),
+                "fidus_return": round(balance_fidus["weighted_return"], 2),
                 "funds": {
                     "BALANCE": {
                         "aum": balance_fund["aum"],
