@@ -46,13 +46,15 @@ Salesperson:      sp_6909e8eaaaf69606babea151 (Salvador Palma)
 ### 2. Commission Calculation - FIXED ✅
 
 **Problem Identified:**
-- BALANCE commissions were $750 (30% rate) instead of $250 (10% rate)
-- CORE commissions were $22.69 instead of $27.23
-- Total was $3,272.27 instead of expected $1,326.73
+- Initial fix used WRONG interest calculation for BALANCE fund
+- Incorrectly calculated BALANCE as $2,500 per quarter (2.5% quarterly rate)
+- Should be $7,500 per quarter (2.5% monthly rate × 3 months)
+- This resulted in $250 commission instead of correct $750
 
 **Root Cause:**
-- Incorrect commission rate applied to BALANCE fund
-- Old/duplicate commission records in database
+- Misread SYSTEM_MASTER.md interest rate structure
+- BALANCE fund has 2.5% MONTHLY rate, paid QUARTERLY
+- Not 2.5% quarterly rate as initially calculated
 
 **Solution:**
 - Deleted all 16 old commission records
