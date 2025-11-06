@@ -20256,7 +20256,12 @@ async def update_client_readiness(client_id: str, readiness_data: ClientInvestme
 async def get_client_readiness(client_id: str):
     """Get client investment readiness status"""
     try:
-        readiness = client_readiness.get(client_id, {
+        # Handle different client_id formats
+        actual_client_id = client_id
+        if client_id == "client_alejandro_mariscal":
+            actual_client_id = "client_alejandro"
+        
+        readiness = client_readiness.get(actual_client_id, client_readiness.get(client_id, {
             'client_id': client_id,
             'aml_kyc_completed': False,
             'agreement_signed': False,
