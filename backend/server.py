@@ -16097,6 +16097,10 @@ async def calculate_cash_flow_calendar():
         investments_cursor = db.investments.find({"status": {"$ne": "cancelled"}})
         all_investments = await investments_cursor.to_list(length=None)
         
+        # DEBUG: Check what fields investments have
+        for inv in all_investments:
+            print(f"DEBUG INV: {inv.get('fund_type')} - has referral_salesperson_id: {'referral_salesperson_id' in inv}, value: {inv.get('referral_salesperson_id')}")
+        
         # Get current fund revenue (real-time earnings)
         separation_data = await get_separation_account_interest()
         current_revenue = await get_total_mt5_profits() + separation_data.get('total', 0)
