@@ -15296,9 +15296,9 @@ async def get_client_investments(client_id: str):
     """Get all investments for a specific client - Direct MongoDB version"""
     try:
         # Handle different client_id formats
-        # Frontend uses 'client_alejandro_mariscal', DB uses 'client_alejandro'
+        # FIELD STANDARDS: DB uses 'client_alejandro', old tokens may use variations
         actual_client_id = client_id
-        if client_id == "client_alejandro_mariscal":
+        if "alejandro" in client_id.lower():
             actual_client_id = "client_alejandro"
         
         # Get investments directly from MongoDB
@@ -25798,9 +25798,9 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
     """Get MT5 accounts for a client with live data and detailed analysis"""
     try:
         # Handle different client_id formats
-        # Frontend uses 'client_alejandro_mariscal', DB uses 'client_alejandro'
+        # FIELD STANDARDS: DB uses 'client_alejandro', old tokens may use variations
         actual_client_id = client_id
-        if client_id == "client_alejandro_mariscal":
+        if "alejandro" in client_id.lower():
             actual_client_id = "client_alejandro"
         
         # Allow clients to view their own accounts, admins can view any
