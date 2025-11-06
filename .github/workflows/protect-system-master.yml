@@ -1,4 +1,4 @@
-name: Protect SYSTEM_MASTER.md
+name: Protect Critical Documentation Files
 
 on:
   push:
