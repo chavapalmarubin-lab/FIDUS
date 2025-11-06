@@ -32,53 +32,54 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping - UPDATED 2025-11-06 (Three-Tier P&L Integration)
-        # Based on capital_source categorization from Phase 1 analysis
+        # Fund structure mapping - UPDATED 2025-11-06 (Current Manager Assignments)
+        # Based on actual manager assignments in mt5_accounts collection
+        # 5 ACTIVE MANAGERS: CP Strategy, TradingHub Gold, UNO14, alefloreztrader, Provider1-Assev
         self.FUND_STRUCTURE = {
             "BALANCE": {
                 "aum": 100000,  # Client BALANCE allocation
                 "accounts": [886557, 886602, 886066],  # Client BALANCE accounts
                 "managers": [
-                    {"id": "manager_tradinghub_gold", "account": 886557},
-                    {"id": "manager_uno14", "account": 886602},
-                    {"id": "manager_goldentrade", "account": 886066}  # $0 equity but $10k initial
+                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold Provider"},
+                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager"},
+                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade Manager"}  # Inactive but has $10k history
                 ]
             },
             "BALANCE_FIDUS": {
                 "aum": 14662.94,  # FIDUS house capital in BALANCE
                 "accounts": [891215],
                 "managers": [
-                    {"id": "manager_tradinghub_gold", "account": 891215}
+                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold Provider"}
                 ]
             },
             "BALANCE_REINVESTED": {
                 "aum": 0,  # Reinvested profit, no client obligation
                 "accounts": [897589],
                 "managers": [
-                    {"id": "manager_provider1_assev", "account": 897589}
+                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev"}
                 ]
             },
             "CORE": {
                 "aum": 18151.41,  # Client CORE allocation
-                "accounts": [885822],  # Client CORE account
+                "accounts": [885822, 891234],  # Client CORE accounts (891234 has no manager)
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 885822}
+                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy Provider"}
                 ]
             },
             "CORE_REINVESTED": {
                 "aum": 0,  # Reinvested profit, no client obligation
                 "accounts": [897590],
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 897590}
+                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy Provider"}
                 ]
             },
             "SEPARATION": {
                 "aum": 0,  # Extracted profits
                 "accounts": [897591, 897599, 886528],
                 "managers": [
-                    {"id": "manager_alefloreztrader", "account": 897591},
-                    {"id": "manager_alefloreztrader", "account": 897599},
-                    {"id": "manager_alefloreztrader", "account": 886528}
+                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader"},
+                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader"},
+                    {"id": "manager_alefloreztrader", "account": 886528, "name": "alefloreztrader"}
                 ]
             }
         }
