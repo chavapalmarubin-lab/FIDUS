@@ -378,11 +378,11 @@ class TradingAnalyticsService:
         try:
             logger.info(f"📊 Calculating managers ranking for {period_days} days")
             
-            # Get all ACTIVE managers from BALANCE and CORE funds only (exclude SEPARATION and INACTIVE)
+            # Get all ACTIVE managers from BALANCE, CORE, and SEPARATION funds (exclude INACTIVE only)
             # Track unique managers to avoid duplicates (some managers handle multiple accounts)
             unique_managers = {}  # Key: manager_id, Value: aggregated performance
             
-            for fund_name in ["BALANCE", "CORE"]:  # Only process active funds
+            for fund_name in ["BALANCE", "CORE", "SEPARATION"]:  # Process all active funds
                 fund_config = self.FUND_STRUCTURE.get(fund_name)
                 if not fund_config:
                     continue
