@@ -20275,7 +20275,7 @@ async def get_client_readiness(client_id: str):
             'readiness_override_reason': '',
             'readiness_override_by': '',
             'readiness_override_date': None
-        })
+        }))
         
         return {
             "success": True,
