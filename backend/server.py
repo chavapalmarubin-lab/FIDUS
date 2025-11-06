@@ -834,7 +834,22 @@ FIDUS_FUND_CONFIG = {
 client_investments = {}
 
 # RESTORED: Working client readiness storage  
-client_readiness = {}
+client_readiness = {
+    "client_alejandro": {
+        'client_id': 'client_alejandro',
+        'aml_kyc_completed': True,
+        'agreement_signed': True,
+        'account_creation_date': '2025-09-30',
+        'investment_ready': True,
+        'notes': 'Active client with CORE and BALANCE investments',
+        'updated_at': '2025-09-30T00:00:00Z',
+        'updated_by': 'system',
+        'readiness_override': False,
+        'readiness_override_reason': '',
+        'readiness_override_by': '',
+        'readiness_override_date': None
+    }
+}
 
 # Production MongoDB-only storage (NO MOCK DATA)
 user_temp_passwords = {}
