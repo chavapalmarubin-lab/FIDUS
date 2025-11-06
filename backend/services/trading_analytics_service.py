@@ -32,13 +32,13 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping - UPDATED 2025-12-18 (Per SYSTEM_MASTER.md)
-        # 5 ACTIVE MANAGERS per SYSTEM_MASTER.md Section 5:
+        # Fund structure mapping - UPDATED 2025-12-18 (Matches actual database)
+        # 5 ACTIVE MANAGERS based on database reality:
         # 1. UNO14 Manager (886602 - MAM account, BALANCE fund)
-        # 2. TradingHub Gold Provider (886557, 891215 - BALANCE fund)
-        # 3. CP Strategy Provider (885822, 891234, 897590 - CORE fund)
-        # 4. MultiBank BALANCE Trader (891215 - BALANCE fund)
-        # 5. MEXAtlantic Provider (897589 - BALANCE fund)
+        # 2. TradingHub Gold Provider (886557, 891215 - BALANCE fund, manages 2 accounts)
+        # 3. Provider1-Assev (897589 - BALANCE fund)
+        # 4. CP Strategy Provider (885822, 897590 - CORE fund, manages 2 accounts)
+        # 5. alefloreztrader (897591, 897599 - SEPARATION accounts)
         # INACTIVE: GoldenTrade (886066) - keep in database but don't show
         self.FUND_STRUCTURE = {
             "BALANCE": {
@@ -47,8 +47,8 @@ class TradingAnalyticsService:
                 "managers": [
                     {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager", "status": "active", "method": "MAM"},
                     {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold Provider", "status": "active"},
-                    {"id": "manager_multibank_balance", "account": 891215, "name": "MultiBank BALANCE Trader", "status": "active"},
-                    {"id": "manager_mexatlantic", "account": 897589, "name": "MEXAtlantic Provider", "status": "active"}
+                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold Provider", "status": "active"},  # Same manager, 2nd account
+                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev", "status": "active"}
                 ]
             },
             "CORE": {
@@ -62,13 +62,16 @@ class TradingAnalyticsService:
             "SEPARATION": {
                 "aum": 0,  # Extracted profits - no client obligation
                 "accounts": [897591, 897599, 886528],
-                "managers": []  # Separation accounts don't have dedicated managers
+                "managers": [
+                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader", "status": "active"},
+                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader", "status": "active"}
+                ]
             },
             "INACTIVE": {
                 "aum": 0,
                 "accounts": [886066],  # GoldenTrade - inactive
                 "managers": [
-                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade", "status": "inactive"}
+                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade Manager", "status": "inactive"}
                 ]
             }
         }
