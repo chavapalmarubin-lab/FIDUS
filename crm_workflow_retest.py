@@ -39,7 +39,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-finance-3.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-fix.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

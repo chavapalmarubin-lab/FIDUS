@@ -24631,7 +24631,7 @@ if not cors_origins or cors_origins == '*':
     # Default allowed origins if not specified
     cors_origins = [
         "https://fidus-investment-platform.onrender.com",
-        "https://fidus-finance-3.preview.emergentagent.com",
+        "https://fidus-fix.preview.emergentagent.com",
         "http://localhost:3000",
         "http://localhost:3001"
     ]
