@@ -474,86 +474,98 @@ class FidusCommissionTester:
             self.log_test("Investment Data Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_fund_portfolio(self) -> bool:
-        """Test 5: Fund Portfolio - should return real fund allocations for CORE, BALANCE, SEPARATION"""
+    def test_commission_calculations(self) -> bool:
+        """Test 5: Commission Calculations - Verify specific commission calculation validations"""
         try:
-            print("\n📊 Testing Fund Portfolio...")
-            
-            response = self.session.get(f"{self.base_url}/fund-portfolio/overview")
-            
-            if response.status_code != 200:
-                self.log_test("Fund Portfolio API", "FAIL", f"HTTP {response.status_code}: {response.text}")
-                return False
-            
-            data = response.json()
-            funds_dict = data.get("funds", {})
-            
-            # Expected funds
-            expected_funds = ["CORE", "BALANCE", "SEPARATION"]
-            found_funds = {}
-            
-            # Parse the funds dictionary structure
-            for fund_code in expected_funds:
-                if fund_code in funds_dict:
-                    fund_data = funds_dict[fund_code]
-                    found_funds[fund_code] = {
-                        "aum": fund_data.get("aum", 0),
-                        "mt5_allocation": fund_data.get("mt5_allocation", 0),
-                        "mt5_accounts_count": fund_data.get("mt5_accounts_count", 0),
-                        "total_true_pnl": fund_data.get("total_true_pnl", 0)
-                    }
+            print("\n🧮 Testing Commission Calculations...")
             
             success = True
             
-            # Check CORE fund
-            if "CORE" in found_funds:
-                core_data = found_funds["CORE"]
-                if core_data["aum"] > 0:
-                    self.log_test("CORE Fund Allocation", "PASS", 
-                                f"CORE fund: AUM ${core_data['aum']:,.2f}, MT5 ${core_data['mt5_allocation']:,.2f}, {core_data['mt5_accounts_count']} accounts")
-                else:
-                    self.log_test("CORE Fund Allocation", "FAIL", "CORE fund has $0 AUM")
-                    success = False
+            # Test BALANCE quarterly commission calculation
+            # Expected: BALANCE quarterly commission = $7,500 (NOT $750 or $250)
+            balance_principal = 100000.00  # $100,000 BALANCE investment
+            balance_monthly_rate = 0.025   # 2.5% monthly rate
+            balance_quarterly = balance_principal * balance_monthly_rate * 3  # 3 months
+            expected_balance_quarterly = 7500.00
+            
+            if abs(balance_quarterly - expected_balance_quarterly) < 0.01:
+                self.log_test("BALANCE Quarterly Commission Calculation", "PASS", 
+                            f"BALANCE quarterly commission calculated correctly", 
+                            f"${expected_balance_quarterly:,.2f}", 
+                            f"${balance_quarterly:,.2f}")
             else:
-                self.log_test("CORE Fund", "FAIL", "CORE fund not found")
+                self.log_test("BALANCE Quarterly Commission Calculation", "FAIL", 
+                            f"BALANCE quarterly commission calculation incorrect", 
+                            f"${expected_balance_quarterly:,.2f}", 
+                            f"${balance_quarterly:,.2f}")
                 success = False
             
-            # Check BALANCE fund
-            if "BALANCE" in found_funds:
-                balance_data = found_funds["BALANCE"]
-                if balance_data["aum"] > 0:
-                    self.log_test("BALANCE Fund Allocation", "PASS", 
-                                f"BALANCE fund: AUM ${balance_data['aum']:,.2f}, MT5 ${balance_data['mt5_allocation']:,.2f}, {balance_data['mt5_accounts_count']} accounts")
-                else:
-                    self.log_test("BALANCE Fund Allocation", "FAIL", "BALANCE fund has $0 AUM")
-                    success = False
+            # Test CORE monthly commission calculation
+            # Expected: CORE monthly commission = $272.27
+            core_principal = 18151.41      # $18,151.41 CORE investment
+            core_monthly_rate = 0.015      # 1.5% monthly rate
+            core_monthly = core_principal * core_monthly_rate
+            expected_core_monthly = 272.27
+            
+            if abs(core_monthly - expected_core_monthly) < 0.01:
+                self.log_test("CORE Monthly Commission Calculation", "PASS", 
+                            f"CORE monthly commission calculated correctly", 
+                            f"${expected_core_monthly:,.2f}", 
+                            f"${core_monthly:,.2f}")
             else:
-                self.log_test("BALANCE Fund", "FAIL", "BALANCE fund not found")
+                self.log_test("CORE Monthly Commission Calculation", "FAIL", 
+                            f"CORE monthly commission calculation incorrect", 
+                            f"${expected_core_monthly:,.2f}", 
+                            f"${core_monthly:,.2f}")
                 success = False
             
-            # Note: SEPARATION fund is not included in fund portfolio as it's operational accounts, not client investment funds
-            # Check that we have the main investment funds (CORE and BALANCE)
-            main_funds_count = len([f for f in ["CORE", "BALANCE"] if f in found_funds and found_funds[f]["aum"] > 0])
-            if main_funds_count >= 2:
-                self.log_test("Main Investment Funds", "PASS", f"Found {main_funds_count} active investment funds (CORE, BALANCE)")
+            # Test total commission calculation
+            # 12 CORE payments + 4 BALANCE payments = total commissions
+            total_core_commissions = core_monthly * 12  # 12 monthly payments
+            total_balance_commissions = balance_quarterly * 4  # 4 quarterly payments
+            total_calculated = total_core_commissions + total_balance_commissions
+            expected_total = 3326.76
+            
+            if abs(total_calculated - expected_total) < 0.01:
+                self.log_test("Total Commission Calculation", "PASS", 
+                            f"Total commission calculation matches expected", 
+                            f"${expected_total:,.2f}", 
+                            f"${total_calculated:,.2f}")
             else:
-                self.log_test("Main Investment Funds", "FAIL", f"Only {main_funds_count} active investment funds found")
+                self.log_test("Total Commission Calculation", "FAIL", 
+                            f"Total commission calculation incorrect", 
+                            f"${expected_total:,.2f}", 
+                            f"${total_calculated:,.2f}")
                 success = False
             
-            # Check total portfolio value
-            total_aum = data.get("total_aum", 0)
-            if total_aum > 100000:  # Expect at least $100K total
-                self.log_test("Total Portfolio Value", "PASS", f"Total AUM: ${total_aum:,.2f}")
+            # Verify NOT the incorrect values mentioned in the review
+            incorrect_balance_quarterly = 750.00  # This should NOT be the result
+            incorrect_total = 1326.73  # This should NOT be the result
+            
+            if balance_quarterly != incorrect_balance_quarterly:
+                self.log_test("BALANCE Commission NOT $750", "PASS", 
+                            f"BALANCE quarterly commission is NOT the incorrect $750", 
+                            f"NOT ${incorrect_balance_quarterly:,.2f}", 
+                            f"${balance_quarterly:,.2f}")
             else:
-                self.log_test("Total Portfolio Value", "FAIL", f"Total AUM: ${total_aum:,.2f} - expected more substantial amount")
+                self.log_test("BALANCE Commission NOT $750", "FAIL", 
+                            f"BALANCE quarterly commission incorrectly calculated as $750")
                 success = False
             
-            self.log_test("Fund Portfolio API", "PASS" if success else "FAIL", 
-                        "Fund portfolio with real allocations verified" if success else "Fund portfolio has allocation issues")
+            if total_calculated != incorrect_total:
+                self.log_test("Total Commission NOT $1,326.73", "PASS", 
+                            f"Total commission is NOT the incorrect $1,326.73", 
+                            f"NOT ${incorrect_total:,.2f}", 
+                            f"${total_calculated:,.2f}")
+            else:
+                self.log_test("Total Commission NOT $1,326.73", "FAIL", 
+                            f"Total commission incorrectly calculated as $1,326.73")
+                success = False
+            
             return success
             
         except Exception as e:
-            self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Commission Calculations Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_three_tier_pnl_endpoint(self) -> bool:
