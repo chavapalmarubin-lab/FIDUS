@@ -3692,7 +3692,7 @@ async def get_client_pnl(client_id: str, current_user: dict = Depends(get_curren
         raise HTTPException(status_code=500, detail=f"Failed to calculate client P&L: {str(e)}")
 
 
-@api_router.get("/api/pnl/fund-performance")
+@api_router.get("/pnl/fund-performance")
 async def get_fund_performance(current_user: dict = Depends(get_current_admin_user)):
     """
     Get complete fund performance vs obligations (ADMIN ONLY)
