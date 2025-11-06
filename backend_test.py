@@ -243,61 +243,113 @@ class FidusCommissionTester:
             self.log_test("Money Managers Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_trading_analytics(self) -> bool:
-        """Test 3: Trading Analytics - should return real portfolio data (not 404)"""
+    def test_commission_calendar(self) -> bool:
+        """Test 3: Commission Calendar/Schedule - Any endpoint that shows payment dates"""
         try:
-            print("\n📈 Testing Trading Analytics...")
+            print("\n📅 Testing Commission Calendar/Schedule...")
             
-            # Try the correct endpoint path
-            response = self.session.get(f"{self.base_url}/admin/trading/analytics/overview")
+            # Try multiple potential endpoints for commission calendar
+            endpoints_to_try = [
+                "/admin/cashflow/calendar",
+                "/admin/commissions/schedule", 
+                "/admin/referrals/commission-schedule",
+                "/admin/cashflow/overview"
+            ]
             
-            if response.status_code == 404:
-                # Try alternative endpoint
-                response = self.session.get(f"{self.base_url}/admin/trading-analytics/portfolio")
-                
-                if response.status_code == 404:
-                    self.log_test("Trading Analytics API", "FAIL", "Trading Analytics endpoints return 404 - not found")
-                    return False
-            
-            if response.status_code != 200:
-                self.log_test("Trading Analytics API", "FAIL", f"HTTP {response.status_code}: {response.text}")
-                return False
-            
-            data = response.json()
-            
-            # Parse the correct structure from trading analytics API
-            analytics = data.get("analytics", {})
-            overview = analytics.get("overview", {})
-            accounts_included = data.get("accounts_included", [])
-            
-            # Check for real portfolio data using correct field names
-            total_pnl = overview.get("total_pnl", 0)
-            total_trades = overview.get("total_trades", 0)
-            active_accounts = len(accounts_included)
-            
+            calendar_found = False
             success = True
             
-            if total_trades > 0:
-                self.log_test("Trading Activity", "PASS", f"Total trades: {total_trades}")
-            else:
-                self.log_test("Trading Activity", "FAIL", "No trading activity found")
-                success = False
+            for endpoint in endpoints_to_try:
+                try:
+                    response = self.session.get(f"{self.base_url}{endpoint}")
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        if data.get("success"):
+                            calendar_found = True
+                            self.log_test("Commission Calendar Endpoint", "PASS", 
+                                        f"Found working calendar endpoint: {endpoint}")
+                            
+                            # Look for payment schedule data
+                            monthly_obligations = data.get("monthly_obligations", [])
+                            milestones = data.get("milestones", {})
+                            
+                            if monthly_obligations:
+                                # Check for BALANCE first payment (Feb 28, 2026)
+                                balance_payments = [
+                                    payment for payment in monthly_obligations 
+                                    if payment.get("balance_interest", 0) > 0
+                                ]
+                                
+                                if balance_payments:
+                                    first_balance = balance_payments[0]
+                                    balance_date = first_balance.get("date", "")
+                                    
+                                    if "2026-02" in balance_date or "Feb" in balance_date:
+                                        self.log_test("BALANCE First Payment Date", "PASS", 
+                                                    f"BALANCE first payment scheduled correctly", 
+                                                    "February 2026", 
+                                                    balance_date)
+                                    else:
+                                        self.log_test("BALANCE First Payment Date", "FAIL", 
+                                                    f"BALANCE first payment date incorrect", 
+                                                    "February 2026", 
+                                                    balance_date)
+                                        success = False
+                                
+                                # Check for CORE first payment (Dec 30, 2025)
+                                core_payments = [
+                                    payment for payment in monthly_obligations 
+                                    if payment.get("core_interest", 0) > 0
+                                ]
+                                
+                                if core_payments:
+                                    first_core = core_payments[0]
+                                    core_date = first_core.get("date", "")
+                                    
+                                    if "2025-12" in core_date or "Dec" in core_date:
+                                        self.log_test("CORE First Payment Date", "PASS", 
+                                                    f"CORE first payment scheduled correctly", 
+                                                    "December 2025", 
+                                                    core_date)
+                                    else:
+                                        self.log_test("CORE First Payment Date", "FAIL", 
+                                                    f"CORE first payment date incorrect", 
+                                                    "December 2025", 
+                                                    core_date)
+                                        success = False
+                                
+                                # Check total commission payments count (16 total: 12 CORE + 4 BALANCE)
+                                total_payments = len(monthly_obligations)
+                                expected_payments = 16
+                                
+                                if total_payments >= expected_payments:
+                                    self.log_test("Total Commission Payments", "PASS", 
+                                                f"Total commission payments count adequate", 
+                                                f">= {expected_payments}", 
+                                                total_payments)
+                                else:
+                                    self.log_test("Total Commission Payments", "FAIL", 
+                                                f"Total commission payments count low", 
+                                                f">= {expected_payments}", 
+                                                total_payments)
+                                    success = False
+                            
+                            break
+                            
+                except Exception as e:
+                    continue
             
-            if total_pnl != 0:
-                self.log_test("Portfolio P&L", "PASS", f"Total P&L: ${total_pnl:,.2f} (not $0)")
-            else:
-                self.log_test("Portfolio P&L", "FAIL", "Total P&L is $0 - expected real data")
-                success = False
+            if not calendar_found:
+                self.log_test("Commission Calendar", "FAIL", "No working commission calendar endpoint found")
+                return False
             
-            if active_accounts > 0:
-                self.log_test("Active Accounts", "PASS", f"Active accounts in analytics: {active_accounts}")
-            else:
-                self.log_test("Active Accounts", "FAIL", "No active accounts found in analytics")
-                success = False
-            
-            self.log_test("Trading Analytics API", "PASS" if success else "FAIL", 
-                        "Trading Analytics endpoint accessible with real data" if success else "Trading Analytics has data issues")
             return success
+            
+        except Exception as e:
+            self.log_test("Commission Calendar Test", "ERROR", f"Exception: {str(e)}")
+            return False
             
         except Exception as e:
             self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
