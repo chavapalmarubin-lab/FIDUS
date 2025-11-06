@@ -16013,7 +16013,8 @@ def get_months_per_period(product):
 
 def generate_payment_schedule(investment):
     """Generate complete payment schedule for a single investment"""
-    investment_date_str = investment.get('created_at')
+    # Use start_date if available, otherwise fall back to created_at
+    investment_date_str = investment.get('start_date') or investment.get('created_at')
     if isinstance(investment_date_str, str):
         investment_date = datetime.fromisoformat(investment_date_str.replace('Z', '+00:00')).replace(tzinfo=None)
     else:
