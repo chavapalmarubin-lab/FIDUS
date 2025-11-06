@@ -379,7 +379,8 @@ class TradingAnalyticsService:
             logger.info(f"📊 Calculating managers ranking for {period_days} days")
             
             # Get all ACTIVE managers from BALANCE and CORE funds only (exclude SEPARATION and INACTIVE)
-            all_managers = []
+            # Track unique managers to avoid duplicates (some managers handle multiple accounts)
+            unique_managers = {}  # Key: manager_id, Value: aggregated performance
             
             for fund_name in ["BALANCE", "CORE"]:  # Only process active funds
                 fund_config = self.FUND_STRUCTURE.get(fund_name)
@@ -392,6 +393,8 @@ class TradingAnalyticsService:
                         logger.info(f"⏭️  Skipping {manager_config['name']} - inactive status")
                         continue
                     
+                    manager_id = manager_config["id"]
+                    
                     try:
                         manager_perf = await self.get_manager_analytics(
                             manager_config["id"],
@@ -399,16 +402,31 @@ class TradingAnalyticsService:
                             period_days
                         )
                         
-                        # Add fund context
-                        manager_perf["fund_type"] = fund_name
-                        manager_perf["status"] = manager_config.get("status", "active")
-                        
-                        all_managers.append(manager_perf)
-                        logger.info(f"✅ Added {manager_perf['manager_name']} from {fund_name} fund")
+                        # If this manager already processed, aggregate their performance across accounts
+                        if manager_id in unique_managers:
+                            existing = unique_managers[manager_id]
+                            # Aggregate P&L and equity across all accounts
+                            existing["total_pnl"] += manager_perf["total_pnl"]
+                            existing["current_equity"] += manager_perf["current_equity"]
+                            existing["initial_allocation"] += manager_perf["initial_allocation"]
+                            existing["total_trades"] += manager_perf["total_trades"]
+                            # Recalculate return percentage
+                            if existing["initial_allocation"] > 0:
+                                existing["return_percentage"] = (existing["total_pnl"] / existing["initial_allocation"]) * 100
+                            logger.info(f"📊 Aggregated performance for {manager_config['name']} across multiple accounts")
+                        else:
+                            # First time seeing this manager
+                            manager_perf["fund_type"] = fund_name
+                            manager_perf["status"] = manager_config.get("status", "active")
+                            unique_managers[manager_id] = manager_perf
+                            logger.info(f"✅ Added {manager_perf['manager_name']} from {fund_name} fund")
                         
                     except Exception as e:
                         logger.warning(f"⚠️  Failed to get analytics for {manager_config['name']}: {str(e)}")
                         continue
+            
+            # Convert dict back to list
+            all_managers = list(unique_managers.values())
             
             # Sort by return percentage (highest first)
             all_managers.sort(key=lambda x: x["return_percentage"], reverse=True)
