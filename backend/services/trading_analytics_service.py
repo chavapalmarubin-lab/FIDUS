@@ -153,16 +153,16 @@ class TradingAnalyticsService:
                 "fidus_return": round(balance_fidus["weighted_return"], 2),
                 "funds": {
                     "BALANCE": {
-                        "aum": balance_fund["aum"],
-                        "pnl": balance_fund["total_pnl"],
-                        "return_pct": balance_fund["weighted_return"],
-                        "managers_count": len(balance_fund["managers"])
+                        "aum": balance_client["aum"],
+                        "pnl": balance_client["total_pnl"],
+                        "return_pct": balance_client["weighted_return"],
+                        "managers_count": len(balance_client["managers"])
                     },
                     "CORE": {
-                        "aum": core_fund["aum"],
-                        "pnl": core_fund["total_pnl"],
-                        "return_pct": core_fund["weighted_return"],
-                        "managers_count": len(core_fund["managers"])
+                        "aum": core_client["aum"],
+                        "pnl": core_client["total_pnl"],
+                        "return_pct": core_client["weighted_return"],
+                        "managers_count": len(core_client["managers"])
                     },
                     "SEPARATION": {
                         "aum": separation_fund["aum"],
