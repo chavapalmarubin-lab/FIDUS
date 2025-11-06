@@ -263,8 +263,9 @@ class FidusCashFlowTester:
                 self.log_test("Total Sales Volume", "FAIL", f"Total sales volume: ${total_sales_volume:.2f} (expected ${expected_total_sales_volume:.2f})")
                 success = False
             
-            # Check total clients referred
-            total_clients = data.get("total_clients", 0) or data.get("totalClients", 0)
+            # Check total clients referred - use the correct field from topSalespeople
+            top_salespeople = data.get("topSalespeople", [])
+            total_clients = sum(sp.get("totalClientsReferred", 0) for sp in top_salespeople)
             if total_clients >= expected_total_clients:
                 self.log_test("Total Clients Referred", "PASS", f"Total clients: {total_clients} (expected at least {expected_total_clients})")
             else:
