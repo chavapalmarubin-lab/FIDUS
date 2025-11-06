@@ -44,8 +44,8 @@ jobs:
             echo "files_missing=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check if file was deleted in this commit
-        if: steps.check-file.outputs.file_exists == 'false'
+      - name: Check if files were deleted in this commit
+        if: steps.check-files.outputs.files_missing == 'true'
         run: |
           echo "Checking last commit..."
           git log -1 --name-status
