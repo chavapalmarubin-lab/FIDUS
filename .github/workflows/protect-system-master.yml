@@ -50,17 +50,9 @@ jobs:
           echo "Checking last commit..."
           git log -1 --name-status
           echo ""
-          echo "🚨 SYSTEM_MASTER.md WAS DELETED OR NEVER ADDED!"
+          echo "🚨 CRITICAL FILES MISSING: ${{ steps.check-files.outputs.missing_list }}"
           echo "This is a CRITICAL violation."
-          
-          # Check if file ever existed
-          if git log --all --diff-filter=A --name-only -- "SYSTEM_MASTER.md" | grep -q "SYSTEM_MASTER.md"; then
-            echo "File was previously added and has been DELETED"
-            exit 1
-          else
-            echo "⚠️  WARNING: File has never been added to repository"
-            echo "Please create SYSTEM_MASTER.md and commit it"
-          fi
+          exit 1
 
       - name: Attempt to restore file if deleted
         if: steps.check-file.outputs.file_exists == 'false'
