@@ -355,49 +355,120 @@ class FidusCommissionTester:
             self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_mt5_accounts(self) -> bool:
-        """Test 4: MT5 Accounts - should return 11 accounts with real balances"""
+    def test_investment_data(self) -> bool:
+        """Test 4: Investment Data - GET /api/admin/investments or similar"""
         try:
-            print("\n🏦 Testing MT5 Accounts...")
+            print("\n💰 Testing Investment Data...")
             
-            response = self.session.get(f"{self.base_url}/mt5/admin/accounts")
+            # Try multiple potential endpoints for investment data
+            endpoints_to_try = [
+                "/admin/investments",
+                "/investments/admin/overview",
+                "/admin/fund-portfolio/overview",
+                "/fund-portfolio/overview"
+            ]
             
-            if response.status_code != 200:
-                self.log_test("MT5 Admin Accounts API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+            investment_found = False
+            success = True
+            
+            for endpoint in endpoints_to_try:
+                try:
+                    response = self.session.get(f"{self.base_url}{endpoint}")
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        if data.get("success") or data.get("investments") or data.get("funds"):
+                            investment_found = True
+                            self.log_test("Investment Data Endpoint", "PASS", 
+                                        f"Found working investment endpoint: {endpoint}")
+                            
+                            # Check total investment amount
+                            total_investment = 0
+                            core_investment = 0
+                            balance_investment = 0
+                            
+                            # Handle different response structures
+                            if data.get("investments"):
+                                investments = data["investments"]
+                                for inv in investments:
+                                    amount = inv.get("principal_amount", 0) or inv.get("amount", 0)
+                                    total_investment += amount
+                                    
+                                    fund_code = inv.get("fund_code", "").upper()
+                                    if fund_code == "CORE":
+                                        core_investment += amount
+                                    elif fund_code == "BALANCE":
+                                        balance_investment += amount
+                            
+                            elif data.get("funds"):
+                                funds = data["funds"]
+                                for fund in funds:
+                                    fund_code = fund.get("fund_code", "").upper()
+                                    amount = fund.get("total_allocated", 0) or fund.get("aum", 0)
+                                    
+                                    if fund_code == "CORE":
+                                        core_investment = amount
+                                    elif fund_code == "BALANCE":
+                                        balance_investment = amount
+                                
+                                total_investment = core_investment + balance_investment
+                            
+                            elif data.get("total_aum"):
+                                total_investment = data["total_aum"]
+                            
+                            # Validate total investment = $118,151.41
+                            expected_total = 118151.41
+                            if abs(total_investment - expected_total) < 0.01:
+                                self.log_test("Total Investment Amount", "PASS", 
+                                            f"Total investment matches expected value", 
+                                            f"${expected_total:,.2f}", 
+                                            f"${total_investment:,.2f}")
+                            else:
+                                self.log_test("Total Investment Amount", "FAIL", 
+                                            f"Total investment does not match expected value", 
+                                            f"${expected_total:,.2f}", 
+                                            f"${total_investment:,.2f}")
+                                success = False
+                            
+                            # Validate CORE investment = $18,151.41
+                            expected_core = 18151.41
+                            if abs(core_investment - expected_core) < 0.01:
+                                self.log_test("CORE Investment Amount", "PASS", 
+                                            f"CORE investment matches expected value", 
+                                            f"${expected_core:,.2f}", 
+                                            f"${core_investment:,.2f}")
+                            else:
+                                self.log_test("CORE Investment Amount", "FAIL", 
+                                            f"CORE investment does not match expected value", 
+                                            f"${expected_core:,.2f}", 
+                                            f"${core_investment:,.2f}")
+                                success = False
+                            
+                            # Validate BALANCE investment = $100,000
+                            expected_balance = 100000.00
+                            if abs(balance_investment - expected_balance) < 0.01:
+                                self.log_test("BALANCE Investment Amount", "PASS", 
+                                            f"BALANCE investment matches expected value", 
+                                            f"${expected_balance:,.2f}", 
+                                            f"${balance_investment:,.2f}")
+                            else:
+                                self.log_test("BALANCE Investment Amount", "FAIL", 
+                                            f"BALANCE investment does not match expected value", 
+                                            f"${expected_balance:,.2f}", 
+                                            f"${balance_investment:,.2f}")
+                                success = False
+                            
+                            break
+                            
+                except Exception as e:
+                    continue
+            
+            if not investment_found:
+                self.log_test("Investment Data", "FAIL", "No working investment data endpoint found")
                 return False
             
-            data = response.json()
-            accounts = data.get("accounts", [])
-            
-            # Check total count
-            if len(accounts) == 11:
-                self.log_test("MT5 Account Count", "PASS", f"Found expected 11 MT5 accounts")
-            else:
-                self.log_test("MT5 Account Count", "FAIL", f"Expected 11 accounts, found {len(accounts)}")
-                return False
-            
-            # Check for real balances (not all $0)
-            accounts_with_real_balance = 0
-            total_equity = 0
-            
-            for acc in accounts:
-                equity = acc.get("equity", 0) or acc.get("balance", 0)
-                account_num = acc.get("account", "Unknown")
-                
-                if equity > 0:
-                    accounts_with_real_balance += 1
-                    total_equity += equity
-                
-                self.log_test(f"Account {account_num} Balance", 
-                            "PASS" if equity > 0 else "FAIL",
-                            f"Equity: ${equity:,.2f}")
-            
-            if accounts_with_real_balance >= 8:  # At least 8 out of 11 should have real balances
-                self.log_test("Accounts Real Balances", "PASS", 
-                            f"{accounts_with_real_balance}/11 accounts have real balances")
-            else:
-                self.log_test("Accounts Real Balances", "FAIL", 
-                            f"Only {accounts_with_real_balance}/11 accounts have real balances")
+            return success
                 return False
             
             # Check total equity is substantial
