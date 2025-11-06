@@ -16046,7 +16046,8 @@ def generate_payment_schedule(investment):
     contract_end_date = calculate_contract_end(investment_date)
     
     # Calculate interest per payment period
-    interest_per_payment = amount * monthly_rate * months_per_period
+    # interest_rate is already per period (monthly for CORE, quarterly for BALANCE)
+    interest_per_payment = amount * interest_rate_per_period
     
     # Generate regular payments
     current_date = first_payment_date
