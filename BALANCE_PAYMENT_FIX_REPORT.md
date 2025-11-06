@@ -115,9 +115,10 @@ TOTAL COMMISSIONS:     $3,326.76 ✅
 - BALANCE Principal: $100,000.00
 
 **Total Interest Obligations (12 months):**
-- CORE Interest: $3,267.24
-- BALANCE Interest: $10,000.00
-- **TOTAL: $13,267.24**
+- CORE Interest: $3,267.24 (12 months × $272.27)
+- BALANCE Interest: $30,000.00 (12 months × $2,500)
+  - Paid quarterly: $7,500 × 4 = $30,000
+- **TOTAL: $33,267.24**
 
 **Salvador Palma's Commissions (10%):**
 - CORE Commissions: $326.76
