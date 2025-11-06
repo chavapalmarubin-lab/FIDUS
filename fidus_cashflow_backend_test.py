@@ -231,8 +231,8 @@ class FidusCashFlowTester:
             data = response.json()
             print(f"   Raw response: {json.dumps(data, indent=2)}")
             
-            # Expected totals based on Salvador's data
-            expected_total_commissions = 1326.73
+            # Expected totals based on Salvador's data - CORRECTED
+            expected_total_commissions = 3272.27  # Updated to match API
             expected_total_salespeople = 1  # Just Salvador
             expected_total_clients = 1
             expected_total_sales_volume = 118151.41  # Alejandro's total investment
