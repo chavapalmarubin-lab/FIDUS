@@ -25778,12 +25778,18 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
 async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 accounts for a client with live data and detailed analysis"""
     try:
+        # Handle different client_id formats
+        # Frontend uses 'client_alejandro_mariscal', DB uses 'client_alejandro'
+        actual_client_id = client_id
+        if client_id == "client_alejandro_mariscal":
+            actual_client_id = "client_alejandro"
+        
         # Allow clients to view their own accounts, admins can view any
-        if current_user.get("type") != "admin" and current_user.get("user_id") != client_id:
+        if current_user.get("type") != "admin" and current_user.get("user_id") not in [client_id, actual_client_id]:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        logging.info(f"Fetching MT5 accounts with live data for client_id: {client_id}")
-        mt5_cursor = db.mt5_accounts.find({"client_id": client_id})
+        logging.info(f"Fetching MT5 accounts with live data for client_id: {client_id} (actual: {actual_client_id})")
+        mt5_cursor = db.mt5_accounts.find({"client_id": actual_client_id})
         mt5_accounts_data = await mt5_cursor.to_list(length=None)
         
         accounts = []
