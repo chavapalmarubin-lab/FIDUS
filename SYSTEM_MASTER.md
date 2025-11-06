@@ -302,13 +302,13 @@ Salvador Palma:
 •	Phone: +1234567891
 •	Clients: 1 (Alejandro Mariscal Romero)
 •	Total Sales Volume: $118,151.41
-•	Total Commissions: $3,272.27
+•	Total Commissions: $1,326.73
 •	Active Investments: 2
 •	Status: Active
 Commission Breakdown:
-•	12 monthly payments: $63.53 each (CORE fund)
-•	4 quarterly payments: $250 each (BALANCE fund)
-•	Total: 16 payments over 14 months
+•	12 monthly payments: $27.23 each (CORE fund, 1.5% monthly)
+•	4 quarterly payments: $250 each (BALANCE fund, 2.5% quarterly)
+•	Total: 16 payments over 14 months = $1,326.73
 7.4 Commission Records
 Database Collection: referral_commissions
 Record Structure:
