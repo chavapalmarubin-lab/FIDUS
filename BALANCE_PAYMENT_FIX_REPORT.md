@@ -63,14 +63,16 @@ Salesperson:      sp_6909e8eaaaf69606babea151 (Salvador Palma)
 CORE Fund:
   Monthly Interest:    $272.27
   Commission (10%):    $27.23
-  Total (12 months):   $326.73
+  Total (12 months):   $326.76
 
 BALANCE Fund:
-  Quarterly Interest:  $2,500.00
-  Commission (10%):    $250.00
-  Total (4 quarters):  $1,000.00
+  Monthly Interest Rate: 2.5%
+  Monthly Interest:    $2,500.00
+  Quarterly Interest:  $7,500.00 (3 months)
+  Commission (10%):    $750.00
+  Total (4 quarters):  $3,000.00
 
-TOTAL COMMISSIONS:     $1,326.73 ✅
+TOTAL COMMISSIONS:     $3,326.76 ✅
 ```
 
 ---
