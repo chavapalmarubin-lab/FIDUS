@@ -116,9 +116,9 @@ TOTAL COMMISSIONS:     $1,326.73 ✅
 - **TOTAL: $13,267.24**
 
 **Salvador Palma's Commissions (10%):**
-- CORE Commissions: $326.73
-- BALANCE Commissions: $1,000.00
-- **TOTAL: $1,326.73 ✅**
+- CORE Commissions: $326.76
+- BALANCE Commissions: $3,000.00
+- **TOTAL: $3,326.76 ✅**
 
 ---
 
