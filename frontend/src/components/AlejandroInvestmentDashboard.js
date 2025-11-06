@@ -71,11 +71,17 @@ const AlejandroInvestmentDashboard = () => {
       }
 
       if (investmentsRes.status === 'fulfilled') {
+        console.log('Investments API Response:', investmentsRes.value.data);
         setInvestments(investmentsRes.value.data.investments || []);
+      } else {
+        console.error('Investments API Error:', investmentsRes.reason);
       }
 
       if (mt5AccountsRes.status === 'fulfilled') {
+        console.log('MT5 Accounts API Response:', mt5AccountsRes.value.data);
         setMt5Accounts(mt5AccountsRes.value.data.accounts || []);
+      } else {
+        console.error('MT5 Accounts API Error:', mt5AccountsRes.reason);
       }
 
     } catch (err) {
