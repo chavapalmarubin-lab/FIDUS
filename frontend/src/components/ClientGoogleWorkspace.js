@@ -212,8 +212,8 @@ const ClientGoogleWorkspace = ({ user }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('client_id', user.id);
-      formData.append('client_name', user.name);
+      formData.append('clientId', user.id);
+      formData.append('clientName', user.name);
 
       const response = await apiAxios.post('/fidus/client-document-upload', formData, {
         headers: {
