@@ -15280,8 +15280,14 @@ def calculate_investment_projections(investments, months=24):
 async def get_client_investments(client_id: str):
     """Get all investments for a specific client - Direct MongoDB version"""
     try:
+        # Handle different client_id formats
+        # Frontend uses 'client_alejandro_mariscal', DB uses 'client_alejandro'
+        actual_client_id = client_id
+        if client_id == "client_alejandro_mariscal":
+            actual_client_id = "client_alejandro"
+        
         # Get investments directly from MongoDB
-        investments_cursor = db.investments.find({"client_id": client_id})
+        investments_cursor = db.investments.find({"client_id": actual_client_id})
         investments_data = await investments_cursor.to_list(length=None)
         
         # Calculate portfolio statistics from MongoDB data
