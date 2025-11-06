@@ -90,12 +90,16 @@ class FIDUSAnalyticsTest:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("success") and data.get("user", {}).get("token"):
-                    self.admin_token = data["user"]["token"]
+                # Check if we have user data and token (success can be missing)
+                if data.get("token") or (data.get("user", {}).get("token")):
+                    # Extract token from either location
+                    token = data.get("token") or data.get("user", {}).get("token")
+                    self.admin_token = token
                     self.session.headers.update({
                         "Authorization": f"Bearer {self.admin_token}"
                     })
-                    self.log_test("Admin Authentication", True, f"Logged in as {data['user']['name']}")
+                    user_name = data.get("name") or data.get("user", {}).get("name", "Admin")
+                    self.log_test("Admin Authentication", True, f"Logged in as {user_name}")
                     return True
                 else:
                     self.log_test("Admin Authentication", False, f"Login failed: {data}")
