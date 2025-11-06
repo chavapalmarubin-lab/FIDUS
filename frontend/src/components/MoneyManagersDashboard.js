@@ -865,7 +865,7 @@ const MoneyManagersDashboard = () => {
                   <BarChart data={mt5Performance}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis 
-                      dataKey="manager_name" 
+                      dataKey="managerName" 
                       stroke="#94a3b8"
                       tick={{ fill: '#94a3b8', fontSize: 12 }}
                       angle={-45}
