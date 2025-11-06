@@ -249,7 +249,7 @@ const DocumentPortal = ({ user, userType }) => {
       formData.append('uploader_id', user.id);
       formData.append('uploader_type', userType);
       if (userType === 'client') {
-        formData.append('client_id', user.id);
+        formData.append('clientId', user.id);
       }
 
       const response = await axios.post(`${API}/documents/upload`, formData, {
