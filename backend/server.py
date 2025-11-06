@@ -16263,6 +16263,7 @@ async def calculate_cash_flow_calendar():
                             # Add commission to month
                             monthly_obligations[month_key]['commissions'].append(commission_payment)
                             monthly_obligations[month_key]['referral_commissions'] += commission_amount
+                            print(f"DEBUG: Added commission ${commission_amount:,.2f} to month {month_key}, new total: ${monthly_obligations[month_key]['referral_commissions']:,.2f}")
                             monthly_obligations[month_key]['total_due'] += commission_amount
                             
                             logging.info(f"💰 Added commission: ${commission_amount:.2f} to {salesperson_name} for {client_name}'s payment")
