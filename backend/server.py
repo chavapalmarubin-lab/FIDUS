@@ -16020,7 +16020,8 @@ def generate_payment_schedule(investment):
         investment_date = investment_date_str or datetime.now()
     
     amount = investment.get('principal_amount', 0)
-    fund_code = investment.get('fund_code', '')
+    # CRITICAL FIX: Database uses 'fund_type' not 'fund_code'
+    fund_code = investment.get('fund_type') or investment.get('fund_code', '')
     product = f'FIDUS_{fund_code}' if fund_code else 'FIDUS_CORE'
     
     # Get product specifications
