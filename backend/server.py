@@ -16097,9 +16097,19 @@ async def calculate_cash_flow_calendar():
         # Query exactly like we did in test - no projection to get ALL fields
         all_investments = await db.investments.find({"status": "active", "principal_amount": {"$gt": 0}}).to_list(length=None)
         
-        # DEBUG: Check what fields investments have
+        # DEBUG: Check what fields investments have AND re-query to confirm
         for inv in all_investments:
-            print(f"DEBUG INV: {inv.get('fund_type')} - has referral_salesperson_id: {'referral_salesperson_id' in inv}, value: {inv.get('referral_salesperson_id')}")
+            inv_id = inv.get('_id')
+            print(f"DEBUG INV: {inv.get('fund_type')} - _id: {inv_id}")
+            print(f"  From list - has referral_salesperson_id: {'referral_salesperson_id' in inv}")
+            print(f"  From list - value: {inv.get('referral_salesperson_id')}")
+            print(f"  Keys in inv: {list(inv.keys())[:10]}")  # First 10 keys
+            
+            # Re-query this exact investment
+            requeried = await db.investments.find_one({"_id": inv_id})
+            if requeried:
+                print(f"  Re-queried - has referral_salesperson_id: {'referral_salesperson_id' in requeried}")
+                print(f"  Re-queried - value: {requeried.get('referral_salesperson_id')}")
         
         # Get current fund revenue (real-time earnings)
         separation_data = await get_separation_account_interest()
