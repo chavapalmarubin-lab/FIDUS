@@ -798,6 +798,10 @@ class FidusCommissionTester:
                     
             else:
                 return False
+                
+        except Exception as e:
+            self.log_test("Fund Performance Endpoint", "ERROR", f"Exception: {str(e)}")
+            return False
 
 def main():
     """Main test execution"""
