@@ -46,20 +46,26 @@ const AlejandroInvestmentDashboard = () => {
     setError(null);
     
     try {
-      // Load all Alejandro's data
+      // Get authenticated user from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const clientId = userData.user_id || userData.id || 'client_alejandro';
+      
+      console.log('Loading data for client:', clientId);
+      
+      // Load all Alejandro's data using actual authenticated user ID
       const [readinessRes, investmentsRes, mt5AccountsRes] = await Promise.allSettled([
-        apiAxios.get('/api/clients/client_alejandro_mariscal/readiness'),
-        apiAxios.get('/api/clients/client_alejandro_mariscal/investments'),
-        apiAxios.get('/api/mt5/accounts/client_alejandro_mariscal')
+        apiAxios.get(`/api/clients/${clientId}/readiness`),
+        apiAxios.get(`/api/clients/${clientId}/investments`),
+        apiAxios.get(`/api/mt5/accounts/${clientId}`)
       ]);
 
       if (readinessRes.status === 'fulfilled') {
         setReadiness(readinessRes.value.data.readiness);
         setClientData({
-          client_id: 'client_alejandro_mariscal',
-          name: 'Alejandro Mariscal',
-          email: 'alexmar7609@gmail.com',
-          username: 'alejandrom',
+          client_id: clientId,
+          name: userData.name || 'Alejandro Mariscal',
+          email: userData.email || 'alexmar7609@gmail.com',
+          username: userData.username || 'alejandro_mariscal',
           type: 'client'
         });
       }
