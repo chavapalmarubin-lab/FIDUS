@@ -23392,19 +23392,23 @@ async def get_rebate_summary(
 # ===============================================================================
 
 @api_router.get("/admin/money-managers")
-async def get_all_money_managers():
-    """Get all money managers with performance metrics"""
+async def get_all_money_managers(period_days: int = 30):
+    """Get all money managers with performance metrics - UPDATED to use TradingAnalyticsService"""
     try:
-        from money_managers_service import MoneyManagersService
+        from services.trading_analytics_service import TradingAnalyticsService
         
-        service = MoneyManagersService(db)
-        managers = await service.get_all_managers()
+        service = TradingAnalyticsService(db)
+        ranking = await service.get_managers_ranking(period_days)
         
         return {
             "success": True,
-            "managers": managers,
-            "count": len(managers),
-            "generated_at": datetime.now(timezone.utc).isoformat()
+            "managers": ranking["managers"],
+            "count": ranking["total_managers"],
+            "total_pnl": ranking["total_pnl"],
+            "average_return": ranking["average_return"],
+            "best_performer": ranking["best_performer"],
+            "worst_performer": ranking["worst_performer"],
+            "generated_at": ranking["generated_at"]
         }
         
     except Exception as e:
@@ -23412,7 +23416,8 @@ async def get_all_money_managers():
         return {
             "success": False,
             "error": f"Failed to get money managers: {str(e)}",
-            "managers": []
+            "managers": [],
+            "count": 0
         }
 
 @api_router.get("/admin/money-managers/{manager_id}")
