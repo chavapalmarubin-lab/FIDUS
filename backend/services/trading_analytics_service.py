@@ -32,54 +32,59 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping - UPDATED 2025-11-06 (Current Manager Assignments)
-        # Based on actual manager assignments in mt5_accounts collection
-        # 5 ACTIVE MANAGERS: CP Strategy, TradingHub Gold, UNO14, alefloreztrader, Provider1-Assev
+        # Fund structure mapping - UPDATED 2025-11-06 (FINAL - Per Chava's specifications)
+        # 5 ACTIVE MANAGERS for November 2025:
+        # 1. TradingHub Gold Provider (886557, 891215)
+        # 2. UNO14 Manager (886602 - MAM)
+        # 3. CP Strategy Provider (885822, 897590)
+        # 4. alefloreztrader (897591, 897599, 886528)
+        # 5. Provider1-Assev (897589)
+        # GoldenTrade (886066) - INACTIVE this month but don't delete
         self.FUND_STRUCTURE = {
             "BALANCE": {
                 "aum": 100000,  # Client BALANCE allocation
-                "accounts": [886557, 886602, 886066],  # Client BALANCE accounts
+                "accounts": [886557, 886602, 886066],  # 886066 inactive but tracked
                 "managers": [
-                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold Provider"},
-                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager"},
-                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade Manager"}  # Inactive but has $10k history
+                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold Provider", "status": "active"},
+                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager", "status": "active", "method": "MAM"},
+                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade Manager", "status": "inactive"}
                 ]
             },
             "BALANCE_FIDUS": {
                 "aum": 14662.94,  # FIDUS house capital in BALANCE
                 "accounts": [891215],
                 "managers": [
-                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold Provider"}
+                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold Provider", "status": "active"}
                 ]
             },
             "BALANCE_REINVESTED": {
                 "aum": 0,  # Reinvested profit, no client obligation
                 "accounts": [897589],
                 "managers": [
-                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev"}
+                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev", "status": "active"}
                 ]
             },
             "CORE": {
                 "aum": 18151.41,  # Client CORE allocation
-                "accounts": [885822, 891234],  # Client CORE accounts (891234 has no manager)
+                "accounts": [885822, 891234],  # 891234 inactive
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy Provider"}
+                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy Provider", "status": "active"}
                 ]
             },
             "CORE_REINVESTED": {
                 "aum": 0,  # Reinvested profit, no client obligation
                 "accounts": [897590],
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy Provider"}
+                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy Provider", "status": "active"}
                 ]
             },
             "SEPARATION": {
                 "aum": 0,  # Extracted profits
                 "accounts": [897591, 897599, 886528],
                 "managers": [
-                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader"},
-                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader"},
-                    {"id": "manager_alefloreztrader", "account": 886528, "name": "alefloreztrader"}
+                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader", "status": "active"},
+                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader", "status": "active"},
+                    {"id": "manager_alefloreztrader", "account": 886528, "name": "alefloreztrader", "status": "active"}
                 ]
             }
         }
