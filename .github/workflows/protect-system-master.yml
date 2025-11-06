@@ -87,8 +87,8 @@ jobs:
             echo "❌ Could not restore files - they may have never existed in git history"
           fi
 
-      - name: Create issue if file missing
-        if: steps.check-file.outputs.file_exists == 'false'
+      - name: Create issue if files missing
+        if: steps.check-files.outputs.files_missing == 'true'
         uses: actions/github-script@v6
         with:
           script: |
