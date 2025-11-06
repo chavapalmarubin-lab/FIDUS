@@ -240,21 +240,21 @@ class TradingAnalyticsService:
             balance = account_data.get("balance", 0)
             equity = account_data.get("equity", 0)
             
-            # CORRECT: Calculate net deposits from actual deal history
-            deals_cursor = self.db.mt5_deals_history.find({
-                "account_number": account_num,
-                "type": 2  # Balance operations only
-            })
-            deals = await deals_cursor.to_list(length=None)
+            # FIXED: Use corrected initial_allocation from mt5_accounts (tagged with capital_source)
+            # This accounts for proper capital source categorization (client, FIDUS, reinvested)
+            initial_allocation = float(account_data.get("initial_allocation", 0))
+            if hasattr(account_data.get("initial_allocation"), 'to_decimal'):
+                initial_allocation = float(account_data.get("initial_allocation").to_decimal())
             
-            deposits = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) > 0)
-            withdrawals = sum(d.get('profit', 0) for d in deals if d.get('profit', 0) < 0)
-            net_deposits = deposits + withdrawals  # withdrawals are negative
+            # Get profit withdrawals from account data
+            profit_withdrawals = float(account_data.get("profit_withdrawals", 0))
+            if hasattr(account_data.get("profit_withdrawals"), 'to_decimal'):
+                profit_withdrawals = float(account_data.get("profit_withdrawals").to_decimal())
             
-            # TRUE P&L = Current Balance - Net Deposits
-            initial_allocation = net_deposits if net_deposits > 0 else balance
-            true_pnl = balance - net_deposits
+            # TRUE P&L = (Current Equity + Profit Withdrawals) - Initial Allocation
+            # This matches the three-tier P&L calculator formula
             current_equity = equity
+            true_pnl = current_equity + profit_withdrawals - initial_allocation
             
             # Calculate return percentage
             return_percentage = (true_pnl / net_deposits * 100) if net_deposits > 0 else 0
