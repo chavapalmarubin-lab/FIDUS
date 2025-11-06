@@ -257,11 +257,11 @@ class TradingAnalyticsService:
             true_pnl = current_equity + profit_withdrawals - initial_allocation
             
             # Calculate return percentage
-            return_percentage = (true_pnl / net_deposits * 100) if net_deposits > 0 else 0
+            return_percentage = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
             
             # Calculate drawdown percentage
-            if net_deposits > 0 and balance < net_deposits:
-                drawdown_pct = ((net_deposits - balance) / net_deposits * 100)
+            if initial_allocation > 0 and balance < initial_allocation:
+                drawdown_pct = ((initial_allocation - balance) / initial_allocation * 100)
             else:
                 drawdown_pct = 0
             
