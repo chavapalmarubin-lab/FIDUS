@@ -344,15 +344,15 @@ Example:
 •	Total Return: $1,800 (12 months)
 8.2 BALANCE Fund
 Target Investors: $100,000 - $499,999
-Interest Rate: 2.5% monthly
+Interest Rate: 2.5% quarterly
 Contract Term: 14 months total (2 months incubation + 12 months interest)
 Payment Schedule: Quarterly (every 3 months)
 Total Payments: 4 payments
-Expected Return: 30% over 12 months
+Expected Return: 10% over 12 months
 Example:
 •	Investment: $100,000
-•	Quarterly Interest: $7,500
-•	Total Return: $30,000 (12 months)
+•	Quarterly Interest: $2,500
+•	Total Return: $10,000 (12 months)
 8.3 DYNAMIC Fund
 Target Investors: $500,000 - $999,999
 Interest Rate: Custom (negotiated)
