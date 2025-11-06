@@ -2192,6 +2192,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Three-Tier P&L System API Testing - COMPLETED"
     - "Broker Rebates Calculation Fix Testing - COMPLETED"
     - "Cash Flow Obligations Calendar Verification - COMPLETED"
     - "Trading Analytics System Phase 1A Testing - COMPLETED"
