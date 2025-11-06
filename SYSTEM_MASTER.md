@@ -94,9 +94,9 @@ Financial Tracking:
 2.1 Fund Structure
 FIDUS operates 4 investment products:
 Fund Type	Min Investment	Interest Rate	Contract Term	Incubation Period
-CORE	$10,000	3.5% monthly	14 months	2 months
-BALANCE	$100,000	2.5% monthly	14 months	2 months
-DYNAMIC	$500,000	Custom	14 months	2 months
+CORE	$10,000	1.5% monthly	14 months	2 months
+BALANCE	$100,000	2.5% quarterly	14 months	2 months
+DYNAMIC	$500,000	3.5%	14 months	2 months
 UNLIMITED	$1,000,000	Custom	14 months	2 months
 Incubation Period:
 •	First 2 months of 14-month contract
