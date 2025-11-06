@@ -3636,7 +3636,7 @@ async def get_account_true_pnl(account_number: int, current_user: dict = Depends
 # THREE-TIER P&L API ENDPOINTS (Client, FIDUS, Total Fund)
 # ============================================================================
 
-@api_router.get("/api/pnl/three-tier")
+@api_router.get("/pnl/three-tier")
 async def get_three_tier_pnl(current_user: dict = Depends(get_current_admin_user)):
     """
     Get complete three-tier P&L breakdown (ADMIN ONLY)
