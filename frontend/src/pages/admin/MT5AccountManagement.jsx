@@ -310,8 +310,8 @@ const MT5AccountManagement = () => {
               <Input id="name" value={formData.name} onChange={(e) => handleFormChange('name', e.target.value)} placeholder="e.g., Main Balance Account" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="fund_type">Fund Type *</Label>
-              <Select value={formData.fund_type} onValueChange={(value) => handleFormChange('fund_type', value)}>
+              <Label htmlFor="fundType">Fund Type *</Label>
+              <Select value={formData.fundType} onValueChange={(value) => handleFormChange('fundType', value)}>
                 <SelectTrigger><SelectValue placeholder="Select fund type" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="BALANCE">BALANCE - Balanced Fund</SelectItem>
