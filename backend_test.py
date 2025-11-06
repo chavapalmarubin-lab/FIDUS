@@ -751,22 +751,35 @@ class BackendTester:
             return False
     
     def run_all_tests(self) -> Dict[str, Any]:
-        """Run all critical backend endpoint tests"""
-        print("🚀 Starting Comprehensive Backend Testing - All Critical Endpoints")
+        """Run all critical backend endpoint tests - PRIORITIZING THREE-TIER P&L SYSTEM"""
+        print("🚀 THREE-TIER P&L SYSTEM BACKEND API TESTING")
         print("=" * 80)
         
         # Authenticate first
         if not self.authenticate_admin():
             return {"success": False, "error": "Authentication failed"}
         
-        # Run all tests
-        test_results = {
+        # PRIMARY FOCUS: Three-Tier P&L System Tests
+        print("\n🎯 PRIMARY FOCUS: THREE-TIER P&L SYSTEM")
+        pnl_test_results = {
+            "three_tier_pnl": self.test_three_tier_pnl_endpoint(),
+            "client_pnl": self.test_client_pnl_endpoint(),
+            "fund_performance": self.test_fund_performance_endpoint(),
+            "mathematical_consistency": self.test_mathematical_consistency()
+        }
+        
+        # SECONDARY: Other backend tests (if time permits)
+        print("\n📋 SECONDARY: Other Backend Systems")
+        other_test_results = {
             "cashflow_system": self.test_cashflow_system(),
             "money_managers_api": self.test_money_managers_api(),
             "trading_analytics": self.test_trading_analytics(),
             "mt5_accounts": self.test_mt5_accounts(),
             "fund_portfolio": self.test_fund_portfolio()
         }
+        
+        # Combine all results
+        test_results = {**pnl_test_results, **other_test_results}
         
         # Calculate summary
         total_tests = len(test_results)
