@@ -3,7 +3,7 @@
 RENDER DEPLOYMENT BACKEND TESTING - ALL 4 PRIORITY ISSUES + DEPLOYMENT
 Test Suite for MT5 Bridge System Production Deployment
 
-Backend URL: https://fidus-restore.preview.emergentagent.com/api
+Backend URL: https://fidus-finance-3.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 Test Coverage:
@@ -23,7 +23,7 @@ import time
 
 class RenderDeploymentTester:
     def __init__(self):
-        self.base_url = "https://fidus-restore.preview.emergentagent.com/api"
+        self.base_url = "https://fidus-finance-3.preview.emergentagent.com/api"
         self.admin_token = None
         self.test_results = []
         self.success_count = 0

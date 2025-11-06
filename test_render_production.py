@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Production Backend URL
-PROD_BACKEND_URL = "https://fidus-restore.preview.emergentagent.com"
+PROD_BACKEND_URL = "https://fidus-finance-3.preview.emergentagent.com"
 
 print("=" * 80)
 print("🌐 TESTING PRODUCTION RENDER DEPLOYMENT")

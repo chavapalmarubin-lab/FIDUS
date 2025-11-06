@@ -21,7 +21,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-restore.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-finance-3.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
