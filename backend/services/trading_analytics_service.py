@@ -375,23 +375,37 @@ class TradingAnalyticsService:
         try:
             logger.info(f"📊 Calculating managers ranking for {period_days} days")
             
-            # Get all managers from both funds
+            # Get all ACTIVE managers from BALANCE and CORE funds only (exclude SEPARATION and INACTIVE)
             all_managers = []
             
-            for fund_name, fund_config in self.FUND_STRUCTURE.items():
-                for manager_config in fund_config["managers"]:
-                    manager_perf = await self.get_manager_analytics(
-                        manager_config["id"],
-                        manager_config["account"],
-                        period_days
-                    )
+            for fund_name in ["BALANCE", "CORE"]:  # Only process active funds
+                fund_config = self.FUND_STRUCTURE.get(fund_name)
+                if not fund_config:
+                    continue
                     
-                    # FIXED: Only include managers with actual trading activity
-                    # Managers with 0 trades shouldn't appear in rankings/compare tab
-                    if manager_perf["total_trades"] > 0:
+                for manager_config in fund_config["managers"]:
+                    # Skip inactive managers
+                    if manager_config.get("status") == "inactive":
+                        logger.info(f"⏭️  Skipping {manager_config['name']} - inactive status")
+                        continue
+                    
+                    try:
+                        manager_perf = await self.get_manager_analytics(
+                            manager_config["id"],
+                            manager_config["account"],
+                            period_days
+                        )
+                        
+                        # Add fund context
+                        manager_perf["fund_type"] = fund_name
+                        manager_perf["status"] = manager_config.get("status", "active")
+                        
                         all_managers.append(manager_perf)
-                    else:
-                        logger.info(f"⏭️  Skipping {manager_perf['manager_name']} - 0 trades")
+                        logger.info(f"✅ Added {manager_perf['manager_name']} from {fund_name} fund")
+                        
+                    except Exception as e:
+                        logger.warning(f"⚠️  Failed to get analytics for {manager_config['name']}: {str(e)}")
+                        continue
             
             # Sort by return percentage (highest first)
             all_managers.sort(key=lambda x: x["return_percentage"], reverse=True)
