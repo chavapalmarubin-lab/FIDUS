@@ -3667,7 +3667,7 @@ async def get_three_tier_pnl(current_user: dict = Depends(get_current_admin_user
         raise HTTPException(status_code=500, detail=f"Failed to calculate three-tier P&L: {str(e)}")
 
 
-@api_router.get("/api/pnl/client/{client_id}")
+@api_router.get("/pnl/client/{client_id}")
 async def get_client_pnl(client_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get P&L view for a specific client
