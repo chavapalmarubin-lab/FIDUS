@@ -181,13 +181,13 @@ const DocumentPortal = ({ user, userType }) => {
           aValue = a.status;
           bValue = b.status;
           break;
-        case "created_at":
-          aValue = new Date(a.created_at);
-          bValue = new Date(b.created_at);
+        case "createdAt":
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
           break;
-        case "updated_at":
-          aValue = new Date(a.updated_at);
-          bValue = new Date(b.updated_at);
+        case "updatedAt":
+          aValue = new Date(a.updatedAt);
+          bValue = new Date(b.updatedAt);
           break;
         default:
           aValue = a[sortBy];
