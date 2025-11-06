@@ -469,20 +469,9 @@ class FidusCommissionTester:
                 return False
             
             return success
-                return False
-            
-            # Check total equity is substantial
-            if total_equity > 50000:  # Expect at least $50K total
-                self.log_test("Total MT5 Equity", "PASS", f"Total equity: ${total_equity:,.2f}")
-            else:
-                self.log_test("Total MT5 Equity", "FAIL", f"Total equity: ${total_equity:,.2f} - expected more substantial amounts")
-                return False
-            
-            self.log_test("MT5 Admin Accounts API", "PASS", "MT5 accounts with real balances verified")
-            return True
             
         except Exception as e:
-            self.log_test("MT5 Accounts Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Investment Data Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_fund_portfolio(self) -> bool:
