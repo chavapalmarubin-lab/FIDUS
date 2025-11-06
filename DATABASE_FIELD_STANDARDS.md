@@ -43,6 +43,7 @@ This document defines the EXACT field names used in:
   salesperson_id: String,             // Reference to salespeople collection
   salesperson_name: String,           // "Salvador Palma"
   referral_code: String,              // "SP-2025"
+  referral_salesperson_id: String,    // Used for commission tracking (same as salesperson_id)
   mt5_accounts: Array,                // List of MT5 account numbers allocated
   created_at: Date,                   // When investment was created
   updated_at: Date                    // Last modification timestamp
