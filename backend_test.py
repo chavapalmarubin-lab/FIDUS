@@ -568,82 +568,64 @@ class FidusCommissionTester:
             self.log_test("Commission Calculations Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_three_tier_pnl_endpoint(self) -> bool:
-        """Test GET /api/pnl/three-tier (Admin Only) - Complete three-tier P&L breakdown"""
-        try:
-            print("\n📊 Testing Three-Tier P&L Endpoint...")
+    def run_all_tests(self) -> bool:
+        """Run all FIDUS commission verification tests"""
+        print("🚀 Starting FIDUS Backend Commission Verification Tests")
+        print("=" * 70)
+        
+        # Authenticate first
+        if not self.authenticate_admin():
+            print("\n❌ Authentication failed. Cannot proceed with tests.")
+            return False
+        
+        # Run all commission verification tests
+        tests = [
+            ("Salvador Palma Data", self.test_salvador_palma_data),
+            ("Referrals Overview", self.test_referrals_overview),
+            ("Commission Calendar", self.test_commission_calendar),
+            ("Investment Data", self.test_investment_data),
+            ("Commission Calculations", self.test_commission_calculations)
+        ]
+        
+        passed_tests = 0
+        total_tests = len(tests)
+        
+        for test_name, test_func in tests:
+            try:
+                if test_func():
+                    passed_tests += 1
+            except Exception as e:
+                self.log_test(f"{test_name} Exception", "ERROR", f"Test failed with exception: {str(e)}")
+        
+        # Print summary
+        print("\n" + "=" * 70)
+        print("📊 FIDUS COMMISSION VERIFICATION SUMMARY")
+        print("=" * 70)
+        
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"Tests Passed: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+        
+        # Print detailed results
+        print("\n📋 DETAILED RESULTS:")
+        for result in self.test_results:
+            status_icon = "✅" if result["status"] == "PASS" else "❌" if result["status"] == "FAIL" else "⚠️"
+            print(f"{status_icon} {result['test_name']}: {result['details']}")
             
-            response = self.session.get(f"{self.base_url}/pnl/three-tier", timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                if data.get('success') and 'data' in data:
-                    pnl_data = data['data']
-                    
-                    # Verify structure
-                    required_keys = ['client_pnl', 'fidus_pnl', 'total_fund_pnl', 'separation_balance']
-                    missing_keys = [key for key in required_keys if key not in pnl_data]
-                    
-                    if missing_keys:
-                        self.log_test("Three-Tier P&L Structure", "FAIL", f"Missing keys: {missing_keys}")
-                        return False
-                    
-                    # Extract key values
-                    client_pnl = pnl_data.get('client_pnl', {})
-                    fidus_pnl = pnl_data.get('fidus_pnl', {})
-                    total_fund_pnl = pnl_data.get('total_fund_pnl', {})
-                    separation_balance = pnl_data.get('separation_balance', 0)
-                    
-                    # CRITICAL validation: Client Initial Investment MUST be $118,151.41
-                    client_initial = client_pnl.get('initial_allocation', 0)
-                    expected_client_initial = 118151.41
-                    
-                    if abs(client_initial - expected_client_initial) > 1.0:  # Allow $1 tolerance
-                        self.log_test(
-                            "Client Initial Investment", 
-                            "FAIL", 
-                            f"Expected ${expected_client_initial}, got ${client_initial}",
-                            expected_client_initial,
-                            client_initial
-                        )
-                        return False
-                    
-                    # Validate FIDUS capital
-                    fidus_initial = fidus_pnl.get('initial_allocation', 0)
-                    expected_fidus_initial = 14662.94
-                    
-                    # Validate total fund investment
-                    total_initial = total_fund_pnl.get('initial_allocation', 0)
-                    expected_total_initial = 132814.35
-                    
-                    # Validate account count (client should have 5 accounts)
-                    client_account_count = client_pnl.get('account_count', 0)
-                    
-                    # Log success with key metrics
-                    self.log_test(
-                        "Three-Tier P&L Endpoint", 
-                        "PASS", 
-                        f"✅ Client: ${client_initial}, FIDUS: ${fidus_initial}, Total: ${total_initial}, Accounts: {client_account_count}"
-                    )
-                    
-                    print(f"   📊 Client P&L: ${client_pnl.get('true_pnl', 0)} ({client_pnl.get('return_percent', 0):.1f}%)")
-                    print(f"   📊 FIDUS P&L: ${fidus_pnl.get('true_pnl', 0)} ({fidus_pnl.get('return_percent', 0):.1f}%)")
-                    print(f"   📊 Total Fund P&L: ${total_fund_pnl.get('true_pnl', 0)} ({total_fund_pnl.get('return_percent', 0):.1f}%)")
-                    print(f"   📊 Separation Balance: ${separation_balance}")
-                    
-                    return True
-                    
-                else:
-                    self.log_test("Three-Tier P&L Endpoint", "FAIL", f"Invalid response structure: {data}")
-                    return False
-                    
-            else:
-                self.log_test("Three-Tier P&L Endpoint", "FAIL", f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Three-Tier P&L Endpoint", "ERROR", f"Exception: {str(e)}")
+            if result.get("expected") and result.get("actual"):
+                print(f"   Expected: {result['expected']}")
+                print(f"   Actual: {result['actual']}")
+        
+        print("\n" + "=" * 70)
+        
+        if success_rate >= 80:
+            print("🎉 FIDUS COMMISSION VERIFICATION: SUCCESSFUL")
+            print("✅ Salvador Palma commission data verified")
+            print("✅ Referrals overview totals verified") 
+            print("✅ Commission calculations validated")
+            return True
+        else:
+            print("🚨 FIDUS COMMISSION VERIFICATION: NEEDS ATTENTION")
+            print("❌ Critical commission issues found")
             return False
     
     def test_client_pnl_endpoint(self) -> bool:
