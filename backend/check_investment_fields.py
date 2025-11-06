@@ -2,18 +2,29 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
+import json
 
-load_dotenv()
+load_dotenv('/app/backend/.env')
 
-async def check():
-    client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
-    db = client['fidus_production']
+async def check_fields():
+    """Check exact fields in investments"""
     
-    inv = await db.investments.find_one({})
-    print("Investment document fields:")
-    for key in inv.keys():
-        print(f"  {key}: {inv[key]}")
+    mongo_url = os.getenv('MONGO_URL')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client.fidus_production
+    
+    # Get all investments
+    investments = await db.investments.find({}).to_list(None)
+    
+    for i, inv in enumerate(investments, 1):
+        print(f"\n{'='*60}")
+        print(f"INVESTMENT #{i}")
+        print(f"{'='*60}")
+        for key, value in inv.items():
+            if key != '_id':
+                print(f"{key:30s}: {value}")
     
     client.close()
 
-asyncio.run(check())
+if __name__ == "__main__":
+    asyncio.run(check_fields())
