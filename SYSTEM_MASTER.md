@@ -333,15 +333,15 @@ Record Structure:
 8. INVESTMENT PRODUCTS
 8.1 CORE Fund
 Target Investors: $10,000 - $99,999
-Interest Rate: 3.5% monthly
+Interest Rate: 1.5% monthly
 Contract Term: 14 months total (2 months incubation + 12 months interest)
 Payment Schedule: Monthly on 1st of month
 Total Payments: 12 payments
-Expected Return: 42% over 12 months
+Expected Return: 18% over 12 months
 Example:
 •	Investment: $10,000
-•	Monthly Interest: $350
-•	Total Return: $4,200 (12 months)
+•	Monthly Interest: $150
+•	Total Return: $1,800 (12 months)
 8.2 BALANCE Fund
 Target Investors: $100,000 - $499,999
 Interest Rate: 2.5% monthly
