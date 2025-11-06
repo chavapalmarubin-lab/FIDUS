@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 """
-THREE-TIER P&L SYSTEM BACKEND API TESTING
-Testing Date: December 18, 2025
-Backend URL: https://fidus-fix.preview.emergentagent.com/api
-Auth: Admin token (username: admin, password: password123)
+FIDUS Backend Commission Verification Test Suite
+Testing comprehensive verification of FIDUS backend after commission fixes.
 
-PRIMARY FOCUS: THREE-TIER P&L SYSTEM ENDPOINTS
-1. GET /api/pnl/three-tier (Admin Only) - Complete three-tier P&L breakdown
-2. GET /api/pnl/client/client_alejandro - Client-specific P&L 
-3. GET /api/pnl/fund-performance (Admin Only) - Fund performance vs client obligations
+Test Coverage:
+1. Salvador Palma Data - GET /api/admin/referrals/salespeople/sp_6909e8eaaaf69606babea151
+2. Referrals Overview - GET /api/admin/referrals/overview
+3. Commission Calendar/Schedule - Any endpoint that shows payment dates
+4. Investment Data - GET /api/admin/investments or similar
 
-CRITICAL VALIDATION REQUIREMENTS:
-- Client Initial Investment: MUST be $118,151.41 ✅
-- FIDUS Capital: $14,662.94
-- Total Fund Investment: $132,814.35
-- Account 886066 included with $10,000 initial allocation ✅
-- All calculations mathematically correct
-- Admin-only endpoints require authentication
+Expected Results:
+- Salvador Palma: totalCommissions = $3,326.76, clients = 1, activeInvestments = 2
+- Referrals Overview: Total sales volume = $118,151.41, Total commissions = $3,326.76
+- Commission Calendar: BALANCE first payment = Feb 28, 2026, CORE first payment = Dec 30, 2025
+- Investment Data: Total investment = $118,151.41, CORE = $18,151.41, BALANCE = $100,000
 
-EXPECTED RESPONSE STRUCTURE:
-- Three-tier: client_pnl, fidus_pnl, total_fund_pnl, separation_balance
-- Client P&L: initial_investment, current_equity, available_for_withdrawal, total_pnl
-- Fund Performance: fund_performance, client_obligations, gap_analysis
-
-SECONDARY TESTS (if time permits):
-- Cash Flow System, Money Managers, Trading Analytics, MT5 Accounts, Fund Portfolio
+CRITICAL VALIDATIONS:
+- Verify BALANCE quarterly commission = $750 (NOT $250)
+- Verify CORE monthly commission = $27.23
+- Verify total = $3,326.76 (NOT $1,326.73)
+- Verify BALANCE first payment date = February 28, 2026
 """
 
 import requests
