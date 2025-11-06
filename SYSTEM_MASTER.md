@@ -283,8 +283,8 @@ Commission Rate: 10% of client interest payments
 Calculation:
 Monthly Commission = (Investment Amount × Interest Rate × 10%)
 Examples:
-•	CORE $18,151.41 @ 3.5%: $635.30 × 10% = $63.53 per month
-•	BALANCE $100,000 @ 2.5%: $2,500 × 10% = $250 per payment
+•	CORE $18,151.41 @ 1.5% monthly: $272.27 × 10% = $27.23 per month
+•	BALANCE $100,000 @ 2.5% quarterly: $2,500 × 10% = $250 per quarter
 7.2 Payment Schedule
 Incubation Period (Months 1-2):
 •	Commissions accrue but are NOT paid
