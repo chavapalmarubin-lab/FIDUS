@@ -16094,26 +16094,8 @@ async def calculate_cash_flow_calendar():
     """Calculate month-by-month cash flow obligations calendar with CORRECT date logic"""
     try:
         # Get all active investments
-        # Explicitly include referral_salesperson_id in projection to ensure it's returned
-        investments_cursor = db.investments.find(
-            {"status": {"$ne": "cancelled"}},
-            {
-                "fund_type": 1,
-                "principal_amount": 1,
-                "interest_rate": 1,
-                "payment_frequency": 1,
-                "start_date": 1,
-                "first_payment_date": 1,
-                "created_at": 1,
-                "client_id": 1,
-                "salesperson_id": 1,
-                "salesperson_name": 1,
-                "referral_salesperson_id": 1,  # CRITICAL: Must include for commissions
-                "status": 1,
-                "_id": 1
-            }
-        )
-        all_investments = await investments_cursor.to_list(length=None)
+        # Query exactly like we did in test - no projection to get ALL fields
+        all_investments = await db.investments.find({"status": "active", "principal_amount": {"$gt": 0}}).to_list(length=None)
         
         # DEBUG: Check what fields investments have
         for inv in all_investments:
