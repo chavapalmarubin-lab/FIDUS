@@ -71,7 +71,7 @@ const DocumentPortal = ({ user, userType }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("created_at");
+  const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
