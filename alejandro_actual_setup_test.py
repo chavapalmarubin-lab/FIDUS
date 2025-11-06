@@ -17,7 +17,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://fidus-integration-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-restore.preview.emergentagent.com/api"
 
 class AlejandroActualSetupTester:
     def __init__(self):

@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 
 class ReferralSystemFinalTester:
     def __init__(self):
-        self.base_url = "https://fidus-integration-1.preview.emergentagent.com/api"
+        self.base_url = "https://fidus-restore.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

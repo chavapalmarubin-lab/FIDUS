@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://fidus-integration-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-restore.preview.emergentagent.com/api"
 
 def authenticate_and_get_calendar():
     """Authenticate and get detailed calendar data"""

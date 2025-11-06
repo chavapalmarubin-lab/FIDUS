@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from review request
-BACKEND_URL = "https://fidus-integration-1.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-restore.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class AlejandroFinalTest:
