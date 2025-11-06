@@ -19222,8 +19222,9 @@ async def get_fund_portfolio_overview():
         
         for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
             # Calculate fund AUM from investments
-            fund_investments = [inv for inv in all_investments if inv.get('fund_code') == fund_code]
-            fund_aum = sum(inv.get('principal_amount', 0) for inv in fund_investments)
+            # FIXED: Investments use 'fund_type' not 'fund_code'
+            fund_investments = [inv for inv in all_investments if inv.get('fund_type') == fund_code]
+            fund_aum = sum(float(inv.get('principal_amount', 0)) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
             # Get MT5 allocations for this fund
