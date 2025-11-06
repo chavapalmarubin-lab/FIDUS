@@ -28,7 +28,7 @@ import sys
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-class BackendTester:
+class FidusCommissionTester:
     def __init__(self):
         self.base_url = "https://fidus-fix.preview.emergentagent.com/api"
         self.session = requests.Session()
