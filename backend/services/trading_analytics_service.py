@@ -410,6 +410,10 @@ class TradingAnalyticsService:
                             existing["current_equity"] += manager_perf["current_equity"]
                             existing["initial_allocation"] += manager_perf["initial_allocation"]
                             existing["total_trades"] += manager_perf["total_trades"]
+                            # Add account to assigned_accounts list
+                            if "assigned_accounts" not in existing:
+                                existing["assigned_accounts"] = []
+                            existing["assigned_accounts"].append(manager_config["account"])
                             # Recalculate return percentage
                             if existing["initial_allocation"] > 0:
                                 existing["return_percentage"] = (existing["total_pnl"] / existing["initial_allocation"]) * 100
@@ -418,6 +422,8 @@ class TradingAnalyticsService:
                             # First time seeing this manager
                             manager_perf["fund_type"] = fund_name
                             manager_perf["status"] = manager_config.get("status", "active")
+                            manager_perf["assigned_accounts"] = [manager_config["account"]]
+                            manager_perf["profile_url"] = manager_config.get("profile_url", "")
                             unique_managers[manager_id] = manager_perf
                             logger.info(f"✅ Added {manager_perf['manager_name']} from {fund_name} fund")
                         
