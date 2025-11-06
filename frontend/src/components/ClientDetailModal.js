@@ -342,8 +342,8 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
         const file = files[i];
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('client_id', client.id);
-        formData.append('client_name', client.name);
+        formData.append('clientId', client.id);
+        formData.append('clientName', client.name);
         formData.append('folder_name', `${client.name} - FIDUS Documents`);
 
         // Upload to client's specific Google Drive folder
