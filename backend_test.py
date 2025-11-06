@@ -164,55 +164,62 @@ class FidusCommissionTester:
             self.log_test("Salvador Palma Data Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_money_managers_api(self) -> bool:
-        """Test 2: Money Managers API - should return 5 active managers with real performance data"""
+    def test_referrals_overview(self) -> bool:
+        """Test 2: Referrals Overview - GET /api/admin/referrals/overview"""
         try:
-            print("\n👥 Testing Money Managers API...")
+            print("\n📈 Testing Referrals Overview...")
             
-            response = self.session.get(f"{self.base_url}/admin/money-managers")
+            response = self.session.get(f"{self.base_url}/admin/referrals/overview")
             
             if response.status_code != 200:
-                self.log_test("Money Managers API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Referrals Overview API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            managers = data.get("managers", [])
             
-            # Expected 5 active managers with real performance data
-            expected_managers = [
-                "CP Strategy",
-                "TradingHub Gold", 
-                "UNO14",
-                "alefloreztrader",
-                "Provider1-Assev"
-            ]
-            
-            # Check total count
-            if len(managers) == 5:
-                self.log_test("Money Managers Count", "PASS", f"Found expected 5 money managers")
-            else:
-                self.log_test("Money Managers Count", "FAIL", f"Expected 5 managers, found {len(managers)}")
-                print(f"   Found managers: {[mgr.get('name') for mgr in managers]}")
+            if not data.get("success"):
+                self.log_test("Referrals Overview API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            # Check for real performance data (using correct field names)
-            managers_with_real_data = 0
-            total_current_profit = 0
+            success = True
             
-            for mgr in managers:
-                current_month_profit = mgr.get("currentMonthProfit", 0)
-                assigned_accounts = mgr.get("assignedAccounts", [])
-                performance_fee_rate = mgr.get("performanceFeeRate", 0)
-                
-                # Manager has real data if they have profit or assigned accounts
-                if current_month_profit != 0 or len(assigned_accounts) > 0:
-                    managers_with_real_data += 1
-                    total_current_profit += current_month_profit
-                
-                manager_name = mgr.get("name", "Unknown")
-                self.log_test(f"Manager {manager_name} Data", 
-                            "PASS" if (current_month_profit != 0 or len(assigned_accounts) > 0) else "FAIL",
-                            f"Current Profit: ${current_month_profit:,.2f}, Accounts: {len(assigned_accounts)}, Fee Rate: {performance_fee_rate*100}%")
+            # Check total sales volume = $118,151.41
+            total_sales = data.get("totalSalesVolume", 0)
+            expected_sales = 118151.41
+            
+            if abs(total_sales - expected_sales) < 0.01:
+                self.log_test("Overview Total Sales Volume", "PASS", 
+                            f"Total sales volume matches expected value", 
+                            f"${expected_sales:,.2f}", 
+                            f"${total_sales:,.2f}")
+            else:
+                self.log_test("Overview Total Sales Volume", "FAIL", 
+                            f"Total sales volume does not match expected value", 
+                            f"${expected_sales:,.2f}", 
+                            f"${total_sales:,.2f}")
+                success = False
+            
+            # Check total commissions = $3,326.76
+            total_commissions = data.get("totalCommissions", 0)
+            expected_commissions = 3326.76
+            
+            if abs(total_commissions - expected_commissions) < 0.01:
+                self.log_test("Overview Total Commissions", "PASS", 
+                            f"Total commissions match expected value", 
+                            f"${expected_commissions:,.2f}", 
+                            f"${total_commissions:,.2f}")
+            else:
+                self.log_test("Overview Total Commissions", "FAIL", 
+                            f"Total commissions do not match expected value", 
+                            f"${expected_commissions:,.2f}", 
+                            f"${total_commissions:,.2f}")
+                success = False
+            
+            return success
+            
+        except Exception as e:
+            self.log_test("Referrals Overview Test", "ERROR", f"Exception: {str(e)}")
+            return False
             
             if managers_with_real_data >= 4:  # At least 4 out of 5 should have real data
                 self.log_test("Managers Real Performance Data", "PASS", 
