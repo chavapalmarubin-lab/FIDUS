@@ -183,8 +183,9 @@ class FidusCashFlowTester:
                 self.log_test("Salvador Total Commissions", "FAIL", f"Total commissions: ${total_commissions:.2f} (expected ${expected_total_commissions:.2f})")
                 success = False
             
-            # Check client count
-            clients_count = data.get("clients", 0) or data.get("totalClientsReferred", 0)
+            # Check client count - fix the data extraction
+            clients_list = data.get("clients", [])
+            clients_count = len(clients_list) if isinstance(clients_list, list) else clients_list
             if clients_count == expected_clients:
                 self.log_test("Salvador Clients Count", "PASS", f"Clients: {clients_count} (expected {expected_clients})")
             else:
