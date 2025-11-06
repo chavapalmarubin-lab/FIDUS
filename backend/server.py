@@ -16401,12 +16401,27 @@ async def get_complete_cashflow(days: int = 30):
         total_inflows = mt5_trading_pnl + broker_interest + broker_rebates
         
         # ✅ Get client obligations from REAL investments in MongoDB
-        # Query actual active investments and sum earned interest
+        # Calculate total interest obligations based on investment terms
         investments_cursor = db.investments.find({'status': 'active'})
         investments = await investments_cursor.to_list(length=None)
-        client_interest_obligations = sum(
-            inv.get('earned_interest', 0) for inv in investments
-        )
+        
+        client_interest_obligations = 0
+        for inv in investments:
+            principal = inv.get('principal_amount', 0)
+            interest_rate = inv.get('interest_rate', 0)
+            payment_freq = inv.get('payment_frequency', 'monthly')
+            
+            # Calculate total interest for contract period
+            if payment_freq == 'monthly':
+                # 12 monthly payments
+                total_interest = principal * interest_rate * 12
+            elif payment_freq == 'quarterly':
+                # 4 quarterly payments
+                total_interest = principal * interest_rate * 4
+            else:
+                total_interest = 0
+            
+            client_interest_obligations += total_interest
         
         # Total liabilities (could include other liabilities if they exist)
         total_liabilities = client_interest_obligations
