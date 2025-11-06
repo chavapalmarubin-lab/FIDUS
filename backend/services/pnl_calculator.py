@@ -81,6 +81,7 @@ class PnLCalculator:
             'initial_allocation': round(initial_allocation, 2),
             'current_equity': round(current_equity, 2),
             'profit_withdrawals': round(profit_withdrawals, 2),
+            'inter_account_transfers': round(inter_account_transfers, 2),  # NEW: Include in response
             'true_pnl': round(true_pnl, 2),
             'true_pnl_percent': round(true_pnl_percent, 2),
             'displayed_pnl': round(displayed_pnl, 2),
