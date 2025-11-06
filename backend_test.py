@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE BACKEND TESTING - ALL CRITICAL ENDPOINTS
+THREE-TIER P&L SYSTEM BACKEND API TESTING
 Testing Date: December 18, 2025
 Backend URL: https://fidus-restore.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
-CRITICAL ENDPOINTS TO TEST:
-1. Cash Flow System: GET /api/admin/cashflow/overview & GET /api/admin/cashflow/calendar
-2. Money Managers: GET /api/admin/money-managers (5 active managers expected)
-3. Trading Analytics: GET /api/trading-analytics/overview
-4. MT5 Accounts: GET /api/mt5/admin/accounts (11 accounts expected)
-5. Fund Portfolio: GET /api/fund-portfolio/overview
+PRIMARY FOCUS: THREE-TIER P&L SYSTEM ENDPOINTS
+1. GET /api/pnl/three-tier (Admin Only) - Complete three-tier P&L breakdown
+2. GET /api/pnl/client/client_alejandro - Client-specific P&L 
+3. GET /api/pnl/fund-performance (Admin Only) - Fund performance vs client obligations
 
-EXPECTED RESULTS:
-- Cash Flow: Real fund revenue, MT5 profits (not $0)
-- Money Managers: 5 active managers with real performance data
-- Trading Analytics: Real portfolio data (not 404)
-- MT5 Accounts: 11 accounts with real balances
-- Fund Portfolio: Real fund allocations for CORE, BALANCE, SEPARATION
+CRITICAL VALIDATION REQUIREMENTS:
+- Client Initial Investment: MUST be $118,151.41 ✅
+- FIDUS Capital: $14,662.94
+- Total Fund Investment: $132,814.35
+- Account 886066 included with $10,000 initial allocation ✅
+- All calculations mathematically correct
+- Admin-only endpoints require authentication
 
-MONGODB DATA AVAILABLE:
-- 11 MT5 accounts with real equity ($9,924, $15,576, etc.)
-- 5 active money managers with assigned accounts
-- 2 investments for Alejandro ($18K CORE, $100K BALANCE)
-- 16 referral commissions (verified working)
+EXPECTED RESPONSE STRUCTURE:
+- Three-tier: client_pnl, fidus_pnl, total_fund_pnl, separation_balance
+- Client P&L: initial_investment, current_equity, available_for_withdrawal, total_pnl
+- Fund Performance: fund_performance, client_obligations, gap_analysis
+
+SECONDARY TESTS (if time permits):
+- Cash Flow System, Money Managers, Trading Analytics, MT5 Accounts, Fund Portfolio
 """
 
 import requests
