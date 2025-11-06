@@ -355,7 +355,7 @@ Example:
 •	Total Return: $10,000 (12 months)
 8.3 DYNAMIC Fund
 Target Investors: $500,000 - $999,999
-Interest Rate: Custom (negotiated)
+Interest Rate: 3.5%
 Contract Term: 14 months
 Payment Schedule: Quarterly
 Status: Not yet launched
