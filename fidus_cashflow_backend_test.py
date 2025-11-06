@@ -176,7 +176,7 @@ class FidusCashFlowTester:
             success = True
             
             # Check total commissions
-            total_commissions = data.get("total_commissions", 0) or data.get("totalCommissionsEarned", 0)
+            total_commissions = data.get("totalCommissions", 0) or data.get("totalCommissionsEarned", 0)
             if abs(total_commissions - expected_total_commissions) < 1.0:
                 self.log_test("Salvador Total Commissions", "PASS", f"Total commissions: ${total_commissions:.2f} (expected ${expected_total_commissions:.2f})")
             else:
