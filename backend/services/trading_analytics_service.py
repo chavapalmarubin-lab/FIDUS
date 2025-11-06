@@ -86,40 +86,36 @@ class TradingAnalyticsService:
         try:
             logger.info(f"📊 Calculating portfolio analytics for {period_days} days")
             
-            # Get all funds performance (including FIDUS, REINVESTED, and SEPARATION)
-            balance_client = await self.get_fund_analytics("BALANCE", period_days)
-            balance_fidus = await self.get_fund_analytics("BALANCE_FIDUS", period_days)
-            balance_reinvested = await self.get_fund_analytics("BALANCE_REINVESTED", period_days)
-            core_client = await self.get_fund_analytics("CORE", period_days)
-            core_reinvested = await self.get_fund_analytics("CORE_REINVESTED", period_days)
+            # Get fund performance for BALANCE and CORE
+            balance_fund = await self.get_fund_analytics("BALANCE", period_days)
+            core_fund = await self.get_fund_analytics("CORE", period_days)
             separation_fund = await self.get_fund_analytics("SEPARATION", period_days)
             
-            # Calculate CLIENT portfolio totals (what Alejandro invested)
-            client_aum = balance_client["aum"] + core_client["aum"]
-            client_pnl = balance_client["total_pnl"] + core_client["total_pnl"]
-            client_equity = balance_client["total_equity"] + core_client["total_equity"]
+            # Calculate CLIENT portfolio totals (Alejandro's investment per SYSTEM_MASTER.md)
+            client_aum = balance_fund["aum"] + core_fund["aum"]  # $100,000 + $18,151.41 = $118,151.41
+            client_pnl = balance_fund["total_pnl"] + core_fund["total_pnl"]
+            client_equity = balance_fund["total_equity"] + core_fund["total_equity"]
             
-            # Calculate TOTAL FUND (includes FIDUS and reinvested)
-            total_aum = client_aum + balance_fidus["aum"]  # Only client + FIDUS count as AUM
-            total_pnl = (balance_client["total_pnl"] + balance_fidus["total_pnl"] + balance_reinvested["total_pnl"] +
-                        core_client["total_pnl"] + core_reinvested["total_pnl"] + separation_fund["total_pnl"])
-            total_equity = (balance_client["total_equity"] + balance_fidus["total_equity"] + balance_reinvested["total_equity"] +
-                           core_client["total_equity"] + core_reinvested["total_equity"] + separation_fund["total_equity"])
+            # Calculate TOTAL FUND (includes separation)
+            total_aum = client_aum  # Only client funds count as AUM
+            total_pnl = client_pnl + separation_fund["total_pnl"]
+            total_equity = client_equity + separation_fund["total_equity"]
             
-            # Calculate blended return (client only)
+            # Calculate blended return
             if client_aum > 0:
-                balance_weight = balance_client["aum"] / client_aum
-                core_weight = core_client["aum"] / client_aum
-                blended_return = (balance_client["weighted_return"] * balance_weight +
-                                core_client["weighted_return"] * core_weight)
+                balance_weight = balance_fund["aum"] / client_aum
+                core_weight = core_fund["aum"] / client_aum
+                blended_return = (balance_fund["weighted_return"] * balance_weight +
+                                core_fund["weighted_return"] * core_weight)
             else:
                 blended_return = 0
             
-            # Get all managers for portfolio stats
-            all_managers = (balance_client["managers"] + balance_fidus["managers"] + balance_reinvested["managers"] +
-                           core_client["managers"] + core_reinvested["managers"] + separation_fund["managers"])
-            total_managers = len(all_managers)
-            active_managers = len([m for m in all_managers if m["total_pnl"] != 0])
+            # Get all active managers (5 total per SYSTEM_MASTER.md)
+            all_managers = balance_fund["managers"] + core_fund["managers"]
+            # Filter only active managers
+            active_managers_list = [m for m in all_managers if m.get("status") == "active" or m["total_pnl"] != 0]
+            total_managers = len(active_managers_list)
+            active_managers = total_managers  # All managers in the list are active
             
             return {
                 # CLIENT METRICS (Alejandro's investment)
