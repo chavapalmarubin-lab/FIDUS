@@ -3632,6 +3632,120 @@ async def get_account_true_pnl(account_number: int, current_user: dict = Depends
 
 
 
+# ============================================================================
+# THREE-TIER P&L API ENDPOINTS (Client, FIDUS, Total Fund)
+# ============================================================================
+
+@api_router.get("/api/pnl/three-tier")
+async def get_three_tier_pnl(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get complete three-tier P&L breakdown (ADMIN ONLY)
+    
+    Returns:
+    - client_pnl: Alejandro's investment performance
+    - fidus_pnl: FIDUS house capital performance  
+    - reinvested_pnl: Reinvested profits performance
+    - total_fund_pnl: Overall fund performance
+    - separation_balance: Extracted profits
+    
+    Used for internal cash flow analysis and obligation tracking
+    """
+    try:
+        from services.three_tier_pnl_calculator import ThreeTierPnLCalculator
+        
+        calculator = ThreeTierPnLCalculator(db)
+        result = await calculator.get_admin_view()
+        
+        return {
+            'success': True,
+            'data': result,
+            'message': 'Three-tier P&L calculation complete'
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error calculating three-tier P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate three-tier P&L: {str(e)}")
+
+
+@api_router.get("/api/pnl/client/{client_id}")
+async def get_client_pnl(client_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get P&L view for a specific client
+    
+    Returns client-specific investment performance (NOT shown to client - they see fixed interest)
+    Used internally for tracking actual vs obligated returns
+    """
+    try:
+        from services.three_tier_pnl_calculator import ThreeTierPnLCalculator
+        
+        calculator = ThreeTierPnLCalculator(db)
+        result = await calculator.get_client_view(client_id)
+        
+        return {
+            'success': True,
+            'data': result,
+            'message': f'Client P&L for {client_id}'
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error calculating client P&L for {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate client P&L: {str(e)}")
+
+
+@api_router.get("/api/pnl/fund-performance")
+async def get_fund_performance(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get complete fund performance vs obligations (ADMIN ONLY)
+    
+    Compares:
+    - Actual fund P&L (from trading)
+    - Client obligations (fixed interest payments)
+    - Gap analysis (surplus or deficit)
+    
+    Used for cash flow management and separation account decisions
+    """
+    try:
+        from services.three_tier_pnl_calculator import ThreeTierPnLCalculator
+        
+        calculator = ThreeTierPnLCalculator(db)
+        admin_view = await calculator.get_admin_view()
+        
+        # Calculate obligations
+        # CORE: $18,151.41 × 1.5% monthly × 12 months = $3,267.25
+        # BALANCE: $100,000 × 2.5% monthly × 12 months = $30,000
+        total_obligations = 3267.25 + 30000  # $33,267.25
+        
+        # Compare to actual fund performance
+        fund_pnl = admin_view['total_fund_pnl']
+        gap = fund_pnl['true_pnl'] - total_obligations
+        
+        return {
+            'success': True,
+            'data': {
+                'fund_performance': fund_pnl,
+                'client_obligations': {
+                    'core_obligations': 3267.25,
+                    'balance_obligations': 30000.00,
+                    'total_obligations': 33267.25
+                },
+                'gap_analysis': {
+                    'fund_pnl': fund_pnl['true_pnl'],
+                    'obligations': total_obligations,
+                    'surplus_deficit': gap,
+                    'status': 'surplus' if gap > 0 else 'deficit',
+                    'coverage_ratio': (fund_pnl['true_pnl'] / total_obligations * 100) if total_obligations > 0 else 0
+                },
+                'separation_balance': admin_view['separation_balance']
+            },
+            'message': 'Fund performance vs obligations analysis'
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error calculating fund performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate fund performance: {str(e)}")
+
+
+
 @api_router.post("/mt5/sync-enhanced")
 async def sync_mt5_enhanced(current_user: dict = Depends(get_current_admin_user)):
     """
