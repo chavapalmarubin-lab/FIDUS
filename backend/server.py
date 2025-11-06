@@ -15367,17 +15367,16 @@ async def get_client_investments(client_id: str):
             "client_id": client_id,
             "investments": enriched_investments,
             "portfolio_stats": portfolio_stats
-
-@api_router.get("/clients/{client_id}/investments")
-async def get_client_investments_alias(client_id: str):
-    """Alias endpoint for frontend compatibility"""
-    return await get_client_investments(client_id)
-
         }
         
     except Exception as e:
         logging.error(f"Get client investments error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch client investments")
+
+@api_router.get("/clients/{client_id}/investments")
+async def get_client_investments_alias(client_id: str):
+    """Alias endpoint for frontend compatibility"""
+    return await get_client_investments(client_id)
 
 @api_router.get("/investments/{investment_id}/projections")
 async def get_investment_projections(investment_id: str):
