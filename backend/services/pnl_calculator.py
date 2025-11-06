@@ -63,8 +63,15 @@ class PnLCalculator:
         corrected = await self.db.mt5_corrected_data.find_one({'account_number': account_number})
         profit_withdrawals = corrected.get('profit_withdrawals', 0) if corrected else 0
         
+        # Get inter-account transfers (money moved to/from separation accounts)
+        # Transfers OUT are stored as POSITIVE (profit taken to separation accounts)
+        inter_account_transfers = float(account.get('inter_account_transfers', 0))
+        
         # Calculate TRUE P&L
-        true_pnl = (current_equity + profit_withdrawals) - initial_allocation
+        # Formula: Current Equity + Profit Withdrawals + Inter-Account Transfers - Initial Allocation
+        # Why we ADD transfers: When $100k is moved to separation accounts, it's PROFIT that was taken
+        # Must add it back to show true performance (not count it as a loss)
+        true_pnl = (current_equity + profit_withdrawals + inter_account_transfers) - initial_allocation
         true_pnl_percent = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
         
         return {
