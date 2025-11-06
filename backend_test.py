@@ -786,29 +786,42 @@ class BackendTester:
         passed_tests = sum(1 for result in test_results.values() if result)
         success_rate = (passed_tests / total_tests) * 100
         
+        # Calculate P&L system specific results
+        pnl_passed = sum(1 for result in pnl_test_results.values() if result)
+        pnl_total = len(pnl_test_results)
+        pnl_success_rate = (pnl_passed / pnl_total) * 100
+        
         print("\n" + "=" * 80)
-        print("📊 COMPREHENSIVE BACKEND TEST SUMMARY")
+        print("📊 THREE-TIER P&L SYSTEM TEST SUMMARY")
         print("=" * 80)
         
-        for test_name, result in test_results.items():
+        print("🎯 PRIMARY FOCUS - Three-Tier P&L System:")
+        for test_name, result in pnl_test_results.items():
             status = "✅ PASS" if result else "❌ FAIL"
-            print(f"{status} {test_name.replace('_', ' ').title()}")
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n📊 P&L System Success Rate: {pnl_passed}/{pnl_total} ({pnl_success_rate:.1f}%)")
+        
+        print("\n📋 SECONDARY - Other Backend Systems:")
+        for test_name, result in other_test_results.items():
+            status = "✅ PASS" if result else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
         
         print(f"\n🎯 Overall Success Rate: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
         
-        if success_rate == 100:
-            print("🎉 BACKEND VERIFICATION: EXCELLENT - All critical endpoints working correctly!")
-            print("   ✅ Cash Flow System showing real fund revenue and MT5 profits")
-            print("   ✅ Money Managers with real performance data (not $0)")
-            print("   ✅ Trading Analytics accessible with real portfolio data")
-            print("   ✅ MT5 Accounts with real balances from 11 accounts")
-            print("   ✅ Fund Portfolio with real allocations for CORE, BALANCE, SEPARATION")
-        elif success_rate >= 80:
-            print("✅ BACKEND VERIFICATION: GOOD - Minor issues to address")
-        elif success_rate >= 60:
-            print("⚠️ BACKEND VERIFICATION: NEEDS ATTENTION - Several issues found")
+        if pnl_success_rate == 100:
+            print("🎉 THREE-TIER P&L SYSTEM: EXCELLENT - All endpoints working correctly!")
+            print("   ✅ Client Initial Investment: $118,151.41 ✓")
+            print("   ✅ FIDUS Capital: $14,662.94 ✓") 
+            print("   ✅ Total Fund Investment: $132,814.35 ✓")
+            print("   ✅ All calculations mathematically correct ✓")
+            print("   ✅ Admin authentication working ✓")
+        elif pnl_success_rate >= 75:
+            print("✅ THREE-TIER P&L SYSTEM: GOOD - Minor issues to address")
+        elif pnl_success_rate >= 50:
+            print("⚠️ THREE-TIER P&L SYSTEM: NEEDS ATTENTION - Several issues found")
         else:
-            print("🚨 BACKEND VERIFICATION: CRITICAL ISSUES - Major problems detected")
+            print("🚨 THREE-TIER P&L SYSTEM: CRITICAL ISSUES - Major problems detected")
         
         return {
             "success": success_rate >= 80,
