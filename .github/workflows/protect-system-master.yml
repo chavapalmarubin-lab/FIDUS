@@ -95,26 +95,31 @@ jobs:
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🚨 CRITICAL: SYSTEM_MASTER.md is missing',
-              body: `## Critical File Missing
+              title: '🚨 CRITICAL: Documentation files are missing',
+              body: `## Critical Files Missing
               
-              **File:** SYSTEM_MASTER.md
+              **Files Missing:** ${{ steps.check-files.outputs.missing_list }}
               **Status:** MISSING
               **Commit:** ${{ github.sha }}
               **Time:** ${new Date().toISOString()}
               
               ### Action Required:
-              1. Create SYSTEM_MASTER.md with proper documentation
-              2. Commit and push the file
+              1. Restore missing files from backup or previous commit
+              2. Commit and push the files
               3. Verify file protection is working
               
-              ### Context:
-              The codebase references this file in multiple locations but it does not exist in the repository.
+              ### Files and Their Purpose:
               
-              **Referenced in:**
-              - backend/validation/field_registry.py
-              - backend/server.py (Section 4.1)
+              **SYSTEM_MASTER.md:**
+              - Contains system configuration and account definitions
+              - Referenced in: backend/validation/field_registry.py, backend/server.py
+              - Required for: MT5 account management, separation account definitions
               
-              This file is CRITICAL for system operation and must be restored immediately.`,
+              **DATABASE_FIELD_STANDARDS.md:**
+              - Defines field naming conventions (snake_case vs camelCase)
+              - Required for: Proper MongoDB queries and API responses
+              - Prevents: $0 display issues and field name errors
+              
+              These files are CRITICAL for system operation and must be restored immediately.`,
               labels: ['critical', 'documentation', 'bug']
             })
