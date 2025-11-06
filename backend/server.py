@@ -15352,6 +15352,12 @@ async def get_client_investments(client_id: str):
             "client_id": client_id,
             "investments": enriched_investments,
             "portfolio_stats": portfolio_stats
+
+@api_router.get("/clients/{client_id}/investments")
+async def get_client_investments_alias(client_id: str):
+    """Alias endpoint for frontend compatibility"""
+    return await get_client_investments(client_id)
+
         }
         
     except Exception as e:
