@@ -16025,13 +16025,18 @@ def generate_payment_schedule(investment):
     fund_code = investment.get('fund_type') or investment.get('fund_code', '')
     product = f'FIDUS_{fund_code}' if fund_code else 'FIDUS_CORE'
     
-    # Get product specifications
-    monthly_rates = {
-        'FIDUS_CORE': 0.015,    # 1.5%
-        'FIDUS_BALANCE': 0.025,  # 2.5%
-        'FIDUS_DYNAMIC': 0.035   # 3.5%
-    }
-    monthly_rate = monthly_rates.get(product, 0.015)
+    # CRITICAL: Use interest_rate from investment record (from DATABASE_FIELD_STANDARDS.md)
+    # Don't use hardcoded rates - rates come from database
+    interest_rate_per_period = investment.get('interest_rate', 0)
+    
+    # Fallback to defaults if not in database (should never happen)
+    if not interest_rate_per_period:
+        monthly_rates = {
+            'FIDUS_CORE': 0.015,    # 1.5%
+            'FIDUS_BALANCE': 0.025,  # 2.5%
+            'FIDUS_DYNAMIC': 0.035   # 3.5%
+        }
+        interest_rate_per_period = monthly_rates.get(product, 0.015)
     
     schedule = []
     interval = get_payment_interval(product)
