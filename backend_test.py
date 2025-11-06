@@ -797,6 +797,7 @@ class FidusCommissionTester:
                     return False
                     
             else:
+                return False
 
 def main():
     """Main test execution"""
