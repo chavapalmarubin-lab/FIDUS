@@ -118,43 +118,39 @@ class TradingAnalyticsService:
             active_managers = total_managers  # All managers in the list are active
             
             return {
-                # CLIENT METRICS (Alejandro's investment)
-                "client_aum": round(client_aum, 2),
-                "client_equity": round(client_equity, 2),
-                "client_pnl": round(client_pnl, 2),
-                "client_return": round((client_pnl / client_aum * 100) if client_aum > 0 else 0, 2),
-                
-                # TOTAL FUND METRICS (includes FIDUS + reinvested)
-                "total_aum": round(total_aum, 2),
-                "total_equity": round(total_equity, 2),
-                "total_pnl": round(total_pnl, 2),
+                # CLIENT METRICS (Alejandro's investment per SYSTEM_MASTER.md)
+                "total_aum": round(client_aum, 2),  # $118,151.41
+                "current_equity": round(client_equity, 2),
+                "total_pnl": round(client_pnl, 2),
+                "total_return": round((client_pnl / client_aum * 100) if client_aum > 0 else 0, 2),
                 "blended_return": round(blended_return, 2),
-                "total_managers": total_managers,
-                "active_managers": active_managers,
                 
-                # FIDUS CAPITAL METRICS
-                "fidus_aum": round(balance_fidus["aum"], 2),
-                "fidus_equity": round(balance_fidus["total_equity"], 2),
-                "fidus_pnl": round(balance_fidus["total_pnl"], 2),
-                "fidus_return": round(balance_fidus["weighted_return"], 2),
+                # MANAGER METRICS
+                "total_managers": total_managers,  # Should be 5 active managers
+                "active_managers": active_managers,  # Should be 5
+                
+                # FUND BREAKDOWN
                 "funds": {
                     "BALANCE": {
-                        "aum": balance_client["aum"],
-                        "pnl": balance_client["total_pnl"],
-                        "return_pct": balance_client["weighted_return"],
-                        "managers_count": len(balance_client["managers"])
+                        "aum": balance_fund["aum"],
+                        "current_equity": round(balance_fund["total_equity"], 2),
+                        "pnl": balance_fund["total_pnl"],
+                        "return_pct": balance_fund["weighted_return"],
+                        "managers_count": len(balance_fund["managers"])
                     },
                     "CORE": {
-                        "aum": core_client["aum"],
-                        "pnl": core_client["total_pnl"],
-                        "return_pct": core_client["weighted_return"],
-                        "managers_count": len(core_client["managers"])
+                        "aum": core_fund["aum"],
+                        "current_equity": round(core_fund["total_equity"], 2),
+                        "pnl": core_fund["total_pnl"],
+                        "return_pct": core_fund["weighted_return"],
+                        "managers_count": len(core_fund["managers"])
                     },
                     "SEPARATION": {
                         "aum": separation_fund["aum"],
+                        "current_equity": round(separation_fund["total_equity"], 2),
                         "pnl": separation_fund["total_pnl"],
                         "return_pct": separation_fund["weighted_return"],
-                        "managers_count": len(separation_fund["managers"])
+                        "managers_count": 0  # Separation has no dedicated managers
                     }
                 },
                 "period_days": period_days,
