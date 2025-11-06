@@ -426,6 +426,330 @@ class BackendTester:
             self.log_test("Fund Portfolio Test", "ERROR", f"Exception: {str(e)}")
             return False
     
+    def test_three_tier_pnl_endpoint(self) -> bool:
+        """Test GET /api/pnl/three-tier (Admin Only) - Complete three-tier P&L breakdown"""
+        try:
+            print("\n📊 Testing Three-Tier P&L Endpoint...")
+            
+            response = self.session.get(f"{self.base_url}/pnl/three-tier", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('success') and 'data' in data:
+                    pnl_data = data['data']
+                    
+                    # Verify structure
+                    required_keys = ['client_pnl', 'fidus_pnl', 'total_fund_pnl', 'separation_balance']
+                    missing_keys = [key for key in required_keys if key not in pnl_data]
+                    
+                    if missing_keys:
+                        self.log_test("Three-Tier P&L Structure", "FAIL", f"Missing keys: {missing_keys}")
+                        return False
+                    
+                    # Extract key values
+                    client_pnl = pnl_data.get('client_pnl', {})
+                    fidus_pnl = pnl_data.get('fidus_pnl', {})
+                    total_fund_pnl = pnl_data.get('total_fund_pnl', {})
+                    separation_balance = pnl_data.get('separation_balance', 0)
+                    
+                    # CRITICAL validation: Client Initial Investment MUST be $118,151.41
+                    client_initial = client_pnl.get('initial_allocation', 0)
+                    expected_client_initial = 118151.41
+                    
+                    if abs(client_initial - expected_client_initial) > 1.0:  # Allow $1 tolerance
+                        self.log_test(
+                            "Client Initial Investment", 
+                            "FAIL", 
+                            f"Expected ${expected_client_initial}, got ${client_initial}",
+                            expected_client_initial,
+                            client_initial
+                        )
+                        return False
+                    
+                    # Validate FIDUS capital
+                    fidus_initial = fidus_pnl.get('initial_allocation', 0)
+                    expected_fidus_initial = 14662.94
+                    
+                    # Validate total fund investment
+                    total_initial = total_fund_pnl.get('initial_allocation', 0)
+                    expected_total_initial = 132814.35
+                    
+                    # Validate account count (client should have 5 accounts)
+                    client_account_count = client_pnl.get('account_count', 0)
+                    
+                    # Log success with key metrics
+                    self.log_test(
+                        "Three-Tier P&L Endpoint", 
+                        "PASS", 
+                        f"✅ Client: ${client_initial}, FIDUS: ${fidus_initial}, Total: ${total_initial}, Accounts: {client_account_count}"
+                    )
+                    
+                    print(f"   📊 Client P&L: ${client_pnl.get('true_pnl', 0)} ({client_pnl.get('return_percent', 0):.1f}%)")
+                    print(f"   📊 FIDUS P&L: ${fidus_pnl.get('true_pnl', 0)} ({fidus_pnl.get('return_percent', 0):.1f}%)")
+                    print(f"   📊 Total Fund P&L: ${total_fund_pnl.get('true_pnl', 0)} ({total_fund_pnl.get('return_percent', 0):.1f}%)")
+                    print(f"   📊 Separation Balance: ${separation_balance}")
+                    
+                    return True
+                    
+                else:
+                    self.log_test("Three-Tier P&L Endpoint", "FAIL", f"Invalid response structure: {data}")
+                    return False
+                    
+            else:
+                self.log_test("Three-Tier P&L Endpoint", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Three-Tier P&L Endpoint", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_client_pnl_endpoint(self) -> bool:
+        """Test GET /api/pnl/client/client_alejandro - Client-specific P&L"""
+        try:
+            print("\n👤 Testing Client P&L Endpoint...")
+            
+            response = self.session.get(f"{self.base_url}/pnl/client/client_alejandro", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('success') and 'data' in data:
+                    client_data = data['data']
+                    
+                    # Verify structure
+                    required_keys = ['client_id', 'initial_investment', 'current_equity', 
+                                   'available_for_withdrawal', 'total_value', 'total_pnl', 
+                                   'total_return_percent', 'accounts']
+                    missing_keys = [key for key in required_keys if key not in client_data]
+                    
+                    if missing_keys:
+                        self.log_test("Client P&L Structure", "FAIL", f"Missing keys: {missing_keys}")
+                        return False
+                    
+                    # Extract key values
+                    client_id = client_data.get('client_id')
+                    initial_investment = client_data.get('initial_investment', 0)
+                    current_equity = client_data.get('current_equity', 0)
+                    available_for_withdrawal = client_data.get('available_for_withdrawal', 0)
+                    total_value = client_data.get('total_value', 0)
+                    total_pnl = client_data.get('total_pnl', 0)
+                    total_return_percent = client_data.get('total_return_percent', 0)
+                    accounts = client_data.get('accounts', [])
+                    
+                    # CRITICAL validation: Initial investment MUST be $118,151.41
+                    expected_initial = 118151.41
+                    if abs(initial_investment - expected_initial) > 1.0:  # Allow $1 tolerance
+                        self.log_test(
+                            "Client Initial Investment", 
+                            "FAIL", 
+                            f"Expected ${expected_initial}, got ${initial_investment}",
+                            expected_initial,
+                            initial_investment
+                        )
+                        return False
+                    
+                    # Validate client ID
+                    if client_id != 'client_alejandro':
+                        self.log_test(
+                            "Client ID Validation", 
+                            "FAIL", 
+                            f"Expected 'client_alejandro', got '{client_id}'"
+                        )
+                        return False
+                    
+                    self.log_test(
+                        "Client P&L Endpoint", 
+                        "PASS", 
+                        f"✅ Initial: ${initial_investment}, Current: ${current_equity}, P&L: ${total_pnl} ({total_return_percent:.1f}%)"
+                    )
+                    
+                    print(f"   📊 Available for Withdrawal: ${available_for_withdrawal}")
+                    print(f"   📊 Total Value: ${total_value}")
+                    print(f"   📊 Account Count: {len(accounts)}")
+                    
+                    return True
+                    
+                else:
+                    self.log_test("Client P&L Endpoint", "FAIL", f"Invalid response structure: {data}")
+                    return False
+                    
+            else:
+                self.log_test("Client P&L Endpoint", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Client P&L Endpoint", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_fund_performance_endpoint(self) -> bool:
+        """Test GET /api/pnl/fund-performance (Admin Only) - Fund performance vs client obligations"""
+        try:
+            print("\n📈 Testing Fund Performance Endpoint...")
+            
+            response = self.session.get(f"{self.base_url}/pnl/fund-performance", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('success') and 'data' in data:
+                    perf_data = data['data']
+                    
+                    # Verify structure
+                    required_keys = ['fund_performance', 'client_obligations', 'gap_analysis', 'separation_balance']
+                    missing_keys = [key for key in required_keys if key not in perf_data]
+                    
+                    if missing_keys:
+                        self.log_test("Fund Performance Structure", "FAIL", f"Missing keys: {missing_keys}")
+                        return False
+                    
+                    # Extract key values
+                    fund_performance = perf_data.get('fund_performance', {})
+                    client_obligations = perf_data.get('client_obligations', {})
+                    gap_analysis = perf_data.get('gap_analysis', {})
+                    separation_balance = perf_data.get('separation_balance', 0)
+                    
+                    # Validate obligations
+                    core_obligations = client_obligations.get('core_obligations', 0)
+                    balance_obligations = client_obligations.get('balance_obligations', 0)
+                    total_obligations = client_obligations.get('total_obligations', 0)
+                    
+                    expected_core = 3267.25
+                    expected_balance = 30000.00
+                    expected_total = 33267.25
+                    
+                    if abs(core_obligations - expected_core) > 0.01:
+                        self.log_test(
+                            "CORE Obligations", 
+                            "FAIL", 
+                            f"Expected ${expected_core}, got ${core_obligations}",
+                            expected_core,
+                            core_obligations
+                        )
+                        return False
+                    
+                    if abs(balance_obligations - expected_balance) > 0.01:
+                        self.log_test(
+                            "BALANCE Obligations", 
+                            "FAIL", 
+                            f"Expected ${expected_balance}, got ${balance_obligations}",
+                            expected_balance,
+                            balance_obligations
+                        )
+                        return False
+                    
+                    if abs(total_obligations - expected_total) > 0.01:
+                        self.log_test(
+                            "Total Obligations", 
+                            "FAIL", 
+                            f"Expected ${expected_total}, got ${total_obligations}",
+                            expected_total,
+                            total_obligations
+                        )
+                        return False
+                    
+                    # Extract gap analysis
+                    fund_pnl = gap_analysis.get('fund_pnl', 0)
+                    obligations = gap_analysis.get('obligations', 0)
+                    surplus_deficit = gap_analysis.get('surplus_deficit', 0)
+                    status = gap_analysis.get('status', '')
+                    coverage_ratio = gap_analysis.get('coverage_ratio', 0)
+                    
+                    self.log_test(
+                        "Fund Performance Endpoint", 
+                        "PASS", 
+                        f"✅ Fund P&L: ${fund_pnl}, Obligations: ${obligations}, Gap: ${surplus_deficit} ({status})"
+                    )
+                    
+                    print(f"   📊 Coverage Ratio: {coverage_ratio:.1f}%")
+                    print(f"   📊 Separation Balance: ${separation_balance}")
+                    print(f"   📊 Fund Initial: ${fund_performance.get('initial_allocation', 0)}")
+                    print(f"   📊 Fund Current: ${fund_performance.get('current_equity', 0)}")
+                    
+                    return True
+                    
+                else:
+                    self.log_test("Fund Performance Endpoint", "FAIL", f"Invalid response structure: {data}")
+                    return False
+                    
+            else:
+                self.log_test("Fund Performance Endpoint", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Fund Performance Endpoint", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_mathematical_consistency(self) -> bool:
+        """Test mathematical consistency across all three-tier P&L endpoints"""
+        try:
+            print("\n🧮 Testing Mathematical Consistency...")
+            
+            # Get data from all three endpoints
+            three_tier_response = self.session.get(f"{self.base_url}/pnl/three-tier", timeout=30)
+            client_response = self.session.get(f"{self.base_url}/pnl/client/client_alejandro", timeout=30)
+            fund_perf_response = self.session.get(f"{self.base_url}/pnl/fund-performance", timeout=30)
+            
+            if not all([r.status_code == 200 for r in [three_tier_response, client_response, fund_perf_response]]):
+                self.log_test("Mathematical Consistency", "FAIL", "One or more endpoints failed")
+                return False
+            
+            three_tier_data = three_tier_response.json()['data']
+            client_data = client_response.json()['data']
+            fund_perf_data = fund_perf_response.json()['data']
+            
+            # Validate consistency between three-tier and client endpoints
+            three_tier_client = three_tier_data['client_pnl']
+            
+            consistency_checks = [
+                ('Initial Investment', three_tier_client['initial_allocation'], client_data['initial_investment']),
+                ('Current Equity', three_tier_client['current_equity'], client_data['current_equity']),
+                ('Separation Balance', three_tier_data['separation_balance'], fund_perf_data['separation_balance'])
+            ]
+            
+            for check_name, value1, value2 in consistency_checks:
+                if abs(value1 - value2) > 0.01:  # Allow 1 cent tolerance
+                    self.log_test(
+                        "Mathematical Consistency", 
+                        "FAIL", 
+                        f"{check_name} mismatch: {value1} vs {value2}",
+                        value1,
+                        value2
+                    )
+                    return False
+            
+            # Validate fund performance consistency
+            fund_perf_fund = fund_perf_data['fund_performance']
+            three_tier_fund = three_tier_data['total_fund_pnl']
+            
+            fund_consistency_checks = [
+                ('Fund Initial Allocation', fund_perf_fund['initial_allocation'], three_tier_fund['initial_allocation']),
+                ('Fund Current Equity', fund_perf_fund['current_equity'], three_tier_fund['current_equity']),
+                ('Fund True P&L', fund_perf_fund['true_pnl'], three_tier_fund['true_pnl'])
+            ]
+            
+            for check_name, value1, value2 in fund_consistency_checks:
+                if abs(value1 - value2) > 0.01:  # Allow 1 cent tolerance
+                    self.log_test(
+                        "Mathematical Consistency", 
+                        "FAIL", 
+                        f"{check_name} mismatch: {value1} vs {value2}",
+                        value1,
+                        value2
+                    )
+                    return False
+            
+            self.log_test(
+                "Mathematical Consistency", 
+                "PASS", 
+                "✅ All cross-endpoint calculations are mathematically consistent"
+            )
+            return True
+            
+        except Exception as e:
+            self.log_test("Mathematical Consistency", "ERROR", f"Exception: {str(e)}")
+            return False
+    
     def run_all_tests(self) -> Dict[str, Any]:
         """Run all critical backend endpoint tests"""
         print("🚀 Starting Comprehensive Backend Testing - All Critical Endpoints")
