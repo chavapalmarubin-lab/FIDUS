@@ -54,8 +54,8 @@ jobs:
           echo "This is a CRITICAL violation."
           exit 1
 
-      - name: Attempt to restore file if deleted
-        if: steps.check-file.outputs.file_exists == 'false'
+      - name: Attempt to restore files if deleted
+        if: steps.check-files.outputs.files_missing == 'true'
         continue-on-error: true
         run: |
           echo "Attempting to restore SYSTEM_MASTER.md from history..."
