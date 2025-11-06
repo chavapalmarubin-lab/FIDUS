@@ -16190,6 +16190,10 @@ async def calculate_cash_flow_calendar():
                 
                 # NEW: Add 10% referral commission if investment has salesperson
                 referral_id = payment.get('referral_salesperson_id')
+                
+                # DEBUG: Log what we're checking
+                logging.info(f"📋 Payment check - fund: {payment.get('fund_code')}, amount: ${payment.get('amount', 0):,.2f}, referral_id: {referral_id}, has_id: {bool(referral_id)}")
+                
                 if referral_id:
                     try:
                         logging.info(f"🔍 Processing commission for payment with referral_id: {referral_id}")
