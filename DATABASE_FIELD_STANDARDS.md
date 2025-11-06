@@ -70,6 +70,7 @@ This document defines the EXACT field names used in:
   salespersonId: "string",
   salespersonName: "string",
   referralCode: "string",
+  referralSalespersonId: "string",    // Used for commission tracking
   mt5Accounts: array,
   createdAt: "string",
   updatedAt: "string"
