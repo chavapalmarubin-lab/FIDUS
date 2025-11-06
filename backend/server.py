@@ -16204,10 +16204,18 @@ async def calculate_cash_flow_calendar():
                             
                             commission_amount = commission_base * 0.10
                             
-                            # Get client name for description
-                            client = await db.clients.find_one({
-                                '_id': ObjectId(payment['client_id'])
+                            # Get client name for description (from users collection)
+                            client = await db.users.find_one({
+                                'id': payment['client_id']
                             })
+                            if not client:
+                                # Try with ObjectId if string id didn't work
+                                try:
+                                    client = await db.users.find_one({
+                                        '_id': ObjectId(payment['client_id'])
+                                    })
+                                except:
+                                    pass
                             client_name = client.get('name', 'Unknown Client') if client else 'Unknown Client'
                             
                             # Create commission payment entry
