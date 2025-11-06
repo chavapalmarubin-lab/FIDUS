@@ -87,65 +87,81 @@ class FidusCommissionTester:
             self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
             return False
     
-    def test_cashflow_system(self) -> bool:
-        """Test 1: Cash Flow System - Overview and Calendar endpoints"""
+    def test_salvador_palma_data(self) -> bool:
+        """Test 1: Salvador Palma Data - GET /api/admin/referrals/salespeople/sp_6909e8eaaaf69606babea151"""
         try:
-            print("\n💰 Testing Cash Flow System...")
+            print("\n📊 Testing Salvador Palma Data...")
             
-            # Test Cash Flow Overview
-            response = self.session.get(f"{self.base_url}/admin/cashflow/overview")
+            salvador_id = "sp_6909e8eaaaf69606babea151"
+            response = self.session.get(f"{self.base_url}/admin/referrals/salespeople/{salvador_id}")
             
             if response.status_code != 200:
-                self.log_test("Cash Flow Overview API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Salvador Palma API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            summary = data.get("summary", {})
             
-            # Check for real fund revenue (not $0)
-            fund_revenue = summary.get("fund_revenue", 0)
-            mt5_trading_profits = summary.get("mt5_trading_profits", 0)
-            separation_interest = summary.get("separation_interest", 0)
+            if not data.get("success"):
+                self.log_test("Salvador Palma API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                return False
+            
+            salesperson = data.get("salesperson", {})
+            investments = data.get("investments", [])
             
             success = True
             
-            if fund_revenue != 0:
-                self.log_test("Fund Revenue", "PASS", f"Fund revenue: ${fund_revenue:,.2f} (not $0)")
+            # Check total commissions = $3,326.76
+            total_commissions = salesperson.get("totalCommissions", 0)
+            expected_commissions = 3326.76
+            
+            if abs(total_commissions - expected_commissions) < 0.01:
+                self.log_test("Salvador Total Commissions", "PASS", 
+                            f"Commissions match expected value", 
+                            f"${expected_commissions:,.2f}", 
+                            f"${total_commissions:,.2f}")
             else:
-                self.log_test("Fund Revenue", "FAIL", "Fund revenue is $0 - expected real data")
+                self.log_test("Salvador Total Commissions", "FAIL", 
+                            f"Commissions do not match expected value", 
+                            f"${expected_commissions:,.2f}", 
+                            f"${total_commissions:,.2f}")
                 success = False
             
-            if mt5_trading_profits != 0:
-                self.log_test("MT5 Trading Profits", "PASS", f"MT5 profits: ${mt5_trading_profits:,.2f} (not $0)")
+            # Check clients = 1
+            clients_count = salesperson.get("totalClientsReferred", 0)
+            expected_clients = 1
+            
+            if clients_count == expected_clients:
+                self.log_test("Salvador Clients Count", "PASS", 
+                            f"Clients count matches expected value", 
+                            expected_clients, 
+                            clients_count)
             else:
-                self.log_test("MT5 Trading Profits", "FAIL", "MT5 trading profits is $0 - expected real data")
+                self.log_test("Salvador Clients Count", "FAIL", 
+                            f"Clients count does not match expected value", 
+                            expected_clients, 
+                            clients_count)
                 success = False
             
-            if separation_interest != 0:
-                self.log_test("Separation Interest", "PASS", f"Separation interest: ${separation_interest:,.2f} (not $0)")
+            # Check active investments = 2
+            active_investments = len([inv for inv in investments if inv.get("status") == "active"])
+            expected_investments = 2
+            
+            if active_investments == expected_investments:
+                self.log_test("Salvador Active Investments", "PASS", 
+                            f"Active investments count matches expected value", 
+                            expected_investments, 
+                            active_investments)
             else:
-                self.log_test("Separation Interest", "FAIL", "Separation interest is $0 - expected real data")
+                self.log_test("Salvador Active Investments", "FAIL", 
+                            f"Active investments count does not match expected value", 
+                            expected_investments, 
+                            active_investments)
                 success = False
-            
-            # Test Cash Flow Calendar (known to have issues, but test anyway)
-            calendar_response = self.session.get(f"{self.base_url}/admin/cashflow/calendar")
-            
-            if calendar_response.status_code != 200:
-                self.log_test("Cash Flow Calendar API", "FAIL", f"HTTP {calendar_response.status_code} - Calendar endpoint has server error")
-                # Don't fail the whole test for calendar issues
-            else:
-                calendar_data = calendar_response.json()
-                monthly_obligations = calendar_data.get("monthly_obligations", [])
-                
-                if len(monthly_obligations) > 0:
-                    self.log_test("Cash Flow Calendar", "PASS", f"Calendar has {len(monthly_obligations)} monthly obligations")
-                else:
-                    self.log_test("Cash Flow Calendar", "FAIL", "Calendar has no monthly obligations")
             
             return success
             
         except Exception as e:
-            self.log_test("Cash Flow System Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Salvador Palma Data Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_money_managers_api(self) -> bool:
