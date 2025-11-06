@@ -172,14 +172,14 @@ const AddSalespersonModal = ({ isOpen, onClose, onSave, editData = null }) => {
               </div>
 
               <div>
-                <Label htmlFor="referral_code">
+                <Label htmlFor="referralCode">
                   Referral Code <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-2">
                   <Input
-                    id="referral_code"
-                    value={formData.referral_code}
-                    onChange={(e) => setFormData({...formData, referral_code: e.target.value.toUpperCase()})}
+                    id="referralCode"
+                    value={formData.referralCode}
+                    onChange={(e) => setFormData({...formData, referralCode: e.target.value.toUpperCase()})}
                     placeholder="SP-2025"
                     className="font-mono"
                     required
