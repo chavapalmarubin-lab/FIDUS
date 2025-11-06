@@ -58,19 +58,33 @@ jobs:
         if: steps.check-files.outputs.files_missing == 'true'
         continue-on-error: true
         run: |
-          echo "Attempting to restore SYSTEM_MASTER.md from history..."
+          echo "Attempting to restore critical files from history..."
+          RESTORED=""
           
-          # Try to restore from previous commit
-          if git checkout HEAD~1 -- SYSTEM_MASTER.md 2>/dev/null; then
-            echo "✅ File restored from previous commit"
+          # Try to restore SYSTEM_MASTER.md
+          if [ ! -f "SYSTEM_MASTER.md" ]; then
+            if git checkout HEAD~1 -- SYSTEM_MASTER.md 2>/dev/null; then
+              echo "✅ SYSTEM_MASTER.md restored from previous commit"
+              RESTORED="${RESTORED}SYSTEM_MASTER.md "
+            fi
+          fi
+          
+          # Try to restore DATABASE_FIELD_STANDARDS.md
+          if [ ! -f "DATABASE_FIELD_STANDARDS.md" ]; then
+            if git checkout HEAD~1 -- DATABASE_FIELD_STANDARDS.md 2>/dev/null; then
+              echo "✅ DATABASE_FIELD_STANDARDS.md restored from previous commit"
+              RESTORED="${RESTORED}DATABASE_FIELD_STANDARDS.md"
+            fi
+          fi
+          
+          if [ -n "$RESTORED" ]; then
             git config user.name "GitHub Action - File Protection"
             git config user.email "action@github.com"
-            git add SYSTEM_MASTER.md
-            git commit -m "🚨 AUTO-RESTORE: SYSTEM_MASTER.md was deleted - restoring from backup"
+            git add SYSTEM_MASTER.md DATABASE_FIELD_STANDARDS.md
+            git commit -m "🚨 AUTO-RESTORE: Critical files restored - $RESTORED"
             git push
           else
-            echo "❌ Could not restore file - it may have never existed in git history"
-            echo "Please manually create and commit SYSTEM_MASTER.md"
+            echo "❌ Could not restore files - they may have never existed in git history"
           fi
 
       - name: Create issue if file missing
