@@ -18,15 +18,30 @@ jobs:
         with:
           fetch-depth: 0  # Full history
 
-      - name: Check if SYSTEM_MASTER.md exists
-        id: check-file
+      - name: Check if critical files exist
+        id: check-files
         run: |
+          MISSING_FILES=""
+          
           if [ ! -f "SYSTEM_MASTER.md" ]; then
             echo "❌ CRITICAL: SYSTEM_MASTER.md is MISSING!"
-            echo "file_exists=false" >> $GITHUB_OUTPUT
+            MISSING_FILES="SYSTEM_MASTER.md "
           else
             echo "✅ SYSTEM_MASTER.md exists"
-            echo "file_exists=true" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ ! -f "DATABASE_FIELD_STANDARDS.md" ]; then
+            echo "❌ CRITICAL: DATABASE_FIELD_STANDARDS.md is MISSING!"
+            MISSING_FILES="${MISSING_FILES}DATABASE_FIELD_STANDARDS.md"
+          else
+            echo "✅ DATABASE_FIELD_STANDARDS.md exists"
+          fi
+          
+          if [ -n "$MISSING_FILES" ]; then
+            echo "files_missing=true" >> $GITHUB_OUTPUT
+            echo "missing_list=$MISSING_FILES" >> $GITHUB_OUTPUT
+          else
+            echo "files_missing=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Check if file was deleted in this commit
