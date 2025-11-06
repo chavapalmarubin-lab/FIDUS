@@ -32,46 +32,46 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping - UPDATED 2025-12-18 (Matches actual database)
-        # 5 ACTIVE MANAGERS based on database reality:
-        # 1. UNO14 Manager (886602 - MAM account, BALANCE fund)
-        # 2. TradingHub Gold Provider (886557, 891215 - BALANCE fund, manages 2 accounts)
-        # 3. Provider1-Assev (897589 - BALANCE fund)
-        # 4. CP Strategy Provider (885822, 897590 - CORE fund, manages 2 accounts)
-        # 5. alefloreztrader (897591, 897599 - SEPARATION accounts)
-        # INACTIVE: GoldenTrade (886066) - keep in database but don't show
+        # Fund structure mapping - FINAL 2025-12-18 (Per Chava's exact specifications)
+        # 5 ACTIVE MANAGERS:
+        # 1. alefloreztrader - SEPARATION accounts 897591, 897599 (https://ratings.multibankfx.com/widgets/ratings/4119)
+        # 2. Provider1-Assev - BALANCE account 897589 (https://ratings.mexatlantic.com/widgets/ratings/5201)
+        # 3. TradingHub Gold - BALANCE accounts 886557, 891215 (https://ratings.multibankfx.com/widgets/ratings/1359)
+        # 4. UNO14 Manager - BALANCE account 886602 MAM (https://www.fxblue.com/users/gestion_global)
+        # 5. CP Strategy - CORE accounts 897590, 885822 (https://ratings.mexatlantic.com/widgets/ratings/3157)
+        # INACTIVE: GoldenTrade account 886066 (keep in DB, don't delete)
         self.FUND_STRUCTURE = {
             "BALANCE": {
-                "aum": 100000,  # Client BALANCE allocation per SYSTEM_MASTER.md
-                "accounts": [886557, 886602, 891215, 897589],  # All BALANCE accounts
+                "aum": 100000,  # Client BALANCE allocation: $100,000
+                "accounts": [886557, 886602, 891215, 897589],  # All client BALANCE accounts
                 "managers": [
-                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager", "status": "active", "method": "MAM"},
-                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold Provider", "status": "active"},
-                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold Provider", "status": "active"},  # Same manager, 2nd account
-                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev", "status": "active"}
+                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager", "status": "active", "method": "MAM", "profile_url": "https://www.fxblue.com/users/gestion_global"},
+                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/1359?widgetKey=social_platform_ratings"},
+                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/1359?widgetKey=social_platform_ratings"},
+                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/5201?widgetKey=social_platform_ratings"}
                 ]
             },
             "CORE": {
-                "aum": 18151.41,  # Client CORE allocation per SYSTEM_MASTER.md
-                "accounts": [885822, 891234, 897590],  # All CORE accounts
+                "aum": 18151.41,  # Client CORE allocation: $18,151.41
+                "accounts": [885822, 891234, 897590],  # All client CORE accounts
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy Provider", "status": "active"},
-                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy Provider", "status": "active"}
+                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social"},
+                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social"}
                 ]
             },
             "SEPARATION": {
                 "aum": 0,  # Extracted profits - no client obligation
                 "accounts": [897591, 897599, 886528],
                 "managers": [
-                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader", "status": "active"},
-                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader", "status": "active"}
+                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/4119?widgetKey=social_platform_ratings"},
+                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/4119?widgetKey=social_platform_ratings"}
                 ]
             },
             "INACTIVE": {
                 "aum": 0,
-                "accounts": [886066],  # GoldenTrade - inactive
+                "accounts": [886066],  # GoldenTrade - inactive but keep in database
                 "managers": [
-                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade Manager", "status": "inactive"}
+                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade", "status": "inactive"}
                 ]
             }
         }
