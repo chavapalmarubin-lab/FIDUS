@@ -50,7 +50,13 @@ const AlejandroInvestmentDashboard = () => {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       const clientId = userData.user_id || userData.id || 'client_alejandro';
       
-      console.log('Loading data for client:', clientId);
+      console.log('=== ALEJANDRO DASHBOARD DEBUG ===');
+      console.log('User Data from localStorage:', userData);
+      console.log('Extracted clientId:', clientId);
+      console.log('API URLs will be:');
+      console.log(`  - /api/clients/${clientId}/readiness`);
+      console.log(`  - /api/clients/${clientId}/investments`);
+      console.log(`  - /api/mt5/accounts/${clientId}`);
       
       // Load all Alejandro's data using actual authenticated user ID
       const [readinessRes, investmentsRes, mt5AccountsRes] = await Promise.allSettled([
