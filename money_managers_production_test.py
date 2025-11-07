@@ -11,7 +11,7 @@ from datetime import datetime
 # Production API URL
 BACKEND_URL = "https://fidus-fix.preview.emergentagent.com"
 API_ENDPOINT = f"{BACKEND_URL}/api/admin/money-managers"
-LOGIN_ENDPOINT = f"{BACKEND_URL}/api/login"
+LOGIN_ENDPOINT = f"{BACKEND_URL}/api/auth/login"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
