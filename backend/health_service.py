@@ -80,6 +80,8 @@ async def check_backend_health(db) -> Dict[str, Any]:
         except:
             active_connections = 0
         
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://referral-tracker-9.preview.emergentagent.com/api')
+        
         return {
             "component": "backend",
             "name": "FIDUS Backend API",
@@ -87,7 +89,7 @@ async def check_backend_health(db) -> Dict[str, Any]:
             "response_time": round(response_time, 2),
             "database_connected": db_connected,
             "active_connections": active_connections,
-            "url": "https://fidus-api.onrender.com",
+            "url": backend_url,
             "last_check": datetime.now(timezone.utc).isoformat(),
             "message": "All systems operational"
         }
