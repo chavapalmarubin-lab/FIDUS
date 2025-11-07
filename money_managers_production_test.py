@@ -11,6 +11,44 @@ from datetime import datetime
 # Production API URL
 BACKEND_URL = "https://fidus-fix.preview.emergentagent.com"
 API_ENDPOINT = f"{BACKEND_URL}/api/admin/money-managers"
+LOGIN_ENDPOINT = f"{BACKEND_URL}/api/login"
+
+# Admin credentials
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
+
+def get_admin_token():
+    """Login and get admin JWT token"""
+    print("🔐 Logging in as admin to get JWT token...")
+    
+    try:
+        response = requests.post(
+            LOGIN_ENDPOINT,
+            json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
+                "user_type": "admin"
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get('token')
+            if token:
+                print(f"✅ Successfully logged in as admin")
+                return token
+            else:
+                print(f"❌ Login response missing token")
+                return None
+        else:
+            print(f"❌ Login failed with status {response.status_code}")
+            print(f"Response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Login error: {str(e)}")
+        return None
 
 def test_money_managers_api():
     """Test Money Managers API on production"""
