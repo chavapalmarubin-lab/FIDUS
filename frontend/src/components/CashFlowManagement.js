@@ -1378,7 +1378,7 @@ const CashFlowManagement = () => {
                 <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
                   <span className="text-slate-400">Total Rebates Earned</span>
                   <span className="text-cyan-400 font-bold">
-                    {formatCurrency(rebatesSummary?.total_rebates || 0)}
+                    {formatCurrency(fundAccounting?.assets?.broker_rebates || 0)}
                   </span>
                 </div>
                 <div className="text-sm text-slate-300">
