@@ -274,15 +274,16 @@ class TradingAnalyticsService:
             if hasattr(account_data.get("initial_allocation"), 'to_decimal'):
                 initial_allocation = float(account_data.get("initial_allocation").to_decimal())
             
-            # Get profit withdrawals from account data
+            # Get profit withdrawals from account data (for reference, not used in manager P&L)
             profit_withdrawals = float(account_data.get("profit_withdrawals", 0))
             if hasattr(account_data.get("profit_withdrawals"), 'to_decimal'):
                 profit_withdrawals = float(account_data.get("profit_withdrawals").to_decimal())
             
-            # TRUE P&L = (Current Equity + Profit Withdrawals) - Initial Allocation
-            # This matches the three-tier P&L calculator formula
+            # TRUE P&L for MANAGER PERFORMANCE = Current Equity - Initial Allocation
+            # (Do NOT add profit_withdrawals - those went to separation accounts)
+            # Manager is judged on current account performance only
             current_equity = equity
-            true_pnl = current_equity + profit_withdrawals - initial_allocation
+            true_pnl = current_equity - initial_allocation
             
             # Calculate return percentage
             return_percentage = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
