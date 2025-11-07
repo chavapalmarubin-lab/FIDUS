@@ -1,173 +1,109 @@
 #!/usr/bin/env python3
-"""
-Test Production Render Deployment
-Tests the live Render backend with referral system endpoints
-"""
-
+"""Test Render Production API"""
 import requests
-import sys
-from datetime import datetime
+import json
 
-# Production Backend URL
-PROD_BACKEND_URL = "https://fidus-fix.preview.emergentagent.com"
+RENDER_URL = "https://fidus-investment-platform.onrender.com"
 
-print("=" * 80)
-print("🌐 TESTING PRODUCTION RENDER DEPLOYMENT")
-print("=" * 80)
-print(f"Production URL: {PROD_BACKEND_URL}")
-print(f"⏰ Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print("=" * 80)
+print("="*80)
+print("TESTING RENDER PRODUCTION API")
+print("="*80)
+print(f"URL: {RENDER_URL}")
+print()
 
-def test_production():
-    """Test production backend endpoints"""
-    try:
-        # 1. Test health endpoint
-        print("\n1️⃣ Testing production health endpoint...")
+# Test Money Managers endpoint
+api_url = f"{RENDER_URL}/api/admin/money-managers"
+print(f"Testing: {api_url}")
+print()
+
+try:
+    response = requests.get(api_url, timeout=30)
+    print(f"Status Code: {response.status_code}")
+    print(f"Content-Type: {response.headers.get('content-type', 'N/A')}")
+    print()
+    
+    if response.status_code == 200:
+        # Try to parse as JSON
         try:
-            response = requests.get(f"{PROD_BACKEND_URL}/api/health", timeout=15)
-            if response.status_code == 200:
-                health_data = response.json()
-                print(f"   ✅ Health check passed")
-                print(f"   📊 Status: {health_data.get('status')}")
-                print(f"   🗄️  MongoDB: {health_data.get('services', {}).get('mongodb', 'unknown')}")
+            data = response.json()
+            print("✅ Valid JSON response received")
+            print()
+            
+            # Handle both dict and list formats
+            if isinstance(data, dict):
+                managers = data.get('managers', data.get('data', []))
+                count = data.get('count', len(managers))
+                success = data.get('success', True)
+                
+                print(f"Response Structure:")
+                print(f"   success: {success}")
+                print(f"   count: {count}")
+                print(f"   managers count: {len(managers)}")
             else:
-                print(f"   ⚠️  Health check returned: {response.status_code}")
-                return False
-        except requests.exceptions.RequestException as e:
-            print(f"   ❌ Health check failed: {str(e)}")
-            print(f"   ⚠️  Is Render still deploying? Check: https://dashboard.render.com")
-            return False
-        
-        # 2. Test admin login
-        print("\n2️⃣ Testing production admin login...")
-        login_response = requests.post(
-            f"{PROD_BACKEND_URL}/api/auth/login",
-            json={"username": "admin", "password": "password123", "user_type": "admin"},
-            timeout=15
-        )
-        
-        if login_response.status_code == 200:
-            token = login_response.json().get('token')
-            print(f"   ✅ Admin login successful")
-            print(f"   🔑 Token received: {token[:30]}...")
-        else:
-            print(f"   ❌ Admin login failed: {login_response.status_code}")
-            print(f"   Response: {login_response.text[:200]}")
-            return False
-        
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        # 3. Test referral salespeople endpoint
-        print("\n3️⃣ Testing GET /api/admin/referrals/salespeople...")
-        salespeople_response = requests.get(
-            f"{PROD_BACKEND_URL}/api/admin/referrals/salespeople",
-            headers=headers,
-            timeout=15
-        )
-        
-        if salespeople_response.status_code == 200:
-            data = salespeople_response.json()
-            salespeople_list = data.get('salespeople', [])
-            print(f"   ✅ Salespeople endpoint working")
-            print(f"   📊 Salespeople found: {len(salespeople_list)}")
+                managers = data
+                count = len(managers)
             
-            if len(salespeople_list) > 0:
-                for sp in salespeople_list:
-                    print(f"\n   👤 {sp.get('name')}")
-                    print(f"      Code: {sp.get('referral_code')}")
-                    print(f"      Email: {sp.get('email')}")
-                    print(f"      Active: {sp.get('active')}")
-                    print(f"      Sales Volume: ${sp.get('total_sales_volume', 0):,.2f}")
-                    print(f"      Commissions Earned: ${sp.get('total_commissions_earned', 0):,.2f}")
-                    print(f"      Commissions Pending: ${sp.get('commissions_pending', 0):,.2f}")
-                    print(f"      Commissions Paid: ${sp.get('commissions_paid_to_date', 0):,.2f}")
-                    print(f"      Clients Referred: {sp.get('total_clients_referred', 0)}")
+            print()
+            print("="*80)
+            print(f"MANAGERS FOUND: {count}")
+            print("="*80)
+            print()
+            
+            if count == 0:
+                print("❌ CRITICAL: No managers returned!")
+                print()
+                print("Full Response:")
+                print(json.dumps(data, indent=2))
             else:
-                print("   ⚠️  No salespeople found - migration might not have run on production")
-        else:
-            print(f"   ❌ Salespeople endpoint failed: {salespeople_response.status_code}")
-            print(f"   Response: {salespeople_response.text[:300]}")
-            return False
+                # Check each manager
+                zero_managers = []
+                
+                for i, mgr in enumerate(managers, 1):
+                    name = mgr.get('manager_name', mgr.get('name', 'Unknown'))
+                    initial = mgr.get('initial_allocation', 0)
+                    equity = mgr.get('current_equity', 0)
+                    pnl = mgr.get('total_pnl', 0)
+                    
+                    print(f"{i}. {name}")
+                    print(f"   Initial: ${initial:,.2f}")
+                    print(f"   Equity: ${equity:,.2f}")
+                    print(f"   P&L: ${pnl:,.2f}")
+                    
+                    if initial == 0 or equity == 0:
+                        zero_managers.append(name)
+                        print(f"   ⚠️  HAS $0 VALUES!")
+                    else:
+                        print(f"   ✅ OK")
+                    print()
+                
+                print("="*80)
+                print("VALIDATION SUMMARY")
+                print("="*80)
+                print(f"Total Managers: {count}")
+                print(f"Managers with $0 values: {len(zero_managers)}")
+                print()
+                
+                if len(zero_managers) == 0:
+                    print("🎉 SUCCESS! All managers have non-zero values!")
+                else:
+                    print("❌ ISSUE: The following managers have $0 values:")
+                    for name in zero_managers:
+                        print(f"   - {name}")
         
-        # 4. Test get salesperson by ID (Salvador Palma)
-        if len(salespeople_list) > 0:
-            salvador_id = salespeople_list[0].get('id')
-            print(f"\n4️⃣ Testing GET /api/admin/referrals/salespeople/{salvador_id}...")
-            detail_response = requests.get(
-                f"{PROD_BACKEND_URL}/api/admin/referrals/salespeople/{salvador_id}",
-                headers=headers,
-                timeout=15
-            )
-            
-            if detail_response.status_code == 200:
-                detail_data = detail_response.json()
-                print(f"   ✅ Salesperson detail endpoint working")
-                print(f"   👤 Name: {detail_data.get('salesperson', {}).get('name')}")
-                print(f"   📊 Clients: {len(detail_data.get('clients', []))}")
-                print(f"   💼 Investments: {len(detail_data.get('investments', []))}")
-                print(f"   💰 Commissions: {len(detail_data.get('commissions', []))}")
-            else:
-                print(f"   ⚠️  Detail endpoint status: {detail_response.status_code}")
-        
-        # 5. Test commissions pending endpoint
-        print("\n5️⃣ Testing GET /api/admin/referrals/commissions/pending...")
-        commissions_response = requests.get(
-            f"{PROD_BACKEND_URL}/api/admin/referrals/commissions/pending",
-            headers=headers,
-            timeout=15
-        )
-        
-        if commissions_response.status_code == 200:
-            data = commissions_response.json()
-            commissions_list = data.get('commissions', [])
-            print(f"   ✅ Commissions endpoint working")
-            print(f"   📊 Pending commissions: {len(commissions_list)}")
-            
-            if len(commissions_list) > 0:
-                print(f"\n   Sample commissions:")
-                for i, comm in enumerate(commissions_list[:3]):
-                    print(f"   💵 ${comm.get('amount', 0):,.2f} - Status: {comm.get('status')} - Due: {comm.get('payment_date')}")
-        else:
-            print(f"   ⚠️  Commissions endpoint status: {commissions_response.status_code}")
-        
-        # 6. Test public endpoint (no auth)
-        print("\n6️⃣ Testing GET /api/public/salespeople (no auth)...")
-        public_response = requests.get(
-            f"{PROD_BACKEND_URL}/api/public/salespeople",
-            timeout=15
-        )
-        
-        if public_response.status_code == 200:
-            data = public_response.json()
-            print(f"   ✅ Public salespeople endpoint working")
-            print(f"   📊 Active salespeople: {len(data.get('salespeople', []))}")
-            
-            if len(data.get('salespeople', [])) > 0:
-                print(f"\n   🌐 Public accessible salespeople:")
-                for sp in data.get('salespeople', []):
-                    print(f"   - {sp.get('name')} (Code: {sp.get('referral_code')})")
-        else:
-            print(f"   ⚠️  Public endpoint status: {public_response.status_code}")
-        
-        print("\n" + "=" * 80)
-        print("✅ PRODUCTION VERIFICATION COMPLETE!")
-        print("=" * 80)
-        return True
-        
-    except requests.exceptions.RequestException as e:
-        print(f"\n❌ Production test failed: {str(e)}")
-        print(f"\n💡 Possible reasons:")
-        print(f"   - Render is still deploying (check dashboard)")
-        print(f"   - Network/firewall issues")
-        print(f"   - Backend service not running")
-        return False
-    except Exception as e:
-        print(f"\n❌ Unexpected error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return False
+        except json.JSONDecodeError as e:
+            print(f"❌ Invalid JSON response")
+            print(f"Error: {str(e)}")
+            print()
+            print("Response Text (first 1000 chars):")
+            print(response.text[:1000])
+    else:
+        print(f"❌ Request failed with status {response.status_code}")
+        print()
+        print("Response:")
+        print(response.text[:1000])
 
-if __name__ == "__main__":
-    success = test_production()
-    print(f"\n⏰ Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    sys.exit(0 if success else 1)
+except Exception as e:
+    print(f"❌ Error: {str(e)}")
+    import traceback
+    traceback.print_exc()
+
