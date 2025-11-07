@@ -23484,9 +23484,46 @@ async def get_all_money_managers(period_days: int = 30):
         service = TradingAnalyticsService(db)
         ranking = await service.get_managers_ranking(period_days)
         
+        # Transform managers data to match frontend expected structure
+        transformed_managers = []
+        for manager in ranking["managers"]:
+            # Wrap performance data in 'performance' object as frontend expects
+            transformed = {
+                "manager_id": manager.get("manager_id"),
+                "manager_name": manager.get("manager_name"),
+                "strategy": manager.get("strategy"),
+                "execution_type": manager.get("execution_type"),
+                "risk_level": manager.get("risk_level"),
+                "account": manager.get("account"),
+                "fund": manager.get("fund"),
+                "status": manager.get("status"),
+                "assigned_accounts": manager.get("assigned_accounts", []),
+                "profile_url": manager.get("profile_url", ""),
+                "rank": manager.get("rank"),
+                # Performance data in nested object
+                "performance": {
+                    "total_allocated": manager.get("initial_allocation", 0),
+                    "current_equity": manager.get("current_equity", 0),
+                    "total_pnl": manager.get("total_pnl", 0),
+                    "true_pnl": manager.get("total_pnl", 0),  # Alias for compatibility
+                    "return_pct": manager.get("return_percentage", 0),
+                    "return_percentage": manager.get("return_percentage", 0),
+                    "total_withdrawals": manager.get("profit_withdrawals", 0),
+                    "win_rate": manager.get("win_rate", 0),
+                    "profit_factor": manager.get("profit_factor", 0),
+                    "sharpe_ratio": manager.get("sharpe_ratio", 0),
+                    "sortino_ratio": manager.get("sortino_ratio", 0),
+                    "max_drawdown_pct": manager.get("max_drawdown_pct", 0),
+                    "total_trades": manager.get("total_trades", 0),
+                    "winning_trades": manager.get("winning_trades", 0),
+                    "losing_trades": manager.get("losing_trades", 0)
+                }
+            }
+            transformed_managers.append(transformed)
+        
         return {
             "success": True,
-            "managers": ranking["managers"],
+            "managers": transformed_managers,
             "count": ranking["total_managers"],
             "total_pnl": ranking["total_pnl"],
             "average_return": ranking["average_return"],
