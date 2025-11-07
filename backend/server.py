@@ -15533,9 +15533,24 @@ async def get_admin_investments_overview():
                 fund_config = FIDUS_FUND_CONFIG.get(fund_code)
                 fund_name = fund_config.name if fund_config else f"FIDUS {fund_code} Fund"
                 
-                principal_amount = investment.get("principal_amount", 0)
-                current_value = investment.get("current_value", principal_amount)
-                interest_earned = investment.get("total_interest_earned", 0)
+                # Handle Decimal128 values from MongoDB
+                principal_amount_raw = investment.get("principal_amount", investment.get("amount", 0))
+                if hasattr(principal_amount_raw, 'to_decimal'):
+                    principal_amount = float(principal_amount_raw.to_decimal())
+                else:
+                    principal_amount = float(principal_amount_raw) if principal_amount_raw else 0.0
+                
+                current_value_raw = investment.get("current_value", principal_amount_raw)
+                if hasattr(current_value_raw, 'to_decimal'):
+                    current_value = float(current_value_raw.to_decimal())
+                else:
+                    current_value = float(current_value_raw) if current_value_raw else principal_amount
+                
+                interest_earned_raw = investment.get("total_interest_earned", 0)
+                if hasattr(interest_earned_raw, 'to_decimal'):
+                    interest_earned = float(interest_earned_raw.to_decimal())
+                else:
+                    interest_earned = float(interest_earned_raw) if interest_earned_raw else 0.0
                 
                 # Add to all investments
                 investment_record = {
