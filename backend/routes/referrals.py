@@ -478,6 +478,14 @@ async def get_salesperson_dashboard(salesperson_id: str):
             for c in by_status["pending"] + by_status["ready_to_pay"] + by_status["approved"]
         )
         
+        # Calculate total commissions per client
+        client_commissions = {}
+        for c in all_commissions:
+            client_id_str = str(c.get("client_id"))
+            if client_id_str not in client_commissions:
+                client_commissions[client_id_str] = 0
+            client_commissions[client_id_str] += get_amount(c, "commission_amount")
+        
         return {
             "salespersonId": query_id,
             "name": salesperson.get("name"),
@@ -489,7 +497,15 @@ async def get_salesperson_dashboard(salesperson_id: str):
             "totalCommissions": total_commissions,
             "pendingCommissions": commissions_pending,
             "paidCommissions": commissions_paid,
-            "clients": [{"clientId": str(c.get("_id")), "name": c.get("name", "Unknown")} for c in clients],
+            "clients": [
+                {
+                    "clientId": str(c.get("_id")),
+                    "name": c.get("name", "Unknown"),
+                    "email": c.get("email", ""),
+                    "totalCommissionsGenerated": client_commissions.get(str(c.get("_id")), 0)
+                }
+                for c in clients
+            ],
             "investments": [
                 {
                     "investmentId": inv.get("investment_id"),
