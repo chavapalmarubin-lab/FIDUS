@@ -16381,10 +16381,22 @@ async def get_complete_cashflow(days: int = 30):
         days: Number of days to calculate rebates for (default: 30)
     """
     try:
-        # ✅ Get MT5 trading P&L from REAL accounts in MongoDB
-        mt5_accounts_cursor = db.mt5_accounts.find({})
+        # ✅ Get MT5 trading P&L from REAL accounts (use true_pnl, not profit)
+        # true_pnl = current_equity - initial_allocation
+        mt5_accounts_cursor = db.mt5_accounts.find({
+            'capital_source': {'$in': ['client_core', 'client_balance']}
+        })
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
-        mt5_trading_pnl = sum(acc.get('profit', 0) for acc in mt5_accounts)
+        
+        # Calculate true P&L for client funds only
+        mt5_trading_pnl = 0
+        for acc in mt5_accounts:
+            equity = acc.get('equity', 0)
+            initial = acc.get('initial_allocation', 0)
+            if initial > 0:
+                mt5_trading_pnl += (equity - initial)
+        
+        logging.info(f"💰 MT5 Trading P&L: ${mt5_trading_pnl:,.2f} from {len(mt5_accounts)} client accounts")
         
         # ✅ CORRECTED: Get current separation accounts (897591 AND 897599) from MongoDB
         # NOTE: Account 886528 is NO LONGER a separation account per SYSTEM_MASTER.md Section 4.1
