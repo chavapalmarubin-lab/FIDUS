@@ -16449,8 +16449,9 @@ async def get_complete_cashflow(days: int = 30):
         # Calculate broker rebates from start of month to now
         # Query handles BOTH datetime and unix timestamp formats in 'time' field
         # Exclude inactive accounts
+        # NOTE: Only count BUY side (type=0) to avoid double counting (buy+sell = 1 lot)
         deals_cursor = db.mt5_deals_history.find({
-            'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
+            'type': 0,  # Only BUY side (a complete lot = buy + sell, so only count one side)
             'account_number': {'$nin': inactive_account_numbers},  # Exclude inactive
             '$or': [
                 # Handle datetime format
@@ -16466,7 +16467,7 @@ async def get_complete_cashflow(days: int = 30):
         deals = list(unique_deals)
         
         total_volume = sum(deal.get('volume', 0) for deal in deals)
-        broker_rebates = total_volume * 5.05
+        broker_rebates = total_volume * 5.05  # $5.05 per complete lot (buy+sell)
         
         # Calculate days in current month for logging
         days_in_month = (now - start_of_month).days + 1
