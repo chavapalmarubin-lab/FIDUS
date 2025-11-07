@@ -176,13 +176,66 @@ async def perform_all_health_checks(mongo_client, db) -> Dict[str, Dict[str, Any
     logger.info("Checking MT5 Bridge health...")
     health_results['mt5_bridge'] = await check_mt5_sync_health(db)
     
-    # VPS check (basic ping)
-    logger.info("Checking VPS health...")
-    health_results['vps'] = await check_url_health(
-        url='http://92.118.45.135:8000',
-        timeout=3,
-        expected_status=200
-    )
+    # VPS check - Use MT5 terminal status as proxy for VPS health
+    logger.info("Checking VPS health via MT5 status...")
+    try:
+        # Check if we have recent terminal status in the database
+        terminal_status = await db.mt5_terminal_status.find_one(sort=[('timestamp', -1)])
+        
+        if terminal_status:
+            # Check if terminal is connected and initialized
+            is_connected = terminal_status.get('connected', False)
+            is_initialized = terminal_status.get('terminal_initialized', False)
+            
+            # Calculate time since last update
+            last_update = terminal_status.get('timestamp')
+            if last_update:
+                now = datetime.now(timezone.utc)
+                # Handle timezone-aware datetime
+                if last_update.tzinfo is None:
+                    last_update = last_update.replace(tzinfo=timezone.utc)
+                minutes_since = (now - last_update).total_seconds() / 60
+                
+                if is_connected and is_initialized and minutes_since < 5:
+                    health_results['vps'] = {
+                        'status': 'online',
+                        'response_time_ms': 0,
+                        'checked_at': datetime.now(timezone.utc).isoformat(),
+                        'last_heartbeat': last_update.isoformat(),
+                        'minutes_since_heartbeat': round(minutes_since, 1),
+                        'error': None
+                    }
+                else:
+                    health_results['vps'] = {
+                        'status': 'degraded',
+                        'response_time_ms': 0,
+                        'checked_at': datetime.now(timezone.utc).isoformat(),
+                        'last_heartbeat': last_update.isoformat() if last_update else None,
+                        'minutes_since_heartbeat': round(minutes_since, 1) if last_update else None,
+                        'error': f'No heartbeat in {round(minutes_since, 1)} minutes' if minutes_since >= 5 else 'MT5 not connected'
+                    }
+            else:
+                health_results['vps'] = {
+                    'status': 'degraded',
+                    'response_time_ms': 0,
+                    'checked_at': datetime.now(timezone.utc).isoformat(),
+                    'error': 'No timestamp in terminal status'
+                }
+        else:
+            health_results['vps'] = {
+                'status': 'offline',
+                'response_time_ms': 0,
+                'checked_at': datetime.now(timezone.utc).isoformat(),
+                'error': 'No terminal status records found'
+            }
+    except Exception as e:
+        logger.error(f"VPS health check error: {str(e)}")
+        health_results['vps'] = {
+            'status': 'offline',
+            'response_time_ms': 0,
+            'checked_at': datetime.now(timezone.utc).isoformat(),
+            'error': str(e)
+        }
     
     return health_results
 
