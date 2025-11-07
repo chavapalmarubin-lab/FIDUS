@@ -16500,6 +16500,8 @@ async def get_complete_cashflow(days: int = 30):
             'total_inflows': round(total_inflows, 2),
             'net_profit': round(net_profit, 2),
             'client_interest_obligations': round(client_interest_obligations, 2),
+            'client_principal_redemptions': round(client_principal_redemptions, 2),
+            'referral_commissions': round(referral_commissions, 2),
             'total_liabilities': round(total_liabilities, 2),
             'profit_withdrawals': round(profit_withdrawals, 2),
             'total_volume_lots': round(total_volume, 2),
