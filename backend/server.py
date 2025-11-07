@@ -21988,7 +21988,39 @@ async def get_sync_status():
         Sync status including last sync times, data freshness, health indicators
     """
     try:
-        status = await terminal_status_service.get_sync_status()
+        # Get latest terminal status to determine if MT5 is connected
+        terminal_status = await terminal_status_service.get_latest_status()
+        
+        # Check recent deal syncs
+        deals_cursor = db.mt5_deals.find({}).sort("_id", -1).limit(1)
+        latest_deals = await deals_cursor.to_list(1)
+        
+        # Check MT5 accounts
+        accounts_count = await db.mt5_accounts.count_documents({})
+        
+        # Determine health
+        is_connected = terminal_status.get('connected', False) if terminal_status else False
+        has_data = len(latest_deals) > 0
+        has_accounts = accounts_count > 0
+        
+        if is_connected and has_data:
+            health_status = 'healthy'
+            message = 'MT5 Bridge is running and syncing data'
+        elif is_connected:
+            health_status = 'warning'
+            message = 'MT5 connected but no recent data'
+        else:
+            health_status = 'critical'
+            message = 'MT5 Bridge is offline'
+        
+        status = {
+            'connected': is_connected,
+            'health_status': health_status,
+            'message': message,
+            'accounts_monitored': accounts_count,
+            'data_flowing': has_data,
+            'last_check': datetime.now(timezone.utc).isoformat()
+        }
         
         return {
             "success": True,
