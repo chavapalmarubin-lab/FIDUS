@@ -93,14 +93,23 @@ def test_money_managers_api():
         print("=" * 80)
         print()
         
-        # Check if data is a list
-        if not isinstance(data, list):
-            print(f"❌ CRITICAL ERROR: Expected list of managers, got {type(data)}")
+        # Check if data is wrapped in a dict with "managers" key
+        if isinstance(data, dict) and 'managers' in data:
+            print(f"✅ Response structure: dict with 'managers' key")
+            managers = data['managers']
+            print(f"   Additional fields: {', '.join([k for k in data.keys() if k != 'managers'])}")
+        elif isinstance(data, list):
+            print(f"✅ Response structure: direct list of managers")
+            managers = data
+        else:
+            print(f"❌ CRITICAL ERROR: Unexpected response structure")
             print(f"Response: {json.dumps(data, indent=2)}")
             return False
         
+        print()
+        
         # Count managers
-        manager_count = len(data)
+        manager_count = len(managers)
         print(f"📊 Total Managers Found: {manager_count}")
         print(f"   Expected: 5 managers")
         
