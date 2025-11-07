@@ -592,7 +592,7 @@ const MoneyManagersDashboard = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white">
-                  Manager Profile: {selectedManager.display_name || selectedManager.name}
+                  Manager Profile: {selectedManager.manager_name || selectedManager.display_name || selectedManager.name}
                 </h3>
                 <Button 
                   onClick={() => setSelectedManager(null)}
