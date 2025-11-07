@@ -15510,11 +15510,16 @@ async def get_admin_investments_overview():
             client_id = client.get('id')
             client_name = client.get('name', 'Unknown')
             
+            logging.info(f"Processing client: {client_name} (ID: {client_id})")
+            
             # Get investments for this client directly from MongoDB
             investments_cursor = db.investments.find({"client_id": client_id})
             client_investments = await investments_cursor.to_list(length=None)
             
+            logging.info(f"Found {len(client_investments)} investments for client {client_id}")
+            
             if not client_investments:
+                logging.info(f"Skipping client {client_name} - no investments")
                 continue
                 
             # Initialize client summary
