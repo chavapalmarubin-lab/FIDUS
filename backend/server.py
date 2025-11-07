@@ -23485,9 +23485,9 @@ async def get_all_money_managers(period_days: int = 30):
         ranking = await service.get_managers_ranking(period_days)
         
         # Transform managers data to match frontend expected structure
+        # Frontend expects performance data in nested 'performance' object
         transformed_managers = []
         for manager in ranking["managers"]:
-            # Wrap performance data in 'performance' object as frontend expects
             transformed = {
                 "manager_id": manager.get("manager_id"),
                 "manager_name": manager.get("manager_name"),
@@ -23500,12 +23500,11 @@ async def get_all_money_managers(period_days: int = 30):
                 "assigned_accounts": manager.get("assigned_accounts", []),
                 "profile_url": manager.get("profile_url", ""),
                 "rank": manager.get("rank"),
-                # Performance data in nested object
                 "performance": {
                     "total_allocated": manager.get("initial_allocation", 0),
                     "current_equity": manager.get("current_equity", 0),
                     "total_pnl": manager.get("total_pnl", 0),
-                    "true_pnl": manager.get("total_pnl", 0),  # Alias for compatibility
+                    "true_pnl": manager.get("total_pnl", 0),
                     "return_pct": manager.get("return_percentage", 0),
                     "return_percentage": manager.get("return_percentage", 0),
                     "total_withdrawals": manager.get("profit_withdrawals", 0),
