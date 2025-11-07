@@ -16534,6 +16534,8 @@ async def get_complete_cashflow(days: int = 30):
             },
             'liabilities': {
                 'client_interest_obligations': round(client_interest_obligations, 2),
+                'client_principal_redemptions': round(client_principal_redemptions, 2),
+                'referral_commissions': round(referral_commissions, 2),
                 'total': round(total_liabilities, 2)
             },
             'summary': {
