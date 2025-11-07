@@ -16428,16 +16428,23 @@ async def get_complete_cashflow(days: int = 30):
         # ✅ BROKER REBATES: Calculate from START OF CURRENT MONTH to TODAY
         # Business logic: Rebates reset monthly and used for operational expenses
         # Per user requirement: Calculate from 1st of month to today for cash flow
+        # ONLY count ACTIVE CLIENT ACCOUNTS (exclude FIDUS house capital, inactive, separation)
         from datetime import timedelta
         
         # Get start of current month (1st day at 00:00:00)
         now = datetime.now(timezone.utc)
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
-        # Calculate broker rebates from start of month to now
+        # Get ACTIVE CLIENT ACCOUNTS for rebate calculation
+        # Include: client accounts (client, reinvested_profit)
+        # Exclude: FIDUS house capital (891215), inactive accounts, separation accounts
+        active_client_accounts = [886557, 886602, 885822, 897589, 897590]
+        
+        # Calculate broker rebates from start of month to now, ONLY from client accounts
         deals_cursor = db.mt5_deals_history.find({
             'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
-            'time': {'$gte': start_of_month}
+            'time': {'$gte': start_of_month},
+            'account_number': {'$in': active_client_accounts}  # ONLY client accounts
         })
         deals = await deals_cursor.to_list(length=None)
         total_volume = sum(deal.get('volume', 0) for deal in deals)
@@ -16446,7 +16453,7 @@ async def get_complete_cashflow(days: int = 30):
         # Calculate days in current month for logging
         days_in_month = (now - start_of_month).days + 1
         
-        logging.info(f"💰 Broker Rebates (Monthly): {len(deals)} trades, {total_volume:.2f} lots from {start_of_month.strftime('%b 1')} to today ({days_in_month} days) = ${broker_rebates:,.2f}")
+        logging.info(f"💰 Broker Rebates (Monthly - Client Accounts Only): {len(deals)} trades, {total_volume:.2f} lots from {start_of_month.strftime('%b 1')} to today ({days_in_month} days) = ${broker_rebates:,.2f}")
         
         # ✅ CALCULATION #2: Total Inflows (moved from frontend Line 180)
         # Same logic as frontend: mt5_pnl + broker_interest + broker_rebates
