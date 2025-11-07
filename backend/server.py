@@ -16520,7 +16520,12 @@ async def get_complete_cashflow(days: int = 30):
             'total_volume_lots': round(total_volume, 2),
             
             # Metadata
-            'calculation_period_days': days,
+            'calculation_period_days': days,  # For backward compatibility (not used for rebates)
+            'broker_rebates_period': 'monthly',  # NEW: Indicates monthly calculation
+            'broker_rebates_start_date': start_of_month.isoformat(),  # NEW: Start of current month
+            'broker_rebates_end_date': now.isoformat(),  # NEW: Today
+            'broker_rebates_days': days_in_month,  # NEW: Days elapsed in month
+            'current_month': now.strftime('%B %Y'),  # NEW: "November 2025"
             'trades_count': len(deals),
             'mt5_accounts_count': len(mt5_accounts),
             'separation_accounts_count': len(separation_accounts),
