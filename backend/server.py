@@ -16425,20 +16425,28 @@ async def get_complete_cashflow(days: int = 30):
         # Same logic as frontend: separation_balance - profit_withdrawals
         broker_interest = separation_balance - profit_withdrawals
         
-        # ✅ FIXED: Get broker rebates for SPECIFIC TIME PERIOD (not all time)
-        # Calculate from actual deal volume in last N days: volume * $5.05 per lot
+        # ✅ BROKER REBATES: Calculate from START OF CURRENT MONTH to TODAY
+        # Business logic: Rebates reset monthly and used for operational expenses
+        # Per user requirement: Calculate from 1st of month to today for cash flow
         from datetime import timedelta
-        start_date = datetime.now(timezone.utc) - timedelta(days=days)
         
+        # Get start of current month (1st day at 00:00:00)
+        now = datetime.now(timezone.utc)
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Calculate broker rebates from start of month to now
         deals_cursor = db.mt5_deals_history.find({
             'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
-            'time': {'$gte': start_date}
+            'time': {'$gte': start_of_month}
         })
         deals = await deals_cursor.to_list(length=None)
         total_volume = sum(deal.get('volume', 0) for deal in deals)
         broker_rebates = total_volume * 5.05
         
-        logging.info(f"💰 Broker Rebates: {len(deals)} trades, {total_volume:.2f} lots in last {days} days = ${broker_rebates:,.2f}")
+        # Calculate days in current month for logging
+        days_in_month = (now - start_of_month).days + 1
+        
+        logging.info(f"💰 Broker Rebates (Monthly): {len(deals)} trades, {total_volume:.2f} lots from {start_of_month.strftime('%b 1')} to today ({days_in_month} days) = ${broker_rebates:,.2f}")
         
         # ✅ CALCULATION #2: Total Inflows (moved from frontend Line 180)
         # Same logic as frontend: mt5_pnl + broker_interest + broker_rebates
