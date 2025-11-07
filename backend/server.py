@@ -27460,7 +27460,7 @@ async def mt5_bridge_proxy_health():
         }
 
 
-@api_router.get("/api/mt5-bridge-proxy/accounts/summary")
+@api_router.get("/mt5-bridge-proxy/accounts/summary")
 async def mt5_bridge_proxy_accounts():
     """
     Proxy endpoint for MT5 accounts summary
