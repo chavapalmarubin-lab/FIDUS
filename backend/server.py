@@ -16440,30 +16440,49 @@ async def get_complete_cashflow(days: int = 30):
         total_inflows = mt5_trading_pnl + broker_interest + broker_rebates
         
         # ✅ Get client obligations from REAL investments in MongoDB
-        # Calculate total interest obligations based on investment terms
+        # Per SYSTEM_MASTER.md:
+        # - CORE: 1.5% monthly interest (12 payments)
+        # - BALANCE: 2.5% monthly interest paid quarterly (4 payments of 3 months each)
         investments_cursor = db.investments.find({'status': 'active'})
         investments = await investments_cursor.to_list(length=None)
         
         client_interest_obligations = 0
+        client_principal_redemptions = 0
+        
         for inv in investments:
             principal = inv.get('principal_amount', 0)
             interest_rate = inv.get('interest_rate', 0)
-            payment_freq = inv.get('payment_frequency', 'monthly')
+            fund_type = inv.get('fund_type', '')
             
-            # Calculate total interest for contract period
-            if payment_freq == 'monthly':
-                # 12 monthly payments
+            # Principal must be returned at end
+            client_principal_redemptions += principal
+            
+            # Calculate interest obligations per SYSTEM_MASTER.md Section 2.3
+            if 'CORE' in fund_type.upper():
+                # CORE: 1.5% monthly × 12 months
                 total_interest = principal * interest_rate * 12
-            elif payment_freq == 'quarterly':
-                # 4 quarterly payments
-                total_interest = principal * interest_rate * 4
+            elif 'BALANCE' in fund_type.upper():
+                # BALANCE: 2.5% monthly rate but paid quarterly
+                # Quarterly payment = 3 months × 2.5% = 7.5% per quarter
+                # Annual: 4 quarters × 7.5% = 30% annual (or 12 months × 2.5%)
+                total_interest = principal * interest_rate * 12
             else:
                 total_interest = 0
             
             client_interest_obligations += total_interest
         
-        # Total liabilities (could include other liabilities if they exist)
-        total_liabilities = client_interest_obligations
+        # ✅ Get referral commissions (10% of client interest per SYSTEM_MASTER.md Line 125)
+        commissions_cursor = db.referral_commissions.find({'status': {'$in': ['pending', 'paid']}})
+        commissions = await commissions_cursor.to_list(length=None)
+        referral_commissions = sum(
+            float(c.get('commission_amount').to_decimal() if hasattr(c.get('commission_amount'), 'to_decimal') else c.get('commission_amount', 0))
+            for c in commissions
+        )
+        
+        # Total liabilities: Interest + Principal + Referral Commissions
+        total_liabilities = client_interest_obligations + client_principal_redemptions + referral_commissions
+        
+        logging.info(f"💰 Fund Liabilities: Interest ${client_interest_obligations:,.2f} + Principal ${client_principal_redemptions:,.2f} + Commissions ${referral_commissions:,.2f} = ${total_liabilities:,.2f}")
         
         # ✅ CALCULATION #3: Net Profit (moved from frontend Line 192)
         # Same logic as frontend: total_inflows - total_liabilities
