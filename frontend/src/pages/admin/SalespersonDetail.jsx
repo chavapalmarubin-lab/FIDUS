@@ -99,14 +99,20 @@ const SalespersonDetail = ({ salespersonId: propSalespersonId, onBack }) => {
   }
 
   // API returns data at root level with correct field names (camelCase)
+  // Keep both camelCase and snake_case for compatibility
   const salesperson = {
     ...data,
+    // Snake_case for legacy code
     referral_code: data.referralCode,
     referral_link: data.referralLink,
     total_sales_volume: data.totalSalesVolume,
     total_commissions_earned: data.totalCommissions,
     commissions_pending: data.pendingCommissions,
-    commissions_paid_to_date: data.paidCommissions
+    commissions_paid_to_date: data.paidCommissions,
+    // CamelCase for display
+    totalCommissionsEarned: data.totalCommissions,
+    commissionsPending: data.pendingCommissions,
+    commissionsPaidToDate: data.paidCommissions
   };
   
   // Extract data from response
