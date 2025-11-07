@@ -16428,7 +16428,7 @@ async def get_complete_cashflow(days: int = 30):
         # ✅ BROKER REBATES: Calculate from START OF CURRENT MONTH to TODAY
         # Business logic: Rebates reset monthly and used for operational expenses
         # Per user requirement: Calculate from 1st of month to today for cash flow
-        # ALL ACCOUNTS THAT TRADE GENERATE REBATES (client, FIDUS, separation, all)
+        # ALL ACTIVE ACCOUNTS generate rebates (exclude INACTIVE accounts like GoldenTrade)
         from datetime import timedelta
         import time
         
@@ -16441,10 +16441,17 @@ async def get_complete_cashflow(days: int = 30):
         start_timestamp = int(start_of_month.timestamp())
         end_timestamp = int(end_of_month.timestamp())
         
+        # Get INACTIVE accounts to exclude (e.g., GoldenTrade 886066, unknown 891234)
+        inactive_accounts_cursor = db.mt5_accounts.find({'status': 'inactive'})
+        inactive_accounts = await inactive_accounts_cursor.to_list(length=None)
+        inactive_account_numbers = [acc.get('account') for acc in inactive_accounts]
+        
         # Calculate broker rebates from start of month to now
         # Query handles BOTH datetime and unix timestamp formats in 'time' field
+        # Exclude inactive accounts
         deals_cursor = db.mt5_deals_history.find({
             'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
+            'account_number': {'$nin': inactive_account_numbers},  # Exclude inactive
             '$or': [
                 # Handle datetime format
                 {'time': {'$gte': start_of_month, '$lte': end_of_month}},
@@ -16464,7 +16471,7 @@ async def get_complete_cashflow(days: int = 30):
         # Calculate days in current month for logging
         days_in_month = (now - start_of_month).days + 1
         
-        logging.info(f"💰 Broker Rebates (Monthly - ALL Trading Accounts): {len(deals)} trades, {total_volume:.2f} lots from {start_of_month.strftime('%b 1')} to today ({days_in_month} days) = ${broker_rebates:,.2f}")
+        logging.info(f"💰 Broker Rebates (Monthly - ACTIVE Accounts Only): {len(deals)} trades, {total_volume:.2f} lots from {start_of_month.strftime('%b 1')} to today ({days_in_month} days) = ${broker_rebates:,.2f} (excluded {len(inactive_account_numbers)} inactive accounts)")
         
         # ✅ CALCULATION #2: Total Inflows (moved from frontend Line 180)
         # Same logic as frontend: mt5_pnl + broker_interest + broker_rebates
