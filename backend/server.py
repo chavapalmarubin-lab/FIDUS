@@ -16430,18 +16430,34 @@ async def get_complete_cashflow(days: int = 30):
         # Per user requirement: Calculate from 1st of month to today for cash flow
         # ALL ACCOUNTS THAT TRADE GENERATE REBATES (client, FIDUS, separation, all)
         from datetime import timedelta
+        import time
         
         # Get start of current month (1st day at 00:00:00)
         now = datetime.now(timezone.utc)
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_month = now  # Today
+        
+        # Convert to UNIX timestamps (deals can be stored as int or datetime)
+        start_timestamp = int(start_of_month.timestamp())
+        end_timestamp = int(end_of_month.timestamp())
         
         # Calculate broker rebates from start of month to now
-        # Include ALL trading accounts (everything that trades generates rebates)
+        # Query handles BOTH datetime and unix timestamp formats in 'time' field
         deals_cursor = db.mt5_deals_history.find({
             'type': {'$in': [0, 1]},  # Only actual trades (buy/sell)
-            'time': {'$gte': start_of_month}  # From Nov 1 to today
+            '$or': [
+                # Handle datetime format
+                {'time': {'$gte': start_of_month, '$lte': end_of_month}},
+                # Handle unix timestamp format (integer)
+                {'time': {'$gte': start_timestamp, '$lte': end_timestamp}}
+            ]
         })
         deals = await deals_cursor.to_list(length=None)
+        
+        # Remove duplicates (same deal matched by both conditions)
+        unique_deals = {deal.get('ticket', id(deal)): deal for deal in deals}.values()
+        deals = list(unique_deals)
+        
         total_volume = sum(deal.get('volume', 0) for deal in deals)
         broker_rebates = total_volume * 5.05
         
