@@ -15503,8 +15503,10 @@ async def get_admin_investments_overview():
             }
         
         # Get all clients directly from MongoDB
+        logging.info("📋 Fetching clients from users collection...")
         clients_cursor = db.users.find({"type": "client", "status": "active"})
         all_clients = await clients_cursor.to_list(length=None)
+        logging.info(f"📋 Found {len(all_clients)} clients with type='client' and status='active'")
         
         for client in all_clients:
             client_id = client.get('id')
