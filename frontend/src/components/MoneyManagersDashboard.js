@@ -515,10 +515,10 @@ const MoneyManagersDashboard = () => {
                           <td className="py-4">
                             <div>
                               <div className="text-white font-medium">
-                                {manager.display_name || manager.name}
+                                {manager.manager_name || manager.display_name || manager.name}
                               </div>
                               <div className="text-slate-400 text-xs">
-                                {manager.strategy_name}
+                                {manager.strategy || manager.strategy_name || 'Active Trading'}
                               </div>
                             </div>
                           </td>
