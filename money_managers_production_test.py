@@ -139,7 +139,7 @@ def test_money_managers_api():
         }
         
         # Validate each manager
-        for idx, manager in enumerate(data, 1):
+        for idx, manager in enumerate(managers, 1):
             print(f"Manager #{idx}: {manager.get('manager_name', 'UNKNOWN')}")
             print("-" * 80)
             
