@@ -5,15 +5,16 @@ import requests
 # The backend might be on a different subdomain or port
 POSSIBLE_URLS = [
     "https://fidus-investment-platform.onrender.com/api/admin/money-managers",
-    "https://fidus-backend.onrender.com/api/admin/money-managers",
+    "https://fidus-backend.onrender.com/api/admin/money-managers", 
     "https://fidus-api.onrender.com/api/admin/money-managers",
-    "https://fidus-investment-platform.onrender.com:8001/api/admin/money-managers",
 ]
 
 print("="*80)
 print("SEARCHING FOR CORRECT RENDER BACKEND URL")
 print("="*80)
 print()
+
+found_url = None
 
 for url in POSSIBLE_URLS:
     print(f"Testing: {url}")
@@ -37,7 +38,8 @@ for url in POSSIBLE_URLS:
                     if 'managers' in data:
                         print(f"  ✅ This is the Money Managers endpoint!")
                         print(f"  Managers count: {len(data['managers'])}")
-                        return url
+                        found_url = url
+                        break
                 else:
                     print(f"  Response is a list with {len(data)} items")
             except:
@@ -50,10 +52,14 @@ for url in POSSIBLE_URLS:
         print(f"  ❌ Error: {str(e)}")
         print()
 
-print("Could not find backend API. The Render deployment might need verification.")
-print()
-print("Please check:")
-print("1. Is the backend service deployed separately on Render?")
-print("2. What is the actual backend URL in production?")
-print("3. Check Render dashboard for the backend service URL")
+if found_url:
+    print(f"\n🎉 Found backend API: {found_url}")
+else:
+    print("\n❌ Could not find backend API.")
+    print("\nThe Render URL https://fidus-investment-platform.onrender.com")
+    print("is serving the frontend React app, not the backend API.")
+    print("\nThis means either:")
+    print("1. Backend and frontend are on the same server but routes are configured differently")
+    print("2. Backend is on a separate Render service with different URL")
+    print("3. The deployment needs to be updated")
 
