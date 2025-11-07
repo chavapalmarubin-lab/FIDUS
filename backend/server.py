@@ -16381,20 +16381,25 @@ async def get_complete_cashflow(days: int = 30):
         days: Number of days to calculate rebates for (default: 30)
     """
     try:
-        # ✅ Get MT5 trading P&L from REAL accounts (use true_pnl, not profit)
-        # true_pnl = current_equity - initial_allocation
+        # ✅ Get MT5 trading P&L from CLIENT accounts only (per SYSTEM_MASTER.md)
+        # Exclude FIDUS house capital (891215) and separation accounts
+        # Client accounts: 886557, 886602, 885822 (pure client)
+        # + 897589, 897590 (reinvested profit - but from client interest, still counts)
+        client_account_numbers = [886557, 886602, 885822, 897589, 897590]
+        
         mt5_accounts_cursor = db.mt5_accounts.find({
-            'capital_source': {'$in': ['client_core', 'client_balance']}
+            'account': {'$in': client_account_numbers}
         })
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         
-        # Calculate true P&L for client funds only
+        # Calculate true P&L for client funds: current_equity - initial_allocation
         mt5_trading_pnl = 0
         for acc in mt5_accounts:
             equity = acc.get('equity', 0)
             initial = acc.get('initial_allocation', 0)
-            if initial > 0:
-                mt5_trading_pnl += (equity - initial)
+            pnl = equity - initial if initial > 0 else 0
+            mt5_trading_pnl += pnl
+            logging.debug(f"  Account {acc.get('account')}: ${equity:,.2f} - ${initial:,.2f} = ${pnl:,.2f}")
         
         logging.info(f"💰 MT5 Trading P&L: ${mt5_trading_pnl:,.2f} from {len(mt5_accounts)} client accounts")
         
