@@ -2,7 +2,7 @@
 """
 MONEY MANAGERS ENDPOINTS TESTING - December 18, 2025
 Testing Date: December 18, 2025
-Backend URL: https://fidus-fix.preview.emergentagent.com/api
+Backend URL: https://referral-tracker-9.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 SPECIFIC TEST REQUEST:
@@ -33,7 +33,7 @@ from typing import Dict, Any, List, Optional
 
 class MoneyManagersTester:
     def __init__(self):
-        self.base_url = "https://fidus-fix.preview.emergentagent.com/api"
+        self.base_url = "https://referral-tracker-9.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://fidus-fix.preview.emergentagent.com"
+        self.base_url = "https://referral-tracker-9.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

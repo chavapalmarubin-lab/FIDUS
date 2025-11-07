@@ -11,7 +11,7 @@ from datetime import datetime
 
 class MoneyManagersDebugger:
     def __init__(self):
-        self.base_url = "https://fidus-fix.preview.emergentagent.com/api"
+        self.base_url = "https://referral-tracker-9.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

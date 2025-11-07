@@ -96,7 +96,7 @@ if magic_working:
     print("Next steps:")
     print("  1. Wait 5-10 minutes for new trades to sync to MongoDB")
     print("  2. Trigger full re-sync of historical trades:")
-    print("     curl -X POST https://fidus-fix.preview.emergentagent.com/api/admin/mt5-deals/sync-all")
+    print("     curl -X POST https://referral-tracker-9.preview.emergentagent.com/api/admin/mt5-deals/sync-all")
     print("  3. Verify Money Managers Compare tab shows 4 managers")
 else:
     print("❌ ISSUE: Magic field still missing from trades")

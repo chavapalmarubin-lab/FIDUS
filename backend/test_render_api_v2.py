@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://fidus-fix.preview.emergentagent.com"
+BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

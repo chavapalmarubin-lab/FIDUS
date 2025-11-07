@@ -35,7 +35,7 @@ class MoneyManagersBackendTester:
     
     def __init__(self):
         # Use the correct backend URL from frontend/.env
-        self.base_url = "https://fidus-fix.preview.emergentagent.com"
+        self.base_url = "https://referral-tracker-9.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         # Test credentials
