@@ -19384,6 +19384,7 @@ async def get_fund_portfolio_overview():
                 "performance_ytd": round(weighted_return, 2),  # CORRECTED: Weighted return!
                 "nav_per_share": round(1.0 + (weighted_return / 100), 4),  # Simple NAV calculation
                 "total_true_pnl": round(total_true_pnl, 2),
+                "mt5_trading_profit": round(total_true_pnl, 2),  # MT5 trading profit for display
                 "management_fee": 0.0,
                 "performance_fee": 0.0,
                 "total_rebates": 0.0
