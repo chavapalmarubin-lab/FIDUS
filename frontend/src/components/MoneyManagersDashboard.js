@@ -333,10 +333,10 @@ const MoneyManagersDashboard = () => {
                       </div>
                       
                       <CardTitle className="text-white text-lg">
-                        {manager.display_name || manager.name}
+                        {manager.manager_name || manager.display_name || manager.name}
                       </CardTitle>
                       <p className="text-slate-400 text-sm">
-                        {manager.strategy_name}
+                        {manager.strategy || manager.strategy_name || 'Active Trading Strategy'}
                       </p>
                     </CardHeader>
                     
