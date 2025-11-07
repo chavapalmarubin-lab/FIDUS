@@ -27431,7 +27431,7 @@ async def get_prospect_lead(lead_id: str):
 # ===============================================================================
 # MT5 BRIDGE PROXY ENDPOINTS (for frontend to avoid CORS)
 # ===============================================================================
-@api_router.get("/api/mt5-bridge-proxy/health")
+@api_router.get("/mt5-bridge-proxy/health")
 async def mt5_bridge_proxy_health():
     """
     Proxy endpoint for MT5 Bridge health check
