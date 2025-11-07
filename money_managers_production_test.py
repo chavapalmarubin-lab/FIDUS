@@ -62,9 +62,20 @@ def test_money_managers_api():
     print()
     
     try:
-        # Make GET request to the endpoint
+        # Get admin token first
+        token = get_admin_token()
+        if not token:
+            print("❌ CRITICAL ERROR: Failed to get admin token")
+            return False
+        
+        print()
+        
+        # Make GET request to the endpoint with auth header
         print("📡 Making GET request to /api/admin/money-managers...")
-        response = requests.get(API_ENDPOINT, timeout=30)
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        response = requests.get(API_ENDPOINT, headers=headers, timeout=30)
         
         print(f"✅ Response Status Code: {response.status_code}")
         print()
