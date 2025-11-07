@@ -384,11 +384,17 @@ const FundPortfolioManagement = () => {
                       ))}
                     </defs>
                     <Pie
-                      data={Object.entries(fundData || {}).map(([fundCode, fund]) => ({
-                        name: `${fundCode} Fund`,
-                        value: fund.aum || fund.current_aum || 0,
-                        fundCode: fundCode
-                      }))}
+                      data={Object.entries(fundData || {})
+                        .filter(([fundCode, fund]) => {
+                          // Only show funds with actual allocation (AUM > 0)
+                          const aum = fund.aum || fund.current_aum || 0;
+                          return aum > 0;
+                        })
+                        .map(([fundCode, fund]) => ({
+                          name: `${fundCode} Fund`,
+                          value: fund.aum || fund.current_aum || 0,
+                          fundCode: fundCode
+                        }))}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -397,14 +403,16 @@ const FundPortfolioManagement = () => {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {Object.entries(fundData || {}).map(([fundCode], index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={FUND_COLORS[fundCode] || '#64748b'}
-                          stroke="#1e293b"
-                          strokeWidth={2}
-                        />
-                      ))}
+                      {Object.entries(fundData || {})
+                        .filter(([fundCode, fund]) => (fund.aum || fund.current_aum || 0) > 0)
+                        .map(([fundCode], index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={FUND_COLORS[fundCode] || '#64748b'}
+                            stroke="#1e293b"
+                            strokeWidth={2}
+                          />
+                        ))}
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
