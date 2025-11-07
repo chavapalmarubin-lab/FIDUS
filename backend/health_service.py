@@ -16,10 +16,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 async def check_frontend_health() -> Dict[str, Any]:
     """Check frontend availability and response time"""
     start = time.time()
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://referral-tracker-9.preview.emergentagent.com').replace('/api', '')
+    
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                "https://fidus-investment-platform.onrender.com",
+                frontend_url,
                 timeout=5.0,
                 follow_redirects=True
             )
@@ -39,7 +41,7 @@ async def check_frontend_health() -> Dict[str, Any]:
             "status": status,
             "response_time": round(response_time, 2),
             "status_code": response.status_code,
-            "url": "https://fidus-investment-platform.onrender.com",
+            "url": frontend_url,
             "last_check": datetime.now(timezone.utc).isoformat(),
             "message": "Frontend is responding" if status == "healthy" else f"Response time: {round(response_time)}ms"
         }
