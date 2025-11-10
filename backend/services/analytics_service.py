@@ -71,9 +71,10 @@ class AnalyticsService:
                 return self._empty_metrics()
             
             # Calculate ALL metrics in BACKEND
-            total_pnl = sum(t.get("profit", 0) for t in actual_trades)
-            total_commission = sum(t.get("commission", 0) for t in actual_trades)
-            total_swap = sum(t.get("swap", 0) for t in actual_trades)
+            # Handle None values from VPS (commission, swap, fee not provided)
+            total_pnl = sum(t.get("profit") or 0 for t in actual_trades)
+            total_commission = sum(t.get("commission") or 0 for t in actual_trades)
+            total_swap = sum(t.get("swap") or 0 for t in actual_trades)
             
             # Classify trades
             winning_trades = [t for t in actual_trades if t.get("profit", 0) > 0]
