@@ -576,9 +576,9 @@ const FundPortfolioManagement = () => {
                       Account Performance Breakdown
                     </h4>
                     
-                    {fundPerformanceDetails[fund.fund_code].accounts?.length > 0 ? (
+                    {fundPerformanceDetails[fundCode].accounts?.length > 0 ? (
                       <div className="space-y-3">
-                        {fundPerformanceDetails[fund.fund_code].accounts.map((account, idx) => (
+                        {fundPerformanceDetails[fundCode].accounts.map((account, idx) => (
                           <div key={account.account_id} className="p-3 bg-slate-700/50 rounded border border-slate-600">
                             <div className="flex items-start justify-between mb-2">
                               <div>
