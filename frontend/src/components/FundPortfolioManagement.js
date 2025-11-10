@@ -549,10 +549,10 @@ const FundPortfolioManagement = () => {
                   {(fund.mt5_accounts_count > 0 || fund.account_count > 0) && (
                     <div className="mt-4 pt-4 border-t border-slate-600">
                       <button
-                        onClick={() => toggleFundExpansion(fund.fund_code)}
+                        onClick={() => toggleFundExpansion(fundCode)}
                         className="flex items-center text-sm text-blue-400 hover:text-blue-300"
                       >
-                        {expandedFunds[fund.fund_code] ? (
+                        {expandedFunds[fundCode] ? (
                           <>
                             <ChevronUp className="h-4 w-4 mr-1" />
                             Hide Account Breakdown
