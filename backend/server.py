@@ -6732,7 +6732,7 @@ def generate_clients_excel_data():
             
             for user in client_docs:
                 transactions = generate_mock_transactions(user["id"], 50)
-                balances = calculate_balances(user["id"])
+                balances = await calculate_balances(user["id"])
                 
                 # Calculate additional metrics
                 total_transactions = len(transactions)
