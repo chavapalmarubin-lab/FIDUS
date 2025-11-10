@@ -161,7 +161,7 @@ All MongoDB collections follow **snake_case** convention per DATABASE_FIELD_STAN
 ## 4. Production Environment Verification
 
 ### ✅ Production API Tests
-**URL**: `https://referral-tracker-9.preview.emergentagent.com/api`  
+**URL**: `https://trading-platform-110.preview.emergentagent.com/api`  
 **Status**: ✅ FULLY OPERATIONAL
 
 **Fund Portfolio Overview**:
@@ -288,12 +288,12 @@ All MongoDB collections follow **snake_case** convention per DATABASE_FIELD_STAN
 ## Test Credentials
 
 ### Admin Login
-- **URL**: https://referral-tracker-9.preview.emergentagent.com
+- **URL**: https://trading-platform-110.preview.emergentagent.com
 - **Username**: admin
 - **Password**: password123
 
 ### Client Login
-- **URL**: https://referral-tracker-9.preview.emergentagent.com
+- **URL**: https://trading-platform-110.preview.emergentagent.com
 - **Username**: alejandro
 - **Password**: alejandro123
 

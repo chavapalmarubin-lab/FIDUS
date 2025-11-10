@@ -10,7 +10,7 @@ Test Requirements:
 4. Upcoming Redemptions - next 5 upcoming payments
 
 Authentication: admin/password123
-Backend: https://referral-tracker-9.preview.emergentagent.com/api
+Backend: https://trading-platform-110.preview.emergentagent.com/api
 """
 
 import requests
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from review request
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
 
 class CashFlowTester:
     def __init__(self):

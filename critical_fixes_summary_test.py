@@ -26,7 +26,7 @@ import time
 import io
 
 # Configuration
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

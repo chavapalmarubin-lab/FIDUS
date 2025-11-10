@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Production API URL
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com"
 API_ENDPOINT = f"{BACKEND_URL}/api/admin/money-managers"
 LOGIN_ENDPOINT = f"{BACKEND_URL}/api/auth/login"
 

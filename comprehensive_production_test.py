@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
 
 class ComprehensiveProductionTest:
     def __init__(self):

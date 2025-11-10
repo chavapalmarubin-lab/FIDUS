@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://referral-tracker-9.preview.emergentagent.com`
+`https://trading-platform-110.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

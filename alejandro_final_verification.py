@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
 
 def get_admin_token():
     """Get admin JWT token"""

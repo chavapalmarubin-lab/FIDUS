@@ -27,7 +27,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://referral-tracker-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
