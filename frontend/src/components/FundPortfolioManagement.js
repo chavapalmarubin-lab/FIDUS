@@ -654,7 +654,7 @@ const FundPortfolioManagement = () => {
                         ))}
                         
                         {/* Performance Attribution Summary */}
-                        {fundPerformanceDetails[fund.fund_code].best_performer && (
+                        {fundPerformanceDetails[fundCode].best_performer && (
                           <div className="mt-4 p-3 bg-slate-700/30 rounded border border-slate-600">
                             <h5 className="text-white font-medium mb-2">Performance Attribution</h5>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
@@ -663,9 +663,9 @@ const FundPortfolioManagement = () => {
                                 <div>
                                   <div className="text-slate-400 text-xs">Best Performer</div>
                                   <div className="text-white">
-                                    Account {fundPerformanceDetails[fund.fund_code].best_performer.account_id}
+                                    Account {fundPerformanceDetails[fundCode].best_performer.account_id}
                                     <span className="text-green-400 ml-1">
-                                      (+{fundPerformanceDetails[fund.fund_code].best_performer.return_pct.toFixed(2)}%)
+                                      (+{fundPerformanceDetails[fundCode].best_performer.return_pct.toFixed(2)}%)
                                     </span>
                                   </div>
                                 </div>
@@ -675,9 +675,9 @@ const FundPortfolioManagement = () => {
                                 <div>
                                   <div className="text-slate-400 text-xs">Worst Performer</div>
                                   <div className="text-white">
-                                    Account {fundPerformanceDetails[fund.fund_code].worst_performer.account_id}
+                                    Account {fundPerformanceDetails[fundCode].worst_performer.account_id}
                                     <span className="text-red-400 ml-1">
-                                      ({fundPerformanceDetails[fund.fund_code].worst_performer.return_pct.toFixed(2)}%)
+                                      ({fundPerformanceDetails[fundCode].worst_performer.return_pct.toFixed(2)}%)
                                     </span>
                                   </div>
                                 </div>
@@ -687,10 +687,10 @@ const FundPortfolioManagement = () => {
                                 <div>
                                   <div className="text-slate-400 text-xs">Largest Contributor</div>
                                   <div className="text-white">
-                                    Account {fundPerformanceDetails[fund.fund_code].largest_contributor.account_id}
+                                    Account {fundPerformanceDetails[fundCode].largest_contributor.account_id}
                                     <span className="text-blue-400 ml-1">
-                                      ({fundPerformanceDetails[fund.fund_code].largest_contributor.contribution >= 0 ? '+' : ''}
-                                      {fundPerformanceDetails[fund.fund_code].largest_contributor.contribution.toFixed(2)}%)
+                                      ({fundPerformanceDetails[fundCode].largest_contributor.contribution >= 0 ? '+' : ''}
+                                      {fundPerformanceDetails[fundCode].largest_contributor.contribution.toFixed(2)}%)
                                     </span>
                                   </div>
                                 </div>
