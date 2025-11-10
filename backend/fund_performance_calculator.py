@@ -160,7 +160,8 @@ async def get_all_funds_performance(db) -> Dict[str, Any]:
         Dictionary with all funds' performance data
     """
     try:
-        fund_codes = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']
+        # Include SEPARATION fund for complete portfolio view
+        fund_codes = ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED', 'SEPARATION']
         funds_performance = {}
         
         for fund_code in fund_codes:
