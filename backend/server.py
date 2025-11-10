@@ -1870,7 +1870,7 @@ def generate_mock_transactions(client_id: str, count: int = 50) -> List[dict]:
     
     return sorted(transactions, key=lambda x: x["date"], reverse=True)
 
-def calculate_balances(client_id: str) -> dict:
+async def calculate_balances(client_id: str) -> dict:
     """Calculate balances from current investment values - showing individual fund balances"""
     balances = {
         "core_balance": 0, 
@@ -1882,19 +1882,24 @@ def calculate_balances(client_id: str) -> dict:
     
     # Get client investments from MongoDB
     try:
-        from mongodb_integration import mongodb_manager
-        investments = mongodb_manager.get_client_investments(client_id)
+        # Query investments directly from MongoDB
+        investments_data = await db.investments.find({
+            "client_id": client_id,
+            "status": "active"
+        }).to_list(length=None)
         
-        for investment in investments:
-            current_value = investment['current_value']
+        for investment in investments_data:
+            # Use amount field as current_value if current_value not set
+            current_value = investment.get('current_value', investment.get('amount', 0))
+            fund_code = investment.get('fund_code', '')
             
-            if investment['fund_code'] == "CORE":
+            if fund_code == "CORE":
                 balances["core_balance"] += current_value
-            elif investment['fund_code'] == "BALANCE":
+            elif fund_code == "BALANCE":
                 balances["balance_balance"] += current_value
-            elif investment['fund_code'] == "DYNAMIC":
+            elif fund_code == "DYNAMIC":
                 balances["dynamic_balance"] += current_value
-            elif investment['fund_code'] == "UNLIMITED":
+            elif fund_code == "UNLIMITED":
                 balances["unlimited_balance"] += current_value
         
         # For backward compatibility, combine BALANCE and UNLIMITED into fidus_funds
