@@ -539,9 +539,9 @@ const FundPortfolioManagement = () => {
                   <div>
                     <span className="text-slate-400">FIDUS Monthly Profit:</span>
                     <span className={`ml-2 font-semibold ${
-                      (fund.mt5_trading_profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                      (fund.mt5_trading_profit || fund.total_true_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {formatCurrency(fund.mt5_trading_profit || 0)}
+                      {formatCurrency(fund.mt5_trading_profit || fund.total_true_pnl || 0)}
                     </span>
                   </div>
                   
