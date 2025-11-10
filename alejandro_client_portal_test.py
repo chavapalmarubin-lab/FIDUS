@@ -335,11 +335,12 @@ class AlejandroClientPortalTester:
             
             data = response.json()
             
-            if not data.get("success"):
+            # Handle direct data or wrapped response
+            if data.get("success") is False:
                 self.log_test("Client Investments API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            investments = data.get('investments', []) or data.get('data', [])
+            investments = data.get('investments', []) or data.get('data', []) or (data if isinstance(data, list) else [])
             
             success = True
             
