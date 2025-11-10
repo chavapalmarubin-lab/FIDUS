@@ -229,3 +229,70 @@ def format_percentage(value: Optional[float], decimals: int = 2) -> str:
     if value is None:
         return "0.00%"
     return f"{value:.{decimals}f}%"
+
+
+
+def transform_mt5_deal_to_api(deal_doc: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Transform MongoDB mt5_deal document (snake_case) to API response (camelCase).
+    
+    Critical: This maintains MT5 Standardization Mandate compliance.
+    - MongoDB stores snake_case (exact MT5 Python API field names)
+    - API returns camelCase (frontend JavaScript standard)
+    
+    Args:
+        deal_doc: Deal document from MongoDB with snake_case MT5 fields
+        
+    Returns:
+        Dictionary with camelCase fields for API/Frontend consumption
+        
+    Example:
+        Input (MongoDB):  {"ticket": 123, "position_id": 456, "account": 886557}
+        Output (API):     {"ticket": 123, "positionId": 456, "accountNumber": 886557}
+    """
+    if not deal_doc:
+        return None
+    
+    # Helper function to safely format datetime
+    def format_datetime(dt):
+        if dt is None:
+            return None
+        if isinstance(dt, datetime):
+            return dt.isoformat()
+        return dt
+        
+    return {
+        # Deal Identity
+        "ticket": deal_doc.get("ticket"),
+        "order": deal_doc.get("order"),
+        "time": format_datetime(deal_doc.get("time")),
+        "timeMsc": deal_doc.get("time_msc"),
+        "type": deal_doc.get("type"),
+        "entry": deal_doc.get("entry"),
+        "magic": deal_doc.get("magic"),
+        "positionId": deal_doc.get("position_id"),
+        "reason": deal_doc.get("reason"),
+        
+        # Trading Details
+        "symbol": deal_doc.get("symbol"),
+        "volume": deal_doc.get("volume"),
+        "price": deal_doc.get("price"),
+        
+        # Financial Data (CRITICAL for calculations)
+        "profit": deal_doc.get("profit"),
+        "commission": deal_doc.get("commission"),
+        "swap": deal_doc.get("swap"),
+        "fee": deal_doc.get("fee"),
+        
+        # Additional Info
+        "comment": deal_doc.get("comment"),
+        "externalId": deal_doc.get("external_id"),
+        
+        # FIDUS-specific metadata
+        "accountNumber": deal_doc.get("account"),  # account → accountNumber
+        "accountName": deal_doc.get("account_name"),  # Optional FIDUS field
+        "fundType": deal_doc.get("fund_type"),  # Optional FIDUS field
+        "syncedAt": format_datetime(deal_doc.get("synced_at")),
+        "syncedBy": deal_doc.get("synced_by"),
+        "syncedFromVps": deal_doc.get("synced_from_vps")
+    }
