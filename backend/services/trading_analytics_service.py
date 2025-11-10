@@ -343,12 +343,12 @@ class TradingAnalyticsService:
             
             return {
                 "manager_id": manager_id,
-                "manager_name": manager.get("display_name", manager.get("name", "Unknown")),
-                "strategy": manager.get("strategy_name", "Unknown"),
-                "execution_type": manager.get("execution_type", "Unknown"),
-                "risk_level": manager.get("risk_profile", "Unknown"),
+                "manager_name": manager_config.get("name", account_data.get("manager", "Unknown")),
+                "strategy": manager_config.get("method", account_data.get("fund_type", "Unknown")),
+                "execution_type": manager_config.get("method", "Copy Trade"),
+                "risk_level": "Medium",  # Default for now
                 "account": account_num,
-                "fund": fund_name,
+                "fund": account_data.get("fund_type", "Unknown"),
                 
                 # Financial metrics
                 "initial_allocation": round(initial_allocation, 2),
