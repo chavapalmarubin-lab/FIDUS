@@ -45,7 +45,7 @@ class AnalyticsService:
             # Build match filter
             match_filter = {}
             if account_number and account_number != 'all':
-                match_filter["account_number"] = int(account_number)
+                match_filter["account"] = int(account_number)  # CORRECTED: Use 'account' field per MT5 standardization
             
             if start_date or end_date:
                 match_filter["time"] = {}
