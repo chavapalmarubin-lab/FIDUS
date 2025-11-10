@@ -145,14 +145,18 @@ const FundPortfolioManagement = () => {
       const dataPoint = { date };
       Object.keys(funds || {}).forEach(fundCode => {
         const fund = funds[fundCode];
-        // Only show performance trends for funds with actual investors and AUM
-        if (fund && fund.total_investors > 0 && fund.aum > 0) {
+        // Only show performance trends for funds with actual investors/accounts and AUM
+        // Support both 'total_investors' and 'account_count' for different fund types
+        const hasAccounts = (fund.total_investors > 0) || (fund.account_count > 0);
+        const hasAUM = (fund.aum > 0) || (fund.total_aum > 0);
+        
+        if (fund && hasAccounts && hasAUM) {
           // Simulate performance trends
-          const basePerformance = fund.performance_ytd || 0;
+          const basePerformance = fund.performance_ytd || fund.weighted_return || 0;
           const dailyVariation = (Math.random() - 0.5) * 2; // -1% to +1% daily variation
           dataPoint[fundCode] = basePerformance + dailyVariation;
         } else {
-          // Funds with no investors/AUM show flat line at 0
+          // Funds with no investors/accounts/AUM show flat line at 0
           dataPoint[fundCode] = 0;
         }
       });
