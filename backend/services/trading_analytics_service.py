@@ -308,12 +308,14 @@ class TradingAnalyticsService:
                 drawdown_pct = 0
             
             # Get trades for this account (last N days)
+            # NOTE: Using mt5_deals collection (standardized field names)
             end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(days=period_days)
             
-            trades_cursor = self.db.mt5_trades.find({
+            trades_cursor = self.db.mt5_deals.find({
                 "account": account_num,
-                "close_time": {"$gte": start_date, "$lte": end_date}
+                "type": 0,  # Only actual trades (type 0), not deposits/withdrawals
+                "time": {"$gte": start_date, "$lte": end_date}
             })
             trades = await trades_cursor.to_list(length=None)
             
