@@ -86,8 +86,8 @@ async def calculate_fund_weighted_performance(db, fund_code: str) -> Dict[str, A
             else:
                 status = 'poor'
             
-            # Get manager name from account or use default
-            manager_name = acc.get('manager_name', acc.get('broker', 'Unknown Manager'))
+            # Get manager name from account (using 'manager' field set during emergency fix)
+            manager_name = acc.get('manager', acc.get('manager_name', acc.get('broker', 'Unknown Manager')))
             
             account_details.append({
                 'account_id': account_num,
