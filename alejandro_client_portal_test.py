@@ -165,11 +165,12 @@ class AlejandroClientPortalTester:
             
             data = response.json()
             
-            if not data.get("success"):
+            # Handle direct profile data or wrapped response
+            if data.get("success") is False:
                 self.log_test("Client Profile API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            profile = data.get('profile', {}) or data.get('user', {}) or data.get('data', {})
+            profile = data.get('profile', {}) or data.get('user', {}) or data.get('data', {}) or data
             
             # Validate profile data
             success = True
