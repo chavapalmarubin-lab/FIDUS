@@ -16362,26 +16362,47 @@ async def calculate_cash_flow_calendar():
         for month_key in sorted_months:
             month_data = monthly_obligations[month_key]
             
-            # Next payment (first upcoming payment)
+            # Next payment (first upcoming payment) - with specific day
             if not next_payment and month_data['total_due'] > 0:
+                payment_date = month_data['date']
+                # Set to last day of month for display
+                if payment_date.month == 12:
+                    last_day = payment_date.replace(day=31)
+                else:
+                    last_day = payment_date.replace(month=payment_date.month + 1, day=1) - timedelta(days=1)
+                
                 next_payment = {
-                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'date': last_day.strftime('%B %d, %Y'),  # e.g., "December 31, 2025"
                     'amount': month_data['total_due'],
                     'days_away': max(0, month_data['days_away'])
                 }
             
-            # First large payment (> $5000)
+            # First large payment (> $5000) - with specific day
             if not first_large_payment and month_data['total_due'] > 5000:
+                payment_date = month_data['date']
+                # Set to last day of month for display
+                if payment_date.month == 12:
+                    last_day = payment_date.replace(day=31)
+                else:
+                    last_day = payment_date.replace(month=payment_date.month + 1, day=1) - timedelta(days=1)
+                
                 first_large_payment = {
-                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'date': last_day.strftime('%B %d, %Y'),  # e.g., "February 28, 2026"
                     'amount': month_data['total_due'],
                     'days_away': max(0, month_data['days_away'])
                 }
             
-            # Contract end (month with principal redemptions)
+            # Contract end (month with principal redemptions) - with specific day
             if month_data['principal_redemptions'] > 0:
+                payment_date = month_data['date']
+                # Set to last day of month for display
+                if payment_date.month == 12:
+                    last_day = payment_date.replace(day=31)
+                else:
+                    last_day = payment_date.replace(month=payment_date.month + 1, day=1) - timedelta(days=1)
+                
                 contract_end_payment = {
-                    'date': month_data['date'].strftime('%B %d, %Y'),
+                    'date': last_day.strftime('%B %d, %Y'),  # e.g., "December 01, 2026"
                     'amount': month_data['total_due'],
                     'days_away': max(0, month_data['days_away'])
                 }
