@@ -2,6 +2,11 @@
 VPS MT5 Bridge Sync Service
 Fetches live MT5 data from VPS Bridge and updates MongoDB
 Critical fix for stale data issue (Oct 24, 2025)
+
+UPDATED: Nov 3, 2025 - MT5 Field Standardization Compliance
+- Changed collection from mt5_deals_history to mt5_deals
+- Using exact MT5 Python API field names (snake_case)
+- Removed invalid fields not in MT5 API
 """
 
 import asyncio
@@ -286,6 +291,10 @@ class VPSSyncService:
     async def sync_account_trades(self, account_id: int, limit: int = 100) -> Dict[str, Any]:
         """
         Sync trades/deals for a single account from VPS
+        UPDATED: Nov 3, 2025 - MT5 Field Standardization Compliance
+        - Using mt5_deals collection (not mt5_deals_history)
+        - Exact MT5 Python API field names (snake_case)
+        - Removed invalid fields not in VPS API response
         
         Args:
             account_id: MT5 account number
@@ -296,6 +305,7 @@ class VPSSyncService:
         """
         try:
             logger.info(f"🔄 Syncing trades for account {account_id}")
+            logger.info(f"📝 Target collection: mt5_deals")
             
             # Fetch trades from VPS
             result = await self.fetch_from_vps(f'/api/mt5/account/{account_id}/trades?limit={limit}')
@@ -320,39 +330,62 @@ class VPSSyncService:
                     "message": "No trades to sync"
                 }
             
-            # Store trades in mt5_deals_history collection
+            # Store trades in mt5_deals collection (CORRECTED from mt5_deals_history)
             trades_synced = 0
             sync_time = datetime.now(timezone.utc)
             
             for trade in trades:
                 try:
-                    # Prepare trade document
+                    # Convert Unix timestamp to datetime
+                    trade_time = trade.get('time')
+                    if isinstance(trade_time, int):
+                        trade_time = datetime.fromtimestamp(trade_time, tz=timezone.utc)
+                    elif isinstance(trade_time, str):
+                        try:
+                            trade_time = datetime.fromisoformat(trade_time.replace('Z', '+00:00'))
+                        except:
+                            trade_time = sync_time
+                    else:
+                        trade_time = sync_time
+                    
+                    # Prepare trade document with EXACT MT5 Python API field names
+                    # Following MT5 Field Standardization Mandate
                     trade_doc = {
-                        'account_number': account_id,
-                        'ticket': trade.get('ticket') or trade.get('order'),
-                        'time': trade.get('time') or trade.get('close_time'),
+                        # Core MT5 deal fields (from VPS API)
+                        'ticket': trade.get('ticket'),
+                        'order': trade.get('order'),
+                        'time': trade_time,
                         'type': trade.get('type'),
                         'entry': trade.get('entry'),
-                        'action': trade.get('action'),
-                        'deal': trade.get('deal'),
                         'symbol': trade.get('symbol'),
-                        'volume': trade.get('volume', 0),
+                        'volume': trade.get('volume'),
                         'price': trade.get('price'),
-                        'commission': trade.get('commission', 0),
-                        'swap': trade.get('swap', 0),
-                        'profit': trade.get('profit', 0),
-                        'fee': trade.get('fee', 0),
+                        'profit': trade.get('profit'),
                         'comment': trade.get('comment', ''),
-                        'synced_at': sync_time,
-                        'synced_from_vps': True
+                        
+                        # MT5 fields not provided by VPS API (set to None for honesty)
+                        'time_msc': None,      # VPS doesn't provide milliseconds
+                        'commission': None,    # VPS doesn't provide commission
+                        'swap': None,          # VPS doesn't provide swap
+                        'fee': None,           # VPS doesn't provide fee
+                        'external_id': None,   # VPS doesn't provide external_id
+                        'position_id': None,   # VPS doesn't provide position_id
+                        'magic': None,         # VPS doesn't provide magic number
+                        'reason': None,        # VPS doesn't provide reason
+                        
+                        # FIDUS-specific metadata (added AFTER MT5 fields)
+                        'account': account_id,           # MT5 account login number
+                        'synced_at': sync_time,          # When synced
+                        'synced_from_vps': True,         # Data source flag
+                        'synced_by': 'vps_bridge_service'  # Service identifier
                     }
                     
                     # Upsert trade (update if exists, insert if new)
-                    # Use ticket+account_number as unique identifier (matches MongoDB index)
-                    await self.db.mt5_deals_history.update_one(
+                    # Use ticket+account as unique identifier
+                    await self.db.mt5_deals.update_one(
                         {
                             'ticket': trade_doc['ticket'],
-                            'account_number': account_id
+                            'account': account_id
                         },
                         {'$set': trade_doc},
                         upsert=True
@@ -364,7 +397,7 @@ class VPSSyncService:
                     logger.error(f"❌ Error storing trade {trade.get('ticket')}: {str(e)}")
                     continue
             
-            logger.info(f"✅ Synced {trades_synced}/{len(trades)} trades for account {account_id}")
+            logger.info(f"✅ Synced {trades_synced}/{len(trades)} deals to mt5_deals collection for account {account_id}")
             
             return {
                 "success": True,

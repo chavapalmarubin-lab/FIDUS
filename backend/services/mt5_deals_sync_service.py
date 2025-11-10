@@ -1,6 +1,11 @@
 """
 MT5 Deals History Sync Service
 Fetches trade/deals history from MT5 Bridge and syncs to MongoDB for rebates calculation
+
+UPDATED: Nov 3, 2025 - MT5 Field Standardization Compliance
+- Changed collection from mt5_deals_history to mt5_deals
+- Using exact MT5 Python API field names (snake_case)
+- Removed FIDUS-specific fields from core MT5 data
 """
 
 import asyncio
@@ -58,9 +63,13 @@ class MT5DealsSyncService:
             return []
     
     async def sync_account_deals(self, account_number: int) -> Dict:
-        """Sync deals for a single account"""
+        """
+        Sync deals for a single account
+        UPDATED: Nov 3, 2025 - MT5 Field Standardization Compliance
+        """
         try:
             logger.info(f"🔄 Syncing deals for account {account_number}...")
+            logger.info(f"📝 Target collection: mt5_deals")
             
             # Fetch trades from bridge
             trades = await self.fetch_account_trades(account_number, days=90)
@@ -73,7 +82,7 @@ class MT5DealsSyncService:
                     "deals_synced": 0
                 }
             
-            # Get account info for metadata
+            # Get account info for FIDUS metadata
             account_info = await self.db.mt5_account_config.find_one({"account_number": account_number})
             
             account_name = "Unknown"
@@ -88,39 +97,56 @@ class MT5DealsSyncService:
             
             # Process each trade
             for trade in trades:
-                # Parse time
-                time_str = trade.get('time')
-                if isinstance(time_str, str):
+                # Parse time from Unix timestamp or ISO string
+                time_value = trade.get('time')
+                if isinstance(time_value, int):
+                    # Unix timestamp
+                    trade_time = datetime.fromtimestamp(time_value, tz=timezone.utc)
+                elif isinstance(time_value, str):
                     try:
-                        trade_time = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                        trade_time = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
                     except:
                         trade_time = datetime.now(timezone.utc)
                 else:
                     trade_time = datetime.now(timezone.utc)
                 
-                # Prepare deal document
+                # Prepare deal document with EXACT MT5 Python API field names
+                # Following MT5 Field Standardization Mandate
                 deal_doc = {
+                    # Core MT5 deal fields (from VPS API)
                     "ticket": trade.get('ticket'),
                     "order": trade.get('order'),
                     "time": trade_time,
-                    "type": trade.get('type'),  # 0=buy, 1=sell
+                    "type": trade.get('type'),  # 0=buy, 1=sell, 2=balance
                     "entry": trade.get('entry'),  # 0=in, 1=out
-                    "volume": float(trade.get('volume', 0)),  # Already in lots
-                    "price": float(trade.get('price', 0)),
-                    "commission": float(trade.get('commission', 0)),
-                    "swap": float(trade.get('swap', 0)),
-                    "profit": float(trade.get('profit', 0)),
                     "symbol": trade.get('symbol'),
+                    "volume": float(trade.get('volume', 0)),  # Volume in lots
+                    "price": float(trade.get('price', 0)),
+                    "profit": float(trade.get('profit', 0)),
                     "comment": trade.get('comment', ''),
-                    "account_number": account_number,
-                    "account_name": account_name,
-                    "fund_type": fund_type,
-                    "synced_at": datetime.now(timezone.utc)
+                    
+                    # MT5 fields not provided by VPS API (set to None for honesty)
+                    "time_msc": None,      # VPS doesn't provide milliseconds
+                    "commission": None,    # VPS doesn't provide commission
+                    "swap": None,          # VPS doesn't provide swap
+                    "fee": None,           # VPS doesn't provide fee
+                    "external_id": None,   # VPS doesn't provide external_id
+                    "position_id": None,   # VPS doesn't provide position_id
+                    "magic": None,         # VPS doesn't provide magic number
+                    "reason": None,        # VPS doesn't provide reason
+                    
+                    # FIDUS-specific metadata (added AFTER MT5 fields)
+                    "account": account_number,           # MT5 account login number
+                    "account_name": account_name,        # Human-readable name
+                    "fund_type": fund_type,              # CORE/BALANCE/DYNAMIC/UNLIMITED
+                    "synced_at": datetime.now(timezone.utc),  # When synced
+                    "synced_by": "mt5_deals_sync_service"   # Service identifier
                 }
                 
                 # Upsert to database (update if exists, insert if new)
-                result = await self.db.mt5_deals_history.update_one(
-                    {"ticket": deal_doc["ticket"], "account_number": account_number},
+                # CORRECTED: Using mt5_deals collection (not mt5_deals_history)
+                result = await self.db.mt5_deals.update_one(
+                    {"ticket": deal_doc["ticket"], "account": account_number},
                     {"$set": deal_doc},
                     upsert=True
                 )
@@ -130,7 +156,7 @@ class MT5DealsSyncService:
                 elif result.modified_count > 0:
                     deals_updated += 1
             
-            logger.info(f"✅ Account {account_number}: {deals_synced} new, {deals_updated} updated")
+            logger.info(f"✅ Account {account_number}: {deals_synced} new, {deals_updated} updated in mt5_deals collection")
             
             return {
                 "account": account_number,
@@ -153,6 +179,7 @@ class MT5DealsSyncService:
         """Sync deals for all managed accounts"""
         logger.info("=" * 60)
         logger.info("🚀 STARTING MT5 DEALS HISTORY SYNC FOR ALL ACCOUNTS")
+        logger.info("📝 Target collection: mt5_deals")
         logger.info("=" * 60)
         
         start_time = datetime.now()
