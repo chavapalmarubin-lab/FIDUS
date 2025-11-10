@@ -260,9 +260,9 @@ class MT5Watchdog:
     async def check_vps_sync_status(self) -> Dict:
         """Check VPS sync recency"""
         try:
-            # Get most recently synced account
-            recent = await self.db.mt5_accounts.find_one(
-                sort=[("updated_at", -1)]
+            # Get most recently synced deal (more reliable than accounts)
+            recent = await self.db.mt5_deals.find_one(
+                sort=[("synced_at", -1)]
             )
             
             if not recent:
