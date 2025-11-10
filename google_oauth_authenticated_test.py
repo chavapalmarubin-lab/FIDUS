@@ -21,7 +21,7 @@ from datetime import datetime
 import time
 
 # Configuration - Use the backend URL from frontend .env
-BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

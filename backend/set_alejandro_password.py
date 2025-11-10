@@ -33,7 +33,7 @@ async def set_password():
     print(f"Username: alejandro_mariscal")
     print(f"Password: Alejandro123")
     print()
-    print("Login URL: https://financial-api-fix.preview.emergentagent.com")
+    print("Login URL: https://invest-tracker-146.preview.emergentagent.com")
     print()
     
     client.close()

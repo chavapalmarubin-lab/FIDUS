@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com"
+BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

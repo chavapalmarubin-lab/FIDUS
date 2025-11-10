@@ -4,7 +4,7 @@ import json
 
 # Get admin token
 login_response = requests.post(
-    "https://financial-api-fix.preview.emergentagent.com/api/auth/login",
+    "https://invest-tracker-146.preview.emergentagent.com/api/auth/login",
     json={
         "username": "admin", 
         "password": "password123",
@@ -31,7 +31,7 @@ if login_response.status_code == 200:
     
     print(f"\nTesting manual account creation...")
     response = requests.post(
-        "https://financial-api-fix.preview.emergentagent.com/api/mt5/admin/add-manual-account",
+        "https://invest-tracker-146.preview.emergentagent.com/api/mt5/admin/add-manual-account",
         json=test_account,
         headers=headers
     )

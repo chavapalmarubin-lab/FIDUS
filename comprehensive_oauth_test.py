@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com/api"
-FRONTEND_URL = "https://financial-api-fix.preview.emergentagent.com"
+BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
+FRONTEND_URL = "https://invest-tracker-146.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
