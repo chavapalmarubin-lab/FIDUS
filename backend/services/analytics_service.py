@@ -103,7 +103,7 @@ class AnalyticsService:
             equity_curve = []
             running_equity = 0.0
             for trade in sorted(actual_trades, key=lambda x: x.get("time", datetime.now(timezone.utc))):
-                running_equity += trade.get("profit", 0)
+                running_equity += trade.get("profit") or 0
                 equity_curve.append(running_equity)
             
             peak = equity_curve[0] if equity_curve else 0.0
