@@ -477,8 +477,8 @@ class AlejandroClientPortalTester:
                 
                 print(f"   Testing {fund_code} investment details...")
                 
-                # Get investment details
-                detail_response = self.session.get(f"{self.base_url}/investments/{investment_id}", timeout=30)
+                # Get investment details (projections)
+                detail_response = self.session.get(f"{self.base_url}/investments/{investment_id}/projections", timeout=30)
                 
                 if detail_response.status_code != 200:
                     self.log_test(f"{fund_code} Investment Details API", "FAIL", 
