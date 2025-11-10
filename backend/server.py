@@ -27163,6 +27163,73 @@ async def get_trading_metrics_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ===============================================================================
+# THREE-TIER P&L ENDPOINT - Critical for Fund Performance Review
+# ===============================================================================
+@api_router.get("/analytics/three-tier-pnl")
+async def get_three_tier_pnl(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get three-tier P&L breakdown:
+    1. CLIENT P&L - Client-funded accounts
+    2. FIDUS P&L - House capital accounts  
+    3. TOTAL FUND P&L - All accounts combined
+    
+    Uses initial_allocation as baseline for TRUE P&L calculations.
+    """
+    try:
+        from services.three_tier_pnl_calculator import ThreeTierPnLCalculator
+        
+        calculator = ThreeTierPnLCalculator(db)
+        
+        # Get client P&L (accounts funded by client capital)
+        client_pnl = await calculator.calculate_tier_pnl('client')
+        
+        # Get FIDUS P&L (house capital accounts)
+        fidus_pnl = await calculator.calculate_tier_pnl('fidus')
+        
+        # Get total fund P&L
+        total_pnl = await calculator.calculate_total_fund_pnl()
+        
+        return {
+            "success": True,
+            "client_pnl": client_pnl,
+            "fidus_pnl": fidus_pnl,
+            "total_fund_pnl": total_pnl,
+            "calculation_method": "Using initial_allocation as baseline",
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Error calculating three-tier P&L: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate three-tier P&L: {str(e)}")
+
+# ===============================================================================
+# TRADING ANALYTICS ENDPOINT - Account-Level P&L Display
+# ===============================================================================
+@api_router.get("/admin/trading-analytics")
+async def get_trading_analytics(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Get comprehensive trading analytics by account.
+    Shows P&L, performance, and key metrics for each MT5 account.
+    """
+    try:
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        service = TradingAnalyticsService(db)
+        analytics = await service.get_comprehensive_analytics()
+        
+        return {
+            "success": True,
+            "analytics": analytics,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting trading analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get trading analytics: {str(e)}")
+
+
+
 # Money Managers Performance Endpoint
 @api_router.get("/money-managers/performance")
 async def get_manager_performance_endpoint(
