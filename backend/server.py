@@ -4495,7 +4495,7 @@ async def get_client_data(client_id: str):
         
         # For clean start, return empty transactions - will be populated with real activity
         transactions = []
-        balances = calculate_balances(client_id)
+        balances = await calculate_balances(client_id)
         
         # Create balance object
         client_balance = ClientBalance(
