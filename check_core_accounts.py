@@ -7,7 +7,7 @@ import requests
 import json
 
 def authenticate():
-    base_url = "https://trading-platform-110.preview.emergentagent.com/api"
+    base_url = "https://financial-api-fix.preview.emergentagent.com/api"
     
     login_data = {
         "username": "admin",
@@ -23,7 +23,7 @@ def authenticate():
     return None
 
 def check_core_accounts():
-    base_url = "https://trading-platform-110.preview.emergentagent.com/api"
+    base_url = "https://financial-api-fix.preview.emergentagent.com/api"
     token = authenticate()
     
     if not token:

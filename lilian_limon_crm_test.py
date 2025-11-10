@@ -34,7 +34,7 @@ import io
 import os
 
 # Configuration
-BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
+BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com"
+BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com"
 
 def test_mt5_accounts_endpoint():
     """Test the MT5 accounts endpoint for client_alejandro"""

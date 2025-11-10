@@ -4,7 +4,7 @@ Test Render Production API
 import requests
 import json
 
-BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com"
+BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

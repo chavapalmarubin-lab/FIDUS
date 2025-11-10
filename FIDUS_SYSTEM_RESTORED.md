@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://trading-platform-110.preview.emergentagent.com`
+`https://financial-api-fix.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

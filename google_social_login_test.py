@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://trading-platform-110.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://financial-api-fix.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class GoogleSocialLoginTester:

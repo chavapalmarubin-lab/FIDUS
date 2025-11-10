@@ -39,7 +39,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com"
+BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

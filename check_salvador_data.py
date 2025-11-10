@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://trading-platform-110.preview.emergentagent.com'
+base_url = 'https://financial-api-fix.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

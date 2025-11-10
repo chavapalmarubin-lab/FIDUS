@@ -1,57 +1,58 @@
 <analysis>
-The AI engineer's trajectory chronicles an intensive debugging and feature refinement process for the FIDUS platform. Initially, the system suffered from critical data inconsistencies (empty database, incorrect calculations) and environment misconfigurations (deployment issues, incorrect health checks). The AI systematically addressed these, starting with database population, then fixing frontend-backend data mismatches in Referral commissions and client investment displays. Subsequent efforts focused on refining financial dashboards (Fund Portfolio, Cash Flow) to show accurate P&L and consistent broker rebates. A major recurring challenge involved misinterpretations of data flow and field standardization, culminating in a critical mandate to strictly follow MT5 Python API field names in MongoDB and apply transformations only at the API layer, which is the current focus for fixing real-time MT5 data persistence.
+The AI engineer's work has progressed through multiple phases, addressing critical data pipeline and dashboard accuracy issues for the FIDUS platform. Initial efforts focused on establishing a robust MT5 data sync, adhering to strict field standardization (snake_case in MongoDB, camelCase for API). Subsequent phases involved migrating backend services to use the correct  collection, implementing data transformation, verifying system calculations (P&L, analytics, rebates), and updating initial allocations for money managers. The auto-healing system and comprehensive technical documentation were also updated. The work was interrupted during Phase 6: Comprehensive System Testing by an emergency to fix the Cash Flow dashboard, which was displaying zero values during a client demo. The immediate task is to diagnose and fix the Cash Flow API endpoint's data retrieval and processing logic.
 </analysis>
 
 <product_requirements>
-The FIDUS platform requires accurate financial tracking, P&L calculations, and a robust Referral System. Salespeople, referred clients, and 10% commissions on client interest payments must be tracked and integrated into cash flow. A key client, Alejandro Mariscal Romero, has a 18,151.41 investment (8,151.41 CORE, 00,000 BALANCE) with specific monthly (CORE: 1.5%) and quarterly (BALANCE: 2.5% monthly rate paid quarterly) interest rates. Salvador Palma earns a 10% commission on these interest payments. Production issues included broken Referrals, incorrect Trading Analytics, incomplete Money Managers data, /bin/bash investments, CORS errors, and 500 errors, all requiring accurate data adhering to field standardization. A three-tier P&L (Client, FIDUS Capital, Total Fund) is needed, distinct from the client's fixed interest view. Recent fixes include correctly displaying referral commissions, client investments, accurate fund P&L, consistent broker rebates, and robust system health monitoring. The latest requirement is strict adherence to MT5 API field naming conventions for data storage and retrieval to ensure real-time data accuracy.
+The FIDUS platform needs accurate financial tracking, P&L calculations, and a robust Referral System, including 10% commissions on client interest payments. Specific client investment details (e.g., Alejandro Mariscal Romero's 18,151.41 investment) require accurate interest calculations (monthly 1.5% CORE, quarterly 2.5% BALANCE) and commission tracking (Salvador Palma's 10% commission). Initial problems included broken referrals, incorrect Trading Analytics, incomplete Money Managers data, /bin/bash investments, CORS, and 500 errors, all demanding strict data field standardization. A three-tier P&L is required, distinct from client fixed interest. Recent work addressed referral commissions, client investments, fund P&L, consistent broker rebates, and system health monitoring. A critical MT5 Field Standardization Mandate was introduced, requiring exact MT5 Python API field names (snake_case) in MongoDB, with  transformations exclusively at the backend API layer. Latest updates include initial allocations (38,805.17 total for 8 active accounts) and updated money manager names.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend**: Python (FastAPI, PyMongo/Motor), MongoDB (Decimal128, UUIDs).
+- **Backend**: Python (FastAPI, Motor/PyMongo), MongoDB (Decimal128, UUIDs).
 - **Frontend**: React.js (, ).
 - **Deployment**: Kubernetes, Supervisor, GitHub Actions, Render.
-- **Data Integrity**: Strict field standardization (MT5 API fields for DB, camelCase for API/frontend), data transformation.
-- **Financial Data**: MT5 deal history for deposits/withdrawals/transfers, three-tier P&L.
-- **Documentation**: , .
+- **Data Integrity**: Strict MT5 Python API field standardization (snake_case for DB, camelCase for API/Frontend).
+- **Financial Data**: MT5 deal history (deposits/withdrawals/transfers), three-tier P&L, initial allocations.
+- **Auto-Healing**: Watchdog service for system health monitoring and GitHub Actions for automated recovery.
 </key_technical_concepts>
 
 <code_architecture>
 
-- : Main FastAPI application. Modified to include new endpoints for client data, referral statistics, and system health. The  function was updated to correctly retrieve user information based on  and . The  endpoint was modified to return . Proxy routes were fixed ( was corrected to ).
-- : Handles referral-related API routes. Modified to calculate and include  and  for clients in the  endpoint.
-- : A new script created to populate the MongoDB database with initial salesperson, client, and investment data, ensuring a baseline for the referral system and calculations.
-- : Contains functions for various system health checks. Modified to use the correct preview URL for frontend health and to check MT5 sync status instead of attempting a direct HTTP hit to the VPS.
-- : Critical for syncing MT5 data. Identified as the source of current data persistence issues. It will be modified to write to the  collection (instead of ) and adhere strictly to MT5 Python API field names (snake_case) when storing data in MongoDB.
-- : Contains utility functions for data transformation. This file is designated as the *sole* place for transforming MT5 data from  (DB) to  (API response).
-- : Displays details for a salesperson, including commissions. Modified to correctly display  and  by using the correct camelCase fields returned by the backend API.
-- : Displays fund allocation and performance. Modified to hide funds with zero AUM in the pie chart and to display  instead of rebates for FIDUS Monthly Profit.
-- : Displays cash flow and broker rebates. Modified to ensure consistency in broker rebate display, using  in both the top summary and the detailed section.
-- : Displays overall system health. Fixed by replacing an undefined  constant with a proper CSS class. It also now consumes health data from correctly configured backend endpoints.
-- : Used for MT5 Bridge control status. Modified implicitly by fixing the backend endpoint  to resolve the Offline status display.
-- : Critical documentation defining database field naming conventions, now explicitly updated with precise MT5 field standards.
-- **MongoDB Collections**: , , , , , , , , . Investments were updated with  and  handling. The  collection was updated to include , , and  fields for client login. The  (and related MT5 collections) are the current focus for correct data population.
+- : Main FastAPI app. Modified to include  and various fixes related to collection names and field usage.
+- : Critical for MT5 data sync. Modified to write to  (from ) and use exact MT5 Python API  field names, adding , , .
+- : Also modified to write to  and handle MT5 field names.
+- : Added  function to convert  (DB) to  (API), handling missing fields as .
+- : Modified to use  and correct field  (from ). Planned to use  for P&L. Currently being fixed for  handling in cash flow.
+- : Modified to use  and  field, with robust  value handling for calculations.
+- , , , : All updated to query  instead of .
+- : New service created for auto-healing. Monitors , , initial allocations, VPS sync, and money manager data quality. Triggers GitHub Actions workflows on failure.
+- : New file containing API endpoints for MT5 health checks and manual auto-healing triggers, exposed via .
+- **MongoDB Collections**:  (populated with 25,000+ docs),  (11 total, 8 active, with initial allocations and manager info).  is deprecated and intended for deletion.
 </code_architecture>
 
 <pending_tasks>
-- Fix  to store MT5 trade data into the  collection using exact MT5 Python API field names (snake_case).
-- Implement field transformations from  (MongoDB) to  (API response) exclusively within the backend API layer.
-- Ensure the frontend properly consumes and displays the  MT5 data from the API.
+- Complete Phase 6: Comprehensive System Testing once the emergency fix is deployed and verified.
+- Apply the  function to all relevant API endpoints for frontend compatibility (Phase 3 in previous plan).
+- Verify frontend components for accurate data display using  fields (Phase 4 in previous plan).
+- Full audit and clean up of documentation () to reflect  content.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was engaged in resolving a critical issue where the FIDUS platform was not populating real-time MT5 data, showing Last Updated: 3 days ago despite the VPS logs indicating successful syncing of trades. Investigation revealed that the  and  MongoDB collections were empty, meaning the VPS sync service was *not* persisting the synced trade data to the database, or it was writing to an incorrect collection ( instead of ).
+Immediately before this summary request, the AI engineer was engaged in Phase 6: Comprehensive System Testing, systematically verifying MongoDB data, Render API endpoints, VPS/GitHub Actions, data population, field standardization, and the auto-healing system. This process was interrupted by an EMERGENCY DIRECTIVE from the user.
 
-The user then provided a comprehensive MT5 FIELD STANDARDIZATION MANDATE (Chat Message 453) which is a critical directive. This mandate specifies absolute rules for MT5 data handling:
-1.  **MT5 Python API is the single source of truth** for all field names.
-2.  **MongoDB must store data with EXACT MT5 field names** (snake_case).
-3.  **Transformation to camelCase happens ONLY in the backend API layer**.
-4.  **Frontend uses camelCase** exactly as the API provides it.
-5.  **VPS sync writes to **, NOT .
-6.  No field name improvements or clarifications are allowed.
+The critical emergency is that the **Cash Flow dashboard is showing ALL ZEROS** and displaying a Failed to load cash flow data error during a client demo. This occurs despite VPS logs indicating successful data syncing and the database ( collection) containing over 25,000 documents with real balance data.
 
-The AI engineer has acknowledged this mandate (Chat Message 454) and is now about to proceed with implementing these fixes in the  and verifying the data persistence and API transformations. The current state is that the problem has been identified as a data persistence and field standardization violation within the MT5 sync service.
+The root cause is suspected to be a broken Cash Flow API endpoint or service not correctly retrieving data. The AI engineer has been instructed to:
+1.  **Fix **:
+    *   Ensure it queries  (not ).
+    *   Use the correct field name  (not ).
+    *   Handle  values for fields like  using .
+2.  **Verify  endpoint**: Ensure it uses the corrected service logic.
+3.  **Immediately Deploy** the fixes to production without further approval.
+4.  **Verify** the fix by testing the Cash Flow API endpoint and refreshing the frontend.
+
+The AI engineer has just initiated the emergency response and is currently diagnosing the specific issues within .
 </current_work>
 
 <optional_next_step>
-Fix the  to adhere to the MT5 Field Standardization Mandate by writing to  with exact MT5 Python API field names.
+Immediately diagnose and apply the emergency fixes to  to restore Cash Flow data.
 </optional_next_step>

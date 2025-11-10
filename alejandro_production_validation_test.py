@@ -29,7 +29,7 @@ from datetime import datetime
 from decimal import Decimal
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://trading-platform-110.preview.emergentagent.com/api"
+BACKEND_URL = "https://financial-api-fix.preview.emergentagent.com/api"
 
 class AlejandroProductionValidator:
     def __init__(self):
