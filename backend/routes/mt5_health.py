@@ -19,7 +19,7 @@ from services.mt5_watchdog import MT5Watchdog, get_watchdog
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/mt5", tags=["MT5 Health"])
+router = APIRouter(prefix="/mt5", tags=["MT5 Health"])
 
 
 async def get_database():
