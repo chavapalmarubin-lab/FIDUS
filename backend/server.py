@@ -830,6 +830,17 @@ FIDUS_FUND_CONFIG = {
         invitation_only=True,  # By invitation only
         incubation_months=2,  # 2 months incubation
         minimum_hold_months=12  # 12 months commitment after incubation = 14 months total
+    ),
+    "SEPARATION": FundConfiguration(
+        fund_code="SEPARATION",
+        name="FIDUS Interest Segregation Accounts",
+        interest_rate=0.0,  # Interest accumulation accounts (not client-facing)
+        minimum_investment=0.0,  # Internal accounts only
+        interest_frequency="none",  # Accumulates broker interest
+        redemption_frequency="none",  # Reserved for client interest payments
+        invitation_only=True,  # Internal use only
+        incubation_months=0,
+        minimum_hold_months=0
     )
 }
 
