@@ -90,7 +90,7 @@ class MoneyManagersService:
                     **time_filter
                 }
                 
-                trades = await self.db.mt5_deals.find(deal_filter).to_list(length=None)
+                trades = await self.db.mt5_deals_history.find(deal_filter).to_list(length=None)
                 
                 if provider not in manager_stats:
                     manager_stats[provider] = {
@@ -178,7 +178,7 @@ class MoneyManagersService:
             for account in accounts:
                 account_number = account["account"]
                 
-                trades = await self.db.mt5_deals.find({
+                trades = await self.db.mt5_deals_history.find({
                     "account_number": account_number,
                     "entry": {"$in": [0, 1]}
                 }).to_list(length=None)

@@ -285,7 +285,7 @@ class TerminalStatusService:
             
             # Count deals synced today
             today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-            deals_today = await self.db.mt5_deals.count_documents({
+            deals_today = await self.db.mt5_deals_history.count_documents({
                 "synced_at": {"$gte": today_start}
             })
             

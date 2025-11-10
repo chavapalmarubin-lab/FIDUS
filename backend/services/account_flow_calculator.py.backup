@@ -34,7 +34,7 @@ class AccountFlowCalculator:
         """
         try:
             # Get all balance operations (type 2) for this account
-            deals_cursor = self.db.mt5_deals.find({
+            deals_cursor = self.db.mt5_deals_history.find({
                 "account_number": account_number,
                 "type": 2  # Balance operations (deposits/withdrawals)
             })

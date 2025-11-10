@@ -55,7 +55,7 @@ class AnalyticsService:
                     match_filter["time"]["$lte"] = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
             
             # Get all trades
-            trades = await self.db.mt5_deals.find(match_filter).to_list(length=None)
+            trades = await self.db.mt5_deals_history.find(match_filter).to_list(length=None)
             
             if not trades:
                 logger.warning(f"No trades found for account: {account_number or 'ALL'}")

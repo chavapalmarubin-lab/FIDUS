@@ -74,7 +74,7 @@ class SpreadAnalysisService:
                 {"$sort": {"total_deals": -1}}
             ]
             
-            results = await self.db.mt5_deals.aggregate(pipeline).to_list(length=None)
+            results = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
             
             # Format results
             by_symbol = []
@@ -167,7 +167,7 @@ class SpreadAnalysisService:
                 {"$sort": {"total_volume": -1}}
             ]
             
-            by_symbol = await self.db.mt5_deals.aggregate(by_symbol_pipeline).to_list(length=None)
+            by_symbol = await self.db.mt5_deals_history.aggregate(by_symbol_pipeline).to_list(length=None)
             
             # Estimate spread cost (simplified: assume $10 pip value)
             total_spread_cost = 0
@@ -196,7 +196,7 @@ class SpreadAnalysisService:
                 {"$sort": {"total_volume": -1}}
             ]
             
-            by_account = await self.db.mt5_deals.aggregate(by_account_pipeline).to_list(length=None)
+            by_account = await self.db.mt5_deals_history.aggregate(by_account_pipeline).to_list(length=None)
             
             for item in by_account:
                 spread_cost = item["total_spread"] * item["total_volume"] * 0.1
