@@ -546,7 +546,7 @@ const FundPortfolioManagement = () => {
                   </div>
                   
                   {/* MT5 Accounts Info */}
-                  {fund.mt5_accounts_count > 0 && (
+                  {(fund.mt5_accounts_count > 0 || fund.account_count > 0) && (
                     <div className="mt-4 pt-4 border-t border-slate-600">
                       <button
                         onClick={() => toggleFundExpansion(fund.fund_code)}
@@ -560,7 +560,7 @@ const FundPortfolioManagement = () => {
                         ) : (
                           <>
                             <ChevronDown className="h-4 w-4 mr-1" />
-                            Show Account Breakdown ({fund.mt5_accounts_count} accounts)
+                            Show Account Breakdown ({fund.mt5_accounts_count || fund.account_count} accounts)
                           </>
                         )}
                       </button>
