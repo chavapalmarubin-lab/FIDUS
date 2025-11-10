@@ -252,18 +252,31 @@ class TradingAnalyticsService:
             Complete manager performance with all risk metrics
         """
         try:
-            logger.info(f"📊 Calculating manager analytics for {manager_id}")
+            logger.info(f"📊 Calculating manager analytics for {manager_id} (account {account_num})")
             
-            # Get manager document
-            manager = await self.db.money_managers.find_one({"manager_id": manager_id})
-            if not manager:
-                raise ValueError(f"Manager not found: {manager_id}")
-            
-            # Get account data
+            # Get account data from mt5_accounts (primary source of truth)
             account_data = await self.db.mt5_accounts.find_one({"account": account_num})
             if not account_data:
-                logger.warning(f"Account {account_num} not found, using zeros")
-                account_data = {}
+                logger.warning(f"Account {account_num} not found in mt5_accounts")
+                raise ValueError(f"Account {account_num} not found")
+            
+            # Get manager info from FUND_STRUCTURE or account data
+            # Find manager config from FUND_STRUCTURE
+            manager_config = None
+            for fund_name, fund_data in self.FUND_STRUCTURE.items():
+                for mgr in fund_data.get("managers", []):
+                    if mgr["id"] == manager_id and mgr["account"] == account_num:
+                        manager_config = mgr
+                        break
+                if manager_config:
+                    break
+            
+            if not manager_config:
+                logger.warning(f"Manager config not found for {manager_id}, using account data")
+                manager_config = {
+                    "name": account_data.get("manager", "Unknown"),
+                    "id": manager_id
+                }
             
             balance = account_data.get("balance", 0)
             equity = account_data.get("equity", 0)
