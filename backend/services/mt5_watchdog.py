@@ -278,8 +278,13 @@ class MT5Watchdog:
                     "message": "No sync timestamp found"
                 }
             
-            # Calculate age
-            age = datetime.now(timezone.utc) - last_sync
+            # Calculate age (handle timezone-aware and naive datetimes)
+            now = datetime.now(timezone.utc)
+            if last_sync.tzinfo is None:
+                # Make timezone-naive datetime timezone-aware (assume UTC)
+                last_sync = last_sync.replace(tzinfo=timezone.utc)
+            
+            age = now - last_sync
             age_minutes = age.total_seconds() / 60
             
             healthy = age_minutes < self.max_sync_age_minutes
