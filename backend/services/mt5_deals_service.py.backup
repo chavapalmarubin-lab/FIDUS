@@ -59,7 +59,7 @@ class MT5DealsService:
                 query["type"] = deal_type
             
             # Query deals
-            cursor = self.db.mt5_deals.find(query).sort("time", -1).limit(limit)
+            cursor = self.db.mt5_deals_history.find(query).sort("time", -1).limit(limit)
             deals = await cursor.to_list(length=limit)
             
             # Convert ObjectId to string for JSON serialization
@@ -154,7 +154,7 @@ class MT5DealsService:
                 }
             ]
             
-            result = await self.db.mt5_deals.aggregate(pipeline).to_list(length=1)
+            result = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=1)
             
             if not result:
                 return {
@@ -279,7 +279,7 @@ class MT5DealsService:
                 }
             ]
             
-            total_result = await self.db.mt5_deals.aggregate(total_pipeline).to_list(length=1)
+            total_result = await self.db.mt5_deals_history.aggregate(total_pipeline).to_list(length=1)
             total_volume = total_result[0]["total_volume"] if total_result else 0
             total_commission = total_result[0]["total_commission"] if total_result else 0
             total_rebates = total_volume * rebate_per_lot
@@ -299,7 +299,7 @@ class MT5DealsService:
                 {"$sort": {"volume": -1}}
             ]
             
-            by_account = await self.db.mt5_deals.aggregate(by_account_pipeline).to_list(length=None)
+            by_account = await self.db.mt5_deals_history.aggregate(by_account_pipeline).to_list(length=None)
             
             for item in by_account:
                 item["account"] = item.pop("_id")
@@ -318,7 +318,7 @@ class MT5DealsService:
                 {"$sort": {"volume": -1}}
             ]
             
-            by_symbol = await self.db.mt5_deals.aggregate(by_symbol_pipeline).to_list(length=None)
+            by_symbol = await self.db.mt5_deals_history.aggregate(by_symbol_pipeline).to_list(length=None)
             
             for item in by_symbol:
                 item["symbol"] = item.pop("_id")
@@ -415,7 +415,7 @@ class MT5DealsService:
                 {"$sort": {"total_profit": -1}}
             ]
             
-            results = await self.db.mt5_deals.aggregate(pipeline).to_list(length=None)
+            results = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
             
             logger.info(f"Aggregated performance for {len(results)} accounts")
             
@@ -551,7 +551,7 @@ class MT5DealsService:
             if end_date:
                 query.setdefault("time", {})["$lte"] = end_date
             
-            cursor = self.db.mt5_deals.find(query).sort("time", -1)
+            cursor = self.db.mt5_deals_history.find(query).sort("time", -1)
             operations = await cursor.to_list(length=None)
             
             # Classify operations based on comment (ENHANCED)
@@ -663,7 +663,7 @@ class MT5DealsService:
                 {"$sort": {"_id": 1}}
             ]
             
-            results = await self.db.mt5_deals.aggregate(pipeline).to_list(length=None)
+            results = await self.db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
             
             # Format results
             daily_pnl = []
@@ -722,7 +722,7 @@ class MT5DealsService:
             equity_snapshots = await equity_cursor.to_list(length=None)
             
             # Get deals for trading metrics
-            deals_cursor = self.db.mt5_deals.find({
+            deals_cursor = self.db.mt5_deals_history.find({
                 "account_number": account_number,
                 "type": {"$in": [0, 1]},  # Trading deals only
                 "time": {"$gte": start_date, "$lte": end_date}
