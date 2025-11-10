@@ -15310,10 +15310,15 @@ async def get_client_investments(client_id: str):
     """Get all investments for a specific client - Direct MongoDB version"""
     try:
         # Handle different client_id formats
-        # FIELD STANDARDS: DB uses 'client_alejandro', old tokens may use variations
+        # FIELD STANDARDS: DB uses UUID or email-based IDs
         actual_client_id = client_id
-        if "alejandro" in client_id.lower():
-            actual_client_id = "client_alejandro"
+        
+        # If it's not a UUID or standard format, try to find the user
+        if "alejandro" in client_id.lower() and "-" not in client_id:
+            # Look up the actual client ID from users collection
+            user = await db.users.find_one({"name": {"$regex": "Alejandro", "$options": "i"}})
+            if user:
+                actual_client_id = user.get('id')
         
         # Get investments directly from MongoDB
         investments_cursor = db.investments.find({"client_id": actual_client_id})
