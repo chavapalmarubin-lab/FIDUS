@@ -42,7 +42,7 @@ class AlejandroClientPortalTester:
             "password": "password123"
         }
         
-        self.expected_client_id = "8d1a0ec7-25e7-477d-81f7-69522a09d99c"
+        self.expected_client_id = "client_alejandro"
         self.expected_data = {
             "total_investment": 118151.41,
             "current_balance": 114175.56,
