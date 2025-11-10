@@ -93,14 +93,10 @@ class AlejandroClientPortalTester:
             
             data = response.json()
             
-            if not data.get("success"):
-                self.log_test("Authentication API", "FAIL", f"Login failed: {data.get('message', 'Unknown error')}")
-                return False
-            
-            # Extract JWT token
+            # Check if response has token (successful login)
             self.client_token = data.get('token')
             if not self.client_token:
-                self.log_test("JWT Token", "FAIL", "No token received in login response")
+                self.log_test("JWT Token", "FAIL", f"No token received in login response: {data}")
                 return False
             
             # Set authorization header for subsequent requests
@@ -108,8 +104,8 @@ class AlejandroClientPortalTester:
                 'Authorization': f'Bearer {self.client_token}'
             })
             
-            # Validate user info in response
-            user_info = data.get('user', {})
+            # Validate user info in response (data is the user info directly)
+            user_info = data
             
             # Check username
             username = user_info.get('username')
