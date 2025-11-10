@@ -26503,6 +26503,13 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include MT5 Bridge Proxy router: {e}")
 
+# MT5 Health Monitoring Routes (November 2025)
+try:
+    api_router.include_router(mt5_health_router)
+    logging.info("✅ MT5 Health Monitoring router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include MT5 Health router: {e}")
+
 # Test endpoint to verify routing
 @api_router.get("/test-routing")
 async def test_routing():
