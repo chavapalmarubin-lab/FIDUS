@@ -4412,7 +4412,7 @@ async def update_client_profile(profile_update: dict, current_user: dict = Depen
             "message": "Profile updated successfully",
             "updated_fields": update_data,
             "user": {
-                "id": updated_user_doc["user_id"],
+                "id": updated_user_doc.get("id") or updated_user_doc.get("user_id"),
                 "username": updated_user_doc["username"],
                 "name": updated_user_doc["name"], 
                 "email": updated_user_doc["email"],
