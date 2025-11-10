@@ -45,8 +45,8 @@ async def calculate_fund_weighted_performance(db, fund_code: str) -> Dict[str, A
                 'message': 'No accounts allocated yet'
             }
         
-        # Calculate total AUM (initial deposits)
-        total_aum = sum(acc.get('balance', 0) for acc in accounts)
+        # Calculate total AUM (initial allocations)
+        total_aum = sum(acc.get('initial_allocation', 0) for acc in accounts)
         
         # Calculate weighted return
         weighted_return = 0
