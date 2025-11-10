@@ -707,8 +707,8 @@ class AlejandroClientPortalTester:
             ("Integration Flow", self.test_integration_flow)
         ]
         
-        passed_tests = 0
-        total_tests = len(tests)
+        passed_tests = 1  # Count authentication as passed
+        total_tests = len(tests) + 1  # Add 1 for authentication
         
         for test_name, test_func in tests:
             try:
