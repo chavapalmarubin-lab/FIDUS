@@ -7538,7 +7538,7 @@ async def get_detailed_clients():
         
         for user in client_docs:
                 transactions = generate_mock_transactions(user["id"], 30)
-                balances = calculate_balances(user["id"])
+                balances = await calculate_balances(user["id"])
                 
                 # Calculate metrics
                 total_transactions = len(transactions)
