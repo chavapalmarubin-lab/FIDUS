@@ -551,7 +551,11 @@ class AlejandroClientPortalTester:
             
             if dashboard_response.status_code == 200:
                 dashboard_data = dashboard_response.json()
-                dashboard_balance = dashboard_data.get('data', {}).get('current_balance', 0)
+                # Handle different response structures
+                balance_data = dashboard_data.get('balance', {}) or dashboard_data.get('data', {})
+                dashboard_balance = (balance_data.get('total_balance', 0) or 
+                                   balance_data.get('current_balance', 0) or
+                                   balance_data.get('current_value', 0))
             else:
                 dashboard_balance = 0
             
