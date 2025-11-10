@@ -27565,16 +27565,16 @@ async def sync_account_deals(
 @api_router.get("/admin/mt5-deals/sync-status")
 async def get_deals_sync_status(current_user: dict = Depends(get_current_admin_user)):
     """
-    Get status of mt5_deals_history collection
+    Get status of mt5_deals collection
     """
     try:
         # Get total count
-        total = await db.mt5_deals_history.count_documents({})
+        total = await db.mt5_deals.count_documents({})
         
         # Get date range
         if total > 0:
-            oldest_doc = await db.mt5_deals_history.find_one(sort=[("time", 1)])
-            newest_doc = await db.mt5_deals_history.find_one(sort=[("time", -1)])
+            oldest_doc = await db.mt5_deals.find_one(sort=[("time", 1)])
+            newest_doc = await db.mt5_deals.find_one(sort=[("time", -1)])
             
             oldest_time = oldest_doc.get('time') if oldest_doc else None
             newest_time = newest_doc.get('time') if newest_doc else None
@@ -27582,14 +27582,14 @@ async def get_deals_sync_status(current_user: dict = Depends(get_current_admin_u
             # Get counts by account
             pipeline = [
                 {"$group": {
-                    "_id": "$account_number",
+                    "_id": "$account",
                     "count": {"$sum": 1},
                     "volume": {"$sum": "$volume"}
                 }},
                 {"$sort": {"volume": -1}}
             ]
             
-            by_account = await db.mt5_deals_history.aggregate(pipeline).to_list(length=None)
+            by_account = await db.mt5_deals.aggregate(pipeline).to_list(length=None)
             
             return {
                 "success": True,
