@@ -27522,7 +27522,7 @@ async def run_initial_mt5_deals_sync():
 async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user)):
     """
     Sync trade/deals history from MT5 Bridge for all 7 accounts
-    This populates mt5_deals_history collection for accurate rebates calculation
+    This populates mt5_deals collection for accurate rebates calculation
     """
     try:
         # Initialize sync service if not already done
