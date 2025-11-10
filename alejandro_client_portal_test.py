@@ -246,7 +246,8 @@ class AlejandroClientPortalTester:
             
             data = response.json()
             
-            if not data.get("success"):
+            # Handle direct data or wrapped response
+            if data.get("success") is False:
                 self.log_test("Dashboard Data API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
