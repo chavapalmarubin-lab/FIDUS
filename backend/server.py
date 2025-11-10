@@ -19509,7 +19509,7 @@ async def get_fund_performance(fund_code: str, current_user: dict = Depends(get_
     try:
         from fund_performance_calculator import calculate_fund_weighted_performance
         
-        if fund_code not in ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED']:
+        if fund_code not in ['CORE', 'BALANCE', 'DYNAMIC', 'UNLIMITED', 'SEPARATION']:
             raise HTTPException(status_code=404, detail="Fund not found")
         
         performance = await calculate_fund_weighted_performance(db, fund_code)
