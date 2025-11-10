@@ -271,7 +271,7 @@ class MT5Watchdog:
                     "message": "No accounts found in database"
                 }
             
-            last_sync = recent.get("updated_at")
+            last_sync = recent.get("synced_at")
             if not last_sync:
                 return {
                     "healthy": False,
