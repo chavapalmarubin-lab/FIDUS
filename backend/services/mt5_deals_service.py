@@ -44,7 +44,7 @@ class MT5DealsService:
             query = {}
             
             if account_number:
-                query["account_number"] = account_number
+                query["account"] = account_number  # CORRECTED: Use 'account' field per MT5 standardization
             
             if start_date:
                 query.setdefault("time", {})["$gte"] = start_date
@@ -106,7 +106,7 @@ class MT5DealsService:
             query = {}
             
             if account_number:
-                query["account_number"] = account_number
+                query["account"] = account_number  # CORRECTED: Use 'account' field per MT5 standardization
             
             if start_date:
                 query.setdefault("time", {})["$gte"] = start_date
@@ -259,7 +259,7 @@ class MT5DealsService:
             query = {"type": {"$in": [0, 1]}}  # 0=buy, 1=sell (exclude 2=balance)
             
             if account_number:
-                query["account_number"] = account_number
+                query["account"] = account_number  # CORRECTED: Use 'account' field per MT5 standardization
             
             if start_date:
                 query.setdefault("time", {})["$gte"] = start_date
@@ -543,7 +543,7 @@ class MT5DealsService:
             query = {"type": 2}  # 2 = balance operation
             
             if account_number:
-                query["account_number"] = account_number
+                query["account"] = account_number  # CORRECTED: Use 'account' field per MT5 standardization
             
             if start_date:
                 query.setdefault("time", {})["$gte"] = start_date
@@ -643,7 +643,7 @@ class MT5DealsService:
             }
             
             if account_number:
-                query["account_number"] = account_number
+                query["account"] = account_number  # CORRECTED: Use 'account' field per MT5 standardization
             
             # Aggregation by date
             pipeline = [
