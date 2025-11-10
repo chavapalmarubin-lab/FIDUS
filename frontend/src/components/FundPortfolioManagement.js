@@ -504,13 +504,15 @@ const FundPortfolioManagement = () => {
                   <div>
                     <span className="text-slate-400">AUM:</span>
                     <span className="text-white ml-2 font-medium">
-                      {formatCurrency(fund.aum)}
+                      {formatCurrency(fund.aum || fund.total_aum || 0)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Investors:</span>
+                    <span className="text-slate-400">
+                      {fundCode === 'SEPARATION' ? 'Accounts:' : 'Investors:'}
+                    </span>
                     <span className="text-white ml-2 font-medium">
-                      {fund.total_investors || 0}
+                      {fund.total_investors || fund.account_count || 0}
                     </span>
                   </div>
                   <div>
