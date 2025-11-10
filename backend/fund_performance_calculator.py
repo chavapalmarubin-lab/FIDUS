@@ -55,9 +55,10 @@ async def calculate_fund_weighted_performance(db, fund_code: str) -> Dict[str, A
         
         for acc in accounts:
             account_num = acc.get('account')
-            initial_deposit = acc.get('balance', 0)  # Current balance as allocation
+            initial_deposit = acc.get('initial_allocation', 0)  # CORRECTED: Use initial_allocation for proper P&L calc
             current_equity = acc.get('equity', 0)
-            true_pnl = acc.get('true_pnl', 0)
+            # Calculate TRUE P&L: current equity - initial allocation
+            true_pnl = current_equity - initial_deposit if initial_deposit > 0 else 0
             profit_withdrawals = acc.get('profit_withdrawals', 0)
             
             # Skip if no allocation
