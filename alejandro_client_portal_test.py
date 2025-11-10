@@ -607,6 +607,19 @@ class AlejandroClientPortalTester:
     def setup_alejandro_investments(self) -> bool:
         """Setup Alejandro's investment data if missing"""
         try:
+            print("🔧 Checking Alejandro's investment data...")
+            
+            # First check if investments already exist
+            investments_response = self.session.get(f"{self.base_url}/investments/client/{self.expected_client_id}", timeout=30)
+            
+            if investments_response.status_code == 200:
+                investments_data = investments_response.json()
+                investments = investments_data.get('investments', [])
+                
+                if len(investments) >= 2:
+                    self.log_test("Investment Data Check", "PASS", f"Found {len(investments)} existing investments")
+                    return True
+            
             print("🔧 Setting up Alejandro's investment data...")
             
             # First authenticate as admin to create investments
