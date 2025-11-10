@@ -4356,7 +4356,7 @@ async def get_client_profile(current_user: dict = Depends(get_current_user)):
         return {
             "success": True,
             "user": {
-                "id": user_doc["user_id"],
+                "id": user_doc.get("id") or user_doc.get("user_id"),
                 "username": user_doc["username"],
                 "name": user_doc.get("name", ""),
                 "email": user_doc.get("email", ""),
