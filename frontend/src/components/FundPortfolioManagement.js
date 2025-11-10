@@ -569,7 +569,7 @@ const FundPortfolioManagement = () => {
                 </div>
                 
                 {/* Expandable Account Breakdown */}
-                {expandedFunds[fund.fund_code] && fundPerformanceDetails[fund.fund_code] && (
+                {expandedFunds[fundCode] && fundPerformanceDetails[fundCode] && (
                   <div className="mt-4 p-4 bg-slate-800/50 rounded-lg border border-slate-600">
                     <h4 className="text-white font-semibold mb-3 flex items-center">
                       <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
