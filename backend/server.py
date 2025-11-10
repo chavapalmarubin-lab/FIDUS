@@ -57,6 +57,9 @@ from routes.mt5_config import router as mt5_config_router, init_db as init_mt5_c
 # MT5 Bridge Proxy Routes (for VPS API service)
 from routes.mt5_bridge_proxy import router as mt5_bridge_proxy_router
 
+# MT5 Health Monitoring Routes (November 2025)
+from routes.mt5_health import router as mt5_health_router
+
 # System Registry and Health Checks (Phase 1: Technical Documentation)
 from system_registry import (
     SYSTEM_COMPONENTS, 
