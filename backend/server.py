@@ -16472,9 +16472,9 @@ async def get_complete_cashflow(days: int = 30):
         # Query handles BOTH datetime and unix timestamp formats in 'time' field
         # Exclude inactive accounts
         # NOTE: Only count BUY side (type=0) to avoid double counting (buy+sell = 1 lot)
-        deals_cursor = db.mt5_deals_history.find({
+        deals_cursor = db.mt5_deals.find({
             'type': 0,  # Only BUY side (a complete lot = buy + sell, so only count one side)
-            'account_number': {'$nin': inactive_account_numbers},  # Exclude inactive
+            'account': {'$nin': inactive_account_numbers},  # Exclude inactive (CORRECTED: account not account_number)
             '$or': [
                 # Handle datetime format
                 {'time': {'$gte': start_of_month, '$lte': end_of_month}},
