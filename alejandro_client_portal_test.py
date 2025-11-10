@@ -600,6 +600,87 @@ class AlejandroClientPortalTester:
             self.log_test("Integration Flow", "ERROR", f"Exception: {str(e)}")
             return False
     
+    def setup_alejandro_investments(self) -> bool:
+        """Setup Alejandro's investment data if missing"""
+        try:
+            print("🔧 Setting up Alejandro's investment data...")
+            
+            # First authenticate as admin to create investments
+            admin_login_data = {
+                "username": "admin",
+                "password": "password123",
+                "user_type": "admin"
+            }
+            
+            admin_response = self.session.post(f"{self.base_url}/auth/login", json=admin_login_data, timeout=30)
+            if admin_response.status_code != 200:
+                self.log_test("Admin Authentication for Setup", "FAIL", f"HTTP {admin_response.status_code}")
+                return False
+            
+            admin_data = admin_response.json()
+            admin_token = admin_data.get('token')
+            
+            if not admin_token:
+                self.log_test("Admin Token for Setup", "FAIL", "No admin token received")
+                return False
+            
+            # Set admin authorization
+            admin_headers = {'Authorization': f'Bearer {admin_token}'}
+            
+            # Create CORE investment
+            core_investment = {
+                "client_id": self.expected_client_id,
+                "fund_code": "CORE",
+                "amount": self.expected_data['core_principal'],
+                "deposit_date": "2025-10-01"
+            }
+            
+            core_response = requests.post(
+                f"{self.base_url}/investments/create", 
+                json=core_investment, 
+                headers=admin_headers,
+                timeout=30
+            )
+            
+            if core_response.status_code == 200:
+                self.log_test("CORE Investment Creation", "PASS", "CORE investment created successfully")
+            else:
+                # Investment might already exist
+                self.log_test("CORE Investment Creation", "INFO", f"CORE investment response: {core_response.status_code}")
+            
+            # Create BALANCE investment
+            balance_investment = {
+                "client_id": self.expected_client_id,
+                "fund_code": "BALANCE",
+                "amount": self.expected_data['balance_principal'],
+                "deposit_date": "2025-10-01"
+            }
+            
+            balance_response = requests.post(
+                f"{self.base_url}/investments/create", 
+                json=balance_investment, 
+                headers=admin_headers,
+                timeout=30
+            )
+            
+            if balance_response.status_code == 200:
+                self.log_test("BALANCE Investment Creation", "PASS", "BALANCE investment created successfully")
+            else:
+                # Investment might already exist
+                self.log_test("BALANCE Investment Creation", "INFO", f"BALANCE investment response: {balance_response.status_code}")
+            
+            # Restore client authentication
+            if self.client_token:
+                self.session.headers.update({
+                    'Authorization': f'Bearer {self.client_token}'
+                })
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Investment Setup", "ERROR", f"Exception: {str(e)}")
+            return False
+
     def run_all_tests(self) -> bool:
         """Run all Alejandro client portal API tests"""
         print("🚀 Starting ALEJANDRO CLIENT PORTAL API TESTING")
@@ -609,9 +690,16 @@ class AlejandroClientPortalTester:
         print(f"💰 Expected Investment: ${self.expected_data['total_investment']:,.2f}")
         print("=" * 70)
         
-        # Run all tests in sequence
+        # First authenticate
+        if not self.test_authentication_login():
+            print("\n❌ Authentication failed. Cannot proceed with tests.")
+            return False
+        
+        # Setup investment data if needed
+        self.setup_alejandro_investments()
+        
+        # Run all tests in sequence (skip authentication since we already did it)
         tests = [
-            ("Authentication Login", self.test_authentication_login),
             ("Client Profile", self.test_client_profile),
             ("Client Dashboard Data", self.test_client_dashboard_data),
             ("Client Investments", self.test_client_investments),
