@@ -88,8 +88,8 @@ class AnalyticsService:
             win_rate = (win_count / total_count * 100) if total_count > 0 else 0.0
             
             # Profit calculations
-            gross_profit = sum(t.get("profit", 0) for t in winning_trades)
-            gross_loss = abs(sum(t.get("profit", 0) for t in losing_trades))
+            gross_profit = sum(t.get("profit") or 0 for t in winning_trades)
+            gross_loss = abs(sum(t.get("profit") or 0 for t in losing_trades))
             
             # Profit factor
             profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 0.0
