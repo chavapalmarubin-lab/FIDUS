@@ -14252,12 +14252,21 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                 
                 # Add calendar events for redemption opportunities
                 if can_redeem_interest and month <= timeframe_months:
-                    monthly_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    # Calculate interest for the redemption period (not just 1 month)
+                    redemption_period_months = 1
+                    if fund_config.redemption_frequency == "quarterly":
+                        redemption_period_months = 3
+                    elif fund_config.redemption_frequency == "semi_annually":
+                        redemption_period_months = 6
+                    elif fund_config.redemption_frequency == "annually":
+                        redemption_period_months = 12
+                    
+                    period_interest = calculate_simple_interest(amount, fund_config.interest_rate, redemption_period_months)
                     calendar_events.append({
                         "date": projection_date.isoformat().split('T')[0],
                         "title": f"{fund_code} Interest Available",
-                        "description": f"${monthly_interest:,.2f} interest can be redeemed",
-                        "amount": monthly_interest,
+                        "description": f"${period_interest:,.2f} interest can be redeemed",
+                        "amount": period_interest,
                         "fund_code": fund_code,
                         "type": "interest_redemption"
                     })
@@ -14514,12 +14523,21 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                 
                 # Add calendar events for redemption opportunities
                 if can_redeem_interest and month <= timeframe_months:
-                    monthly_interest = calculate_simple_interest(amount, fund_config.interest_rate, 1)
+                    # Calculate interest for the redemption period (not just 1 month)
+                    redemption_period_months = 1
+                    if fund_config.redemption_frequency == "quarterly":
+                        redemption_period_months = 3
+                    elif fund_config.redemption_frequency == "semi_annually":
+                        redemption_period_months = 6
+                    elif fund_config.redemption_frequency == "annually":
+                        redemption_period_months = 12
+                    
+                    period_interest = calculate_simple_interest(amount, fund_config.interest_rate, redemption_period_months)
                     calendar_events.append({
                         "date": projection_date.isoformat().split('T')[0],
                         "title": f"{fund_code} Interest Available",
-                        "description": f"${monthly_interest:,.2f} interest can be redeemed",
-                        "amount": monthly_interest,
+                        "description": f"${period_interest:,.2f} interest can be redeemed",
+                        "amount": period_interest,
                         "fund_code": fund_code,
                         "type": "interest_redemption"
                     })
