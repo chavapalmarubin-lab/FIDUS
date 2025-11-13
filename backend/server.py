@@ -19631,8 +19631,20 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         mt5_trading_pnl = total_current_equity - total_initial_deposits
         logging.info(f"   💵 Total MT5 Trading P&L: ${mt5_trading_pnl:+.2f}")
         
-        # Total fund REVENUE (not assets!) = trading P&L + separation interest
-        total_fund_revenue = mt5_trading_pnl + separation_equity
+        # Calculate broker rebates from MT5 deals
+        from services.mt5_deals_sync_service import MT5DealsService
+        mt5_deals_service = MT5DealsService(db)
+        rebate_data = await mt5_deals_service.calculate_rebates(
+            start_date=contract_start,
+            end_date=now,
+            account_number=None,  # All accounts
+            rebate_per_lot=5.05
+        )
+        broker_rebates = rebate_data.get('total_rebates', 0)
+        logging.info(f"   💰 Broker Rebates: ${broker_rebates:.2f}")
+        
+        # Total fund REVENUE (not assets!) = trading P&L + separation interest + broker rebates
+        total_fund_revenue = mt5_trading_pnl + separation_equity + broker_rebates
         
         # CONTRACT DETAILS
         contract_start = datetime(2025, 10, 1, tzinfo=timezone.utc)
