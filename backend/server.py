@@ -16670,6 +16670,9 @@ async def get_complete_cashflow(days: int = 30):
             'profit_withdrawals': round(profit_withdrawals, 2),
             'total_volume_lots': round(total_volume, 2),
             
+            # Account breakdown for transparency
+            'account_breakdown': account_breakdown,
+            
             # Metadata
             'calculation_period_days': days,  # For backward compatibility (not used for rebates)
             'broker_rebates_period': 'monthly',  # NEW: Indicates monthly calculation
