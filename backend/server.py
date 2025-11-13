@@ -19700,7 +19700,7 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
             "fund_revenue": {
                 "mt5_trading_pnl": round(mt5_trading_pnl, 2),
                 "separation_interest": round(separation_equity, 2),
-                "broker_rebates": 0.0,
+                "broker_rebates": round(broker_rebates, 2),
                 "total_revenue_to_date": round(total_fund_revenue, 2)
             },
             "obligations": {
