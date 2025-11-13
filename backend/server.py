@@ -19632,8 +19632,8 @@ async def get_corrected_fund_performance(current_user: dict = Depends(get_curren
         logging.info(f"   💵 Total MT5 Trading P&L: ${mt5_trading_pnl:+.2f}")
         
         # Calculate broker rebates from MT5 deals
-        from services.mt5_deals_sync_service import MT5DealsService
-        mt5_deals_service = MT5DealsService(db)
+        from services.mt5_deals_sync_service import MT5DealsSyncService
+        mt5_deals_service = MT5DealsSyncService(db)
         rebate_data = await mt5_deals_service.calculate_rebates(
             start_date=contract_start,
             end_date=now,
