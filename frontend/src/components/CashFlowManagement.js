@@ -181,6 +181,7 @@ const CashFlowManagement = () => {
         const fundAccountingData = {
           assets: {
             mt5_trading_profits: mt5TruePnl,     // From backend API
+            separation_interest: separationBalance,  // From backend API (separation account balance)
             broker_interest: brokerInterest,     // From backend API
             broker_rebates: brokerRebates,       // From backend API
             total_inflows: totalInflows          // From backend API (calculated)
