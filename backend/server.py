@@ -13960,6 +13960,7 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         # Generate monthly projections up to the contract end OR timeframe, whichever is shorter
         fund_projections = []
         projection_months = min(timeframe_months + 1, 15)  # Cap at 15 months max (14 + 1 for month 0)
+        fund_simulation_months = projection_months - 1  # For consistency with other functions
         
         for month in range(projection_months):
             projection_date = deposit_date + timedelta(days=month * 30)
