@@ -197,16 +197,25 @@ const Leads = () => {
               <p className="text-slate-400 mb-6">
                 {searchTerm
                   ? 'Try adjusting your search or filter'
-                  : 'Share your referral link to start getting leads'}
+                  : 'Start building your pipeline by adding your first lead or sharing your referral link'}
               </p>
               {!searchTerm && (
-                <Button
-                  onClick={() => navigate('/referral-agent/profile')}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Get Your Referral Link
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => setShowAddLeadModal(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Lead
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/referral-agent/profile')}
+                    variant="outline"
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  >
+                    Get Referral Link
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
