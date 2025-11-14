@@ -1521,3 +1521,329 @@ async def verify_agent_email(email: str):
             "message": "If the email exists in our system, you will receive password reset instructions"
         }
 
+
+# ==========================================
+# REFERRAL AGENT CRM ENDPOINTS
+# ==========================================
+
+@router.get("/referral-agent/crm/dashboard", tags=["Agent CRM"])
+async def get_agent_dashboard(current_agent: dict = Depends(get_current_agent)):
+    """
+    Get dashboard statistics and overview for the logged-in agent
+    """
+    try:
+        salesperson_id = current_agent["_id"]
+        
+        # Get all leads for this agent
+        leads = await db.leads.find({
+            "referred_by": current_agent.get("referral_code")
+        }, {"_id": 0}).to_list(1000)
+        
+        # Get all clients (converted leads)
+        clients = await db.clients.find({
+            "referred_by": current_agent.get("referral_code")
+        }, {"_id": 0}).to_list(1000)
+        
+        # Get commission data
+        commissions = await db.referral_commissions.find({
+            "salesperson_id": str(salesperson_id)
+        }, {"_id": 0}).to_list(1000)
+        
+        # Calculate stats
+        total_leads = len(leads)
+        active_clients = len(clients)
+        total_commissions_earned = sum(c.get("commission_amount", 0) for c in commissions)
+        conversion_rate = round((active_clients / total_leads * 100) if total_leads > 0 else 0, 1)
+        
+        # Pipeline breakdown
+        pipeline_breakdown = {}
+        for lead in leads:
+            status = lead.get("crm_status", "pending")
+            pipeline_breakdown[status] = pipeline_breakdown.get(status, 0) + 1
+        
+        # Recent leads (last 5)
+        recent_leads = sorted(
+            leads,
+            key=lambda x: x.get("registration_date", ""),
+            reverse=True
+        )[:5]
+        
+        # Upcoming follow-ups
+        upcoming_follow_ups = [
+            lead for lead in leads 
+            if lead.get("next_follow_up") and lead.get("crm_status") not in ["converted", "lost"]
+        ]
+        upcoming_follow_ups = sorted(
+            upcoming_follow_ups,
+            key=lambda x: x.get("next_follow_up", "")
+        )[:5]
+        
+        return {
+            "success": True,
+            "data": {
+                "stats": {
+                    "totalLeads": total_leads,
+                    "activeClients": active_clients,
+                    "totalCommissionsEarned": total_commissions_earned,
+                    "conversionRate": conversion_rate
+                },
+                "pipelineBreakdown": pipeline_breakdown,
+                "recentLeads": recent_leads,
+                "upcomingFollowUps": upcoming_follow_ups
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Dashboard error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load dashboard")
+
+
+@router.get("/referral-agent/crm/leads", tags=["Agent CRM"])
+async def get_agent_leads(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    search: Optional[str] = None,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Get all leads for the logged-in agent with optional filters
+    """
+    try:
+        # Build query
+        query = {"referred_by": current_agent.get("referral_code")}
+        
+        if status:
+            query["crm_status"] = status
+        if priority:
+            query["priority"] = priority
+        if search:
+            query["$or"] = [
+                {"email": {"$regex": search, "$options": "i"}},
+                {"name": {"$regex": search, "$options": "i"}},
+                {"phone": {"$regex": search, "$options": "i"}}
+            ]
+        
+        leads = await db.leads.find(query, {"_id": 0}).to_list(1000)
+        
+        return {
+            "success": True,
+            "leads": leads
+        }
+        
+    except Exception as e:
+        logging.error(f"Get leads error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load leads")
+
+
+@router.get("/referral-agent/crm/leads/{lead_id}", tags=["Agent CRM"])
+async def get_lead_detail(
+    lead_id: str,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Get detailed information for a specific lead
+    """
+    try:
+        lead = await db.leads.find_one({
+            "id": lead_id,
+            "referred_by": current_agent.get("referral_code")
+        }, {"_id": 0})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        return {
+            "success": True,
+            "lead": lead
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Get lead detail error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load lead details")
+
+
+@router.post("/referral-agent/crm/leads/{lead_id}/notes", tags=["Agent CRM"])
+async def add_lead_note(
+    lead_id: str,
+    note_data: dict,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Add a note to a lead
+    """
+    try:
+        # Verify lead belongs to agent
+        lead = await db.leads.find_one({
+            "id": lead_id,
+            "referred_by": current_agent.get("referral_code")
+        })
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Create note
+        note = {
+            "note_text": note_data.get("note_text"),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "added_by": current_agent.get("email")
+        }
+        
+        # Update lead
+        await db.leads.update_one(
+            {"id": lead_id},
+            {
+                "$push": {"agent_notes": note},
+                "$set": {"last_contacted": datetime.now(timezone.utc).isoformat()}
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Note added successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Add note error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add note")
+
+
+@router.put("/referral-agent/crm/leads/{lead_id}/status", tags=["Agent CRM"])
+async def update_lead_status(
+    lead_id: str,
+    status_data: dict,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Update the status of a lead
+    """
+    try:
+        # Verify lead belongs to agent
+        lead = await db.leads.find_one({
+            "id": lead_id,
+            "referred_by": current_agent.get("referral_code")
+        })
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        new_status = status_data.get("status")
+        next_follow_up = status_data.get("next_follow_up")
+        
+        # Create status history entry
+        status_history_entry = {
+            "status": new_status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_agent.get("email")
+        }
+        
+        # Update document
+        update_doc = {
+            "$set": {
+                "crm_status": new_status,
+                "last_contacted": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {"crm_status_history": status_history_entry}
+        }
+        
+        if next_follow_up:
+            update_doc["$set"]["next_follow_up"] = next_follow_up
+        
+        await db.leads.update_one({"id": lead_id}, update_doc)
+        
+        return {
+            "success": True,
+            "message": "Status updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Update status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update status")
+
+
+@router.get("/referral-agent/crm/clients", tags=["Agent CRM"])
+async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
+    """
+    Get all clients (converted leads) for the logged-in agent
+    """
+    try:
+        # Get clients referred by this agent
+        clients = await db.clients.find({
+            "referred_by": current_agent.get("referral_code")
+        }, {"_id": 0}).to_list(1000)
+        
+        # For each client, get their investment data
+        client_data = []
+        for client in clients:
+            user_id = client.get("id")
+            
+            # Get investments
+            investments = await db.client_investments.find({
+                "user_id": user_id
+            }, {"_id": 0}).to_list(100)
+            
+            total_investment = sum(inv.get("amount", 0) for inv in investments)
+            active_investments = len([inv for inv in investments if inv.get("status") == "active"])
+            
+            client_data.append({
+                "clientId": user_id,
+                "clientName": client.get("name"),
+                "email": client.get("email"),
+                "joinDate": client.get("registration_date"),
+                "totalInvestment": total_investment,
+                "activeInvestments": active_investments,
+                "investments": [
+                    {
+                        "fundCode": inv.get("fund_code"),
+                        "amount": inv.get("amount"),
+                        "status": inv.get("status")
+                    }
+                    for inv in investments
+                ]
+            })
+        
+        return {
+            "success": True,
+            "clients": client_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Get clients error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load clients")
+
+
+@router.get("/referral-agent/commissions/schedule", tags=["Agent CRM"])
+async def get_commission_schedule(current_agent: dict = Depends(get_current_agent)):
+    """
+    Get commission schedule and payment history for the logged-in agent
+    """
+    try:
+        salesperson_id = str(current_agent["_id"])
+        
+        # Get all commissions
+        commissions = await db.referral_commissions.find({
+            "salesperson_id": salesperson_id
+        }, {"_id": 0}).to_list(1000)
+        
+        # Get client names
+        for commission in commissions:
+            client_id = commission.get("client_id")
+            if client_id:
+                client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+                if client:
+                    commission["clientName"] = client.get("name", "Unknown")
+        
+        return {
+            "success": True,
+            "commissions": commissions
+        }
+        
+    except Exception as e:
+        logging.error(f"Get commissions error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load commissions")
+
