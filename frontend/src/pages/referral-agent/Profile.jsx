@@ -56,9 +56,28 @@ const Profile = () => {
 
   const downloadQRCode = () => {
     const link = document.createElement('a');
-    link.download = `referral-qr-${agent.referralCode}.png`;
+    link.download = `FIDUS-QR-${agent.referralCode}.png`;
     link.href = qrCodeDataUrl;
     link.click();
+  };
+
+  const shareVia = (channel) => {
+    const link = agent.referralLink || `https://fidus-investment-platform.onrender.com/prospects?ref=${agent.referralCode}`;
+    const text = `Invierte con FIDUS y obtén rendimientos garantizados. Usa mi código: ${agent.referralCode}`;
+    
+    switch(channel) {
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + link)}`, '_blank');
+        break;
+      case 'email':
+        window.open(`mailto:?subject=Invierte con FIDUS&body=${encodeURIComponent(text + '\n\n' + link)}`, '_blank');
+        break;
+      case 'sms':
+        window.open(`sms:?body=${encodeURIComponent(text + ' ' + link)}`, '_blank');
+        break;
+      default:
+        break;
+    }
   };
 
   if (loading) {
