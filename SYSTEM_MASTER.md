@@ -821,6 +821,17 @@ Solution: Under investigation
 Status: 🔴 ACTIVE
  
 16. CHANGE LOG
+November 14, 2025 - v5.0.1 - Investment Simulator Bug Fix
+•	Component: Investment Simulator
+•	Status: CRITICAL BUG FIX - Tested & Verified
+•	Bug Fixed: Simulator was calculating only 10 months of interest (25% ROI) instead of 12 months (30% ROI)
+•	Root Cause: Loop used timeframe_months without adding incubation period
+•	Fix Applied: Modified calculate_simulation_projections() to add incubation_months to simulation timeframe
+•	Result: 12-month request → 14 months total → 12 interest payments → 30% ROI
+•	Verification: ✅ BALANCE fund: 30% ROI | ✅ CORE fund: 18% ROI | ✅ Multi-fund: Correct aggregation
+•	Impact: Affects prospects using Investment Simulator - Now matches actual FIDUS investment structure
+•	Files Modified: /app/backend/server.py - calculate_simulation_projections()
+•	Developer: Emergent | Tested By: Backend Testing Agent | Status: ✅ VERIFIED & DEPLOYED
 November 5, 2025
 •	SYSTEM_MASTER.md v2.0 created
 •	FIELD_REGISTRY.md created
