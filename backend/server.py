@@ -14390,7 +14390,7 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         "total_roi_percentage": final_timeline['growth_percentage'],
         "monthly_average_interest": round(final_timeline['total_interest'] / timeframe_months, 2) if timeframe_months > 0 else 0,
         "timeframe_months": timeframe_months,
-        "actual_simulation_months": timeframe_months,  # Total months including incubation
+        "actual_simulation_months": max_simulation_months,  # Total months including incubation
         "interest_payment_months": timeframe_months  # Requested interest payment months
     }
     
@@ -14672,7 +14672,7 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         "total_roi_percentage": final_timeline['growth_percentage'],
         "monthly_average_interest": round(final_timeline['total_interest'] / timeframe_months, 2) if timeframe_months > 0 else 0,
         "timeframe_months": timeframe_months,
-        "actual_simulation_months": timeframe_months,  # Total months including incubation
+        "actual_simulation_months": max_simulation_months,  # Total months including incubation
         "interest_payment_months": timeframe_months  # Requested interest payment months
     }
     
