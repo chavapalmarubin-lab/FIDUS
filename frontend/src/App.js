@@ -14,6 +14,7 @@ import ReferralAgentLeads from "./pages/referral-agent/Leads";
 import ReferralAgentLeadDetail from "./pages/referral-agent/LeadDetail";
 import ReferralAgentClients from "./pages/referral-agent/Clients";
 import ReferralAgentCommissions from "./pages/referral-agent/Commissions";
+import ReferralAgentProfile from "./pages/referral-agent/Profile";
 import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
 // Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
