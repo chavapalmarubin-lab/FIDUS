@@ -1877,9 +1877,10 @@ async def get_commission_schedule(current_agent: dict = Depends(get_current_agen
     try:
         salesperson_id = current_agent["_id"]
         
-        # Get all commissions - check multiple formats
+        # Get all commissions - check multiple formats including sp_ prefix
         commissions = await db.referral_commissions.find({
             "$or": [
+                {"salesperson_id": f"sp_{salesperson_id}"},
                 {"salesperson_id": str(salesperson_id)},
                 {"salesperson_id": salesperson_id}
             ]
