@@ -1882,6 +1882,8 @@ async def get_commission_schedule(current_agent: dict = Depends(get_current_agen
     Get commission schedule and payment history for the logged-in agent
     """
     try:
+        from bson.decimal128 import Decimal128
+        
         salesperson_id = current_agent["_id"]
         
         # Get all commissions - check multiple formats including sp_ prefix
@@ -1893,26 +1895,62 @@ async def get_commission_schedule(current_agent: dict = Depends(get_current_agen
             ]
         }).to_list(1000)
         
-        # Get client names
+        # Serialize and enrich commissions
+        serialized_commissions = []
         for commission in commissions:
             client_id = commission.get("client_id")
+            client_name = "Unknown"
+            
             if client_id:
                 # Try to find client by _id (converted to string)
-                client = await db.clients.find_one({
-                    "$or": [
-                        {"_id": client_id},
-                        {"id": client_id}
-                    ]
-                })
-                if client:
-                    commission["clientName"] = client.get("name", "Unknown")
+                try:
+                    if isinstance(client_id, str):
+                        client = await db.clients.find_one({"_id": ObjectId(client_id)})
+                    else:
+                        client = await db.clients.find_one({"_id": client_id})
+                    
+                    if client:
+                        client_name = client.get("name", "Unknown")
+                except:
+                    pass
+            
+            # Serialize commission
+            serialized = {
+                "commissionId": commission.get("commission_id") or str(commission.get("_id")),
+                "investmentId": commission.get("investment_id"),
+                "clientId": str(commission.get("client_id")) if commission.get("client_id") else None,
+                "clientName": client_name,
+                "fundType": commission.get("fund_type"),
+                "commissionAmount": float(commission.get("commission_amount").to_decimal()) if isinstance(commission.get("commission_amount"), Decimal128) else float(commission.get("commission_amount", 0)),
+                "paymentMonth": commission.get("payment_month"),
+                "paymentDate": commission.get("payment_date").isoformat() if commission.get("payment_date") else None,
+                "status": commission.get("status", "pending"),
+                "paymentNumber": commission.get("payment_number", 0)
+            }
+            serialized_commissions.append(serialized)
+        
+        # Sort by payment date
+        serialized_commissions.sort(key=lambda x: x.get("paymentDate") or "", reverse=False)
+        
+        # Calculate summary stats
+        total = sum(c["commissionAmount"] for c in serialized_commissions)
+        paid = sum(c["commissionAmount"] for c in serialized_commissions if c["status"] == "paid")
+        pending = sum(c["commissionAmount"] for c in serialized_commissions if c["status"] in ["pending", "ready_to_pay", "approved"])
         
         return {
             "success": True,
-            "commissions": commissions
+            "commissions": serialized_commissions,
+            "summary": {
+                "totalEarned": total,
+                "totalPaid": paid,
+                "totalPending": pending,
+                "count": len(serialized_commissions)
+            }
         }
         
     except Exception as e:
         logging.error(f"Get commissions error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to load commissions")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to load commissions: {str(e)}")
 
