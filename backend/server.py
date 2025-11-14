@@ -14234,13 +14234,18 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
         
         # Calculate projections for this fund
+        # CRITICAL FIX: Add incubation period to ensure user gets full interest payment months
+        # If user requests 12 months, they should get 12 months of INTEREST, not 12 months total
+        # For BALANCE fund: 12 months requested = 2 months incubation + 12 months interest = 14 months total
+        fund_simulation_months = timeframe_months + fund_config.incubation_months
+        
         fund_projections = []
         total_interest_earned = 0.0
         current_date = deposit_date
-        end_date = deposit_date + timedelta(days=timeframe_months * 30)
+        end_date = deposit_date + timedelta(days=fund_simulation_months * 30)
         
         # Generate monthly projections
-        for month in range(timeframe_months + 1):
+        for month in range(fund_simulation_months + 1):
             projection_date = deposit_date + timedelta(days=month * 30)
             
             # Check if we're past incubation period
@@ -14505,13 +14510,18 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
         
         # Calculate projections for this fund
+        # CRITICAL FIX: Add incubation period to ensure user gets full interest payment months
+        # If user requests 12 months, they should get 12 months of INTEREST, not 12 months total
+        # For BALANCE fund: 12 months requested = 2 months incubation + 12 months interest = 14 months total
+        fund_simulation_months = timeframe_months + fund_config.incubation_months
+        
         fund_projections = []
         total_interest_earned = 0.0
         current_date = deposit_date
-        end_date = deposit_date + timedelta(days=timeframe_months * 30)
+        end_date = deposit_date + timedelta(days=fund_simulation_months * 30)
         
         # Generate monthly projections
-        for month in range(timeframe_months + 1):
+        for month in range(fund_simulation_months + 1):
             projection_date = deposit_date + timedelta(days=month * 30)
             
             # Check if we're past incubation period
