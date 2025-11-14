@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Link as LinkIcon, QrCode, Copy, Check, Download, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Mail, Phone, Link as LinkIcon, QrCode, Copy, Check, Download, BarChart3, Share2, MessageCircle } from 'lucide-react';
 import Layout from '../../components/referral-agent/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
