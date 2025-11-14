@@ -116,11 +116,22 @@ const Layout = ({ children }) => {
             })}
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t">
+          {/* Bottom Actions */}
+          <div className="p-4 border-t space-y-2">
+            {/* Profile/Settings Button */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-700 hover:bg-gray-50"
+              onClick={() => navigate('/referral-agent/profile')}
+            >
+              <User className="mr-2 h-4 w-4" />
+              Profile & Settings
+            </Button>
+            
+            {/* Logout Button */}
             <Button
               variant="outline"
-              className="w-full justify-start"
+              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
