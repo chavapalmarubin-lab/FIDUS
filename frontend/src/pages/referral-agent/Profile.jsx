@@ -170,28 +170,65 @@ const Profile = () => {
                 <LinkIcon className="h-5 w-5 text-cyan-400" />
                 Referral Tools
               </CardTitle>
-              <CardDescription className="text-slate-400">Share your unique referral link</CardDescription>
+              <CardDescription className="text-slate-400">Share your unique referral link and track performance</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Referral Link */}
               <div>
-                <label className="text-sm text-slate-400 mb-2 block">Your Referral Link</label>
+                <label className="text-sm font-medium text-slate-400 mb-2 block">Your Referral Link</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={agent?.referralLink || ''}
                     readOnly
-                    className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white text-sm"
+                    className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
                   />
                   <Button
                     onClick={copyReferralLink}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white px-6"
                   >
                     {copied ? (
-                      <Check className="h-4 w-4" />
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Copied!
+                      </>
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy
+                      </>
                     )}
+                  </Button>
+                </div>
+                {copied && (
+                  <p className="text-green-400 text-sm mt-2">✓ Link copied to clipboard!</p>
+                )}
+              </div>
+
+              {/* Quick Share Buttons */}
+              <div>
+                <label className="text-sm font-medium text-slate-400 mb-2 block">Quick Share</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <Button
+                    onClick={() => shareVia('whatsapp')}
+                    className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    onClick={() => shareVia('email')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Button>
+                  <Button
+                    onClick={() => shareVia('sms')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-2"
+                  >
+                    <Phone className="h-4 w-4" />
+                    SMS
                   </Button>
                 </div>
               </div>
@@ -199,39 +236,49 @@ const Profile = () => {
               {/* QR Code */}
               {qrCodeDataUrl && (
                 <div>
-                  <label className="text-sm text-slate-400 mb-2 block">QR Code</label>
-                  <div className="bg-white p-4 rounded-lg inline-block">
-                    <img src={qrCodeDataUrl} alt="Referral QR Code" className="w-48 h-48" />
+                  <label className="text-sm font-medium text-slate-400 mb-2 block">QR Code</label>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-white p-4 rounded-lg inline-block mb-3">
+                      <img src={qrCodeDataUrl} alt="Referral QR Code" className="w-48 h-48" />
+                    </div>
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        onClick={downloadQRCode}
+                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PNG
+                      </Button>
+                      <Button
+                        onClick={() => shareVia('whatsapp')}
+                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    onClick={downloadQRCode}
-                    variant="outline"
-                    className="w-full mt-3 border-slate-700 text-slate-300 hover:bg-slate-800"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download QR Code
-                  </Button>
                 </div>
               )}
 
-              {/* Link Analytics Placeholder */}
+              {/* Link Analytics */}
               <div className="pt-4 border-t border-slate-700">
-                <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-3">
                   <BarChart3 className="h-4 w-4" />
                   Link Analytics
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div className="text-xl font-bold text-white">-</div>
-                    <div className="text-xs text-slate-400">Clicks</div>
+                  <div className="p-4 bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-lg text-center border border-slate-700">
+                    <div className="text-2xl font-bold text-white">0</div>
+                    <div className="text-xs text-slate-400 mt-1">Total Clicks</div>
                   </div>
-                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div className="text-xl font-bold text-white">-</div>
-                    <div className="text-xs text-slate-400">Leads</div>
+                  <div className="p-4 bg-gradient-to-br from-cyan-900/30 to-slate-800/50 rounded-lg text-center border border-cyan-800/50">
+                    <div className="text-2xl font-bold text-cyan-400">0</div>
+                    <div className="text-xs text-slate-400 mt-1">Leads Generated</div>
                   </div>
-                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
-                    <div className="text-xl font-bold text-white">-</div>
-                    <div className="text-xs text-slate-400">Rate</div>
+                  <div className="p-4 bg-gradient-to-br from-green-900/30 to-slate-800/50 rounded-lg text-center border border-green-800/50">
+                    <div className="text-2xl font-bold text-green-400">0%</div>
+                    <div className="text-xs text-slate-400 mt-1">Conversion Rate</div>
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 mt-3 text-center">Analytics tracking coming soon</p>
