@@ -431,6 +431,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/referral-agent/profile" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentProfile />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}
           <Route 
