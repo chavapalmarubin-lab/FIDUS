@@ -25,7 +25,7 @@ const Login = () => {
       const response = await referralAgentApi.login(formData.email, formData.password);
       
       if (response.success) {
-        localStorage.setItem('agent_token', response.access_token);
+        localStorage.setItem('referral_agent_token', response.access_token);
         navigate('/referral-agent/dashboard');
       } else {
         setError('Invalid email or password');
