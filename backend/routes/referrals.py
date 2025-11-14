@@ -1535,13 +1535,23 @@ async def get_agent_dashboard(current_agent: dict = Depends(get_current_agent)):
         salesperson_id = current_agent["_id"]
         
         # Get all leads for this agent
+        # Note: referred_by can be either referral_code (string) OR salesperson ObjectId
         leads = await db.leads.find({
-            "referred_by": current_agent.get("referral_code")
+            "$or": [
+                {"referred_by": current_agent.get("referral_code")},
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id}
+            ]
         }, {"_id": 0}).to_list(1000)
         
         # Get all clients (converted leads)
+        # Note: referred_by contains salesperson ObjectId (not referral_code)
         clients = await db.clients.find({
-            "referred_by": current_agent.get("referral_code")
+            "$or": [
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id},
+                {"referred_by": current_agent.get("referral_code")}
+            ]
         }, {"_id": 0}).to_list(1000)
         
         # Get commission data
