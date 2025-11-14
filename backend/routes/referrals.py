@@ -1810,8 +1810,13 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
     """
     try:
         # Get clients referred by this agent
+        salesperson_id = current_agent["_id"]
         clients = await db.clients.find({
-            "referred_by": current_agent.get("referral_code")
+            "$or": [
+                {"referred_by": current_agent.get("referral_code")},
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id}
+            ]
         }, {"_id": 0}).to_list(1000)
         
         # For each client, get their investment data
