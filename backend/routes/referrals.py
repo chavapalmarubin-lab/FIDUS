@@ -1620,19 +1620,31 @@ async def get_agent_leads(
     """
     try:
         # Build query
-        query = {"referred_by": current_agent.get("referral_code")}
-        
-        if status:
-            query["crm_status"] = status
-        if priority:
-            query["priority"] = priority
-        if search:
-            query["$or"] = [
-                {"email": {"$regex": search, "$options": "i"}},
-                {"name": {"$regex": search, "$options": "i"}},
-                {"phone": {"$regex": search, "$options": "i"}}
+        salesperson_id = current_agent["_id"]
+        base_query = {
+            "$or": [
+                {"referred_by": current_agent.get("referral_code")},
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id}
             ]
+        }
         
+        # Add additional filters
+        query_parts = [base_query]
+        if status:
+            query_parts.append({"crm_status": status})
+        if priority:
+            query_parts.append({"priority": priority})
+        if search:
+            query_parts.append({
+                "$or": [
+                    {"email": {"$regex": search, "$options": "i"}},
+                    {"name": {"$regex": search, "$options": "i"}},
+                    {"phone": {"$regex": search, "$options": "i"}}
+                ]
+            })
+        
+        query = {"$and": query_parts} if len(query_parts) > 1 else base_query
         leads = await db.leads.find(query, {"_id": 0}).to_list(1000)
         
         return {
