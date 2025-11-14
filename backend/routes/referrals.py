@@ -10,10 +10,15 @@ from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel
 import sys
+import secrets
 sys.path.append('/app/backend')
 
 # Use new field_registry for authoritative transformations
 from validation.field_registry import transform_salesperson, transform_investment, transform_to_api_format
+
+# JWT Authentication
+from auth.jwt_handler import verify_password, get_password_hash, create_access_token, verify_token
+from auth.dependencies import get_current_agent, get_current_agent_optional
 
 router = APIRouter(prefix="/api", tags=["Referrals"])
 
