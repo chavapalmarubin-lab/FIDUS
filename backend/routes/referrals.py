@@ -1817,17 +1817,22 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
                 {"referred_by": str(salesperson_id)},
                 {"referred_by": salesperson_id}
             ]
-        }, {"_id": 0}).to_list(1000)
+        }).to_list(1000)
         
         # For each client, get their investment data
         client_data = []
         for client in clients:
-            user_id = client.get("id")
+            # FIX: Use _id from MongoDB, convert to string for user_id matching
+            client_id = str(client.get("_id"))
             
-            # Get investments
-            investments = await db.client_investments.find({
-                "user_id": user_id
-            }, {"_id": 0}).to_list(100)
+            # Get investments - try multiple possible field formats
+            investments = await db.investments.find({
+                "$or": [
+                    {"client_id": client_id},
+                    {"user_id": client_id},
+                    {"client_id": client.get("_id")}
+                ]
+            }).to_list(100)
             
             total_investment = sum(inv.get("amount", 0) for inv in investments)
             active_investments = len([inv for inv in investments if inv.get("status") == "active"])
