@@ -80,40 +80,97 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div onClick={() => navigate('/referral-agent/leads')} className="cursor-pointer">
-            <StatsCard
-              title="Total Leads"
-              value={dashboardData?.stats.totalLeads || 0}
-              icon={Users}
-              loading={loading}
-              trend="+0%"
-            />
+          <div onClick={() => navigate('/referral-agent/leads')} className="cursor-pointer transform hover:scale-105 transition-transform">
+            <Card className="bg-gradient-to-br from-blue-600 to-blue-800 border-blue-700 overflow-hidden">
+              <CardContent className="p-6">
+                {loading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 w-20 bg-blue-400/30 rounded mb-3"></div>
+                    <div className="h-8 w-16 bg-blue-400/30 rounded"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-blue-100 text-sm font-medium mb-1">Total Leads</p>
+                        <p className="text-4xl font-bold text-white">{dashboardData?.stats.totalLeads || 0}</p>
+                      </div>
+                      <Users className="h-10 w-10 text-blue-200/50" />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <div onClick={() => navigate('/referral-agent/clients')} className="cursor-pointer">
-            <StatsCard
-              title="Active Clients"
-              value={dashboardData?.stats.activeClients || 0}
-              icon={UserCheck}
-              loading={loading}
-              trend="+0%"
-            />
+          <div onClick={() => navigate('/referral-agent/clients')} className="cursor-pointer transform hover:scale-105 transition-transform">
+            <Card className="bg-gradient-to-br from-green-600 to-green-800 border-green-700 overflow-hidden">
+              <CardContent className="p-6">
+                {loading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 w-20 bg-green-400/30 rounded mb-3"></div>
+                    <div className="h-8 w-16 bg-green-400/30 rounded"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-green-100 text-sm font-medium mb-1">Active Clients</p>
+                        <p className="text-4xl font-bold text-white">{dashboardData?.stats.activeClients || 0}</p>
+                      </div>
+                      <UserCheck className="h-10 w-10 text-green-200/50" />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <div onClick={() => navigate('/referral-agent/commissions')} className="cursor-pointer">
-            <StatsCard
-              title="Total Commissions"
-              value={`$${(dashboardData?.stats.totalCommissionsEarned || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              icon={DollarSign}
-              loading={loading}
-              trend="+0%"
-            />
+          <div onClick={() => navigate('/referral-agent/commissions')} className="cursor-pointer transform hover:scale-105 transition-transform">
+            <Card className="bg-gradient-to-br from-cyan-600 to-cyan-800 border-cyan-700 overflow-hidden">
+              <CardContent className="p-6">
+                {loading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 w-20 bg-cyan-400/30 rounded mb-3"></div>
+                    <div className="h-8 w-24 bg-cyan-400/30 rounded"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-cyan-100 text-sm font-medium mb-1">Total Commissions</p>
+                        <p className="text-4xl font-bold text-white">
+                          ${(dashboardData?.stats.totalCommissionsEarned || 0).toLocaleString('en-US', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          })}
+                        </p>
+                      </div>
+                      <DollarSign className="h-10 w-10 text-cyan-200/50" />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <StatsCard
-            title="Conversion Rate"
-            value={`${dashboardData?.stats.conversionRate || 0}%`}
-            icon={TrendingUp}
-            loading={loading}
-            trend="0%"
-          />
+          <Card className="bg-gradient-to-br from-purple-600 to-purple-800 border-purple-700 overflow-hidden">
+            <CardContent className="p-6">
+              {loading ? (
+                <div className="animate-pulse">
+                  <div className="h-4 w-20 bg-purple-400/30 rounded mb-3"></div>
+                  <div className="h-8 w-16 bg-purple-400/30 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-purple-100 text-sm font-medium mb-1">Conversion Rate</p>
+                      <p className="text-4xl font-bold text-white">{dashboardData?.stats.conversionRate || 0}%</p>
+                    </div>
+                    <TrendingUp className="h-10 w-10 text-purple-200/50" />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
