@@ -1,51 +1,48 @@
 import React from 'react';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
-const StatsCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loading }) => {
-  if (loading) {
-    return (
-      <Card className="bg-slate-900 border-slate-800">
-        <CardContent className="pt-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-slate-700 rounded w-1/2 mb-2"></div>
-            <div className="h-8 bg-slate-700 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-slate-700 rounded w-1/3"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+const StatsCard = ({ title, value, icon: Icon, loading, trend }) => {
+  const isPositive = trend && trend.startsWith('+');
+  const isNegative = trend && trend.startsWith('-');
 
   return (
-    <Card className="bg-slate-900 border-slate-800 hover:border-cyan-600 transition-colors cursor-pointer">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-400">{title}</p>
-            <p className="text-3xl font-bold text-white mt-1">{value}</p>
-            {subtitle && (
-              <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
-            )}
-            {trend && trendValue && (
-              <div className="flex items-center mt-2">
+    <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 hover:border-cyan-600/50 transition-all duration-300">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-slate-400">
+          {title}
+        </CardTitle>
+        {Icon && (
+          <div className="h-10 w-10 rounded-full bg-cyan-600/20 flex items-center justify-center">
+            <Icon className="h-5 w-5 text-cyan-400" />
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="space-y-2">
+            <div className="h-8 w-24 bg-slate-700 animate-pulse rounded"></div>
+            {trend && <div className="h-4 w-16 bg-slate-700 animate-pulse rounded"></div>}
+          </div>
+        ) : (
+          <>
+            <div className="text-3xl font-bold text-white">{value}</div>
+            {trend && (
+              <div className="flex items-center gap-1 mt-2">
+                {isPositive && <TrendingUp className="h-4 w-4 text-green-400" />}
+                {isNegative && <TrendingDown className="h-4 w-4 text-red-400" />}
                 <span
                   className={`text-sm font-medium ${
-                    trend === 'up' ? 'text-green-400' : 'text-red-400'
+                    isPositive ? 'text-green-400' : isNegative ? 'text-red-400' : 'text-slate-400'
                   }`}
                 >
-                  {trend === 'up' ? '↑' : '↓'} {trendValue}
+                  {trend}
                 </span>
+                <span className="text-xs text-slate-500 ml-1">vs last period</span>
               </div>
             )}
-          </div>
-          {Icon && (
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-cyan-600/20 rounded-full flex items-center justify-center">
-                <Icon className="h-6 w-6 text-cyan-400" />
-              </div>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

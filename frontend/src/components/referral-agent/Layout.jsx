@@ -1,171 +1,119 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  UserCheck, 
-  DollarSign, 
-  Menu, 
-  X, 
-  LogOut,
-  User
-} from 'lucide-react';
-import { getCurrentAgent, logout } from '../../utils/referralAgentAuth';
+import React from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Users, UserCheck, DollarSign, User, LogOut, Menu, X } from 'lucide-react';
 import { Button } from '../ui/button';
+import referralAgentApi from '../../services/referralAgentApi';
 
 const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
-  const agent = getCurrentAgent();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  const navigation = [
-    { name: 'Dashboard', href: '/referral-agent/dashboard', icon: LayoutDashboard },
-    { name: 'Leads', href: '/referral-agent/leads', icon: Users },
-    { name: 'Clients', href: '/referral-agent/clients', icon: UserCheck },
-    { name: 'Commissions', href: '/referral-agent/commissions', icon: DollarSign },
-  ];
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      navigate('/referral-agent/login');
-    }
+  const handleLogout = () => {
+    referralAgentApi.logout();
+    navigate('/referral-agent/login');
   };
 
+  const navigation = [
+    { name: 'Dashboard', path: '/referral-agent/dashboard', icon: LayoutDashboard },
+    { name: 'Leads', path: '/referral-agent/leads', icon: Users },
+    { name: 'Clients', path: '/referral-agent/clients', icon: UserCheck },
+    { name: 'Commissions', path: '/referral-agent/commissions', icon: DollarSign },
+    { name: 'Profile', path: '/referral-agent/profile', icon: User },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <div className="flex h-screen bg-slate-950">
-      {/* Mobile sidebar backdrop */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+      <aside
+        className={`${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 ease-in-out lg:static`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
-            <div className="flex items-center">
-              <img
-                src="/fidus-logo.png"
-                alt="FIDUS"
-                className="h-8 w-auto"
-              />
-              <span className="ml-2 text-lg font-semibold text-cyan-400">Agent Portal</span>
+          <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <div>
+              <h1 className="text-2xl font-bold text-white">FIDUS</h1>
+              <p className="text-xs text-cyan-400">Agent Portal</p>
             </div>
             <button
-              className="lg:hidden"
               onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-slate-400 hover:text-white"
             >
-              <X className="h-6 w-6 text-gray-400" />
+              <X className="h-6 w-6" />
             </button>
           </div>
 
-          {/* Agent Info */}
-          <div className="px-4 py-4 border-b border-slate-800 bg-slate-950">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 rounded-full bg-cyan-600 flex items-center justify-center">
-                  <User className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-white">{agent?.name || 'Agent'}</p>
-                <p className="text-xs text-slate-400">{agent?.email}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-2">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const Icon = item.icon;
+              const active = isActive(item.path);
               return (
                 <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`
-                    group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
-                    ${isActive
-                      ? 'bg-cyan-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }
-                  `}
+                  key={item.path}
+                  to={item.path}
                   onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    active
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
                 >
-                  <item.icon
-                    className={`
-                      mr-3 h-5 w-5 flex-shrink-0
-                      ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}
-                    `}
-                  />
-                  {item.name}
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-slate-800 space-y-2">
-            {/* Profile/Settings Button */}
+          {/* Logout */}
+          <div className="p-4 border-t border-slate-800">
             <Button
-              variant="ghost"
-              className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
-              onClick={() => navigate('/referral-agent/profile')}
-            >
-              <User className="mr-2 h-4 w-4" />
-              Profile & Settings
-            </Button>
-            
-            {/* Logout Button */}
-            <Button
-              variant="outline"
-              className="w-full justify-start text-red-400 border-red-900 hover:bg-red-950 hover:text-red-300"
               onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="h-5 w-5 mr-3" />
               Logout
             </Button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top bar */}
-        <div className="flex items-center justify-between h-16 px-4 bg-slate-900 border-b border-slate-800 lg:px-6">
-          <button
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6 text-slate-400" />
-          </button>
-          <div className="hidden lg:block">
-            <h1 className="text-xl font-semibold text-white">
-              {navigation.find(item => item.href === location.pathname)?.name || 'Portal'}
-            </h1>
+      {/* Main Content */}
+      <div className="lg:ml-64 min-h-screen">
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-slate-900 border-b border-slate-800 p-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-slate-400 hover:text-white"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-white">FIDUS</h1>
+              <p className="text-xs text-cyan-400">Agent Portal</p>
+            </div>
+            <div className="w-6" /> {/* Spacer for centering */}
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-slate-400">
-              Code: <span className="font-semibold text-cyan-400">{agent?.referralCode || 'N/A'}</span>
-            </span>
-          </div>
-        </div>
+        </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-slate-950">
-          <div className="container mx-auto px-4 py-6 lg:px-6">
+        {/* Page Content */}
+        <main className="p-4 lg:p-8">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
