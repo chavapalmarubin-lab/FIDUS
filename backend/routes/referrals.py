@@ -1813,6 +1813,83 @@ async def update_lead_status(
         raise HTTPException(status_code=500, detail="Failed to update status")
 
 
+@router.post("/referral-agent/crm/leads", tags=["Agent CRM"])
+async def create_lead_manually(
+    name: str,
+    email: str,
+    phone: Optional[str] = None,
+    notes: Optional[str] = None,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Create a new lead manually by the agent
+    """
+    try:
+        from datetime import datetime
+        import uuid
+        
+        # Check if lead with this email already exists
+        existing_lead = await db.leads.find_one({"email": email.lower().strip()})
+        if existing_lead:
+            raise HTTPException(status_code=400, detail="A lead with this email already exists")
+        
+        # Create new lead document
+        new_lead = {
+            "id": str(uuid.uuid4()),
+            "name": name.strip(),
+            "email": email.lower().strip(),
+            "phone": phone.strip() if phone else None,
+            "referred_by": str(current_agent["_id"]),
+            "referral_code": current_agent.get("referral_code"),
+            "crm_status": "pending",
+            "priority": "medium",
+            "agent_notes": [{
+                "note_text": notes,
+                "created_by": str(current_agent["_id"]),
+                "created_by_name": current_agent.get("name"),
+                "timestamp": datetime.now(timezone.utc),
+                "private": True
+            }] if notes else [],
+            "registration_date": datetime.now(timezone.utc),
+            "last_activity": datetime.now(timezone.utc),
+            "crm_status_history": [{
+                "status": "pending",
+                "changed_at": datetime.now(timezone.utc),
+                "changed_by": str(current_agent["_id"]),
+                "changed_by_name": current_agent.get("name")
+            }],
+            "simulator_sessions": [],
+            "last_contacted": None,
+            "next_follow_up": None,
+            "source": "manual_entry"
+        }
+        
+        # Insert into database
+        result = await db.leads.insert_one(new_lead)
+        
+        return {
+            "success": True,
+            "message": "Lead created successfully",
+            "leadId": str(result.inserted_id),
+            "lead": {
+                "id": new_lead["id"],
+                "name": new_lead["name"],
+                "email": new_lead["email"],
+                "phone": new_lead["phone"],
+                "crmStatus": new_lead["crm_status"]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Create lead error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to create lead: {str(e)}")
+
+
+
 @router.get("/referral-agent/crm/clients", tags=["Agent CRM"])
 async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
     """
