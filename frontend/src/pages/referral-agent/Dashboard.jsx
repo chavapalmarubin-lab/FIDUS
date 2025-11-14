@@ -37,31 +37,37 @@ const Dashboard = () => {
   return (
     <Layout>
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 bg-red-950 border-red-900 text-red-200">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <StatsCard
-          title="Total Leads"
-          value={dashboardData?.stats.totalLeads || 0}
-          icon={Users}
-          loading={loading}
-        />
-        <StatsCard
-          title="Active Clients"
-          value={dashboardData?.stats.activeClients || 0}
-          icon={UserCheck}
-          loading={loading}
-        />
-        <StatsCard
-          title="Total Commissions"
-          value={`$${(dashboardData?.stats.totalCommissionsEarned || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={DollarSign}
-          loading={loading}
-        />
+        <div onClick={() => navigate('/referral-agent/leads')}>
+          <StatsCard
+            title="Total Leads"
+            value={dashboardData?.stats.totalLeads || 0}
+            icon={Users}
+            loading={loading}
+          />
+        </div>
+        <div onClick={() => navigate('/referral-agent/clients')}>
+          <StatsCard
+            title="Active Clients"
+            value={dashboardData?.stats.activeClients || 0}
+            icon={UserCheck}
+            loading={loading}
+          />
+        </div>
+        <div onClick={() => navigate('/referral-agent/commissions')}>
+          <StatsCard
+            title="Total Commissions"
+            value={`$${(dashboardData?.stats.totalCommissionsEarned || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={DollarSign}
+            loading={loading}
+          />
+        </div>
         <StatsCard
           title="Conversion Rate"
           value={`${dashboardData?.stats.conversionRate || 0}%`}
@@ -72,10 +78,10 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Leads */}
-        <Card>
+        <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
-            <CardTitle>Recent Leads</CardTitle>
-            <CardDescription>Your most recent lead activities</CardDescription>
+            <CardTitle className="text-white">Recent Leads</CardTitle>
+            <CardDescription className="text-slate-400">Your most recent lead activities</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
