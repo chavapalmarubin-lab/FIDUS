@@ -147,25 +147,25 @@ const Dashboard = () => {
       </div>
 
       {/* Pipeline Overview */}
-      <Card className="mt-6">
+      <Card className="mt-6 bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle>Lead Pipeline</CardTitle>
-          <CardDescription>Distribution of leads by status</CardDescription>
+          <CardTitle className="text-white">Lead Pipeline</CardTitle>
+          <CardDescription className="text-slate-400">Distribution of leads by status</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-32 bg-slate-800 rounded animate-pulse"></div>
           ) : dashboardData?.pipelineBreakdown ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {Object.entries(dashboardData.pipelineBreakdown).map(([status, count]) => (
-                <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-gray-900">{count}</p>
+                <div key={status} className="text-center p-4 bg-slate-800 rounded-lg hover:bg-slate-700 cursor-pointer transition-colors" onClick={() => navigate(`/referral-agent/leads?status=${status}`)}>
+                  <p className="text-2xl font-bold text-white mb-2">{count}</p>
                   <StatusBadge status={status} />
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 text-center py-8">No pipeline data</p>
+            <p className="text-sm text-slate-500 text-center py-8">No pipeline data</p>
           )}
         </CardContent>
       </Card>
