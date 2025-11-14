@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://referral-portal-5.preview.emergentagent.com/api'
+BACKEND_URL = 'https://advisor-dash-1.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

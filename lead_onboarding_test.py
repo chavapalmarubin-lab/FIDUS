@@ -28,7 +28,7 @@ import uuid
 import os
 
 # Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://referral-portal-5.preview.emergentagent.com') + '/api'
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://advisor-dash-1.preview.emergentagent.com') + '/api'
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

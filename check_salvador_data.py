@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://referral-portal-5.preview.emergentagent.com'
+base_url = 'https://advisor-dash-1.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

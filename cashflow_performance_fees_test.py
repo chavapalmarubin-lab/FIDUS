@@ -56,7 +56,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com"
+BACKEND_URL = "https://advisor-dash-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

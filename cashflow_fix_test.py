@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Use the correct backend URL from review request
-BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com/api"
+BACKEND_URL = "https://advisor-dash-1.preview.emergentagent.com/api"
 
 class CashFlowFixTester:
     def __init__(self):
