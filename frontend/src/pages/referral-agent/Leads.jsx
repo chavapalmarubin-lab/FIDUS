@@ -18,6 +18,14 @@ const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showAddLeadModal, setShowAddLeadModal] = useState(false);
+  const [newLead, setNewLead] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    notes: ''
+  });
+  const [addingLead, setAddingLead] = useState(false);
 
   useEffect(() => {
     fetchLeads();
