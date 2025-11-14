@@ -1831,16 +1831,12 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
         # For each client, get their investment data
         client_data = []
         for client in clients:
-            # FIX: Use _id from MongoDB, convert to string for user_id matching
-            client_id = str(client.get("_id"))
+            # Get investments by client name (since client_id in investments uses custom format)
+            client_name = client.get("name")
             
-            # Get investments - try multiple possible field formats
+            # Get investments - query by client_name as investments use custom client_id
             investments = await db.investments.find({
-                "$or": [
-                    {"client_id": client_id},
-                    {"user_id": client_id},
-                    {"client_id": client.get("_id")}
-                ]
+                "client_name": client_name
             }).to_list(100)
             
             # Calculate totals
