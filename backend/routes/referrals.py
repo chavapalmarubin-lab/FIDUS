@@ -1098,3 +1098,126 @@ async def fix_salvador_data():
         traceback.print_exc()
         raise HTTPException(500, f"Fix failed: {str(e)}")
 
+
+# ============================================================================
+# REFERRAL AGENT PORTAL AUTHENTICATION
+# ============================================================================
+
+class AgentLoginRequest(BaseModel):
+    """Login request for referral agents"""
+    email: str
+    password: str
+
+class AgentLoginResponse(BaseModel):
+    """Login response with agent info"""
+    success: bool
+    salesperson: dict
+    message: str
+
+@router.post("/referral-agent/auth/login", response_model=AgentLoginResponse, tags=["Agent Portal"])
+async def agent_portal_login(login_request: AgentLoginRequest):
+    """
+    Simple login endpoint for referral agent portal
+    
+    Verifies email and password, returns agent information
+    NOTE: This is Phase 1 - simple authentication without JWT tokens
+    """
+    try:
+        from passlib.context import CryptContext
+        
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        
+        # Find salesperson by email (case-insensitive)
+        salesperson = await db.salespeople.find_one({
+            "email": login_request.email.lower()
+        })
+        
+        if not salesperson:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+        
+        # Check if account is active
+        if salesperson.get("status") != "active" and salesperson.get("active") != True:
+            raise HTTPException(
+                status_code=403,
+                detail="Account is inactive. Contact administrator."
+            )
+        
+        # Verify password exists
+        if not salesperson.get("password_hash"):
+            raise HTTPException(
+                status_code=400,
+                detail="Password not set. Please contact administrator."
+            )
+        
+        # Verify password
+        if not pwd_context.verify(login_request.password, salesperson["password_hash"]):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+        
+        # Update login stats
+        await db.salespeople.update_one(
+            {"_id": salesperson["_id"]},
+            {
+                "$set": {
+                    "last_login": datetime.now(timezone.utc)
+                },
+                "$inc": {
+                    "login_count": 1
+                }
+            }
+        )
+        
+        # Return success with agent info
+        return {
+            "success": True,
+            "salesperson": {
+                "id": str(salesperson["_id"]),
+                "name": salesperson["name"],
+                "email": salesperson["email"],
+                "referral_code": salesperson["referral_code"],
+                "referral_link": salesperson["referral_link"],
+                "portal_settings": salesperson.get("portal_settings", {}),
+                "stats": salesperson.get("stats", {})
+            },
+            "message": "Login successful"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Login error: {str(e)}"
+        )
+
+@router.get("/referral-agent/auth/verify", tags=["Agent Portal"])
+async def verify_agent_email(email: str):
+    """
+    Verify if an email exists in the system (for password reset flow)
+    
+    Returns generic message to prevent email enumeration
+    """
+    try:
+        salesperson = await db.salespeople.find_one({
+            "email": email.lower()
+        })
+        
+        # Always return success to prevent email enumeration
+        return {
+            "success": True,
+            "message": "If the email exists in our system, you will receive password reset instructions"
+        }
+        
+    except Exception as e:
+        return {
+            "success": True,
+            "message": "If the email exists in our system, you will receive password reset instructions"
+        }
+
