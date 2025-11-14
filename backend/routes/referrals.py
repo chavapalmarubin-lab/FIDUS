@@ -1702,9 +1702,14 @@ async def add_lead_note(
     """
     try:
         # Verify lead belongs to agent
+        salesperson_id = current_agent["_id"]
         lead = await db.leads.find_one({
             "id": lead_id,
-            "referred_by": current_agent.get("referral_code")
+            "$or": [
+                {"referred_by": current_agent.get("referral_code")},
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id}
+            ]
         })
         
         if not lead:
@@ -1749,9 +1754,14 @@ async def update_lead_status(
     """
     try:
         # Verify lead belongs to agent
+        salesperson_id = current_agent["_id"]
         lead = await db.leads.find_one({
             "id": lead_id,
-            "referred_by": current_agent.get("referral_code")
+            "$or": [
+                {"referred_by": current_agent.get("referral_code")},
+                {"referred_by": str(salesperson_id)},
+                {"referred_by": salesperson_id}
+            ]
         })
         
         if not lead:
