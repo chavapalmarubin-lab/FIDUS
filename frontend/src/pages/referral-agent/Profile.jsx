@@ -1,75 +1,78 @@
 import React, { useState, useEffect } from 'react';
+import { User, Mail, Phone, Link as LinkIcon, QrCode, Copy, Check, Download, BarChart3 } from 'lucide-react';
 import Layout from '../../components/referral-agent/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { User, Mail, Phone, Lock, Save } from 'lucide-react';
 import referralAgentApi from '../../services/referralAgentApi';
-import { getCurrentAgent } from '../../utils/referralAgentAuth';
+import QRCode from 'qrcode';
 
 const Profile = () => {
-  const [agent, setAgent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [agent, setAgent] = useState(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
-  // Password change
-  const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   useEffect(() => {
-    const agentData = getCurrentAgent();
-    if (agentData) {
-      setAgent(agentData);
-    }
-    setLoading(false);
+    fetchProfile();
   }, []);
 
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-
+  const fetchProfile = async () => {
     try {
-      setSaving(true);
-      await referralAgentApi.changePassword(currentPassword, newPassword);
-      setSuccess('Password changed successfully');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setShowPasswordChange(false);
-    } catch (err) {
-      console.error('Password change error:', err);
-      if (err.response?.status === 401) {
-        setError('Current password is incorrect');
-      } else {
-        setError('Failed to change password. Please try again.');
+      setLoading(true);
+      const response = await referralAgentApi.getCurrentAgent();
+      setAgent(response);
+      
+      // Generate QR code for referral link
+      if (response.referralLink) {
+        const qrDataUrl = await QRCode.toDataURL(response.referralLink, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#0891B2',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataUrl(qrDataUrl);
       }
+    } catch (err) {
+      console.error('Profile error:', err);
+      setError('Failed to load profile');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
+  };
+
+  const copyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(agent.referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  };
+
+  const downloadQRCode = () => {
+    const link = document.createElement('a');
+    link.download = `referral-qr-${agent.referralCode}.png`;
+    link.href = qrCodeDataUrl;
+    link.click();
   };
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 w-48 bg-slate-800 rounded mb-2"></div>
+            <div className="h-4 w-64 bg-slate-800 rounded"></div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-96 bg-slate-800 rounded"></div>
+            <div className="h-96 bg-slate-800 rounded"></div>
+          </div>
         </div>
       </Layout>
     );
@@ -77,149 +80,191 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile & Settings</h2>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Agent Toolkit</h1>
+          <p className="text-slate-400">Your profile and referral tools</p>
+        </div>
 
         {error && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="bg-red-950 border-red-900 text-red-200">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {success && (
-          <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Profile Information */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>Your referral agent details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                  <User className="h-8 w-8 text-white" />
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Profile Information */}
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <User className="h-5 w-5 text-cyan-400" />
+                Profile Information
+              </CardTitle>
+              <CardDescription className="text-slate-400">Your agent account details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg">
+                <User className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{agent?.name}</h3>
-                  <p className="text-sm text-gray-500">Referral Agent</p>
+                  <div className="text-sm text-slate-400">Full Name</div>
+                  <div className="text-white font-medium">{agent?.name || 'N/A'}</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+              <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg">
+                <Mail className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <Label className="text-gray-600 flex items-center">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Email
-                  </Label>
-                  <p className="mt-1 text-gray-900 font-medium">{agent?.email}</p>
+                  <div className="text-sm text-slate-400">Email</div>
+                  <div className="text-white font-medium">{agent?.email || 'N/A'}</div>
                 </div>
+              </div>
 
+              <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg">
+                <Phone className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <Label className="text-gray-600 flex items-center">
-                    <User className="h-4 w-4 mr-2" />
-                    Referral Code
-                  </Label>
-                  <p className="mt-1 text-gray-900 font-medium">{agent?.referralCode}</p>
+                  <div className="text-sm text-slate-400">Referral Code</div>
+                  <div className="text-cyan-400 font-bold text-lg">{agent?.referralCode || 'N/A'}</div>
                 </div>
+              </div>
 
-                {agent?.phone && (
-                  <div>
-                    <Label className="text-gray-600 flex items-center">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Phone
-                    </Label>
-                    <p className="mt-1 text-gray-900 font-medium">{agent.phone}</p>
+              <div className="pt-4 border-t border-slate-700">
+                <div className="text-sm text-slate-400 mb-2">Account Stats</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-cyan-900/20 rounded-lg border border-cyan-800/50">
+                    <div className="text-2xl font-bold text-cyan-400">{agent?.loginCount || 0}</div>
+                    <div className="text-xs text-slate-400">Total Logins</div>
                   </div>
-                )}
+                  <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="text-2xl font-bold text-white">{agent?.lastLogin ? 'Active' : 'New'}</div>
+                    <div className="text-xs text-slate-400">Status</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Referral Tools */}
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-cyan-400" />
+                Referral Tools
+              </CardTitle>
+              <CardDescription className="text-slate-400">Share your unique referral link</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Referral Link */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Your Referral Link</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={agent?.referralLink || ''}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white text-sm"
+                  />
+                  <Button
+                    onClick={copyReferralLink}
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              {qrCodeDataUrl && (
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">QR Code</label>
+                  <div className="bg-white p-4 rounded-lg inline-block">
+                    <img src={qrCodeDataUrl} alt="Referral QR Code" className="w-48 h-48" />
+                  </div>
+                  <Button
+                    onClick={downloadQRCode}
+                    variant="outline"
+                    className="w-full mt-3 border-slate-700 text-slate-300 hover:bg-slate-800"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download QR Code
+                  </Button>
+                </div>
+              )}
+
+              {/* Link Analytics Placeholder */}
+              <div className="pt-4 border-t border-slate-700">
+                <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+                  <BarChart3 className="h-4 w-4" />
+                  Link Analytics
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <div className="text-xl font-bold text-white">-</div>
+                    <div className="text-xs text-slate-400">Clicks</div>
+                  </div>
+                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <div className="text-xl font-bold text-white">-</div>
+                    <div className="text-xs text-slate-400">Leads</div>
+                  </div>
+                  <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <div className="text-xl font-bold text-white">-</div>
+                    <div className="text-xs text-slate-400">Rate</div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-3 text-center">Analytics tracking coming soon</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Marketing Materials Section */}
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Download className="h-5 w-5 text-cyan-400" />
+              Marketing Materials
+            </CardTitle>
+            <CardDescription className="text-slate-400">Downloadable assets for promoting FIDUS investments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                <div className="h-24 bg-gradient-to-br from-cyan-600 to-blue-700 rounded mb-3 flex items-center justify-center">
+                  <span className="text-white font-bold">FIDUS</span>
+                </div>
+                <div className="text-white font-medium mb-1">Investment Brochure</div>
+                <div className="text-xs text-slate-400 mb-3">PDF · 2.3 MB</div>
+                <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800" size="sm" disabled>
+                  Coming Soon
+                </Button>
+              </div>
+
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                <div className="h-24 bg-gradient-to-br from-purple-600 to-pink-700 rounded mb-3 flex items-center justify-center">
+                  <span className="text-white font-bold">SOCIAL</span>
+                </div>
+                <div className="text-white font-medium mb-1">Social Media Kit</div>
+                <div className="text-xs text-slate-400 mb-3">ZIP · 5.1 MB</div>
+                <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800" size="sm" disabled>
+                  Coming Soon
+                </Button>
+              </div>
+
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                <div className="h-24 bg-gradient-to-br from-green-600 to-teal-700 rounded mb-3 flex items-center justify-center">
+                  <span className="text-white font-bold">PRESO</span>
+                </div>
+                <div className="text-white font-medium mb-1">Pitch Deck</div>
+                <div className="text-xs text-slate-400 mb-3">PPTX · 3.7 MB</div>
+                <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800" size="sm" disabled>
+                  Coming Soon
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Password Change */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>Update your password</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!showPasswordChange ? (
-              <Button
-                onClick={() => setShowPasswordChange(true)}
-                variant="outline"
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                Change Password
-              </Button>
-            ) : (
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div>
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input
-                    id="current-password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                    disabled={saving}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    disabled={saving}
-                    minLength={8}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Must be at least 8 characters
-                  </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    disabled={saving}
-                  />
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button type="submit" disabled={saving}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {saving ? 'Saving...' : 'Save Password'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowPasswordChange(false);
-                      setCurrentPassword('');
-                      setNewPassword('');
-                      setConfirmPassword('');
-                      setError('');
-                    }}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            )}
           </CardContent>
         </Card>
       </div>
