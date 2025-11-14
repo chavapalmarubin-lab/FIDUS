@@ -10,6 +10,7 @@ import StatusBadge from '../../components/referral-agent/StatusBadge';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [dashboardData, setDashboardData] = useState(null);
