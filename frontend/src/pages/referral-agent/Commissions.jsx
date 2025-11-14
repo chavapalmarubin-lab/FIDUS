@@ -71,61 +71,61 @@ const Commissions = () => {
   return (
     <Layout>
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 bg-red-950 border-red-900 text-red-200">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Commission Schedule</h2>
-        <p className="text-gray-600 mt-1">Track your earnings and payment schedule</p>
+        <h2 className="text-2xl font-bold text-white">Commission Schedule</h2>
+        <p className="text-slate-400 mt-1">Track your earnings and payment schedule</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <Card>
+        <Card className="bg-slate-900 border-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Earned</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+                <p className="text-sm font-medium text-slate-400">Total Earned</p>
+                <p className="text-2xl font-bold text-white mt-1">
                   ${loading ? '...' : stats.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-cyan-600/20 rounded-full flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-cyan-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-900 border-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Paid</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">
+                <p className="text-sm font-medium text-slate-400">Paid</p>
+                <p className="text-2xl font-bold text-green-400 mt-1">
                   ${loading ? '...' : stats.paid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-600/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-900 border-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1">
+                <p className="text-sm font-medium text-slate-400">Pending</p>
+                <p className="text-2xl font-bold text-yellow-400 mt-1">
                   ${loading ? '...' : stats.pending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="w-12 h-12 bg-yellow-600/20 rounded-full flex items-center justify-center">
+                <Clock className="h-6 w-6 text-yellow-400" />
               </div>
             </div>
           </CardContent>
