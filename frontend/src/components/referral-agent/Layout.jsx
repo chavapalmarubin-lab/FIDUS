@@ -144,27 +144,27 @@ const Layout = ({ children }) => {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top bar */}
-        <div className="flex items-center justify-between h-16 px-4 bg-white border-b lg:px-6">
+        <div className="flex items-center justify-between h-16 px-4 bg-slate-900 border-b border-slate-800 lg:px-6">
           <button
             className="lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-6 w-6 text-gray-500" />
+            <Menu className="h-6 w-6 text-slate-400" />
           </button>
           <div className="hidden lg:block">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-white">
               {navigation.find(item => item.href === location.pathname)?.name || 'Portal'}
             </h1>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500">
-              Code: <span className="font-semibold text-gray-900">{agent?.referralCode || 'N/A'}</span>
+            <span className="text-sm text-slate-400">
+              Code: <span className="font-semibold text-cyan-400">{agent?.referralCode || 'N/A'}</span>
             </span>
           </div>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-y-auto bg-slate-950">
           <div className="container mx-auto px-4 py-6 lg:px-6">
             {children}
           </div>
