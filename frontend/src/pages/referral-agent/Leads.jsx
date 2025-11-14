@@ -281,6 +281,98 @@ const Leads = () => {
             ))}
           </div>
         )}
+
+        {/* Add Lead Modal */}
+        {showAddLeadModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-lg border border-slate-800 p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-white">Add New Lead</h3>
+                <button
+                  onClick={() => setShowAddLeadModal(false)}
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddLead}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                      value={newLead.name}
+                      onChange={(e) => setNewLead({...newLead, name: e.target.value})}
+                      placeholder="Enter lead's name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                      value={newLead.email}
+                      onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                      value={newLead.phone}
+                      onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                      placeholder="+52 123 456 7890"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 resize-none"
+                      value={newLead.notes}
+                      onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                      placeholder="Add any relevant notes about this lead..."
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLeadModal(false)}
+                    className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingLead}
+                    className="flex-1 px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {addingLead ? 'Adding...' : 'Add Lead'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
