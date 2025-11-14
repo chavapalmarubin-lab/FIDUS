@@ -1114,24 +1114,30 @@ class AgentLoginRequest(BaseModel):
     password: str
 
 class AgentLoginResponse(BaseModel):
-    """Login response with agent info"""
+    """Login response with JWT token and agent info"""
     success: bool
-    salesperson: dict
-    message: str
+    access_token: str
+    token_type: str
+    expires_in: int
+    agent: dict
 
-@router.post("/referral-agent/auth/login", response_model=AgentLoginResponse, tags=["Agent Portal"])
+@router.post("/referral-agent/auth/login", tags=["Agent Portal"])
 async def agent_portal_login(login_request: AgentLoginRequest):
     """
-    Simple login endpoint for referral agent portal
+    Login endpoint for referral agents - Phase 2 with JWT tokens
     
-    Verifies email and password, returns agent information
-    NOTE: This is Phase 1 - simple authentication without JWT tokens
+    Verifies email and password, returns JWT token for authenticated sessions
+    
+    Returns:
+        {
+            "success": true,
+            "access_token": "jwt_token_here",
+            "token_type": "bearer",
+            "expires_in": 86400,
+            "agent": {...}
+        }
     """
     try:
-        from passlib.context import CryptContext
-        
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        
         # Find salesperson by email (case-insensitive using regex)
         salesperson = await db.salespeople.find_one({
             "email": {"$regex": f"^{login_request.email}$", "$options": "i"}
@@ -1151,18 +1157,25 @@ async def agent_portal_login(login_request: AgentLoginRequest):
             )
         
         # Verify password exists
-        if not salesperson.get("password_hash"):
+        password_hash = salesperson.get("password_hash")
+        if not password_hash:
             raise HTTPException(
                 status_code=400,
                 detail="Password not set. Please contact administrator."
             )
         
         # Verify password
-        if not pwd_context.verify(login_request.password, salesperson["password_hash"]):
+        if not verify_password(login_request.password, password_hash):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid email or password"
             )
+        
+        # Create JWT access token
+        access_token = create_access_token(
+            data={"sub": str(salesperson["_id"])},
+            expires_delta=timedelta(hours=24)
+        )
         
         # Update login stats
         await db.salespeople.update_one(
@@ -1177,19 +1190,35 @@ async def agent_portal_login(login_request: AgentLoginRequest):
             }
         )
         
-        # Return success with agent info
+        # Create session record
+        session_record = {
+            "salesperson_id": salesperson["_id"],
+            "salesperson_name": salesperson.get("name"),
+            "session_token": access_token,
+            "login_time": datetime.now(timezone.utc),
+            "logout_time": None,
+            "last_activity": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=24),
+            "pages_viewed": [],
+            "actions_performed": []
+        }
+        
+        await db.referral_agent_sessions.insert_one(session_record)
+        
+        # Return success with JWT token
         return {
             "success": True,
-            "salesperson": {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": 86400,  # 24 hours in seconds
+            "agent": {
                 "id": str(salesperson["_id"]),
-                "name": salesperson["name"],
-                "email": salesperson["email"],
-                "referral_code": salesperson["referral_code"],
-                "referral_link": salesperson["referral_link"],
-                "portal_settings": salesperson.get("portal_settings", {}),
+                "name": salesperson.get("name"),
+                "email": salesperson.get("email"),
+                "referralCode": salesperson.get("referral_code"),
+                "referralLink": salesperson.get("referral_link"),
                 "stats": salesperson.get("stats", {})
-            },
-            "message": "Login successful"
+            }
         }
         
     except HTTPException:
