@@ -14353,7 +14353,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         
         fund_simulations.append({
             "fund_code": fund_code,
-            "projections": fund_projections
+            "projections": fund_projections,
+            "simulation_months": fund_simulation_months
         })
     
     # Create combined timeline showing total portfolio value over time
@@ -14631,7 +14632,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         
         fund_simulations.append({
             "fund_code": fund_code,
-            "projections": fund_projections
+            "projections": fund_projections,
+            "simulation_months": fund_simulation_months
         })
     
     # Create combined timeline showing total portfolio value over time
