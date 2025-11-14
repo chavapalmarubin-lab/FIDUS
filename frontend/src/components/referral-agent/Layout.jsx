@@ -73,16 +73,16 @@ const Layout = ({ children }) => {
           </div>
 
           {/* Agent Info */}
-          <div className="px-4 py-4 border-b bg-gray-50">
+          <div className="px-4 py-4 border-b border-slate-800 bg-slate-950">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-cyan-600 flex items-center justify-center">
                   <User className="h-6 w-6 text-white" />
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{agent?.name || 'Agent'}</p>
-                <p className="text-xs text-gray-500">{agent?.email}</p>
+                <p className="text-sm font-medium text-white">{agent?.name || 'Agent'}</p>
+                <p className="text-xs text-slate-400">{agent?.email}</p>
               </div>
             </div>
           </div>
@@ -98,8 +98,8 @@ const Layout = ({ children }) => {
                   className={`
                     group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
                     ${isActive
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     }
                   `}
                   onClick={() => setSidebarOpen(false)}
@@ -107,7 +107,7 @@ const Layout = ({ children }) => {
                   <item.icon
                     className={`
                       mr-3 h-5 w-5 flex-shrink-0
-                      ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'}
+                      ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}
                     `}
                   />
                   {item.name}
@@ -117,11 +117,11 @@ const Layout = ({ children }) => {
           </nav>
 
           {/* Bottom Actions */}
-          <div className="p-4 border-t space-y-2">
+          <div className="p-4 border-t border-slate-800 space-y-2">
             {/* Profile/Settings Button */}
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-700 hover:bg-gray-50"
+              className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
               onClick={() => navigate('/referral-agent/profile')}
             >
               <User className="mr-2 h-4 w-4" />
@@ -131,7 +131,7 @@ const Layout = ({ children }) => {
             {/* Logout Button */}
             <Button
               variant="outline"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+              className="w-full justify-start text-red-400 border-red-900 hover:bg-red-950 hover:text-red-300"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
