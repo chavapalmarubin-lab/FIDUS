@@ -115,11 +115,11 @@ const Leads = () => {
             <p className="text-slate-400">Track and manage your prospects</p>
           </div>
           <Button
-            onClick={() => navigate('/referral-agent/profile')}
+            onClick={() => setShowAddLeadModal(true)}
             className="bg-cyan-600 hover:bg-cyan-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Get Referral Link
+            Add Lead
           </Button>
         </div>
 
