@@ -1566,7 +1566,12 @@ async def get_agent_dashboard(current_agent: dict = Depends(get_current_agent)):
         # Calculate stats
         total_leads = len(leads)
         active_clients = len(clients)
-        total_commissions_earned = sum(c.get("commission_amount", 0) for c in commissions)
+        # Handle Decimal128 for commission amounts
+        total_commissions_earned = sum(
+            float(c.get("commission_amount").to_decimal()) if hasattr(c.get("commission_amount"), 'to_decimal') 
+            else float(c.get("commission_amount", 0)) 
+            for c in commissions
+        )
         conversion_rate = round((active_clients / total_leads * 100) if total_leads > 0 else 0, 1)
         
         # Pipeline breakdown
