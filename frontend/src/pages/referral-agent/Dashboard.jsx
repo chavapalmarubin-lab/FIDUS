@@ -111,27 +111,27 @@ const Dashboard = () => {
         </Card>
 
         {/* Upcoming Follow-ups */}
-        <Card>
+        <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
-            <CardTitle>Upcoming Follow-ups</CardTitle>
-            <CardDescription>Leads that need your attention</CardDescription>
+            <CardTitle className="text-white">Upcoming Follow-ups</CardTitle>
+            <CardDescription className="text-slate-400">Leads that need your attention</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="h-16 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-slate-800 rounded"></div>
                   </div>
                 ))}
               </div>
             ) : dashboardData?.upcomingFollowUps && dashboardData.upcomingFollowUps.length > 0 ? (
               <div className="space-y-4">
                 {dashboardData.upcomingFollowUps.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div key={lead.id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 hover:bg-slate-800 cursor-pointer rounded px-2 transition-colors" onClick={() => navigate(`/referral-agent/leads/${lead.id}`)}>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{lead.name || lead.email}</p>
-                      <p className="text-sm text-blue-600">
+                      <p className="font-medium text-white">{lead.name || lead.email}</p>
+                      <p className="text-sm text-cyan-400">
                         {lead.nextFollowUp && format(new Date(lead.nextFollowUp), 'MMM d, yyyy')}
                       </p>
                     </div>
@@ -140,7 +140,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-8">No follow-ups scheduled</p>
+              <p className="text-sm text-slate-500 text-center py-8">No follow-ups scheduled</p>
             )}
           </CardContent>
         </Card>
