@@ -1839,12 +1839,16 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
                 "client_name": client_name
             }).to_list(100)
             
-            # Calculate totals
-            total_investment = sum(float(inv.get("principal_amount", inv.get("amount", 0))) for inv in investments)
+            # Calculate totals - handle Decimal128
+            total_investment = sum(
+                float(inv.get("principal_amount").to_decimal()) if hasattr(inv.get("principal_amount"), 'to_decimal')
+                else float(inv.get("principal_amount", inv.get("amount", 0)))
+                for inv in investments
+            )
             active_investments = len([inv for inv in investments if inv.get("status") == "active"])
             
             client_data.append({
-                "clientId": client_id,
+                "clientId": str(client.get("_id")),
                 "clientName": client.get("name"),
                 "email": client.get("email"),
                 "joinDate": client.get("registration_date") or client.get("created_at"),
@@ -1853,7 +1857,8 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
                 "investments": [
                     {
                         "fundCode": inv.get("fund_code") or inv.get("fund_type"),
-                        "amount": float(inv.get("principal_amount", inv.get("amount", 0))),
+                        "amount": float(inv.get("principal_amount").to_decimal()) if hasattr(inv.get("principal_amount"), 'to_decimal')
+                               else float(inv.get("principal_amount", inv.get("amount", 0))),
                         "status": inv.get("status")
                     }
                     for inv in investments
