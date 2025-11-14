@@ -1874,18 +1874,27 @@ async def get_commission_schedule(current_agent: dict = Depends(get_current_agen
     Get commission schedule and payment history for the logged-in agent
     """
     try:
-        salesperson_id = str(current_agent["_id"])
+        salesperson_id = current_agent["_id"]
         
-        # Get all commissions
+        # Get all commissions - check multiple formats
         commissions = await db.referral_commissions.find({
-            "salesperson_id": salesperson_id
-        }, {"_id": 0}).to_list(1000)
+            "$or": [
+                {"salesperson_id": str(salesperson_id)},
+                {"salesperson_id": salesperson_id}
+            ]
+        }).to_list(1000)
         
         # Get client names
         for commission in commissions:
             client_id = commission.get("client_id")
             if client_id:
-                client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+                # Try to find client by _id (converted to string)
+                client = await db.clients.find_one({
+                    "$or": [
+                        {"_id": client_id},
+                        {"id": client_id}
+                    ]
+                })
                 if client:
                     commission["clientName"] = client.get("name", "Unknown")
         
