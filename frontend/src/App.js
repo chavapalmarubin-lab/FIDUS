@@ -385,6 +385,52 @@ function App() {
             element={<SalespersonDetail />} 
           />
           
+          {/* REFERRAL AGENT PORTAL ROUTES */}
+          <Route 
+            path="/referral-agent/login" 
+            element={<ReferralAgentLogin />} 
+          />
+          <Route 
+            path="/referral-agent/dashboard" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/referral-agent/leads" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentLeads />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/referral-agent/leads/:leadId" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentLeadDetail />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/referral-agent/clients" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentClients />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/referral-agent/commissions" 
+            element={
+              <ProtectedRoute>
+                <ReferralAgentCommissions />
+              </ProtectedRoute>
+            } 
+          />
+          
           {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}
           <Route 
             path="/admin" 
