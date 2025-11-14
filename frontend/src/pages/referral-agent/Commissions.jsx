@@ -133,17 +133,17 @@ const Commissions = () => {
       </div>
 
       {/* Commissions Table */}
-      <Card>
+      <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle>Commission History</CardTitle>
-          <CardDescription>All your commission payments and scheduled payouts</CardDescription>
+          <CardTitle className="text-white">Commission History</CardTitle>
+          <CardDescription className="text-slate-400">All your commission payments and scheduled payouts</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-16 bg-gray-200 rounded"></div>
+                  <div className="h-16 bg-slate-800 rounded"></div>
                 </div>
               ))}
             </div>
@@ -151,28 +151,28 @@ const Commissions = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Client</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Amount</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
+                  <tr className="border-b border-slate-800">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Client</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Amount</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {commissions.map((commission, idx) => (
-                    <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={idx} className="border-b border-slate-800 last:border-0 hover:bg-slate-800 transition-colors">
                       <td className="py-3 px-4">
-                        <p className="font-medium text-gray-900">{commission.clientName || 'N/A'}</p>
+                        <p className="font-medium text-white">{commission.clientName || 'N/A'}</p>
                         {commission.fundCode && (
-                          <p className="text-sm text-gray-500">{commission.fundCode}</p>
+                          <p className="text-sm text-slate-400">{commission.fundCode}</p>
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-cyan-400">
                           ${commission.commissionAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">
+                      <td className="py-3 px-4 text-slate-300">
                         {commission.paymentDate ? format(new Date(commission.paymentDate), 'MMM d, yyyy') : 'N/A'}
                       </td>
                       <td className="py-3 px-4">
@@ -185,9 +185,9 @@ const Commissions = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <DollarSign className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Commissions Yet</h3>
-              <p className="text-gray-600">
+              <DollarSign className="h-16 w-16 mx-auto text-slate-700 mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">No Commissions Yet</h3>
+              <p className="text-slate-400">
                 Your commissions will appear here when your clients make investments.
               </p>
             </div>
