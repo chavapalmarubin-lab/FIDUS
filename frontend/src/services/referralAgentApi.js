@@ -122,6 +122,15 @@ const referralAgentApi = {
     );
     return transformKeys(response.data);
   },
+
+  createLead: async (leadData) => {
+    const response = await axios.post(
+      `${API_BASE}/api/referral-agent/crm/leads`,
+      leadData,
+      { headers: getAuthHeaders() }
+    );
+    return transformKeys(response.data);
+  },
 };
 
 export default referralAgentApi;
