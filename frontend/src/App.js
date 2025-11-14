@@ -7,6 +7,14 @@ import AdminDashboard from "./components/AdminDashboard";
 import ProspectsPortal from "./components/ProspectsPortal";
 import Referrals from "./pages/admin/Referrals";
 import SalespersonDetail from "./pages/admin/SalespersonDetail";
+// Referral Agent Portal imports
+import ReferralAgentLogin from "./pages/referral-agent/Login";
+import ReferralAgentDashboard from "./pages/referral-agent/Dashboard";
+import ReferralAgentLeads from "./pages/referral-agent/Leads";
+import ReferralAgentLeadDetail from "./pages/referral-agent/LeadDetail";
+import ReferralAgentClients from "./pages/referral-agent/Clients";
+import ReferralAgentCommissions from "./pages/referral-agent/Commissions";
+import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
 // Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
