@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
 import referralAgentApi from '../../services/referralAgentApi';
-import { setAuthToken, setCurrentAgent, isAuthenticated } from '../../utils/referralAgentAuth';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate('/referral-agent/dashboard');
-    }
-  }, [navigate]);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,108 +22,106 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await referralAgentApi.login(email, password);
+      const response = await referralAgentApi.login(formData.email, formData.password);
       
-      if (response.success && response.accessToken) {
-        setAuthToken(response.accessToken);
-        setCurrentAgent(response.agent);
+      if (response.success) {
+        localStorage.setItem('agent_token', response.access_token);
         navigate('/referral-agent/dashboard');
       } else {
-        setError(response.message || 'Login failed. Please check your credentials.');
+        setError('Invalid email or password');
       }
     } catch (err) {
       console.error('Login error:', err);
-      if (err.response?.status === 401) {
-        setError('Invalid email or password');
-      } else if (err.response?.status === 403) {
-        setError('Access denied. Please contact administrator.');
-      } else {
-        setError('An error occurred. Please try again.');
-      }
+      setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img
-            src="/fidus-logo.png"
-            alt="FIDUS"
-            className="h-16 w-auto mx-auto mb-4"
-          />
-          <h1 className="text-3xl font-bold text-gray-900">Referral Agent Portal</h1>
-          <p className="text-gray-600 mt-2">Sign in to manage your leads and commissions</p>
+          <h1 className="text-4xl font-bold text-white mb-2">FIDUS</h1>
+          <p className="text-cyan-400 text-lg">Referral Agent Portal</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>Enter your credentials to access your portal</CardDescription>
+        <Card className="bg-slate-900 border-slate-800 shadow-2xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center text-white">Welcome Back</CardTitle>
+            <CardDescription className="text-center text-slate-400">
+              Sign in to your agent account
+            </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-6 bg-red-950 border-red-900 text-red-200">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-400 mb-2">
+                  Email Address
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
+                  <input
                     id="email"
+                    name="email"
                     type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-transparent"
                     placeholder="agent@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                    disabled={loading}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-400 mb-2">
+                  Password
+                </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
+                  <input
                     id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
-                    disabled={loading}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-12 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-transparent"
+                    placeholder="Enter your password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                  onClick={() => alert('Please contact your administrator to reset your password.')}
-                >
-                  Forgot Password?
-                </button>
               </div>
 
               <Button
                 type="submit"
-                className="w-full"
                 disabled={loading}
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-6 text-lg font-semibold disabled:opacity-50"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center">
-                    <span className="animate-spin mr-2">⏳</span>
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Signing in...
                   </span>
                 ) : (
@@ -138,14 +130,18 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-600">
-              <p>Need help? Contact your administrator at <a href="mailto:admin@fidusinvestment.com" className="text-blue-600 hover:underline">admin@fidusinvestment.com</a></p>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-slate-500">
+                Need help? Contact your administrator
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center text-xs text-gray-500">
-          <p>&copy; 2025 FIDUS. All rights reserved.</p>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-500">
+            © 2025 FIDUS Investment Platform. All rights reserved.
+          </p>
         </div>
       </div>
     </div>
