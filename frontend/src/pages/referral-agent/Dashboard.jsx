@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, UserCheck, DollarSign, TrendingUp } from 'lucide-react';
 import Layout from '../../components/referral-agent/Layout';
 import StatsCard from '../../components/referral-agent/StatsCard';
