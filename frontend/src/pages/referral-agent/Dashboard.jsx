@@ -88,24 +88,24 @@ const Dashboard = () => {
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="h-16 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-slate-800 rounded"></div>
                   </div>
                 ))}
               </div>
             ) : dashboardData?.recentLeads && dashboardData.recentLeads.length > 0 ? (
               <div className="space-y-4">
                 {dashboardData.recentLeads.slice(0, 5).map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div key={lead.id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 hover:bg-slate-800 cursor-pointer rounded px-2 transition-colors" onClick={() => navigate(`/referral-agent/leads/${lead.id}`)}>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{lead.name || lead.email}</p>
-                      <p className="text-sm text-gray-500">{lead.email}</p>
+                      <p className="font-medium text-white">{lead.name || lead.email}</p>
+                      <p className="text-sm text-slate-400">{lead.email}</p>
                     </div>
                     <StatusBadge status={lead.crmStatus} />
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-8">No leads yet</p>
+              <p className="text-sm text-slate-500 text-center py-8">No leads yet</p>
             )}
           </CardContent>
         </Card>
