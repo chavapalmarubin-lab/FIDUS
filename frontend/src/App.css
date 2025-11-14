@@ -190,6 +190,15 @@ body {
   box-shadow: 0 8px 25px rgba(255, 167, 38, 0.4);
 }
 
+.login-option.referral-agent {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+.login-option.referral-agent:hover {
+  background: linear-gradient(135deg, #ba68c8 0%, #ce93d8 100%);
+  box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+}
+
 /* Dashboard Base Styles */
 .dashboard {
   min-height: 100vh;
