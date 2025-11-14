@@ -70,6 +70,41 @@ const Leads = () => {
     converted: leads.filter(l => l.crmStatus === 'converted').length,
   };
 
+  const handleAddLead = async (e) => {
+    e.preventDefault();
+    
+    if (!newLead.name || !newLead.email) {
+      setError('Name and email are required');
+      return;
+    }
+
+    try {
+      setAddingLead(true);
+      setError('');
+      
+      // Call API to create lead
+      const response = await referralAgentApi.createLead(newLead);
+      
+      if (response.success) {
+        // Refresh leads list
+        await fetchLeads();
+        // Close modal
+        setShowAddLeadModal(false);
+        // Reset form
+        setNewLead({ name: '', email: '', phone: '', notes: '' });
+        // Show success (you could use a toast here)
+        alert('Lead added successfully!');
+      } else {
+        setError('Failed to add lead');
+      }
+    } catch (err) {
+      console.error('Error adding lead:', err);
+      setError(err.response?.data?.detail || 'Failed to add lead. Please try again.');
+    } finally {
+      setAddingLead(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
