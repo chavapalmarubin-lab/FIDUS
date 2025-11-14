@@ -1834,20 +1834,21 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
                 ]
             }).to_list(100)
             
-            total_investment = sum(inv.get("amount", 0) for inv in investments)
+            # Calculate totals
+            total_investment = sum(float(inv.get("principal_amount", inv.get("amount", 0))) for inv in investments)
             active_investments = len([inv for inv in investments if inv.get("status") == "active"])
             
             client_data.append({
-                "clientId": user_id,
+                "clientId": client_id,
                 "clientName": client.get("name"),
                 "email": client.get("email"),
-                "joinDate": client.get("registration_date"),
+                "joinDate": client.get("registration_date") or client.get("created_at"),
                 "totalInvestment": total_investment,
                 "activeInvestments": active_investments,
                 "investments": [
                     {
-                        "fundCode": inv.get("fund_code"),
-                        "amount": inv.get("amount"),
+                        "fundCode": inv.get("fund_code") or inv.get("fund_type"),
+                        "amount": float(inv.get("principal_amount", inv.get("amount", 0))),
                         "status": inv.get("status")
                     }
                     for inv in investments
