@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Search, Filter, Plus, Mail, Phone } from 'lucide-react';
+import { Users, Search, Filter, Plus, Mail, Phone, X } from 'lucide-react';
 import Layout from '../../components/referral-agent/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
