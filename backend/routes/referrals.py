@@ -1127,9 +1127,9 @@ async def agent_portal_login(login_request: AgentLoginRequest):
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         
-        # Find salesperson by email (case-insensitive)
+        # Find salesperson by email (case-insensitive using regex)
         salesperson = await db.salespeople.find_one({
-            "email": login_request.email.lower()
+            "email": {"$regex": f"^{login_request.email}$", "$options": "i"}
         })
         
         if not salesperson:
