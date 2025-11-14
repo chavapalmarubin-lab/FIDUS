@@ -1554,10 +1554,13 @@ async def get_agent_dashboard(current_agent: dict = Depends(get_current_agent)):
             ]
         }, {"_id": 0}).to_list(1000)
         
-        # Get commission data
+        # Get commission data - check multiple formats
         commissions = await db.referral_commissions.find({
-            "salesperson_id": str(salesperson_id)
-        }, {"_id": 0}).to_list(1000)
+            "$or": [
+                {"salesperson_id": str(salesperson_id)},
+                {"salesperson_id": salesperson_id}
+            ]
+        }).to_list(1000)
         
         # Calculate stats
         total_leads = len(leads)
