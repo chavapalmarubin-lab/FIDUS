@@ -21,7 +21,7 @@ import time
 import uuid
 
 # Configuration
-BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

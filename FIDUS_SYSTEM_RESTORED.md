@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://invest-tracker-146.preview.emergentagent.com`
+`https://referral-portal-5.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://invest-tracker-146.preview.emergentagent.com/api/system/status
+   curl https://referral-portal-5.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://invest-tracker-146.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://referral-portal-5.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com"
+BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv

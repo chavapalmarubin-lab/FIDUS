@@ -1,58 +1,172 @@
-<analysis>
-The AI engineer's work has progressed through multiple phases, addressing critical data pipeline and dashboard accuracy issues for the FIDUS platform. Initial efforts focused on establishing a robust MT5 data sync, adhering to strict field standardization (snake_case in MongoDB, camelCase for API). Subsequent phases involved migrating backend services to use the correct  collection, implementing data transformation, verifying system calculations (P&L, analytics, rebates), and updating initial allocations for money managers. The auto-healing system and comprehensive technical documentation were also updated. The work was interrupted during Phase 6: Comprehensive System Testing by an emergency to fix the Cash Flow dashboard, which was displaying zero values during a client demo. The immediate task is to diagnose and fix the Cash Flow API endpoint's data retrieval and processing logic.
-</analysis>
+<analysis>**original_problem_statement:**
+The user initially reported that Alejandro Mariscal Romero's client dashboard was showing all zeros. After fixing that, the user pointed out duplicate investments. Subsequent user requests included:
+1.  Fix a 404 error when loading performance data for the SEPARATION fund on the Fund Portfolio dashboard.
+2.  Correct calculation errors in the Investment Simulator:
+    *   Quarterly interest for the BALANCE fund was being calculated monthly (,500) instead of quarterly (,500 for a 00k investment).
+    *   The total ROI was calculated over 10 months instead of 12, resulting in a 25% ROI instead of the expected 30%.
+3.  Fix the net calculation in the Cash Flow tab, ensuring that negative P&L from trading accounts contributes negatively to the total.
+4.  Fix the Actual Performance section on the Cash Flow tab, where Separation Interest was incorrectly showing as /bin/bash.
+5.  Add a new referral agent, Josselyn Arellano López (), with a standard 10% commission.
+6.  A major feature request: Build a complete, secure Referral Agent Portal with login, a CRM for lead tracking, and a commission dashboard.
 
-<product_requirements>
-The FIDUS platform needs accurate financial tracking, P&L calculations, and a robust Referral System, including 10% commissions on client interest payments. Specific client investment details (e.g., Alejandro Mariscal Romero's 18,151.41 investment) require accurate interest calculations (monthly 1.5% CORE, quarterly 2.5% BALANCE) and commission tracking (Salvador Palma's 10% commission). Initial problems included broken referrals, incorrect Trading Analytics, incomplete Money Managers data, /bin/bash investments, CORS, and 500 errors, all demanding strict data field standardization. A three-tier P&L is required, distinct from client fixed interest. Recent work addressed referral commissions, client investments, fund P&L, consistent broker rebates, and system health monitoring. A critical MT5 Field Standardization Mandate was introduced, requiring exact MT5 Python API field names (snake_case) in MongoDB, with  transformations exclusively at the backend API layer. Latest updates include initial allocations (38,805.17 total for 8 active accounts) and updated money manager names.
-</product_requirements>
+**what currently exists?**
+The application is a full-stack platform with a React frontend, FastAPI backend, and MongoDB database. It's designed for investment tracking and financial analysis. The agent has successfully implemented the backend foundation for the new Referral Agent Portal, including user migration, JWT-based authentication, and a full suite of CRM API endpoints. The frontend for this new portal has not been started.
 
-<key_technical_concepts>
-- **Backend**: Python (FastAPI, Motor/PyMongo), MongoDB (Decimal128, UUIDs).
-- **Frontend**: React.js (, ).
-- **Deployment**: Kubernetes, Supervisor, GitHub Actions, Render.
-- **Data Integrity**: Strict MT5 Python API field standardization (snake_case for DB, camelCase for API/Frontend).
-- **Financial Data**: MT5 deal history (deposits/withdrawals/transfers), three-tier P&L, initial allocations.
-- **Auto-Healing**: Watchdog service for system health monitoring and GitHub Actions for automated recovery.
-</key_technical_concepts>
+**Last working item**:
+-   **Last item agent was working:** Implementing the backend for the Referral Agent Portal (Phase 3), which includes all CRM-related API endpoints. This involves endpoints for the agent's dashboard, lead management (list, detail, notes, status updates), client portfolio view, and commission schedule.
+-   **Status:** IN PROGRESS (Backend complete, but Frontend is not started and user has not verified)
+-   **Agent Testing Done:** Y
+-   **Which testing method agent to use?** Manual testing using a python script. The agent created a comprehensive test script at  that logs in as both referral agents (one with data, one without) and calls all the new CRM endpoints to verify data segregation and correctness. This script should be run to validate the backend functionality.
+-   **User Testing Done:** N
 
-<code_architecture>
+**All Pending/In progress Issue list**:
+-   **Issue 1:** Investment Simulator ROI Calculation is incorrect (P1)
 
-- : Main FastAPI app. Modified to include  and various fixes related to collection names and field usage.
-- : Critical for MT5 data sync. Modified to write to  (from ) and use exact MT5 Python API  field names, adding , , .
-- : Also modified to write to  and handle MT5 field names.
-- : Added  function to convert  (DB) to  (API), handling missing fields as .
-- : Modified to use  and correct field  (from ). Planned to use  for P&L. Currently being fixed for  handling in cash flow.
-- : Modified to use  and  field, with robust  value handling for calculations.
-- , , , : All updated to query  instead of .
-- : New service created for auto-healing. Monitors , , initial allocations, VPS sync, and money manager data quality. Triggers GitHub Actions workflows on failure.
-- : New file containing API endpoints for MT5 health checks and manual auto-healing triggers, exposed via .
-- **MongoDB Collections**:  (populated with 25,000+ docs),  (11 total, 8 active, with initial allocations and manager info).  is deprecated and intended for deletion.
-</code_architecture>
+**Issues Detail:**
+-   **Issue 1:**
+    -   **Description:** The user reported that for a 12-month simulation, the ROI is being calculated based on 10 months of interest payments (25% instead of 30%). The agent discovered this is due to a 2-month incubation period for the BALANCE fund, where no interest is earned. The calculation is technically correct according to the configuration, but it contradicts the user's expectation. The agent asked for clarification but moved on to other tasks before getting a response.
+    -   **Attempted fixes:** The agent correctly identified  in the  for the BALANCE fund in  as the cause. No code fix was attempted.
+    -   **Next debug checklist:**
+        1.  Confirm with the user how the  input should be interpreted. Should it be total investment duration (including incubation) or total interest-earning duration?
+        2.  Based on user feedback, modify the  function in . If the user wants 12 months of interest, the total simulation duration might need to be .
+    -   **Why fix this issue and what will be achieved with the fix?** To ensure the investment simulator provides projections that align with user and prospect expectations, which is critical for sales and building trust.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Backend. Test the  endpoint.
+    -   **Blocked on other issue:** None. Blocked on user clarification.
 
-<pending_tasks>
-- Complete Phase 6: Comprehensive System Testing once the emergency fix is deployed and verified.
-- Apply the  function to all relevant API endpoints for frontend compatibility (Phase 3 in previous plan).
-- Verify frontend components for accurate data display using  fields (Phase 4 in previous plan).
-- Full audit and clean up of documentation () to reflect  content.
-</pending_tasks>
+**In progress Task List**:
+-   **Task 1:** Build Referral Agent Portal (P0)
 
-<current_work>
-Immediately before this summary request, the AI engineer was engaged in Phase 6: Comprehensive System Testing, systematically verifying MongoDB data, Render API endpoints, VPS/GitHub Actions, data population, field standardization, and the auto-healing system. This process was interrupted by an EMERGENCY DIRECTIVE from the user.
+**Task Detail:**
+-   **Task 1:**
+    -   **Where to resume:** The backend is complete up to Phase 3 (CRM Endpoints). The next step is **Phase 4: Frontend Portal**. This involves building the UI for the entire portal as detailed in the user's comprehensive prompt. Start by creating the login page () and then the protected routes and components for the dashboard, leads, clients, and commissions.
+    -   **What will be achieved with this?** A complete, dedicated portal for referral agents to log in, manage their leads, and track their commissions, fulfilling a major feature request.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both. The backend is testable now, and the frontend will require extensive testing as it's built.
+    -   **Blocked on something:** Nothing.
 
-The critical emergency is that the **Cash Flow dashboard is showing ALL ZEROS** and displaying a Failed to load cash flow data error during a client demo. This occurs despite VPS logs indicating successful data syncing and the database ( collection) containing over 25,000 documents with real balance data.
+**Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+    - Build Referral Agent Portal Frontend (P0)
+- **Future Tasks:**
+    - Apply  function to all relevant API endpoints for frontend data consistency (P2).
+    - Perform a full audit and cleanup of  to reflect all recent changes (P2).
+    - Phase 6: Comprehensive System Testing once all features and fixes are complete (P2).
 
-The root cause is suspected to be a broken Cash Flow API endpoint or service not correctly retrieving data. The AI engineer has been instructed to:
-1.  **Fix **:
-    *   Ensure it queries  (not ).
-    *   Use the correct field name  (not ).
-    *   Handle  values for fields like  using .
-2.  **Verify  endpoint**: Ensure it uses the corrected service logic.
-3.  **Immediately Deploy** the fixes to production without further approval.
-4.  **Verify** the fix by testing the Cash Flow API endpoint and refreshing the frontend.
+**Completed work in this session**
+- **Fixes:**
+  - **Alejandro's ALL ZEROS Dashboard:** Resolved by adding missing user credentials and fixing client ID lookup in .
+  - **SEPARATION Fund 404 Error:** Fixed by adding SEPARATION to the list of valid fund codes in the  endpoint in .
+  - **Cash Flow P&L Calculation:** Fixed the  endpoint in  to include all trading accounts (especially the missing loss-making account 891215) in the  calculation.
+  - **Cash Flow Separation Interest Display:** Fixed the  component to correctly source and display  in the Actual Performance section.
+  - **Investment Simulator Quarterly Payments:** Partially fixed the simulation logic in  to correctly calculate interest for the redemption period (e.g., monthly interest * 3 for quarterly payments). The ROI calculation issue remains.
+- **Features:**
+  - **Added New Referral:** Successfully added Josselyn Arellano López to the  collection via an API call.
+  - **Referral Agent Portal Backend (Phases 1, 2, 3):**
+    - **Phase 1 (Foundation):** Ran a migration script () to add all necessary authentication, CRM, and stats fields to the  collection.
+    - **Phase 2 (JWT Auth):** Implemented a full, secure JWT authentication system in  and , including login, logout, password change, password reset, and a  dependency for protected routes.
+    - **Phase 3 (CRM Backend):** Implemented all CRM API endpoints in  for the agent dashboard, leads, clients, and commissions, with strict data segregation.
 
-The AI engineer has just initiated the emergency response and is currently diagnosing the specific issues within .
-</current_work>
+**Earlier issues found/mentioned but not fixed**
+   - **Issue 1: Investment Simulator ROI Calculation is incorrect.** This is the same as the pending issue listed above. The agent identified the cause but did not resolve it pending user feedback.
 
-<optional_next_step>
-Immediately diagnose and apply the emergency fixes to  to restore Cash Flow data.
-</optional_next_step>
+**Known issue recurrence from previous fork**
+  - None identified.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Backend**: Python (FastAPI, Motor/PyMongo)
+- **Database**: MongoDB (UUIDs, Decimal128)
+- **Frontend**: React.js ()
+- **Authentication**: JWT (JSON Web Tokens), bcrypt for password hashing
+- **Deployment**: Kubernetes, Supervisor
+
+**key DB schema**
+- **salespeople:** 
+- **leads:** 
+- **referral_agent_sessions:** 
+- **referral_commissions:** 
+- **clients:** 
+
+**changes in tech stack**
+- None.
+
+**All files**
+- **Created:**
+  - : Script to add auth/CRM fields to the  collection.
+  - : Makes the  directory a Python package.
+  - : Contains all logic for creating, verifying, and hashing JWTs and passwords.
+  - : Contains the  dependency for protecting FastAPI routes.
+  - : A summary of the Phase 1 implementation for the user.
+  - : Script to add CRM fields to the  collection.
+  - : A comprehensive script to test all the new CRM endpoints for both agents.
+- **Updated:**
+  - : Multiple fixes for cash flow, simulator, and SEPARATION fund bugs.
+  - : Fixed a bug where separation interest was not being displayed.
+  - : Major updates. Added the complete authentication and CRM backend for the referral agent portal.
+
+**Areas that need refactoring**:
+- The  file has grown very large. The new authentication and CRM logic should be split into separate files (e.g., , ) and included in  to improve maintainability, as suggested in the user's detailed prompt.
+
+**key api endpoints**
+- **Authentication:**
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+- **CRM:**
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+
+**Critical Info for New Agent**
+- The user provided extremely detailed, multi-page prompts for the Referral Agent Portal, including mandatory documentation reading from external GitHub URLs. **The agent cannot access these external URLs.** The user provided excerpts in the chat, which should be used as the source of truth for field names and logic.
+- When working on the Referral Portal, **data segregation is critical**. Every CRM endpoint MUST filter data by the  obtained from the authenticated JWT token to ensure agents only see their own data.
+- The  is managed via environment variables. The agent generated one and provided it to the user to add to the Render environment. It should not be hardcoded.
+
+**documents created in this job**
+- 
+- 
+- 
+- 
+
+**Last 5 User Messages and any pending user messages**
+1.  **User Message**: Add Josselyn Arellano López as a new referral.
+    - **Status**: Completed.
+2.  **User Message**: Build a complete Referral Agent Portal with login, CRM, and commission tracking.
+    - **Status**: In Progress. Backend is complete. Frontend is pending.
+3.  **User Message**: Clarified the requirements for the portal and provided documentation excerpts.
+    - **Status**: Acknowledged.
+4.  **User Message**: Acknowledged the agent's work on Phase 1 (Auth Foundation) and provided documentation update text.
+    - **Status**: Acknowledged. The agent created a local doc file.
+5.  **User Message**: Instructed the agent to generate a JWT secret and proceed with building Phase 2 (JWT Auth) and Phase 3 (CRM Backend).
+    - **Status**: Completed.
+
+**Project Health Check:**
+- **Broken**: Nothing is reported as broken at the end of the session.
+- **Mocked**: No mocked data. The system is running on production data.
+
+**Testing status**
+- **Testing agent used after significant changes**: NO
+- **Troubleshoot agent used after agent stuck in loop**: NO
+- **Test files created:**
+  -  (ad-hoc script, not a formal test file)
+- **Known regressions**: None.
+
+**Credentials to test flow:**
+- **Admin:** , 
+- **Client (Alejandro):** , 
+- **Referral Agent (Salvador):** , 
+- **Referral Agent (Josselyn):** , 
+
+**What agent forgot to execute**
+- The agent did not get final user confirmation on the Investment Simulator ROI calculation. The agent diagnosed the cause (incubation period) but did not confirm with the user if this was the desired behavior or if the calculation logic needed to be changed. This issue remains unresolved.</analysis>

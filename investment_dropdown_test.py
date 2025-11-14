@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration - Use URL from frontend .env
-BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {

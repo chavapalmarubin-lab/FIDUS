@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
+BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com/api"
 
 def test_oauth_callback_state_processing():
     """Test OAuth callback with the new state parameter format"""

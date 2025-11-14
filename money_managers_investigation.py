@@ -42,7 +42,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com"
+BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -140,7 +140,7 @@
 ## System URLs
 
 ### Production Ready Demo
-- **URL**: `https://invest-tracker-146.preview.emergentagent.com?skip_animation=true`
+- **URL**: `https://referral-portal-5.preview.emergentagent.com?skip_animation=true`
 - **Admin**: admin / password123
 - **Client**: client1 / password123
 
@@ -155,13 +155,13 @@
 
 ```bash
 # Check zero balances
-curl -s "https://invest-tracker-146.preview.emergentagent.com/api/client/client_001/data" | jq '.monthly_statement'
+curl -s "https://referral-portal-5.preview.emergentagent.com/api/client/client_001/data" | jq '.monthly_statement'
 
 # Check fund AUM
-curl -s "https://invest-tracker-146.preview.emergentagent.com/api/investments/funds/config" | jq '.funds[].aum'
+curl -s "https://referral-portal-5.preview.emergentagent.com/api/investments/funds/config" | jq '.funds[].aum'
 
 # Check clients ready for investment  
-curl -s "https://invest-tracker-146.preview.emergentagent.com/api/clients/all" | jq '.ready_for_investment'
+curl -s "https://referral-portal-5.preview.emergentagent.com/api/clients/all" | jq '.ready_for_investment'
 ```
 
 ---

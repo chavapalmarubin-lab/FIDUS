@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Testing the EXACT URL from the review request to see if there's a difference
-Review request specified: https://invest-tracker-146.preview.emergentagent.com/api
+Review request specified: https://referral-portal-5.preview.emergentagent.com/api
 """
 
 import requests
@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Use the EXACT URL from the review request
-REVIEW_BACKEND_URL = "https://invest-tracker-146.preview.emergentagent.com/api"
+REVIEW_BACKEND_URL = "https://referral-portal-5.preview.emergentagent.com/api"
 
 class ReviewURLTester:
     def __init__(self):
