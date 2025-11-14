@@ -11,6 +11,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 import sys
 import secrets
+import logging
 sys.path.append('/app/backend')
 
 # Use new field_registry for authoritative transformations
