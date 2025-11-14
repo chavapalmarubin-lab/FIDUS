@@ -1231,6 +1231,272 @@ async def agent_portal_login(login_request: AgentLoginRequest):
             detail=f"Login error: {str(e)}"
         )
 
+
+@router.post("/referral-agent/auth/logout", tags=["Agent Portal"])
+async def agent_portal_logout(current_agent: dict = Depends(get_current_agent)):
+    """
+    Logout endpoint - marks current session as ended
+    
+    Requires: Valid JWT token in Authorization header
+    """
+    try:
+        # Mark all active sessions for this agent as logged out
+        await db.referral_agent_sessions.update_many(
+            {
+                "salesperson_id": current_agent["_id"],
+                "logout_time": None
+            },
+            {
+                "$set": {
+                    "logout_time": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Logged out successfully"
+        }
+        
+    except Exception as e:
+        print(f"Logout error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Logout failed. Please try again."
+        )
+
+
+@router.get("/referral-agent/auth/me", tags=["Agent Portal"])
+async def get_current_agent_info(current_agent: dict = Depends(get_current_agent)):
+    """
+    Get current authenticated agent information
+    
+    Requires: Valid JWT token in Authorization header
+    
+    Returns agent profile data without sensitive fields
+    """
+    try:
+        return {
+            "id": str(current_agent["_id"]),
+            "name": current_agent.get("name"),
+            "email": current_agent.get("email"),
+            "referralCode": current_agent.get("referral_code"),
+            "referralLink": current_agent.get("referral_link"),
+            "portalSettings": current_agent.get("portal_settings", {}),
+            "leadPipelineStages": current_agent.get("lead_pipeline_stages", []),
+            "stats": current_agent.get("stats", {}),
+            "lastLogin": current_agent.get("last_login").isoformat() if current_agent.get("last_login") else None,
+            "loginCount": current_agent.get("login_count", 0)
+        }
+        
+    except Exception as e:
+        print(f"Get current agent error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve agent information"
+        )
+
+
+@router.put("/referral-agent/auth/change-password", tags=["Agent Portal"])
+async def change_password_endpoint(
+    current_password: str,
+    new_password: str,
+    current_agent: dict = Depends(get_current_agent)
+):
+    """
+    Change password for current authenticated agent
+    
+    Requires: Valid JWT token in Authorization header
+    
+    Args:
+        current_password: Current password for verification
+        new_password: New password (min 8 characters)
+    """
+    try:
+        # Validate new password strength
+        if len(new_password) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail="New password must be at least 8 characters"
+            )
+        
+        # Verify current password
+        current_hash = current_agent.get("password_hash")
+        if not current_hash or not verify_password(current_password, current_hash):
+            raise HTTPException(
+                status_code=400,
+                detail="Current password is incorrect"
+            )
+        
+        # Hash new password
+        new_password_hash = get_password_hash(new_password)
+        
+        # Update password
+        await db.salespeople.update_one(
+            {"_id": current_agent["_id"]},
+            {
+                "$set": {
+                    "password_hash": new_password_hash,
+                    "password_reset_token": None,
+                    "password_reset_expires": None
+                }
+            }
+        )
+        
+        # Invalidate all existing sessions (force re-login)
+        await db.referral_agent_sessions.update_many(
+            {
+                "salesperson_id": current_agent["_id"],
+                "logout_time": None
+            },
+            {
+                "$set": {
+                    "logout_time": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Password changed successfully. Please login again with your new password."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Change password error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to change password"
+        )
+
+
+@router.post("/referral-agent/auth/password-reset", tags=["Agent Portal"])
+async def request_password_reset_endpoint(email: str):
+    """
+    Request password reset - generates reset token
+    
+    Does not reveal if email exists (security best practice)
+    """
+    try:
+        # Find salesperson (case-insensitive)
+        salesperson = await db.salespeople.find_one({
+            "email": {"$regex": f"^{email}$", "$options": "i"}
+        })
+        
+        if not salesperson:
+            # Don't reveal if email doesn't exist
+            return {
+                "success": True,
+                "message": "If the email address exists in our system, a password reset link has been sent."
+            }
+        
+        # Generate secure reset token (URL-safe)
+        reset_token = secrets.token_urlsafe(32)
+        reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        
+        # Save token to database
+        await db.salespeople.update_one(
+            {"_id": salesperson["_id"]},
+            {
+                "$set": {
+                    "password_reset_token": reset_token,
+                    "password_reset_expires": reset_expires
+                }
+            }
+        )
+        
+        # TODO: Send email with reset link
+        # For now, just log the token (REMOVE THIS IN PRODUCTION)
+        print(f"Password reset token for {email}: {reset_token}")
+        print(f"Reset link: https://fidus-investment-platform.onrender.com/referral-agent/reset-password?token={reset_token}")
+        
+        return {
+            "success": True,
+            "message": "If the email address exists in our system, a password reset link has been sent."
+        }
+        
+    except Exception as e:
+        print(f"Password reset request error: {str(e)}")
+        # Still return success (don't reveal if email exists)
+        return {
+            "success": True,
+            "message": "If the email address exists in our system, a password reset link has been sent."
+        }
+
+
+@router.post("/referral-agent/auth/password-reset/confirm", tags=["Agent Portal"])
+async def confirm_password_reset_endpoint(token: str, new_password: str):
+    """
+    Confirm password reset with token
+    
+    Args:
+        token: Reset token from email link
+        new_password: New password (min 8 characters)
+    """
+    try:
+        # Validate new password
+        if len(new_password) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail="Password must be at least 8 characters"
+            )
+        
+        # Find salesperson by reset token
+        salesperson = await db.salespeople.find_one({
+            "password_reset_token": token,
+            "password_reset_expires": {"$gt": datetime.now(timezone.utc)}
+        })
+        
+        if not salesperson:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or expired reset token. Please request a new password reset."
+            )
+        
+        # Hash new password
+        new_password_hash = get_password_hash(new_password)
+        
+        # Update password and clear reset token
+        await db.salespeople.update_one(
+            {"_id": salesperson["_id"]},
+            {
+                "$set": {
+                    "password_hash": new_password_hash,
+                    "password_reset_token": None,
+                    "password_reset_expires": None
+                }
+            }
+        )
+        
+        # Invalidate all existing sessions
+        await db.referral_agent_sessions.update_many(
+            {
+                "salesperson_id": salesperson["_id"],
+                "logout_time": None
+            },
+            {
+                "$set": {
+                    "logout_time": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Password reset successfully. You can now login with your new password."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Password reset confirm error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Password reset failed. Please try again."
+        )
+
+
 @router.get("/referral-agent/auth/verify", tags=["Agent Portal"])
 async def verify_agent_email(email: str):
     """
