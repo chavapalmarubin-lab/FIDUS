@@ -188,11 +188,11 @@ class ReferralAgentPortalTester:
             login_data = login_response.json()
             
             # Step 2: Verify JWT token received
-            if not login_data.get('token'):
+            if not login_data.get('access_token'):
                 self.log_test("Josselyn JWT Token", "FAIL", "No JWT token received in login response")
                 return False
             
-            self.josselyn_token = login_data['token']
+            self.josselyn_token = login_data['access_token']
             self.log_test("Josselyn Login", "PASS", "Successfully authenticated and received JWT token")
             
             # Set authorization header for subsequent requests
