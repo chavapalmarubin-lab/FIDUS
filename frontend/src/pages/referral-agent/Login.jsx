@@ -30,8 +30,8 @@ const Login = () => {
     try {
       const response = await referralAgentApi.login(email, password);
       
-      if (response.success && response.token) {
-        setAuthToken(response.token);
+      if (response.success && response.accessToken) {
+        setAuthToken(response.accessToken);
         setCurrentAgent(response.agent);
         navigate('/referral-agent/dashboard');
       } else {
