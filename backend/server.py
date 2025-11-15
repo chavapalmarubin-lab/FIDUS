@@ -14170,6 +14170,10 @@ async def get_public_fund_configurations():
         funds = []
         
         for fund_code, config in FIDUS_FUND_CONFIG.items():
+            # Exclude internal SEPARATION fund (Interest Segregation Accounts)
+            if fund_code == "SEPARATION":
+                continue
+                
             funds.append({
                 'fund_code': fund_code,
                 'name': config.name,
@@ -14452,6 +14456,10 @@ async def get_public_fund_configurations():
         funds = []
         
         for fund_code, config in FIDUS_FUND_CONFIG.items():
+            # Exclude internal SEPARATION fund (Interest Segregation Accounts)
+            if fund_code == "SEPARATION":
+                continue
+                
             funds.append({
                 'fund_code': fund_code,
                 'name': config.name,
@@ -14734,6 +14742,10 @@ async def get_public_fund_configurations():
         funds = []
         
         for fund_code, config in FIDUS_FUND_CONFIG.items():
+            # Exclude internal SEPARATION fund (Interest Segregation Accounts)
+            if fund_code == "SEPARATION":
+                continue
+                
             funds.append({
                 'fund_code': fund_code,
                 'name': config.name,
