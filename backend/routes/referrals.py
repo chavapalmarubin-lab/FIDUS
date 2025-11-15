@@ -2028,32 +2028,60 @@ async def get_agent_clients(current_agent: dict = Depends(get_current_agent)):
             ]
         }).to_list(1000)
         
-        # For each client, get their investment data
+        # For each client, get their investment and commission data
+        from bson.decimal128 import Decimal128
         client_data = []
+        
         for client in clients:
-            # Get investments by client name (since client_id in investments uses custom format)
-            client_name = client.get("name")
+            client_id_str = str(client.get("_id"))
+            client_name = client.get("name", "Unknown Client")
             
-            # Get investments - query by client_name as investments use custom client_id
+            # Get investments - try multiple ways to find them
             investments = await db.investments.find({
-                "client_name": client_name
+                "$or": [
+                    {"client_name": client_name},
+                    {"client_id": client_id_str},
+                    {"client_id": f"client_{client_name.lower().replace(' ', '_')}"}
+                ]
             }).to_list(100)
             
-            # Calculate totals - handle Decimal128
-            total_investment = sum(
-                float(inv.get("principal_amount").to_decimal()) if hasattr(inv.get("principal_amount"), 'to_decimal')
-                else float(inv.get("principal_amount", inv.get("amount", 0)))
-                for inv in investments
-            )
+            # Calculate investment totals - handle Decimal128
+            total_investment = 0
+            for inv in investments:
+                principal = inv.get("principal_amount", inv.get("amount", 0))
+                if hasattr(principal, 'to_decimal'):
+                    total_investment += float(principal.to_decimal())
+                else:
+                    total_investment += float(principal)
+            
             active_investments = len([inv for inv in investments if inv.get("status") == "active"])
             
+            # Get commissions for this client
+            commissions = await db.referral_commissions.find({
+                "$or": [
+                    {"client_id": client_id_str},
+                    {"client_id": client.get("_id")}
+                ]
+            }).to_list(1000)
+            
+            # Calculate total commissions
+            total_commissions = 0
+            for commission in commissions:
+                amount = commission.get("commission_amount", 0)
+                if isinstance(amount, Decimal128):
+                    total_commissions += float(amount.to_decimal())
+                else:
+                    total_commissions += float(amount)
+            
             client_data.append({
-                "clientId": str(client.get("_id")),
-                "clientName": client.get("name"),
-                "email": client.get("email"),
+                "clientId": client_id_str,
+                "name": client_name,
+                "email": client.get("email", ""),
+                "phone": client.get("phone", ""),
                 "joinDate": client.get("registration_date") or client.get("created_at"),
                 "totalInvestment": total_investment,
                 "activeInvestments": active_investments,
+                "totalCommissionsGenerated": total_commissions,
                 "investments": [
                     {
                         "fundCode": inv.get("fund_code") or inv.get("fund_type"),
