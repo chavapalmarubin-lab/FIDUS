@@ -5,6 +5,7 @@ import LoginSelection from "./components/LoginSelection";
 import ClientDashboard from "./components/ClientDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import ProspectsPortal from "./components/ProspectsPortal";
+import ProspectSignup from "./pages/public/ProspectSignup";
 import Referrals from "./pages/admin/Referrals";
 import SalespersonDetail from "./pages/admin/SalespersonDetail";
 // Referral Agent Portal imports
