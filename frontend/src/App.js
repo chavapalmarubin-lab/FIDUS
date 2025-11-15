@@ -384,7 +384,11 @@ function App() {
     <BrowserRouter>
       <ToastProvider>
         <Routes>
-          {/* PUBLIC ROUTE: Prospects Portal - No authentication required */}
+          {/* PUBLIC ROUTES: Prospect Signup and Prospects Portal - No authentication required */}
+          <Route 
+            path="/prospects" 
+            element={<ProspectSignup />} 
+          />
           <Route 
             path="/prospects/*" 
             element={<ProspectsPortal />} 
