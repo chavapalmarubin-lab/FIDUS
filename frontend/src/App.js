@@ -355,12 +355,25 @@ function App() {
 
   // EARLY RETURN: Render public routes immediately without any App wrapper
   if (isProspectsRoute) {
+    // Check if it's the new signup page (with ?ref= parameter) or old prospects portal
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRefCode = urlParams.has('ref');
+    
     return (
       <BrowserRouter>
         <ToastProvider>
           <Routes>
-            <Route path="/prospects/*" element={<ProspectsPortal />} />
-            <Route path="/prospects" element={<ProspectsPortal />} />
+            {hasRefCode ? (
+              <>
+                <Route path="/prospects" element={<ProspectSignup />} />
+                <Route path="/prospects/*" element={<ProspectSignup />} />
+              </>
+            ) : (
+              <>
+                <Route path="/prospects/*" element={<ProspectsPortal />} />
+                <Route path="/prospects" element={<ProspectsPortal />} />
+              </>
+            )}
           </Routes>
         </ToastProvider>
       </BrowserRouter>
