@@ -21,20 +21,30 @@ const Login = () => {
     setError('');
     setLoading(true);
 
+    console.log('🔐 Login attempt:', formData.email);
+
     try {
+      console.log('📡 Calling API...');
       const response = await referralAgentApi.login(formData.email, formData.password);
       
+      console.log('✅ API response:', response);
+      
       if (response.success) {
-        localStorage.setItem('referral_agent_token', response.access_token);
+        console.log('✅ Login successful, storing token...');
+        localStorage.setItem('referral_agent_token', response.accessToken);
+        console.log('✅ Token stored, navigating to dashboard...');
         navigate('/referral-agent/dashboard');
       } else {
+        console.log('❌ Login failed:', response);
         setError('Invalid email or password');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('❌ Login error:', err);
+      console.error('❌ Error response:', err.response);
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
+      console.log('🔄 Login attempt complete');
     }
   };
 
