@@ -100,19 +100,25 @@ def serialize_doc(doc):
 # PUBLIC ENDPOINTS - No Authentication Required
 # ============================================================================
 
-@router.post("/public/prospect-signup", tags=["Public"])
-async def prospect_signup(
-    name: str,
-    email: str,
-    phone: str,
+class ProspectSignupRequest(BaseModel):
+    name: str
+    email: str
+    phone: str
     referral_code: str
-):
+
+@router.post("/public/prospect-signup", tags=["Public"])
+async def prospect_signup(request: ProspectSignupRequest):
     """
     PUBLIC endpoint - Creates a new lead from prospect signup via referral link.
     No authentication required.
     """
     try:
         import uuid
+        
+        name = request.name
+        email = request.email
+        phone = request.phone
+        referral_code = request.referral_code
         
         # Find the salesperson by referral code
         salesperson = await db.salespeople.find_one(
