@@ -544,6 +544,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="broker-rebates" className="flex-shrink-0">
               💰 Broker Rebates
             </TabsTrigger>
+            <TabsTrigger value="investment-committee" className="flex-shrink-0">
+              📊 Investment Committee
+            </TabsTrigger>
 
             <TabsTrigger value="investments" className="flex-shrink-0">
               <TrendingUp size={16} className="mr-2" />
