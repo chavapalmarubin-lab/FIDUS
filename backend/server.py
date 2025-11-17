@@ -27863,12 +27863,12 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include Referrals router: {e}")
 
-# Import and include investment committee router
+# Import and include investment committee router (V2 - Drag-and-Drop)
 try:
-    from routes.investment_committee import router as investment_committee_router, init_db as init_investment_committee_db
+    from routes.investment_committee_v2 import router as investment_committee_router, init_db as init_investment_committee_db
     init_investment_committee_db(db)
     app.include_router(investment_committee_router)
-    logging.info("✅ Investment Committee router included successfully")
+    logging.info("✅ Investment Committee V2 router included successfully")
 except Exception as e:
     logging.error(f"❌ Failed to include Investment Committee router: {e}")
 
