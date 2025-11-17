@@ -290,8 +290,7 @@ async def get_available_managers(
 
 @router.get("/managers/{manager_name}/actual-balance")
 async def get_manager_actual_balance(
-    manager_name: str,
-    current_user = Depends(get_current_admin_user)
+    manager_name: str
 ):
     """Get actual balance from MT5 accounts for a manager"""
     
