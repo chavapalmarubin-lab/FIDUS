@@ -31,7 +31,10 @@ export default function RemoveManagerModal({
     setLoading(true);
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/investment-committee/managers/${encodeURIComponent(allocation.managerName)}/actual-balance`
+        `${BACKEND_URL}/api/admin/investment-committee/managers/${encodeURIComponent(allocation.managerName)}/actual-balance`,
+        {
+          headers: getAuthHeaders()
+        }
       );
       const data = await response.json();
       if (data.success) {
