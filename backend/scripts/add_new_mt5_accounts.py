@@ -127,7 +127,9 @@ async def add_new_accounts():
     
     print(f"Found {len(both_accounts)} accounts (901351, 901353)")
     for acc in both_accounts:
-        print(f"  ✅ Account {acc['account']} - Broker: {acc['broker']} - Password: {acc['password']}")
+        password = acc.get('password', 'NOT SET')
+        broker = acc.get('broker', 'NOT SET')
+        print(f"  ✅ Account {acc['account']} - Broker: {broker} - Password: {password}")
     
     # Check total count of all 13 accounts
     print("\n🔍 Checking total account count (should be 13)...")
