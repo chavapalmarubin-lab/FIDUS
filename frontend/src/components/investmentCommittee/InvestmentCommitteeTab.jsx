@@ -37,7 +37,10 @@ export default function InvestmentCommitteeTab() {
     setError(null);
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/investment-committee/funds/${selectedFund}/allocation`
+        `${BACKEND_URL}/api/admin/investment-committee/funds/${selectedFund}/allocation`,
+        {
+          headers: getAuthHeaders()
+        }
       );
       
       if (!response.ok) {
