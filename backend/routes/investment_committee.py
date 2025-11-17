@@ -7,8 +7,8 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-from ..services.allocation_service import AllocationService
-from ..validation.field_registry import transform_to_api_format
+from services.allocation_service import AllocationService
+from validation.field_registry import transform_to_api_format
 
 # Database will be injected when router is initialized
 _db = None
