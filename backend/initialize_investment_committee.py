@@ -334,6 +334,7 @@ async def initialize_investment_committee():
     
     if not spaniard_exists:
         spaniard_manager = {
+            "manager_id": "mgr_spaniard_stock_cfds",
             "name": "Spaniard Stock CFDs",
             "display_name": "Spaniard Stock CFDs",
             "strategy_name": "Stock CFDs Trading",
