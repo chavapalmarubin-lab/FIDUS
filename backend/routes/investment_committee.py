@@ -7,10 +7,16 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-from ..mongodb_integration import mongodb_manager
 from ..services.allocation_service import AllocationService
 from ..validation.field_registry import transform_to_api_format
 
+# Database will be injected when router is initialized
+_db = None
+
+def init_db(database):
+    """Initialize database connection for this router"""
+    global _db
+    _db = database
 
 router = APIRouter(prefix="/api/admin/investment-committee", tags=["Investment Committee"])
 
