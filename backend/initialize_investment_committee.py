@@ -377,6 +377,7 @@ async def initialize_investment_committee():
     
     if not jose_exists:
         jose_manager = {
+            "manager_id": "mgr_jose_lucrum",
             "name": "JOSE",
             "display_name": "JOSE",
             "strategy_name": "HFT Rebate Arbitrage Strategy",
