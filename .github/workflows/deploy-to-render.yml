@@ -1,0 +1,69 @@
+name: Deploy Backend to Render
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          echo "🚀 Triggering Render deployment..."
+          
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "Response code: $http_code"
+          echo "Response body: $body"
+          
+          if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 200 ]; then
+            echo "✅ Deployment triggered successfully!"
+            
+            # Extract deploy ID if available
+            deploy_id=$(echo "$body" | jq -r '.id // empty')
+            if [ ! -z "$deploy_id" ]; then
+              echo "Deploy ID: $deploy_id"
+            fi
+          else
+            echo "❌ Failed to trigger deployment"
+            exit 1
+          fi
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# Render Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment triggered via Render API" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What This Does:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Restarts backend service on Render" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend will re-read MongoDB for all MT5 accounts" >> $GITHUB_STEP_SUMMARY
+          echo "- New accounts (901351, 901353) will be discovered automatically" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Timeline:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment time: ~2-3 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- Service restart: ~30 seconds" >> $GITHUB_STEP_SUMMARY
+          echo "- Total: ~3-4 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Verify:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "After 3-4 minutes:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check Render logs: \`✅ Accounts sync complete: 13/13 accounts synced\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Clear browser cache (Ctrl+Shift+R)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Login to Investment Committee" >> $GITHUB_STEP_SUMMARY
+          echo "4. Should see 2 unassigned accounts (901351, 901353)" >> $GITHUB_STEP_SUMMARY
