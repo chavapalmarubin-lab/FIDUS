@@ -65,8 +65,9 @@ async def get_current_admin_user(request: Request):
 
 # Initialize allocation service
 def get_allocation_service():
-    db = mongodb_manager.get_db()
-    return AllocationService(db)
+    if _db is None:
+        raise RuntimeError("Database not initialized. Call init_db() first.")
+    return AllocationService(_db)
 
 
 @router.get("/funds/{fund_type}/allocation")
