@@ -58,6 +58,10 @@ async def test_all_endpoints():
     
     account = await db.mt5_accounts.find_one({"account": test_account})
     
+    if not account:
+        print(f"❌ Account {test_account} not found!")
+        return
+    
     result = await db.mt5_accounts.update_one(
         {"account": test_account},
         {"$set": {
