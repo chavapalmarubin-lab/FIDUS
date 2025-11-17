@@ -208,8 +208,7 @@ async def remove_manager_allocation(
 @router.put("/funds/{fund_type}/capital")
 async def adjust_fund_capital(
     fund_type: str,
-    data: AdjustCapitalRequest,
-    current_user = Depends(get_current_admin_user)
+    data: AdjustCapitalRequest
 ):
     """Adjust fund total capital"""
     
