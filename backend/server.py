@@ -23252,11 +23252,13 @@ async def automatic_vps_sync():
             vps_accounts = await vps_accounts_cursor.to_list(length=None)
             
             for account in vps_accounts:
+                # Remove _id field to prevent MongoDB immutable field error
+                account_data = {k: v for k, v in account.items() if k != '_id'}
                 await db.mt5_accounts_cache.update_one(
-                    {'account': account.get('account')},
+                    {'account': account_data.get('account')},
                     {
                         '$set': {
-                            **account,
+                            **account_data,
                             'cached_at': datetime.now(timezone.utc),
                             'cache_source': 'VPS_BRIDGE_API'
                         }
