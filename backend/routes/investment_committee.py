@@ -176,8 +176,7 @@ async def apply_allocation(
 async def remove_manager_allocation(
     fund_type: str,
     manager_name: str,
-    data: RemoveManagerRequest,
-    current_user = Depends(get_current_admin_user)
+    data: RemoveManagerRequest
 ):
     """Remove manager and return capital to pool"""
     
