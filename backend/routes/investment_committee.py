@@ -272,8 +272,7 @@ async def get_allocation_history(
 
 @router.get("/managers/available")
 async def get_available_managers(
-    fund_type: Optional[str] = None,
-    current_user = Depends(get_current_admin_user)
+    fund_type: Optional[str] = None
 ):
     """Get available managers"""
     
