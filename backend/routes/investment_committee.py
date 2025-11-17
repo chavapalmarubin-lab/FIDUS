@@ -157,7 +157,7 @@ async def apply_allocation(
             amount=data.amount,
             account_distribution=account_dist,
             notes=data.notes,
-            user_id=str(current_user["_id"])
+            user_id="admin_user_123"
         )
         
         return {
