@@ -20,7 +20,10 @@ export default function AllocationHistoryTable({ fundType }) {
     setError(null);
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/investment-committee/funds/${fundType}/history?limit=10`
+        `${BACKEND_URL}/api/admin/investment-committee/funds/${fundType}/history?limit=10`,
+        {
+          headers: getAuthHeaders()
+        }
       );
       
       if (!response.ok) {
