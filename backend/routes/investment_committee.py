@@ -65,8 +65,7 @@ def get_allocation_service():
 
 @router.get("/funds/{fund_type}/allocation")
 async def get_fund_allocation(
-    fund_type: str,
-    current_user = Depends(get_current_admin_user)
+    fund_type: str
 ):
     """Get current allocation state for a fund"""
     
