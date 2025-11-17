@@ -5,9 +5,9 @@ import { DollarSign, Plus } from 'lucide-react';
 
 export default function FundCapitalCard({ 
   fundType, 
-  totalCapital, 
-  allocatedCapital, 
-  unallocatedCapital,
+  totalCapital = 0, 
+  allocatedCapital = 0, 
+  unallocatedCapital = 0,
   onAddCapital
 }) {
   const allocatedPercent = totalCapital > 0 ? (allocatedCapital / totalCapital) * 100 : 0;
