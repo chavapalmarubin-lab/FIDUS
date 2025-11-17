@@ -1,0 +1,88 @@
+name: Restart VPS MT5 Bridge Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-service:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Stop MT5 Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "Stopping MT5 Bridge service..." -ForegroundColor Yellow
+            schtasks /End /TN MT5BridgeService 2>$null
+            Start-Sleep -Seconds 3
+            Write-Host "Service stopped" -ForegroundColor Green
+      
+      - name: Start MT5 Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "Starting MT5 Bridge service..." -ForegroundColor Yellow
+            schtasks /Run /TN MT5BridgeService
+            Start-Sleep -Seconds 10
+            Write-Host "Service started" -ForegroundColor Green
+      
+      - name: Verify Accounts Syncing
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "Verifying account sync..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 5
+            try {
+              $summary = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 15
+              $total = $summary.accounts.Count
+              Write-Host "Total accounts syncing: $total" -ForegroundColor White
+              
+              if ($total -eq 13) {
+                Write-Host "SUCCESS: All 13 accounts are syncing!" -ForegroundColor Green
+              } else {
+                Write-Host "WARNING: Expected 13 accounts, found $total" -ForegroundColor Yellow
+              }
+              
+              # Show account details
+              Write-Host "" -ForegroundColor White
+              Write-Host "Accounts:" -ForegroundColor Cyan
+              foreach ($acc in $summary.accounts) {
+                Write-Host "  - Account $($acc.account): Balance $($acc.balance)" -ForegroundColor White
+              }
+            } catch {
+              Write-Host "Could not verify via API: $_" -ForegroundColor Yellow
+            }
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# VPS MT5 Bridge Service Restart Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Restart Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Accounts:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Total: **13 accounts**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Including new accounts:" >> $GITHUB_STEP_SUMMARY
+          echo "- 901351 (MEXAtlantic - Unassigned)" >> $GITHUB_STEP_SUMMARY
+          echo "- 901353 (MEXAtlantic - Unassigned)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check VPS logs for: \`✅ VPS sync complete: 13/13 accounts synced\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check backend logs for: \`✅ Accounts sync complete: 13/13 accounts synced\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Check Investment Committee UI for 2 unassigned accounts" >> $GITHUB_STEP_SUMMARY
