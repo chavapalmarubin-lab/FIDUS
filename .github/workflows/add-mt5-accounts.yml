@@ -1,0 +1,105 @@
+name: Add New MT5 Accounts to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      accounts:
+        description: 'Comma-separated account numbers to add (e.g., 901351,901353)'
+        required: true
+        default: '901351,901353'
+
+jobs:
+  add-accounts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Add accounts to VPS MT5 Bridge Service
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          ADMIN_SECRET_TOKEN: ${{ secrets.ADMIN_SECRET_TOKEN }}
+        run: |
+          echo "🚀 Adding MT5 accounts: ${{ github.event.inputs.accounts }}"
+          
+          # Parse account numbers
+          IFS=',' read -ra ACCOUNTS <<< "${{ github.event.inputs.accounts }}"
+          
+          # Prepare JSON payload with all accounts
+          ACCOUNTS_JSON="["
+          for i in "${!ACCOUNTS[@]}"; do
+            account="${ACCOUNTS[$i]}"
+            if [ $i -gt 0 ]; then
+              ACCOUNTS_JSON+=","
+            fi
+            ACCOUNTS_JSON+="{\"login\":$account,\"password\":\"Fidus13!\",\"fund_type\":\"UNASSIGNED\",\"target_amount\":0,\"client_name\":\"Account $account - Unassigned\"}"
+          done
+          ACCOUNTS_JSON+="]"
+          
+          echo "📦 Payload: $ACCOUNTS_JSON"
+          
+          # Call VPS endpoint to add accounts
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "http://${VPS_HOST}:${VPS_PORT}/api/admin/mt5/accounts/add" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${ADMIN_SECRET_TOKEN}" \
+            -d "$ACCOUNTS_JSON")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📡 Response code: $http_code"
+          echo "📄 Response body: $body"
+          
+          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
+            echo "✅ Successfully added accounts to VPS"
+          else
+            echo "❌ Failed to add accounts to VPS"
+            exit 1
+          fi
+      
+      - name: Restart VPS MT5 Bridge Service
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          ADMIN_SECRET_TOKEN: ${{ secrets.ADMIN_SECRET_TOKEN }}
+        run: |
+          echo "🔄 Restarting MT5 Bridge Service on VPS..."
+          
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "http://${VPS_HOST}:${VPS_PORT}/api/admin/emergency-restart?token=${ADMIN_SECRET_TOKEN}")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📡 Response code: $http_code"
+          echo "📄 Response body: $body"
+          
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Successfully restarted MT5 Bridge Service"
+          else
+            echo "⚠️ Service restart may have failed, check manually"
+          fi
+      
+      - name: Verify accounts are syncing
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          echo "⏳ Waiting 30 seconds for service to restart..."
+          sleep 30
+          
+          echo "🔍 Verifying accounts are syncing..."
+          
+          response=$(curl -s "http://${VPS_HOST}:${VPS_PORT}/api/mt5/bridge/health")
+          
+          echo "📊 Health check response: $response"
+          
+          # Check if the response contains the new account numbers
+          if echo "$response" | grep -q "901351" && echo "$response" | grep -q "901353"; then
+            echo "✅ New accounts are syncing successfully!"
+          else
+            echo "⚠️ New accounts may not be syncing yet, check VPS logs"
+          fi
