@@ -1,0 +1,276 @@
+name: Add MT5 Accounts (No SSH - MongoDB + Backend Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      accounts:
+        description: 'Account numbers to add (comma-separated, e.g., 901351,901353)'
+        required: true
+        default: '901351,901353'
+      password:
+        description: 'MT5 Password'
+        required: false
+        default: 'Fidus13!'
+
+jobs:
+  add-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      # ============================================
+      # STEP 1: ADD TO MONGODB
+      # ============================================
+      - name: Add Accounts to MongoDB
+        run: |
+          echo "============================================"
+          echo "STEP 1: ADD TO MONGODB"
+          echo "============================================"
+          
+          # Install pymongo
+          pip install pymongo
+          
+          # Create Python script
+          cat > add_to_mongo.py << 'PYTHON_SCRIPT'
+          from pymongo import MongoClient
+          from datetime import datetime, timezone
+          import sys
+          
+          accounts_input = "${{ github.event.inputs.accounts }}"
+          password = "${{ github.event.inputs.password }}"
+          
+          # Parse account numbers
+          account_numbers = [int(acc.strip()) for acc in accounts_input.split(',')]
+          
+          # Connect to MongoDB
+          mongo_uri = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+          client = MongoClient(mongo_uri)
+          db = client.fidus_production
+          
+          print(f"Adding {len(account_numbers)} accounts to MongoDB...")
+          
+          added_count = 0
+          updated_count = 0
+          
+          for account_num in account_numbers:
+              # Check if exists
+              existing = db.mt5_accounts.find_one({"account": account_num})
+              
+              if existing:
+                  print(f"  ⚠️  Account {account_num} already exists, updating...")
+                  db.mt5_accounts.update_one(
+                      {"account": account_num},
+                      {"$set": {
+                          "password": password,
+                          "is_active": True,
+                          "status": "unassigned",
+                          "broker": "MEXAtlantic",
+                          "server": "MEXAtlantic-Real",
+                          "manager_assigned": None,
+                          "fund_type": None,
+                          "trading_platform": None,
+                          "allocated_capital": 0,
+                          "updated_at": datetime.now(timezone.utc)
+                      }}
+                  )
+                  updated_count += 1
+              else:
+                  print(f"  ✅ Adding account {account_num}...")
+                  db.mt5_accounts.insert_one({
+                      'account': account_num,
+                      'password': password,
+                      'name': f'Account {account_num}',
+                      'broker': 'MEXAtlantic',
+                      'server': 'MEXAtlantic-Real',
+                      'fund_type': None,
+                      'manager_assigned': None,
+                      'trading_platform': None,
+                      'allocated_capital': 0,
+                      'target_amount': 0,
+                      'is_active': True,
+                      'status': 'unassigned',
+                      'balance': 0,
+                      'equity': 0,
+                      'margin': 0,
+                      'margin_free': 0,
+                      'margin_level': 0,
+                      'profit': 0,
+                      'created_at': datetime.now(timezone.utc),
+                      'last_sync': None,
+                      'sync_enabled': False
+                  })
+                  added_count += 1
+          
+          # Verify
+          total = db.mt5_accounts.count_documents({"is_active": True})
+          print(f"\n✅ MongoDB Summary:")
+          print(f"   Added: {added_count}")
+          print(f"   Updated: {updated_count}")
+          print(f"   Total active accounts: {total}")
+          
+          client.close()
+          PYTHON_SCRIPT
+          
+          # Run script
+          python add_to_mongo.py
+      
+      # ============================================
+      # STEP 2: UPDATE BACKEND SERVER.PY
+      # ============================================
+      - name: Update Backend Configuration
+        run: |
+          echo "============================================"
+          echo "STEP 2: UPDATE BACKEND SERVER.PY"
+          echo "============================================"
+          
+          # Create Python script to update server.py
+          cat > update_backend.py << 'PYTHON_SCRIPT'
+          import re
+          import sys
+          
+          accounts_input = "${{ github.event.inputs.accounts }}"
+          password = "${{ github.event.inputs.password }}"
+          
+          # Parse account numbers
+          account_numbers = [int(acc.strip()) for acc in accounts_input.split(',')]
+          
+          print("Reading backend/server.py...")
+          with open('backend/server.py', 'r', encoding='utf-8') as f:
+              content = f.read()
+          
+          # Check if accounts already exist
+          already_exists = []
+          for account_num in account_numbers:
+              if f'"account_number": {account_num}' in content or f"'account_number': {account_num}" in content:
+                  already_exists.append(account_num)
+                  print(f"  ⚠️  Account {account_num} already in backend")
+          
+          # Filter out existing accounts
+          accounts_to_add = [acc for acc in account_numbers if acc not in already_exists]
+          
+          if not accounts_to_add:
+              print("\n✅ All accounts already exist in backend - no changes needed")
+              sys.exit(0)
+          
+          # Find MT5_ACCOUNTS list or similar pattern
+          patterns = [
+              r'MT5_ACCOUNTS\s*=\s*\[(.*?)\]',
+              r'ACCOUNTS\s*=\s*\[(.*?)\]'
+          ]
+          
+          match = None
+          for pattern in patterns:
+              match = re.search(pattern, content, re.DOTALL)
+              if match:
+                  break
+          
+          if not match:
+              print("WARNING: Could not find accounts list in backend/server.py")
+              print("Please add accounts manually or check the file structure")
+              sys.exit(0)
+          
+          accounts_section = match.group(0)
+          
+          # Build new account entries
+          new_entries = []
+          for account_num in accounts_to_add:
+              entry = f'''    {{
+                  "account_number": {account_num},
+                  "password": "{password}",
+                  "broker": "MEXAtlantic",
+                  "server": "MEXAtlantic-Real",
+                  "fund_type": None,
+                  "manager": None,
+                  "is_active": True,
+                  "status": "unassigned"
+              }}'''
+              new_entries.append(entry)
+              print(f"  + Adding account {account_num} to backend")
+          
+          # Insert before closing bracket
+          updated_section = accounts_section[:-1] + ',\n' + ',\n'.join(new_entries) + '\n]'
+          
+          # Replace in content
+          updated_content = content.replace(accounts_section, updated_section)
+          
+          print("Writing updated server.py...")
+          with open('backend/server.py', 'w', encoding='utf-8') as f:
+              f.write(updated_content)
+          
+          print(f"✅ Backend configuration updated! Added {len(accounts_to_add)} account(s)")
+          PYTHON_SCRIPT
+          
+          # Run script
+          python update_backend.py
+      
+      # ============================================
+      # STEP 3: COMMIT AND PUSH CHANGES
+      # ============================================
+      - name: Commit Backend Changes
+        run: |
+          echo "============================================"
+          echo "STEP 3: COMMIT CHANGES TO GITHUB"
+          echo "============================================"
+          
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          git add backend/server.py
+          
+          if git diff --staged --quiet; then
+            echo "✅ No changes to commit (accounts may already exist)"
+          else
+            git commit -m "Add MT5 accounts: ${{ github.event.inputs.accounts }}"
+            git push
+            echo "✅ Changes pushed to GitHub"
+            echo "⏳ Render will auto-deploy in ~3 minutes"
+          fi
+      
+      # ============================================
+      # STEP 4: GENERATE REPORT
+      # ============================================
+      - name: Generate Deployment Report
+        if: always()
+        run: |
+          echo "# MT5 Accounts Addition Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Accounts Processed:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Account | Password | Broker | Server | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|----------|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          IFS=',' read -ra ACCOUNTS <<< "${{ github.event.inputs.accounts }}"
+          for account in "${ACCOUNTS[@]}"; do
+            account=$(echo $account | xargs)
+            echo "| $account | Fidus13! | MEXAtlantic | MEXAtlantic-Real | Unassigned |" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Locations Updated:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **MongoDB Atlas** - mt5_accounts collection" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Backend API** - server.py configuration" >> $GITHUB_STEP_SUMMARY
+          echo "⏭️ **VPS** - Accounts already added to MT5 Terminal manually" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Wait 3 minutes** for Render to auto-deploy backend changes" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Restart VPS service manually** to pick up new accounts" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Check backend logs:** Should show \`✅ Accounts sync complete: 13/13 accounts synced\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Check Investment Committee UI:** Should show 2 new unassigned accounts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Manual VPS Restart (PowerShell):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`powershell" >> $GITHUB_STEP_SUMMARY
+          echo "# Stop service" >> $GITHUB_STEP_SUMMARY
+          echo "Get-Process python | Stop-Process -Force" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Restart service" >> $GITHUB_STEP_SUMMARY
+          echo "cd C:\\mt5_bridge_service" >> $GITHUB_STEP_SUMMARY
+          echo "python mt5_bridge_service_production.py" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
