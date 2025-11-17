@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
+import { getAuthHeaders } from '../../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
