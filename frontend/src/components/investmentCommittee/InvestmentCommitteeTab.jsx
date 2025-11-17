@@ -108,7 +108,10 @@ export default function InvestmentCommitteeTab() {
         `${BACKEND_URL}/api/admin/investment-committee/funds/${selectedFund}/allocate`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
           body: JSON.stringify(allocationData)
         }
       );
