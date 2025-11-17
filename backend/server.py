@@ -27865,7 +27865,8 @@ except Exception as e:
 
 # Import and include investment committee router
 try:
-    from routes.investment_committee import router as investment_committee_router
+    from routes.investment_committee import router as investment_committee_router, init_db as init_investment_committee_db
+    init_investment_committee_db(db)
     app.include_router(investment_committee_router)
     logging.info("✅ Investment Committee router included successfully")
 except Exception as e:
