@@ -242,8 +242,7 @@ async def get_allocation_history(
     end_date: Optional[str] = None,
     manager_name: Optional[str] = None,
     action_type: Optional[str] = None,
-    limit: int = 50,
-    current_user = Depends(get_current_admin_user)
+    limit: int = 50
 ):
     """Get allocation history"""
     
