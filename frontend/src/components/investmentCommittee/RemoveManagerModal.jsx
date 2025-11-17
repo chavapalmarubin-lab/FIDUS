@@ -3,6 +3,7 @@ import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
+import { getAuthHeaders } from '../../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
