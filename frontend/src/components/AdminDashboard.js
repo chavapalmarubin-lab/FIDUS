@@ -669,6 +669,11 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          {/* Investment Committee Tab */}
+          <TabsContent value="investment-committee" className="mt-6">
+            <InvestmentCommitteeTab />
+          </TabsContent>
+
           <TabsContent value="investments" className="mt-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
