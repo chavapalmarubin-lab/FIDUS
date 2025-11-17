@@ -64,7 +64,10 @@ export default function InvestmentCommitteeTab() {
   const loadAvailableManagers = async () => {
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/investment-committee/managers/available?fundType=${selectedFund}`
+        `${BACKEND_URL}/api/admin/investment-committee/managers/available?fundType=${selectedFund}`,
+        {
+          headers: getAuthHeaders()
+        }
       );
       
       if (!response.ok) {
