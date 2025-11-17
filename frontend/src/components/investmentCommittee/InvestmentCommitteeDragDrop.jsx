@@ -36,6 +36,10 @@ export default function InvestmentCommitteeDragDrop() {
       setLoading(true);
       setError(null);
 
+      // Debug logging
+      console.log('🔍 Investment Committee - API_BASE_URL:', API_BASE_URL);
+      console.log('🔍 Investment Committee - Full URL:', `${API_BASE_URL}/api/admin/investment-committee/mt5-accounts`);
+
       // Fetch all accounts
       const accountsRes = await fetch(
         `${API_BASE_URL}/api/admin/investment-committee/mt5-accounts`,
