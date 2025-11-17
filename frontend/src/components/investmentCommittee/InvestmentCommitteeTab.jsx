@@ -138,7 +138,10 @@ export default function InvestmentCommitteeTab() {
         `${BACKEND_URL}/api/admin/investment-committee/funds/${selectedFund}/managers/${encodeURIComponent(removeData.managerName)}`,
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
           body: JSON.stringify(removeData)
         }
       );
