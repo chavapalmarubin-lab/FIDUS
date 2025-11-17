@@ -27863,6 +27863,14 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include Referrals router: {e}")
 
+# Import and include investment committee router
+try:
+    from routes.investment_committee import router as investment_committee_router
+    app.include_router(investment_committee_router)
+    logging.info("✅ Investment Committee router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Investment Committee router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
