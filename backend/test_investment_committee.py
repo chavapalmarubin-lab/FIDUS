@@ -4,8 +4,9 @@ Direct database-level testing to verify functionality
 """
 import asyncio
 import sys
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
 from services.allocation_service import AllocationService
-from mongodb_integration import mongodb_manager
 from validation.field_registry import transform_to_api_format
 
 
@@ -16,8 +17,11 @@ async def test_investment_committee():
     print("🧪 TESTING INVESTMENT COMMITTEE API")
     print("=" * 70)
     
-    # Get database
-    db = mongodb_manager.db
+    # Connect to MongoDB with Motor (async)
+    mongo_url = os.getenv('MONGO_URL')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.getenv('DB_NAME', 'fidus_production')]
+    
     service = AllocationService(db)
     
     # TEST 1: Get BALANCE fund allocation
