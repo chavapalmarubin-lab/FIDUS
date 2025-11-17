@@ -2,7 +2,7 @@
 """
 FINAL SYSTEM VERIFICATION - FIDUS PLATFORM STATUS
 Testing Date: December 18, 2025
-Backend URL: https://advisor-dash-1.preview.emergentagent.com/api
+Backend URL: https://fidus-agents.preview.emergentagent.com/api
 Auth: Admin (username: admin, password: password123)
 
 COMPREHENSIVE VERIFICATION REPORT:
@@ -23,7 +23,7 @@ from typing import Dict, Any, List, Optional
 
 class FinalSystemVerifier:
     def __init__(self):
-        self.base_url = "https://advisor-dash-1.preview.emergentagent.com/api"
+        self.base_url = "https://fidus-agents.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

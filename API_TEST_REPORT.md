@@ -2,7 +2,7 @@
 
 **Test Date:** November 10, 2025  
 **Environment:** Production (Render)  
-**API URL:** https://advisor-dash-1.preview.emergentagent.com  
+**API URL:** https://fidus-agents.preview.emergentagent.com  
 **Status:** ✅ ALL SYSTEMS OPERATIONAL
 
 ---

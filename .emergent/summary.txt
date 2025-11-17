@@ -1,95 +1,66 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a complete, secure Referral Agent Portal with login, a CRM for lead tracking, and a commission dashboard. After an initial implementation, the user provided extremely detailed feedback, rejecting the work as a complete mess.
+The user initially requested a complete rebuild of a Referral Agent Portal that was deemed a complete mess. The user provided a detailed, multi-page document outlining strict requirements under FIDUS standards.
 
-The user has now provided a comprehensive multi-page requirements document for a **complete rebuild** of the portal to meet FIDUS standards. Key requirements include:
-1.  **UI/UX Overhaul:** The portal must match the existing admin CRM's dark theme (slate-900 background, cyan/teal accents) and professional quality, not the white theme the agent built.
-2.  **Dashboard Enhancement:** Integrate the full FIDUS Investment Simulator, a visual sales pipeline (Kanban-style), and business projection tools.
-3.  **Commission Page Rebuild:** Implement a visual calendar for the payment schedule, detailed commission cards, and summary metrics. This page is currently broken, showing /bin/bash.
-4.  **Full CRM Integration:** The agent portal's CRM must match the power of the admin CRM, including a drag-and-drop Kanban board for lead management.
-5.  **Advanced Referral Tools:** The profile page must be upgraded to an agent toolkit with a copyable referral link, QR code generator, link analytics, and downloadable marketing materials.
-6.  **Fix Data Issues:** All data-related problems (CORS errors, commissions showing /bin/bash, clients not showing investments) must be fixed. This is linked to a backend deployment issue on Render.
+The core requirements were:
+1.  **UI/UX Overhaul:** A complete redesign to a professional dark theme (slate-900, cyan/teal accents).
+2.  **Dashboard Enhancement:** Integration of the FIDUS Investment Simulator, a visual sales pipeline (Kanban), and business projection tools.
+3.  **Commission Page Rebuild:** A visual calendar for payment schedules and detailed commission cards.
+4.  **CRM Integration:** A powerful CRM with a drag-and-drop Kanban board for lead management.
+5.  **Advanced Referral Tools:** An agent toolkit with a copyable referral link, QR code generator, and link analytics.
+6.  **Data & Deployment Fixes:** Resolve all backend deployment issues, CORS errors, and data inconsistencies (e.g., commissions showing /bin/bash).
+
+After completing the portal, the user requested the creation of three new agent profiles. Most recently, the user provided an extremely detailed, enterprise-level specification for a brand new major feature: the **Investment Committee Tab,** intended for managing fund allocations across money managers and trading accounts.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack platform (React, FastAPI, MongoDB) hosted on Render. It has a robust admin-side CRM and an Investment Simulator.
-
-The initial version of the Referral Agent Portal frontend and backend exists but is fundamentally broken and rejected by the user. The backend code contains logic for authentication and CRM endpoints, but it is not correctly deployed on Render, causing all API calls from the live frontend to fail or return incorrect data. The frontend UI has the wrong theme (white instead of dark) and lacks the required functionality and interactivity.
+The application is a full-stack platform (React, FastAPI, MongoDB). The Referral Agent Portal has been completely rebuilt and is now largely functional. It features a dark theme, secure agent login, a dashboard with live stats, a commissions page, a clients list, and a leads management page. The profile page includes referral tools like a copyable link and a QR code generator. A public-facing landing page exists to capture new leads via referral links, which successfully populates the corresponding agent's CRM. Three new agent accounts have been created and verified. A comprehensive specification document for the next major feature, the Investment Committee Tab, has been provided by the user.
 
 **Last working item**:
--   **Last item agent was working:** The agent acknowledged the user's extensive and critical feedback. In response, the agent created and presented a detailed, 8-phase plan for a complete rebuild of the Referral Agent Portal, aligning with the new, comprehensive requirements. The agent is waiting for the user's approval to start this new plan.
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** N/A (A plan was proposed; no new code has been implemented yet).
--   **Which testing method agent to use?** After completing Phase 1, the agent should use  to test backend endpoints. After completing the full rebuild of each frontend page, the  should be used to verify the new dark-theme design. A full  run will be needed after major phases (like CRM and Dashboard rebuild) are complete.
+-   **Last item agent was working:** The agent received and acknowledged an extremely detailed specification for a new Investment Committee Tab. The agent was in the process of formulating critical clarifying questions before beginning implementation.
+-   **Status:** NOT STARTED
+-   **Agent Testing Done:** N/A
+-   **Which testing method agent to use?** This is a large, multi-phase feature. The agent should use  for backend endpoints,  for UI verification, and the  after completing major phases (e.g., Core Functionality, Meeting Management).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Backend not deployed correctly on Render (P0)
--   **Issue 2:** Referral Portal UI/UX and functionality do not meet requirements (P0)
--   **Issue 3:** Referral link for new agent 'JA-2025' was not working (P2)
-
-**Issues Detail:**
--   **Issue 1:**
-    -   **Description:** The live backend on Render is not serving the new CRM API endpoints. All  calls from the frontend are either failing with CORS errors or receiving the frontend's HTML instead of JSON. This is the root cause for all data-related bugs (e.g., commissions showing /bin/bash). The agent corrected the  in  to point to the correct API service (), but the code needs to be pushed to GitHub and the Render services need to be redeployed.
-    -   **Attempted fixes:** The agent identified the correct backend URL and updated the  file. The agent also repeatedly asked the user to redeploy.
-    -   **Next debug checklist:**
-        1.  Ensure the latest code, especially the updated , is saved to GitHub.
-        2.  Guide the user to trigger a manual redeployment of BOTH the frontend () and backend () services on Render.
-        3.  Verify the fix by calling an API endpoint ({"detail":"Not authenticated"} with a valid token) and confirming it returns JSON.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. Fixing it will allow the frontend to communicate with the backend, making it possible to display real data and move forward with the portal rebuild.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Both.
-
--   **Issue 2:**
-    -   **Description:** The entire first version of the referral portal is functionally and aesthetically wrong. It has a white theme, not the required dark theme. It's missing the Investment Simulator, a proper CRM, a commission calendar, and advanced referral tools. The user has provided a detailed prompt for a complete rebuild.
-    -   **Next debug checklist:** This is not a bug to be fixed, but a large feature to be rebuilt. The agent must follow the 8-phase plan they proposed, starting with Phase 1.
-    -   **Why fix this issue and what will be achieved with the fix?** To deliver the product the user actually requested and meet FIDUS's quality standards.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Both.
-
--   **Issue 3:**
-    -   **Description:** The referral link for Josselyn () was showing an Invalid referral code error because her code in the database was incorrectly stored as JAL-2025.
-    -   **Attempted fixes:** The agent ran a script to find and update the incorrect code in the MongoDB Atlas database.
-    -   **Next debug checklist:** After the backend is correctly deployed (Issue 1), re-test the link  to confirm the fix is live.
-    -   **Status:** TESTING PENDING
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend.
+There are no outstanding high-priority bugs reported for the Referral Agent Portal. The work is now focused on the new feature.
 
 **In progress Task List**:
--   **Task 1:** Rebuild the Referral Agent Portal (P0)
-
-**Task Detail:**
--   **Task 1:**
-    -   **Where to resume:** The user needs to approve the agent's proposed 8-phase plan. Once approved, the agent must start with **Phase 1: Fix Foundation**. This involves fixing all backend data queries and CORS issues, ensuring the correct  is used, and getting real data for agent Salvador Palma to appear correctly on the (soon-to-be-rebuilt) portal.
-    -   **What will be achieved with this?** A stable foundation where the frontend can correctly fetch data from the backend on Render, resolving the critical /bin/bash commissions and CORS error problems. This is the first step in the complete portal overhaul.
-    -   **Status:** NOT STARTED (Pending user approval of the new plan).
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** User approval of the 8-phase plan.
+There are no tasks currently in progress.
 
 **Upcoming and Future Tasks**
-The agent has proposed a detailed 8-phase plan for the portal rebuild.
-
 -   **Upcoming Tasks:**
-    -   **Phase 1: Fix Foundation (P0):** Fix all data-loading issues (CORS, DB queries, Render deployment).
-    -   **Phase 2: Investment Simulator Integration (P1):** Embed the existing admin simulator into the agent dashboard.
-    -   **Phase 3: Commission Calendar (P1):** Rebuild the commissions page with a visual calendar view.
-    -   **Phase 4: Full CRM Pipeline (Kanban) (P1):** Build a drag-and-drop Kanban board for lead management.
+    -   **Task 1: Implement Investment Committee Tab (P0):** This is the next major feature. The user has provided a comprehensive specification document. The implementation should be broken down into phases as outlined in the spec:
+        -   **Phase 1: Core Functionality:** Create all new required database collections (, , , etc.) and build the main UI for viewing current allocations and the manager database.
+        -   **Phase 2: Meeting Management:** Build functionality to track committee meetings, manage attached documents (e.g., Google Docs), and implement an approval workflow for allocation changes.
+        -   **Phase 3: Advanced Features:** Implement scenario planning, integrate with the Trading Analytics dashboard, and build automated reporting/export features.
+        -   **Phase 4: Multi-Broker & Copy Trading Integration:** Build the broker management system, integrate with the Biking copy trading platform, and manage the Master/Copy account relationships.
 -   **Future Tasks:**
-    -   **Phase 5: Referral Tools & Analytics (P2):** Add QR codes, link tracking, and marketing materials.
-    -   **Phase 6: Profile Enhancement (P2):** Upgrade the profile page with more settings.
-    -   **Phase 7: UI Polish & Mobile Optimization (P2):** Final design polish to match the dark theme and ensure mobile responsiveness.
-    -   **Phase 8: End-to-End Testing & Bug Fixes (P2):** A final round of comprehensive testing.
+    -   **Task 2: Implement Referral Link Analytics (P2):** The UI for link analytics (clicks, leads, conversion) exists on the Profile page but displays placeholder data. The backend logic to track and serve this data needs to be implemented.
 
 **Completed work in this session**
--   **Bug Fix:** The Investment Simulator's ROI calculation was corrected to account for the fund's incubation period, ensuring a 12-month request correctly calculates 12 interest payments (30% ROI) over a 14-month total timeline.
--   **Initial Portal Scaffolding:** Created the file structure and basic components for the referral portal, which are now slated for a complete overhaul.
--   **Backend Data Debugging:** Identified and fixed numerous incorrect database queries in  related to object ID formats, custom string IDs, and  data types.
--   **Deployment Diagnosis:** Correctly identified that the frontend's  file was pointing to the wrong backend URL and that the Render backend service was not deployed with the latest code. The agent has corrected the  file.
+-   **Full Referral Agent Portal Rebuild:**
+    -   **End-to-End Referral Flow:** Implemented the complete user journey from an agent sharing a QR code/link to a prospect signing up on a public landing page () and appearing as a new lead in the agent's CRM.
+    -   **Backend Implementation:** Created and fixed all necessary API endpoints for authentication, CRM (, ), commissions, and the public prospect signup.
+    -   **Frontend Implementation:** Rebuilt all pages (, , , , , ) with the required dark theme, functionality, and professional styling.
+    -   **Feature - Referral Toolkit:** The Profile page now includes a working QR code generator (), a copy-to-clipboard referral link, and quick-share buttons.
+    -   **Feature - Manual Lead Creation:** The Leads page now includes an + Add Lead button with a modal to allow agents to add leads manually.
+-   **Critical Bug Fixes:**
+    -   **Client Data:** Fixed a critical bug on the Clients page where Salvador's client was showing as Unknown Client with /bin/bash commissions. It now correctly displays Alejandro Mariscal Romero with the proper commission and investment data.
+    -   **Login Failure:** Diagnosed and resolved a silent login failure.
+-   **Simulator Enhancement:**
+    -   Removed the FIDUS Interest Segregation Accounts fund type from the investment simulator options as requested.
+-   **Agent Account Management:**
+    -   Successfully created and verified logins for three new agents (Gerardo Briones, Jorge Gonzalez, Javier Gonzalez).
+    -   Debugged and fixed a database connection issue where the new agents were being created in the wrong database.
 
 **Earlier issues found/mentioned but not fixed**
-All previously known issues are now consolidated into the comprehensive rebuild plan for the Referral Agent Portal. The most critical one is the Render deployment/configuration issue.
+All major issues reported by the user for the Referral Agent Portal have been addressed.
+
+**Known issue recurrence from previous fork**
+-   **Deployment Environment Confusion:** The agent initially confused the internal preview URL with the live production URL on Render.com. This is a recurring pattern and requires careful attention to the deployment workflow ( triggers Render deploy).
+-   **Database Context:** The agent created new users in the wrong database ( instead of ). The correct database context must be carefully managed.
 
 **Code Architecture**
 
@@ -98,62 +69,80 @@ All previously known issues are now consolidated into the comprehensive rebuild 
 -   **Frameworks**: React (frontend), FastAPI (backend)
 -   **Database**: MongoDB
 -   **Styling**: Tailwind CSS, Shadcn/ui
--   **Authentication**: JWT-based for the referral portal
--   **Deployment**: Render.com (with separate services for frontend and backend)
+-   **Authentication**: JWT-based authentication for the portal.
+-   **Deployment**: The application is deployed on Render.com, with auto-deploys triggered by pushes to the GitHub main branch.
+-   **Libraries**:  for QR code generation.
 
 **key DB schema**
--   **salespeople**: Stores agent data.  is used for public-facing links.
--   **clients**: Linked to agents via  (ObjectId or code) and to investments via a custom .
--   **investments**: Linked to clients via  (a custom string like client_alejandro).
--   **referral_commissions**:  is a .  is a string-prefixed ObjectId (e.g., ).
+-   **salespeople**: Stores agent data, including , , and .
+-   **clients**: Linked to agents via . Contains client details.
+-   **leads**: New leads created via referral link or manually. Linked by  and .
+-   **investments**: Stores investment records linked to clients.
+-   **(New)** The Investment Committee Tab spec requires several new collections: , ,  (enhanced), , , .
+
+**changes in tech stack**
+-    was added as a new frontend dependency.
 
 **All files**
--   **/app/backend/server.py**: Updated to fix the investment simulator logic.
--   **/app/backend/routes/referrals.py**: Heavily modified to add and then repeatedly correct all CRM and auth endpoints for the agent portal. This file contains the logic that needs to be deployed to Render.
--   **/app/frontend/src/pages/referral-agent/**: All files within this directory were created for the portal and now require a complete rebuild to match the dark theme and new requirements.
--   **/app/frontend/src/components/LoginSelection.js**: Modified to add the third Referral Agent Login button.
--   **/app/frontend/.env**: Critical file updated to point  to the correct production API service: . This change needs to be pushed to GitHub and deployed.
--   **/app/SYSTEM_MASTER.md**: Updated with a change log entry for the simulator fix.
+-   **/app/backend/routes/referrals.py**: Heavily modified to add and fix endpoints for login, clients, commissions, manual lead creation, and the public prospect signup.
+-   **/app/backend/server.py**: Modified to filter out the SEPARATION fund from the investment simulator configuration.
+-   **/app/frontend/src/pages/referral-agent/**: All files in this directory (, , , , , ) were created or completely rewritten to build the new portal.
+-   **/app/frontend/src/pages/public/ProspectSignup.jsx**: New file created for the public-facing lead capture page.
+-   **/app/frontend/src/App.js**: Modified to add the new public  route.
+-   **/app/frontend/src/services/referralAgentApi.js**: Updated to include the  method.
 
 **Areas that need refactoring**:
--   The **ENTIRE** referral agent portal frontend ( and associated components) needs a complete rebuild to match the FIDUS dark theme, implement the requested features (simulator, CRM, calendar), and fix interactivity. The current implementation was rejected by the user.
+-   The user's specification noted that MultiBank is an old name for MEXAtlantic and should be replaced platform-wide for consistency.
+-   The agent noted that  may contain duplicate API endpoint definitions that should be consolidated.
 
 **key api endpoints**
--   
--   
--   
--    (Used by the public referral link)
--   
+-   : Agent login.
+-   : Get an agent's clients.
+-   : Manually create a new lead.
+-   : Get an agent's commission schedule.
+-   : **Public endpoint** to create a lead from a referral link.
+-   : Returns available fund types for the simulator.
+-   **(New)** The Investment Committee spec defines a large new set of admin-only endpoints under .
 
 **Critical Info for New Agent**
--   **The user is highly frustrated.** You MUST follow the new 8-phase rebuild plan exactly and get user approval at each stage. Do not deviate or make assumptions. Acknowledge the user's detailed requirements from their last message.
--   **Start with Phase 1: Fix the Foundation.** Do not build new features until the existing data loading is fixed on Render. This means ensuring the latest code (especially the  file) is on GitHub and both frontend/backend services on Render are redeployed.
--   **UI/UX is paramount.** The portal MUST be rebuilt to match the existing admin portal's dark theme and professional quality. Reference screenshots and existing components (, ).
--   **Data queries are complex.** Be mindful of the different ways collections are linked (, custom strings, prefixed strings) and the use of . The queries in  were fixed multiple times; review them carefully.
+-   **Your next task is a very large, complex feature:** The Investment Committee Tab. You MUST follow the user's comprehensive specification document to the letter. Do not start implementation without asking the clarifying questions you have prepared.
+-   **Deployment is on Render, not the preview environment.** All code must be pushed to GitHub to trigger a production deployment. Production testing must be done on the  URL.
+-   **Database is .** When creating new data (like agents), ensure you are connected to the correct production database, not a local or staging one.
+-   The user is highly technical and provides excellent, detailed feedback and specifications. Read them carefully.
+
+**documents created in this job**
+-   The user provided a comprehensive specification document for the FIDUS INVESTMENT COMMITTEE TAB feature.
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Frustrated with the portal being a complete mess (wrong colors, no UX, broken functionality).
-2.  **User:** Approved the agent's proposal to go ahead with a complete rebuild.
-3.  **User:** Expressed extreme frustration (you drive me crazy) with the agent's confusion over the Render production environment and requests to change URLs.
-4.  **User:** Provided a very long, detailed requirements document for a complete portal rebuild, defining the FIDUS Standard and listing all unacceptable issues.
-5.  **Agent:** Acknowledged the user's comprehensive requirements, apologized, and proposed a detailed 8-phase, 3-4 week plan for the rebuild, asking for approval to start with Phase 1. This is the last action, and it is **pending user approval**.
+1.  **User:** Requested a fix for the Clients tab, where a client was showing as Unknown with /bin/bash data. (This was fixed).
+2.  **User:** Requested the removal of Interest Segregation from the investment simulator. (This was fixed).
+3.  **User:** Requested the creation of three new referral agent profiles and logins. (This was completed).
+4.  **User:** Asked for the login credentials for the new agents. (This was provided).
+5.  **User:** Provided the extremely detailed, multi-page specification for the new Investment Committee Tab feature.
+
+**Awaiting User Response:** The last action from the agent was to acknowledge the new specification and prepare critical clarifying questions. The user has not yet responded to these implicit questions.
 
 **Project Health Check:**
--   **Broken**: The Referral Agent Portal is non-functional on the production Render environment. The backend service is out-of-date, causing the frontend to fail all data fetches with CORS errors, resulting in incorrect data displays (e.g., /bin/bash commissions) and a broken user experience.
+-   **Broken**: Nothing is critically broken.
+-   **Mocked**: The referral link analytics on the agent profile page are placeholders and not yet functional.
 
 **Testing status**
 -   **Testing agent used after significant changes**: NO
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None in this session.
--   **Known regressions**: The live Referral Portal is entirely non-functional from a data perspective.
+-   **Test files created**: None.
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
 -   **Salvador Palma (Agent with data):**
-    -   **Email:** 
-    -   **Password:** 
+    -   Email: 
+    -   Password: 
 -   **Josselyn Arellano López (New agent, no data):**
-    -   **Email:** 
-    -   **Password:** 
+    -   Email: 
+    -   Password: 
+-   **New Agents (Password for all: )**
+    -   **Gerardo Briones:** 
+    -   **Jorge Gonzalez:** 
+    -   **Javier Gonzalez:** 
 
 **What agent forgot to execute**
-The agent initially failed to understand the user's quality standards and existing design system, leading to the creation of a portal that was immediately rejected. The agent also struggled to diagnose the Render deployment issue, causing significant user frustration. All these issues are now captured in the new, comprehensive rebuild plan.</analysis>
+-   The full implementation of referral link analytics (clicks, conversions). The UI was created with placeholder 0 values, but the backend tracking and API logic were not built.</analysis>

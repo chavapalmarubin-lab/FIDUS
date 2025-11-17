@@ -12,7 +12,7 @@ async def detailed_verification():
     async with aiohttp.ClientSession() as session:
         # Login
         async with session.post(
-            "https://advisor-dash-1.preview.emergentagent.com/api/auth/login",
+            "https://fidus-agents.preview.emergentagent.com/api/auth/login",
             json={"username": "admin", "password": "password123", "user_type": "admin"}
         ) as response:
             if response.status == 200:
@@ -22,7 +22,7 @@ async def detailed_verification():
                 # Get managers
                 headers = {"Authorization": f"Bearer {token}"}
                 async with session.get(
-                    "https://advisor-dash-1.preview.emergentagent.com/api/admin/money-managers",
+                    "https://fidus-agents.preview.emergentagent.com/api/admin/money-managers",
                     headers=headers
                 ) as response:
                     if response.status == 200:
