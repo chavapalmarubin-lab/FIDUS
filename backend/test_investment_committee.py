@@ -17,7 +17,7 @@ async def test_investment_committee():
     print("=" * 70)
     
     # Get database
-    db = mongodb_manager.get_db()
+    db = mongodb_manager.db
     service = AllocationService(db)
     
     # TEST 1: Get BALANCE fund allocation
