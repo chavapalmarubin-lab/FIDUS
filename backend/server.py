@@ -23155,18 +23155,19 @@ async def sync_from_vps(current_user: dict = Depends(get_current_admin_user)):
         # Update cache collection
         accounts_synced = 0
         for account in vps_accounts:
+            # Remove _id field to prevent MongoDB immutable field error
+            account_data = {k: v for k, v in account.items() if k != '_id'}
             await db.mt5_accounts_cache.update_one(
-                {'account': account.get('account')},
+                {'account': account_data.get('account')},
                 {
                     '$set': {
-                        **account,
+                        **account_data,
                         'cached_at': datetime.now(timezone.utc),
                         'cache_source': 'VPS_MONGODB'
                     }
                 },
                 upsert=True
             )
-            del account['_id']  # Remove ObjectId for logging
             accounts_synced += 1
         
         # Sync trades (last 30 days for daily calendar)
