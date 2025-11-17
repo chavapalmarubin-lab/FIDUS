@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidus-agents.preview.emergentagent.com`
+`https://alloc-wizard.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

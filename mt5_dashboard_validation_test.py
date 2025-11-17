@@ -17,7 +17,7 @@ import json
 import sys
 from datetime import datetime
 
-BACKEND_URL = "https://fidus-agents.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com/api"
 
 class MT5DashboardValidator:
     def __init__(self):

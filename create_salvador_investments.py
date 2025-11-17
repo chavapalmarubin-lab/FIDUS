@@ -8,7 +8,7 @@ import requests
 import json
 
 def create_salvador_investments():
-    base_url = "https://fidus-agents.preview.emergentagent.com"
+    base_url = "https://alloc-wizard.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={

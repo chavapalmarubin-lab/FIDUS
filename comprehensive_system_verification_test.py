@@ -34,7 +34,7 @@ from typing import Dict, Any, List, Optional
 
 class ComprehensiveSystemVerifier:
     def __init__(self):
-        self.base_url = "https://fidus-agents.preview.emergentagent.com/api"
+        self.base_url = "https://alloc-wizard.preview.emergentagent.com/api"
         self.mt5_bridge_url = "http://92.118.45.135:8000/api/mt5/bridge/health"
         self.session = requests.Session()
         self.admin_token = None

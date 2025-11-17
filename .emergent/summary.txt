@@ -1,66 +1,66 @@
 <analysis>**original_problem_statement:**
-The user initially requested a complete rebuild of a Referral Agent Portal that was deemed a complete mess. The user provided a detailed, multi-page document outlining strict requirements under FIDUS standards.
+The user's initial goal was to rebuild a Referral Agent Portal with a professional dark theme, enhanced dashboard, CRM, and referral tools. After successfully completing this, the user requested a new major feature: the Investment Committee Tab for managing fund allocations.
 
-The core requirements were:
-1.  **UI/UX Overhaul:** A complete redesign to a professional dark theme (slate-900, cyan/teal accents).
-2.  **Dashboard Enhancement:** Integration of the FIDUS Investment Simulator, a visual sales pipeline (Kanban), and business projection tools.
-3.  **Commission Page Rebuild:** A visual calendar for payment schedules and detailed commission cards.
-4.  **CRM Integration:** A powerful CRM with a drag-and-drop Kanban board for lead management.
-5.  **Advanced Referral Tools:** An agent toolkit with a copyable referral link, QR code generator, and link analytics.
-6.  **Data & Deployment Fixes:** Resolve all backend deployment issues, CORS errors, and data inconsistencies (e.g., commissions showing /bin/bash).
+After the agent built a fully functional first version of this feature (modal-based, capital allocation), the user provided a new, final specification for a **complete redesign**. The feature must now be a **drag-and-drop interface** where individual MT5 accounts are assigned to managers, funds, brokers, and platforms, fundamentally changing the architecture from capital-based to account-based assignment.
 
-After completing the portal, the user requested the creation of three new agent profiles. Most recently, the user provided an extremely detailed, enterprise-level specification for a brand new major feature: the **Investment Committee Tab,** intended for managing fund allocations across money managers and trading accounts.
+PRODUCT REQUIREMENTS:
+1.  **Redesign Investment Committee Tab:** Scrap the modal-based UI and implement a new drag-and-drop interface as per the latest user specification ().
+2.  **Account-Centric Logic:** The system must revolve around assigning 13 specific MT5 accounts to different categories (10 managers, 5 funds, 2 brokers, 2 platforms).
+3.  **Multi-Assignment:** An MT5 account must support simultaneous assignment to a manager, a fund, a broker, and a trading platform.
+4.  **Critical Prerequisite:** Before any UI work, two new MT5 accounts (901351 and 901353) must be added to the  database collection.
+5.  **Backend Overhaul:** The backend endpoints and services must be rewritten to support the new account-assignment logic, primarily by updating fields in the  collection.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack platform (React, FastAPI, MongoDB). The Referral Agent Portal has been completely rebuilt and is now largely functional. It features a dark theme, secure agent login, a dashboard with live stats, a commissions page, a clients list, and a leads management page. The profile page includes referral tools like a copyable link and a QR code generator. A public-facing landing page exists to capture new leads via referral links, which successfully populates the corresponding agent's CRM. Three new agent accounts have been created and verified. A comprehensive specification document for the next major feature, the Investment Committee Tab, has been provided by the user.
+The application is a full-stack platform (React, FastAPI, MongoDB).
+1.  **Referral Agent Portal:** Fully functional and complete, including login, dashboard, CRM, and referral link/QR code tools.
+2.  **Investment Committee Tab (Version 1 - OBSOLETE):** A complete, modal-based version of the feature was built. The backend (7 APIs, services for capital allocation using  collection) is fully implemented and tested. The frontend (6+ React components, integrated into the admin dashboard) was also built and bugs were fixed. **This entire implementation is now obsolete due to a complete redesign request from the user.**
 
 **Last working item**:
--   **Last item agent was working:** The agent received and acknowledged an extremely detailed specification for a new Investment Committee Tab. The agent was in the process of formulating critical clarifying questions before beginning implementation.
+-   **Last item agent was working:** The agent acknowledged the user's request for a complete redesign of the Investment Committee tab to a drag-and-drop interface. The agent was about to execute the first critical step of this new plan: adding two new MT5 accounts to the database.
 -   **Status:** NOT STARTED
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** This is a large, multi-phase feature. The agent should use  for backend endpoints,  for UI verification, and the  after completing major phases (e.g., Core Functionality, Meeting Management).
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?**
+    -   To add the new accounts: a backend Python script followed by a manual MongoDB query for verification.
+    -   For the full feature: Backend APIs should be tested via  or a new test script. The frontend UI will require the  and end-to-end testing with the  to validate the drag-and-drop functionality.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no outstanding high-priority bugs reported for the Referral Agent Portal. The work is now focused on the new feature.
+-   **Issue 1: Obsolete Feature Implementation (P0):** The recently completed modal-based Investment Committee Tab is now entirely obsolete due to a change in user requirements. The code for this feature (backend services, routes, and frontend components) needs to be either removed or completely replaced by the new drag-and-drop implementation.
 
 **In progress Task List**:
-There are no tasks currently in progress.
+There are no tasks currently in progress. The previous task was completed and the new one is about to begin.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   **Task 1: Implement Investment Committee Tab (P0):** This is the next major feature. The user has provided a comprehensive specification document. The implementation should be broken down into phases as outlined in the spec:
-        -   **Phase 1: Core Functionality:** Create all new required database collections (, , , etc.) and build the main UI for viewing current allocations and the manager database.
-        -   **Phase 2: Meeting Management:** Build functionality to track committee meetings, manage attached documents (e.g., Google Docs), and implement an approval workflow for allocation changes.
-        -   **Phase 3: Advanced Features:** Implement scenario planning, integrate with the Trading Analytics dashboard, and build automated reporting/export features.
-        -   **Phase 4: Multi-Broker & Copy Trading Integration:** Build the broker management system, integrate with the Biking copy trading platform, and manage the Master/Copy account relationships.
--   **Future Tasks:**
-    -   **Task 2: Implement Referral Link Analytics (P2):** The UI for link analytics (clicks, leads, conversion) exists on the Profile page but displays placeholder data. The backend logic to track and serve this data needs to be implemented.
+**Upcoming Tasks:**
+-   **Task 1: Implement Drag-and-Drop Investment Committee Tool (P0):** This is a complete redesign based on the user's latest specification ().
+    -   **Phase 0 (Blocking):** Add new MT5 accounts (901351, 901353) to the  collection using the provided script.
+    -   **Phase 1 (Backend):** Rewrite the  routes. Create new endpoints for getting all MT5 accounts and assigning/un-assigning them to managers and funds by updating the  documents.
+    -   **Phase 2 (Frontend Setup):** Install the  library.
+    -   **Phase 3 (Frontend Build):** Create the new drag-and-drop UI, including the , , and  components.
+    -   **Phase 4 (Testing):** Perform end-to-end testing of the drag-and-drop functionality.
+
+**Future Tasks:**
+-   **Task 2: Implement Referral Link Analytics (P2):** The UI for this exists on the Profile page but displays placeholder data. The backend logic to track and serve click/lead/conversion data needs to be implemented.
+-   **Task 3: Platform-wide Refactoring (P2):**
+    -   Replace all instances of MultiBank with MEXAtlantic.
+    -   Consolidate any duplicate API endpoint definitions in .
 
 **Completed work in this session**
--   **Full Referral Agent Portal Rebuild:**
-    -   **End-to-End Referral Flow:** Implemented the complete user journey from an agent sharing a QR code/link to a prospect signing up on a public landing page () and appearing as a new lead in the agent's CRM.
-    -   **Backend Implementation:** Created and fixed all necessary API endpoints for authentication, CRM (, ), commissions, and the public prospect signup.
-    -   **Frontend Implementation:** Rebuilt all pages (, , , , , ) with the required dark theme, functionality, and professional styling.
-    -   **Feature - Referral Toolkit:** The Profile page now includes a working QR code generator (), a copy-to-clipboard referral link, and quick-share buttons.
-    -   **Feature - Manual Lead Creation:** The Leads page now includes an + Add Lead button with a modal to allow agents to add leads manually.
--   **Critical Bug Fixes:**
-    -   **Client Data:** Fixed a critical bug on the Clients page where Salvador's client was showing as Unknown Client with /bin/bash commissions. It now correctly displays Alejandro Mariscal Romero with the proper commission and investment data.
-    -   **Login Failure:** Diagnosed and resolved a silent login failure.
--   **Simulator Enhancement:**
-    -   Removed the FIDUS Interest Segregation Accounts fund type from the investment simulator options as requested.
--   **Agent Account Management:**
-    -   Successfully created and verified logins for three new agents (Gerardo Briones, Jorge Gonzalez, Javier Gonzalez).
-    -   Debugged and fixed a database connection issue where the new agents were being created in the wrong database.
+-   **Implemented Investment Committee Tab (Version 1 - Now Obsolete):**
+    -   **Backend:** Created  and  collections. Built and tested 7 API endpoints in  and business logic in  for managing capital-based allocations.
+    -   **Frontend:** Created a new Investment Committee tab in . Developed a full suite of React components in  for a modal-based UI.
+    -   **Bug Fixes:**
+        -   Fixed frontend authentication by adding JWT token headers to all API calls within the new components.
+        -   Fixed  errors on null data by adding safety checks in  and .
 
 **Earlier issues found/mentioned but not fixed**
-All major issues reported by the user for the Referral Agent Portal have been addressed.
+-   **Issue 1: Referral Link Analytics Backend:** The UI was created in a previous session with placeholder 0 values, but the backend tracking and API logic have not been built.
+    -   Status: NOT STARTED
 
 **Known issue recurrence from previous fork**
--   **Deployment Environment Confusion:** The agent initially confused the internal preview URL with the live production URL on Render.com. This is a recurring pattern and requires careful attention to the deployment workflow ( triggers Render deploy).
--   **Database Context:** The agent created new users in the wrong database ( instead of ). The correct database context must be carefully managed.
+-   None observed in this session. The agent correctly handled database context and did not encounter deployment issues.
 
 **Code Architecture**
 
@@ -68,81 +68,84 @@ All major issues reported by the user for the Referral Agent Portal have been ad
 **Key Technical Concepts**
 -   **Frameworks**: React (frontend), FastAPI (backend)
 -   **Database**: MongoDB
--   **Styling**: Tailwind CSS, Shadcn/ui
--   **Authentication**: JWT-based authentication for the portal.
--   **Deployment**: The application is deployed on Render.com, with auto-deploys triggered by pushes to the GitHub main branch.
--   **Libraries**:  for QR code generation.
+-   **Architecture Shift**: The core logic is pivoting from a capital-allocation model (using dedicated  documents) to an account-assignment model (updating fields like  and  within the  collection).
+-   **UI Technology**: The new UI will be built using a drag-and-drop library ().
 
 **key DB schema**
--   **salespeople**: Stores agent data, including , , and .
--   **clients**: Linked to agents via . Contains client details.
--   **leads**: New leads created via referral link or manually. Linked by  and .
--   **investments**: Stores investment records linked to clients.
--   **(New)** The Investment Committee Tab spec requires several new collections: , ,  (enhanced), , , .
+-   ****: (OBSOLETE) Stored the state of capital allocation for each fund.
+-   ****: (PARTIALLY OBSOLETE) Tracked changes to capital allocations. A similar history might be needed for account assignments.
+-   ** (Enhanced)**: This is now the central collection. It must be enhanced with new fields to track assignments:
+    -   
+    -   
+    -   
+    -   
+-   ****: Stores data about the 10 active managers.
 
 **changes in tech stack**
--    was added as a new frontend dependency.
+-   The frontend will require the installation of  and related packages.
 
 **All files**
--   **/app/backend/routes/referrals.py**: Heavily modified to add and fix endpoints for login, clients, commissions, manual lead creation, and the public prospect signup.
--   **/app/backend/server.py**: Modified to filter out the SEPARATION fund from the investment simulator configuration.
--   **/app/frontend/src/pages/referral-agent/**: All files in this directory (, , , , , ) were created or completely rewritten to build the new portal.
--   **/app/frontend/src/pages/public/ProspectSignup.jsx**: New file created for the public-facing lead capture page.
--   **/app/frontend/src/App.js**: Modified to add the new public  route.
--   **/app/frontend/src/services/referralAgentApi.js**: Updated to include the  method.
+*   **Created/Modified (Now Obsolete/Needs Rewrite):**
+    *   : DB seeding script for the old model.
+    *   : Business logic for capital allocation.
+    *   : API routes for the old model.
+    *   : All React components for the modal-based UI.
+*   **Modified (Still Relevant):**
+    *   : Added the  router.
+    *   : Added the Investment Committee tab and content panel.
+    *   : Used for fixing frontend authentication.
 
 **Areas that need refactoring**:
--   The user's specification noted that MultiBank is an old name for MEXAtlantic and should be replaced platform-wide for consistency.
--   The agent noted that  may contain duplicate API endpoint definitions that should be consolidated.
+-   The entire first implementation of the Investment Committee feature is now technical debt. All related files in , , and  should be removed or completely rewritten to align with the new drag-and-drop specification.
 
 **key api endpoints**
--   : Agent login.
--   : Get an agent's clients.
--   : Manually create a new lead.
--   : Get an agent's commission schedule.
--   : **Public endpoint** to create a lead from a referral link.
--   : Returns available fund types for the simulator.
--   **(New)** The Investment Committee spec defines a large new set of admin-only endpoints under .
+*   **Obsolete Endpoints (To be replaced):**
+    *   
+    *   
+    *   
+    *   And 4 others related to the capital-allocation model.
+*   **New Endpoints (To be implemented):**
+    *   
+    *   
+    *   
+    *   
+    *   
 
 **Critical Info for New Agent**
--   **Your next task is a very large, complex feature:** The Investment Committee Tab. You MUST follow the user's comprehensive specification document to the letter. Do not start implementation without asking the clarifying questions you have prepared.
--   **Deployment is on Render, not the preview environment.** All code must be pushed to GitHub to trigger a production deployment. Production testing must be done on the  URL.
--   **Database is .** When creating new data (like agents), ensure you are connected to the correct production database, not a local or staging one.
--   The user is highly technical and provides excellent, detailed feedback and specifications. Read them carefully.
+-   **COMPLETE REDESIGN:** Your primary task is to scrap the existing Investment Committee feature and build a new one from scratch based on the user's latest drag-and-drop specification. The previous modal-based implementation is **100% obsolete**.
+-   **BLOCKING FIRST STEP:** You **MUST** add two new MT5 accounts (901351 and 901353) to the  collection before starting any other work. The user has provided a script/command for this. The UI will not display correctly without these accounts.
+-   **ARCHITECTURE SHIFT:** The new system does not use the  collection. All logic is based on updating assignment fields (, , etc.) directly within the existing  collection documents.
+-   **NEW SPECIFICATION IS LAW:** Adhere strictly to the document titled . It contains the complete layout, data models, API signatures, and component examples for the new feature.
 
 **documents created in this job**
--   The user provided a comprehensive specification document for the FIDUS INVESTMENT COMMITTEE TAB feature.
+The agent processed several user messages that serve as specification documents, most notably:
+-    (Specification for the first, now obsolete, version)
+-    (Specification for the new, current task)
+-    (Critical prerequisite instructions)
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Requested a fix for the Clients tab, where a client was showing as Unknown with /bin/bash data. (This was fixed).
-2.  **User:** Requested the removal of Interest Segregation from the investment simulator. (This was fixed).
-3.  **User:** Requested the creation of three new referral agent profiles and logins. (This was completed).
-4.  **User:** Asked for the login credentials for the new agents. (This was provided).
-5.  **User:** Provided the extremely detailed, multi-page specification for the new Investment Committee Tab feature.
-
-**Awaiting User Response:** The last action from the agent was to acknowledge the new specification and prepare critical clarifying questions. The user has not yet responded to these implicit questions.
+1.  **User approved backend:** The user confirmed the backend for the first version of the tool was complete and approved it. (COMPLETED)
+2.  **User requested frontend:** The user instructed the agent to proceed with building the frontend UI for the first version. (COMPLETED)
+3.  **User provided new spec:** The user sent a new, extremely detailed specification for a complete redesign of the feature into a drag-and-drop interface, making the previous work obsolete. (PENDING IMPLEMENTATION)
+4.  **User sent urgent prerequisite:** The user sent a follow-up message emphasizing that two new MT5 accounts (901351 and 901353) MUST be added to the database before any UI work on the new design begins. (PENDING IMPLEMENTATION)
+5.  **Agent acknowledged redesign:** The agent confirmed understanding of the complete redesign and the prerequisite task of adding the new accounts. (AWAITING AGENT ACTION)
 
 **Project Health Check:**
--   **Broken**: Nothing is critically broken.
--   **Mocked**: The referral link analytics on the agent profile page are placeholders and not yet functional.
+-   **Broken**: No part of the existing, stable application is broken.
+-   **Mocked**: Referral Link Analytics on the agent profile page still use placeholder data.
+-   **Obsolete**: The entire Investment Committee Tab feature (V1) is now obsolete and requires a full replacement.
 
 **Testing status**
--   **Testing agent used after significant changes**: NO
+-   **Testing agent used after significant changes**: YES. The testing agent was used to validate the frontend of the (now obsolete) V1 Investment Committee tab, successfully identifying authentication and null-value bugs, which were then fixed.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None.
+-   **Test files created**:
+    -    (Tests the obsolete V1 backend)
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   **Salvador Palma (Agent with data):**
+-   **Salvador Palma (Admin Agent):**
     -   Email: 
     -   Password: 
--   **Josselyn Arellano López (New agent, no data):**
-    -   Email: 
-    -   Password: 
--   **New Agents (Password for all: )**
-    -   **Gerardo Briones:** 
-    -   **Jorge Gonzalez:** 
-    -   **Javier Gonzalez:** 
 
 **What agent forgot to execute**
--   The full implementation of referral link analytics (clicks, conversions). The UI was created with placeholder 0 values, but the backend tracking and API logic were not built.</analysis>
+The agent has not forgotten to execute any tasks. It correctly identified the major pivot in requirements from the user and was about to execute the first step of the new plan before the handoff.</analysis>

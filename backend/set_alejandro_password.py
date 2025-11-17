@@ -33,7 +33,7 @@ async def set_password():
     print(f"Username: alejandro_mariscal")
     print(f"Password: Alejandro123")
     print()
-    print("Login URL: https://fidus-agents.preview.emergentagent.com")
+    print("Login URL: https://alloc-wizard.preview.emergentagent.com")
     print()
     
     client.close()

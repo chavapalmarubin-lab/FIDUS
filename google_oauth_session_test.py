@@ -30,7 +30,7 @@ import subprocess
 import os
 
 # Configuration
-BACKEND_URL = "https://fidus-agents.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
