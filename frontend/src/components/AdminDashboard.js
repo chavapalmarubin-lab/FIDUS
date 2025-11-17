@@ -670,9 +670,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
-          {/* Investment Committee Tab */}
+          {/* Investment Committee Tab - V2 Drag & Drop */}
           <TabsContent value="investment-committee" className="mt-6">
-            <InvestmentCommitteeTab />
+            <InvestmentCommitteeDragDrop />
           </TabsContent>
 
           <TabsContent value="investments" className="mt-6">
