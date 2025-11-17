@@ -133,8 +133,7 @@ async def preview_allocation(
 @router.post("/funds/{fund_type}/allocate")
 async def apply_allocation(
     fund_type: str,
-    data: AllocateRequest,
-    current_user = Depends(get_current_admin_user)
+    data: AllocateRequest
 ):
     """Apply allocation to a manager"""
     
