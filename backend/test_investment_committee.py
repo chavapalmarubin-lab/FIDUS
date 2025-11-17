@@ -17,10 +17,21 @@ async def test_investment_committee():
     print("🧪 TESTING INVESTMENT COMMITTEE API")
     print("=" * 70)
     
+    # Read MONGO_URL from .env file
+    mongo_url = None
+    with open('.env') as f:
+        for line in f:
+            if line.startswith('MONGO_URL='):
+                mongo_url = line.split('=', 1)[1].strip().strip('"')
+                break
+    
+    if not mongo_url:
+        print("❌ MONGO_URL not found in .env")
+        return
+    
     # Connect to MongoDB with Motor (async)
-    mongo_url = os.getenv('MONGO_URL')
     client = AsyncIOMotorClient(mongo_url)
-    db = client[os.getenv('DB_NAME', 'fidus_production')]
+    db = client['fidus_production']
     
     service = AllocationService(db)
     
