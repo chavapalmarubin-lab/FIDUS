@@ -168,7 +168,10 @@ export default function InvestmentCommitteeTab() {
         `${BACKEND_URL}/api/admin/investment-committee/funds/${selectedFund}/capital`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
           body: JSON.stringify(capitalData)
         }
       );
