@@ -220,7 +220,7 @@ async def adjust_fund_capital(
             new_total_capital=data.newTotalCapital,
             reason=data.reason,
             notes=data.notes,
-            user_id=str(current_user["_id"])
+            user_id="admin_user_123"
         )
         
         return {
