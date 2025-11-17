@@ -190,7 +190,7 @@ async def remove_manager_allocation(
             expected_allocation=data.expectedAllocation,
             loss_handling=data.lossHandling,
             notes=data.notes,
-            user_id=str(current_user["_id"])
+            user_id="admin_user_123"
         )
         
         return {
