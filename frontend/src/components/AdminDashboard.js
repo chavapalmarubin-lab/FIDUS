@@ -24,6 +24,7 @@ import TradingAnalyticsDashboard from "./TradingAnalyticsDashboard";
 import MoneyManagersDashboard from "./MoneyManagersDashboard";
 import BrokerRebates from "./BrokerRebates"; // PHASE 4A
 import UserAdministration from "./UserAdministration";
+import InvestmentCommitteeTab from "./investmentCommittee/InvestmentCommitteeTab";
 // Clean imports - removed unused Google components
 import InvestmentDashboard from './InvestmentDashboard';
 import ClientDetailModal from './ClientDetailModal';
