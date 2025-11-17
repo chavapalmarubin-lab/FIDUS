@@ -59,15 +59,38 @@ function MT5AccountCard({ account }) {
 }
 
 export default function MT5AccountList({ accounts }) {
+  // Separate unassigned and assigned accounts
+  const unassignedAccounts = accounts.filter(acc => !acc.managerAssigned && !acc.fundType);
+  const assignedAccounts = accounts.filter(acc => acc.managerAssigned || acc.fundType);
+  
   return (
     <div className="mt5-account-list">
+      {/* Unassigned Accounts Section */}
+      {unassignedAccounts.length > 0 && (
+        <>
+          <div className="section-header unassigned-header">
+            <h3>🆕 UNASSIGNED ACCOUNTS</h3>
+            <p className="subtitle">({unassignedAccounts.length} awaiting assignment)</p>
+          </div>
+          
+          <div className="account-grid unassigned-grid">
+            {unassignedAccounts.map(account => (
+              <MT5AccountCard key={account.account} account={account} />
+            ))}
+          </div>
+          
+          <div className="divider"></div>
+        </>
+      )}
+      
+      {/* Assigned Accounts Section */}
       <div className="section-header">
         <h3>MT5 ACCOUNTS</h3>
-        <p className="subtitle">(Drag to assign)</p>
+        <p className="subtitle">({assignedAccounts.length} assigned)</p>
       </div>
       
       <div className="account-grid">
-        {accounts.map(account => (
+        {assignedAccounts.map(account => (
           <MT5AccountCard key={account.account} account={account} />
         ))}
       </div>
@@ -76,6 +99,10 @@ export default function MT5AccountList({ accounts }) {
         <div className="summary-row">
           <strong>Total Accounts:</strong>
           <span>{accounts.length}</span>
+        </div>
+        <div className="summary-row">
+          <strong>Unassigned:</strong>
+          <span className="unassigned-count">{unassignedAccounts.length}</span>
         </div>
         <div className="summary-row">
           <strong>Total Capital:</strong>
