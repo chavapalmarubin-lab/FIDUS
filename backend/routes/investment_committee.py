@@ -97,8 +97,7 @@ async def get_fund_allocation(
 @router.post("/funds/{fund_type}/preview")
 async def preview_allocation(
     fund_type: str,
-    data: AllocationPreviewRequest,
-    current_user = Depends(get_current_admin_user)
+    data: AllocationPreviewRequest
 ):
     """Preview allocation change without applying it"""
     
