@@ -9,6 +9,7 @@ import AllocationModal from './AllocationModal';
 import RemoveManagerModal from './RemoveManagerModal';
 import AddCapitalModal from './AddCapitalModal';
 import AllocationHistoryTable from './AllocationHistoryTable';
+import { getAuthHeaders } from '../../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
