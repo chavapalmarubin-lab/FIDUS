@@ -43,7 +43,7 @@ export default function ManagerAllocationCard({
                 <span className="text-slate-500 ml-2">({account.type})</span>
               </span>
               <span className="text-cyan-400 font-medium">
-                ${account.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(account.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           ))}
