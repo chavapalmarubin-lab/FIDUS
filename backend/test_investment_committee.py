@@ -143,7 +143,7 @@ async def test_investment_committee():
     print(f"   Unallocated:       ${balance_api['unallocatedCapital']:,.2f} ({(balance_api['unallocatedCapital']/balance_api['totalCapital']*100):.1f}%)")
     print(f"   Active Managers:   {len(balance_api['managerAllocations'])}")
     
-    mongodb_manager.close()
+    client.close()
 
 
 if __name__ == "__main__":
