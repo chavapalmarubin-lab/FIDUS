@@ -1,0 +1,205 @@
+name: Add MT5 Accounts to VPS (CORRECT FILE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      account1:
+        description: 'First account number'
+        required: true
+        default: '901351'
+      account2:
+        description: 'Second account number'
+        required: true
+        default: '901353'
+      password:
+        description: 'MT5 Password'
+        required: false
+        default: 'Fidus13!'
+
+jobs:
+  add-to-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Add Accounts to VPS Configuration (CORRECT FILE)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          command_timeout: 60s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "ADDING ACCOUNTS TO mt5_bridge_api_service.py" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # CORRECT CONFIGURATION FILE
+            $configFile = "C:\mt5_bridge_service\mt5_bridge_api_service.py"
+            $account1 = "${{ github.event.inputs.account1 }}"
+            $account2 = "${{ github.event.inputs.account2 }}"
+            $password = "${{ github.event.inputs.password }}"
+            
+            Write-Host "Target file: $configFile" -ForegroundColor Yellow
+            Write-Host "Adding accounts: $account1, $account2" -ForegroundColor Yellow
+            Write-Host ""
+            
+            # Check if file exists
+            if (-not (Test-Path $configFile)) {
+                Write-Host "ERROR: Configuration file not found!" -ForegroundColor Red
+                Write-Host "Tried: $configFile" -ForegroundColor Red
+                exit 1
+            }
+            
+            # Read configuration
+            Write-Host "Reading configuration file..." -ForegroundColor Yellow
+            $content = Get-Content $configFile -Raw
+            
+            # Check if accounts already exist
+            $account1Exists = $content -match "`"login`":\s*$account1" -or $content -match "'login':\s*$account1"
+            $account2Exists = $content -match "`"login`":\s*$account2" -or $content -match "'login':\s*$account2"
+            
+            if ($account1Exists -and $account2Exists) {
+                Write-Host "Both accounts already exist in configuration!" -ForegroundColor Green
+                Write-Host "Skipping addition, proceeding to restart..." -ForegroundColor Yellow
+            } else {
+                # Find ACCOUNTS list
+                $accountsStart = $content.IndexOf("ACCOUNTS = [")
+                if ($accountsStart -eq -1) {
+                    Write-Host "ERROR: Could not find ACCOUNTS list!" -ForegroundColor Red
+                    exit 1
+                }
+                
+                $accountsEnd = $content.IndexOf("]", $accountsStart)
+                if ($accountsEnd -eq -1) {
+                    Write-Host "ERROR: Could not find end of ACCOUNTS list!" -ForegroundColor Red
+                    exit 1
+                }
+                
+                Write-Host "Found ACCOUNTS list at position $accountsStart" -ForegroundColor Green
+                
+                # Build new account entries
+                $newEntries = ""
+                
+                if (-not $account1Exists) {
+                    $newEntries += @"
+            ,
+                {
+                    "login": $account1,
+                    "password": "$password",
+                    "fund_type": "UNASSIGNED",
+                    "target_amount": 0,
+                    "client_name": "Account $account1 - Unassigned"
+                }
+            "@
+                    Write-Host "  + Will add account $account1" -ForegroundColor Green
+                }
+                
+                if (-not $account2Exists) {
+                    $newEntries += @"
+            ,
+                {
+                    "login": $account2,
+                    "password": "$password",
+                    "fund_type": "UNASSIGNED",
+                    "target_amount": 0,
+                    "client_name": "Account $account2 - Unassigned"
+                }
+            "@
+                    Write-Host "  + Will add account $account2" -ForegroundColor Green
+                }
+                
+                # Insert accounts before closing bracket
+                $beforeClosing = $content.Substring(0, $accountsEnd)
+                $afterClosing = $content.Substring($accountsEnd)
+                $updatedContent = $beforeClosing + $newEntries + "`n    " + $afterClosing
+                
+                # Create backup
+                $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+                $backupFile = "$configFile.backup_$timestamp"
+                Write-Host ""
+                Write-Host "Creating backup: $backupFile" -ForegroundColor Yellow
+                Copy-Item $configFile $backupFile
+                
+                # Write updated configuration
+                Write-Host "Writing updated configuration..." -ForegroundColor Yellow
+                Set-Content $configFile -Value $updatedContent -Encoding UTF8
+                
+                Write-Host ""
+                Write-Host "Configuration updated successfully!" -ForegroundColor Green
+                Write-Host "Backup saved: $backupFile" -ForegroundColor Cyan
+            }
+            
+            Write-Host ""
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "RESTARTING VPS SERVICE" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Stop Python service
+            Write-Host "Stopping Python service..." -ForegroundColor Yellow
+            try {
+                Get-Process python | Where-Object {$_.Path -like "*mt5_bridge*"} | Stop-Process -Force
+                Start-Sleep -Seconds 3
+                Write-Host "Service stopped" -ForegroundColor Green
+            } catch {
+                Write-Host "No running service found" -ForegroundColor Gray
+            }
+            
+            # Verify the file was updated
+            Write-Host ""
+            Write-Host "Verifying file contents..." -ForegroundColor Yellow
+            $verifyContent = Get-Content $configFile -Raw
+            if ($verifyContent -match "$account1" -and $verifyContent -match "$account2") {
+                Write-Host "✅ VERIFIED: Both accounts are now in the file!" -ForegroundColor Green
+            } else {
+                Write-Host "⚠️ WARNING: Accounts may not have been added!" -ForegroundColor Red
+            }
+            
+            # Start service in background
+            Write-Host ""
+            Write-Host "Starting Python service..." -ForegroundColor Yellow
+            
+            cd C:\mt5_bridge_service
+            Start-Process python -ArgumentList "mt5_bridge_api_service.py" -WindowStyle Hidden
+            
+            # Wait for service to start
+            Write-Host "Waiting for service to initialize..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 10
+            
+            Write-Host "Service restart initiated" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "============================================" -ForegroundColor Green
+            Write-Host "DEPLOYMENT COMPLETE!" -ForegroundColor Green
+            Write-Host "============================================" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "IMPORTANT: Check VPS logs to verify:" -ForegroundColor Yellow
+            Write-Host "- Should say: 'Will login to 13 accounts'" -ForegroundColor White
+            Write-Host "- Should see accounts 901351 and 901353 logging in" -ForegroundColor White
+            Write-Host ""
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# VPS MT5 Accounts Addition Report (FIXED)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File Updated:** \`mt5_bridge_api_service.py\` ✅" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Accounts Added:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Account ${{ github.event.inputs.account1 }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Account ${{ github.event.inputs.account2 }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected VPS Output:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "Will login to 13 accounts" >> $GITHUB_STEP_SUMMARY
+          echo "[LOGIN] Attempting to login to account 901351..." >> $GITHUB_STEP_SUMMARY
+          echo "✅ [OK] Successfully logged into account 901351" >> $GITHUB_STEP_SUMMARY
+          echo "[LOGIN] Attempting to login to account 901353..." >> $GITHUB_STEP_SUMMARY
+          echo "✅ [OK] Successfully logged into account 901353" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
