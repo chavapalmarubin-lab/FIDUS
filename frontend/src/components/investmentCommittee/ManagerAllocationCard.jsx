@@ -8,6 +8,12 @@ export default function ManagerAllocationCard({
   onEdit,
   onRemove
 }) {
+  if (!allocation) return null;
+  
+  const allocatedAmount = allocation.allocatedAmount || 0;
+  const allocationPercentage = allocation.allocationPercentage || 0;
+  const accounts = allocation.accounts || [];
+  
   return (
     <Card className="bg-slate-800 border-slate-700 hover:border-cyan-500/50 transition-colors">
       <div className="p-4 space-y-3">
@@ -16,10 +22,10 @@ export default function ManagerAllocationCard({
           <div>
             <h3 className="text-lg font-semibold text-white">{allocation.managerName}</h3>
             <div className="text-2xl font-bold text-cyan-400 mt-1">
-              ${allocation.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="text-xs text-slate-400 mt-1">
-              {allocation.allocationPercentage.toFixed(1)}% of fund
+              {allocationPercentage.toFixed(1)}% of fund
             </div>
           </div>
         </div>
@@ -27,7 +33,7 @@ export default function ManagerAllocationCard({
         {/* Account Breakdown */}
         <div className="space-y-1 border-t border-slate-700 pt-3">
           <div className="text-xs text-slate-400 mb-2">Accounts:</div>
-          {allocation.accounts.map(account => (
+          {accounts.map(account => (
             <div 
               key={account.accountNumber} 
               className="flex justify-between items-center text-sm bg-slate-900/50 rounded px-2 py-1"
