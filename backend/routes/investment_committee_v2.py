@@ -663,72 +663,72 @@ async def apply_allocations(
                 accounts_updated = 0
                 
                 for change in pending_changes:
-                        result = await _db.mt5_accounts.update_one(
-                            {"account": change["account_number"]},
-                            {
-                                "$set": {
-                                    "status": "assigned",
-                                    "is_active": True,
-                                    "updated_at": datetime.utcnow(),
-                                    "last_allocation_update": datetime.utcnow()
-                                }
-                            },
-                            session=session
-                        )
-                        accounts_updated += result.modified_count
-                        
-                        # Also update mt5_account_config collection
-                        await _db.mt5_account_config.update_one(
-                            {"account": change["account_number"]},
-                            {
-                                "$set": {
-                                    "is_active": True,
-                                    "updated_at": datetime.utcnow().isoformat(),
-                                    "last_modified_by": "apply_allocations"
-                                }
-                            },
-                            upsert=False,
-                            session=session
-                        )
-                    
-                    logger.info(f"✅ Updated {accounts_updated} account statuses")
-                    
-                    # Run all recalculations within the transaction
-                    logger.info("🔄 Starting recalculations...")
-                    recalc_results = await recalc_service.run_all_recalculations(
+                    result = await _db.mt5_accounts.update_one(
+                        {"account": change["account_number"]},
+                        {
+                            "$set": {
+                                "status": "assigned",
+                                "is_active": True,
+                                "updated_at": datetime.utcnow(),
+                                "last_allocation_update": datetime.utcnow()
+                            }
+                        },
                         session=session
                     )
+                    accounts_updated += result.modified_count
                     
-                    if not recalc_results["success"]:
-                        raise Exception(f"Recalculations failed: {recalc_results['errors']}")
-                    
-                    logger.info(f"✅ All recalculations complete in {recalc_results['total_duration_seconds']:.2f}s")
-                    
-                    # Create audit log entry
-                    audit_entry = {
+                    # Also update mt5_account_config collection
+                    await _db.mt5_account_config.update_one(
+                        {"account": change["account_number"]},
+                        {
+                            "$set": {
+                                "is_active": True,
+                                "updated_at": datetime.utcnow().isoformat(),
+                                "last_modified_by": "apply_allocations"
+                            }
+                        },
+                        upsert=False,
+                        session=session
+                    )
+                
+                logger.info(f"✅ Updated {accounts_updated} account statuses")
+                
+                # Run all recalculations within the transaction
+                logger.info("🔄 Starting recalculations...")
+                recalc_results = await recalc_service.run_all_recalculations(
+                    session=session
+                )
+                
+                if not recalc_results["success"]:
+                    raise Exception(f"Recalculations failed: {recalc_results['errors']}")
+                
+                logger.info(f"✅ All recalculations complete in {recalc_results['total_duration_seconds']:.2f}s")
+                
+                # Create audit log entry
+                audit_entry = {
+                    "timestamp": datetime.utcnow(),
+                    "action": "apply_allocations",
+                    "accounts_updated": accounts_updated,
+                    "pending_changes": pending_changes,
+                    "performed_by": str(current_user["_id"]),
+                    "recalculation_results": recalc_results,
+                    "calculations_run": list(recalc_results["recalculations"].keys())
+                }
+                
+                await _db.allocation_audit_log.insert_one(audit_entry, session=session)
+                
+                # Log action to allocation history
+                for change in pending_changes:
+                    await _db.allocation_history.insert_one({
                         "timestamp": datetime.utcnow(),
-                        "action": "apply_allocations",
-                        "accounts_updated": accounts_updated,
-                        "pending_changes": pending_changes,
-                        "performed_by": str(current_user["_id"]),
-                        "recalculation_results": recalc_results,
-                        "calculations_run": list(recalc_results["recalculations"].keys())
-                    }
-                    
-                    await _db.allocation_audit_log.insert_one(audit_entry, session=session)
-                    
-                    # Log action to allocation history
-                    for change in pending_changes:
-                        await _db.allocation_history.insert_one({
-                            "timestamp": datetime.utcnow(),
-                            "action_type": "allocation_applied",
-                            "account_number": change["account_number"],
-                            "manager_name": change["changes"]["manager"]["new"],
-                            "fund_type": change["changes"]["fund_type"]["new"],
-                            "broker": change["changes"]["broker"]["new"],
-                            "trading_platform": change["changes"]["platform"]["new"],
-                            "performed_by": str(current_user["_id"])
-                        }, session=session)
+                        "action_type": "allocation_applied",
+                        "account_number": change["account_number"],
+                        "manager_name": change["changes"]["manager"]["new"],
+                        "fund_type": change["changes"]["fund_type"]["new"],
+                        "broker": change["changes"]["broker"]["new"],
+                        "trading_platform": change["changes"]["platform"]["new"],
+                        "performed_by": str(current_user["_id"])
+                    }, session=session)
                     
                 # Commit transaction (if available)
                 if session:
