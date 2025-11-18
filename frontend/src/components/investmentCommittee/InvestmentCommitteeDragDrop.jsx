@@ -327,64 +327,60 @@ export default function InvestmentCommitteeDragDrop() {
     <DndContext onDragEnd={handleDragEnd}>
       <div className="investment-committee-container">
         <div className="page-header">
-          <h1>Investment Committee - Drag & Drop Assignment</h1>
+          <h1>Investment Committee - Fund Allocation</h1>
           <p className="page-description">
-            Assign MT5 accounts to managers, funds, brokers, and platforms by dragging and dropping
+            Assign MT5 accounts to fund types and managers by dragging and dropping
           </p>
-          <button onClick={loadData} className="refresh-btn">
-            🔄 Refresh Data
-          </button>
+          <div className="header-actions">
+            <button onClick={loadData} className="refresh-btn">
+              🔄 Refresh Data
+            </button>
+            {hasUnsavedChanges && (
+              <button 
+                onClick={() => setHasUnsavedChanges(false)} 
+                className="apply-btn"
+                title="Apply changes and recalculate fund portfolios"
+              >
+                ✅ Apply Changes
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Apply Allocations Button - TODO: Uncomment after Render redeploy */}
-        {/* <ApplyAllocationsButton onSuccess={handleApplySuccess} /> */}
-
         <div className="investment-committee-layout">
-          {/* Left Sidebar: MT5 Accounts */}
-          <div className="left-sidebar">
-            <MT5AccountList accounts={accounts} />
-          </div>
+          {/* Top: Fund Types Row - 5 fund categories */}
+          <FundTypesRow 
+            allocations={fundAllocations}
+            onRemoveAccount={handleRemoveAccount}
+          />
 
-          {/* Main Content Area */}
-          <div className="main-content">
-            {/* Top: Managers */}
+          {/* Main Content */}
+          <div className="main-content-row">
+            {/* Left: MT5 Accounts List */}
+            <div className="accounts-sidebar">
+              <MT5AccountList accounts={accounts} />
+            </div>
+
+            {/* Right: Managers Section */}
             <div className="managers-section">
               <ManagerDropZones 
                 allocations={managerAllocations}
                 onRemoveAccount={handleRemoveAccount}
               />
             </div>
-
-            {/* Bottom Row: Funds, Brokers, Platforms */}
-            <div className="bottom-row">
-              <div className="funds-column">
-                <FundDropZones 
-                  allocations={fundAllocations}
-                  onRemoveAccount={handleRemoveAccount}
-                />
-              </div>
-              
-              <div className="broker-platform-column">
-                <BrokerPlatformZones 
-                  brokerAllocations={brokerAllocations}
-                  platformAllocations={platformAllocations}
-                  onRemoveAccount={handleRemoveAccount}
-                />
-              </div>
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Reassignment Confirmation Dialog */}
-      <ReassignmentDialog
-        isOpen={showReassignDialog}
-        accountNumber={pendingAssignment?.accountNumber}
-        currentAllocation={pendingAssignment?.currentAllocation}
-        newAllocation={pendingAssignment?.newAllocation}
-        onConfirm={handleReassignConfirm}
-        onCancel={handleReassignCancel}
-      />
+        {/* Reassignment Confirmation Dialog */}
+        <ReassignmentDialog
+          isOpen={showReassignDialog}
+          accountNumber={pendingAssignment?.accountNumber}
+          currentAllocation={pendingAssignment?.currentAllocation}
+          newAllocation={pendingAssignment?.newAllocation}
+          onConfirm={handleReassignConfirm}
+          onCancel={handleReassignCancel}
+        />
+      </div>
     </DndContext>
   );
 }
