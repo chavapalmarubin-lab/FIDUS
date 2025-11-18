@@ -353,6 +353,17 @@ export default function InvestmentCommitteeDragDrop() {
           </div>
         </div>
       </div>
+
+      {/* Reassignment Confirmation Dialog */}
+      {showReassignDialog && pendingAssignment && (
+        <ReassignmentDialog
+          accountNumber={pendingAssignment.accountNumber}
+          currentAllocation={pendingAssignment.currentAllocation}
+          newAllocation={pendingAssignment.newAllocation}
+          onConfirm={handleReassignConfirm}
+          onCancel={handleReassignCancel}
+        />
+      )}
     </DndContext>
   );
 }
