@@ -4,20 +4,11 @@ import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
 import FundDropZones from './FundDropZones';
 import BrokerPlatformZones from './BrokerPlatformZones';
+import { getAuthHeaders } from '../../utils/auth';
 // import ApplyAllocationsButton from './ApplyAllocationsButton'; // TODO: Uncomment after Render redeploy
 import './InvestmentCommittee.css';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('token');
-  return token ? { 
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  } : {
-    'Content-Type': 'application/json'
-  };
-}
 
 export default function InvestmentCommitteeDragDrop() {
   const [accounts, setAccounts] = useState([]);
