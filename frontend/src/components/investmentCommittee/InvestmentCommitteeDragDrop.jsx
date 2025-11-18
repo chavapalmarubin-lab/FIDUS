@@ -207,6 +207,7 @@ export default function InvestmentCommitteeDragDrop() {
       
       if (result.success) {
         // Reload data to reflect changes
+        setHasUnsavedChanges(true);
         await loadData();
       } else {
         alert('Assignment failed: ' + (result.message || 'Unknown error'));
@@ -215,6 +216,26 @@ export default function InvestmentCommitteeDragDrop() {
       console.error('Failed to assign account:', error);
       alert('Error: ' + error.message);
     }
+  }
+
+  // Handle reassignment dialog confirmation
+  async function handleReassignConfirm() {
+    if (!pendingAssignment) return;
+    
+    await performAssignment(
+      pendingAssignment.accountNumber,
+      pendingAssignment.type,
+      pendingAssignment.value
+    );
+    
+    setShowReassignDialog(false);
+    setPendingAssignment(null);
+  }
+
+  // Handle reassignment dialog cancellation
+  function handleReassignCancel() {
+    setShowReassignDialog(false);
+    setPendingAssignment(null);
   }
 
   // Handle reassignment dialog confirmation
