@@ -659,10 +659,10 @@ async def apply_allocations(
                 await session.start_transaction()
             
             try:
-                    # Update account statuses to 'assigned'
-                    accounts_updated = 0
-                    
-                    for change in pending_changes:
+                # Update account statuses to 'assigned'
+                accounts_updated = 0
+                
+                for change in pending_changes:
                         result = await _db.mt5_accounts.update_one(
                             {"account": change["account_number"]},
                             {
