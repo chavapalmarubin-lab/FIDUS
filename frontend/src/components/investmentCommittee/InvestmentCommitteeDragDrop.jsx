@@ -2,13 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
-import FundDropZones from './FundDropZones';
+import FundTypesRow from './FundTypesRow';
 import BrokerPlatformZones from './BrokerPlatformZones';
+import ReassignmentDialog from './ReassignmentDialog';
 import { getAuthHeaders } from '../../utils/auth';
-// import ApplyAllocationsButton from './ApplyAllocationsButton'; // TODO: Uncomment after Render redeploy
 import './InvestmentCommittee.css';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+// Define fund types mapping
+const FUND_TYPE_NAMES = {
+  'SEPARATION': 'Separation Account',
+  'REBATES': 'Rebate Account', 
+  'CORE': 'FIDUS Core',
+  'BALANCE': 'FIDUS Balance',
+  'DYNAMIC': 'FIDUS Dynamic'
+};
 
 export default function InvestmentCommitteeDragDrop() {
   const [accounts, setAccounts] = useState([]);
