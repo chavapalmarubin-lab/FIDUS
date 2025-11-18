@@ -194,6 +194,40 @@ export default function MT5AccountList({ accounts }) {
           </div>
         )}
       </div>
+
+      {/* Capital Summary Footer */}
+      <div className="capital-summary">
+        <div className="summary-header">
+          <h4>💰 Capital Allocation Summary</h4>
+        </div>
+        <div className="summary-grid">
+          <div className="summary-item total">
+            <span className="label">Total Capital</span>
+            <span className="value">${totalCapital.toLocaleString()}</span>
+          </div>
+          <div className="summary-item unassigned">
+            <span className="label">Unassigned</span>
+            <span className="value">${unassignedCapital.toLocaleString()}</span>
+          </div>
+          <div className="summary-item assigned">
+            <span className="label">Assigned</span>
+            <span className="value">${assignedCapital.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="allocation-progress">
+          <div className="progress-label">
+            Allocation Progress: {totalCapital > 0 ? Math.round((assignedCapital / totalCapital) * 100) : 0}%
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill"
+              style={{
+                width: `${totalCapital > 0 ? (assignedCapital / totalCapital) * 100 : 0}%`
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
