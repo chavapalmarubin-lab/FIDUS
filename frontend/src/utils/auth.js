@@ -31,19 +31,25 @@ export const getAuthToken = () => {
  * @returns {object} Headers object with Authorization header if token exists
  */
 export const getAuthHeaders = () => {
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  
   // First try to get JWT token for regular admin authentication
   const jwtToken = getAuthToken();
   if (jwtToken) {
-    return { Authorization: `Bearer ${jwtToken}` };
+    headers.Authorization = `Bearer ${jwtToken}`;
+    return headers;
   }
   
   // Fallback to Google session token for Google OAuth authenticated requests
   const googleSessionToken = localStorage.getItem('google_session_token');
   if (googleSessionToken) {
-    return { Authorization: `Bearer ${googleSessionToken}` };
+    headers.Authorization = `Bearer ${googleSessionToken}`;
+    return headers;
   }
   
-  return {};
+  return headers;
 };
 
 /**
