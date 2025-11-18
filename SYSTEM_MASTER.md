@@ -52,6 +52,9 @@ TABLE OF CONTENTS
 2.	Business Model
 3.	Technology Stack
 4.	MT5 Trading Accounts
+    4.1 Account List
+    4.2 Account Synchronization
+    4.3 Investment Committee Allocation Workflow
 5.	Money Managers
 6.	Client Management
 7.	Commission System
