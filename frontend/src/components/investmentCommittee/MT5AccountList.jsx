@@ -73,60 +73,120 @@ function MT5AccountCard({ account }) {
 }
 
 export default function MT5AccountList({ accounts }) {
-  // Separate unassigned and assigned accounts
-  const unassignedAccounts = accounts.filter(acc => !acc.managerAssigned && !acc.fundType);
-  const assignedAccounts = accounts.filter(acc => acc.managerAssigned || acc.fundType);
-  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+
+  // Filter and search accounts
+  const filteredAccounts = useMemo(() => {
+    let filtered = accounts || [];
+
+    // Filter by assignment status
+    if (filterType === 'unassigned') {
+      filtered = filtered.filter(account => !account.managerAssigned && !account.fundType);
+    } else if (filterType === 'assigned') {
+      filtered = filtered.filter(account => account.managerAssigned || account.fundType);
+    }
+
+    // Search by account number, client name, or server
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(account => 
+        account.account?.toString().includes(term) ||
+        account.clientName?.toLowerCase().includes(term) ||
+        account.server?.toLowerCase().includes(term)
+      );
+    }
+
+    return filtered;
+  }, [accounts, searchTerm, filterType]);
+
+  const unassignedCount = accounts?.filter(acc => !acc.managerAssigned && !acc.fundType).length || 0;
+  const assignedCount = accounts?.filter(acc => acc.managerAssigned || acc.fundType).length || 0;
+
   return (
-    <div className="mt5-account-list">
-      {/* Unassigned Accounts Section */}
-      {unassignedAccounts.length > 0 && (
-        <>
-          <div className="section-header unassigned-header">
-            <h3>🆕 UNASSIGNED ACCOUNTS</h3>
-            <p className="subtitle">({unassignedAccounts.length} awaiting assignment)</p>
+    <div className="mt5-accounts-container">
+      {/* Search Header */}
+      <div className="accounts-header">
+        <div className="accounts-title">
+          <h3>MT5 Accounts</h3>
+          <div className="accounts-stats">
+            <span className="stat-badge unassigned">{unassignedCount} Unassigned</span>
+            <span className="stat-badge assigned">{assignedCount} Assigned</span>
           </div>
-          
-          <div className="account-grid unassigned-grid">
-            {unassignedAccounts.map(account => (
+        </div>
+        
+        {/* Search Bar */}
+        <div className="search-container">
+          <div className="search-input-wrapper">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search by account number, client, or broker..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="clear-search"
+                title="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="filter-buttons">
+          <button 
+            className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterType('all')}
+          >
+            All ({accounts?.length || 0})
+          </button>
+          <button 
+            className={`filter-btn ${filterType === 'unassigned' ? 'active' : ''}`}
+            onClick={() => setFilterType('unassigned')}
+          >
+            Unassigned ({unassignedCount})
+          </button>
+          <button 
+            className={`filter-btn ${filterType === 'assigned' ? 'active' : ''}`}
+            onClick={() => setFilterType('assigned')}
+          >
+            Assigned ({assignedCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Scrollable Accounts List */}
+      <div className="accounts-list-wrapper">
+        {filteredAccounts.length === 0 ? (
+          <div className="empty-accounts">
+            {searchTerm ? (
+              <>
+                <span className="empty-icon">🔍</span>
+                <p>No accounts found for "{searchTerm}"</p>
+                <button onClick={() => setSearchTerm('')} className="clear-btn">
+                  Clear search
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="empty-icon">📋</span>
+                <p>No {filterType === 'all' ? '' : filterType} accounts available</p>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="accounts-list">
+            {filteredAccounts.map(account => (
               <MT5AccountCard key={account.account} account={account} />
             ))}
           </div>
-          
-          <div className="divider"></div>
-        </>
-      )}
-      
-      {/* Assigned Accounts Section */}
-      <div className="section-header">
-        <h3>MT5 ACCOUNTS</h3>
-        <p className="subtitle">({assignedAccounts.length} assigned)</p>
-      </div>
-      
-      <div className="account-grid">
-        {assignedAccounts.map(account => (
-          <MT5AccountCard key={account.account} account={account} />
-        ))}
-      </div>
-      
-      <div className="total-summary">
-        <div className="summary-row">
-          <strong>Total Accounts:</strong>
-          <span>{accounts.length}</span>
-        </div>
-        <div className="summary-row">
-          <strong>Unassigned:</strong>
-          <span className="unassigned-count">{unassignedAccounts.length}</span>
-        </div>
-        <div className="summary-row">
-          <strong>Total Capital:</strong>
-          <span>
-            ${accounts.reduce((sum, acc) => sum + (acc.balance || 0), 0).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}
-          </span>
-        </div>
+        )}
       </div>
     </div>
   );
