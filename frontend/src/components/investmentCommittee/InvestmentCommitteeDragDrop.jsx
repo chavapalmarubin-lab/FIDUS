@@ -263,6 +263,45 @@ export default function InvestmentCommitteeDragDrop() {
     setPendingAssignment(null);
   }
 
+  // Handle apply allocations
+  async function handleApplyAllocations() {
+    try {
+      // Call backend to apply allocations and trigger recalculations
+      const response = await fetch(`${API_BASE_URL}/api/admin/investment-committee/apply-allocations`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to apply allocations');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Show success message
+        alert('✅ Allocations applied successfully! Fund portfolio and cash flow analysis have been updated.');
+        
+        // Reset unsaved changes flag
+        setHasUnsavedChanges(false);
+        
+        // Reload data to reflect changes
+        await loadData();
+      } else {
+        throw new Error(result.message || 'Apply allocations failed');
+      }
+    } catch (error) {
+      console.error('Failed to apply allocations:', error);
+      alert('Error applying allocations: ' + error.message);
+    } finally {
+      setShowApplyDialog(false);
+    }
+  }
+
+  // Calculate total capital for apply dialog
+  const totalCapital = accounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+
   async function handleRemoveAccount(accountOrNumber, assignmentValue, assignmentType) {
     // Handle both account object and account number
     const accountNumber = typeof accountOrNumber === 'object' ? accountOrNumber.account : accountOrNumber;
