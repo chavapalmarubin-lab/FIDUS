@@ -27,6 +27,11 @@ export default function InvestmentCommitteeDragDrop() {
   const [platformAllocations, setPlatformAllocations] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Confirmation dialog state
+  const [showReassignDialog, setShowReassignDialog] = useState(false);
+  const [pendingAssignment, setPendingAssignment] = useState(null);
 
   useEffect(() => {
     loadData();
