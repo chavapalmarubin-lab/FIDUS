@@ -34,6 +34,9 @@ export default function InvestmentCommitteeDragDrop() {
   // Confirmation dialog state
   const [showReassignDialog, setShowReassignDialog] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState(null);
+  
+  // Apply allocations dialog state
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
 
   useEffect(() => {
     loadData();
