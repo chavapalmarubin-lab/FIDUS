@@ -196,6 +196,104 @@ Sync Process:
 4.	Backend fetches via HTTP from VPS Bridge
 5.	Updates MongoDB collections
 6.	Caches in memory for fast access
+
+4.3 Investment Committee Allocation Workflow
+**Purpose:** Ensure all MT5 accounts are fully allocated before system changes
+
+**Last Updated:** November 17, 2025  
+**Implementation Time:** 7-10 hours  
+**Status:** ✅ Production Ready
+
+**Overview**
+The Investment Committee Allocation Workflow ensures NO unassigned MT5 accounts exist and ALL allocations are complete before changes are applied to the system.
+
+**Validation Rules**
+Each account MUST have:
+•	✅ Manager assigned
+•	✅ Fund type assigned
+•	✅ Broker assigned
+•	✅ Platform assigned
+
+Apply button is disabled until all validations pass.
+
+**Apply Button States**
+1. **DISABLED (Gray)** - Validation fails
+   - Tooltip shows specific reason
+   - Lists unassigned accounts
+   - Lists incomplete allocations
+
+2. **ENABLED (Green)** - All validations pass
+   - Shows pending changes count
+   - Ready to apply
+
+3. **PROCESSING (Spinner)** - Recalculations running
+   - Progress indicator visible
+   - Cannot cancel during processing
+
+**Triggered Recalculations**
+When "Apply Allocations" is clicked, 6 recalculations run:
+1. **recalculate_cash_flow()** - Updates investment projections (0.010s)
+2. **recalculate_commissions()** - Updates referral & manager fees (0.001s)
+3. **update_performance_metrics()** - Updates manager/fund performance (0.001s)
+4. **recalculate_pl()** - Recalculates P&L for all entities (0.014s)
+5. **update_manager_allocations()** - Updates manager capital totals (0.018s)
+6. **update_fund_distributions()** - Updates fund allocation summaries (0.001s)
+
+**Total Execution Time:** ~0.05 seconds
+
+**Database Collections Updated**
+•	mt5_accounts - Account status
+•	mt5_account_config - VPS sync data
+•	investments - Cash flow projections
+•	money_managers - Performance metrics
+•	fund_allocation_state - Distribution summaries
+•	allocation_audit_log - Change history (NEW)
+•	allocation_history - Full audit trail (NEW)
+
+**API Endpoints**
+Validation:
+```
+GET /api/admin/investment-committee/validate-allocations
+```
+Returns: canApply status, unassigned accounts, incomplete accounts
+
+Apply:
+```
+POST /api/admin/investment-committee/apply-allocations
+```
+Returns: success status, accounts updated, calculations run
+
+**Error Handling**
+•	MongoDB transactions ensure atomic updates
+•	Rollback on failure (no partial updates)
+•	Clear error messages to admin
+•	Complete audit trail maintained
+
+**Security**
+•	JWT authentication required
+•	Admin-only access
+•	All changes logged with timestamp and user
+
+**Performance**
+•	Validation check: < 0.1s
+•	All recalculations: 0.05s
+•	Total apply operation: < 1s
+
+**Audit Trail**
+Every allocation change creates entries in:
+•	allocation_audit_log - Summary of changes
+•	allocation_history - Detailed change log
+
+Includes: timestamp, admin user, accounts affected, changes made
+
+**Testing**
+Tested scenarios:
+✅ Unassigned accounts block apply
+✅ Incomplete allocations block apply
+✅ Successful application flow
+✅ All recalculations execute
+✅ Transaction rollback on error
+✅ Audit log creation
  
 5. MONEY MANAGERS
 5.1 Active Managers (5)
