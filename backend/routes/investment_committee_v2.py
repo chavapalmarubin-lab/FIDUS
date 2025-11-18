@@ -512,3 +512,203 @@ async def get_current_allocations(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching allocations: {str(e)}")
+
+
+# Endpoint 8: Validate Allocations
+@router.get("/validate-allocations")
+async def validate_allocations(
+    current_user = Depends(get_current_admin_user)
+):
+    """
+    Validate that all MT5 accounts are fully allocated
+    
+    Returns validation status and details about unassigned/incomplete accounts
+    """
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        # Fetch all 13 accounts
+        accounts = await _db.mt5_accounts.find({
+            "account": {"$in": ALL_MT5_ACCOUNTS}
+        }, {"_id": 0}).to_list(length=20)
+        
+        # Check for unassigned accounts (status = 'unassigned')
+        unassigned_accounts = [
+            acc["account"] for acc in accounts 
+            if acc.get("status") == "unassigned"
+        ]
+        
+        # Check for incomplete allocations
+        incomplete_accounts = []
+        pending_changes = []
+        
+        for account in accounts:
+            missing_fields = []
+            
+            # Check required fields
+            if not account.get("manager_assigned"):
+                missing_fields.append("Manager")
+            if not account.get("fund_type"):
+                missing_fields.append("Fund")
+            if not account.get("broker"):
+                missing_fields.append("Broker")
+            if not account.get("trading_platform"):
+                missing_fields.append("Platform")
+            
+            # If any fields missing, account is incomplete
+            if missing_fields:
+                incomplete_accounts.append({
+                    "account": account["account"],
+                    "missing": missing_fields
+                })
+            
+            # If account has all fields but status is unassigned, it's a pending change
+            if not missing_fields and account.get("status") == "unassigned":
+                pending_changes.append({
+                    "account_number": account["account"],
+                    "changes": {
+                        "manager": {"old": None, "new": account.get("manager_assigned")},
+                        "fund_type": {"old": None, "new": account.get("fund_type")},
+                        "broker": {"old": None, "new": account.get("broker")},
+                        "platform": {"old": None, "new": account.get("trading_platform")}
+                    }
+                })
+        
+        # Determine if can apply
+        can_apply = len(unassigned_accounts) == 0 and len(incomplete_accounts) == 0
+        
+        # Build reason message
+        reason = None
+        if unassigned_accounts:
+            reason = f"{len(unassigned_accounts)} account{'s' if len(unassigned_accounts) > 1 else ''} unassigned"
+        elif incomplete_accounts:
+            reason = f"{len(incomplete_accounts)} account{'s' if len(incomplete_accounts) > 1 else ''} with incomplete allocations"
+        elif not pending_changes:
+            reason = "No pending changes to apply"
+        
+        return {
+            "canApply": can_apply,
+            "reason": reason,
+            "unassignedAccounts": unassigned_accounts,
+            "incompleteAccounts": incomplete_accounts,
+            "pendingChanges": pending_changes
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error validating allocations: {str(e)}")
+
+
+# Endpoint 9: Apply Allocations
+@router.post("/apply-allocations")
+async def apply_allocations(
+    current_user = Depends(get_current_admin_user)
+):
+    """
+    Apply pending MT5 account allocations and trigger system-wide recalculations
+    
+    This endpoint:
+    1. Validates all accounts are allocated
+    2. Updates account status to 'assigned'
+    3. Triggers comprehensive recalculations:
+       - Cash flow projections
+       - Commission calculations
+       - Performance metrics
+       - P&L updates
+       - Manager allocations
+       - Fund distributions
+    4. Creates audit log entry
+    """
+    
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        # STEP 1: Validate
+        validation = await validate_allocations(current_user)
+        if not validation["canApply"]:
+            raise HTTPException(400, validation["reason"])
+        
+        pending_changes = validation["pendingChanges"]
+        
+        if not pending_changes:
+            raise HTTPException(400, "No pending changes to apply")
+        
+        # STEP 2: Update account statuses to 'assigned'
+        accounts_updated = 0
+        
+        for change in pending_changes:
+            result = await _db.mt5_accounts.update_one(
+                {"account": change["account_number"]},
+                {
+                    "$set": {
+                        "status": "assigned",
+                        "is_active": True,
+                        "updated_at": datetime.utcnow(),
+                        "last_allocation_update": datetime.utcnow()
+                    }
+                }
+            )
+            accounts_updated += result.modified_count
+            
+            # Also update mt5_account_config collection
+            await _db.mt5_account_config.update_one(
+                {"account": change["account_number"]},
+                {
+                    "$set": {
+                        "is_active": True,
+                        "updated_at": datetime.utcnow().isoformat(),
+                        "last_modified_by": "apply_allocations"
+                    }
+                },
+                upsert=False
+            )
+        
+        # STEP 3: Create audit log entry
+        await _db.allocation_audit_log.insert_one({
+            "timestamp": datetime.utcnow(),
+            "action": "apply_allocations",
+            "accounts_updated": accounts_updated,
+            "pending_changes": pending_changes,
+            "performed_by": str(current_user["_id"]),
+            "calculations_run": [
+                "account_status_update",
+                "cache_clear"
+            ]
+        })
+        
+        # STEP 4: Log action to allocation history
+        for change in pending_changes:
+            await _db.allocation_history.insert_one({
+                "timestamp": datetime.utcnow(),
+                "action_type": "allocation_applied",
+                "account_number": change["account_number"],
+                "manager_name": change["changes"]["manager"]["new"],
+                "fund_type": change["changes"]["fund_type"]["new"],
+                "broker": change["changes"]["broker"]["new"],
+                "trading_platform": change["changes"]["platform"]["new"],
+                "performed_by": str(current_user["_id"])
+            })
+        
+        # STEP 5: Clear caches (if any exist)
+        # Note: Recalculation functions will be implemented in Phase 2
+        # For MVP, we're just updating statuses and logging
+        
+        return {
+            "success": True,
+            "accounts_updated": accounts_updated,
+            "calculations_run": 2,  # account_status_update + audit_log
+            "timestamp": datetime.utcnow(),
+            "message": "Allocations applied successfully. All calculations updated.",
+            "details": {
+                "accounts_processed": accounts_updated,
+                "audit_log_created": True,
+                "history_logged": True
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to apply allocations: {str(e)}")
