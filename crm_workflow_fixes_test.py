@@ -35,7 +35,7 @@ import uuid
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

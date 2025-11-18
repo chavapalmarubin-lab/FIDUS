@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 import time
 
 # Configuration
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com/api"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com/api"
 
 class InvestmentSimulationTest:
     def __init__(self):

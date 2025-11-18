@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from review request
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class AlejandroFinalTest:

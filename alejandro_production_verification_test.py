@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com/api"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com/api"
 
 class AlejandroProductionVerifier:
     def __init__(self):

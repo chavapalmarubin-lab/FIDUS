@@ -4,7 +4,7 @@ Test Render Production API Endpoints
 import requests
 import json
 
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com"
 
 print("="*80)
 print("RENDER PRODUCTION API VERIFICATION")

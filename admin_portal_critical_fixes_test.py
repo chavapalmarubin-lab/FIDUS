@@ -41,7 +41,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com/api"
+BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
