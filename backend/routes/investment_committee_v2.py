@@ -730,15 +730,24 @@ async def apply_allocations(
                             "performed_by": str(current_user["_id"])
                         }, session=session)
                     
-                    # Commit transaction
-                    await session.commit_transaction()
-                    logger.info("✅ Transaction committed successfully")
+                    # Commit transaction (if available)
+                    if session:
+                        await session.commit_transaction()
+                        logger.info("✅ Transaction committed successfully")
+                    else:
+                        logger.info("✅ All updates completed (no transaction support)")
                     
                 except Exception as e:
-                    # Transaction will automatically rollback
-                    logger.error(f"❌ Transaction failed, rolling back: {e}")
-                    await session.abort_transaction()
+                    # Rollback transaction (if available)
+                    if session:
+                        logger.error(f"❌ Transaction failed, rolling back: {e}")
+                        await session.abort_transaction()
+                    else:
+                        logger.error(f"❌ Updates failed (no rollback available): {e}")
                     raise
+        finally:
+            if session:
+                session.end_session()
         
         # Build response
         calculations_run = len(recalc_results["recalculations"])
