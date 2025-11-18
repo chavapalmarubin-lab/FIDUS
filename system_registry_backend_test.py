@@ -24,7 +24,7 @@ from datetime import datetime
 import sys
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com"
+BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com"
 BASE_API_URL = f"{BACKEND_URL}/api"
 
 def print_header(title):

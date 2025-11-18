@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://alloc-wizard.preview.emergentagent.com/api"
+    base_url = "https://fund-manager-assign.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate

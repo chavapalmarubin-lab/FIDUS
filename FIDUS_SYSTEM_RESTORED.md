@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://alloc-wizard.preview.emergentagent.com`
+`https://fund-manager-assign.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com"
+BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -3,7 +3,7 @@
 **Date:** November 6, 2025, 4:40 PM UTC  
 **Testing Agent:** Emergent AI  
 **Production URL:** https://fidus-api.onrender.com (Backend)  
-**Frontend URL:** https://alloc-wizard.preview.emergentagent.com
+**Frontend URL:** https://fund-manager-assign.preview.emergentagent.com
 
 ═══════════════════════════════════════════════════════════════
 
@@ -50,7 +50,7 @@
 ## STEP 2: PRODUCTION URL IDENTIFICATION
 
 **Backend API:** https://fidus-api.onrender.com ✅ CONFIRMED  
-**Frontend:** https://alloc-wizard.preview.emergentagent.com ✅ CONFIRMED  
+**Frontend:** https://fund-manager-assign.preview.emergentagent.com ✅ CONFIRMED  
 **Database:** MongoDB Atlas - fidus_production ✅ CONFIRMED
 
 ═══════════════════════════════════════════════════════════════
@@ -133,7 +133,7 @@ When `fund_type` is `None`, this returns nothing! So the API shouldn't work...
 
 ### Homepage
 
-**URL:** https://alloc-wizard.preview.emergentagent.com  
+**URL:** https://fund-manager-assign.preview.emergentagent.com  
 **Status:** ✅ **WORKING**  
 **Load Time:** Fast  
 **Console Errors:** 1 warning (X-Frame-Options - not critical)

@@ -2,7 +2,7 @@
 """
 FIDUS BACKEND CASH FLOW CALCULATIONS TEST
 Testing Date: December 18, 2025
-Backend URL: https://alloc-wizard.preview.emergentagent.com/api
+Backend URL: https://fund-manager-assign.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 CRITICAL CONTEXT:
@@ -34,7 +34,7 @@ from typing import Dict, Any, List, Optional
 
 class FidusCashFlowTester:
     def __init__(self):
-        self.base_url = "https://alloc-wizard.preview.emergentagent.com/api"
+        self.base_url = "https://fund-manager-assign.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

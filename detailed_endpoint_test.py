@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "https://alloc-wizard.preview.emergentagent.com"
+    base_url = "https://fund-manager-assign.preview.emergentagent.com"
     
     print("🔍 DETAILED ENDPOINT ANALYSIS")
     print("=" * 60)

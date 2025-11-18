@@ -23,7 +23,7 @@ import uuid
 from decimal import Decimal
 
 # Backend URL Configuration (from frontend .env)
-BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com/api"
+BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com/api"
 
 # Test Admin Credentials
 ADMIN_CREDENTIALS = {

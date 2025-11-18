@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://alloc-wizard.preview.emergentagent.com/api"
+BACKEND_URL = "https://fund-manager-assign.preview.emergentagent.com/api"
 
 class SimplifiedPipelineFinalTest:
     def __init__(self):

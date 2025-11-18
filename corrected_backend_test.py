@@ -18,7 +18,7 @@ from datetime import datetime
 
 class CorrectedBackendTester:
     def __init__(self):
-        self.base_url = "https://alloc-wizard.preview.emergentagent.com/api"
+        self.base_url = "https://fund-manager-assign.preview.emergentagent.com/api"
         self.admin_token = None
         self.test_results = []
         

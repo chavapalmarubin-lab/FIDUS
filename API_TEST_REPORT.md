@@ -2,7 +2,7 @@
 
 **Test Date:** November 10, 2025  
 **Environment:** Production (Render)  
-**API URL:** https://alloc-wizard.preview.emergentagent.com  
+**API URL:** https://fund-manager-assign.preview.emergentagent.com  
 **Status:** ✅ ALL SYSTEMS OPERATIONAL
 
 ---

@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://alloc-wizard.preview.emergentagent.com"
+        self.base_url = "https://fund-manager-assign.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):
