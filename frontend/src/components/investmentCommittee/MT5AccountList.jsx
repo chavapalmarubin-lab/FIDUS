@@ -7,7 +7,7 @@ function MT5AccountCard({ account }) {
     id: `account-${account.account}`,
     data: { 
       type: 'account', 
-      account 
+      account: account.account
     }
   });
 
