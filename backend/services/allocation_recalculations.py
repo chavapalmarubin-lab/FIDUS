@@ -225,7 +225,7 @@ class AllocationRecalculationService:
                 )
                 
                 await self.db.money_managers.update_one(
-                    {"name": manager_name},
+                    {"manager_name": manager_name},
                     {
                         "$set": {
                             "total_balance": stats["total_balance"],
