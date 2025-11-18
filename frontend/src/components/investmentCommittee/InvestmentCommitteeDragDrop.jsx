@@ -4,16 +4,8 @@ import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
 import FundDropZones from './FundDropZones';
 import BrokerPlatformZones from './BrokerPlatformZones';
+// import ApplyAllocationsButton from './ApplyAllocationsButton'; // TODO: Uncomment after Render redeploy
 import './InvestmentCommittee.css';
-
-// Conditionally import ApplyAllocationsButton (may not exist in older builds)
-let ApplyAllocationsButton;
-try {
-  ApplyAllocationsButton = require('./ApplyAllocationsButton').default;
-} catch (e) {
-  console.warn('ApplyAllocationsButton not available in this build');
-  ApplyAllocationsButton = null;
-}
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
