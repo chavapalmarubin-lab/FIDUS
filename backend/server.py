@@ -1936,7 +1936,13 @@ async def login(login_data: LoginRequest):
         })
         
         if not user_doc:
+            logging.warning(f"🔍 Login failed: User not found for username={username}, type={user_type}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        logging.info(f"🔍 User found: {user_doc.get('name')}, checking password...")
+        logging.info(f"🔍 Has temp_password: {bool(user_doc.get('temp_password'))}")
+        if user_doc.get('temp_password'):
+            logging.info(f"🔍 temp_password matches: {password == user_doc.get('temp_password')}")
         
         # Check MongoDB user password
         password_valid = False
@@ -1945,10 +1951,13 @@ async def login(login_data: LoginRequest):
         if user_doc.get("temp_password") and password == user_doc["temp_password"]:
             password_valid = True
             must_change_password = True
+            logging.info(f"✅ Password validated via temp_password")
         elif password == "password123":
             password_valid = True
+            logging.info(f"✅ Password validated via password123 fallback")
             
         if not password_valid:
+            logging.warning(f"❌ Password validation failed for user: {username}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         user_response_dict = {
