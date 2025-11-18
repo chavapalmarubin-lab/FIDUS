@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { getAuthHeaders } from '../../utils/auth';
 import './ApplyAllocations.css';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('token');
-  return token ? { 
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  } : {
-    'Content-Type': 'application/json'
-  };
-}
 
 export default function ApplyAllocationsButton({ onSuccess }) {
   const [validation, setValidation] = useState(null);
