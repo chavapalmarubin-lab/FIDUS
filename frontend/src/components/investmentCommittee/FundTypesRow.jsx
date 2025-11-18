@@ -3,11 +3,11 @@ import { useDroppable } from '@dnd-kit/core';
 import './FundTypesRow.css';
 
 const FUND_TYPES = [
-  { id: 'SEPARATION', name: 'Separation Account', color: '#FF6B35' },
-  { id: 'REBATES', name: 'Rebate Account', color: '#F7931E' },
-  { id: 'CORE', name: 'FIDUS Core', color: '#004E89' },
-  { id: 'BALANCE', name: 'FIDUS Balance', color: '#1B998B' },
-  { id: 'DYNAMIC', name: 'FIDUS Dynamic', color: '#C44569' }
+  { id: 'SEPARATION', name: 'Separation Account', color: '#FF6B35', backendValue: 'SEPARATION INTEREST' },
+  { id: 'REBATES', name: 'Rebate Account', color: '#F7931E', backendValue: 'REBATES ACCOUNT' },
+  { id: 'CORE', name: 'FIDUS Core', color: '#004E89', backendValue: 'FIDUS CORE' },
+  { id: 'BALANCE', name: 'FIDUS Balance', color: '#1B998B', backendValue: 'FIDUS BALANCE' },
+  { id: 'DYNAMIC', name: 'FIDUS Dynamic', color: '#C44569', backendValue: 'FIDUS DYNAMIC' }
 ];
 
 function FundTypeZone({ fundType, accounts, onRemoveAccount }) {
