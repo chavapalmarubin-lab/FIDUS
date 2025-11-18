@@ -6,6 +6,7 @@ import FundDropZones from './FundDropZones';
 import FundTypesRow from './FundTypesRow';
 import BrokerPlatformZones from './BrokerPlatformZones';
 import ReassignmentDialog from './ReassignmentDialog';
+import ApplyAllocationsDialog from './ApplyAllocationsDialog';
 import { getAuthHeaders } from '../../utils/auth';
 import './InvestmentCommittee.css';
 
