@@ -83,13 +83,29 @@
 .investment-committee-layout {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  height: calc(100vh - 200px);
+}
+
+/* Sticky fund types at top */
+.fund-types-row {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(26, 31, 46, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .main-content-row {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 2rem;
+  flex: 1;
+  min-height: 0;
+  padding: 1rem 1.5rem;
 }
 
 @media (max-width: 1200px) {
@@ -100,6 +116,8 @@
 }
 
 .accounts-sidebar {
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -111,6 +129,7 @@
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .left-sidebar {
