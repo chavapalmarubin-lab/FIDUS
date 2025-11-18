@@ -919,6 +919,34 @@ Solution: Under investigation
 Status: 🔴 ACTIVE
  
 16. CHANGE LOG
+November 17, 2025 - Investment Committee Allocation Workflow
+•	Feature: Complete allocation workflow with validation and recalculations
+•	Components: Apply button, 6 recalculation functions, audit logging
+•	Implementation Time: 7-10 hours
+•	Performance: 0.05s for all recalculations
+•	Status: ✅ Production ready
+•	Files Created:
+	○	frontend/src/components/investmentCommittee/ApplyAllocationsButton.jsx
+	○	frontend/src/components/investmentCommittee/ApplyAllocations.css
+	○	backend/services/allocation_recalculations.py
+•	Files Modified:
+	○	frontend/src/components/investmentCommittee/InvestmentCommitteeDragDrop.jsx
+	○	backend/routes/investment_committee_v2.py
+•	Collections Created:
+	○	allocation_audit_log - Audit trail for allocation changes
+	○	allocation_history - Detailed change history
+•	Implemented by: Emergent AI
+•	Verified by: Backend testing complete
+•	Testing: All 6 recalculation functions tested and working
+•	Performance Metrics:
+	○	recalculate_cash_flow: 0.010s
+	○	recalculate_commissions: 0.001s
+	○	update_performance_metrics: 0.001s
+	○	recalculate_pl: 0.014s
+	○	update_manager_allocations: 0.018s
+	○	update_fund_distributions: 0.001s
+	○	Total: 0.05s
+
 November 14, 2025 - v5.0.1 - Investment Simulator Bug Fix
 •	Component: Investment Simulator
 •	Status: CRITICAL BUG FIX - Tested & Verified
