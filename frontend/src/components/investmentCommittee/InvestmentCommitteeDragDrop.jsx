@@ -423,6 +423,15 @@ export default function InvestmentCommitteeDragDrop() {
           onConfirm={handleReassignConfirm}
           onCancel={handleReassignCancel}
         />
+
+        {/* Apply Allocations Dialog */}
+        <ApplyAllocationsDialog
+          isOpen={showApplyDialog}
+          allocations={fundAllocations}
+          totalCapital={totalCapital}
+          onConfirm={handleApplyAllocations}
+          onCancel={() => setShowApplyDialog(false)}
+        />
       </div>
     </DndContext>
   );
