@@ -647,10 +647,18 @@ async def apply_allocations(
         # STEP 2: Initialize recalculation service
         recalc_service = AllocationRecalculationService(_db)
         
-        # STEP 3: Execute all updates in a MongoDB transaction
-        async with await _db.client.start_session() as session:
-            async with session.start_transaction():
-                try:
+        # STEP 3: Execute all updates (with transaction if replica set available)
+        try:
+            session = await _db.client.start_session()
+        except Exception as e:
+            logger.warning(f"⚠️ Transaction support not available: {e}")
+            session = None
+        
+        try:
+            if session:
+                await session.start_transaction()
+            
+            try:
                     # Update account statuses to 'assigned'
                     accounts_updated = 0
                     
