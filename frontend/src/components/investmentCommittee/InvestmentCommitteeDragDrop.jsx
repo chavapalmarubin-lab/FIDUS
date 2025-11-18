@@ -251,6 +251,11 @@ export default function InvestmentCommitteeDragDrop() {
     );
   }
 
+  function handleApplySuccess(result) {
+    // Reload data after successful application
+    loadData();
+  }
+
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="investment-committee-container">
@@ -263,6 +268,9 @@ export default function InvestmentCommitteeDragDrop() {
             🔄 Refresh Data
           </button>
         </div>
+
+        {/* Apply Allocations Button */}
+        <ApplyAllocationsButton onSuccess={handleApplySuccess} />
 
         <div className="investment-committee-layout">
           {/* Left Sidebar: MT5 Accounts */}
