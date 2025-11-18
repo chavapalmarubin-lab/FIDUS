@@ -11,13 +11,13 @@ import './InvestmentCommittee.css';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Define fund types mapping
+// Define fund types mapping - MUST MATCH BACKEND EXACTLY
 const FUND_TYPE_NAMES = {
-  'SEPARATION': 'Separation Account',
-  'REBATES': 'Rebate Account', 
-  'CORE': 'FIDUS Core',
-  'BALANCE': 'FIDUS Balance',
-  'DYNAMIC': 'FIDUS Dynamic'
+  'SEPARATION': 'SEPARATION INTEREST',
+  'REBATES': 'REBATES ACCOUNT', 
+  'CORE': 'FIDUS CORE',
+  'BALANCE': 'FIDUS BALANCE',
+  'DYNAMIC': 'FIDUS DYNAMIC'
 };
 
 export default function InvestmentCommitteeDragDrop() {
