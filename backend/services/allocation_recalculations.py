@@ -353,7 +353,7 @@ class AllocationRecalculationService:
             managers_updated = 0
             
             for manager in managers:
-                manager_name = manager["name"]
+                manager_name = manager.get("name") or manager.get("manager_name")
                 
                 # Get all accounts for this manager
                 accounts = await self.db.mt5_accounts.find(
