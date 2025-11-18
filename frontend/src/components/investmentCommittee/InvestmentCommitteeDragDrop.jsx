@@ -217,6 +217,26 @@ export default function InvestmentCommitteeDragDrop() {
     }
   }
 
+  // Handle reassignment dialog confirmation
+  async function handleReassignConfirm() {
+    if (!pendingAssignment) return;
+    
+    await performAssignment(
+      pendingAssignment.accountNumber,
+      pendingAssignment.type,
+      pendingAssignment.value
+    );
+    
+    setShowReassignDialog(false);
+    setPendingAssignment(null);
+  }
+
+  // Handle reassignment dialog cancellation
+  function handleReassignCancel() {
+    setShowReassignDialog(false);
+    setPendingAssignment(null);
+  }
+
   async function handleRemoveAccount(accountOrNumber, assignmentValue, assignmentType) {
     // Handle both account object and account number
     const accountNumber = typeof accountOrNumber === 'object' ? accountOrNumber.account : accountOrNumber;
