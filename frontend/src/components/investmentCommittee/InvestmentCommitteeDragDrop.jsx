@@ -277,8 +277,8 @@ export default function InvestmentCommitteeDragDrop() {
           </button>
         </div>
 
-        {/* Apply Allocations Button */}
-        <ApplyAllocationsButton onSuccess={handleApplySuccess} />
+        {/* Apply Allocations Button (only if available) */}
+        {ApplyAllocationsButton && <ApplyAllocationsButton onSuccess={handleApplySuccess} />}
 
         <div className="investment-committee-layout">
           {/* Left Sidebar: MT5 Accounts */}
