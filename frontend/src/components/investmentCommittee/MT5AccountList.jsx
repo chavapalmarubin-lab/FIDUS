@@ -76,6 +76,12 @@ export default function MT5AccountList({ accounts }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
+  // Calculate totals
+  const totalCapital = accounts?.reduce((sum, acc) => sum + (acc.balance || 0), 0) || 0;
+  const unassignedCapital = accounts?.filter(acc => !acc.managerAssigned && !acc.fundType)
+                                    .reduce((sum, acc) => sum + (acc.balance || 0), 0) || 0;
+  const assignedCapital = totalCapital - unassignedCapital;
+
   // Filter and search accounts
   const filteredAccounts = useMemo(() => {
     let filtered = accounts || [];
