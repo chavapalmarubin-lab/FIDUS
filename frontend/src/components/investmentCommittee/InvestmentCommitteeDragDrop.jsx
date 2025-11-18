@@ -3,6 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
 import FundDropZones from './FundDropZones';
+import FundTypesRow from './FundTypesRow';
 import BrokerPlatformZones from './BrokerPlatformZones';
 import ReassignmentDialog from './ReassignmentDialog';
 import { getAuthHeaders } from '../../utils/auth';
