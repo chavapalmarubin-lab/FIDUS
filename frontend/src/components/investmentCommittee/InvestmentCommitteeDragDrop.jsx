@@ -4,6 +4,7 @@ import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
 import FundDropZones from './FundDropZones';
 import BrokerPlatformZones from './BrokerPlatformZones';
+import ApplyAllocationsButton from './ApplyAllocationsButton';
 import './InvestmentCommittee.css';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
