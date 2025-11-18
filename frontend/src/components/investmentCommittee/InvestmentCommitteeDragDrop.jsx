@@ -380,7 +380,7 @@ export default function InvestmentCommitteeDragDrop() {
             </button>
             {hasUnsavedChanges && (
               <button 
-                onClick={() => setHasUnsavedChanges(false)} 
+                onClick={() => setShowApplyDialog(true)} 
                 className="apply-btn"
                 title="Apply changes and recalculate fund portfolios"
               >
