@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import MT5AccountList from './MT5AccountList';
 import ManagerDropZones from './ManagerDropZones';
-import FundTypesRow from './FundTypesRow';
+import FundDropZones from './FundDropZones';
 import BrokerPlatformZones from './BrokerPlatformZones';
 import ReassignmentDialog from './ReassignmentDialog';
 import { getAuthHeaders } from '../../utils/auth';
