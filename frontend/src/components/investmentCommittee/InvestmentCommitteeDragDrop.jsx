@@ -122,35 +122,55 @@ export default function InvestmentCommitteeDragDrop() {
 
     if (!draggedItem || !dropTarget) return;
 
-    // Confirm with user
-    const account = draggedItem.account;
-    let confirmMessage = '';
-    let assignmentType = '';
-    let assignmentValue = '';
+    console.log('Dragged:', draggedItem);
+    console.log('Drop target:', dropTarget);
 
-    if (dropTarget.type === 'manager') {
-      assignmentType = 'manager';
-      assignmentValue = dropTarget.manager;
-      confirmMessage = `Assign account ${account.account} to manager "${dropTarget.manager}"?`;
-    } else if (dropTarget.type === 'fund') {
-      assignmentType = 'fund';
-      assignmentValue = dropTarget.fund;
-      confirmMessage = `Assign account ${account.account} to fund "${dropTarget.fund}"?`;
-    } else if (dropTarget.type === 'broker') {
-      assignmentType = 'broker';
-      assignmentValue = dropTarget.value;
-      confirmMessage = `Assign account ${account.account} to broker "${dropTarget.value}"?`;
-    } else if (dropTarget.type === 'platform') {
-      assignmentType = 'platform';
-      assignmentValue = dropTarget.value;
-      confirmMessage = `Assign account ${account.account} to platform "${dropTarget.value}"?`;
-    }
-
-    if (!window.confirm(confirmMessage)) {
+    // Extract account info
+    const accountNumber = draggedItem.account;
+    const accountData = accounts.find(acc => acc.account === accountNumber);
+    
+    if (!accountNumber || !accountData) {
+      alert('Invalid account data');
       return;
     }
 
-    await performAssignment(account.account, assignmentType, assignmentValue);
+    // Check if this is a reassignment (account already has allocation of this type)
+    let needsConfirmation = false;
+    let currentAllocation = null;
+    let newAllocation = null;
+
+    if (dropTarget.type === 'fund' && accountData.fundType) {
+      needsConfirmation = true;
+      currentAllocation = FUND_TYPE_NAMES[accountData.fundType] || accountData.fundType;
+      newAllocation = FUND_TYPE_NAMES[dropTarget.fundType] || dropTarget.fundType;
+    } else if (dropTarget.type === 'manager' && accountData.manager_assigned) {
+      needsConfirmation = true;
+      currentAllocation = accountData.manager_assigned;
+      newAllocation = dropTarget.managerName;
+    }
+
+    // If needs confirmation, show dialog
+    if (needsConfirmation) {
+      setPendingAssignment({
+        accountNumber,
+        type: dropTarget.type,
+        value: dropTarget.type === 'fund' ? dropTarget.fundType : dropTarget.managerName,
+        currentAllocation,
+        newAllocation
+      });
+      setShowReassignDialog(true);
+    } else {
+      // Direct assignment for new allocations
+      if (dropTarget.type === 'manager') {
+        await performAssignment(accountNumber, 'manager', dropTarget.managerName);
+      } else if (dropTarget.type === 'fund') {
+        await performAssignment(accountNumber, 'fund', dropTarget.fundType);
+      } else if (dropTarget.type === 'broker') {
+        await performAssignment(accountNumber, 'broker', dropTarget.brokerName);
+      } else if (dropTarget.type === 'platform') {
+        await performAssignment(accountNumber, 'platform', dropTarget.platformName);
+      }
+    }
   }
 
   async function performAssignment(accountNumber, assignmentType, assignmentValue) {
