@@ -37,23 +37,37 @@ function MT5AccountCard({ account }) {
         })}
       </div>
       
-      {account.managerAssigned && (
-        <div className="account-assignment">
-          <small className="assignment-label">📊 {account.managerAssigned}</small>
-        </div>
-      )}
+      <div className="account-details">
+        {account.clientName && (
+          <div className="account-client">
+            <small className="assignment-label">👤 {account.clientName}</small>
+          </div>
+        )}
+        
+        {account.server && (
+          <div className="account-broker">
+            <small className="assignment-label">🏢 {account.server}</small>
+          </div>
+        )}
+        
+        {account.managerAssigned && (
+          <div className="account-assignment">
+            <small className="assignment-label">📊 {account.managerAssigned}</small>
+          </div>
+        )}
+        
+        {account.fundType && (
+          <div className="account-fund">
+            <small className="assignment-label">💰 {account.fundType}</small>
+          </div>
+        )}
+      </div>
       
-      {account.fundType && (
-        <div className="account-fund">
-          <small className="assignment-label">💰 {account.fundType}</small>
-        </div>
-      )}
-      
-      {account.tradingPlatform && (
-        <div className="account-platform">
-          <small className="assignment-label">🖥️ {account.tradingPlatform}</small>
-        </div>
-      )}
+      <div className="account-status">
+        <span className={`status-badge ${account.managerAssigned ? 'assigned' : 'unassigned'}`}>
+          {account.managerAssigned ? 'Assigned' : 'Available'}
+        </span>
+      </div>
     </div>
   );
 }
