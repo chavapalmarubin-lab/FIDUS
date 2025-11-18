@@ -155,7 +155,7 @@ export default function InvestmentCommitteeDragDrop() {
       setPendingAssignment({
         accountNumber,
         type: dropTarget.type,
-        value: dropTarget.type === 'fund' ? dropTarget.fundType : dropTarget.managerName,
+        value: dropTarget.type === 'fund' ? FUND_TYPE_NAMES[dropTarget.fundType] : dropTarget.managerName,
         currentAllocation,
         newAllocation
       });
@@ -165,7 +165,7 @@ export default function InvestmentCommitteeDragDrop() {
       if (dropTarget.type === 'manager') {
         await performAssignment(accountNumber, 'manager', dropTarget.managerName);
       } else if (dropTarget.type === 'fund') {
-        await performAssignment(accountNumber, 'fund', dropTarget.fundType);
+        await performAssignment(accountNumber, 'fund', FUND_TYPE_NAMES[dropTarget.fundType]);
       } else if (dropTarget.type === 'broker') {
         await performAssignment(accountNumber, 'broker', dropTarget.brokerName);
       } else if (dropTarget.type === 'platform') {
