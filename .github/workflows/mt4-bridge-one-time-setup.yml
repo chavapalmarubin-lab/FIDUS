@@ -116,47 +116,46 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           script: |
-            echo "=========================================="
-            echo "PYTHON DEPENDENCIES INSTALLATION"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'PYTHON DEPENDENCIES INSTALLATION' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            # Check if Python is installed
-            echo ""
-            echo "STEP 1: Checking Python installation..."
-            powershell -Command "python --version"
+            # STEP 1: Check Python installation
+            Write-Host 'STEP 1: Checking Python installation...' -ForegroundColor Yellow
+            python --version
+            Write-Host ''
             
-            # Install required packages
-            echo ""
-            echo "STEP 2: Installing Python packages..."
-            echo "  - pyzmq (ZeroMQ Python bindings)"
-            echo "  - pymongo (MongoDB driver)"
-            echo "  - python-dotenv (Environment variables)"
-            echo ""
+            # STEP 2: Install Python packages
+            Write-Host 'STEP 2: Installing Python packages...' -ForegroundColor Yellow
+            Write-Host '  - pyzmq (ZeroMQ Python bindings)' -ForegroundColor Gray
+            Write-Host '  - pymongo (MongoDB driver)' -ForegroundColor Gray
+            Write-Host '  - python-dotenv (Environment variables)' -ForegroundColor Gray
+            Write-Host ''
             
-            powershell -Command "python -m pip install --upgrade pip"
-            powershell -Command "pip install pyzmq pymongo python-dotenv"
-            
-            if [ $? -eq 0 ]; then
-              echo ""
-              echo "✓ All Python dependencies installed successfully"
-            else
-              echo ""
-              echo "✗ Python dependency installation failed"
+            try {
+              python -m pip install --upgrade pip --quiet
+              pip install pyzmq pymongo python-dotenv --quiet
+              Write-Host '✓ All Python dependencies installed successfully' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ Python dependency installation failed:' \$_.Exception.Message -ForegroundColor Red
               exit 1
-            fi
+            }
+            Write-Host ''
             
-            # Verify installations
-            echo ""
-            echo "STEP 3: Verifying installations..."
-            powershell -Command "python -c 'import zmq; print(f\"✓ pyzmq {zmq.zmq_version()}\")'"
-            powershell -Command "python -c 'import pymongo; print(f\"✓ pymongo {pymongo.__version__}\")'"
+            # STEP 3: Verify installations
+            Write-Host 'STEP 3: Verifying installations...' -ForegroundColor Yellow
+            python -c 'import zmq; print(f\"✓ pyzmq {zmq.zmq_version()}\")'
+            python -c 'import pymongo; print(f\"✓ pymongo {pymongo.__version__}\")'
+            Write-Host ''
             
-            echo ""
-            echo "=========================================="
-            echo "PYTHON DEPENDENCIES COMPLETE"
-            echo "=========================================="
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'PYTHON DEPENDENCIES COMPLETE' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            "
       
       - name: Setup Summary
         if: always()
