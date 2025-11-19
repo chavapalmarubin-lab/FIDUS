@@ -18,73 +18,80 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           command_timeout: 300s
           script: |
-            echo "=========================================="
-            echo "MT4 ZEROMQ LIBRARY - ONE-TIME SETUP"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'MT4 ZEROMQ LIBRARY - ONE-TIME SETUP' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            # Create temp directory
-            echo ""
-            echo "STEP 1: Creating temp directory..."
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\temp\zeromq' | Out-Null"
+            # STEP 1: Create temp directory
+            Write-Host 'STEP 1: Creating temp directory...' -ForegroundColor Yellow
+            New-Item -ItemType Directory -Force -Path 'C:\temp\zeromq' | Out-Null
+            Write-Host '✓ Directory created' -ForegroundColor Green
+            Write-Host ''
             
-            # Download ZeroMQ library
-            echo ""
-            echo "STEP 2: Downloading ZeroMQ library for MT4..."
-            powershell -Command "Invoke-WebRequest -Uri 'https://github.com/dingmaotu/mql-zmq/archive/refs/heads/master.zip' -OutFile 'C:\temp\zeromq\mql-zmq.zip'"
-            
-            if [ $? -eq 0 ]; then
-              echo "✓ Download successful"
-            else
-              echo "✗ Download failed"
+            # STEP 2: Download ZeroMQ library
+            Write-Host 'STEP 2: Downloading ZeroMQ library for MT4...' -ForegroundColor Yellow
+            try {
+              Invoke-WebRequest -Uri 'https://github.com/dingmaotu/mql-zmq/archive/refs/heads/master.zip' -OutFile 'C:\temp\zeromq\mql-zmq.zip' -UseBasicParsing
+              Write-Host '✓ Download successful' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ Download failed:' \$_.Exception.Message -ForegroundColor Red
               exit 1
-            fi
+            }
+            Write-Host ''
             
-            # Extract archive
-            echo ""
-            echo "STEP 3: Extracting archive..."
-            powershell -Command "Expand-Archive -Path 'C:\temp\zeromq\mql-zmq.zip' -DestinationPath 'C:\temp\zeromq' -Force"
-            
-            if [ $? -eq 0 ]; then
-              echo "✓ Extraction successful"
-            else
-              echo "✗ Extraction failed"
+            # STEP 3: Extract archive
+            Write-Host 'STEP 3: Extracting archive...' -ForegroundColor Yellow
+            try {
+              Expand-Archive -Path 'C:\temp\zeromq\mql-zmq.zip' -DestinationPath 'C:\temp\zeromq' -Force
+              Write-Host '✓ Extraction successful' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ Extraction failed:' \$_.Exception.Message -ForegroundColor Red
               exit 1
-            fi
+            }
+            Write-Host ''
             
-            # Create Include directory if it doesn't exist
-            echo ""
-            echo "STEP 4: Creating MT4 Include directory..."
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq' | Out-Null"
+            # STEP 4: Create MT4 Include directory
+            Write-Host 'STEP 4: Creating MT4 Include directory...' -ForegroundColor Yellow
+            New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq' | Out-Null
+            Write-Host '✓ Directory created' -ForegroundColor Green
+            Write-Host ''
             
-            # Copy ZeroMQ files to MT4 Include directory
-            echo ""
-            echo "STEP 5: Copying ZeroMQ files to MT4..."
-            powershell -Command "Copy-Item -Path 'C:\temp\zeromq\mql-zmq-master\MQL4\Include\Zmq\*' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\' -Recurse -Force"
-            
-            if [ $? -eq 0 ]; then
-              echo "✓ ZeroMQ library installed successfully"
-            else
-              echo "✗ Installation failed"
+            # STEP 5: Copy ZeroMQ files to MT4
+            Write-Host 'STEP 5: Copying ZeroMQ files to MT4...' -ForegroundColor Yellow
+            try {
+              Copy-Item -Path 'C:\temp\zeromq\mql-zmq-master\MQL4\Include\Zmq\*' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\' -Recurse -Force
+              Write-Host '✓ Files copied successfully' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ Copy failed:' \$_.Exception.Message -ForegroundColor Red
               exit 1
-            fi
+            }
+            Write-Host ''
             
-            # Verify installation
-            echo ""
-            echo "STEP 6: Verifying installation..."
-            powershell -Command "if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\Zmq.mqh') { Write-Host '✓ Zmq.mqh found - Installation verified'; exit 0 } else { Write-Host '✗ Zmq.mqh not found - Installation failed'; exit 1 }"
+            # STEP 6: Verify installation
+            Write-Host 'STEP 6: Verifying installation...' -ForegroundColor Yellow
+            if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\Zmq.mqh') {
+              Write-Host '✓ Zmq.mqh found - Installation verified' -ForegroundColor Green
+            } else {
+              Write-Host '✗ Zmq.mqh not found - Installation failed' -ForegroundColor Red
+              exit 1
+            }
+            Write-Host ''
             
-            # Cleanup
-            echo ""
-            echo "STEP 7: Cleaning up temp files..."
-            powershell -Command "Remove-Item -Path 'C:\temp\zeromq' -Recurse -Force -ErrorAction SilentlyContinue"
+            # STEP 7: Cleanup
+            Write-Host 'STEP 7: Cleaning up temp files...' -ForegroundColor Yellow
+            Remove-Item -Path 'C:\temp\zeromq' -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host '✓ Cleanup complete' -ForegroundColor Green
+            Write-Host ''
             
-            echo ""
-            echo "=========================================="
-            echo "ZEROMQ INSTALLATION COMPLETE"
-            echo "=========================================="
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'ZEROMQ INSTALLATION COMPLETE' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            "
             
       - name: Setup Summary
         if: always()
