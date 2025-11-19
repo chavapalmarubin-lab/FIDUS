@@ -185,12 +185,19 @@ async def assign_account_to_manager(
             detail=f"Invalid manager name. Must be one of: {VALID_MANAGERS}"
         )
     
-    # Validate account exists
+    # Validate account exists and is in our managed accounts
+    if data.account_number not in ALL_ACCOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Account {data.account_number} is not in the managed accounts list"
+        )
+    
+    # Validate account exists in database
     account = await _db.mt5_accounts.find_one({"account": data.account_number})
     if not account:
         raise HTTPException(
             status_code=404,
-            detail=f"Account {data.account_number} not found"
+            detail=f"Account {data.account_number} not found in database"
         )
     
     try:
@@ -241,12 +248,19 @@ async def assign_account_to_fund(
             detail=f"Invalid fund type. Must be one of: {VALID_FUNDS}"
         )
     
-    # Validate account exists
+    # Validate account exists and is in our managed accounts
+    if data.account_number not in ALL_ACCOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Account {data.account_number} is not in the managed accounts list"
+        )
+    
+    # Validate account exists in database
     account = await _db.mt5_accounts.find_one({"account": data.account_number})
     if not account:
         raise HTTPException(
             status_code=404,
-            detail=f"Account {data.account_number} not found"
+            detail=f"Account {data.account_number} not found in database"
         )
     
     try:
@@ -295,12 +309,19 @@ async def assign_account_to_broker(
             detail=f"Invalid broker. Must be one of: {VALID_BROKERS}"
         )
     
-    # Validate account exists
+    # Validate account exists and is in our managed accounts
+    if data.account_number not in ALL_ACCOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Account {data.account_number} is not in the managed accounts list"
+        )
+    
+    # Validate account exists in database
     account = await _db.mt5_accounts.find_one({"account": data.account_number})
     if not account:
         raise HTTPException(
             status_code=404,
-            detail=f"Account {data.account_number} not found"
+            detail=f"Account {data.account_number} not found in database"
         )
     
     try:
@@ -349,12 +370,19 @@ async def assign_account_to_platform(
             detail=f"Invalid trading platform. Must be one of: {VALID_PLATFORMS}"
         )
     
-    # Validate account exists
+    # Validate account exists and is in our managed accounts
+    if data.account_number not in ALL_ACCOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Account {data.account_number} is not in the managed accounts list"
+        )
+    
+    # Validate account exists in database
     account = await _db.mt5_accounts.find_one({"account": data.account_number})
     if not account:
         raise HTTPException(
             status_code=404,
-            detail=f"Account {data.account_number} not found"
+            detail=f"Account {data.account_number} not found in database"
         )
     
     try:
@@ -404,12 +432,19 @@ async def remove_assignment(
             detail=f"Invalid assignment type. Must be one of: {valid_types}"
         )
     
-    # Validate account exists
+    # Validate account exists and is in our managed accounts
+    if data.account_number not in ALL_ACCOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Account {data.account_number} is not in the managed accounts list"
+        )
+    
+    # Validate account exists in database
     account = await _db.mt5_accounts.find_one({"account": data.account_number})
     if not account:
         raise HTTPException(
             status_code=404,
-            detail=f"Account {data.account_number} not found"
+            detail=f"Account {data.account_number} not found in database"
         )
     
     try:
