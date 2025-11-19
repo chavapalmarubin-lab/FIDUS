@@ -33,7 +33,7 @@ from typing import Dict, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../vps-scripts'))
 
 # Test configuration
-TEST_MONGODB_URI = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production"
+TEST_MONGODB_URI = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 TEST_DATABASE = "fidus_production"
 TEST_COLLECTIONS = ["mt5_accounts", "mt5_account_config"]
 
