@@ -16,7 +16,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 async def check_frontend_health() -> Dict[str, Any]:
     """Check frontend availability and response time"""
     start = time.time()
-    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://allocation-hub-1.preview.emergentagent.com').replace('/api', '')
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://tradingbridge-4.preview.emergentagent.com').replace('/api', '')
     
     try:
         async with httpx.AsyncClient() as client:
@@ -80,7 +80,7 @@ async def check_backend_health(db) -> Dict[str, Any]:
         except:
             active_connections = 0
         
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://allocation-hub-1.preview.emergentagent.com/api')
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://tradingbridge-4.preview.emergentagent.com/api')
         
         return {
             "component": "backend",

@@ -4,7 +4,7 @@ Test Render Production API
 import requests
 import json
 
-BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

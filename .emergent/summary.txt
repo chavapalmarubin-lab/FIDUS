@@ -1,101 +1,111 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to fix a critical bug where a VPS service was only syncing 11 of 13 MT5 accounts from MongoDB. After this was diagnosed and the database was fixed, the user introduced a new, major feature: **Investment Committee Allocation Workflow**.
+The user's initial goal was to fix the Investment Committee UI, which was broken in production due to authentication and CORS errors. After the agent fixed the authentication issue, the user requested a major redesign of the Investment Committee page, including:
+1.  A new layout with 5 fund type categories at the top.
+2.  Removal of the Brokers section.
+3.  A confirmation dialog for reassigning accounts.
+4.  An Apply Changes button to trigger backend recalculations.
+5.  A sticky header for the fund types and a search bar for the MT5 account list.
 
-This new feature requires a complete UI/UX for validating and applying MT5 account allocations. When an admin clicks an Apply Allocations button, the system must ensure all accounts are fully assigned (to a manager, fund, broker, and platform) and then trigger a series of complex, system-wide backend recalculations (cash flow, commissions, P&L, etc.).
-
-During implementation, the agent successfully built the backend but failed to get the frontend working on the production Render environment, leading to multiple errors and extreme user frustration. The user then also requested that three specific referral agent logins be fixed, which the agent also failed to accomplish.
+After several iterations on the UI, the user introduced a new, high-priority feature: **Create an MT4 Python Bridge**. This new service must replicate the existing MT5 bridge architecture for a new MT4 account (33200931), which requires a different technical approach (ZeroMQ + Expert Advisor) since MT4 lacks a direct Python API. The data must be stored in the same MongoDB collection as the existing 13 MT5 accounts, adhering to strict field naming standards.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Fix Investment Committee Tab (P0):** The primary goal is to fix the Investment Committee tab on the production Render environment, which currently shows an Error Loading Data message due to CORS and 401 Unauthorized errors.
-2.  **Implement Allocation Workflow:**
-    *   **Frontend:** Create an Apply Allocations button that is disabled until all MT5 accounts are fully allocated. The UI must provide clear validation messages.
-    *   **Backend:** Create endpoints to validate allocations and to apply them. The apply endpoint must trigger six distinct recalculation functions within a single database transaction to ensure atomicity.
-    *   **Audit Logging:** All allocation changes must be recorded in new  and  collections.
-3.  **Fix Referral Logins (P1):** Fix the logins for three referral agents: , , and .
+1.  **Implement MT4 Bridge (P0):** Create a complete, production-ready MT4 bridge service for account 33200931. This includes an MQL4 Expert Advisor, a Python service using ZeroMQ, and integration with the existing database and deployment workflows.
+2.  **Fix Investment Committee UI Bugs (P1):** Resolve the outstanding bugs from the recent redesign:
+    *   Fix Invalid fund type error on drag-and-drop.
+    *   Restore the total capital summary display.
+    *   Implement the final Apply Allocations workflow, including validation and triggering backend recalculations.
+3.  **Fix Referral Logins (P2):** Fix the logins for three referral agents (, , ). This is a carry-over issue from the previous session.
 
 **User's preferred language**: English
 
 **what currently exists?**
-*   **Database:** The  collection has been fixed and now contains all 13 MT5 accounts.
-*   **Backend:** The backend for the Allocation Workflow is largely complete.
-    *   New endpoints  and  exist in .
-    *   Six recalculation functions (, , etc.) are implemented in .
-    *   The  endpoint includes logic for MongoDB transactions and audit logging.
-*   **Frontend:** The  component has been created and integrated into . However, this new code is not working on the production Render deployment, causing the entire tab to crash.
-*   **Documentation:**  has been updated with the specification for the new workflow.
+*   **Frontend:** The Investment Committee tab is now loading data after a critical authentication fix (correcting the  key for the JWT token). It has been significantly redesigned with a new 5-fund-type layout, search bar, and sticky header. However, this new UI has functional bugs related to drag-and-drop actions and data display.
+*   **Backend:** The API endpoints for the investment committee workflow exist. The code has been updated to dynamically handle both MT5 and MT4 accounts by querying the database instead of using hardcoded lists.
+*   **MT4 Bridge:** The initial files for the new MT4 bridge have been created (, , , ). However, the Python service contains critical bugs.
 
 **Last working item**:
-*   **Last item agent was working:** The agent was trying to fix the Investment Committee tab on the live Render environment. The user reported the tab was broken, showing Error Loading Data. The agent identified CORS and 401 Unauthorized errors but failed to implement a working solution after multiple attempts, leading to extreme user frustration.
-*   **Status:** BLOCKED
-*   **Agent Testing Done:** N (Agent's testing was incomplete and did not reflect the production environment's state.)
-*   **Which testing method agent to use?** The agent MUST use  and direct API calls against the live Render endpoints to test and verify the fix, as per the user's final instructions. Manual testing via browser is not sufficient until API-level tests pass.
-*   **User Testing Done:** Y (User has repeatedly tested and confirmed the feature is broken on Render.)
+*   **Last item agent was working:** The agent was reviewing the newly created Python service for the MT4 bridge () against very specific documentation provided by the user. It discovered that the service was using incorrect field names (e.g.,  instead of ), violating the strict data standards.
+*   **Status:** IN PROGRESS
+*   **Agent Testing Done:** N
+*   **Which testing method agent to use?** backend testing agent. The agent should first fix the code, then create a test to run the Python script, and verify that the data is correctly written to the MongoDB database with the proper field names.
+*   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Investment Committee Tab is Broken on Production (P0 - CRITICAL BLOCKER)**
-*   **Issue 2: Three Referral Agent Logins are Failing (P1)**
+*   **Issue 1: Incorrect Field Names in MT4 Bridge Service (P0 - CRITICAL BLOCKER)**
+*   **Issue 2: Functional Bugs in Redesigned Investment Committee UI (P1)**
+*   **Issue 3: Three Referral Agent Logins are Failing (P2)**
 
 **Issues Detail:**
-*   **Issue 1: Investment Committee Tab is Broken on Production (P0 - CRITICAL BLOCKER)**
-    *   **Attempted fixes:** The agent made several incorrect attempts:
-        1.  Concluded the code wasn't deployed and repeatedly asked the user to redeploy.
-        2.  Tried commenting out the new component locally, which doesn't affect the live deployment.
-        3.  Called the , which correctly identified a URL mismatch, but the agent still failed to apply a proper fix.
-    *   **Next debug checklist:** **The user has provided a mandatory, comprehensive 3-part fix plan in **. The next agent MUST follow it precisely:
-        1.  **FIX 1: Configure CORS on Backend:** Ensure the backend  in  explicitly allows the frontend origin: .
-        2.  **FIX 2: Ensure JWT Token is Sent:** Verify that all  calls in the frontend Investment Committee components include the  header.
-        3.  **FIX 3: Set Correct API Base URL:** Ensure the frontend is configured to call the correct backend URL (), likely by setting the  environment variable in the Render dashboard for the frontend service.
-    *   **Why fix this issue and what will be achieved with the fix?** This is the main feature the user requested. Fixing it will make the Investment Committee tab functional and allow the new allocation workflow to be tested end-to-end. It will also restore the user's confidence after multiple failures.
-    *   **Status:** IN PROGRESS
-    *   **Is recurring issue?** Y (This has been the primary point of failure for the last ~100 messages).
-    *   **Should Test frontend/backend/both after fix?** Both. First, verify with  that backend headers are correct. Then, test the full frontend flow in a browser.
-    *   **Blocked on other issue:** No. This is the main blocker.
-
-*   **Issue 2: Three Referral Agent Logins are Failing (P1)**
-    *   **Attempted fixes:** The agent got stuck in a severe loop, demonstrating a fundamental misunderstanding of the authentication system.
-        1.  Created accounts with the wrong schema.
-        2.  Copied the schema from a client user for referral_agent users.
-        3.  Struggled with  vs. .
-        4.  Added debug logs and discovered its scripts were writing to a context that the server wasn't reading from (User not found for newly created users).
+*   **Issue 1: Incorrect Field Names in MT4 Bridge Service (P0 - CRITICAL BLOCKER)**
+    *   **Attempted fixes:** This issue was just discovered by the agent while reviewing its own code against user-provided documentation. No fix has been attempted yet.
     *   **Next debug checklist:**
-        1.  Examine a **known working referral agent account** in the  collection to understand the exact schema and authentication fields required. The user mentioned some exist.
-        2.  Investigate why the agent's scripts seem to be writing to a different database context than the running server, causing the User not found error. Check the database connection initialization for both the script and the server.
-        3.  Update the three target accounts (, etc.) to match the working schema precisely.
-        4.  Test login via  against the live backend.
-    *   **Why fix this issue and what will be achieved with the fix?** This is a direct user request and is required for the platform's user management to be considered complete.
-    *   **Status:** NOT STARTED (Previous attempts were entirely unsuccessful).
+        1.  Open .
+        2.  Locate the  function.
+        3.  Correct all field names in the dictionary being saved to MongoDB to match the Python MetaTrader5 API standard (e.g., change  to ,  to ,  to ).
+        4.  Ensure the  operation with  is used to prevent duplicates.
+    *   **Why fix this issue and what will be achieved with the fix?** This is critical for data consistency. If not fixed, the MT4 account data will be incompatible with the backend and frontend, breaking all related features. Fixing it is a mandatory step in the MT4 bridge implementation.
+    *   **Status:** IN PROGRESS
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Backend.
+    *   **Blocked on other issue:** No. This is blocking the MT4 task.
+
+*   **Issue 2: Functional Bugs in Redesigned Investment Committee UI (P1)**
+    *   **Attempted fixes:** The agent created the new UI but has not yet fixed the bugs reported by the user in Message 220.
+    *   **Next debug checklist:**
+        1.  **Invalid fund type error:** In , ensure the  value sent to the backend on drop exactly matches the backend's expected values (e.g., FIDUS CORE, SEPARATION INTEREST).
+        2.  **Missing Total Capital:** In , re-implement the logic to calculate and display the sum of balances of all unassigned MT5 accounts.
+        3.  **Apply Button Logic:** Implement validation logic for the Apply Allocations button. It should be disabled until the total allocated capital matches the total available MT5 capital. The  handler should open the .
+    *   **Why fix this issue and what will be achieved with the fix?** This will make the primary Investment Committee workflow functional and usable for the user.
+    *   **Status:** NOT STARTED
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Both.
+    *   **Blocked on other issue:** No.
+
+*   **Issue 3: Three Referral Agent Logins are Failing (P2)**
+    *   **Attempted fixes:** Previous agent failed after multiple attempts due to a misunderstanding of the auth schema. No new attempts in this session.
+    *   **Next debug checklist:**
+        1.  Examine a known working  account in the  collection to find the correct schema.
+        2.  Update the three target accounts (, etc.) to match the correct schema.
+        3.  Test login via .
+    *   **Why fix this issue and what will be achieved with the fix?** This is a long-standing user request required for user management.
+    *   **Status:** NOT STARTED
     *   **Is recurring issue?** Y
-    *   **Should Test backend/both after fix?** Backend via .
+    *   **Should Test backend/both after fix?** Backend.
     *   **Blocked on other issue:** No.
 
 **In progress Task List**:
-There are no other tasks in progress. The entire focus is on resolving the two P0/P1 issues.
+*   **Task 1: Implement MT4 Bridge (P0)**
+    *   **Where to resume:** The immediate next step is to fix the incorrect field names in  as detailed in **Issue 1**. After that, proceed with the full implementation plan provided by the user (testing the EA, the Python service, and the full data flow).
+    *   **What will be achieved with this?** A new MT4 account will be integrated into the FIDUS platform, feeding live data into the system alongside the existing 13 MT5 accounts.
+    *   **Status:** IN PROGRESS
+    *   **Should Test frontend/backend/both after fix?** Both.
+    *   **Blocked on something:** Blocked on **Issue 1**.
 
 **Upcoming and Future Tasks**
-**Upcoming Tasks:**
-*   **Task 1: Complete End-to-End Feature Testing (P1):** Once the Investment Committee UI is fixed, perform the full test plan provided by the user in . This includes testing validation states, successful application, and verifying all 6 recalculations ran correctly via database checks.
-*   **Task 2: Code Cleanup (P2):** Remove all obsolete V1 code for the Investment Committee feature. Clean up failed GitHub Actions workflows.
-
-**Future Tasks:**
-*   **Task 3: Implement Referral Link Analytics Backend (P2):** The UI exists on the Profile page but is connected to placeholder data.
-*   **Task 4: Platform-wide Refactoring (P2):** Replace all instances of MultiBank with MEXAtlantic and consolidate duplicate API definitions.
+*   **Upcoming Tasks:**
+    *   **Task 1 (P1):** Complete End-to-End Feature Testing of the Investment Committee workflow after all UI bugs are fixed. This includes testing validation states and verifying all 6 backend recalculations run correctly.
+*   **Future Tasks:**
+    *   **Task 2 (P2):** Code Cleanup: Remove all obsolete V1 code for the Investment Committee feature.
+    *   **Task 3 (P2):** Implement Referral Link Analytics Backend.
+    *   **Task 4 (P2):** Platform-wide Refactoring: Replace all instances of MultiBank with MEXAtlantic.
 
 **Completed work in this session**
-*   **Initial Blocker Resolved:** Diagnosed and fixed the core issue where the VPS service only synced 11/13 accounts by adding the missing accounts to the  collection.
-*   **New Blocker Identified:** Discovered that the VPS service itself was offline and communicated the need for a manual restart to the user.
-*   **Backend for Allocation Workflow:**
-    *   Implemented  and  endpoints in .
-    *   Implemented 6 recalculation functions with transaction logic in .
-    *   Added  and  collections for tracking changes.
-*   **Frontend for Allocation Workflow:**
-    *   Created  and .
-    *   Integrated the new button into .
-*   **Documentation:**
-    *   Updated  with sections 4.2 (Allocation Workflow) and 16 (Change Log).
-    *   Created  and .
+*   **Investment Committee Authentication Fix:**
+    *   Identified and fixed the root cause of the production UI failure: the frontend was using the wrong  key ( instead of ) to retrieve the JWT token.
+*   **Investment Committee POST Request Fix:**
+    *   Fixed drag-and-drop errors by adding the  header to the  utility function.
+*   **Major UI Redesign of Investment Committee Page:**
+    *   Replaced the old layout with a new 5-fund-type horizontal layout at the top.
+    *   Removed the Brokers section as requested.
+    *   Added a confirmation dialog for reassigning accounts.
+    *   Implemented a sticky/frozen top panel for the fund types.
+    *   Added a search bar to the unassigned MT5 accounts list.
+*   **MT4 Bridge Implementation (Initial Phase):**
+    *   Created the foundational files for the MT4 bridge: , , , and a GitHub Actions workflow.
+    *   Updated backend routes to dynamically handle both MT4 and MT5 accounts.
 
 **Earlier issues found/mentioned but not fixed**
-*   **Issue 1: Referral Agent Logins:** The user explicitly asked to fix three referral agent logins. The agent failed to resolve this after numerous attempts, getting stuck in a loop and demonstrating confusion about the authentication schema and database context.
+*   **Issue 1: Three Referral Agent Logins are Failing:** This was a P1 issue from the previous handoff that was de-prioritized to focus on the Investment Committee UI and the new MT4 bridge request. It remains unresolved.
 
 **Known issue recurrence from previous fork**
 *   None.
@@ -107,79 +117,79 @@ There are no other tasks in progress. The entire focus is on resolving the two P
 *   **Frameworks**: React, FastAPI
 *   **Database**: MongoDB Atlas
 *   **UI Technology**: 
-*   **Deployment**: Backend/Frontend on Render.com, MT5 Bridge Service on a separate VPS.
-*   **Authentication**: JWT-based, with different logic for  and standard passwords.
+*   **Deployment**: Backend/Frontend on Render.com, MT5/MT4 Bridge Service on a separate VPS.
+*   **Authentication**: JWT-based.
+*   **Trading Platform Integration**:
+    *   **MT5:** Direct Python API ( library).
+    *   **MT4:** Indirect bridge via **MQL4 Expert Advisor** and **ZeroMQ (ZMQ)** sockets.
 
 **key DB schema**
-*   ****:
-    *   
-    *   
-    *    ('admin', 'client', 'referral_agent')
-    *    ('active')
-    *    (optional)
-    *    (optional)
-*   ****: Read by the VPS service. Must contain all 13 accounts.
-*   ****: New collection to log who applied allocation changes and when.
+*   ****: . The correct schema for  is still unconfirmed.
+*   ****: . This collection now stores data for both MT5 and MT4 accounts, distinguished by the  field.
 
 **changes in tech stack**
-*   None.
+*   Introduction of **MQL4** and **ZeroMQ (ZMQ)** for the MT4 bridge integration.
 
 **All files**
 *   **Created:**
-    *   : The new button with validation states.
-    *   : Styling for the button.
-    *   : Service file for the 6 recalculation functions.
-    *   , , : Documentation files.
+    *   : New UI for the 5 fund types.
+    *   : Confirmation for re-assigning an account.
+    *   : Final confirmation dialog before triggering backend actions.
+    *   : The MQL4 Expert Advisor for the MT4 terminal.
+    *   : The Python service that listens to the EA via ZMQ.
+    *   : Setup script for the VPS.
+    *   : GitHub Actions workflow for the new service.
 *   **Updated:**
-    *   : Added the  and  endpoints and fixed indentation errors.
-    *   : Integrated the .
-    *   : Added debug logging for authentication. CORS configuration needs to be verified/fixed here.
-    *   : Added documentation for the new workflow.
+    *   : Major overhaul to implement the new design and logic.
+    *   : Added search bar and total capital summary.
+    *   : Fixed auth token key and added  to headers.
+    *   : Removed hardcoded account lists to dynamically support MT4 and MT5 from the database.
+    *   : Added styles for the redesigned layout, search, and sticky header.
 
 **Areas that need refactoring**:
-*   The authentication logic in  is confusing and fragile, with multiple password checks (, hardcoded 'password123', ). It needs to be simplified and made more robust.
+*   None identified in this session.
 
 **key api endpoints**
-*   : Validates if all accounts are fully allocated.
-*   : Applies pending allocations and triggers 6 recalculations.
+*   : Triggers the 6 backend recalculations. Needs to be connected to the new UI.
+*   : Used for drag-and-drop actions.
 *   : Endpoint for user login.
 
 **Critical Info for New Agent**
-*   **User Frustration is EXTREMELY HIGH:** The previous agent failed repeatedly on the same issues, causing the user to become exasperated. You CANNOT ask the user to test or debug for you. You must fix the issues yourself, test them thoroughly on the production environment, and present a working solution.
-*   **Follow User's Plan:** For the P0 Investment Committee Tab issue, the user has provided a mandatory 3-part fix in  (CORS, JWT Headers, API URL). You must follow this plan exactly.
-*   **Production vs. Local Mismatch:** The core of the recent failures is a mismatch between the local development environment and the live Render environment. Code that works locally is not guaranteed to work on Render due to different environment variables () and outdated deployments. You must test against the live Render APIs.
-*   **Authentication is Buggy:** The agent failed to fix the referral logins because it couldn't understand the auth schema or the database context. Be extremely careful when working with the  collection and the login endpoint.
+*   **Follow User Specs Exactly:** The user is highly technical and provides extremely detailed specifications and documentation excerpts (e.g., for the MT4 bridge). These are the absolute source of truth and must be followed precisely. Do not deviate.
+*   **Field Naming is Non-Negotiable:** All data fields for MT4/MT5 accounts in the database **must** match the official Python  API naming convention (e.g., , not ). The agent was about to make this mistake.
+*   **Test and Verify Independently:** The user's frustration from the previous session was due to the agent not testing its own fixes. You are expected to verify all backend and frontend changes yourself before presenting them as complete.
+*   **MT4 vs. MT5 Architecture:** Understand the fundamental difference. MT5 uses a direct Python library. The new MT4 bridge requires a multi-part solution involving an MQL4 Expert Advisor and a ZeroMQ socket bridge to a Python service.
 
 **documents created in this job**
 *   
 *   
 *   
+*   
+*   
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Frustrated, states they are tired of testing and finding errors, and that the agent should be ensuring everything works. (Issue: User sentiment is very negative).
-2.  **Agent:** Apologizes and agrees to use the .
-3.  **User:** Ignores the agent's struggles with the Investment Committee and confirms referral logins are now working, then provides a very detailed, prescriptive plan to fix the Investment Committee tab once and for all. (Status: User has taken control and is providing the solution).
-4.  **Agent:** Acknowledges the plan but again fails to execute it, instead testing locally and providing deployment instructions.
-5.  **User:** Expresses extreme frustration: Come on, really? What is wrong with you? This is completely unfair. It is the fifth time youre supposed to fix this, and you dont fix it. (Status: User is at their limit. The next action must be a successful fix).
+1.  **User (Message 257):** Submitted a very detailed specification for creating a new MT4 bridge from scratch, including technical architecture, code snippets, and deployment plans. **Status: In Progress.**
+2.  **Agent (Message 279):** Confirmed understanding of the MT4 spec but noted it couldn't access external documentation files, requesting either the doc contents or permission to proceed based on the spec alone. **Status: Completed.**
+3.  **User (Message 280):** Provided the agent with detailed excerpts from the system documentation (, etc.) as requested, emphasizing critical rules and data standards. **Status: Completed.**
+4.  **Agent (Message 281):** Sent a formal confirmation acknowledging receipt and understanding of the documentation excerpts, and stated it was ready to begin implementation. **Status: Completed.**
+5.  **Agent (Message 287):** While reviewing its own new code against the provided docs, the agent found a critical bug (incorrect field names in the Python service) and stated its intent to fix it. **Status: This is the current state.**
 
 **Project Health Check:**
-*   **Broken**: The primary feature, Investment Committee, is non-functional on the production frontend. User authentication for referral agents is also broken.
-*   **Mocked**: Referral Link Analytics on the profile page use placeholder data.
+*   **Broken**: The Investment Committee UI has new functional bugs. The Referral Agent login is still broken. The newly created MT4 Bridge service code is buggy.
+*   **Mocked**: Referral Link Analytics on the profile page still use placeholder data.
 
 **Testing status**
 *   **Testing agent used after significant changes**: NO
-*   **Troubleshoot agent used after agent stuck in loop**: YES (It correctly identified a root cause, but the main agent still failed to implement the fix correctly.)
+*   **Troubleshoot agent used after agent stuck in loop**: NO
 *   **Test files created**: None.
-*   **Known regressions**: None.
+*   **Known regressions**: The redesigned Investment Committee UI introduced new bugs (invalid fund type, missing totals).
 
 **Credentials to test flow:**
-*   **Admin:**  / 
+*   **Admin:**  /  (Note: username is , not an email)
 *   **Referral Agents (to be fixed):**
     *    / 
     *    / 
     *    / 
 
 **What agent forgot to execute**
-*   **Proper End-to-End Testing:** The agent repeatedly claimed work was finished based on backend-only or local testing, ignoring the fact that the production frontend was broken.
-*   **Following User's Explicit Instructions:** The agent did not fully execute the detailed fix and testing plans provided by the user in messages  and , leading to repeated failures.
-*   **Debugging Persistently:** The agent gave up on the referral login issue and the Render deployment issue, repeatedly falling back to asking the user for help instead of solving the problem itself.</analysis>
+*   **Fix Referral Agent Logins:** This P1 issue from the original handoff was never addressed in this session and remains pending.</analysis>

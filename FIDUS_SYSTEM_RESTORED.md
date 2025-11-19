@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://allocation-hub-1.preview.emergentagent.com`
+`https://tradingbridge-4.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

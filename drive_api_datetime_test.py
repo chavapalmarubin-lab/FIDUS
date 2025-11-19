@@ -21,7 +21,7 @@ class DriveAPIDatetimeTestSuite:
     
     def __init__(self):
         # Get backend URL from environment
-        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://allocation-hub-1.preview.emergentagent.com')
+        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://tradingbridge-4.preview.emergentagent.com')
         if not self.backend_url.endswith('/api'):
             self.backend_url = f"{self.backend_url}/api"
         

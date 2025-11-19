@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://allocation-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
