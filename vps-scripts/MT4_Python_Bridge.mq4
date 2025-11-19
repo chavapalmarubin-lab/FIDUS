@@ -47,8 +47,8 @@ void SendAccountData() {
     json = json + q + "timestamp" + q + ":" + q + TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS) + q;
     json = json + "}";
     
-    ZmqMsg message(json);
-    socket.send(message);
+    ZmqMsg msg(json);
+    socket.send(msg);
     Print("Account data sent - Balance: ", AccountBalance(), ", Equity: ", AccountEquity());
 }
 
