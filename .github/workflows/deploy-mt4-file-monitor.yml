@@ -1,0 +1,263 @@
+name: Deploy MT4 File Monitor Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Deploy MT4 File Monitor Service
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        script: |
+          Write-Host "=" -ForegroundColor Cyan
+          Write-Host "DEPLOYING MT4 FILE MONITOR SERVICE" -ForegroundColor Cyan
+          Write-Host "=" -ForegroundColor Cyan
+          
+          # Create service directory
+          $serviceDir = "C:\mt4_bridge_service"
+          if (!(Test-Path $serviceDir)) {
+              New-Item -ItemType Directory -Path $serviceDir | Out-Null
+              Write-Host "Created: $serviceDir" -ForegroundColor Green
+          }
+          
+          # Deploy Python service
+          $pythonScript = @'
+          """
+          MT4 File Monitor Service - Auto-discovers and monitors account_data.json
+          """
+          import os
+          import json
+          import time
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from pymongo import MongoClient
+          import sys
+          
+          # Configuration
+          MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017')
+          ACCOUNT_ID = "MT4_33200931"
+          POLL_INTERVAL = 30
+          
+          def find_account_data_file():
+              """Search for account_data.json in common MT4 locations"""
+              search_paths = [
+                  r"C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files",
+                  r"C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal",
+                  r"C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Files",
+                  r"C:\Program Files (x86)\MEX Atlantic MT4 Terminal\MQL4\Files",
+              ]
+              
+              print("🔍 Searching for account_data.json...")
+              
+              for base_path in search_paths:
+                  if not os.path.exists(base_path):
+                      continue
+                  
+                  print(f"   Checking: {base_path}")
+                  
+                  for root, dirs, files in os.walk(base_path):
+                      if "account_data.json" in files:
+                          file_path = os.path.join(root, "account_data.json")
+                          print(f"✅ Found: {file_path}")
+                          return file_path
+              
+              print("❌ account_data.json not found")
+              return None
+          
+          def connect_mongodb():
+              """Connect to MongoDB"""
+              try:
+                  client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
+                  client.admin.command('ping')
+                  db = client.get_database()
+                  print(f"✅ Connected to MongoDB")
+                  return db
+              except Exception as e:
+                  print(f"❌ MongoDB connection error: {e}")
+                  return None
+          
+          def read_account_data(file_path):
+              """Read and parse account data JSON"""
+              try:
+                  with open(file_path, 'r') as f:
+                      data = json.load(f)
+                  return data
+              except json.JSONDecodeError as e:
+                  print(f"❌ Invalid JSON: {e}")
+                  return None
+              except Exception as e:
+                  print(f"❌ Error reading file: {e}")
+                  return None
+          
+          def upload_to_mongodb(db, account_data):
+              """Upload account data to MongoDB"""
+              try:
+                  doc = {
+                      "_id": ACCOUNT_ID,
+                      "account_number": account_data.get("account"),
+                      "account_name": account_data.get("name"),
+                      "server": account_data.get("server"),
+                      "balance": float(account_data.get("balance", 0)),
+                      "equity": float(account_data.get("equity", 0)),
+                      "margin": float(account_data.get("margin", 0)),
+                      "free_margin": float(account_data.get("free_margin", 0)),
+                      "profit": float(account_data.get("profit", 0)),
+                      "currency": account_data.get("currency"),
+                      "leverage": account_data.get("leverage"),
+                      "credit": float(account_data.get("credit", 0)),
+                      "platform": "MT4",
+                      "fund_type": "MONEY_MANAGER",
+                      "updated_at": datetime.now(timezone.utc),
+                      "mt4_timestamp": account_data.get("timestamp")
+                  }
+                  
+                  result = db.mt5_accounts.update_one(
+                      {"_id": ACCOUNT_ID},
+                      {"$set": doc},
+                      upsert=True
+                  )
+                  
+                  if result.upserted_id:
+                      print(f"✅ Created account: {ACCOUNT_ID}")
+                  else:
+                      print(f"✅ Updated: Balance=${doc['balance']:.2f}, Equity=${doc['equity']:.2f}")
+                  
+                  return True
+              except Exception as e:
+                  print(f"❌ Upload error: {e}")
+                  return False
+          
+          def main():
+              """Main service loop"""
+              print("=" * 70)
+              print("MT4 FILE MONITOR SERVICE")
+              print("=" * 70)
+              print(f"Account: {ACCOUNT_ID}")
+              print(f"MongoDB: {MONGO_URL[:50]}...")
+              print("=" * 70)
+              
+              file_path = find_account_data_file()
+              if not file_path:
+                  print("\n⚠️  Cannot start: account_data.json not found")
+                  print("\nRetrying in 60 seconds...")
+                  time.sleep(60)
+                  return main()
+              
+              db = connect_mongodb()
+              if not db:
+                  print("❌ Cannot start without MongoDB connection")
+                  sys.exit(1)
+              
+              print(f"\n🚀 Service started. Monitoring: {file_path}")
+              print(f"📊 Poll interval: {POLL_INTERVAL} seconds\n")
+              
+              last_modified = None
+              error_count = 0
+              
+              while True:
+                  try:
+                      if not os.path.exists(file_path):
+                          print(f"⚠️  File removed: {file_path}")
+                          time.sleep(POLL_INTERVAL)
+                          continue
+                      
+                      current_modified = os.path.getmtime(file_path)
+                      
+                      if last_modified is None or current_modified > last_modified:
+                          timestamp = datetime.fromtimestamp(current_modified).strftime('%Y-%m-%d %H:%M:%S')
+                          print(f"\n📄 File updated: {timestamp}")
+                          
+                          account_data = read_account_data(file_path)
+                          
+                          if account_data:
+                              if upload_to_mongodb(db, account_data):
+                                  last_modified = current_modified
+                                  error_count = 0
+                          else:
+                              error_count += 1
+                      
+                      time.sleep(POLL_INTERVAL)
+                      
+                  except KeyboardInterrupt:
+                      print("\n⏹️  Service stopped by user")
+                      break
+                  except Exception as e:
+                      print(f"❌ Unexpected error: {e}")
+                      error_count += 1
+                      time.sleep(POLL_INTERVAL)
+          
+          if __name__ == "__main__":
+              main()
+          '@
+          
+          $pythonPath = "$serviceDir\mt4_file_monitor.py"
+          [System.IO.File]::WriteAllText($pythonPath, $pythonScript)
+          Write-Host "Created: $pythonPath" -ForegroundColor Green
+          
+          # Create .env file with MongoDB connection
+          $envContent = "MONGO_URL=${{ secrets.MONGO_URL }}"
+          $envPath = "$serviceDir\.env"
+          [System.IO.File]::WriteAllText($envPath, $envContent)
+          Write-Host "Created: $envPath" -ForegroundColor Green
+          
+          # Install required Python packages
+          Write-Host "`nInstalling Python packages..." -ForegroundColor Yellow
+          pip install pymongo python-dotenv --quiet
+          
+          # Create startup batch file
+          $batchContent = @"
+          @echo off
+          cd /d C:\mt4_bridge_service
+          python mt4_file_monitor.py
+          "@
+          
+          $batchPath = "$serviceDir\start_monitor.bat"
+          [System.IO.File]::WriteAllText($batchPath, $batchContent)
+          Write-Host "Created: $batchPath" -ForegroundColor Green
+          
+          # Create Task Scheduler task
+          Write-Host "`nSetting up Windows Task Scheduler..." -ForegroundColor Yellow
+          
+          $taskName = "MT4 File Monitor"
+          $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+          
+          if ($taskExists) {
+              Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+              Write-Host "Removed existing task" -ForegroundColor Gray
+          }
+          
+          $action = New-ScheduledTaskAction -Execute "python.exe" -Argument "mt4_file_monitor.py" -WorkingDirectory $serviceDir
+          $trigger = New-ScheduledTaskTrigger -AtStartup
+          $principal = New-ScheduledTaskPrincipal -UserId "Administrator" -LogonType ServiceAccount -RunLevel Highest
+          $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Hours 0)
+          
+          Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings | Out-Null
+          Write-Host "Task Scheduler configured" -ForegroundColor Green
+          
+          # Start the service now
+          Write-Host "`nStarting service..." -ForegroundColor Yellow
+          Start-ScheduledTask -TaskName $taskName
+          Start-Sleep -Seconds 3
+          
+          Write-Host "`n=" -ForegroundColor Green
+          Write-Host "DEPLOYMENT COMPLETE!" -ForegroundColor Green
+          Write-Host "=" -ForegroundColor Green
+          Write-Host "`nService Status:" -ForegroundColor Cyan
+          $task = Get-ScheduledTask -TaskName $taskName
+          Write-Host "  Task State: $($task.State)" -ForegroundColor White
+          Write-Host "`nThe service will:" -ForegroundColor Cyan
+          Write-Host "  1. Search for account_data.json automatically" -ForegroundColor White
+          Write-Host "  2. Monitor file for updates every 30 seconds" -ForegroundColor White
+          Write-Host "  3. Upload to MongoDB: mt5_accounts collection" -ForegroundColor White
+          Write-Host "  4. Restart automatically if it crashes" -ForegroundColor White
+          Write-Host "`nTo check logs:" -ForegroundColor Yellow
+          Write-Host "  Get-Content C:\mt4_bridge_service\monitor.log -Tail 50" -ForegroundColor Gray
