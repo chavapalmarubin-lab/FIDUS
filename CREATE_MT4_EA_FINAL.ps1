@@ -21,7 +21,7 @@ Context context("MT4_BRIDGE");
 Socket socket(context, ZMQ_PUSH);
 
 int OnInit() {
-    string address = StringFormat("tcp://%s:%d", ZMQ_HOST, ZMQ_PORT);
+    string address = "tcp://" + ZMQ_HOST + ":" + IntegerToString(ZMQ_PORT);
     socket.connect(address);
     Print("MT4 Bridge initialized, connecting to ", address);
     SendAccountData();
@@ -37,20 +37,20 @@ void OnTick() {
 
 void SendAccountData() {
     string json = "{";
-    json += StringFormat("\"account\": %d,", AccountNumber());
-    json += StringFormat("\"name\": \"%s\",", AccountName());
-    json += StringFormat("\"server\": \"%s\",", AccountServer());
-    json += StringFormat("\"balance\": %.2f,", AccountBalance());
-    json += StringFormat("\"equity\": %.2f,", AccountEquity());
-    json += StringFormat("\"margin\": %.2f,", AccountMargin());
-    json += StringFormat("\"free_margin\": %.2f,", AccountFreeMargin());
-    json += StringFormat("\"profit\": %.2f,", AccountProfit());
-    json += StringFormat("\"currency\": \"%s\",", AccountCurrency());
-    json += StringFormat("\"leverage\": %d,", AccountLeverage());
-    json += StringFormat("\"credit\": %.2f,", AccountCredit());
-    json += StringFormat("\"platform\": \"MT4\",");
-    json += StringFormat("\"timestamp\": \"%s\"", TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS));
-    json += "}";
+    json = json + "\"account\":" + IntegerToString(AccountNumber()) + ",";
+    json = json + "\"name\":\"" + AccountName() + "\",";
+    json = json + "\"server\":\"" + AccountServer() + "\",";
+    json = json + "\"balance\":" + DoubleToString(AccountBalance(), 2) + ",";
+    json = json + "\"equity\":" + DoubleToString(AccountEquity(), 2) + ",";
+    json = json + "\"margin\":" + DoubleToString(AccountMargin(), 2) + ",";
+    json = json + "\"free_margin\":" + DoubleToString(AccountFreeMargin(), 2) + ",";
+    json = json + "\"profit\":" + DoubleToString(AccountProfit(), 2) + ",";
+    json = json + "\"currency\":\"" + AccountCurrency() + "\",";
+    json = json + "\"leverage\":" + IntegerToString(AccountLeverage()) + ",";
+    json = json + "\"credit\":" + DoubleToString(AccountCredit(), 2) + ",";
+    json = json + "\"platform\":\"MT4\",";
+    json = json + "\"timestamp\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS) + "\"";
+    json = json + "}";
     
     ZmqMsg message(json);
     socket.send(message);
@@ -58,7 +58,8 @@ void SendAccountData() {
 }
 
 void OnDeinit(const int reason) {
-    socket.disconnect(StringFormat("tcp://%s:%d", ZMQ_HOST, ZMQ_PORT));
+    string address = "tcp://" + ZMQ_HOST + ":" + IntegerToString(ZMQ_PORT);
+    socket.disconnect(address);
     Print("MT4 Bridge stopped");
 }
 "@
