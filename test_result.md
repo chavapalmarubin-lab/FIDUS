@@ -5296,3 +5296,17 @@ agent_communication:
 
     -agent: "testing"
     -message: "CLIENT PORTAL FIXES VERIFICATION COMPLETED - Both requested fixes successfully implemented and verified. TradingHub Gold badge has been completely removed from client profile section. Fund cards layout shows all 4 funds (CORE, BALANCE, DYNAMIC, UNLIMITED) in proper responsive grid. Client login working with alejandro_mariscal/password123 at https://fidus-invest.emergent.host/?skip_animation=true. Ready for production use."
+
+
+  - task: "MT4 Bridge Field Name Correction and Service Validation"
+    implemented: true
+    working: "NEEDS_TESTING"
+    file: "/app/vps-scripts/mt4_bridge_api_service.py, /app/vps-scripts/MT4_Python_Bridge.mq4"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MT4 BRIDGE FIELD NAME CORRECTION AND SERVICE VALIDATION: Fixed critical bug in MT4 bridge Python service where incorrect field name 'fundType' (camelCase) was being accessed instead of 'fund_type' (snake_case). Context: Previous agent created MT4 bridge files but used incorrect field naming convention in one location (line 201 of mt4_bridge_api_service.py). This would cause KeyError when trying to update config collection. Bug Fixed: Line 201 changed from document['fundType'] to document['fund_type'] to match Python MetaTrader5 API field naming standards. Test Objectives: (1) Verify Python service can be imported and instantiated without errors, (2) Test save_account_data() method with sample MT4 account data, (3) Verify MongoDB document structure matches expected format with correct field names (account, name, server, balance, equity, margin, free_margin, profit, currency, leverage, credit, fund_type, platform, updated_at, _id), (4) Confirm document _id format is 'MT4_33200931', (5) Verify platform field is set to 'MT4', (6) Verify fund_type field is 'MONEY_MANAGER', (7) Ensure upsert operation prevents duplicate documents, (8) Validate all field names use snake_case (NOT camelCase). Success Criteria: ✅ Python service imports successfully, ✅ All field names match Python MT5 API standards (snake_case), ✅ Document structure is correct with _id='MT4_33200931', ✅ MongoDB upsert operation works correctly, ✅ No KeyError on accessing document['fund_type'], ✅ Ready for VPS deployment. CRITICAL: This is P0 blocker for MT4 bridge implementation. Service must be validated before manual VPS deployment."
+
