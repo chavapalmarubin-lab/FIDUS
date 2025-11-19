@@ -1,0 +1,433 @@
+name: MT4 Bridge - One-Time Setup (Complete)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-zeromq:
+    name: 1. Install ZeroMQ Library
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Install ZeroMQ Library for MT4
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          command_timeout: 300s
+          script: |
+            echo "=========================================="
+            echo "MT4 ZEROMQ LIBRARY - ONE-TIME SETUP"
+            echo "=========================================="
+            
+            # Create temp directory
+            echo ""
+            echo "STEP 1: Creating temp directory..."
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\temp\zeromq' | Out-Null"
+            
+            # Download ZeroMQ library
+            echo ""
+            echo "STEP 2: Downloading ZeroMQ library for MT4..."
+            powershell -Command "Invoke-WebRequest -Uri 'https://github.com/dingmaotu/mql-zmq/archive/refs/heads/master.zip' -OutFile 'C:\temp\zeromq\mql-zmq.zip'"
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ Download successful"
+            else
+              echo "✗ Download failed"
+              exit 1
+            fi
+            
+            # Extract archive
+            echo ""
+            echo "STEP 3: Extracting archive..."
+            powershell -Command "Expand-Archive -Path 'C:\temp\zeromq\mql-zmq.zip' -DestinationPath 'C:\temp\zeromq' -Force"
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ Extraction successful"
+            else
+              echo "✗ Extraction failed"
+              exit 1
+            fi
+            
+            # Create Include directory if it doesn't exist
+            echo ""
+            echo "STEP 4: Creating MT4 Include directory..."
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq' | Out-Null"
+            
+            # Copy ZeroMQ files to MT4 Include directory
+            echo ""
+            echo "STEP 5: Copying ZeroMQ files to MT4..."
+            powershell -Command "Copy-Item -Path 'C:\temp\zeromq\mql-zmq-master\MQL4\Include\Zmq\*' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\' -Recurse -Force"
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ ZeroMQ library installed successfully"
+            else
+              echo "✗ Installation failed"
+              exit 1
+            fi
+            
+            # Verify installation
+            echo ""
+            echo "STEP 6: Verifying installation..."
+            powershell -Command "if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\Zmq.mqh') { Write-Host '✓ Zmq.mqh found - Installation verified'; exit 0 } else { Write-Host '✗ Zmq.mqh not found - Installation failed'; exit 1 }"
+            
+            # Cleanup
+            echo ""
+            echo "STEP 7: Cleaning up temp files..."
+            powershell -Command "Remove-Item -Path 'C:\temp\zeromq' -Recurse -Force -ErrorAction SilentlyContinue"
+            
+            echo ""
+            echo "=========================================="
+            echo "ZEROMQ INSTALLATION COMPLETE"
+            echo "=========================================="
+            
+      - name: Setup Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "ZEROMQ SETUP - Component 1/4 Complete"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+
+  install-python-dependencies:
+    name: 2. Install Python Dependencies
+    runs-on: ubuntu-latest
+    needs: setup-zeromq
+    timeout-minutes: 10
+    
+    steps:
+      - name: Install Python Packages
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          script: |
+            echo "=========================================="
+            echo "PYTHON DEPENDENCIES INSTALLATION"
+            echo "=========================================="
+            
+            # Check if Python is installed
+            echo ""
+            echo "STEP 1: Checking Python installation..."
+            powershell -Command "python --version"
+            
+            # Install required packages
+            echo ""
+            echo "STEP 2: Installing Python packages..."
+            echo "  - pyzmq (ZeroMQ Python bindings)"
+            echo "  - pymongo (MongoDB driver)"
+            echo "  - python-dotenv (Environment variables)"
+            echo ""
+            
+            powershell -Command "python -m pip install --upgrade pip"
+            powershell -Command "pip install pyzmq pymongo python-dotenv"
+            
+            if [ $? -eq 0 ]; then
+              echo ""
+              echo "✓ All Python dependencies installed successfully"
+            else
+              echo ""
+              echo "✗ Python dependency installation failed"
+              exit 1
+            fi
+            
+            # Verify installations
+            echo ""
+            echo "STEP 3: Verifying installations..."
+            powershell -Command "python -c 'import zmq; print(f\"✓ pyzmq {zmq.zmq_version()}\")'"
+            powershell -Command "python -c 'import pymongo; print(f\"✓ pymongo {pymongo.__version__}\")'"
+            
+            echo ""
+            echo "=========================================="
+            echo "PYTHON DEPENDENCIES COMPLETE"
+            echo "=========================================="
+      
+      - name: Setup Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "PYTHON DEPENDENCIES - Component 2/4 Complete"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+
+  deploy-mt4-ea:
+    name: 3. Deploy MT4 Expert Advisor
+    runs-on: ubuntu-latest
+    needs: install-python-dependencies
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Deploy MT4 EA to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          script: |
+            echo "=========================================="
+            echo "MT4 EXPERT ADVISOR DEPLOYMENT"
+            echo "=========================================="
+            
+            # Create Experts directory if it doesn't exist
+            echo ""
+            echo "STEP 1: Creating MT4 Experts directory..."
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts' | Out-Null"
+            
+            # Create temp directory for file transfer
+            echo ""
+            echo "STEP 2: Creating temp directory..."
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\temp\mt4_deploy' | Out-Null"
+            
+            echo ""
+            echo "✓ Directories ready"
+            echo ""
+            echo "=========================================="
+            echo "MT4 EA DEPLOYMENT READY"
+            echo "=========================================="
+      
+      - name: Upload MT4 EA File
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          source: "vps-scripts/MT4_Python_Bridge.mq4"
+          target: "C:\\temp\\mt4_deploy\\"
+          strip_components: 1
+      
+      - name: Move EA to MT4 Directory
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          script: |
+            echo "=========================================="
+            echo "FINALIZING MT4 EA INSTALLATION"
+            echo "=========================================="
+            
+            echo ""
+            echo "STEP 3: Copying EA to MT4 Experts folder..."
+            powershell -Command "Copy-Item -Path 'C:\temp\mt4_deploy\MT4_Python_Bridge.mq4' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force"
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ MT4 EA deployed successfully"
+            else
+              echo "✗ MT4 EA deployment failed"
+              exit 1
+            fi
+            
+            # Verify file exists
+            echo ""
+            echo "STEP 4: Verifying EA installation..."
+            powershell -Command "if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') { Write-Host '✓ MT4_Python_Bridge.mq4 found'; exit 0 } else { Write-Host '✗ EA file not found'; exit 1 }"
+            
+            # Cleanup
+            echo ""
+            echo "STEP 5: Cleaning up..."
+            powershell -Command "Remove-Item -Path 'C:\temp\mt4_deploy' -Recurse -Force -ErrorAction SilentlyContinue"
+            
+            echo ""
+            echo "=========================================="
+            echo "MT4 EA INSTALLATION COMPLETE"
+            echo "=========================================="
+            echo ""
+            echo "NEXT STEPS:"
+            echo "1. Open MT4 Terminal"
+            echo "2. Press F4 to open MetaEditor"
+            echo "3. Navigate to Experts → MT4_Python_Bridge.mq4"
+            echo "4. Press F7 to compile"
+            echo "5. Close MetaEditor"
+            echo "6. Drag EA onto any chart"
+            echo "7. Enable 'Allow DLL imports' checkbox"
+            echo "=========================================="
+      
+      - name: Setup Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "MT4 EA DEPLOYMENT - Component 3/4 Complete"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+
+  deploy-python-service:
+    name: 4. Deploy Python Bridge Service
+    runs-on: ubuntu-latest
+    needs: deploy-mt4-ea
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Service Directory
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          script: |
+            echo "=========================================="
+            echo "PYTHON BRIDGE SERVICE DEPLOYMENT"
+            echo "=========================================="
+            
+            # Create service directory
+            echo ""
+            echo "STEP 1: Creating service directory..."
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service' | Out-Null"
+            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service\logs' | Out-Null"
+            
+            echo "✓ Service directories created"
+      
+      - name: Upload Python Service Files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          source: "vps-scripts/mt4_bridge_api_service.py,vps-scripts/setup_mt4_bridge.ps1"
+          target: "C:\\mt4_bridge_service\\"
+          strip_components: 1
+      
+      - name: Verify Service Installation
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script_stop: true
+          script: |
+            echo "=========================================="
+            echo "VERIFYING PYTHON SERVICE INSTALLATION"
+            echo "=========================================="
+            
+            echo ""
+            echo "STEP 2: Verifying files..."
+            powershell -Command "if (Test-Path 'C:\mt4_bridge_service\mt4_bridge_api_service.py') { Write-Host '✓ mt4_bridge_api_service.py found' } else { Write-Host '✗ Python service not found'; exit 1 }"
+            powershell -Command "if (Test-Path 'C:\mt4_bridge_service\setup_mt4_bridge.ps1') { Write-Host '✓ setup_mt4_bridge.ps1 found' } else { Write-Host '✗ Setup script not found'; exit 1 }"
+            
+            echo ""
+            echo "STEP 3: Testing Python service import..."
+            powershell -Command "cd C:\mt4_bridge_service; python -c 'import mt4_bridge_api_service; print(\"✓ Python service imports successfully\")'"
+            
+            if [ $? -eq 0 ]; then
+              echo ""
+              echo "✓ Python service validated successfully"
+            else
+              echo ""
+              echo "✗ Python service validation failed"
+              exit 1
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "PYTHON SERVICE DEPLOYMENT COMPLETE"
+            echo "=========================================="
+            echo ""
+            echo "Service Location: C:\mt4_bridge_service\"
+            echo "Logs Location: C:\mt4_bridge_service\logs\"
+            echo ""
+            echo "Files deployed:"
+            powershell -Command "Get-ChildItem 'C:\mt4_bridge_service\' -Name"
+            echo ""
+            echo "=========================================="
+      
+      - name: Setup Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "PYTHON SERVICE - Component 4/4 Complete"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+
+  final-summary:
+    name: 5. Installation Summary
+    runs-on: ubuntu-latest
+    needs: [setup-zeromq, install-python-dependencies, deploy-mt4-ea, deploy-python-service]
+    if: always()
+    
+    steps:
+      - name: Print Final Summary
+        run: |
+          echo "=========================================="
+          echo "MT4 BRIDGE - ONE-TIME SETUP COMPLETE"
+          echo "=========================================="
+          echo ""
+          echo "Components Installed:"
+          echo "  1. ✓ ZeroMQ Library for MT4"
+          echo "  2. ✓ Python Dependencies (pyzmq, pymongo)"
+          echo "  3. ✓ MT4 Expert Advisor (MT4_Python_Bridge.mq4)"
+          echo "  4. ✓ Python Bridge Service (mt4_bridge_api_service.py)"
+          echo ""
+          echo "Installation Locations:"
+          echo "  - ZeroMQ: C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\"
+          echo "  - MT4 EA: C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\"
+          echo "  - Python Service: C:\mt4_bridge_service\"
+          echo ""
+          echo "=========================================="
+          echo "NEXT STEPS - MANUAL ACTIONS REQUIRED"
+          echo "=========================================="
+          echo ""
+          echo "1. COMPILE MT4 EA:"
+          echo "   - Open MT4 Terminal"
+          echo "   - Press F4 (MetaEditor)"
+          echo "   - Navigate to Experts → MT4_Python_Bridge.mq4"
+          echo "   - Press F7 to compile"
+          echo "   - Close MetaEditor"
+          echo ""
+          echo "2. ATTACH EA TO CHART:"
+          echo "   - In MT4 Navigator, find 'MT4_Python_Bridge'"
+          echo "   - Drag and drop onto any chart (e.g., EURUSD)"
+          echo "   - Check 'Allow DLL imports' ✓"
+          echo "   - Click OK"
+          echo ""
+          echo "3. START PYTHON SERVICE:"
+          echo "   - Open PowerShell as Administrator"
+          echo "   - cd C:\mt4_bridge_service"
+          echo "   - python mt4_bridge_api_service.py"
+          echo "   - Wait 5 minutes for first data sync"
+          echo ""
+          echo "4. VERIFY IN MONGODB:"
+          echo "   - Open MongoDB Compass"
+          echo "   - Look for document _id: 'MT4_33200931'"
+          echo "   - Check platform: 'MT4'"
+          echo "   - Check fund_type: 'MONEY_MANAGER'"
+          echo ""
+          echo "5. OPTIONAL - CONFIGURE AS WINDOWS SERVICE:"
+          echo "   - cd C:\mt4_bridge_service"
+          echo "   - .\setup_mt4_bridge.ps1"
+          echo ""
+          echo "=========================================="
+          echo "DEPLOYMENT COMPLETE"
+          echo "=========================================="
+          echo ""
+          echo "This was a ONE-TIME setup."
+          echo "You do NOT need to run this workflow again."
+          echo ""
+          echo "For updates, use: 'Deploy MT4 Bridge Updates' workflow"
+          echo "=========================================="
