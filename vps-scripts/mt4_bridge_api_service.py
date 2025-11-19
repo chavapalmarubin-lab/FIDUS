@@ -148,45 +148,50 @@ class MT4BridgeService:
             return False
     
     def save_account_data(self, account_data):
-        """Save MT4 account data to MongoDB (same collection as MT5)"""
+        """Save MT4 account data to MongoDB (same collection as MT5) using EXACT Python MT5 API field names"""
         try:
-            # Validate required fields
-            required_fields = ['account', 'balance', 'equity', 'server']
+            # Validate required fields (using Python MT5 API field names)
+            required_fields = ['account', 'name', 'server', 'balance', 'equity', 
+                             'margin', 'free_margin', 'profit', 'currency', 
+                             'leverage', 'credit']
+            
             for field in required_fields:
                 if field not in account_data:
                     logger.error(f"Missing required field: {field}")
                     return False
             
-            # Add metadata to match MT5 format
+            # Add metadata to match MT5 format - using EXACT Python MT5 API field names
             current_time = datetime.now(timezone.utc)
             
             document = {
+                # Core fields - EXACT Python MetaTrader5 API field names
                 'account': account_data['account'],
+                'name': account_data['name'],  # Client name goes in 'name' field
+                'server': account_data['server'],
                 'balance': float(account_data['balance']),
                 'equity': float(account_data['equity']),
-                'margin': float(account_data.get('margin', 0)),
-                'freeMargin': float(account_data.get('free_margin', 0)),
-                'profit': float(account_data.get('profit', 0)),
-                'currency': account_data.get('currency', 'USD'),
-                'leverage': int(account_data.get('leverage', 1)),
-                'server': account_data['server'],
-                'name': account_data.get('name', MT4_ACCOUNT['name']),
-                'clientName': account_data.get('client_name', MT4_ACCOUNT['name']),
-                'fundType': account_data.get('fund_type', MT4_ACCOUNT['fund_type']),
+                'margin': float(account_data['margin']),
+                'free_margin': float(account_data['free_margin']),  # NOT freeMargin
+                'profit': float(account_data['profit']),
+                'currency': account_data['currency'],
+                'leverage': int(account_data['leverage']),
+                'credit': float(account_data['credit']),
+                
+                # FIDUS custom fields
+                'fund_type': MT4_ACCOUNT['fund_type'],  # NOT fundType
                 'platform': 'MT4',
-                'success': True,
                 'updated_at': current_time.isoformat(),
-                'timestamp': current_time
+                '_id': f"MT4_{MT4_ACCOUNT['login']}"  # Document ID format
             }
             
-            # Upsert to MongoDB (same collection as MT5 accounts)
-            filter_query = {'account': MT4_ACCOUNT['login']}
+            # Upsert to MongoDB (same collection as MT5 accounts) - NO DUPLICATES
+            filter_query = {'account': MT4_ACCOUNT['login'], 'platform': 'MT4'}
             update_query = {'$set': document}
             
             result = self.accounts_collection.update_one(
                 filter_query,
                 update_query,
-                upsert=True
+                upsert=True  # Updates existing or creates new - no duplicates
             )
             
             # Also update the config collection
