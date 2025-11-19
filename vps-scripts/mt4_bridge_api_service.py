@@ -198,7 +198,7 @@ class MT4BridgeService:
             config_doc = {
                 'account_number': account_data['account'],
                 'server': account_data['server'],
-                'fund_type': document['fundType'],
+                'fund_type': document['fund_type'],
                 'platform': 'MT4',
                 'enabled': True,
                 'updated_at': current_time.isoformat()
