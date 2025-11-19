@@ -337,42 +337,55 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           script: |
-            echo "=========================================="
-            echo "VERIFYING PYTHON SERVICE INSTALLATION"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'VERIFYING PYTHON SERVICE INSTALLATION' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            echo ""
-            echo "STEP 2: Verifying files..."
-            powershell -Command "if (Test-Path 'C:\mt4_bridge_service\mt4_bridge_api_service.py') { Write-Host '✓ mt4_bridge_api_service.py found' } else { Write-Host '✗ Python service not found'; exit 1 }"
-            powershell -Command "if (Test-Path 'C:\mt4_bridge_service\setup_mt4_bridge.ps1') { Write-Host '✓ setup_mt4_bridge.ps1 found' } else { Write-Host '✗ Setup script not found'; exit 1 }"
-            
-            echo ""
-            echo "STEP 3: Testing Python service import..."
-            powershell -Command "cd C:\mt4_bridge_service; python -c 'import mt4_bridge_api_service; print(\"✓ Python service imports successfully\")'"
-            
-            if [ $? -eq 0 ]; then
-              echo ""
-              echo "✓ Python service validated successfully"
-            else
-              echo ""
-              echo "✗ Python service validation failed"
+            # STEP 2: Verify files
+            Write-Host 'STEP 2: Verifying files...' -ForegroundColor Yellow
+            if (Test-Path 'C:\mt4_bridge_service\mt4_bridge_api_service.py') {
+              Write-Host '✓ mt4_bridge_api_service.py found' -ForegroundColor Green
+            } else {
+              Write-Host '✗ Python service not found' -ForegroundColor Red
               exit 1
-            fi
+            }
             
-            echo ""
-            echo "=========================================="
-            echo "PYTHON SERVICE DEPLOYMENT COMPLETE"
-            echo "=========================================="
-            echo ""
-            echo "Service Location: C:\mt4_bridge_service\"
-            echo "Logs Location: C:\mt4_bridge_service\logs\"
-            echo ""
-            echo "Files deployed:"
-            powershell -Command "Get-ChildItem 'C:\mt4_bridge_service\' -Name"
-            echo ""
-            echo "=========================================="
+            if (Test-Path 'C:\mt4_bridge_service\setup_mt4_bridge.ps1') {
+              Write-Host '✓ setup_mt4_bridge.ps1 found' -ForegroundColor Green
+            } else {
+              Write-Host '✗ Setup script not found' -ForegroundColor Red
+              exit 1
+            }
+            Write-Host ''
+            
+            # STEP 3: Test Python service import
+            Write-Host 'STEP 3: Testing Python service import...' -ForegroundColor Yellow
+            cd C:\mt4_bridge_service
+            try {
+              python -c 'import mt4_bridge_api_service; print(\"✓ Python service imports successfully\")'
+              Write-Host '✓ Python service validated successfully' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ Python service validation failed:' \$_.Exception.Message -ForegroundColor Red
+              exit 1
+            }
+            Write-Host ''
+            
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'PYTHON SERVICE DEPLOYMENT COMPLETE' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
+            Write-Host 'Service Location: C:\mt4_bridge_service\' -ForegroundColor Gray
+            Write-Host 'Logs Location: C:\mt4_bridge_service\logs\' -ForegroundColor Gray
+            Write-Host ''
+            Write-Host 'Files deployed:' -ForegroundColor Yellow
+            Get-ChildItem 'C:\mt4_bridge_service\' -Name | ForEach-Object { Write-Host \"  - \$_\" -ForegroundColor Gray }
+            Write-Host ''
+            Write-Host '==========================================' -ForegroundColor Cyan
+            "
       
       - name: Setup Summary
         if: always()
