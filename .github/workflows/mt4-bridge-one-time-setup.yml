@@ -183,28 +183,30 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           script: |
-            echo "=========================================="
-            echo "MT4 EXPERT ADVISOR DEPLOYMENT"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'MT4 EXPERT ADVISOR DEPLOYMENT' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            # Create Experts directory if it doesn't exist
-            echo ""
-            echo "STEP 1: Creating MT4 Experts directory..."
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts' | Out-Null"
+            # STEP 1: Create MT4 Experts directory
+            Write-Host 'STEP 1: Creating MT4 Experts directory...' -ForegroundColor Yellow
+            New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts' | Out-Null
+            Write-Host '✓ Directory ready' -ForegroundColor Green
+            Write-Host ''
             
-            # Create temp directory for file transfer
-            echo ""
-            echo "STEP 2: Creating temp directory..."
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\temp\mt4_deploy' | Out-Null"
+            # STEP 2: Create temp directory
+            Write-Host 'STEP 2: Creating temp directory...' -ForegroundColor Yellow
+            New-Item -ItemType Directory -Force -Path 'C:\temp\mt4_deploy' | Out-Null
+            Write-Host '✓ Temp directory ready' -ForegroundColor Green
+            Write-Host ''
             
-            echo ""
-            echo "✓ Directories ready"
-            echo ""
-            echo "=========================================="
-            echo "MT4 EA DEPLOYMENT READY"
-            echo "=========================================="
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'MT4 EA DEPLOYMENT READY' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            "
       
       - name: Upload MT4 EA File
         uses: appleboy/scp-action@v0.1.7
