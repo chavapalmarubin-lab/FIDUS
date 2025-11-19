@@ -1,0 +1,58 @@
+name: Install ZMQ Library and Deploy MT4 EA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Install ZMQ Library and Deploy EA
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        script: |
+          Write-Host "Step 1: Installing ZeroMQ library..." -ForegroundColor Cyan
+          
+          # Download mql-zmq library
+          $zmqUrl = "https://github.com/dingmaotu/mql-zmq/releases/download/v1.0.0/mql-zmq-1.0.0.zip"
+          $zmqZip = "$env:TEMP\mql-zmq.zip"
+          $zmqExtract = "$env:TEMP\mql-zmq"
+          
+          Invoke-WebRequest -Uri $zmqUrl -OutFile $zmqZip -UseBasicParsing
+          Expand-Archive -Path $zmqZip -DestinationPath $zmqExtract -Force
+          
+          # Copy ZMQ files to MT4
+          $mt4Path = "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4"
+          Copy-Item -Path "$zmqExtract\MQL4\Include\Zmq" -Destination "$mt4Path\Include\" -Recurse -Force
+          Copy-Item -Path "$zmqExtract\MQL4\Libraries\*" -Destination "$mt4Path\Libraries\" -Recurse -Force
+          
+          Write-Host "ZMQ library installed successfully" -ForegroundColor Green
+          
+          # Cleanup
+          Remove-Item $zmqZip -Force -ErrorAction SilentlyContinue
+          Remove-Item $zmqExtract -Recurse -Force -ErrorAction SilentlyContinue
+          
+          Write-Host "`nStep 2: Deploying MT4 Expert Advisor..." -ForegroundColor Cyan
+          
+          # Deploy the EA file
+          $base64Content = "Ly8rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwovL3wgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBNVDRfUHl0aG9uX0JyaWRnZS5tcTQgICB8Ci8vKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSsKI3Byb3BlcnR5IGNvcHlyaWdodCAiRklEVVMgSW52ZXN0bWVudCBNYW5hZ2VtZW50IgojcHJvcGVydHkgc3RyaWN0CgojaW5jbHVkZSA8Wm1xL1ptcS5tcWg+CgppbnB1dCBpbnQgVVBEQVRFX0lOVEVSVkFMID0gMzAwOwppbnB1dCBzdHJpbmcgWk1RX0hPU1QgPSAibG9jYWxob3N0IjsKaW5wdXQgaW50IFpNUV9QT1JUID0gMzI3Njg7CgpkYXRldGltZSBsYXN0VXBkYXRlID0gMDsKQ29udGV4dCBjb250ZXh0KCJNVDRfQlJJREdFIik7ClNvY2tldCBzb2NrZXQoY29udGV4dCwgWk1RX1BVU0gpOwoKaW50IE9uSW5pdCgpIHsKICAgIHN0cmluZyBhZGRyZXNzID0gInRjcDovLyIgKyBaTVFfSE9TVCArICI6IiArIEludGVnZXJUb1N0cmluZyhaTVFfUE9SVCk7CiAgICBzb2NrZXQuY29ubmVjdChhZGRyZXNzKTsKICAgIFByaW50KCJNVDQgQnJpZGdlIGluaXRpYWxpemVkLCBjb25uZWN0aW5nIHRvICIsIGFkZHJlc3MpOwogICAgU2VuZEFjY291bnREYXRhKCk7CiAgICByZXR1cm4gSU5JVF9TVUNDRUVERUQ7Cn0KCnZvaWQgT25UaWNrKCkgewogICAgaWYgKFRpbWVDdXJyZW50KCkgLSBsYXN0VXBkYXRlID49IFVQREFURV9JTlRFUlZBTCkgewogICAgICAgIFNlbmRBY2NvdW50RGF0YSgpOwogICAgICAgIGxhc3RVcGRhdGUgPSBUaW1lQ3VycmVudCgpOwogICAgfQp9Cgp2b2lkIFNlbmRBY2NvdW50RGF0YSgpIHsKICAgIHN0cmluZyBxID0gQ2hhclRvU3RyaW5nKDM0KTsKICAgIHN0cmluZyBqc29uID0gInsiOwogICAganNvbiA9IGpzb24gKyBxICsgImFjY291bnQiICsgcSArICI6IiArIEludGVnZXJUb1N0cmluZyhBY2NvdW50TnVtYmVyKCkpICsgIiwiOwogICAganNvbiA9IGpzb24gKyBxICsgIm5hbWUiICsgcSArICI6IiArIHEgKyBBY2NvdW50TmFtZSgpICsgcSArICIsIjsKICAgIGpzb24gPSBqc29uICsgcSArICJzZXJ2ZXIiICsgcSArICI6IiArIHEgKyBBY2NvdW50U2VydmVyKCkgKyBxICsgIiwiOwogICAganNvbiA9IGpzb24gKyBxICsgImJhbGFuY2UiICsgcSArICI6IiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRCYWxhbmNlKCksIDIpICsgIiwiOwogICAganNvbiA9IGpzb24gKyBxICsgImVxdWl0eSIgKyBxICsgIjoiICsgRG91YmxlVG9TdHJpbmcoQWNjb3VudEVxdWl0eSgpLCAyKSArICIsIjsKICAgIGpzb24gPSBqc29uICsgcSArICJtYXJnaW4iICsgcSArICI6IiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRNYXJnaW4oKSwgMikgKyAiLCI7CiAgICBqc29uID0ganNvbiArIHEgKyAiZnJlZV9tYXJnaW4iICsgcSArICI6IiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRGcmVlTWFyZ2luKCksIDIpICsgIiwiOwogICAganNvbiA9IGpzb24gKyBxICsgInByb2ZpdCIgKyBxICsgIjoiICsgRG91YmxlVG9TdHJpbmcoQWNjb3VudFByb2ZpdCgpLCAyKSArICIsIjsKICAgIGpzb24gPSBqc29uICsgcSArICJjdXJyZW5jeSIgKyBxICsgIjoiICsgcSArIEFjY291bnRDdXJyZW5jeSgpICsgcSArICIsIjsKICAgIGpzb24gPSBqc29uICsgcSArICJsZXZlcmFnZSIgKyBxICsgIjoiICsgSW50ZWdlclRvU3RyaW5nKEFjY291bnRMZXZlcmFnZSgpKSArICIsIjsKICAgIGpzb24gPSBqc29uICsgcSArICJjcmVkaXQiICsgcSArICI6IiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRDcmVkaXQoKSwgMikgKyAiLCI7CiAgICBqc29uID0ganNvbiArIHEgKyAicGxhdGZvcm0iICsgcSArICI6IiArIHEgKyAiTVQ0IiArIHEgKyAiLCI7CiAgICBqc29uID0ganNvbiArIHEgKyAidGltZXN0YW1wIiArIHEgKyAiOiIgKyBxICsgVGltZVRvU3RyaW5nKFRpbWVDdXJyZW50KCksIFRJTUVfREFURXxUSU1FX1NFQ09ORFMpICsgcTsKICAgIGpzb24gPSBqc29uICsgIn0iOwogICAgCiAgICBabXFNc2cgbWVzc2FnZShqc29uKTsKICAgIHNvY2tldC5zZW5kKG1lc3NhZ2UpOwogICAgUHJpbnQoIkFjY291bnQgZGF0YSBzZW50IC0gQmFsYW5jZTogIiwgQWNjb3VudEJhbGFuY2UoKSwgIiwgRXF1aXR5OiAiLCBBY2NvdW50RXF1aXR5KCkpOwp9Cgp2b2lkIE9uRGVpbml0KGNvbnN0IGludCByZWFzb24pIHsKICAgIHN0cmluZyBhZGRyZXNzID0gInRjcDovLyIgKyBaTVFfSE9TVCArICI6IiArIEludGVnZXJUb1N0cmluZyhaTVFfUE9SVCk7CiAgICBzb2NrZXQuZGlzY29ubmVjdChhZGRyZXNzKTsKICAgIFByaW50KCJNVDQgQnJpZGdlIHN0b3BwZWQiKTsKfQo="
+          $targetPath = "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4"
+          $bytes = [System.Convert]::FromBase64String($base64Content)
+          $content = [System.Text.Encoding]::UTF8.GetString($bytes)
+          [System.IO.File]::WriteAllText($targetPath, $content)
+          
+          Write-Host "MT4 Expert Advisor deployed to: $targetPath" -ForegroundColor Green
+          
+          Write-Host "`n=== DEPLOYMENT COMPLETE ===" -ForegroundColor Green
+          Write-Host "NEXT STEPS:" -ForegroundColor Yellow
+          Write-Host "1. Open MetaEditor on your VPS" -ForegroundColor White
+          Write-Host "2. Open MT4_Python_Bridge.mq4" -ForegroundColor White  
+          Write-Host "3. Go to Tools > Options > Compiler > tick 'Allow DLL imports'" -ForegroundColor White
+          Write-Host "4. Press F7 to compile - should show 0 errors" -ForegroundColor White
