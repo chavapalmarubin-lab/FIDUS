@@ -1,0 +1,45 @@
+name: FIX EA Final
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Delete and Upload Clean File
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          source: "vps-scripts/MT4_Python_Bridge.mq4"
+          target: "C:\\temp\\"
+          strip_components: 1
+      
+      - name: Move to MT4 Directory
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          script: |
+            powershell.exe -Command "Remove-Item 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force -ErrorAction SilentlyContinue; Copy-Item 'C:\temp\MT4_Python_Bridge.mq4' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force; if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') { Write-Host '[SUCCESS] File fixed' -ForegroundColor Green } else { Write-Host '[FAILED]' -ForegroundColor Red; exit 1 }"
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "MT4 EA FIXED"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+          echo "Refresh MetaEditor and compile (F7)"
+          echo "=========================================="
