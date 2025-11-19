@@ -73,12 +73,20 @@ async def get_current_admin_user(request: Request):
     return {"_id": "admin_user_123", "email": "admin@getfidus.com", "role": "admin"}
 
 
-# Constants
+# Constants - Now supports both MT4 and MT5
 ALL_MT5_ACCOUNTS = [
     885822, 886066, 886528, 886557, 886602,
     891215, 891234, 897589, 897590, 897591,
     897599, 901351, 901353
 ]
+
+# MT4 Accounts
+ALL_MT4_ACCOUNTS = [
+    33200931  # Money Manager MT4 Account
+]
+
+# Combined accounts
+ALL_ACCOUNTS = ALL_MT5_ACCOUNTS + ALL_MT4_ACCOUNTS
 
 VALID_MANAGERS = [
     "aleflorextrader",
