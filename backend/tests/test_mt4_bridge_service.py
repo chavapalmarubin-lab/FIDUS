@@ -297,7 +297,7 @@ class MT4BridgeServiceTester:
         """Test 3: Field Name Compliance Check"""
         try:
             db, accounts_collection, config_collection = self.test_mongodb_connection()
-            if not db:
+            if db is None:
                 return False
             
             # Get the document we just created
@@ -394,7 +394,7 @@ class MT4BridgeServiceTester:
         """Test 4: Upsert Operation Test"""
         try:
             db, accounts_collection, config_collection = self.test_mongodb_connection()
-            if not db:
+            if db is None:
                 return False
             
             # Count documents before second save
