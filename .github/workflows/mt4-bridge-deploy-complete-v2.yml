@@ -1,4 +1,4 @@
-name: MT4 Bridge - Populate Folder
+name: Deploy MT4 Bridge - Complete Setup
 
 on:
   workflow_dispatch:
