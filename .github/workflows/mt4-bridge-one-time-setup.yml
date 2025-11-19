@@ -303,19 +303,20 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           script: |
-            echo "=========================================="
-            echo "PYTHON BRIDGE SERVICE DEPLOYMENT"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'PYTHON BRIDGE SERVICE DEPLOYMENT' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            # Create service directory
-            echo ""
-            echo "STEP 1: Creating service directory..."
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service' | Out-Null"
-            powershell -Command "New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service\logs' | Out-Null"
-            
-            echo "✓ Service directories created"
+            # STEP 1: Create service directories
+            Write-Host 'STEP 1: Creating service directories...' -ForegroundColor Yellow
+            New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service' | Out-Null
+            New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service\logs' | Out-Null
+            Write-Host '✓ Service directories created' -ForegroundColor Green
+            "
       
       - name: Upload Python Service Files
         uses: appleboy/scp-action@v0.1.7
