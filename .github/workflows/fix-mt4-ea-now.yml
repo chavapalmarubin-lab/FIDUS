@@ -1,0 +1,106 @@
+name: FIX MT4 EA Now
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-ea:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+      - name: Delete Corrupted and Create Clean EA
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          script: |
+            powershell.exe -Command "
+            Write-Host 'Deleting corrupted file...' -ForegroundColor Yellow
+            Remove-Item -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force -ErrorAction SilentlyContinue
+            Write-Host 'Creating clean file...' -ForegroundColor Yellow
+            
+            \$content = @'
+//+------------------------------------------------------------------+
+//|                                          MT4_Python_Bridge.mq4   |
+//+------------------------------------------------------------------+
+#property copyright \"FIDUS Investment Management\"
+#property strict
+
+#include <Zmq/Zmq.mqh>
+
+input int UPDATE_INTERVAL = 300;
+input string ZMQ_HOST = \"localhost\";
+input int ZMQ_PORT = 32768;
+
+datetime lastUpdate = 0;
+Context context(\"MT4_BRIDGE\");
+Socket socket(context, ZMQ_PUSH);
+
+int OnInit() {
+    string address = StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT);
+    socket.connect(address);
+    Print(\"MT4 Bridge initialized, connecting to \", address);
+    SendAccountData();
+    return INIT_SUCCEEDED;
+}
+
+void OnTick() {
+    if (TimeCurrent() - lastUpdate >= UPDATE_INTERVAL) {
+        SendAccountData();
+        lastUpdate = TimeCurrent();
+    }
+}
+
+void SendAccountData() {
+    string json = \"{\";
+    json += StringFormat(\"\\\"account\\\": %d,\", AccountNumber());
+    json += StringFormat(\"\\\"name\\\": \\\"%s\\\",\", AccountName());
+    json += StringFormat(\"\\\"server\\\": \\\"%s\\\",\", AccountServer());
+    json += StringFormat(\"\\\"balance\\\": %.2f,\", AccountBalance());
+    json += StringFormat(\"\\\"equity\\\": %.2f,\", AccountEquity());
+    json += StringFormat(\"\\\"margin\\\": %.2f,\", AccountMargin());
+    json += StringFormat(\"\\\"free_margin\\\": %.2f,\", AccountFreeMargin());
+    json += StringFormat(\"\\\"profit\\\": %.2f,\", AccountProfit());
+    json += StringFormat(\"\\\"currency\\\": \\\"%s\\\",\", AccountCurrency());
+    json += StringFormat(\"\\\"leverage\\\": %d,\", AccountLeverage());
+    json += StringFormat(\"\\\"credit\\\": %.2f,\", AccountCredit());
+    json += StringFormat(\"\\\"platform\\\": \\\"MT4\\\",\");
+    json += StringFormat(\"\\\"timestamp\\\": \\\"%s\\\"\", TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS));
+    json += \"}\";
+    
+    ZmqMsg message(json);
+    socket.send(message);
+    Print(\"Account data sent - Balance: \", AccountBalance(), \", Equity: \", AccountEquity());
+}
+
+void OnDeinit(const int reason) {
+    socket.disconnect(StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT));
+    Print(\"MT4 Bridge stopped\");
+}
+'@
+            
+            Set-Content -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Value \$content -Encoding UTF8
+            
+            if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') {
+                Write-Host '[SUCCESS] Clean MT4 EA file created' -ForegroundColor Green
+            } else {
+                Write-Host '[FAILED] File not created' -ForegroundColor Red
+                exit 1
+            }
+            "
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "MT4 EA FILE FIXED"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+          echo ""
+          echo "Next: Refresh MetaEditor (F4) and compile (F7)"
+          echo "Should now show 0 errors"
+          echo "=========================================="
