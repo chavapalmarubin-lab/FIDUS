@@ -1,0 +1,45 @@
+name: Deploy File-Based MT4 Bridge (NO ZMQ)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy File-Based MT4 Bridge
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        script: |
+          Write-Host "=" -ForegroundColor Cyan
+          Write-Host "DEPLOYING FILE-BASED MT4 BRIDGE (NO ZMQ REQUIRED)" -ForegroundColor Cyan
+          Write-Host "=" -ForegroundColor Cyan
+          
+          # Create bridge directory
+          $bridgeDir = "C:\mt4_bridge"
+          if (!(Test-Path $bridgeDir)) {
+              New-Item -ItemType Directory -Path $bridgeDir | Out-Null
+              Write-Host "Created directory: $bridgeDir" -ForegroundColor Green
+          }
+          
+          # Deploy MT4 EA (File-Based)
+          $base64EA = "Ly8rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwovL3wgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1UNF9QeXRob25fQnJpZGdlX0ZpbGVCYXNlZC5tcTR8Ci8vfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBGSURVUyBJbnZlc3RtZW50IE1hbmFnZW1lbnQgICAgIHwKLy8rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwojcHJvcGVydHkgY29weXJpZ2h0ICJGSURVUyBJbnZlc3RtZW50IE1hbmFnZW1lbnQiCiNwcm9wZXJ0eSBzdHJpY3QKCmlucHV0IGludCBVUERBVEVfSU5URVJWQUwgPSAzMDA7IC8vIFVwZGF0ZSBldmVyeSA1IG1pbnV0ZXMKaW5wdXQgc3RyaW5nIE9VVFBVVF9GSUxFID0gIkM6XFxtdDRfYnJpZGdlXFxhY2NvdW50X2RhdGEuanNvbiI7CgpkYXRldGltZSBsYXN0VXBkYXRlID0gMDsKCmludCBPbkluaXQoKSB7CiAgICBQcmludCgiTVQ0IEZpbGUtQmFzZWQgQnJpZGdlIGluaXRpYWxpemVkIik7CiAgICBQcmludCgiT3V0cHV0IGZpbGU6ICIsIE9VVFBVVF9GSUxFKTsKICAgIFdyaXRlQWNjb3VudERhdGEoKTsKICAgIHJldHVybiBJTklUX1NVQ0NFRURFRDYKFQ0Kdm9pZCBPblRpY2soKSB7CiAgICBpZiAoVGltZUN1cnJlbnQoKSAtIGxhc3RVcGRhdGUgPj0gVVBEQVRFX0lOVEVSVkFMKSB7CiAgICAgICAgV3JpdGVBY2NvdW50RGF0YSgpOwogICAgICAgIGxhc3RVcGRhdGUgPSBUaW1lQ3VycmVudCgpOwogICAgfQp9Cgp2b2lkIFdyaXRlQWNjb3VudERhdGEoKSB7CiAgICAvLyBCdWlsZCBKU09OIHN0cmluZwogICAgc3RyaW5nIGpzb24gPSAiIjsKICAgIGpzb24gPSBqc29uICsgIntcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwiYWNjb3VudFwiOiAiICsgSW50ZWdlclRvU3RyaW5nKEFjY291bnROdW1iZXIoKSkgKyAiLFxuIjsKICAgIGpzb24gPSBqc29uICsgIiAgXCJuYW1lXCI6IFwiIiArIEFjY291bnROYW1lKCkgKyAiXCIsXG4iOwogICAganNvbiA9IGpzb24gKyAiICBcInNlcnZlclwiOiBcIiIgKyBBY2NvdW50U2VydmVyKCkgKyAiXCIsXG4iOwogICAganNvbiA9IGpzb24gKyAiICBcImJhbGFuY2VcIjogIiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRCYWxhbmNlKCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwiZXF1aXR5XCI6ICIgKyBEb3VibGVUb1N0cmluZyhBY2NvdW50RXF1aXR5KCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwibWFyZ2luXCI6ICIgKyBEb3VibGVUb1N0cmluZyhBY2NvdW50TWFyZ2luKCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwiZnJlZV9tYXJnaW5cIjogIiArIERvdWJsZVRvU3RyaW5nKEFjY291bnRGcmVlTWFyZ2luKCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwicHJvZml0XCI6ICIgKyBEb3VibGVUb1N0cmluZyhBY2NvdW50UHJvZml0KCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwiY3VycmVuY3lcIjogXCIiICsgQWNjb3VudEN1cnJlbmN5KCkgKyAiXCIsXG4iOwogICAganNvbiA9IGpzb24gKyAiICBcImxldmVyYWdlXCI6ICIgKyBJbnRlZ2VyVG9TdHJpbmcoQWNjb3VudExldmVyYWdlKCkpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwiY3JlZGl0XCI6ICIgKyBEb3VibGVUb1N0cmluZyhBY2NvdW50Q3JlZGl0KCksIDIpICsgIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwicGxhdGZvcm1cIjogXCJNVDRcIixcbiI7CiAgICBqc29uID0ganNvbiArICIgIFwidGltZXN0YW1wXCI6IFwiIiArIFRpbWVUb1N0cmluZyhUaW1lQ3VycmVudCgpLCBUSU1FX0RBVEV8VElNRV9TRUNPTkRTKSArICJcIlxuIjsKICAgIGpzb24gPSBqc29uICsgIn1cbiI7CiAgICAKICAgIC8vIFdyaXRlIHRvIGZpbGUKICAgIGludCBoYW5kbGUgPSBGaWxlT3BlbihPVVRQVVRfRklMRSwgRklMRV9XUklURXxGSUxFX1RYVCk7CiAgICBpZiAoaGFuZGxlICE9IElOVkFMSURfSEFORExFKSB7CiAgICAgICAgRmlsZVdyaXRlU3RyaW5nKGhhbmRsZSwganNvbik7CiAgICAgICAgRmlsZUNsb3NlKGhhbmRsZSk7CiAgICAgICAgUHJpbnQoIkFjY291bnQgZGF0YSB3cml0dGVuIC0gQmFsYW5jZTogIiwgQWNjb3VudEJhbGFuY2UoKSwgIiwgRXF1aXR5OiAiLCBBY2NvdW50RXF1aXR5KCkpOwogICAgfSBlbHNlIHsKICAgICAgICBQcmludCgiRVJST1I6IENvdWxkIG5vdCB3cml0ZSB0byBmaWxlOiAiLCBPVVRQVVRfRklMRSk7CiAgICB9Cn0KCnZvaWQgT25EZWluaXQoY29uc3QgaW50IHJlYXNvbikgewogICAgUHJpbnQoIk1UNCBGaWxlLUJhc2VkIEJyaWRnZSBzdG9wcGVkIik7Cn0K"
+          $eaPath = "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge_FileBased.mq4"
+          
+          $bytes = [System.Convert]::FromBase64String($base64EA)
+          $content = [System.Text.Encoding]::UTF8.GetString($bytes)
+          [System.IO.File]::WriteAllText($eaPath, $content)
+          
+          Write-Host "MT4 EA deployed: $eaPath" -ForegroundColor Green
+          
+          Write-Host "`n=== DEPLOYMENT COMPLETE ===" -ForegroundColor Green
+          Write-Host "`nNEXT STEPS:" -ForegroundColor Yellow
+          Write-Host "1. Open MetaEditor" -ForegroundColor White
+          Write-Host "2. Open MT4_Python_Bridge_FileBased.mq4" -ForegroundColor White
+          Write-Host "3. Press F7 to compile (NO DLL imports needed!)" -ForegroundColor White
+          Write-Host "4. Attach EA to any chart" -ForegroundColor White
+          Write-Host "5. Check C:\mt4_bridge\account_data.json is being created" -ForegroundColor White
