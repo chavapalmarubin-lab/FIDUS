@@ -113,33 +113,53 @@ VALID_BROKERS = ["MEXAtlantic", "LUCRUM"]
 VALID_PLATFORMS = ["Broker Platform", "Biking"]
 
 
-# Endpoint 1: Get All MT5 Accounts
+# Endpoint 1: Get All MT5/MT4 Accounts
 @router.get("/mt5-accounts")
-async def get_all_mt5_accounts(
+async def get_all_accounts(
     current_user = Depends(get_current_admin_user)
 ):
-    """Get all 13 MT5 accounts with their assignments"""
+    """Get all MT5 and MT4 accounts with their assignments"""
     
     if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     try:
-        # Fetch all 13 accounts
+        # Fetch all accounts (both MT5 and MT4)
         accounts = await _db.mt5_accounts.find({
-            "account": {"$in": ALL_MT5_ACCOUNTS}
-        }, {"_id": 0}).to_list(length=20)
+            "account": {"$in": ALL_ACCOUNTS}
+        }, {"_id": 0}).to_list(length=50)
         
-        # Sort by account number
-        accounts_sorted = sorted(accounts, key=lambda x: ALL_MT5_ACCOUNTS.index(x["account"]))
+        # Add platform indicator for accounts that don't have it
+        for account in accounts:
+            if "platform" not in account:
+                if account["account"] in ALL_MT5_ACCOUNTS:
+                    account["platform"] = "MT5"
+                elif account["account"] in ALL_MT4_ACCOUNTS:
+                    account["platform"] = "MT4"
+        
+        # Sort by platform first (MT5, then MT4), then by account number
+        def sort_key(acc):
+            platform_order = {"MT5": 0, "MT4": 1}
+            platform = acc.get("platform", "MT5")
+            return (platform_order.get(platform, 2), acc["account"])
+        
+        accounts_sorted = sorted(accounts, key=sort_key)
         
         # Convert to camelCase
         accounts_camel = [to_camel_case(acc) for acc in accounts_sorted]
+        
+        # Count by platform
+        mt5_count = len([acc for acc in accounts_camel if acc.get("platform", "MT5") == "MT5"])
+        mt4_count = len([acc for acc in accounts_camel if acc.get("platform") == "MT4"])
         
         return {
             "success": True,
             "data": {
                 "accounts": accounts_camel,
-                "total": len(accounts_camel)
+                "total": len(accounts_camel),
+                "mt5_count": mt5_count,
+                "mt4_count": mt4_count,
+                "platforms": ["MT5", "MT4"]
             }
         }
     
