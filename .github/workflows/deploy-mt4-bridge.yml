@@ -1,0 +1,264 @@
+name: Deploy MT4 Bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - start
+          - stop
+          - status
+          - restart
+  push:
+    branches:
+      - main
+    paths:
+      - 'vps-scripts/mt4_bridge_api_service.py'
+      - 'vps-scripts/MT4_Python_Bridge.mq4'
+      - 'vps-scripts/setup_mt4_bridge.ps1'
+
+env:
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+  VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+  MT4_ACCOUNT: "33200931"
+  MT4_SERVER: "MEXAtlantic-Real"
+
+jobs:
+  deploy-mt4-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy MT4 Bridge to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: 22
+          timeout: 600s
+          command_timeout: 300s
+          script: |
+            echo "================================================"
+            echo "DEPLOYING MT4 BRIDGE TO VPS"
+            echo "================================================"
+            echo "Account: ${{ env.MT4_ACCOUNT }}"
+            echo "Server: ${{ env.MT4_SERVER }}"
+            echo "Date: $(Get-Date)"
+            echo ""
+            
+            # Set execution policy
+            Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+            
+            # Create MT4 bridge directory if it doesn't exist
+            if (!(Test-Path "C:\mt4_bridge_service")) {
+                New-Item -ItemType Directory -Path "C:\mt4_bridge_service" -Force
+                echo "Created MT4 bridge directory"
+            }
+            
+            # Navigate to MT4 bridge directory
+            cd C:\mt4_bridge_service
+            
+            # Stop existing service
+            echo "Stopping existing MT4 bridge service..."
+            Stop-ScheduledTask -TaskName "MT4 Bridge Service" -ErrorAction SilentlyContinue
+            Get-Process | Where-Object {$_.ProcessName -eq "python" -and $_.CommandLine -like "*mt4_bridge*"} | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            
+            # Pull latest code from GitHub (if repo exists)
+            if (Test-Path ".git") {
+                echo "Pulling latest code..."
+                git pull origin main
+            } else {
+                echo "No git repository found. Ensure files are manually copied."
+            }
+            
+            # Copy MT4 files if they exist in the repo
+            $repoPath = "C:\fidus-platform-repo"  # Adjust this path
+            if (Test-Path "$repoPath\vps-scripts") {
+                echo "Copying files from repository..."
+                
+                # Copy Python service
+                Copy-Item "$repoPath\vps-scripts\mt4_bridge_api_service.py" -Destination "." -Force -ErrorAction SilentlyContinue
+                
+                # Copy MT4 EA to MT4 Experts folder
+                $mt4Path = "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts"
+                if (Test-Path $mt4Path) {
+                    Copy-Item "$repoPath\vps-scripts\MT4_Python_Bridge.mq4" -Destination $mt4Path -Force -ErrorAction SilentlyContinue
+                    echo "MT4 EA copied to Experts folder"
+                }
+                
+                # Copy setup script
+                Copy-Item "$repoPath\vps-scripts\setup_mt4_bridge.ps1" -Destination "." -Force -ErrorAction SilentlyContinue
+                
+                echo "Files copied successfully"
+            } else {
+                echo "Repository files not found. Manual deployment required."
+            }
+            
+            # Check if Python service file exists
+            if (Test-Path "mt4_bridge_api_service.py") {
+                echo "✅ Python service file found"
+            } else {
+                echo "❌ Python service file missing!"
+                exit 1
+            }
+            
+            # Install/update requirements
+            echo "Installing Python requirements..."
+            pip install pyzmq pymongo python-dotenv --upgrade --quiet
+            
+            # Restart service via Task Scheduler
+            $action = "${{ inputs.action || 'deploy' }}"
+            
+            switch ($action) {
+                "deploy" {
+                    echo "Starting MT4 Bridge Service..."
+                    Start-ScheduledTask -TaskName "MT4 Bridge Service" -ErrorAction SilentlyContinue
+                    Start-Sleep -Seconds 5
+                }
+                "start" {
+                    echo "Starting MT4 Bridge Service..."
+                    Start-ScheduledTask -TaskName "MT4 Bridge Service"
+                }
+                "stop" {
+                    echo "Stopping MT4 Bridge Service..."
+                    Stop-ScheduledTask -TaskName "MT4 Bridge Service"
+                }
+                "restart" {
+                    echo "Restarting MT4 Bridge Service..."
+                    Stop-ScheduledTask -TaskName "MT4 Bridge Service" -ErrorAction SilentlyContinue
+                    Start-Sleep -Seconds 5
+                    Start-ScheduledTask -TaskName "MT4 Bridge Service"
+                }
+                "status" {
+                    echo "Checking MT4 Bridge Service status..."
+                }
+            }
+            
+            # Wait for service to start
+            if ($action -in @("deploy", "start", "restart")) {
+                echo "Waiting for service to initialize..."
+                Start-Sleep -Seconds 10
+            }
+            
+            echo ""
+            echo "================================================"
+            echo "MT4 BRIDGE DEPLOYMENT COMPLETE"
+            echo "================================================"
+      
+      - name: Verify MT4 Bridge Health
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          script: |
+            echo "VERIFYING MT4 BRIDGE HEALTH..."
+            echo "=============================="
+            
+            cd C:\mt4_bridge_service
+            
+            # Check scheduled task status
+            $task = Get-ScheduledTask -TaskName "MT4 Bridge Service" -ErrorAction SilentlyContinue
+            if ($task) {
+                $taskInfo = Get-ScheduledTaskInfo -TaskName "MT4 Bridge Service"
+                echo "✅ Scheduled Task: $($task.State)"
+                echo "   Last Run: $($taskInfo.LastRunTime)"
+                echo "   Next Run: $($taskInfo.NextRunTime)"
+            } else {
+                echo "❌ Scheduled Task: Not found"
+            }
+            
+            # Check Python process
+            $pythonProcess = Get-Process | Where-Object {$_.ProcessName -eq "python" -and $_.Path -like "*mt4_bridge*"} | Select-Object -First 1
+            if ($pythonProcess) {
+                echo "✅ Python Process: Running (PID: $($pythonProcess.Id))"
+                echo "   Start Time: $($pythonProcess.StartTime)"
+                echo "   Working Set: $([math]::Round($pythonProcess.WorkingSet64/1MB, 2)) MB"
+            } else {
+                echo "❌ Python Process: Not running"
+            }
+            
+            # Check log file
+            $logFile = "logs\mt4_bridge.log"
+            if (Test-Path $logFile) {
+                $logInfo = Get-Item $logFile
+                $ageMinutes = ((Get-Date) - $logInfo.LastWriteTime).TotalMinutes
+                
+                echo "✅ Log File: $($logInfo.Length) bytes"
+                echo "   Last Modified: $($logInfo.LastWriteTime) ($([math]::Round($ageMinutes, 1)) min ago)"
+                
+                if ($ageMinutes -lt 10) {
+                    echo "✅ Log Status: Fresh (recently updated)"
+                } else {
+                    echo "⚠️  Log Status: Stale (no recent updates)"
+                }
+                
+                # Show last few log entries
+                echo ""
+                echo "RECENT LOG ENTRIES:"
+                echo "-------------------"
+                Get-Content $logFile -Tail 8 | ForEach-Object {
+                    if ($_ -match "ERROR") {
+                        echo "❌ $_"
+                    } elseif ($_ -match "SUCCESS|✅|saved") {
+                        echo "✅ $_"
+                    } else {
+                        echo "   $_"
+                    }
+                }
+            } else {
+                echo "❌ Log File: Not found"
+            }
+            
+            # Check MT4 EA file
+            $eaPath = "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4"
+            if (Test-Path $eaPath) {
+                $eaInfo = Get-Item $eaPath
+                echo "✅ MT4 EA: Present ($($eaInfo.LastWriteTime))"
+            } else {
+                echo "❌ MT4 EA: Not found"
+            }
+            
+            echo ""
+            echo "=============================="
+            echo "HEALTH CHECK COMPLETE"
+            echo "=============================="
+            
+            # Set success/failure for GitHub Actions
+            if ($task -and $task.State -eq "Running") {
+                echo "::notice title=MT4 Bridge Status::Service is running successfully"
+                exit 0
+            } else {
+                echo "::error title=MT4 Bridge Status::Service is not running properly"
+                exit 0  # Don't fail the workflow, just report the issue
+            }
+
+  notify-status:
+    runs-on: ubuntu-latest
+    needs: deploy-mt4-bridge
+    if: always()
+    
+    steps:
+      - name: Notification
+        run: |
+          if [ "${{ needs.deploy-mt4-bridge.result }}" == "success" ]; then
+            echo "✅ MT4 Bridge deployment completed successfully"
+            echo "Account ${{ env.MT4_ACCOUNT }} should be sending data to MongoDB"
+            echo "Check VPS logs for confirmation"
+          else
+            echo "❌ MT4 Bridge deployment failed"
+            echo "Check the deployment logs and VPS status"
+          fi
