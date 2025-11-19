@@ -1,0 +1,32 @@
+name: Create MT4 EA File
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-file:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+      - name: Create MT4 EA on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          script: |
+            powershell.exe -Command "[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('Ly8rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwovL3wgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBNVDRfUHl0aG9uX0JyaWRnZS5tcTQgICB8Ci8vKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSsKI3Byb3BlcnR5IGNvcHlyaWdodCAiRklEVVMgSW52ZXN0bWVudCBNYW5hZ2VtZW50IgojcHJvcGVydHkgc3RyaWN0CgojaW5jbHVkZSA8Wm1xL1ptcS5tcWg+CgppbnB1dCBpbnQgVVBEQVRFX0lOVEVSVkFMID0gMzAwOwppbnB1dCBzdHJpbmcgWk1RX0hPU1QgPSAibG9jYWxob3N0IjsKaW5wdXQgaW50IFpNUV9QT1JUID0gMzI3Njg7CgpkYXRldGltZSBsYXN0VXBkYXRlID0gMDsKQ29udGV4dCBjb250ZXh0KCJNVDRfQlJJREdFIik7ClNvY2tldCBzb2NrZXQoY29udGV4dCwgWk1RX1BVU0gpOwoKaW50IE9uSW5pdCgpIHsKICAgIHN0cmluZyBhZGRyZXNzID0gU3RyaW5nRm9ybWF0KCJ0Y3A6Ly8lczolZCIsIFpNUV9IT1NULCBaTVFfUE9SVCk7CiAgICBzb2NrZXQuY29ubmVjdChhZGRyZXNzKTsKICAgIFByaW50KCJNVDQgQnJpZGdlIGluaXRpYWxpemVkLCBjb25uZWN0aW5nIHRvICIsIGFkZHJlc3MpOwogICAgU2VuZEFjY291bnREYXRhKCk7CiAgICByZXR1cm4gSU5JVF9TVUNDRUVERUQ7Cn0KCnZvaWQgT25UaWNrKCkgewogICAgaWYgKFRpbWVDdXJyZW50KCkgLSBsYXN0VXBkYXRlID49IFVQREFURV9JTlRFUlZBTCkgewogICAgICAgIFNlbmRBY2NvdW50RGF0YSgpOwogICAgICAgIGxhc3RVcGRhdGUgPSBUaW1lQ3VycmVudCgpOwogICAgfQp9Cgp2b2lkIFNlbmRBY2NvdW50RGF0YSgpIHsKICAgIHN0cmluZyBqc29uID0gInsiOwogICAganNvbiArPSBTdHJpbmdGb3JtYXQoIlwiYWNjb3VudFwiOiAlZCwiLCBBY2NvdW50TnVtYmVyKCkpOwogICAganNvbiArPSBTdHJpbmdGb3JtYXQoIlwibmFtZVwiOiBcIiVzXCIsIiwgQWNjb3VudE5hbWUoKSk7CiAgICBqc29uICs9IFN0cmluZ0Zvcm1hdCgiXCJzZXJ2ZXJcIjogXCIlc1wiLCIsIEFjY291bnRTZXJ2ZXIoKSk7CiAgICBqc29uICs9IFN0cmluZ0Zvcm1hdCgiXCJiYWxhbmNlXCI6ICUuMmYsIiwgQWNjb3VudEJhbGFuY2UoKSk7CiAgICBqc29uICs9IFN0cmluZ0Zvcm1hdCgiXCJlcXVpdHlcIjogJS4yZiwiLCBBY2NvdW50RXF1aXR5KCkpOwogICAganNvbiArPSBTdHJpbmdGb3JtYXQoIlwibWFyZ2luXCI6ICUuMmYsIiwgQWNjb3VudE1hcmdpbigpKTsKICAgIGpzb24gKz0gU3RyaW5nRm9ybWF0KCJcImZyZWVfbWFyZ2luXCI6ICUuMmYsIiwgQWNjb3VudEZyZWVNYXJnaW4oKSk7CiAgICBqc29uICs9IFN0cmluZ0Zvcm1hdCgiXCJwcm9maXRcIjogJS4yZiwiLCBBY2NvdW50UHJvZml0KCkpOwogICAganNvbiArPSBTdHJpbmdGb3JtYXQoIlwiY3VycmVuY3lcIjogXCIlc1wiLCIsIEFjY291bnRDdXJyZW5jeSgpKTsKICAgIGpzb24gKz0gU3RyaW5nRm9ybWF0KCJcImxldmVyYWdlXCI6ICVkLCIsIEFjY291bnRMZXZlcmFnZSgpKTsKICAgIGpzb24gKz0gU3RyaW5nRm9ybWF0KCJcImNyZWRpdFwiOiAlLjJmLCIsIEFjY291bnRDcmVkaXQoKSk7CiAgICBqc29uICs9IFN0cmluZ0Zvcm1hdCgiXCJwbGF0Zm9ybVwiOiBcIk1UNFwiLCIpOwogICAganNvbiArPSBTdHJpbmdGb3JtYXQoIlwidGltZXN0YW1wXCI6IFwiJXNcIiIsIFRpbWVUb1N0cmluZyhUaW1lQ3VycmVudCgpLCBUSU1FX0RBVEV8VElNRV9TRUNPTkRTKSk7CiAgICBqc29uICs9ICJ9IjsKICAgIAogICAgWm1xTXNnIG1lc3NhZ2UoanNvbik7CiAgICBzb2NrZXQuc2VuZChtZXNzYWdlKTsKICAgIFByaW50KCJBY2NvdW50IGRhdGEgc2VudCAtIEJhbGFuY2U6ICIsIEFjY291bnRCYWxhbmNlKCksICIsIEVxdWl0eTogIiwgQWNjb3VudEVxdWl0eSgpKTsKfQoKdm9pZCBPbkRlaW5pdChjb25zdCBpbnQgcmVhc29uKSB7CiAgICBzb2NrZXQuZGlzY29ubmVjdChTdHJpbmdGb3JtYXQoInRjcDovLyVzOiVkIiwgWk1RX0hPU1QsIFpNUV9QT1JUKSk7CiAgICBQcmludCgiTVQ0IEJyaWRnZSBzdG9wcGVkIik7Cn0K')) | Out-File -FilePath 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Encoding UTF8; if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') { Write-Host '[SUCCESS] MT4 EA created' -ForegroundColor Green } else { Write-Host '[FAILED] File not created' -ForegroundColor Red; exit 1 }"
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "MT4 EA FILE CREATION"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+          echo ""
+          echo "Next: Compile in MT4 (F4 -> F7)"
+          echo "=========================================="
