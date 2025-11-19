@@ -227,47 +227,55 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           timeout: 300s
-          script_stop: true
+          script_stop: false
           script: |
-            echo "=========================================="
-            echo "FINALIZING MT4 EA INSTALLATION"
-            echo "=========================================="
+            powershell.exe -Command "
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'FINALIZING MT4 EA INSTALLATION' -ForegroundColor Cyan
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
             
-            echo ""
-            echo "STEP 3: Copying EA to MT4 Experts folder..."
-            powershell -Command "Copy-Item -Path 'C:\temp\mt4_deploy\MT4_Python_Bridge.mq4' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force"
-            
-            if [ $? -eq 0 ]; then
-              echo "✓ MT4 EA deployed successfully"
-            else
-              echo "✗ MT4 EA deployment failed"
+            # STEP 3: Copy EA to MT4 Experts folder
+            Write-Host 'STEP 3: Copying EA to MT4 Experts folder...' -ForegroundColor Yellow
+            try {
+              Copy-Item -Path 'C:\temp\mt4_deploy\MT4_Python_Bridge.mq4' -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Force
+              Write-Host '✓ MT4 EA deployed successfully' -ForegroundColor Green
+            } catch {
+              Write-Host '✗ MT4 EA deployment failed:' \$_.Exception.Message -ForegroundColor Red
               exit 1
-            fi
+            }
+            Write-Host ''
             
-            # Verify file exists
-            echo ""
-            echo "STEP 4: Verifying EA installation..."
-            powershell -Command "if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') { Write-Host '✓ MT4_Python_Bridge.mq4 found'; exit 0 } else { Write-Host '✗ EA file not found'; exit 1 }"
+            # STEP 4: Verify EA installation
+            Write-Host 'STEP 4: Verifying EA installation...' -ForegroundColor Yellow
+            if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4') {
+              Write-Host '✓ MT4_Python_Bridge.mq4 found' -ForegroundColor Green
+            } else {
+              Write-Host '✗ EA file not found' -ForegroundColor Red
+              exit 1
+            }
+            Write-Host ''
             
-            # Cleanup
-            echo ""
-            echo "STEP 5: Cleaning up..."
-            powershell -Command "Remove-Item -Path 'C:\temp\mt4_deploy' -Recurse -Force -ErrorAction SilentlyContinue"
+            # STEP 5: Cleanup
+            Write-Host 'STEP 5: Cleaning up...' -ForegroundColor Yellow
+            Remove-Item -Path 'C:\temp\mt4_deploy' -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host '✓ Cleanup complete' -ForegroundColor Green
+            Write-Host ''
             
-            echo ""
-            echo "=========================================="
-            echo "MT4 EA INSTALLATION COMPLETE"
-            echo "=========================================="
-            echo ""
-            echo "NEXT STEPS:"
-            echo "1. Open MT4 Terminal"
-            echo "2. Press F4 to open MetaEditor"
-            echo "3. Navigate to Experts → MT4_Python_Bridge.mq4"
-            echo "4. Press F7 to compile"
-            echo "5. Close MetaEditor"
-            echo "6. Drag EA onto any chart"
-            echo "7. Enable 'Allow DLL imports' checkbox"
-            echo "=========================================="
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'MT4 EA INSTALLATION COMPLETE' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
+            Write-Host 'NEXT STEPS:' -ForegroundColor Yellow
+            Write-Host '1. Open MT4 Terminal' -ForegroundColor Gray
+            Write-Host '2. Press F4 to open MetaEditor' -ForegroundColor Gray
+            Write-Host '3. Navigate to Experts → MT4_Python_Bridge.mq4' -ForegroundColor Gray
+            Write-Host '4. Press F7 to compile' -ForegroundColor Gray
+            Write-Host '5. Close MetaEditor' -ForegroundColor Gray
+            Write-Host '6. Drag EA onto any chart' -ForegroundColor Gray
+            Write-Host '7. Enable Allow DLL imports checkbox' -ForegroundColor Gray
+            Write-Host '==========================================' -ForegroundColor Cyan
+            "
       
       - name: Setup Summary
         if: always()
