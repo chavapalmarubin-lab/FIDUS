@@ -30,20 +30,21 @@ void OnTick() {
 }
 
 void SendAccountData() {
+    string q = CharToString(34);
     string json = "{";
-    json = json + "\"account\":" + IntegerToString(AccountNumber()) + ",";
-    json = json + "\"name\":\"" + AccountName() + "\",";
-    json = json + "\"server\":\"" + AccountServer() + "\",";
-    json = json + "\"balance\":" + DoubleToString(AccountBalance(), 2) + ",";
-    json = json + "\"equity\":" + DoubleToString(AccountEquity(), 2) + ",";
-    json = json + "\"margin\":" + DoubleToString(AccountMargin(), 2) + ",";
-    json = json + "\"free_margin\":" + DoubleToString(AccountFreeMargin(), 2) + ",";
-    json = json + "\"profit\":" + DoubleToString(AccountProfit(), 2) + ",";
-    json = json + "\"currency\":\"" + AccountCurrency() + "\",";
-    json = json + "\"leverage\":" + IntegerToString(AccountLeverage()) + ",";
-    json = json + "\"credit\":" + DoubleToString(AccountCredit(), 2) + ",";
-    json = json + "\"platform\":\"MT4\",";
-    json = json + "\"timestamp\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS) + "\"";
+    json = json + q + "account" + q + ":" + IntegerToString(AccountNumber()) + ",";
+    json = json + q + "name" + q + ":" + q + AccountName() + q + ",";
+    json = json + q + "server" + q + ":" + q + AccountServer() + q + ",";
+    json = json + q + "balance" + q + ":" + DoubleToString(AccountBalance(), 2) + ",";
+    json = json + q + "equity" + q + ":" + DoubleToString(AccountEquity(), 2) + ",";
+    json = json + q + "margin" + q + ":" + DoubleToString(AccountMargin(), 2) + ",";
+    json = json + q + "free_margin" + q + ":" + DoubleToString(AccountFreeMargin(), 2) + ",";
+    json = json + q + "profit" + q + ":" + DoubleToString(AccountProfit(), 2) + ",";
+    json = json + q + "currency" + q + ":" + q + AccountCurrency() + q + ",";
+    json = json + q + "leverage" + q + ":" + IntegerToString(AccountLeverage()) + ",";
+    json = json + q + "credit" + q + ":" + DoubleToString(AccountCredit(), 2) + ",";
+    json = json + q + "platform" + q + ":" + q + "MT4" + q + ",";
+    json = json + q + "timestamp" + q + ":" + q + TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS) + q;
     json = json + "}";
     
     ZmqMsg message(json);
