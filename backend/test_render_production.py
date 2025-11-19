@@ -4,7 +4,7 @@ Test Render Production API Endpoints
 import requests
 import json
 
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
 
 print("="*80)
 print("RENDER PRODUCTION API VERIFICATION")

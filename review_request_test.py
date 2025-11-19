@@ -33,7 +33,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
 
 class ReviewRequestTester:
     def __init__(self):

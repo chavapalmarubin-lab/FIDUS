@@ -24,7 +24,7 @@ from datetime import datetime
 import sys
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
 BASE_API_URL = f"{BACKEND_URL}/api"
 
 def print_header(title):

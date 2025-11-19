@@ -153,7 +153,7 @@ async def perform_all_health_checks(mongo_client, db) -> Dict[str, Dict[str, Any
     # Frontend check - use preview URL
     logger.info("Checking frontend health...")
     health_results['frontend'] = await check_url_health(
-        url='https://tradingbridge-4.preview.emergentagent.com',
+        url='https://tradeconnect-14.preview.emergentagent.com',
         timeout=5,
         expected_status=200
     )

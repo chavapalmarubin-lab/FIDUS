@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 
 # Configuration
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
 
 # Test data
 TEST_CLIENT_ID = "client_001"  # Gerardo Briones

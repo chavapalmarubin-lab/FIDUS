@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Production API URL
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
 API_ENDPOINT = f"{BACKEND_URL}/api/admin/money-managers"
 LOGIN_ENDPOINT = f"{BACKEND_URL}/api/auth/login"
 

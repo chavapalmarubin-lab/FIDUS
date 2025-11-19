@@ -35,7 +35,7 @@ from typing import Dict, Any, List, Optional
 class PostFixesVerificationTester:
     def __init__(self):
         # Use the backend URL from frontend .env
-        self.base_url = "https://tradingbridge-4.preview.emergentagent.com/api"
+        self.base_url = "https://tradeconnect-14.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

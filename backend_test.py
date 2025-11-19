@@ -30,7 +30,7 @@ from typing import Dict, Any, List, Optional
 
 class FidusCommissionTester:
     def __init__(self):
-        self.base_url = "https://tradingbridge-4.preview.emergentagent.com/api"
+        self.base_url = "https://tradeconnect-14.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
 
 def authenticate_and_get_calendar():
     """Authenticate and get detailed calendar data"""

@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://tradingbridge-4.preview.emergentagent.com/api"
-FRONTEND_URL = "https://tradingbridge-4.preview.emergentagent.com"
+BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
+FRONTEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
