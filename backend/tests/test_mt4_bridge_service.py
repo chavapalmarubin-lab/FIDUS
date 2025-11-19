@@ -187,7 +187,7 @@ class MT4BridgeServiceTester:
             
             # Connect to MongoDB
             db, accounts_collection, config_collection = self.test_mongodb_connection()
-            if not db:
+            if db is None:
                 return False
             
             # Test the save_account_data method
