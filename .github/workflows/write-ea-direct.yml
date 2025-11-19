@@ -1,0 +1,75 @@
+name: Write EA Direct
+
+on:
+  workflow_dispatch:
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write File
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 60s
+          script: |
+            powershell.exe -Command "
+            \$f='C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4';
+            '#property copyright \"FIDUS Investment Management\"' | Out-File \$f -Encoding UTF8;
+            '#property strict' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            '#include <Zmq/Zmq.mqh>' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'input int UPDATE_INTERVAL = 300;' | Out-File \$f -Append -Encoding UTF8;
+            'input string ZMQ_HOST = \"localhost\";' | Out-File \$f -Append -Encoding UTF8;
+            'input int ZMQ_PORT = 32768;' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'datetime lastUpdate = 0;' | Out-File \$f -Append -Encoding UTF8;
+            'Context context(\"MT4_BRIDGE\");' | Out-File \$f -Append -Encoding UTF8;
+            'Socket socket(context, ZMQ_PUSH);' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'int OnInit() {' | Out-File \$f -Append -Encoding UTF8;
+            '    string address = StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT);' | Out-File \$f -Append -Encoding UTF8;
+            '    socket.connect(address);' | Out-File \$f -Append -Encoding UTF8;
+            '    Print(\"MT4 Bridge initialized\");' | Out-File \$f -Append -Encoding UTF8;
+            '    SendAccountData();' | Out-File \$f -Append -Encoding UTF8;
+            '    return INIT_SUCCEEDED;' | Out-File \$f -Append -Encoding UTF8;
+            '}' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'void OnTick() {' | Out-File \$f -Append -Encoding UTF8;
+            '    if (TimeCurrent() - lastUpdate >= UPDATE_INTERVAL) {' | Out-File \$f -Append -Encoding UTF8;
+            '        SendAccountData();' | Out-File \$f -Append -Encoding UTF8;
+            '        lastUpdate = TimeCurrent();' | Out-File \$f -Append -Encoding UTF8;
+            '    }' | Out-File \$f -Append -Encoding UTF8;
+            '}' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'void SendAccountData() {' | Out-File \$f -Append -Encoding UTF8;
+            '    string json = \"{\";' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"account\\\": %d,\", AccountNumber());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"name\\\": \\\"%s\\\",\", AccountName());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"server\\\": \\\"%s\\\",\", AccountServer());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"balance\\\": %.2f,\", AccountBalance());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"equity\\\": %.2f,\", AccountEquity());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"margin\\\": %.2f,\", AccountMargin());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"free_margin\\\": %.2f,\", AccountFreeMargin());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"profit\\\": %.2f,\", AccountProfit());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"currency\\\": \\\"%s\\\",\", AccountCurrency());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"leverage\\\": %d,\", AccountLeverage());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"credit\\\": %.2f,\", AccountCredit());' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"platform\\\": \\\"MT4\\\",\");' | Out-File \$f -Append -Encoding UTF8;
+            '    json += StringFormat(\"\\\"timestamp\\\": \\\"%s\\\"\", TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS));' | Out-File \$f -Append -Encoding UTF8;
+            '    json += \"}\";' | Out-File \$f -Append -Encoding UTF8;
+            '    ZmqMsg message(json);' | Out-File \$f -Append -Encoding UTF8;
+            '    socket.send(message);' | Out-File \$f -Append -Encoding UTF8;
+            '    Print(\"Data sent\");' | Out-File \$f -Append -Encoding UTF8;
+            '}' | Out-File \$f -Append -Encoding UTF8;
+            '' | Out-File \$f -Append -Encoding UTF8;
+            'void OnDeinit(const int reason) {' | Out-File \$f -Append -Encoding UTF8;
+            '    socket.disconnect(StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT));' | Out-File \$f -Append -Encoding UTF8;
+            '    Print(\"MT4 Bridge stopped\");' | Out-File \$f -Append -Encoding UTF8;
+            '}' | Out-File \$f -Append -Encoding UTF8;
+            Write-Host 'File written' -ForegroundColor Green;
+            "
