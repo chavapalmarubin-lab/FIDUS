@@ -1,0 +1,477 @@
+name: Deploy MT4 Bridge Complete with DLLs
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Deployment action'
+        required: true
+        default: 'deploy_all'
+        type: choice
+        options:
+          - deploy_all
+          - deploy_python_only
+          - deploy_mt4_ea_only
+          - install_zeromq_complete
+          - check_status
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 1200s
+          command_timeout: 30m
+          script: |
+            powershell.exe -ExecutionPolicy Bypass -Command "& {
+            
+            \$action = '${{ github.event.inputs.action }}'
+            
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'MT4 BRIDGE COMPLETE DEPLOYMENT' -ForegroundColor Cyan
+            Write-Host \"Action: \$action\" -ForegroundColor Yellow
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
+            
+            # ===========================================
+            # STEP 1: Create Directory Structure
+            # ===========================================
+            if (\$action -eq 'deploy_all') {
+                Write-Host 'STEP 1: Creating directories...' -ForegroundColor Yellow
+                
+                New-Item -ItemType Directory -Force -Path 'C:\mt4_bridge_service\logs' | Out-Null
+                Write-Host '  [OK] Service directories created' -ForegroundColor Green
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # STEP 2: Install Python Dependencies
+            # ===========================================
+            if (\$action -eq 'deploy_all') {
+                Write-Host 'STEP 2: Installing Python packages...' -ForegroundColor Yellow
+                
+                pip install pyzmq pymongo python-dotenv --quiet 2>&1 | Out-Null
+                Write-Host '  [OK] Python packages installed' -ForegroundColor Green
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # STEP 3: Download and Install ZeroMQ Library
+            # ===========================================
+            if (\$action -eq 'deploy_all' -or \$action -eq 'install_zeromq_complete') {
+                Write-Host 'STEP 3: Installing ZeroMQ library...' -ForegroundColor Yellow
+                
+                try {
+                    # Create temp directory
+                    New-Item -ItemType Directory -Force -Path 'C:\temp\zeromq_install' | Out-Null
+                    
+                    # Download mql-zmq (MQL4 bindings)
+                    Write-Host '  Downloading mql-zmq...' -ForegroundColor Gray
+                    Invoke-WebRequest -Uri 'https://github.com/dingmaotu/mql-zmq/archive/refs/heads/master.zip' -OutFile 'C:\temp\zeromq_install\mql-zmq.zip' -UseBasicParsing
+                    
+                    # Extract mql-zmq
+                    Write-Host '  Extracting mql-zmq...' -ForegroundColor Gray
+                    Expand-Archive -Path 'C:\temp\zeromq_install\mql-zmq.zip' -DestinationPath 'C:\temp\zeromq_install' -Force
+                    \$zmqFolder = Get-ChildItem -Path 'C:\temp\zeromq_install' -Directory | Where-Object { \$_.Name -like 'mql-zmq*' } | Select-Object -First 1
+                    
+                    # Install MQL4 Include files
+                    Write-Host '  Installing MQL4 Include files...' -ForegroundColor Gray
+                    New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq' | Out-Null
+                    \$zmqIncludePath = Join-Path \$zmqFolder.FullName 'MQL4\Include\Zmq'
+                    Copy-Item -Path \"\$zmqIncludePath\*\" -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\' -Recurse -Force
+                    Write-Host '  [OK] MQL4 Include files installed' -ForegroundColor Green
+                    
+                    # Install DLL files (32-bit for MT4)
+                    Write-Host '  Installing ZeroMQ DLL files...' -ForegroundColor Gray
+                    New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries' | Out-Null
+                    
+                    \$dllPath = Join-Path \$zmqFolder.FullName 'Library\MT4\MQL4\Libraries'
+                    if (Test-Path \$dllPath) {
+                        Copy-Item -Path \"\$dllPath\*.dll\" -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries\' -Force
+                        Write-Host '  [OK] DLL files installed from mql-zmq' -ForegroundColor Green
+                    } else {
+                        Write-Host '  [INFO] No DLLs in mql-zmq, downloading libzmq...' -ForegroundColor Yellow
+                        
+                        # Download libzmq binaries directly
+                        Invoke-WebRequest -Uri 'https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4-x86.zip' -OutFile 'C:\temp\zeromq_install\libzmq.zip' -UseBasicParsing
+                        Expand-Archive -Path 'C:\temp\zeromq_install\libzmq.zip' -DestinationPath 'C:\temp\zeromq_install\libzmq' -Force
+                        
+                        # Find and copy DLL
+                        \$libzmqDll = Get-ChildItem -Path 'C:\temp\zeromq_install\libzmq' -Filter 'libzmq*.dll' -Recurse | Select-Object -First 1
+                        if (\$libzmqDll) {
+                            Copy-Item -Path \$libzmqDll.FullName -Destination 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries\libzmq.dll' -Force
+                            Write-Host '  [OK] libzmq.dll installed' -ForegroundColor Green
+                        }
+                    }
+                    
+                    # Verify installation
+                    Write-Host '  Verifying installation...' -ForegroundColor Gray
+                    \$installOk = \$true
+                    
+                    if (Test-Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\Zmq.mqh') {
+                        Write-Host '  [OK] Zmq.mqh found' -ForegroundColor Green
+                    } else {
+                        Write-Host '  [ERROR] Zmq.mqh not found' -ForegroundColor Red
+                        \$installOk = \$false
+                    }
+                    
+                    \$dllFiles = Get-ChildItem -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries' -Filter '*.dll' -ErrorAction SilentlyContinue
+                    if (\$dllFiles) {
+                        Write-Host \"  [OK] DLL files found: \$(\$dllFiles.Count) files\" -ForegroundColor Green
+                        foreach (\$dll in \$dllFiles) {
+                            Write-Host \"    - \$(\$dll.Name)\" -ForegroundColor Gray
+                        }
+                    } else {
+                        Write-Host '  [WARNING] No DLL files found in Libraries' -ForegroundColor Yellow
+                    }
+                    
+                    # Cleanup
+                    Write-Host '  Cleaning up...' -ForegroundColor Gray
+                    Remove-Item -Path 'C:\temp\zeromq_install' -Recurse -Force -ErrorAction SilentlyContinue
+                    
+                    if (\$installOk) {
+                        Write-Host '  [OK] ZeroMQ installation complete' -ForegroundColor Green
+                    }
+                    
+                } catch {
+                    Write-Host \"  [ERROR] ZeroMQ installation failed: \$_\" -ForegroundColor Red
+                }
+                
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # STEP 4: Create Python Service File
+            # ===========================================
+            if (\$action -eq 'deploy_all' -or \$action -eq 'deploy_python_only') {
+                Write-Host 'STEP 4: Creating Python service file...' -ForegroundColor Yellow
+                
+                \$pythonCode = @'
+import zmq
+import json
+import pymongo
+from datetime import datetime, timezone
+import time
+import logging
+import sys
+
+MONGODB_URI = \"mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS\"
+MONGODB_DATABASE = \"fidus_production\"
+ZMQ_HOST = \"localhost\"
+ZMQ_PORT = 32768
+
+MT4_ACCOUNT = {
+    \"login\": 33200931,
+    \"password\": \"Fidus13!\",
+    \"server\": \"MEXAtlantic-Real\",
+    \"fund_type\": \"MONEY_MANAGER\",
+    \"platform\": \"MT4\"
+}
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=\"%(asctime)s - %(levelname)s - %(message)s\",
+    handlers=[
+        logging.FileHandler(\"C:\\\\mt4_bridge_service\\\\logs\\\\mt4_bridge.log\"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+class MT4BridgeService:
+    def __init__(self):
+        self.mongo_client = None
+        self.db = None
+        self.collection = None
+        self.context = None
+        self.socket = None
+        
+    def connect_mongodb(self):
+        try:
+            logger.info(\"Connecting to MongoDB...\")
+            self.mongo_client = pymongo.MongoClient(MONGODB_URI)
+            self.mongo_client.admin.command(\"ping\")
+            self.db = self.mongo_client[MONGODB_DATABASE]
+            self.collection = self.db[\"mt5_accounts\"]
+            logger.info(\"MongoDB connected successfully\")
+            return True
+        except Exception as e:
+            logger.error(f\"MongoDB connection failed: {e}\")
+            return False
+    
+    def setup_zeromq(self):
+        try:
+            logger.info(\"Setting up ZeroMQ...\")
+            self.context = zmq.Context()
+            self.socket = self.context.socket(zmq.PULL)
+            address = f\"tcp://{ZMQ_HOST}:{ZMQ_PORT}\"
+            self.socket.bind(address)
+            logger.info(f\"ZeroMQ server bound to {address}\")
+            return True
+        except Exception as e:
+            logger.error(f\"ZeroMQ setup failed: {e}\")
+            return False
+    
+    def save_account_data(self, data):
+        try:
+            data[\"fund_type\"] = MT4_ACCOUNT[\"fund_type\"]
+            data[\"platform\"] = \"MT4\"
+            data[\"updated_at\"] = datetime.now(timezone.utc).isoformat()
+            data[\"_id\"] = f\"MT4_{MT4_ACCOUNT['login']}\"
+            
+            self.collection.update_one(
+                {\"account\": MT4_ACCOUNT[\"login\"], \"platform\": \"MT4\"},
+                {\"$set\": data},
+                upsert=True
+            )
+            
+            logger.info(f\"Account {MT4_ACCOUNT['login']} data saved\")
+            logger.info(f\"Balance: ${data.get('balance', 0):.2f}, Equity: ${data.get('equity', 0):.2f}\")
+            return True
+        except Exception as e:
+            logger.error(f\"Failed to save data: {e}\")
+            return False
+    
+    def run(self):
+        logger.info(\"=\"*60)
+        logger.info(\"MT4 BRIDGE SERVICE STARTING\")
+        logger.info(\"=\"*60)
+        
+        if not self.connect_mongodb():
+            logger.error(\"Failed to connect to MongoDB. Exiting.\")
+            return
+        
+        if not self.setup_zeromq():
+            logger.error(\"Failed to setup ZeroMQ. Exiting.\")
+            return
+        
+        logger.info(\"MT4 Bridge Service running...\")
+        logger.info(\"Waiting for data from MT4...\")
+        
+        try:
+            while True:
+                try:
+                    message = self.socket.recv_string(flags=zmq.NOBLOCK)
+                    logger.debug(f\"Received: {message}\")
+                    account_data = json.loads(message)
+                    self.save_account_data(account_data)
+                except zmq.Again:
+                    time.sleep(1)
+                except Exception as e:
+                    logger.error(f\"Error processing message: {e}\")
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            logger.info(\"Service stopped by user\")
+        except Exception as e:
+            logger.error(f\"Fatal error: {e}\")
+        finally:
+            self.shutdown()
+    
+    def shutdown(self):
+        logger.info(\"Shutting down...\")
+        if self.socket:
+            self.socket.close()
+        if self.context:
+            self.context.term()
+        if self.mongo_client:
+            self.mongo_client.close()
+        logger.info(\"Service stopped\")
+
+if __name__ == \"__main__\":
+    service = MT4BridgeService()
+    service.run()
+'@
+                
+                Set-Content -Path 'C:\mt4_bridge_service\mt4_bridge_api_service.py' -Value \$pythonCode -Encoding UTF8
+                
+                if (Test-Path 'C:\mt4_bridge_service\mt4_bridge_api_service.py') {
+                    \$fileSize = (Get-Item 'C:\mt4_bridge_service\mt4_bridge_api_service.py').Length
+                    Write-Host \"  [OK] Python service created: \$fileSize bytes\" -ForegroundColor Green
+                } else {
+                    Write-Host '  [ERROR] Python service file not created' -ForegroundColor Red
+                }
+                
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # STEP 5: Create Startup BAT File
+            # ===========================================
+            if (\$action -eq 'deploy_all') {
+                Write-Host 'STEP 5: Creating startup script...' -ForegroundColor Yellow
+                
+                \$batContent = @'
+@echo off
+echo ==========================================
+echo MT4 BRIDGE SERVICE - STARTING
+echo ==========================================
+cd /d C:\mt4_bridge_service
+python mt4_bridge_api_service.py
+pause
+'@
+                
+                Set-Content -Path 'C:\mt4_bridge_service\start_mt4_bridge.bat' -Value \$batContent
+                Write-Host '  [OK] Startup BAT created' -ForegroundColor Green
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # STEP 6: Create MT4 Expert Advisor
+            # ===========================================
+            if (\$action -eq 'deploy_all' -or \$action -eq 'deploy_mt4_ea_only') {
+                Write-Host 'STEP 6: Creating MT4 Expert Advisor...' -ForegroundColor Yellow
+                
+                \$mt4Code = @'
+//+------------------------------------------------------------------+
+//|                                          MT4_Python_Bridge.mq4   |
+//+------------------------------------------------------------------+
+#property copyright \"FIDUS Investment Management\"
+#property strict
+
+#include <Zmq/Zmq.mqh>
+
+input int UPDATE_INTERVAL = 300;
+input string ZMQ_HOST = \"localhost\";
+input int ZMQ_PORT = 32768;
+
+datetime lastUpdate = 0;
+Context context(\"MT4_BRIDGE\");
+Socket socket(context, ZMQ_PUSH);
+
+int OnInit() {
+    string address = StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT);
+    socket.connect(address);
+    Print(\"MT4 Bridge initialized, connecting to \", address);
+    SendAccountData();
+    return INIT_SUCCEEDED;
+}
+
+void OnTick() {
+    if (TimeCurrent() - lastUpdate >= UPDATE_INTERVAL) {
+        SendAccountData();
+        lastUpdate = TimeCurrent();
+    }
+}
+
+void SendAccountData() {
+    string json = \"{\";
+    json += StringFormat(\"\\\"account\\\": %d,\", AccountNumber());
+    json += StringFormat(\"\\\"name\\\": \\\"%s\\\",\", AccountName());
+    json += StringFormat(\"\\\"server\\\": \\\"%s\\\",\", AccountServer());
+    json += StringFormat(\"\\\"balance\\\": %.2f,\", AccountBalance());
+    json += StringFormat(\"\\\"equity\\\": %.2f,\", AccountEquity());
+    json += StringFormat(\"\\\"margin\\\": %.2f,\", AccountMargin());
+    json += StringFormat(\"\\\"free_margin\\\": %.2f,\", AccountFreeMargin());
+    json += StringFormat(\"\\\"profit\\\": %.2f,\", AccountProfit());
+    json += StringFormat(\"\\\"currency\\\": \\\"%s\\\",\", AccountCurrency());
+    json += StringFormat(\"\\\"leverage\\\": %d,\", AccountLeverage());
+    json += StringFormat(\"\\\"credit\\\": %.2f,\", AccountCredit());
+    json += StringFormat(\"\\\"platform\\\": \\\"MT4\\\",\");
+    json += StringFormat(\"\\\"timestamp\\\": \\\"%s\\\"\", TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS));
+    json += \"}\";
+    
+    ZmqMsg message(json);
+    socket.send(message);
+    Print(\"Account data sent - Balance: \", AccountBalance(), \", Equity: \", AccountEquity());
+}
+
+void OnDeinit(const int reason) {
+    socket.disconnect(StringFormat(\"tcp://%s:%d\", ZMQ_HOST, ZMQ_PORT));
+    Print(\"MT4 Bridge stopped\");
+}
+'@
+                
+                New-Item -ItemType Directory -Force -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts' | Out-Null
+                Set-Content -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4' -Value \$mt4Code -Encoding UTF8
+                Write-Host '  [OK] MT4 EA created' -ForegroundColor Green
+                Write-Host ''
+            }
+            
+            # ===========================================
+            # VERIFICATION
+            # ===========================================
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'VERIFICATION' -ForegroundColor Yellow
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
+            
+            \$checks = @{
+                'Service folder' = 'C:\mt4_bridge_service'
+                'Logs folder' = 'C:\mt4_bridge_service\logs'
+                'Python service' = 'C:\mt4_bridge_service\mt4_bridge_api_service.py'
+                'Startup BAT' = 'C:\mt4_bridge_service\start_mt4_bridge.bat'
+                'MT4 EA' = 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts\MT4_Python_Bridge.mq4'
+                'ZeroMQ Include' = 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Include\Zmq\Zmq.mqh'
+                'MT4 Libraries folder' = 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries'
+            }
+            
+            foreach (\$check in \$checks.GetEnumerator()) {
+                if (Test-Path \$check.Value) {
+                    Write-Host \"[OK] \$(\$check.Key)\" -ForegroundColor Green
+                } else {
+                    Write-Host \"[MISSING] \$(\$check.Key)\" -ForegroundColor Red
+                }
+            }
+            
+            # Check DLL files
+            Write-Host ''
+            Write-Host 'DLL Files in Libraries:' -ForegroundColor Yellow
+            \$dllFiles = Get-ChildItem -Path 'C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Libraries' -Filter '*.dll' -ErrorAction SilentlyContinue
+            if (\$dllFiles) {
+                foreach (\$dll in \$dllFiles) {
+                    Write-Host \"  [OK] \$(\$dll.Name) - \$([math]::Round(\$dll.Length/1KB, 2)) KB\" -ForegroundColor Green
+                }
+            } else {
+                Write-Host '  [WARNING] No DLL files found' -ForegroundColor Yellow
+            }
+            
+            # Show folder contents
+            Write-Host ''
+            Write-Host 'Service Folder Contents:' -ForegroundColor Yellow
+            Get-ChildItem 'C:\mt4_bridge_service' -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize
+            
+            Write-Host ''
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host 'DEPLOYMENT COMPLETE' -ForegroundColor Green
+            Write-Host '==========================================' -ForegroundColor Cyan
+            Write-Host ''
+            Write-Host 'NEXT STEPS:' -ForegroundColor Yellow
+            Write-Host '1. Open MT4 Terminal' -ForegroundColor White
+            Write-Host '2. Press F4 (MetaEditor)' -ForegroundColor White
+            Write-Host '3. Open MT4_Python_Bridge.mq4' -ForegroundColor White
+            Write-Host '4. Press F7 to compile' -ForegroundColor White
+            Write-Host '5. Drag EA onto chart' -ForegroundColor White
+            Write-Host '6. Enable Allow DLL imports' -ForegroundColor White
+            Write-Host '7. Start Python service: C:\mt4_bridge_service\start_mt4_bridge.bat' -ForegroundColor White
+            Write-Host ''
+            
+            }"
+      
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "DEPLOYMENT SUMMARY"
+          echo "=========================================="
+          echo "Action: ${{ github.event.inputs.action }}"
+          echo "Status: ${{ job.status }}"
+          echo ""
+          echo "Components deployed:"
+          echo "  - Python service with ZeroMQ"
+          echo "  - MT4 Expert Advisor"
+          echo "  - ZeroMQ library (Include + DLLs)"
+          echo "  - Startup scripts"
+          echo ""
+          echo "Check VPS at: C:\mt4_bridge_service\"
+          echo "=========================================="
