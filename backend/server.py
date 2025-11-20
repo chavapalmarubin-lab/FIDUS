@@ -14285,7 +14285,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                     can_redeem_interest = months_since_interest_start >= 6 and int(months_since_interest_start) % 6 == 0
                 
                 # Add calendar events for redemption opportunities
-                if can_redeem_interest and month <= timeframe_months:
+                # Show interest events for the full timeframe requested (excluding events beyond simulation)
+                if can_redeem_interest:
                     # Calculate interest for the redemption period (not just 1 month)
                     redemption_period_months = 1
                     if fund_config.redemption_frequency == "quarterly":
@@ -14296,14 +14297,22 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                         redemption_period_months = 12
                     
                     period_interest = calculate_simple_interest(amount, fund_config.interest_rate, redemption_period_months)
-                    calendar_events.append({
-                        "date": projection_date.isoformat().split('T')[0],
-                        "title": f"{fund_code} Interest Available",
-                        "description": f"${period_interest:,.2f} interest can be redeemed",
-                        "amount": period_interest,
-                        "fund_code": fund_code,
-                        "type": "interest_redemption"
-                    })
+                    
+                    # Only show events that fall within the user's requested simulation period
+                    # Calculate which "interest payment month" this is (excluding incubation)
+                    interest_payment_month_number = int(months_since_interest_start)
+                    
+                    # Show event if it's within the requested timeframe
+                    if interest_payment_month_number <= timeframe_months:
+                        calendar_events.append({
+                            "date": projection_date.isoformat().split('T')[0],
+                            "title": f"{fund_code} Interest Available",
+                            "description": f"${period_interest:,.2f} interest can be redeemed",
+                            "amount": period_interest,
+                            "fund_code": fund_code,
+                            "type": "interest_redemption",
+                            "interest_month": interest_payment_month_number
+                        })
                     
             else:
                 # Still in incubation period
@@ -14571,7 +14580,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                     can_redeem_interest = months_since_interest_start >= 6 and int(months_since_interest_start) % 6 == 0
                 
                 # Add calendar events for redemption opportunities
-                if can_redeem_interest and month <= timeframe_months:
+                # Show interest events for the full timeframe requested (excluding events beyond simulation)
+                if can_redeem_interest:
                     # Calculate interest for the redemption period (not just 1 month)
                     redemption_period_months = 1
                     if fund_config.redemption_frequency == "quarterly":
@@ -14582,14 +14592,22 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
                         redemption_period_months = 12
                     
                     period_interest = calculate_simple_interest(amount, fund_config.interest_rate, redemption_period_months)
-                    calendar_events.append({
-                        "date": projection_date.isoformat().split('T')[0],
-                        "title": f"{fund_code} Interest Available",
-                        "description": f"${period_interest:,.2f} interest can be redeemed",
-                        "amount": period_interest,
-                        "fund_code": fund_code,
-                        "type": "interest_redemption"
-                    })
+                    
+                    # Only show events that fall within the user's requested simulation period
+                    # Calculate which "interest payment month" this is (excluding incubation)
+                    interest_payment_month_number = int(months_since_interest_start)
+                    
+                    # Show event if it's within the requested timeframe
+                    if interest_payment_month_number <= timeframe_months:
+                        calendar_events.append({
+                            "date": projection_date.isoformat().split('T')[0],
+                            "title": f"{fund_code} Interest Available",
+                            "description": f"${period_interest:,.2f} interest can be redeemed",
+                            "amount": period_interest,
+                            "fund_code": fund_code,
+                            "type": "interest_redemption",
+                            "interest_month": interest_payment_month_number
+                        })
                     
             else:
                 # Still in incubation period
