@@ -58,6 +58,13 @@ class MT5BrokerConfig:
             "description": "MEXAtlantic - Mexico Trading Platform",
             "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER"],
             "max_accounts_per_client": 10
+        },
+        "lucrum": {
+            "name": "Lucrum Capital",
+            "servers": ["Lucrumcapital-Live", "Lucrumcapital-Demo"],
+            "description": "Lucrum Capital - Professional Trading Platform",
+            "supported_instruments": ["EURUSD", "GBPUSD", "USDJPY", "GOLD", "SILVER", "CRUDE", "INDICES"],
+            "max_accounts_per_client": 10
         }
     }
     
