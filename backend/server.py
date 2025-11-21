@@ -16057,12 +16057,19 @@ async def get_separation_account_interest() -> dict:
     Get ONLY the broker interest from separation accounts (NOT the full balance)
     PHASE 3 FIX: Separation balance = profit withdrawals + broker interest
     We only want to return the broker interest part!
+    PHASE 2 UPDATE: Only includes Phase 2 accounts (active or pending)
     
     NOW RETURNS: dict with total and individual account breakdowns
     """
     try:
-        # Get total profit withdrawals from all trading accounts
-        mt5_cursor = db.mt5_accounts.find({})
+        # Get total profit withdrawals from Phase 2 trading accounts
+        mt5_cursor = db.mt5_accounts.find({
+            "phase": "Phase 2",
+            "$or": [
+                {"status": "active"},
+                {"status": "pending_real_time_data"}
+            ]
+        })
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
         total_profit_withdrawals = 0.0
