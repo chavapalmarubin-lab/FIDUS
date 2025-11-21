@@ -1120,6 +1120,20 @@ ACTIVE MANAGERS (5):
   "profile": null,
   "ratingLink": null
 }
+6. JOSE ✅
+{
+  "name": "JOSE",
+  "displayName": "JOSE Manager",
+  "strategyName": "JOSE Strategy",
+  "status": "active",
+  "executionMethod": "Copy Trade",
+  "assignedAccounts": [2198],
+  "fundType": "BALANCE",
+  "broker": "Lucrum Capital",
+  "server": "Lucrumcapital-Live",
+  "profile": null,
+  "ratingLink": null
+}
 INACTIVE MANAGERS (1):
 6. GoldenTrade Provider ❌
 {
