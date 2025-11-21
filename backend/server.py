@@ -16013,10 +16013,17 @@ async def get_total_mt5_profits() -> float:
     """
     Get total MT5 TRADING TRUE P&L from trading accounts (excluding separation accounts)
     PHASE 3 FIX: Now uses TRUE P&L which includes profit withdrawals!
+    PHASE 2 UPDATE: Only includes Phase 2 accounts (active or pending)
     """
     try:
-        # Get all MT5 accounts directly from MongoDB using the working collection
-        mt5_cursor = db.mt5_accounts.find({})
+        # Get Phase 2 MT5 accounts only (active or pending real-time data)
+        mt5_cursor = db.mt5_accounts.find({
+            "phase": "Phase 2",
+            "$or": [
+                {"status": "active"},
+                {"status": "pending_real_time_data"}
+            ]
+        })
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
         total_true_pnl = 0.0
