@@ -1228,7 +1228,7 @@ Salesperson 3: Test Referral Person ✅
 Portfolio Overview:
 •	Total AUM: $118,151.41
 •	Active Managers: 6
-•	Total Accounts: 11
+•	Total Accounts: 12
 •	Active Funds: 2 (BALANCE, CORE)
 Money Manager Rankings:
 Rank 1: UNO14 Manager (BALANCE)
