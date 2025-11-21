@@ -215,10 +215,40 @@ This document defines the EXACT field names used in:
   leverage: 100,
   currency: "USD",
   server: "MEXAtlantic-Live",
+  broker: "MEXAtlantic",
   status: "active",
   last_sync: ISODate("2025-11-06T10:00:00Z"),
   created_at: ISODate("2025-10-01T00:00:00Z"),
   updated_at: ISODate("2025-11-06T10:00:00Z")
+}
+
+**Example 2 - Lucrum Capital Account (snake_case):**
+```javascript
+{
+  _id: ObjectId("abc123def457"),
+  account: 2198,
+  fund_type: "BALANCE",
+  manager_name: "JOSE",
+  manager_profile_url: null,
+  execution_method: "Copy Trade",
+  capital_source: "client",
+  initial_allocation: 10000.00,
+  equity: 10000.00,
+  balance: 10000.00,
+  profit: 0.00,
+  margin: 0,
+  free_margin: 10000.00,
+  margin_level: 0,
+  leverage: 100,
+  currency: "USD",
+  server: "Lucrumcapital-Live",
+  broker: "Lucrum Capital",
+  phase: "Phase 2",
+  status: "active",
+  sync_enabled: true,
+  last_sync: ISODate("2025-11-21T18:00:00Z"),
+  created_at: ISODate("2025-11-21T18:00:00Z"),
+  updated_at: ISODate("2025-11-21T18:44:00Z")
 }
 ```
 
