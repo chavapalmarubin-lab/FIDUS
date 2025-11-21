@@ -19540,8 +19540,15 @@ async def get_fund_portfolio_overview():
         investments_cursor = db.investments.find({})
         all_investments = await investments_cursor.to_list(length=None)
         
-        # Get MT5 accounts for allocation details
-        mt5_cursor = db.mt5_accounts.find({})
+        # Get MT5 accounts for allocation details - PHASE 2 ONLY
+        # Filter for Phase 2 accounts (active or pending real-time data)
+        mt5_cursor = db.mt5_accounts.find({
+            "phase": "Phase 2",
+            "$or": [
+                {"status": "active"},
+                {"status": "pending_real_time_data"}
+            ]
+        })
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
         
         # Get weighted performance for all funds
@@ -19554,8 +19561,9 @@ async def get_fund_portfolio_overview():
             fund_aum = sum(float(inv.get('principal_amount', 0)) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Get MT5 allocations for this fund
+            # Get MT5 allocations for this fund - PHASE 2 ONLY
             # Note: MT5 accounts use 'fund_type' field, not 'fund_code'
+            # Only count Phase 2 active or pending accounts
             fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
             total_mt5_allocation = sum(mt5.get('balance', 0) for mt5 in fund_mt5_accounts)
             mt5_account_count = len(fund_mt5_accounts)
