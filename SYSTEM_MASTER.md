@@ -1031,12 +1031,13 @@ EMERGENT - READ THIS COMPLETELY BEFORE MAKING ANY CHANGES
 This is the DEFINITIVE source of truth for the FIDUS platform structure. DO NOT deviate from this.
  
 🏦 COMPLETE MT5 ACCOUNT STRUCTURE
-Total Accounts: 11 MT5 Accounts
+Total Accounts: 12 MT5 Accounts
 Account #	Fund Type	Manager/Purpose	Broker	Status	Notes
 886602	BALANCE	UNO14 Manager (MAM)	MultiBank	Active	MAM account (not COPY)
 886557	BALANCE	MultiBank BALANCE Trader	MultiBank	Active	BALANCE fund allocation
 891215	BALANCE	MultiBank BALANCE Trader	MultiBank	Active	BALANCE fund allocation
 897589	BALANCE	MEXAtlantic Provider	MEXAtlantic	Active	BALANCE fund allocation
+2198	BALANCE	JOSE	Lucrum Capital	Active	BALANCE fund allocation (Phase 2)
 885822	CORE	CP Strategy	MultiBank	Active	CORE fund allocation
 897590	CORE	CP Strategy	MEXAtlantic	Active	CORE fund allocation
 891234	CORE	(Secondary CORE)	MultiBank	Active	CORE fund allocation
