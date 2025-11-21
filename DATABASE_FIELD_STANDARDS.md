@@ -154,7 +154,8 @@ This document defines the EXACT field names used in:
   margin_level: Number,               // Margin level percentage
   leverage: Number,                   // Account leverage (e.g., 100 = 1:100)
   currency: String,                   // "USD"
-  server: String,                     // "MEXAtlantic-Live"
+  server: String,                     // "MEXAtlantic-Live", "Lucrumcapital-Live"
+  broker: String,                     // "MEXAtlantic", "Lucrum Capital"
   status: String,                     // "active", "inactive"
   last_sync: Date,                    // Last time data was synced from MT5
   created_at: Date,
