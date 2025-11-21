@@ -1,0 +1,215 @@
+name: Verify LUCRUM Account Sync
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify-lucrum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Check MT5 Sync Script Status
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== LUCRUM Account 2198 Sync Verification ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check if sync script is running
+            Write-Host "1. Checking MT5 Sync Process..." -ForegroundColor Yellow
+            $process = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($process) {
+              Write-Host "   ✅ MT5 sync script is running (PID: $($process.Id))" -ForegroundColor Green
+            } else {
+              Write-Host "   ❌ MT5 sync script is NOT running" -ForegroundColor Red
+            }
+            
+            Write-Host ""
+            Write-Host "2. Checking Task Scheduler..." -ForegroundColor Yellow
+            $task = Get-ScheduledTask -TaskName "*MT5*" -ErrorAction SilentlyContinue
+            if ($task) {
+              Write-Host "   ✅ Found MT5 task(s):" -ForegroundColor Green
+              $task | ForEach-Object {
+                Write-Host "      - $($_.TaskName): $($_.State)" -ForegroundColor White
+              }
+            } else {
+              Write-Host "   ⚠️  No MT5 tasks found in Task Scheduler" -ForegroundColor Yellow
+            }
+            
+            Write-Host ""
+            Write-Host "3. Checking LUCRUM MT5 Terminal..." -ForegroundColor Yellow
+            $lucrum_terminal = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -like "*Lucrum*" -or $_.MainWindowTitle -like "*2198*"}
+            if ($lucrum_terminal) {
+              Write-Host "   ✅ LUCRUM MT5 Terminal is running" -ForegroundColor Green
+              Write-Host "      Window Title: $($lucrum_terminal.MainWindowTitle)" -ForegroundColor White
+            } else {
+              Write-Host "   ⚠️  LUCRUM terminal not found (may need to start it)" -ForegroundColor Yellow
+            }
+            
+            Write-Host ""
+            Write-Host "4. Checking Sync Script Configuration..." -ForegroundColor Yellow
+            if (Test-Path "C:\mt5_bridge_service\mt5_bridge_account_switching.py") {
+              Write-Host "   ✅ Account switching script found" -ForegroundColor Green
+              $content = Get-Content "C:\mt5_bridge_service\mt5_bridge_account_switching.py" -Raw
+              if ($content -match 'is_active.*True') {
+                Write-Host "   ✅ Script uses dynamic MongoDB loading (is_active: True)" -ForegroundColor Green
+              }
+            } else {
+              Write-Host "   ⚠️  Sync script not found at expected location" -ForegroundColor Yellow
+            }
+            
+            Write-Host ""
+            Write-Host "5. Checking Recent Sync Logs..." -ForegroundColor Yellow
+            if (Test-Path "C:\mt5_bridge_service\logs\api_service.log") {
+              Write-Host "   Reading last 20 lines of log..." -ForegroundColor White
+              Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 20 | ForEach-Object {
+                if ($_ -match "2198") {
+                  Write-Host "   📊 $_" -ForegroundColor Cyan
+                } elseif ($_ -match "ERROR|FAIL") {
+                  Write-Host "   ❌ $_" -ForegroundColor Red
+                } else {
+                  Write-Host "   $_" -ForegroundColor Gray
+                }
+              }
+            } else {
+              Write-Host "   ⚠️  Log file not found" -ForegroundColor Yellow
+            }
+      
+      - name: Test MongoDB Connection from VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Testing MongoDB Connection ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Test Python MongoDB connection
+            $pythonScript = @'
+import sys
+try:
+    from pymongo import MongoClient
+    import os
+    
+    # Get MongoDB URL from environment or use default
+    mongo_url = os.environ.get("MONGO_URL", "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
+    
+    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+    db = client.get_database()
+    
+    # Test connection
+    client.admin.command("ping")
+    print("✅ MongoDB connection: SUCCESS")
+    
+    # Check for account 2198 in mt5_account_config
+    account = db.mt5_account_config.find_one({"account": 2198})
+    if account:
+        print(f"✅ Account 2198 found in mt5_account_config")
+        print(f"   - Name: {account.get('name')}")
+        print(f"   - Server: {account.get('server')}")
+        print(f"   - Broker: {account.get('broker')}")
+        print(f"   - Active: {account.get('is_active')}")
+    else:
+        print("❌ Account 2198 NOT found in mt5_account_config")
+    
+    # Check total active accounts
+    total = db.mt5_account_config.count_documents({"is_active": True})
+    print(f"\nℹ️  Total active accounts in config: {total}")
+    
+    client.close()
+except Exception as e:
+    print(f"❌ MongoDB connection FAILED: {e}")
+    sys.exit(1)
+'@
+            
+            $pythonScript | python -
+      
+      - name: Check MT5 API Response
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Testing MT5 Bridge API ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            try {
+              Write-Host "Testing API endpoint: http://localhost:8000/api/mt5/accounts/summary" -ForegroundColor White
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 10
+              
+              $total = $response.accounts.Count
+              Write-Host "✅ API Response: $total accounts found" -ForegroundColor Green
+              
+              # Look for account 2198
+              $lucrum = $response.accounts | Where-Object { $_.account -eq 2198 }
+              if ($lucrum) {
+                Write-Host ""
+                Write-Host "🎉 LUCRUM Account 2198 IS SYNCING!" -ForegroundColor Green
+                Write-Host "   Balance: $($lucrum.balance)" -ForegroundColor White
+                Write-Host "   Equity: $($lucrum.equity)" -ForegroundColor White
+                Write-Host "   Server: $($lucrum.server)" -ForegroundColor White
+              } else {
+                Write-Host ""
+                Write-Host "⚠️  LUCRUM Account 2198 NOT in API response" -ForegroundColor Yellow
+                Write-Host "   This means the sync script hasn't picked it up yet" -ForegroundColor Yellow
+              }
+              
+              Write-Host ""
+              Write-Host "All accounts in API:" -ForegroundColor Cyan
+              foreach ($acc in $response.accounts) {
+                Write-Host "  - Account $($acc.account): $($acc.balance)" -ForegroundColor White
+              }
+              
+            } catch {
+              Write-Host "❌ API not responding: $_" -ForegroundColor Red
+              Write-Host "   The MT5 bridge service may not be running" -ForegroundColor Yellow
+            }
+      
+      - name: Generate Verification Report
+        if: always()
+        run: |
+          echo "# LUCRUM Account 2198 Sync Verification Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Verification Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Account Details:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Account:** 2198" >> $GITHUB_STEP_SUMMARY
+          echo "- **Broker:** Lucrum Capital" >> $GITHUB_STEP_SUMMARY
+          echo "- **Server:** Lucrumcapital-Live" >> $GITHUB_STEP_SUMMARY
+          echo "- **Manager:** JOSE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Fund Type:** BALANCE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Phase:** Phase 2" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Was Checked:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ MT5 sync process status" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ Task Scheduler configuration" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ LUCRUM MT5 Terminal status" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Sync script configuration" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ MongoDB connection and account data" >> $GITHUB_STEP_SUMMARY
+          echo "6. ✅ MT5 Bridge API response" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Result:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If account 2198 appears in the API response with real-time balance/equity data, the sync is working correctly." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Troubleshooting:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If account 2198 is NOT syncing:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Run the **Restart MT5 Sync Service** workflow" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check that LUCRUM MT5 terminal is logged into account 2198" >> $GITHUB_STEP_SUMMARY
+          echo "3. Verify server name matches exactly: 'Lucrumcapital-Live'" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check sync logs for any error messages" >> $GITHUB_STEP_SUMMARY

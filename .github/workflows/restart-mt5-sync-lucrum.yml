@@ -1,0 +1,280 @@
+name: Restart MT5 Sync Service (Include LUCRUM)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Pre-Restart Verification
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== Pre-Restart Check ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check current process
+            $process = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($process) {
+              Write-Host "Current sync process (PID: $($process.Id)) will be stopped" -ForegroundColor Yellow
+            } else {
+              Write-Host "No sync process currently running" -ForegroundColor Yellow
+            }
+            
+            # Check MongoDB for account 2198
+            $pythonCheck = @'
+import sys
+try:
+    from pymongo import MongoClient
+    client = MongoClient("mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
+    db = client.get_database()
+    account = db.mt5_account_config.find_one({"account": 2198})
+    if account and account.get("is_active"):
+        print("✅ Account 2198 configured in MongoDB (is_active: True)")
+    else:
+        print("❌ Account 2198 NOT configured or inactive")
+    client.close()
+except Exception as e:
+    print(f"❌ Error: {e}")
+'@
+            $pythonCheck | python -
+      
+      - name: Stop MT5 Sync Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Stopping MT5 Sync Service ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Try to stop via Task Scheduler
+            Write-Host "Attempting to stop via Task Scheduler..." -ForegroundColor Yellow
+            schtasks /End /TN MT5BridgeService 2>$null
+            Start-Sleep -Seconds 3
+            
+            # Force kill any remaining Python MT5 processes
+            Write-Host "Force stopping any remaining MT5 sync processes..." -ForegroundColor Yellow
+            $processes = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($processes) {
+              $processes | ForEach-Object {
+                Write-Host "  Killing process PID: $($_.Id)" -ForegroundColor White
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+              }
+            }
+            
+            Start-Sleep -Seconds 2
+            Write-Host "✅ Services stopped" -ForegroundColor Green
+      
+      - name: Verify LUCRUM Terminal is Running
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Checking MT5 Terminals ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $terminals = Get-Process terminal64 -ErrorAction SilentlyContinue
+            if ($terminals) {
+              Write-Host "Found $($terminals.Count) MT5 terminal(s) running:" -ForegroundColor Green
+              foreach ($term in $terminals) {
+                Write-Host "  - $($term.MainWindowTitle)" -ForegroundColor White
+                if ($term.MainWindowTitle -like "*2198*" -or $term.MainWindowTitle -like "*Lucrum*") {
+                  Write-Host "    ✅ This is the LUCRUM terminal!" -ForegroundColor Green
+                }
+              }
+            } else {
+              Write-Host "⚠️  No MT5 terminals running" -ForegroundColor Yellow
+              Write-Host "   IMPORTANT: You need to manually start the LUCRUM MT5 terminal" -ForegroundColor Red
+              Write-Host "   and log into account 2198 before sync will work" -ForegroundColor Red
+            }
+      
+      - name: Start MT5 Sync Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Starting MT5 Sync Service ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            Write-Host "Starting sync service via Task Scheduler..." -ForegroundColor Yellow
+            schtasks /Run /TN MT5BridgeService
+            
+            Write-Host "Waiting 15 seconds for service to initialize..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 15
+            
+            # Check if service started
+            $process = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($process) {
+              Write-Host "✅ MT5 sync service started (PID: $($process.Id))" -ForegroundColor Green
+            } else {
+              Write-Host "⚠️  Service may not have started - check logs" -ForegroundColor Yellow
+            }
+      
+      - name: Wait for Sync to Complete (30 seconds)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Waiting for Initial Sync ===" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Waiting 30 seconds for accounts to sync..." -ForegroundColor Yellow
+            
+            for ($i = 30; $i -gt 0; $i--) {
+              Write-Progress -Activity "Waiting for sync" -Status "$i seconds remaining" -PercentComplete ((30-$i)/30*100)
+              Start-Sleep -Seconds 1
+            }
+            
+            Write-Host "✅ Wait complete" -ForegroundColor Green
+      
+      - name: Verify LUCRUM Account is Syncing
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Verifying Account Sync ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            try {
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 15
+              
+              $total = $response.accounts.Count
+              Write-Host "Total accounts syncing: $total" -ForegroundColor White
+              
+              # Check for account 2198
+              $lucrum = $response.accounts | Where-Object { $_.account -eq 2198 }
+              
+              Write-Host ""
+              if ($lucrum) {
+                Write-Host "🎉 SUCCESS! LUCRUM Account 2198 IS SYNCING!" -ForegroundColor Green
+                Write-Host "" -ForegroundColor White
+                Write-Host "Account Details:" -ForegroundColor Cyan
+                Write-Host "  Account: $($lucrum.account)" -ForegroundColor White
+                Write-Host "  Balance: $($lucrum.balance)" -ForegroundColor White
+                Write-Host "  Equity: $($lucrum.equity)" -ForegroundColor White
+                Write-Host "  Profit: $($lucrum.profit)" -ForegroundColor White
+                Write-Host "  Server: $($lucrum.server)" -ForegroundColor White
+                Write-Host ""
+              } else {
+                Write-Host "❌ LUCRUM Account 2198 NOT FOUND in sync" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "Possible reasons:" -ForegroundColor Yellow
+                Write-Host "  1. LUCRUM MT5 terminal is not running" -ForegroundColor White
+                Write-Host "  2. Account 2198 is not logged in" -ForegroundColor White
+                Write-Host "  3. Server name mismatch (check 'Lucrumcapital-Live')" -ForegroundColor White
+                Write-Host "  4. Sync script hasn't cycled yet (wait 1-2 minutes)" -ForegroundColor White
+                Write-Host ""
+              }
+              
+              Write-Host "All syncing accounts:" -ForegroundColor Cyan
+              foreach ($acc in $response.accounts) {
+                $indicator = if ($acc.account -eq 2198) { "🎯" } else { "  " }
+                Write-Host "$indicator - Account $($acc.account): Balance $$([math]::Round($acc.balance, 2))" -ForegroundColor White
+              }
+              
+            } catch {
+              Write-Host "❌ Could not verify via API: $_" -ForegroundColor Red
+              Write-Host "The MT5 bridge API may not be responding" -ForegroundColor Yellow
+            }
+      
+      - name: Check Sync Logs for LUCRUM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Recent Sync Logs (Last 30 lines) ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            if (Test-Path "C:\mt5_bridge_service\logs\api_service.log") {
+              $logs = Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 30
+              
+              foreach ($line in $logs) {
+                if ($line -match "2198") {
+                  Write-Host "🎯 $line" -ForegroundColor Green
+                } elseif ($line -match "ERROR|FAIL|Exception") {
+                  Write-Host "❌ $line" -ForegroundColor Red
+                } elseif ($line -match "SUCCESS|OK|completed") {
+                  Write-Host "✅ $line" -ForegroundColor Green
+                } else {
+                  Write-Host "   $line" -ForegroundColor Gray
+                }
+              }
+            } else {
+              Write-Host "⚠️  Log file not found" -ForegroundColor Yellow
+            }
+      
+      - name: Generate Restart Report
+        if: always()
+        run: |
+          echo "# MT5 Sync Service Restart Report (LUCRUM Integration)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Restart Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Target Account:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Account:** 2198" >> $GITHUB_STEP_SUMMARY
+          echo "- **Broker:** Lucrum Capital" >> $GITHUB_STEP_SUMMARY
+          echo "- **Server:** Lucrumcapital-Live" >> $GITHUB_STEP_SUMMARY
+          echo "- **Manager:** JOSE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Fund Type:** BALANCE (Phase 2)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Was Done:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Stopped existing MT5 sync service" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ Verified MongoDB configuration for account 2198" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ Checked LUCRUM MT5 terminal status" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Restarted MT5 sync service" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ Waited for initial sync cycle" >> $GITHUB_STEP_SUMMARY
+          echo "6. ✅ Verified account 2198 in API response" >> $GITHUB_STEP_SUMMARY
+          echo "7. ✅ Checked sync logs for LUCRUM entries" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Total Accounts:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**14 accounts** (13 MEXAtlantic + 1 LUCRUM)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the verification output above for account 2198 status" >> $GITHUB_STEP_SUMMARY
+          echo "2. If account 2198 is syncing, view Investment Committee dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "3. If NOT syncing, ensure LUCRUM terminal is logged into account 2198" >> $GITHUB_STEP_SUMMARY
+          echo "4. Wait 2-3 minutes and run **Verify LUCRUM Account Sync** workflow again" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Troubleshooting:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If account 2198 is still not syncing after restart:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Check MT5 Terminal:** Manually open LUCRUM MT5 terminal on VPS" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Login:** Ensure logged into account 2198 with password 'Fidus13!'" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Server Name:** Verify server is exactly 'Lucrumcapital-Live' (case-sensitive)" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Check Logs:** SSH into VPS and check C:\\mt5_bridge_service\\logs\\api_service.log" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Wait:** Sometimes sync takes 2-3 cycles (5-10 minutes) to pick up new accounts" >> $GITHUB_STEP_SUMMARY

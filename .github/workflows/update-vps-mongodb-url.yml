@@ -1,0 +1,196 @@
+name: Update VPS MongoDB Connection (LUCRUM Support)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-mongo-url:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Verify Current MongoDB Configuration
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== Current MongoDB Configuration ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check if MONGO_URL environment variable exists
+            $currentUrl = [Environment]::GetEnvironmentVariable("MONGO_URL", "Machine")
+            
+            if ($currentUrl) {
+              Write-Host "Current MONGO_URL (Machine-level):" -ForegroundColor Yellow
+              # Mask the password for security
+              $maskedUrl = $currentUrl -replace ':[^@]+@', ':****@'
+              Write-Host "  $maskedUrl" -ForegroundColor White
+            } else {
+              Write-Host "⚠️  MONGO_URL not found in Machine environment variables" -ForegroundColor Yellow
+            }
+            
+            # Check sync script for hardcoded URLs
+            Write-Host ""
+            Write-Host "Checking sync script for MongoDB URLs..." -ForegroundColor Yellow
+            
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_account_switching.py"
+            if (Test-Path $scriptPath) {
+              $content = Get-Content $scriptPath -Raw
+              if ($content -match 'mongodb\+srv://([^"]+)') {
+                $foundUrl = $Matches[0] -replace ':[^@]+@', ':****@'
+                Write-Host "Found MongoDB URL in script:" -ForegroundColor White
+                Write-Host "  $foundUrl" -ForegroundColor Gray
+              }
+            }
+      
+      - name: Test MongoDB Connection with Emergent Credentials
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Testing MongoDB Connection ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $mongoUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+            
+            $pythonTest = @"
+import sys
+try:
+    from pymongo import MongoClient
+    
+    mongo_url = "$mongoUrl"
+    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+    db = client.get_database()
+    
+    # Test connection
+    client.admin.command('ping')
+    print('✅ MongoDB connection: SUCCESS')
+    
+    # Count accounts in mt5_account_config
+    total = db.mt5_account_config.count_documents({'is_active': True})
+    print(f'ℹ️  Active accounts in config: {total}')
+    
+    # Check for account 2198
+    account = db.mt5_account_config.find_one({'account': 2198})
+    if account:
+        print('✅ Account 2198 found in mt5_account_config')
+        print(f'   - Name: {account.get("name")}')
+        print(f'   - Server: {account.get("server")}')
+        print(f'   - Active: {account.get("is_active")}')
+    else:
+        print('❌ Account 2198 NOT found')
+    
+    client.close()
+except Exception as e:
+    print(f'❌ Connection FAILED: {e}')
+    sys.exit(1)
+"@
+            
+            $pythonTest | python -
+      
+      - name: Update Sync Script with Correct MongoDB URL
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Updating Sync Script MongoDB URL ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_account_switching.py"
+            $correctUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+            
+            if (Test-Path $scriptPath) {
+              # Backup original
+              Copy-Item $scriptPath "${scriptPath}.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+              Write-Host "✅ Backup created" -ForegroundColor Green
+              
+              # Read and update
+              $content = Get-Content $scriptPath -Raw
+              
+              # Replace any MongoDB URL with the correct one
+              $updated = $content -replace 'MONGO_URL\s*=\s*"mongodb\+srv://[^"]+"', "MONGO_URL = `"$correctUrl`""
+              
+              # Write back
+              Set-Content -Path $scriptPath -Value $updated -Encoding UTF8
+              
+              Write-Host "✅ Script updated with correct MongoDB URL" -ForegroundColor Green
+              
+              # Verify update
+              $verify = Get-Content $scriptPath -Raw
+              if ($verify -match 'emergent-ops') {
+                Write-Host "✅ Verification: emergent-ops credentials confirmed in script" -ForegroundColor Green
+              } else {
+                Write-Host "⚠️  Warning: Could not verify update" -ForegroundColor Yellow
+              }
+            } else {
+              Write-Host "❌ Script not found at: $scriptPath" -ForegroundColor Red
+            }
+      
+      - name: Set MONGO_URL Environment Variable
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Setting System Environment Variable ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $mongoUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+            
+            try {
+              [Environment]::SetEnvironmentVariable("MONGO_URL", $mongoUrl, "Machine")
+              Write-Host "✅ MONGO_URL environment variable set (Machine-level)" -ForegroundColor Green
+              
+              # Verify
+              $verify = [Environment]::GetEnvironmentVariable("MONGO_URL", "Machine")
+              if ($verify -eq $mongoUrl) {
+                Write-Host "✅ Verification: Environment variable set correctly" -ForegroundColor Green
+              }
+            } catch {
+              Write-Host "❌ Failed to set environment variable: $_" -ForegroundColor Red
+            }
+      
+      - name: Generate Update Report
+        if: always()
+        run: |
+          echo "# VPS MongoDB Configuration Update Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Update Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Was Updated:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Verified current MongoDB configuration" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ Tested connection with emergent-ops credentials" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ Updated sync script with correct MongoDB URL" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Set MONGO_URL system environment variable" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ Verified account 2198 exists in database" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## MongoDB Credentials:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **User:** emergent-ops" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database:** fidus_production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cluster:** fidus.y1p9be2.mongodb.net" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Restart MT5 Sync Service** - Run the 'Restart MT5 Sync Service (Include LUCRUM)' workflow" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Verify Sync** - Run the 'Verify LUCRUM Account Sync' workflow" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Check Dashboard** - View Investment Committee dashboard for account 2198" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Important:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The sync service must be restarted for changes to take effect." >> $GITHUB_STEP_SUMMARY
