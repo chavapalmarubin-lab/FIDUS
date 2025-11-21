@@ -327,6 +327,13 @@ o	Strategy: Custom Strategy
 o	Assigned Accounts: (To be assigned)
 o	Fund: TBD
 o	Status: Active
+6.	JOSE
+o	Strategy: JOSE Strategy
+o	Assigned Accounts: 2198
+o	Fund: BALANCE
+o	Broker: Lucrum Capital
+o	Server: Lucrumcapital-Live
+o	Status: Active
 5.2 Inactive Managers (1)
 6.	GoldenTrade 
 o	Status: Inactive
