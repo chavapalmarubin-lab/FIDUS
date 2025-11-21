@@ -1024,7 +1024,7 @@ again and again and again. its tiring to repeat myself to you and to emergent  P
 
 
 6)	Golden Trade we are not using this month but might use it in the future SO DON’T DELETE
-  Total of 5 Active Managers today 
+  Total of 6 Active Managers today 
 
 📋 COMPREHENSIVE FIDUS PLATFORM DATA STRUCTURE - MASTER REFERENCE
 EMERGENT - READ THIS COMPLETELY BEFORE MAKING ANY CHANGES
