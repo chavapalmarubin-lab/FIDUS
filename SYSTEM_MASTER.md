@@ -300,7 +300,7 @@ Tested scenarios:
 ✅ Audit log creation
  
 5. MONEY MANAGERS
-5.1 Active Managers (5)
+5.1 Active Managers (6)
 Manager Names (EXACT - use these ONLY):
 1.	UNO14 Manager
 o	Strategy: UNO14 MAM Strategy
