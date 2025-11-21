@@ -1236,6 +1236,7 @@ Rank 2: TradingHub Gold (BALANCE)
 Rank 3: CP Strategy (CORE)
 Rank 4: MultiBank BALANCE (BALANCE)
 Rank 5: MEXAtlantic (BALANCE)
+Rank 6: JOSE (BALANCE - Lucrum Capital)
 
 NOT SHOWN: GoldenTrade (inactive)
 Cash Flow & Performance:
