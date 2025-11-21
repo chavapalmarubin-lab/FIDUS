@@ -165,12 +165,13 @@ Collections: 35+ (see Section 9 for complete list)
  
 4. MT5 TRADING ACCOUNTS
 4.1 Account List
-Active Accounts (11 total):
+Active Accounts (12 total):
 Account #	Fund Type	Manager	Broker	Status
 886557	BALANCE Master	TradingHub Gold Provider	MEXAtlantic	Active
 886602	BALANCE	TradingHub Gold Provider	MEXAtlantic	Active
 891215	BALANCE	TradingHub Gold Provider	MEXAtlantic	Active
 897589	BALANCE	Provider1-Assev	MEXAtlantic	Active
+2198	BALANCE	JOSE	Lucrum Capital	Active
 885822	CORE	CP Strategy Provider	MEXAtlantic	Active
 891234	CORE	CP Strategy Provider	MEXAtlantic	Active
 897590	CORE	CP Strategy Provider	MEXAtlantic	Active
