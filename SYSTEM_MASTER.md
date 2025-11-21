@@ -1227,7 +1227,7 @@ Salesperson 3: Test Referral Person ✅
 📊 EXPECTED SYSTEM TOTALS
 Portfolio Overview:
 •	Total AUM: $118,151.41
-•	Active Managers: 5
+•	Active Managers: 6
 •	Total Accounts: 11
 •	Active Funds: 2 (BALANCE, CORE)
 Money Manager Rankings:
