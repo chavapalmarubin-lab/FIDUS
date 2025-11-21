@@ -150,7 +150,7 @@ URL: https://fidus-api.onrender.com
 3.3 MT5 Integration
 Bridge: Custom Python MT5 Bridge (v4.0)
 Deployment: Windows VPS (92.118.45.135:8000)
-Broker: MEXAtlantic
+Brokers: MEXAtlantic, Lucrum Capital
 Protocol: HTTP REST API
 Auto-Healing:
 •	GitHub Actions workflows for automatic restarts
