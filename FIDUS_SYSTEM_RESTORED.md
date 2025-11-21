@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://tradeconnect-14.preview.emergentagent.com`
+`https://alloc-refresh.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

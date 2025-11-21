@@ -14,7 +14,7 @@ import requests
 import json
 
 def analyze_salvador_data():
-    base_url = "https://tradeconnect-14.preview.emergentagent.com"
+    base_url = "https://alloc-refresh.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

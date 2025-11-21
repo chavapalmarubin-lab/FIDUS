@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://tradeconnect-14.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://alloc-refresh.preview.emergentagent.com')
 
 def login_as_admin():
     """Login as admin and get JWT token"""

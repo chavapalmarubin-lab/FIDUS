@@ -26,7 +26,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {

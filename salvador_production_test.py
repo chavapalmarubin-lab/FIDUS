@@ -696,7 +696,7 @@ class SalvadorProductionTester:
 
 if __name__ == "__main__":
     # Allow custom base URL via command line
-    base_url = sys.argv[1] if len(sys.argv) > 1 else "https://tradeconnect-14.preview.emergentagent.com"
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "https://alloc-refresh.preview.emergentagent.com"
     
     tester = SalvadorProductionTester(base_url)
     success = tester.run_all_tests()

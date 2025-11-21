@@ -35,7 +35,7 @@ class MoneyManagersBackendTester:
     
     def __init__(self):
         # Use the correct backend URL from frontend/.env
-        self.base_url = "https://tradeconnect-14.preview.emergentagent.com"
+        self.base_url = "https://alloc-refresh.preview.emergentagent.com"
         self.api_base = f"{self.base_url}/api"
         
         # Test credentials

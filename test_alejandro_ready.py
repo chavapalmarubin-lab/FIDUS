@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""

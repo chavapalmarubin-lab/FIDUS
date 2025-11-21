@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com/api"
 
 class MT5MultibrokerTester:
     def __init__(self):

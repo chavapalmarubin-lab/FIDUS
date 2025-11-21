@@ -23,7 +23,7 @@ import uuid
 from decimal import Decimal
 
 # Backend URL Configuration (from frontend .env)
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com/api"
 
 # Test Admin Credentials
 ADMIN_CREDENTIALS = {

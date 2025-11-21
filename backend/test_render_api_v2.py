@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

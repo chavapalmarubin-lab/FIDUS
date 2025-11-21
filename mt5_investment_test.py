@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Backend URL Configuration
-BACKEND_URL = "https://tradeconnect-14.preview.emergentagent.com/api"
+BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com/api"
 
 class MT5InvestmentTester:
     def __init__(self):

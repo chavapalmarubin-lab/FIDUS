@@ -28,7 +28,7 @@ import uuid
 import os
 
 # Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://tradeconnect-14.preview.emergentagent.com') + '/api'
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://alloc-refresh.preview.emergentagent.com') + '/api'
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

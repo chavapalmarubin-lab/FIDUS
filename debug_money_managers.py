@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://tradeconnect-14.preview.emergentagent.com/api"
+    base_url = "https://alloc-refresh.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate
