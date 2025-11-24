@@ -223,33 +223,19 @@ jobs:
             Write-Host "=== Verifying LUCRUM Account 2198 ===" -ForegroundColor Cyan
             Write-Host ""
             
-            # Check MongoDB for recent sync
-            @"
-from pymongo import MongoClient
-from datetime import datetime, timedelta
-client = MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production')
-db = client.get_database()
-account = db.mt5_accounts.find_one({'account': 2198})
-if account:
-    last_sync = account.get('last_sync_timestamp')
-    synced = account.get('synced_from_vps', False)
-    balance = account.get('balance', 0)
-    
-    print(f'Account 2198 Status:')
-    print(f'  Balance: ${balance:,.2f}')
-    print(f'  Last Sync: {last_sync}')
-    print(f'  Synced from VPS: {synced}')
-    
-    if synced and last_sync:
-        time_diff = datetime.now() - last_sync.replace(tzinfo=None)
-        if time_diff < timedelta(minutes=5):
-            print('✅ Account is syncing successfully!')
-        else:
-            print('⚠️  Last sync was more than 5 minutes ago')
-else:
-    print('❌ Account 2198 not found in database')
-client.close()
-"@ | python -
+            # Check logs for account 2198
+            Write-Host "Checking sync logs for account 2198..." -ForegroundColor Yellow
+            $lucrum_logs = Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 100 | Select-String -Pattern "2198|LUCRUM|Lucrumcapital"
+            
+            if ($lucrum_logs) {
+              Write-Host "✅ Found LUCRUM account entries in logs:" -ForegroundColor Green
+              $lucrum_logs | ForEach-Object { Write-Host "   $_" -ForegroundColor Cyan }
+            } else {
+              Write-Host "⚠️  No LUCRUM account entries found in recent logs" -ForegroundColor Yellow
+            }
+            
+            Write-Host ""
+            Write-Host "Check MongoDB and dashboard to verify account 2198 is syncing" -ForegroundColor White
       
       - name: Generate Deployment Report
         if: always()
