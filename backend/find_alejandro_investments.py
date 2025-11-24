@@ -10,7 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from decimal import Decimal
 
 # Use production MongoDB
-MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority")
+MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://YOUR_MONGODB_URL_HERE")
 DB_NAME = "fidus_production"
 
 print("=" * 80)

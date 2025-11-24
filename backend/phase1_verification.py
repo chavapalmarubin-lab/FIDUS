@@ -9,7 +9,7 @@ from datetime import datetime
 from pymongo import MongoClient
 
 # Production credentials
-MONGO_URI = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS"
+MONGO_URI = "mongodb+srv://YOUR_MONGODB_URL_HERE"
 API_BASE_URL = "https://fidus-api.onrender.com"
 
 class Phase1Verifier:
