@@ -26825,6 +26825,21 @@ async def startup_event():
         except Exception as e:
             logging.error(f"❌ MT5 Watchdog initialization failed: {e}")
         
+        # Initialize Bridge Monitoring Service (3-Bridge Architecture)
+        logging.info("🔌 Initializing Bridge Monitoring Service...")
+        try:
+            from services.bridge_monitoring_service import start_monitoring_service
+            await start_monitoring_service(db)
+            
+            logging.info("✅ Bridge Monitoring Service initialized successfully")
+            logging.info("   Monitoring: MEXAtlantic MT5 (13 accounts)")
+            logging.info("   Monitoring: Lucrum MT5 (1 account)")
+            logging.info("   Monitoring: MEXAtlantic MT4 (1 account)")
+            logging.info("   Check interval: 60 seconds")
+            logging.info("   Alert threshold: 5 minutes")
+        except Exception as e:
+            logging.error(f"❌ Bridge Monitoring Service initialization failed: {e}")
+        
     except Exception as e:
         logging.error(f"❌ VPS sync scheduler initialization failed: {e}")
     
