@@ -63,6 +63,9 @@ from routes.mt5_health import router as mt5_health_router
 # Bridge Health Monitoring Routes (3-Bridge Architecture)
 from routes.bridge_health import router as bridge_health_router
 
+# Single Source of Truth API (November 2025)
+from routes.single_source_api import router as single_source_router
+
 # System Registry and Health Checks (Phase 1: Technical Documentation)
 from system_registry import (
     SYSTEM_COMPONENTS, 
