@@ -25835,7 +25835,7 @@ async def upload_client_document_to_fidus(
         
         if not client:
             # Additional debug: check for alternative ID formats
-            alternative_client = await db.clients.find_one({"client_id": client_id}) or await db.clients.find_one({"username": client_name.lower().replace(" ", "mongodb+srv://USER:PASS@HOST/DB"
+            alternative_client = await db.clients.find_one({"client_id": client_id}) or await db.clients.find_one({"username": client_name.lower().replace(" ", "_")})
             logging.info(f"🔍 DEBUG: Alternative client lookup - Found: {alternative_client is not None}")
             
             return {
