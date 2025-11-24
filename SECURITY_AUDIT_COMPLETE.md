@@ -26,12 +26,12 @@ After discovering the GitHub repository was made public (likely for Render/Mongo
 - **Status:** ⚠️ **AWAITING USER ACTION** - Must change broker passwords
 
 ### 3. GitHub Personal Access Token
-- **Token:** `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`
+- **Token:** `[REMOVED_GITHUB_TOKEN]`
 - **Exposed in:** backend/.env and workflow files
 - **Status:** ⏳ **REVIEW NEEDED** - Should be rotated
 
 ### 4. Google OAuth Credentials
-- **Client Secret:** `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`
+- **Client Secret:** `[REMOVED_GOOGLE_SECRET]`
 - **Exposed in:** backend/.env
 - **Status:** ⚠️ **IN .ENV** - Safe but should verify .env not in git
 

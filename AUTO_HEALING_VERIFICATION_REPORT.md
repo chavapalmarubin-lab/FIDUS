@@ -231,7 +231,7 @@ Required GitHub Secrets:
 **Option A: GitHub Personal Access Token**
 1. Go to GitHub Settings → Developer Settings → Personal Access Tokens
 2. Generate new token with scopes: `repo`, `workflow`
-3. Add to `/app/backend/.env`: `GITHUB_TOKEN="ghp_xxxxxxxxxxxx"`
+3. Add to `/app/backend/.env`: `GITHUB_TOKEN="[REMOVED_GITHUB_TOKEN]"`
 4. Restart backend: `sudo supervisorctl restart backend`
 
 **Option B: GitHub Actions Token**

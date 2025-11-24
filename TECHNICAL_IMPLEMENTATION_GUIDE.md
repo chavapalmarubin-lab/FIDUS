@@ -234,7 +234,7 @@ SMTP_APP_PASSWORD=your_app_password
 ALERT_RECIPIENT_EMAIL=admin@fidus.com
 
 # GitHub (for health checks)
-GITHUB_TOKEN=ghp_...
+GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]...
 GITHUB_REPO=your-org/your-repo
 
 # Render (for health checks)

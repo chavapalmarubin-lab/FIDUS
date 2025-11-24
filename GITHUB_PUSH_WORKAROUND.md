@@ -2,7 +2,7 @@
 
 ## ⚠️ **ISSUE IDENTIFIED**
 
-GitHub's secret scanning has detected a GitHub token (`ghp_...`) in the **git commit history**, even though the file (`update_github_secrets.py`) has been deleted from the working directory.
+GitHub's secret scanning has detected a GitHub token (`[REMOVED_GITHUB_TOKEN]...`) in the **git commit history**, even though the file (`update_github_secrets.py`) has been deleted from the working directory.
 
 **Detected in commits:**
 - `7cdf9a58` - Contains `update_github_secrets.py` with exposed token

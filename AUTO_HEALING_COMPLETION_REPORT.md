@@ -122,7 +122,7 @@ Check VPS service logs for:
 
 The provided GitHub token returned `401 Unauthorized`:
 ```
-Token: [SECURED - ghp_****...****]
+Token: [SECURED - [REMOVED_GITHUB_TOKEN]****...****]
 Error: Bad credentials
 ```
 

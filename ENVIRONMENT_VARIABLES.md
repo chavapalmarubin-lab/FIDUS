@@ -43,7 +43,7 @@ This document describes all the environment variables required for the FIDUS inv
 - **Obtained From**: Google Cloud Console > APIs & Services > Credentials
 
 #### `GOOGLE_CLIENT_SECRET`
-- **Value**: `GOCSPX-HQ3ceZZGfnB...`
+- **Value**: `[REMOVED_GOOGLE_SECRET]...`
 - **Description**: Google OAuth 2.0 client secret for authentication
 - **Required**: Yes
 - **Security**: Keep this secret secure and never expose in frontend code
@@ -90,7 +90,7 @@ DB_NAME=fidus-invest-production
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=909926639154-r3v0ka9...
-GOOGLE_CLIENT_SECRET=GOCSPX-HQ3ceZZGfnB...
+GOOGLE_CLIENT_SECRET=[REMOVED_GOOGLE_SECRET]...
 GOOGLE_OAUTH_REDIRECT_URI=https://fidus-invest.emergent.host
 GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
 

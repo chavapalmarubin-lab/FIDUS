@@ -194,7 +194,7 @@ Response:
 
 ```bash
 # GitHub Personal Access Token (with 'workflow' permissions)
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]
 
 # SMTP for alerts (already configured)
 SMTP_USERNAME=chavapalmarubin@gmail.com
@@ -215,7 +215,7 @@ ALERT_RECIPIENT_EMAIL=chavapalmarubin@gmail.com
 7. Copy token immediately (shown only once!)
 8. Add to `/app/backend/.env`:
    ```
-   GITHUB_TOKEN=ghp_your_token_here
+   GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]_token_here
    ```
 
 ---
@@ -352,7 +352,7 @@ db.system_health_history.find().sort({timestamp: -1}).limit(10)
 2. **Add to Backend Environment:**
    ```bash
    # Add to /app/backend/.env
-   GITHUB_TOKEN=ghp_your_token_here
+   GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]_token_here
    ```
 
 3. **Restart Backend:**

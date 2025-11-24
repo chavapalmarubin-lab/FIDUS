@@ -8,7 +8,7 @@ Client ID and Client Secret configured properly as requested in the review.
 
 CONFIGURATION VERIFIED:
 - Client ID: 909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com
-- Client Secret: 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
+- Client Secret: [REMOVED_GOOGLE_SECRET]
 - Redirect URI: https://fidus-invest.emergent.host/admin/google-callback
 
 TESTING REQUIREMENTS:
@@ -40,7 +40,7 @@ ADMIN_PASSWORD = "password123"
 
 # Expected Google OAuth Configuration
 EXPECTED_CLIENT_ID = "909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-EXPECTED_CLIENT_SECRET = "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"
+EXPECTED_CLIENT_SECRET = "[REMOVED_GOOGLE_SECRET]"
 EXPECTED_REDIRECT_URI = "https://fidus-invest.emergent.host/admin/google-callback"
 
 # Required Google OAuth Scopes

@@ -85,7 +85,7 @@ grep "MONGO_URL" /app/backend/.env
 # Verify token is set in backend:
 grep "GITHUB_TOKEN" /app/backend/.env
 
-# Should show: GITHUB_TOKEN="ghp_..."
+# Should show: GITHUB_TOKEN="[REMOVED_GITHUB_TOKEN]..."
 # If empty, watchdog cannot trigger workflows
 ```
 

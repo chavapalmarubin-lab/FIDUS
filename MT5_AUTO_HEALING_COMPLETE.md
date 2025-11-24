@@ -75,7 +75,7 @@ POST /api/system/test-alert                 - Test email alerts (already working
 
 Add this line at the end:
 ```bash
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]
 ```
 (Replace with your actual token)
 

@@ -9,7 +9,7 @@
 ### ✅ All Tests Passed:
 
 1. **GitHub Token Configured** ✅
-   - Token: `ghp_KOiC1i...` (first 10 chars)
+   - Token: `[REMOVED_GITHUB_TOKEN]...` (first 10 chars)
    - Added to `/app/backend/.env`
    - Loaded successfully by backend
 

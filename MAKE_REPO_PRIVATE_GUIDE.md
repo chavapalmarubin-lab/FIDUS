@@ -48,7 +48,7 @@ If Option 1 doesn't work:
 Sometimes the issue is Render can't clone private repos. Fix:
 
 1. **Render → Environment Variables:**
-   - Add: `GITHUB_TOKEN` = `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`
+   - Add: `GITHUB_TOKEN` = `[REMOVED_GITHUB_TOKEN]`
 
 2. **Build Command (if custom):**
    ```bash

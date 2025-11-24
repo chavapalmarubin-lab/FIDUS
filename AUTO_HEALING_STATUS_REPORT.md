@@ -92,7 +92,7 @@ This is **expected** and will be resolved in Phase 3.
 3. Navigate to Environment tab
 4. Add new variable:
    - Key: `GITHUB_TOKEN`
-   - Value: `ghp_YOUR_GITHUB_PERSONAL_ACCESS_TOKEN`
+   - Value: `[REMOVED_GITHUB_TOKEN]_GITHUB_PERSONAL_ACCESS_TOKEN`
 5. Save and redeploy
 
 **GitHub Token Requirements:**

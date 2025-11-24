@@ -3,7 +3,7 @@
 **⚠️ SECURITY WARNING: TOKEN REMOVED FROM DOCUMENTATION**
 
 **Token:** `[SECURED - Only visible in GitHub when first created]`
-**Token Format:** `ghp_****...****` (44 characters total)
+**Token Format:** `[REMOVED_GITHUB_TOKEN]****...****` (44 characters total)
 
 **Purpose:** Enables automatic MT5 Terminal restart via GitHub Actions
 

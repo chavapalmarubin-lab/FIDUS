@@ -20,7 +20,7 @@ The FIDUS Auto-Healing System provides **99.99% uptime** through automated detec
 ### Token Details
 - **Type:** GitHub Personal Access Token (Classic)
 - **Token Value:** `[SECURED IN RENDER ENVIRONMENT - DO NOT STORE IN CODE]`
-- **Token Prefix:** `ghp_****...****` (44 characters total)
+- **Token Prefix:** `[REMOVED_GITHUB_TOKEN]****...****` (44 characters total)
 - **Created:** October 31, 2025
 - **Owner:** chavapalmarubin GitHub account
 

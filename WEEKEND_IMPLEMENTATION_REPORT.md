@@ -120,7 +120,7 @@ class MT5BridgeClient:
 ```bash
 # Google Cloud Console Configuration
 Client ID: 909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com
-Client Secret: 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
+Client Secret: [REMOVED_GOOGLE_SECRET]
 Redirect URI: https://fidus-invest.emergent.host/admin/google-callback
 
 # OAuth Scopes
@@ -221,7 +221,7 @@ Connection: mongodb+srv://chavapalmarubin_db_user:***@fidus.y1p9be2.mongodb.net/
 MONGO_URL="mongodb+srv://...fidus_production"
 DB_NAME="fidus_production"
 GOOGLE_CLIENT_ID="909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="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"
+GOOGLE_CLIENT_SECRET="[REMOVED_GOOGLE_SECRET]"
 GOOGLE_OAUTH_REDIRECT_URI="https://fidus-invest.emergent.host/admin/google-callback"
 MT5_BRIDGE_URL="http://217.197.163.11:8000"
 MT5_BRIDGE_API_KEY="fidus-mt5-bridge-2025-api-key"

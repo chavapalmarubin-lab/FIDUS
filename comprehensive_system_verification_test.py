@@ -110,7 +110,7 @@ class ComprehensiveSystemVerifier:
                 repository_dispatch = github_status.get('repository_dispatch_capable', False)
                 
                 if token_active:
-                    self.log_test("GitHub Token Active", "PASS", "New token (ghp_ssWu...) is active")
+                    self.log_test("GitHub Token Active", "PASS", "New token ([REMOVED_GITHUB_TOKEN]...) is active")
                 else:
                     self.log_test("GitHub Token Active", "FAIL", "GitHub token not active")
                 

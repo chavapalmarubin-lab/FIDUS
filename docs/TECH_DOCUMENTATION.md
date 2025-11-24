@@ -180,7 +180,7 @@ Match Group administrators
 
 **Token Details:**
 - **Type:** GitHub Personal Access Token (Classic)
-- **Token Prefix:** `ghp_GmkC...` (full token secured in Render environment)
+- **Token Prefix:** `[REMOVED_GITHUB_TOKEN]...` (full token secured in Render environment)
 - **Scopes Required:**
   - ✅ `repo` - Full control of private repositories
   - ✅ `workflow` - Update GitHub Action workflows
@@ -252,7 +252,7 @@ Expected response: `HTTP 204 No Content` (success)
 | Variable | Value | Purpose | Status |
 |----------|-------|---------|--------|
 | `MONGO_URL` | `mongodb+srv://chavapalmarubin_db_user:***@fidus.y1p9be2.mongodb.net/fidus_production` | MongoDB Atlas connection | ✅ Set |
-| `GITHUB_TOKEN` | `[SECURED - ghp_****...****]` | Auto-healing GitHub Actions trigger | ✅ Set (Oct 31, 2025) |
+| `GITHUB_TOKEN` | `[SECURED - [REMOVED_GITHUB_TOKEN]****...****]` | Auto-healing GitHub Actions trigger | ✅ Set (Oct 31, 2025) |
 | `GITHUB_REPOSITORY` | `chavapalmarubin-lab/FIDUS` | Repository for GitHub Actions | ✅ Set |
 | `PORT` | `8001` | Backend API port (auto-detected by Render) | ✅ Auto |
 | `SMTP_USERNAME` | Email for alerts | Gmail SMTP username | ⚠️ Check |

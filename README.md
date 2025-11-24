@@ -192,7 +192,7 @@ MONGO_URL="mongodb+srv://...@fidus.y1p9be2.mongodb.net/fidus_production"
 GOOGLE_CLIENT_ID="909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs..."
 GOOGLE_OAUTH_REDIRECT_URI="https://fidus-investment-platform.onrender.com/admin/google-callback"
 MT5_BRIDGE_URL="http://92.118.45.135:8000"
-GITHUB_TOKEN="ghp_..." # For MT5 Auto-Healing
+GITHUB_TOKEN="[REMOVED_GITHUB_TOKEN]..." # For MT5 Auto-Healing
 JWT_SECRET_KEY="fidus-production-secret-2025-secure-key"
 
 # Frontend Environment (.env)

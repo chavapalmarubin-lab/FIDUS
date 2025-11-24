@@ -31,9 +31,9 @@ GitHub detected the Personal Access Token in documentation files and blocked the
 
 ### Safe Patterns Found (OK to push):
 ```
-✅ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  (placeholder)
-✅ GITHUB_TOKEN=ghp_your_token_here                       (placeholder)
-✅ Token: ghp_KOiC1i... (first 10 chars)                  (partial display)
+✅ GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]  (placeholder)
+✅ GITHUB_TOKEN=[REMOVED_GITHUB_TOKEN]_token_here                       (placeholder)
+✅ Token: [REMOVED_GITHUB_TOKEN]... (first 10 chars)                  (partial display)
 ✅ Token in /app/backend/.env                             (gitignored)
 ```
 

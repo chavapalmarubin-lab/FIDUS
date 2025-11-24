@@ -369,7 +369,7 @@ sudo supervisorctl restart backend
 # Check GitHub token:
 grep "GITHUB_TOKEN" /app/backend/.env
 
-# Should show valid token starting with "ghp_"
+# Should show valid token starting with "[REMOVED_GITHUB_TOKEN]"
 
 # Check watchdog status:
 curl -H "Authorization: Bearer <token>" \

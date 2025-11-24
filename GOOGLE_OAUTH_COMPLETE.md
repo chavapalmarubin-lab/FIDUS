@@ -85,7 +85,7 @@ backend/
 # In Render Dashboard → fidus-api → Environment
 
 GOOGLE_CLIENT_ID=909926639154-r3v0ka94cbu4uo0sn8g4jvtiulf4i9qs.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_SECRET=[REMOVED_GOOGLE_SECRET]
 GOOGLE_REDIRECT_URI=https://fidus-api.onrender.com/api/google/callback
 FRONTEND_URL=https://fidus-investment-platform.onrender.com
 ```
