@@ -134,8 +134,10 @@ async def get_fund_portfolio_derived():
                     "broker": "$broker",
                     "manager_name": "$manager_name",
                     "balance": "$balance",
-                    "equity": "$equity"
+                    "equity": "$equity",
+                    "initial_allocation": "$initial_allocation"
                 }},
+                "total_allocation": {"$sum": "$initial_allocation"},
                 "total_balance": {"$sum": "$balance"},
                 "total_equity": {"$sum": "$equity"},
                 "managers": {"$addToSet": "$manager_name"}
@@ -147,26 +149,38 @@ async def get_fund_portfolio_derived():
         
         # Format for frontend
         fund_data = {}
+        total_allocation = 0
         total_aum = 0
         
         for fund in funds:
             fund_type = fund['_id']
+            allocation = fund.get('total_allocation', 0)
+            balance = fund['total_balance']
+            pnl = balance - allocation
+            
             fund_data[fund_type] = {
                 "fund_type": fund_type,
                 "account_count": fund['account_count'],
                 "accounts": fund['accounts'],
-                "total_balance": fund['total_balance'],
+                "total_allocation": allocation,
+                "total_balance": balance,
                 "total_equity": fund['total_equity'],
+                "total_pnl": pnl,
                 "managers": fund['managers'],
                 "manager_count": len(fund['managers'])
             }
-            total_aum += fund['total_balance']
+            total_allocation += allocation
+            total_aum += balance
+        
+        total_pnl = total_aum - total_allocation
         
         return {
             "success": True,
             "funds": fund_data,
             "summary": {
+                "total_allocation": total_allocation,
                 "total_aum": total_aum,
+                "total_pnl": total_pnl,
                 "fund_count": len(fund_data),
                 "total_accounts": sum(f['account_count'] for f in fund_data.values()),
                 "last_updated": datetime.now(timezone.utc).isoformat()
