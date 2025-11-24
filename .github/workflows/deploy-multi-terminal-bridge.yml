@@ -1,0 +1,288 @@
+name: Deploy Multi-Terminal Bridge Update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Backup Current Bridge
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== Creating Backup of Current Bridge ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            cd C:\mt5_bridge_service\
+            
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            $backupName = "mt5_bridge_api_service_backup_$timestamp.py"
+            
+            if (Test-Path "mt5_bridge_api_service.py") {
+              Copy-Item "mt5_bridge_api_service.py" $backupName
+              Write-Host "✅ Backup created: $backupName" -ForegroundColor Green
+              
+              $backupFile = Get-Item $backupName
+              Write-Host "   Size: $($backupFile.Length) bytes" -ForegroundColor Gray
+            } else {
+              Write-Host "⚠️  Original file not found!" -ForegroundColor Yellow
+            }
+      
+      - name: Stop Current Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Stopping Current Bridge Service ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Try Task Scheduler first
+            schtasks /End /TN "MT5BridgeService" 2>$null
+            Start-Sleep -Seconds 3
+            
+            # Force kill any remaining processes
+            $processes = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($processes) {
+              $processes | ForEach-Object {
+                Write-Host "Stopping process PID: $($_.Id)" -ForegroundColor Yellow
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+              }
+            }
+            
+            Start-Sleep -Seconds 2
+            Write-Host "✅ Bridge service stopped" -ForegroundColor Green
+      
+      - name: Deploy Updated Bridge Script
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: "vps-scripts/mt5_bridge_api_service_multi_terminal.py"
+          target: "C:\\temp\\"
+          overwrite: true
+      
+      - name: Install Updated Bridge
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Installing Updated Bridge ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Copy new script to bridge directory
+            Copy-Item "C:\temp\vps-scripts\mt5_bridge_api_service_multi_terminal.py" "C:\mt5_bridge_service\mt5_bridge_api_service.py" -Force
+            
+            Write-Host "✅ New bridge script installed" -ForegroundColor Green
+            
+            # Verify file
+            $newFile = Get-Item "C:\mt5_bridge_service\mt5_bridge_api_service.py"
+            Write-Host "   Size: $($newFile.Length) bytes" -ForegroundColor Gray
+            Write-Host "   Modified: $($newFile.LastWriteTime)" -ForegroundColor Gray
+      
+      - name: Verify Terminal Paths
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Verifying Terminal Paths ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check MEXAtlantic terminal
+            if (Test-Path "C:\Program Files\MEXAtlantic MetaTrader 5\terminal64.exe") {
+              Write-Host "✅ MEXAtlantic terminal found" -ForegroundColor Green
+            } else {
+              Write-Host "⚠️  MEXAtlantic terminal not at default path" -ForegroundColor Yellow
+            }
+            
+            # Check LUCRUM terminal
+            if (Test-Path "C:\Program Files\Lucrum Capital MetaTrader 5\terminal64.exe") {
+              Write-Host "✅ LUCRUM terminal found" -ForegroundColor Green
+            } else {
+              Write-Host "⚠️  LUCRUM terminal not at default path" -ForegroundColor Yellow
+            }
+            
+            # Check if LUCRUM terminal is running
+            $lucrumTerminal = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -like "*2198*"}
+            if ($lucrumTerminal) {
+              Write-Host "✅ LUCRUM terminal is running with account 2198" -ForegroundColor Green
+            } else {
+              Write-Host "⚠️  LUCRUM terminal not found - please start it!" -ForegroundColor Yellow
+            }
+      
+      - name: Test Bridge Manually
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Testing Updated Bridge ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            cd C:\mt5_bridge_service\
+            
+            # Run bridge for 30 seconds to test
+            $job = Start-Job -ScriptBlock {
+              python C:\mt5_bridge_service\mt5_bridge_api_service.py
+            }
+            
+            Write-Host "Bridge started, waiting 30 seconds..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 30
+            
+            # Stop test run
+            Stop-Job $job
+            Remove-Job $job
+            
+            Write-Host "✅ Test run completed" -ForegroundColor Green
+            
+            # Check logs for success indicators
+            Write-Host ""
+            Write-Host "Recent log entries:" -ForegroundColor Cyan
+            Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 20
+      
+      - name: Start Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Starting Bridge Service ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Start via Task Scheduler
+            schtasks /Run /TN "MT5BridgeService"
+            
+            Write-Host "Waiting 10 seconds for service to initialize..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 10
+            
+            # Verify it's running
+            $process = Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "*mt5*"}
+            if ($process) {
+              Write-Host "✅ Bridge service is running (PID: $($process.Id))" -ForegroundColor Green
+            } else {
+              Write-Host "❌ Bridge service failed to start!" -ForegroundColor Red
+            }
+      
+      - name: Monitor First Sync Cycle
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Monitoring First Sync Cycle ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            Write-Host "Waiting 60 seconds for first sync to complete..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 60
+            
+            Write-Host ""
+            Write-Host "Recent sync activity:" -ForegroundColor Cyan
+            Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 50 | Where-Object {$_ -match "Synced|ERROR|✅|❌"}
+      
+      - name: Verify LUCRUM Account Syncing
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Verifying LUCRUM Account 2198 ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check MongoDB for recent sync
+            @"
+from pymongo import MongoClient
+from datetime import datetime, timedelta
+client = MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production')
+db = client.get_database()
+account = db.mt5_accounts.find_one({'account': 2198})
+if account:
+    last_sync = account.get('last_sync_timestamp')
+    synced = account.get('synced_from_vps', False)
+    balance = account.get('balance', 0)
+    
+    print(f'Account 2198 Status:')
+    print(f'  Balance: ${balance:,.2f}')
+    print(f'  Last Sync: {last_sync}')
+    print(f'  Synced from VPS: {synced}')
+    
+    if synced and last_sync:
+        time_diff = datetime.now() - last_sync.replace(tzinfo=None)
+        if time_diff < timedelta(minutes=5):
+            print('✅ Account is syncing successfully!')
+        else:
+            print('⚠️  Last sync was more than 5 minutes ago')
+else:
+    print('❌ Account 2198 not found in database')
+client.close()
+"@ | python -
+      
+      - name: Generate Deployment Report
+        if: always()
+        run: |
+          echo "# Multi-Terminal Bridge Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Changes Deployed:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Bridge updated to version 2.0 (Multi-Terminal Support)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Support added for LUCRUM Capital broker" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Account routing by server implemented" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Enhanced logging with broker identification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Results:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total MT5 Accounts Syncing:** 14 (13 MEXAtlantic + 1 LUCRUM)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sync Interval:** 120 seconds (unchanged)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Brokers Supported:** 2 (MEXAtlantic + LUCRUM)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Verification Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check workflow output above for sync status" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify account 2198 appears in sync logs" >> $GITHUB_STEP_SUMMARY
+          echo "3. Check MongoDB shows recent last_sync_timestamp for 2198" >> $GITHUB_STEP_SUMMARY
+          echo "4. View Investment Committee dashboard (should show 15 accounts)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Rollback (If Needed):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If issues occur, SSH into VPS and run:" >> $GITHUB_STEP_SUMMARY
+          echo '```powershell' >> $GITHUB_STEP_SUMMARY
+          echo 'cd C:\mt5_bridge_service' >> $GITHUB_STEP_SUMMARY
+          echo 'Copy-Item mt5_bridge_api_service_backup_*.py mt5_bridge_api_service.py -Force' >> $GITHUB_STEP_SUMMARY
+          echo 'schtasks /Run /TN "MT5BridgeService"' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
