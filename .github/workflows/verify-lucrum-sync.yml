@@ -92,9 +92,26 @@ jobs:
             Write-Host "=== Testing MongoDB Connection ===" -ForegroundColor Cyan
             Write-Host ""
             
-            $pythonCode = "import sys; from pymongo import MongoClient; mongo_url='mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'; client=MongoClient(mongo_url, serverSelectionTimeoutMS=5000); db=client.get_database(); client.admin.command('ping'); print('MongoDB connection: SUCCESS'); account=db.mt5_account_config.find_one({'account':2198}); print(f'Account 2198: {account.get(\"name\") if account else \"NOT FOUND\"}'); print(f'Active: {account.get(\"is_active\") if account else \"N/A\"}'); total=db.mt5_account_config.count_documents({'is_active':True}); print(f'Total active accounts: {total}'); client.close()"
-            
-            python -c $pythonCode
+            # Create Python script
+            @"
+import sys
+from pymongo import MongoClient
+mongo_url = 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'
+client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+db = client.get_database()
+client.admin.command('ping')
+print('MongoDB connection: SUCCESS')
+account = db.mt5_account_config.find_one({'account': 2198})
+if account:
+    print('Account 2198: ' + account.get('name', 'UNKNOWN'))
+    print('Server: ' + account.get('server', 'N/A'))
+    print('Active: ' + str(account.get('is_active', False)))
+else:
+    print('Account 2198: NOT FOUND')
+total = db.mt5_account_config.count_documents({'is_active': True})
+print('Total active accounts: ' + str(total))
+client.close()
+"@ | python -
       
       - name: Check MT5 API Response
         uses: appleboy/ssh-action@master
