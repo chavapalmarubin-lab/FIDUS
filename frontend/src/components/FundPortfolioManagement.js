@@ -116,6 +116,8 @@ const FundPortfolioManagement = () => {
             ...fund,
             aum: fund.total_balance || 0,  // Map total_balance to aum for backward compatibility
             current_aum: fund.total_balance || 0,
+            allocation: fund.total_allocation || 0,
+            pnl: fund.total_pnl || 0,
             total_investors: fund.account_count || 0,
             fund_code: fundCode
           };
@@ -124,6 +126,8 @@ const FundPortfolioManagement = () => {
         const mappedStats = {
           ...data.summary,
           aum: data.summary.total_aum || 0,  // Map total_aum to aum for backward compatibility
+          total_allocation: data.summary.total_allocation || 0,
+          total_pnl: data.summary.total_pnl || 0,
           ytd_return: 0  // Will be calculated later
         };
         
