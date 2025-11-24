@@ -59,7 +59,7 @@ async def refresh_all_accounts():
 def login_to_account(account_number: int, password: str) -> bool:
     """
     Explicitly login to a specific MT5 account
-    Uses investor password: Fidus13!
+    Uses investor password: ***SANITIZED***
     """
     authorized = mt5.login(
         login=account_number, 
@@ -298,7 +298,7 @@ Get-Content C:\mt5_bridge_service\logs\api_service.log | Select-String "FAIL"
 
 **Fix:**
 - Verify account numbers are correct in `MANAGED_ACCOUNTS`
-- Verify investor password is correct (`Fidus13!`)
+- Verify investor password is correct (`***SANITIZED***`)
 - Check if account is active in MT5
 
 ### Issue: Bridge responds but balances still $0.00
@@ -396,7 +396,7 @@ MANAGED_ACCOUNTS = {
 
 ## 🔐 SECURITY NOTES
 
-- Investor password (`Fidus13!`) is read-only - cannot place trades
+- Investor password (`***SANITIZED***`) is read-only - cannot place trades
 - Password is hardcoded in script (acceptable for investor password)
 - Service runs as `trader` user (not Administrator)
 - No sensitive data exposed via API endpoints

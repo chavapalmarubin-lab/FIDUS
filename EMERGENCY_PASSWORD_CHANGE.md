@@ -7,7 +7,7 @@
 
 ## 🔥 EXPOSED CREDENTIALS
 
-**Password Exposed:** `Fidus13!`  
+**Password Exposed:** `***SANITIZED***`  
 **Accounts Affected:** ALL 15 trading accounts  
 **Found in:** 90+ files in GitHub repository  
 **Risk Level:** 🔴 CRITICAL - Real money trading accounts exposed
@@ -19,29 +19,29 @@
 ### MEXAtlantic MT5 Accounts (13)
 | Account | Broker | Current Password | Status |
 |---------|--------|------------------|--------|
-| 886557 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 886066 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 886602 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 885822 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 886528 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 891215 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 891234 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 897590 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 897589 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 897591 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 897599 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 901351 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
-| 901353 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
+| 886557 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 886066 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 886602 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 885822 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 886528 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 891215 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 891234 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 897590 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 897589 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 897591 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 897599 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 901351 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
+| 901353 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
 
 ### Lucrum MT5 Account (1)
 | Account | Broker | Current Password | Status |
 |---------|--------|------------------|--------|
-| 2198 | Lucrum Capital | Fidus13! | 🔴 EXPOSED |
+| 2198 | Lucrum Capital | ***SANITIZED*** | 🔴 EXPOSED |
 
 ### MEXAtlantic MT4 Account (1)
 | Account | Broker | Current Password | Status |
 |---------|--------|------------------|--------|
-| 33200931 | MEXAtlantic | Fidus13! | 🔴 EXPOSED |
+| 33200931 | MEXAtlantic | ***SANITIZED*** | 🔴 EXPOSED |
 
 ---
 
@@ -215,7 +215,7 @@ Get-ScheduledTask | Where-Object {$_.TaskName -like "*Bridge"} | Format-Table Ta
 - Not based on exposed password
 
 **DO NOT USE:**
-- ❌ Fidus13! (exposed)
+- ❌ ***SANITIZED*** (exposed)
 - ❌ Simple variations like Fidus14! or Fidus2025!
 - ❌ Personal information (birthdays, names)
 

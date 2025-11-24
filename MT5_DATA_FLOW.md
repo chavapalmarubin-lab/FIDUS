@@ -120,7 +120,7 @@ SYNC_INTERVAL = 5 minutes
   
   // Additional fields (not updated by sync)
   client_id: "client_alejandro",
-  password: "Fidus13!",                     // Encrypted in production
+  password: "***SANITIZED***",                     // Encrypted in production
   server: "MEXAtlantic-Real",
   target_amount: 6590.31,
   broker: "MEXAtlantic"

@@ -116,7 +116,7 @@ The MT5 sync service stopped running on or after November 3, 2025. Possible reas
 
 The LUCRUM MT5 terminal needs to be:
 1. Installed on the VPS
-2. Logged into account 2198 with password `Fidus13!`
+2. Logged into account 2198 with password `***SANITIZED***`
 3. Server: `Lucrumcapital-Live`
 4. Running continuously in the background
 
@@ -189,7 +189,7 @@ Get-Process python | Select-Object Path, CommandLine
 3. **Login to Account 2198:**
    ```
    Account: 2198
-   Password: Fidus13!
+   Password: ***SANITIZED***
    Server: Lucrumcapital-Live
    ```
 
@@ -385,7 +385,7 @@ Once script location is found, update:
 
 **LUCRUM Credentials:**
 - Account: `2198`
-- Password: `Fidus13!`
+- Password: `***SANITIZED***`
 - Server: `Lucrumcapital-Live`
 
 **GitHub Workflows:**

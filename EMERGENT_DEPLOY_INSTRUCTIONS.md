@@ -160,7 +160,7 @@ curl http://92.118.45.135:8000/api/mt5/account/891215/info
 ```
 
 **Solution:**
-1. Verify password "Fidus13!" is correct in MongoDB
+1. Verify password "***SANITIZED***" is correct in MongoDB
 2. Check MT5 terminal is running on VPS
 3. Verify MT5_SERVER is set to "MEXAtlantic-Real"
 

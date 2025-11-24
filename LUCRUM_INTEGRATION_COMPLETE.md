@@ -38,7 +38,7 @@ The LUCRUM broker (Lucrum Capital) has been successfully integrated into the FID
 {
   _id: ObjectId('6920b31d07f4b0d609b1ddf4'),
   account: 2198,
-  password: 'Fidus13!',
+  password: '***SANITIZED***',
   name: 'BALANCE - JOSE (LUCRUM)',
   server: 'Lucrumcapital-Live',
   fund_type: 'BALANCE',
@@ -83,7 +83,7 @@ Added LUCRUM broker configuration:
 2. It loads all accounts where `is_active: true`
 3. Account 2198 will be automatically picked up with:
    - Login: 2198
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Server: Lucrumcapital-Live
    - Broker: Lucrum Capital
 

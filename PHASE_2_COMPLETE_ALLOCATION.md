@@ -65,7 +65,7 @@
 - **Broker:** Lucrum Capital
 - **Allocation:** $10,000.00
 - **Fund Type:** BALANCE
-- **Password:** Fidus13!
+- **Password:** ***SANITIZED***
 - **Status:** Pending real-time data integration
 - **Integration Method:** MT5 VPS sync (to be configured)
 - **Notes:** New manager on Lucrum Capital platform
@@ -77,7 +77,7 @@
 - **Broker:** MEX Atlantic
 - **Allocation:** $10,000.00
 - **Fund Type:** BALANCE
-- **Password:** Fidus13!
+- **Password:** ***SANITIZED***
 - **Status:** Pending real-time data integration
 - **Integration Method:** MT4 File Monitor Service (in progress)
 - **Notes:** MT4 bridge implementation underway
@@ -111,7 +111,7 @@
   "phase": "Phase 2",
   "integration_status": "integrated" | "pending",
   "connection_status": "pending_sync" | "pending_integration",
-  "password": "Fidus13!",
+  "password": "***SANITIZED***",
   "notes": "<description>",
   "updated_at": "<timestamp>"
 }

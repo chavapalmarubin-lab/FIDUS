@@ -32,28 +32,28 @@
    - Fund: CORE
    - Manager: CP Strategy
    - Initial Allocation: $0 (awaiting MT5 funding)
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Status: ✅ Added to MongoDB
 
 2. **Account 897589**
    - Fund: BALANCE
    - Manager: MEXAtlantic Provider 5201
    - Initial Allocation: $5,000
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Status: ✅ Added to MongoDB
 
 3. **Account 897591**
    - Fund: SEPARATION (Interest Segregation)
    - Manager: alefloreztrader
    - Initial Allocation: $0 (awaiting MT5 funding)
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Status: ✅ Added to MongoDB
 
 4. **Account 897599**
    - Fund: SEPARATION (Interest Segregation)
    - Manager: alefloreztrader
    - Initial Allocation: $0 (awaiting MT5 funding)
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Status: ✅ Added to MongoDB
 
 ### Existing Account Manager Assignments Updated
@@ -132,10 +132,10 @@ The new accounts need to be added to the VPS MT5 Bridge service configuration:
 **File Location:** VPS Windows Server (not in this codebase)
 
 **Accounts to Add:**
-- 897590 (MEXAtlantic-Real, Fidus13!)
-- 897589 (MEXAtlantic-Real, Fidus13!)
-- 897591 (MultibankFX-Real, Fidus13!)
-- 897599 (MultibankFX-Real, Fidus13!)
+- 897590 (MEXAtlantic-Real, ***SANITIZED***)
+- 897589 (MEXAtlantic-Real, ***SANITIZED***)
+- 897591 (MultibankFX-Real, ***SANITIZED***)
+- 897599 (MultibankFX-Real, ***SANITIZED***)
 
 **VPS Bridge URL:** http://92.118.45.135:8000
 
@@ -192,7 +192,7 @@ Verify the new accounts and managers appear correctly in:
 ### Data Integrity:
 ✅ All account-manager relationships correctly assigned  
 ✅ All fund type classifications correct  
-✅ All passwords set to "Fidus13!" for new accounts  
+✅ All passwords set to "***SANITIZED***" for new accounts  
 ✅ Manager profiles URLs stored correctly
 
 ---

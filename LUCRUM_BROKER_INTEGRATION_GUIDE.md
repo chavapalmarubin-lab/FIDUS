@@ -2,7 +2,7 @@
 
 **Broker:** Lucrum Capital  
 **Account:** 2198  
-**Password:** Fidus13!  
+**Password:** ***SANITIZED***  
 **Server:** Lucrumcapital-Live  
 **Platform:** MT5  
 **Manager:** JOSE  
@@ -99,7 +99,7 @@ MANAGED_ACCOUNTS = {
         "provider": "JOSE",
         "broker": "Lucrum Capital",
         "server": "Lucrumcapital-Live",
-        "password": "Fidus13!"
+        "password": "***SANITIZED***"
     }
 }
 ```
@@ -120,7 +120,7 @@ import time
 MONGO_URL = os.getenv('MONGO_URL')
 ACCOUNT = 2198
 SERVER = "Lucrumcapital-Live"
-PASSWORD = "Fidus13!"
+PASSWORD = "***SANITIZED***"
 
 def sync_lucrum_account():
     """Sync LUCRUM account 2198 to MongoDB"""

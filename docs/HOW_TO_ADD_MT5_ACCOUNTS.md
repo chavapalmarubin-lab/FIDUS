@@ -23,7 +23,7 @@ db = client['fidus_production']
 
 # NEW ACCOUNT DETAILS
 NEW_ACCOUNT = 897999  # <-- Change this
-ACCOUNT_PASSWORD = "Fidus13!"  # <-- Change this  
+ACCOUNT_PASSWORD = "***SANITIZED***"  # <-- Change this  
 ACCOUNT_SERVER = "MEXAtlantic-Real"  # <-- Change this
 ACCOUNT_NAME = "CORE-04"  # <-- Change this
 FUND_TYPE = "CORE"  # Options: CORE, BALANCE, SEPARATION

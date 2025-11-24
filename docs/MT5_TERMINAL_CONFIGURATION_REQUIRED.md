@@ -63,10 +63,10 @@ If using a single MT5 terminal with multiple accounts:
 1. **RDP into VPS** at http://92.118.45.135
 2. **Open MetaTrader 5** terminal
 3. **For each new account:**
-   - Account: 897590, Password: Fidus13!, Server: MEXAtlantic-Real
-   - Account: 897589, Password: Fidus13!, Server: MEXAtlantic-Real
-   - Account: 897591, Password: Fidus13!, Server: MultibankFX-Real
-   - Account: 897599, Password: Fidus13!, Server: MultibankFX-Real
+   - Account: 897590, Password: ***SANITIZED***, Server: MEXAtlantic-Real
+   - Account: 897589, Password: ***SANITIZED***, Server: MEXAtlantic-Real
+   - Account: 897591, Password: ***SANITIZED***, Server: MultibankFX-Real
+   - Account: 897599, Password: ***SANITIZED***, Server: MultibankFX-Real
 
 4. **Add accounts:**
    - File → Login to Trade Account
@@ -90,10 +90,10 @@ If the VPS has automated login scripts:
 2. **Add new accounts to the script:**
    ```powershell
    # Add these to the accounts list:
-   @{Account=897590; Password="Fidus13!"; Server="MEXAtlantic-Real"},
-   @{Account=897589; Password="Fidus13!"; Server="MEXAtlantic-Real"},
-   @{Account=897591; Password="Fidus13!"; Server="MultibankFX-Real"},
-   @{Account=897599; Password="Fidus13!"; Server="MultibankFX-Real"}
+   @{Account=897590; Password="***SANITIZED***"; Server="MEXAtlantic-Real"},
+   @{Account=897589; Password="***SANITIZED***"; Server="MEXAtlantic-Real"},
+   @{Account=897591; Password="***SANITIZED***"; Server="MultibankFX-Real"},
+   @{Account=897599; Password="***SANITIZED***"; Server="MultibankFX-Real"}
    ```
 
 3. **Run the script:**
@@ -172,10 +172,10 @@ Once MT5 terminals are logged in:
 
 | Account | Password | Server | Fund | Manager |
 |---------|----------|--------|------|---------|
-| 897590 | Fidus13! | MEXAtlantic-Real | CORE | CP Strategy |
-| 897589 | Fidus13! | MEXAtlantic-Real | BALANCE | MEXAtlantic Provider 5201 |
-| 897591 | Fidus13! | MultibankFX-Real | SEPARATION | alefloreztrader |
-| 897599 | Fidus13! | MultibankFX-Real | SEPARATION | alefloreztrader |
+| 897590 | ***SANITIZED*** | MEXAtlantic-Real | CORE | CP Strategy |
+| 897589 | ***SANITIZED*** | MEXAtlantic-Real | BALANCE | MEXAtlantic Provider 5201 |
+| 897591 | ***SANITIZED*** | MultibankFX-Real | SEPARATION | alefloreztrader |
+| 897599 | ***SANITIZED*** | MultibankFX-Real | SEPARATION | alefloreztrader |
 
 ---
 

@@ -48,13 +48,13 @@ Once the terminal opens, you'll see a login dialog:
 **Login Credentials:**
 ```
 Login: 2198
-Password: Fidus13!
+Password: ***SANITIZED***
 Server: Lucrumcapital-Live
 ```
 
 **Steps:**
 1. **Login field:** Enter `2198`
-2. **Password field:** Enter `Fidus13!`
+2. **Password field:** Enter `***SANITIZED***`
 3. **Server dropdown:** Select `Lucrumcapital-Live`
 4. **Save password checkbox:** ✅ Check this box (so it stays logged in)
 5. Click **"Login"** button
@@ -131,7 +131,7 @@ Status: Connected ✅
 **Cause:** Wrong password or server
 
 **Solution:**
-- Password is case-sensitive: `Fidus13!`
+- Password is case-sensitive: `***SANITIZED***`
   - Capital F
   - Number 1 (not lowercase L)
   - Exclamation mark at end
@@ -357,7 +357,7 @@ Account 2198 visible in BALANCE fund list
 
 **Login:**
 - Account: `2198`
-- Password: `Fidus13!`
+- Password: `***SANITIZED***`
 - Server: `Lucrumcapital-Live`
 
 **Verification:**
