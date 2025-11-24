@@ -1,0 +1,183 @@
+name: Find MT5 Sync Script Location
+
+on:
+  workflow_dispatch:
+
+jobs:
+  find-script:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Search for MT5 Python Scripts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== Searching for MT5 Sync Scripts ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            Write-Host "1. Searching for MT5-related Python files..." -ForegroundColor Yellow
+            $scripts = Get-ChildItem -Path C:\ -Filter "*.py" -Recurse -ErrorAction SilentlyContinue | 
+              Where-Object {$_.Name -like "*mt5*" -or $_.Name -like "*bridge*" -or $_.Name -like "*account*switching*"}
+            
+            if ($scripts) {
+              Write-Host "   Found $($scripts.Count) potential script(s):" -ForegroundColor Green
+              foreach ($script in $scripts) {
+                Write-Host ""
+                Write-Host "   📄 $($script.FullName)" -ForegroundColor White
+                Write-Host "      Size: $([math]::Round($script.Length/1KB, 2)) KB" -ForegroundColor Gray
+                Write-Host "      Modified: $($script.LastWriteTime)" -ForegroundColor Gray
+              }
+            } else {
+              Write-Host "   ⚠️  No MT5 Python scripts found" -ForegroundColor Yellow
+            }
+      
+      - name: Check Task Scheduler for Script Paths
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Checking Task Scheduler ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $tasks = Get-ScheduledTask -TaskName "*MT5*" -ErrorAction SilentlyContinue
+            
+            if ($tasks) {
+              Write-Host "Found $($tasks.Count) MT5 task(s):" -ForegroundColor Green
+              foreach ($task in $tasks) {
+                Write-Host ""
+                Write-Host "📋 Task: $($task.TaskName)" -ForegroundColor White
+                Write-Host "   State: $($task.State)" -ForegroundColor Gray
+                
+                $action = $task.Actions[0]
+                if ($action) {
+                  Write-Host "   Command: $($action.Execute)" -ForegroundColor Cyan
+                  Write-Host "   Arguments: $($action.Arguments)" -ForegroundColor Cyan
+                  Write-Host "   Working Dir: $($action.WorkingDirectory)" -ForegroundColor Gray
+                }
+              }
+            }
+      
+      - name: Check Common Directories
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Checking Common Directories ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $commonPaths = @(
+              "C:\mt5_bridge_service",
+              "C:\mt5_bridge",
+              "C:\Users\trader\mt5_bridge",
+              "D:\mt5_bridge_service",
+              "C:\Program Files\MT5Bridge"
+            )
+            
+            foreach ($path in $commonPaths) {
+              if (Test-Path $path) {
+                Write-Host "✅ Found: $path" -ForegroundColor Green
+                $files = Get-ChildItem -Path $path -Filter "*.py" -ErrorAction SilentlyContinue
+                if ($files) {
+                  Write-Host "   Python files:" -ForegroundColor White
+                  foreach ($file in $files) {
+                    Write-Host "   - $($file.Name)" -ForegroundColor Cyan
+                  }
+                }
+              } else {
+                Write-Host "❌ Not found: $path" -ForegroundColor Red
+              }
+            }
+      
+      - name: Check Running Python Processes
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Checking Running Python Processes ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $processes = Get-Process python -ErrorAction SilentlyContinue
+            
+            if ($processes) {
+              Write-Host "Found $($processes.Count) Python process(es):" -ForegroundColor Green
+              foreach ($proc in $processes) {
+                Write-Host ""
+                Write-Host "🐍 Process ID: $($proc.Id)" -ForegroundColor White
+                Write-Host "   Path: $($proc.Path)" -ForegroundColor Cyan
+                try {
+                  $cmdLine = (Get-WmiObject Win32_Process -Filter "ProcessId = $($proc.Id)").CommandLine
+                  Write-Host "   Command: $cmdLine" -ForegroundColor Gray
+                } catch {
+                  Write-Host "   Command: Unable to retrieve" -ForegroundColor Yellow
+                }
+              }
+            } else {
+              Write-Host "⚠️  No Python processes currently running" -ForegroundColor Yellow
+              Write-Host "   This is why sync is not working!" -ForegroundColor Red
+            }
+      
+      - name: Check Environment Variables
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host ""
+            Write-Host "=== Checking Environment Variables ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # Check for MONGO_URL
+            $mongoUrl = [Environment]::GetEnvironmentVariable("MONGO_URL", "Machine")
+            if ($mongoUrl) {
+              $maskedUrl = $mongoUrl -replace ':[^@]+@', ':****@'
+              Write-Host "✅ MONGO_URL (Machine): $maskedUrl" -ForegroundColor Green
+            } else {
+              Write-Host "❌ MONGO_URL not set at Machine level" -ForegroundColor Red
+            }
+            
+            # Check for MT5_SERVICE_PATH or similar
+            $servicePath = [Environment]::GetEnvironmentVariable("MT5_SERVICE_PATH", "Machine")
+            if ($servicePath) {
+              Write-Host "✅ MT5_SERVICE_PATH: $servicePath" -ForegroundColor Green
+            }
+      
+      - name: Generate Search Report
+        if: always()
+        run: |
+          echo "# MT5 Sync Script Location Search Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Search Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Was Searched:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ All Python files with 'mt5', 'bridge', or 'account switching' in name" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ Task Scheduler for MT5 tasks and their script paths" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ Common installation directories" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Currently running Python processes" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ Environment variables (MONGO_URL, MT5_SERVICE_PATH)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the output above to find the actual sync script location" >> $GITHUB_STEP_SUMMARY
+          echo "2. If script found: Update workflow files with correct path" >> $GITHUB_STEP_SUMMARY
+          echo "3. If script NOT found: May need to redeploy sync service" >> $GITHUB_STEP_SUMMARY
+          echo "4. If Python NOT running: Need to start the sync service" >> $GITHUB_STEP_SUMMARY
