@@ -385,24 +385,27 @@ async def get_trading_analytics_derived():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.patch("/accounts/{account_id}/assign")
+@router.patch("/accounts/{account_number}/assign")
 async def update_account_assignment(
-    account_id: int,
+    account_number: int,
     assignment_data: Dict[str, Any]
 ):
     """
-    Update account assignment (fund_type, manager, status).
+    ACCOUNTS MANAGEMENT TAB - Update account assignment (fund_type, manager_name, status).
     
-    This is the ONLY place where assignments are edited.
-    All other tabs automatically reflect the changes.
+    This is the ONLY place where assignments are edited in the Single Source of Truth.
+    All other tabs (Fund Portfolio, Money Managers, etc.) automatically reflect these changes.
     
-    Allowed fields: fund_type, manager_name, status, description
+    Allowed editable fields:
+    - fund_type: CORE, BALANCE, SEPARATION, DYNAMIC, UNLIMITED
+    - manager_name: Must match a manager in money_managers collection
+    - status: active or inactive
     """
     try:
         db = await get_database()
         
         # Validate allowed fields
-        allowed_fields = ['fund_type', 'manager_name', 'status', 'description']
+        allowed_fields = ['fund_type', 'manager_name', 'status']
         update_doc = {}
         
         for field, value in assignment_data.items():
@@ -415,26 +418,28 @@ async def update_account_assignment(
             raise HTTPException(status_code=400, detail="No valid assignment fields provided")
         
         # Add timestamp
-        update_doc['last_assignment_update'] = datetime.now(timezone.utc).isoformat()
+        update_doc['last_allocation_update'] = datetime.now(timezone.utc).isoformat()
         
-        # Update the account
+        # Update the account in mt5_accounts (Single Source of Truth)
         result = await db.mt5_accounts.update_one(
-            {"account": account_id, "is_master_account": True},
+            {"account": account_number},
             {"$set": update_doc}
         )
         
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail=f"Account {account_id} not found")
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
         
         # Get updated account
         updated_account = await db.mt5_accounts.find_one(
-            {"account": account_id},
+            {"account": account_number},
             {"_id": 0}
         )
         
+        logger.info(f"✅ Account {account_number} assignment updated: {update_doc}")
+        
         return {
             "success": True,
-            "message": f"Account {account_id} assignment updated",
+            "message": f"Account {account_number} assignment updated successfully",
             "account": updated_account,
             "updated_fields": list(update_doc.keys())
         }
