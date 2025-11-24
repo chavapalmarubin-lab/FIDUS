@@ -19584,12 +19584,15 @@ async def get_fund_portfolio_overview():
             fund_aum = sum(float(inv.get('principal_amount', 0)) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Get MT5 allocations for this fund - PHASE 2 ONLY
-            # Note: MT5 accounts use 'fund_type' field, not 'fund_code'
-            # Only count Phase 2 active or pending accounts
+            # Get MT5 allocations for this fund - ALL ACTIVE ACCOUNTS
+            # Updated: Include all active accounts (15 total) by fund_type
             fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
             total_mt5_allocation = sum(mt5.get('balance', 0) for mt5 in fund_mt5_accounts)
             mt5_account_count = len(fund_mt5_accounts)
+            
+            # Get account details for debugging
+            account_numbers = [acc.get('account') for acc in fund_mt5_accounts]
+            logging.info(f"🔍 DEBUG: {fund_code} fund accounts: {account_numbers} (Total: ${total_mt5_allocation:,.2f})")
             
             # Get weighted performance for this fund
             fund_performance = all_performance.get('funds', {}).get(fund_code, {})
