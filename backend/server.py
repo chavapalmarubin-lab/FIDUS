@@ -60,6 +60,9 @@ from routes.mt5_bridge_proxy import router as mt5_bridge_proxy_router
 # MT5 Health Monitoring Routes (November 2025)
 from routes.mt5_health import router as mt5_health_router
 
+# Bridge Health Monitoring Routes (3-Bridge Architecture)
+from routes.bridge_health import router as bridge_health_router
+
 # System Registry and Health Checks (Phase 1: Technical Documentation)
 from system_registry import (
     SYSTEM_COMPONENTS, 
