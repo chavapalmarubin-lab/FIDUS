@@ -45,42 +45,22 @@ const MoneyManagersDashboard = () => {
       setLoading(true);
       setError("");
 
-      // Try to fetch managers from API
-      try {
-        const response = await apiAxios.get('/admin/money-managers');
-        
-        if (response.data.success) {
-          setManagers(response.data.managers);
-        } else {
-          throw new Error(response.data.error || "Failed to fetch managers");
-        }
-      } catch (apiError) {
-        // If API fails, try to initialize managers first
-        console.warn("Managers API not ready, attempting initialization...");
-        
-        try {
-          const initResponse = await apiAxios.post('/admin/money-managers/initialize');
-          if (initResponse.data.success) {
-            // After successful initialization, try to fetch again
-            const fetchResponse = await apiAxios.get('/admin/money-managers');
-            if (fetchResponse.data.success) {
-              setManagers(fetchResponse.data.managers);
-            } else {
-              throw new Error("Failed to fetch after initialization");
-            }
-          } else {
-            throw new Error("Failed to initialize managers");
-          }
-        } catch (initError) {
-          console.warn("API returned no manager data");
-          setManagers([]);
-          setError("No money manager data available");
-        }
+      // Fetch managers from new SSOT endpoint
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/money-managers`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Convert managers object to array for easier iteration
+        const managersArray = Object.values(data.managers);
+        setManagers(managersArray);
+      } else {
+        throw new Error(data.message || "Failed to fetch managers");
       }
 
     } catch (err) {
       console.error("Money managers fetch error:", err);
       setError("Failed to load money managers data");
+      setManagers([]);
     } finally {
       setLoading(false);
     }
