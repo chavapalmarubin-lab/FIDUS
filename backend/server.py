@@ -7323,7 +7323,7 @@ async def extract_text_sync(file: UploadFile = File(...)):
                     "document_number": "123456789",
                     "nationality": "USA",
                     "date_of_birth": "01/01/1980",
-                    "sex": "mongodb+srv://USER:PASS@HOST/DB"
+                    "sex": "M",
                     "date_of_expiry": "01/01/2025"
                 },
                 "validation_errors": []
