@@ -289,13 +289,17 @@ async def get_money_managers_derived():
             total_allocation += allocation
             total_balance += balance
         
+        total_pnl = total_balance - total_allocation
+        
         return {
             "success": True,
             "managers": manager_data,
             "summary": {
                 "total_managers": len(manager_data),
                 "active_managers": sum(1 for m in manager_data.values() if m['active_accounts'] > 0),
+                "total_allocation": total_allocation,
                 "total_balance": total_balance,
+                "total_pnl": total_pnl,
                 "avg_accounts_per_manager": sum(m['account_count'] for m in manager_data.values()) / len(manager_data) if manager_data else 0,
                 "last_updated": datetime.now(timezone.utc).isoformat()
             }
