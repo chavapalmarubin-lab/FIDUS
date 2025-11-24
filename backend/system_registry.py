@@ -87,7 +87,7 @@ SYSTEM_COMPONENTS = {
             'type': 'database',
             'category': 'Data Layer',
             'status': 'online',
-            'url': '"[CLEANED_MONGO_URL]"
+            'url': 'mongodb+srv://[CLEANED]@fidus.y1p9be2.mongodb.net',
             'platform': 'MongoDB Atlas (AWS)',
             'description': 'Primary database storing all application data',
             'tech_stack': ['MongoDB 7.0+', 'Atlas Cloud'],
