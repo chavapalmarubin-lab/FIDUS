@@ -96,7 +96,7 @@ jobs:
             @"
 import sys
 from pymongo import MongoClient
-mongo_url = 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'
+mongo_url = '${{ secrets.MONGO_URL }}
 client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
 db = client.get_database()
 client.admin.command('ping')

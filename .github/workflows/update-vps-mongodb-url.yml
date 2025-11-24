@@ -62,7 +62,7 @@ jobs:
             @"
 import sys
 from pymongo import MongoClient
-mongo_url = 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'
+mongo_url = '${{ secrets.MONGO_URL }}
 client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
 db = client.get_database()
 client.admin.command('ping')
@@ -92,7 +92,7 @@ client.close()
             Write-Host ""
             
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_account_switching.py"
-            $correctUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+            $correctUrl = "${{ secrets.MONGO_URL }}"
             
             if (Test-Path $scriptPath) {
               # Backup original
@@ -133,7 +133,7 @@ client.close()
             Write-Host "=== Setting System Environment Variable ===" -ForegroundColor Cyan
             Write-Host ""
             
-            $mongoUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
+            $mongoUrl = "${{ secrets.MONGO_URL }}"
             
             try {
               [Environment]::SetEnvironmentVariable("MONGO_URL", $mongoUrl, "Machine")

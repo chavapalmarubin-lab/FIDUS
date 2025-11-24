@@ -73,7 +73,7 @@ jobs:
                 allow_headers=["*"],
             )
             
-            MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+            MONGO_URL = "${{ secrets.MONGO_URL }}"
             mongo_client = None
             db = None
             MT5_INITIALIZED = False

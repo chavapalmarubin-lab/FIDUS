@@ -117,7 +117,7 @@ jobs:
             Write-Host '═══ STEP 4: CREATE .ENV FILE ═══' -ForegroundColor Yellow
             
             `$envContent = @'
-MONGODB_URI=mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production
+MONGODB_URI=${{ secrets.MONGO_URL }}
 MT5_PASSWORD=Fidus13!
 '@
             

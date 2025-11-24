@@ -22,7 +22,7 @@ jobs:
       
       - name: Update Salvador's Total
         env:
-          MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+          MONGO_URL: ${{ secrets.MONGO_URL }}
         run: |
           cd backend
           echo "🔧 Updating Salvador's total sales volume..."

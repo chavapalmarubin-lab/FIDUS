@@ -39,7 +39,7 @@ jobs:
             
             # Create correct .env
             \$envContent = @'
-MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_URI=${{ secrets.MONGO_URL }}
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 MT5_SERVER=MEXAtlantic-Real
 MT5_ACCOUNT=886557
