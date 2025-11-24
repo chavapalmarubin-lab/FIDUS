@@ -451,21 +451,25 @@ async def update_account_assignment(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/validation")
-async def validate_single_source():
+@router.get("/health/ssot")
+async def validate_ssot_architecture():
     """
-    Validate that single source of truth is working correctly.
+    SSOT HEALTH CHECK - Validate that Single Source of Truth architecture is working correctly.
     
-    Checks data consistency and completeness.
+    Checks:
+    1. All 15 accounts exist in mt5_accounts
+    2. Required fields are populated
+    3. money_managers collection has NO account lists (SSOT rule)
+    4. Data completeness across platforms, brokers, funds, managers
     """
     try:
         db = await get_database()
         
-        # Count master accounts
-        total_accounts = await db.mt5_accounts.count_documents({"is_master_account": True})
+        # Check 1: Count all accounts
+        total_accounts = await db.mt5_accounts.count_documents({})
         
-        # Check required fields
-        accounts = await db.mt5_accounts.find({"is_master_account": True}).to_list(100)
+        # Check 2: Validate required fields
+        accounts = await db.mt5_accounts.find({}).to_list(100)
         
         required_fields = ['account', 'platform', 'broker', 'fund_type', 'manager_name', 'status']
         validation_results = []
@@ -480,29 +484,43 @@ async def validate_single_source():
             if account_validation["issues"]:
                 validation_results.append(account_validation)
         
-        # Summary
-        platforms = await db.mt5_accounts.distinct("platform", {"is_master_account": True})
-        brokers = await db.mt5_accounts.distinct("broker", {"is_master_account": True})
-        funds = await db.mt5_accounts.distinct("fund_type", {"is_master_account": True})
-        managers = await db.mt5_accounts.distinct("manager_name", {"is_master_account": True})
+        # Check 3: Verify money_managers has NO account lists (SSOT violation)
+        managers_with_accounts = await db.money_managers.count_documents({'assigned_accounts': {'$exists': True}})
+        ssot_violation = managers_with_accounts > 0
+        
+        # Check 4: Data completeness
+        platforms = await db.mt5_accounts.distinct("platform", {})
+        brokers = await db.mt5_accounts.distinct("broker", {})
+        funds = await db.mt5_accounts.distinct("fund_type", {})
+        managers = await db.mt5_accounts.distinct("manager_name", {})
         
         return {
             "success": True,
+            "ssot_architecture_status": "HEALTHY" if not ssot_violation and len(validation_results) == 0 else "ISSUES_DETECTED",
             "validation": {
                 "total_accounts": total_accounts,
                 "expected_accounts": 15,
                 "accounts_valid": total_accounts == 15,
                 "issues_found": len(validation_results),
-                "accounts_with_issues": validation_results,
+                "accounts_with_issues": validation_results if validation_results else None,
+                "ssot_violation": {
+                    "violated": ssot_violation,
+                    "managers_with_account_lists": managers_with_accounts,
+                    "message": "❌ SSOT VIOLATION: money_managers should NOT store account lists" if ssot_violation else "✅ SSOT COMPLIANT: money_managers has metadata only"
+                },
                 "data_completeness": {
                     "platforms": sorted(platforms),
+                    "platform_count": len(platforms),
                     "brokers": sorted(brokers),
-                    "funds": sorted(funds),
-                    "managers": sorted(managers)
+                    "broker_count": len(brokers),
+                    "fund_types": sorted(funds),
+                    "fund_count": len(funds),
+                    "managers": sorted(managers),
+                    "manager_count": len(managers)
                 }
             }
         }
         
     except Exception as e:
-        logger.error(f"❌ Error validating single source: {e}")
+        logger.error(f"❌ Error validating SSOT architecture: {e}")
         raise HTTPException(status_code=500, detail=str(e))
