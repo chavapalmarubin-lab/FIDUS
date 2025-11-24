@@ -99,7 +99,7 @@ export default function AccountsManagement() {
                 description: editingAccount.description || ''
             };
 
-            const response = await fetch(`${BACKEND_URL}/api/master/accounts/${editingAccount.account}/assign`, {
+            const response = await fetch(`${BACKEND_URL}/api/v2/accounts/${editingAccount.account}/assign`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
