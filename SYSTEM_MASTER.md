@@ -1249,9 +1249,11 @@ Salesperson 3: Test Referral Person ✅
  
 📊 EXPECTED SYSTEM TOTALS
 Portfolio Overview:
-•	Total AUM: $118,151.41
+•	Total AUM: $129,450.66 (includes LUCRUM $11,299.25)
 •	Active Managers: 6
-•	Total Accounts: 12
+•	Total MT5 Accounts: 14 (13 MEXAtlantic + 1 LUCRUM)
+•	Total MT4 Accounts: 1 (MEXAtlantic)
+•	Total Trading Accounts: 15
 •	Active Funds: 2 (BALANCE, CORE)
 Money Manager Rankings:
 Rank 1: UNO14 Manager (BALANCE)
