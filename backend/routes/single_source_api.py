@@ -252,19 +252,26 @@ async def get_money_managers_derived():
         
         # Format for frontend
         manager_data = {}
+        total_allocation = 0
         total_balance = 0
         
         for manager in managers:
             manager_name = manager['_id']
             metadata = manager.get('manager_metadata', {})
+            allocation = manager.get('total_allocation', 0)
+            balance = manager['total_balance']
+            equity = manager['total_equity']
+            pnl = balance - allocation
             
             manager_data[manager_name] = {
                 "manager_name": manager_name,
                 "account_count": manager['account_count'],
                 "active_accounts": manager['active_accounts'],
                 "accounts": manager['accounts'],
-                "total_balance": manager['total_balance'],
-                "total_equity": manager['total_equity'],
+                "total_allocation": allocation,
+                "total_balance": balance,
+                "total_equity": equity,
+                "total_pnl": pnl,
                 "funds": manager['funds'],
                 "platforms": manager['platforms'], 
                 "brokers": manager['brokers'],
@@ -275,11 +282,12 @@ async def get_money_managers_derived():
                 "performance_fee_rate": metadata.get('performance_fee_rate', 0),
                 "notes": metadata.get('notes', ''),
                 "performance": {
-                    "total_pnl": manager['total_equity'] - manager['total_balance'],
-                    "roi_percentage": (manager['total_equity'] - manager['total_balance']) / manager['total_balance'] * 100 if manager['total_balance'] > 0 else 0
+                    "pnl": pnl,
+                    "roi_percentage": (pnl / allocation * 100) if allocation > 0 else 0
                 }
             }
-            total_balance += manager['total_balance']
+            total_allocation += allocation
+            total_balance += balance
         
         return {
             "success": True,
