@@ -104,17 +104,18 @@ const FundPortfolioManagement = () => {
     try {
       setLoading(true);
       
-      // Fetch fund overview data
-      const fundsResponse = await apiAxios.get(`/fund-portfolio/overview`);
-      const portfolioResponse = await apiAxios.get(`/fund-portfolio/overview`);
+      // Fetch fund overview data from new SSOT endpoint
+      const response = await fetch(`${BACKEND_URL}/api/v2/derived/fund-portfolio`);
+      const data = await response.json();
       
-      if (fundsResponse.data.success) {
-        setFundData(fundsResponse.data.funds);
-        setPortfolioStats(portfolioResponse.data);
-        generatePerformanceData(fundsResponse.data.funds);
+      if (data.success) {
+        setFundData(data.funds);
+        setPortfolioStats(data.summary);
+        generatePerformanceData(data.funds);
       }
     } catch (err) {
       setError("Failed to load fund portfolio data");
+      console.error('Error fetching fund portfolio:', err);
     } finally {
       setLoading(false);
     }
