@@ -306,8 +306,9 @@ export default function AccountsManagement() {
                                     <th className="text-left p-2">Broker</th>
                                     <th className="text-left p-2">Fund Type</th>
                                     <th className="text-left p-2">Manager</th>
+                                    <th className="text-right p-2">Allocation</th>
                                     <th className="text-right p-2">Balance</th>
-                                    <th className="text-right p-2">Equity</th>
+                                    <th className="text-right p-2">P&L</th>
                                     <th className="text-center p-2">Status</th>
                                     <th className="text-center p-2">Actions</th>
                                 </tr>
