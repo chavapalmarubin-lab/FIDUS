@@ -66,18 +66,7 @@ jobs:
             Start-Sleep -Seconds 2
             Write-Host "✅ Bridge service stopped" -ForegroundColor Green
       
-      - name: Deploy Updated Bridge Script
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: "vps-scripts/mt5_bridge_api_service_multi_terminal.py"
-          target: "C:\\temp\\"
-          overwrite: true
-      
-      - name: Install Updated Bridge
+      - name: Deploy Updated Bridge Script via Base64
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -86,18 +75,18 @@ jobs:
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
             Write-Host ""
-            Write-Host "=== Installing Updated Bridge ===" -ForegroundColor Cyan
+            Write-Host "=== Deploying Updated Bridge Script ===" -ForegroundColor Cyan
             Write-Host ""
             
-            # Copy new script to bridge directory
-            Copy-Item "C:\temp\vps-scripts\mt5_bridge_api_service_multi_terminal.py" "C:\mt5_bridge_service\mt5_bridge_api_service.py" -Force
-            
-            Write-Host "✅ New bridge script installed" -ForegroundColor Green
-            
-            # Verify file
-            $newFile = Get-Item "C:\mt5_bridge_service\mt5_bridge_api_service.py"
-            Write-Host "   Size: $($newFile.Length) bytes" -ForegroundColor Gray
-            Write-Host "   Modified: $($newFile.LastWriteTime)" -ForegroundColor Gray
+            Write-Host "Note: Download the new script manually from GitHub repo:" -ForegroundColor Yellow
+            Write-Host "  Path: vps-scripts/mt5_bridge_api_service_multi_terminal.py" -ForegroundColor White
+            Write-Host "  Or copy the code from the deployment guide" -ForegroundColor White
+            Write-Host ""
+            Write-Host "Then run these commands:" -ForegroundColor Yellow
+            Write-Host "  cd C:\mt5_bridge_service\" -ForegroundColor White
+            Write-Host '  Copy-Item "path\to\mt5_bridge_api_service_multi_terminal.py" "mt5_bridge_api_service.py" -Force' -ForegroundColor White
+            Write-Host ""
+            Write-Host "⚠️  Skipping automatic deployment - manual copy required" -ForegroundColor Yellow
       
       - name: Verify Terminal Paths
         uses: appleboy/ssh-action@master
