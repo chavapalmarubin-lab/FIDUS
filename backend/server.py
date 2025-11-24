@@ -19557,16 +19557,22 @@ async def get_fund_portfolio_overview():
         investments_cursor = db.investments.find({})
         all_investments = await investments_cursor.to_list(length=None)
         
-        # Get MT5 accounts for allocation details - PHASE 2 ONLY
-        # Filter for Phase 2 accounts (active or pending real-time data)
+        # Get MT5 accounts for allocation details - ALL ACTIVE ACCOUNTS (15 total)
+        # Updated for Phase 2: Include all active accounts regardless of phase
         mt5_cursor = db.mt5_accounts.find({
-            "phase": "Phase 2",
             "$or": [
                 {"status": "active"},
-                {"status": "pending_real_time_data"}
+                {"status": {"$exists": False}}  # Legacy accounts without status field
             ]
         })
         all_mt5_accounts = await mt5_cursor.to_list(length=None)
+        
+        logging.info(f"🔍 DEBUG: Found {len(all_mt5_accounts)} total MT5/MT4 accounts")
+        
+        # Filter accounts by fund type for debugging
+        for fund_code in ["CORE", "BALANCE", "SEPARATION"]:
+            fund_accounts = [acc for acc in all_mt5_accounts if acc.get('fund_type') == fund_code]
+            logging.info(f"🔍 DEBUG: {fund_code} fund has {len(fund_accounts)} accounts")
         
         # Get weighted performance for all funds
         all_performance = await get_all_funds_performance(db)
