@@ -7323,7 +7323,7 @@ async def extract_text_sync(file: UploadFile = File(...)):
                     "document_number": "123456789",
                     "nationality": "USA",
                     "date_of_birth": "01/01/1980",
-                    "sex": "M",
+                    "sex": "mongodb+srv://USER:PASS@HOST/DB"
                     "date_of_expiry": "01/01/2025"
                 },
                 "validation_errors": []
@@ -25835,7 +25835,7 @@ async def upload_client_document_to_fidus(
         
         if not client:
             # Additional debug: check for alternative ID formats
-            alternative_client = await db.clients.find_one({"client_id": client_id}) or await db.clients.find_one({"username": client_name.lower().replace(" ", "_")})
+            alternative_client = await db.clients.find_one({"client_id": client_id}) or await db.clients.find_one({"username": client_name.lower().replace(" ", "mongodb+srv://USER:PASS@HOST/DB"
             logging.info(f"🔍 DEBUG: Alternative client lookup - Found: {alternative_client is not None}")
             
             return {
