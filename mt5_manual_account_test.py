@@ -23,7 +23,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://mt5-sync.preview.emergentagent.com/api"
+BACKEND_URL = "https://securedash-5.preview.emergentagent.com/api"
 
 class MT5ManualAccountTester:
     def __init__(self):

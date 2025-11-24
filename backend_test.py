@@ -30,7 +30,7 @@ from typing import Dict, Any, List, Optional
 
 class FidusCommissionTester:
     def __init__(self):
-        self.base_url = "https://mt5-sync.preview.emergentagent.com/api"
+        self.base_url = "https://securedash-5.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

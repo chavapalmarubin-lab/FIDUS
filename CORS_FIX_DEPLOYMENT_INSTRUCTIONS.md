@@ -9,7 +9,7 @@
 ## 🔍 ROOT CAUSE IDENTIFIED
 
 **Problem:**
-- Frontend `.env` currently points to: `https://mt5-sync.preview.emergentagent.com`
+- Frontend `.env` currently points to: `https://securedash-5.preview.emergentagent.com`
 - Should point to production: `https://fidus-api.onrender.com`
 
 **Impact:**
@@ -44,7 +44,7 @@ Since `.env` files are not committed to GitHub (in `.gitignore`), the environmen
 2. Click on the service name
 3. Go to "Environment" tab (left sidebar)
 4. Find variable: `REACT_APP_BACKEND_URL`
-5. Current value: `https://mt5-sync.preview.emergentagent.com` ❌
+5. Current value: `https://securedash-5.preview.emergentagent.com` ❌
 6. Change to: `https://fidus-api.onrender.com` ✅
 7. Click "Save Changes" button
 
@@ -94,7 +94,7 @@ curl https://fidus-api.onrender.com/api/admin/referrals/overview
 ## 📊 EXPECTED RESULTS AFTER FIX
 
 ### Before Fix (Current State):
-- ❌ Frontend calling: `https://mt5-sync.preview.emergentagent.com`
+- ❌ Frontend calling: `https://securedash-5.preview.emergentagent.com`
 - ❌ CORS errors in console
 - ❌ Salvador shows: $0 total sales, $0 commissions
 - ❌ Referrals page broken or empty

@@ -22,7 +22,7 @@
 ```python
 cors_origins = [
     "https://fidus-investment-platform.onrender.com",  # ✅ PRESENT
-    "https://mt5-sync.preview.emergentagent.com",
+    "https://securedash-5.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:3001"
 ]

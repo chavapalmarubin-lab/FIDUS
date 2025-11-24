@@ -162,7 +162,7 @@ TOTAL: $21,438.67 ✅
 ## 📋 Testing Protocol
 
 ### For Manual Testing:
-1. **Login as Admin** at: https://mt5-sync.preview.emergentagent.com
+1. **Login as Admin** at: https://securedash-5.preview.emergentagent.com
 2. **Navigate** to Cash Flow Management
 3. **Expected Results:**
    - Total MT5 Trading P&L: **$628.74**

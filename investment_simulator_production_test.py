@@ -19,7 +19,7 @@ from datetime import datetime
 
 class ProductionInvestmentTester:
     def __init__(self):
-        self.base_url = "https://mt5-sync.preview.emergentagent.com/api"
+        self.base_url = "https://securedash-5.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.client_token = None
