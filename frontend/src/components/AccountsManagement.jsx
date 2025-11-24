@@ -51,7 +51,7 @@ export default function AccountsManagement() {
     const fetchAccounts = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${BACKEND_URL}/api/master/accounts`);
+            const response = await fetch(`${BACKEND_URL}/api/v2/accounts/all`);
             const data = await response.json();
             
             if (data.success) {
