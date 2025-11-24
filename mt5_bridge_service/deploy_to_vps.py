@@ -16,7 +16,7 @@ class VPSDeployer:
     def __init__(self):
         self.vps_ip = "217.197.163.11"
         self.vps_user = "chavapalmarubin@gmail.com" 
-        self.vps_password = "2170Tenoch!"
+        self.vps_password = ""CLEANED_PASSWORD""
         self.service_dir = "C:\\mt5_bridge_service"
         
     def create_deployment_package(self):

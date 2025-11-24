@@ -164,7 +164,7 @@ def print_vps_setup_reminder():
     print("1. 🖥️ Connect to Windows VPS:")
     print("   - IP: 92.118.45.135")
     print("   - Username: chavapalmarubin@gmail.com")
-    print("   - Password: 2170Tenoch!")
+    print("   - Password: "CLEANED_PASSWORD"")
     print()
     print("2. 📦 Upload files from /app/mt5_bridge_service/ to VPS:")
     print("   - main_production.py")
