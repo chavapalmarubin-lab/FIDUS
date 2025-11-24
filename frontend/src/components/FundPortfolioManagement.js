@@ -109,9 +109,27 @@ const FundPortfolioManagement = () => {
       const data = await response.json();
       
       if (data.success) {
-        setFundData(data.funds);
-        setPortfolioStats(data.summary);
-        generatePerformanceData(data.funds);
+        // Map new API structure to expected format
+        const mappedFunds = {};
+        Object.entries(data.funds).forEach(([fundCode, fund]) => {
+          mappedFunds[fundCode] = {
+            ...fund,
+            aum: fund.total_balance || 0,  // Map total_balance to aum for backward compatibility
+            current_aum: fund.total_balance || 0,
+            total_investors: fund.account_count || 0,
+            fund_code: fundCode
+          };
+        });
+        
+        const mappedStats = {
+          ...data.summary,
+          aum: data.summary.total_aum || 0,  // Map total_aum to aum for backward compatibility
+          ytd_return: 0  // Will be calculated later
+        };
+        
+        setFundData(mappedFunds);
+        setPortfolioStats(mappedStats);
+        generatePerformanceData(mappedFunds);
       }
     } catch (err) {
       setError("Failed to load fund portfolio data");
