@@ -10,12 +10,16 @@ Provides comprehensive health monitoring for the 3-bridge architecture:
 Total: 15 accounts
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone, timedelta
 import os
 import logging
+import sys
+
+sys.path.append('/app/backend')
+from services.bridge_monitoring_service import get_monitoring_service
 
 logger = logging.getLogger(__name__)
 
