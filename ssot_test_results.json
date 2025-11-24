@@ -1,0 +1,196 @@
+{
+  "summary": {
+    "total_tests": 23,
+    "passed": 22,
+    "failed": 1,
+    "success_rate": 95.65217391304348,
+    "total_time": 37.45481777191162,
+    "timestamp": "2025-11-24T22:24:20.933369"
+  },
+  "results": [
+    {
+      "test": "Health Check - Account Count",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Total accounts: 15 \u2713",
+      "response_time_ms": 12017.01,
+      "timestamp": "2025-11-24T22:23:55.495451"
+    },
+    {
+      "test": "Health Check - SSOT Compliance",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "No SSOT violations detected \u2713",
+      "response_time_ms": 12017.01,
+      "timestamp": "2025-11-24T22:23:55.495493"
+    },
+    {
+      "test": "Health Check - Data Completeness",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Platforms: ['MT4', 'MT5'], Brokers: ['LUCRUM Capital', 'MEXAtlantic'] \u2713",
+      "response_time_ms": 12017.01,
+      "timestamp": "2025-11-24T22:23:55.495510"
+    },
+    {
+      "test": "Accounts All - Count",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "15 accounts returned \u2713",
+      "response_time_ms": 561.22,
+      "timestamp": "2025-11-24T22:23:56.059481"
+    },
+    {
+      "test": "Accounts All - Required Fields",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "All 15 accounts have required fields \u2713",
+      "response_time_ms": 561.22,
+      "timestamp": "2025-11-24T22:23:56.059552"
+    },
+    {
+      "test": "Accounts All - Summary",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Summary complete: 15 total, 13 active \u2713",
+      "response_time_ms": 561.22,
+      "timestamp": "2025-11-24T22:23:56.059567"
+    },
+    {
+      "test": "Fund Portfolio - Fund Types",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Found expected funds: ['BALANCE', 'CORE', 'SEPARATION'] \u2713",
+      "response_time_ms": 535.44,
+      "timestamp": "2025-11-24T22:23:56.595335"
+    },
+    {
+      "test": "Fund Portfolio - CORE Fund",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "CORE fund has expected accounts: [885822, 897590] \u2713",
+      "response_time_ms": 535.44,
+      "timestamp": "2025-11-24T22:23:56.595393"
+    },
+    {
+      "test": "Fund Portfolio - BALANCE Fund",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "BALANCE fund has 7 accounts \u2713",
+      "response_time_ms": 535.44,
+      "timestamp": "2025-11-24T22:23:56.595404"
+    },
+    {
+      "test": "Fund Portfolio - SEPARATION Fund",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "SEPARATION fund has 4 accounts \u2713",
+      "response_time_ms": 535.44,
+      "timestamp": "2025-11-24T22:23:56.595413"
+    },
+    {
+      "test": "Money Managers - Count",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "9 managers found \u2713",
+      "response_time_ms": 442.72,
+      "timestamp": "2025-11-24T22:23:57.038261"
+    },
+    {
+      "test": "Money Managers - Expected Names",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Found expected managers: ['CP Strategy', 'TradingHub Gold', 'UNO14 Manager'] \u2713",
+      "response_time_ms": 442.72,
+      "timestamp": "2025-11-24T22:23:57.038306"
+    },
+    {
+      "test": "Money Managers - Data Structure",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "All managers have required fields \u2713",
+      "response_time_ms": 442.72,
+      "timestamp": "2025-11-24T22:23:57.038328"
+    },
+    {
+      "test": "Cash Flow - Active Accounts",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "13 active accounts found \u2713",
+      "response_time_ms": 569.84,
+      "timestamp": "2025-11-24T22:23:57.610648"
+    },
+    {
+      "test": "Cash Flow - Summary Data",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Balance: $83,702.31, Equity: $82,319.27, P&L: $-1,383.04 \u2713",
+      "response_time_ms": 569.84,
+      "timestamp": "2025-11-24T22:23:57.610702"
+    },
+    {
+      "test": "Trading Analytics - Structure",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "All required analytics sections present \u2713",
+      "response_time_ms": 1897.87,
+      "timestamp": "2025-11-24T22:23:59.508925"
+    },
+    {
+      "test": "Trading Analytics - Overview",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Overview complete: 13 accounts, P&L: $-1,383.04 \u2713",
+      "response_time_ms": 1897.87,
+      "timestamp": "2025-11-24T22:23:59.508982"
+    },
+    {
+      "test": "Trading Analytics - Breakdowns",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Fund breakdown: 3 funds, Manager breakdown: 9 managers \u2713",
+      "response_time_ms": 1897.87,
+      "timestamp": "2025-11-24T22:23:59.508994"
+    },
+    {
+      "test": "Account Assignment - Update Applied",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Account 885822 updated successfully: ['fund_type', 'manager_name', 'status', 'last_allocation_update'] \u2713",
+      "response_time_ms": 6892.11,
+      "timestamp": "2025-11-24T22:24:06.401223"
+    },
+    {
+      "test": "Account Assignment - Verification",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "Changes verified in accounts/all endpoint \u2713",
+      "response_time_ms": 6892.11,
+      "timestamp": "2025-11-24T22:24:15.568320"
+    },
+    {
+      "test": "Error Handling - Invalid Account",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "404 returned for invalid account number \u2713",
+      "response_time_ms": 4868.56,
+      "timestamp": "2025-11-24T22:24:20.437243"
+    },
+    {
+      "test": "Error Handling - Invalid Fund Type",
+      "status": "\u274c FAIL",
+      "success": false,
+      "details": "Expected 400/422, got 200",
+      "response_time_ms": 448.58,
+      "timestamp": "2025-11-24T22:24:20.885875"
+    },
+    {
+      "test": "Error Handling - Missing Fields",
+      "status": "\u2705 PASS",
+      "success": true,
+      "details": "400 returned for missing fields \u2713",
+      "response_time_ms": 47.13,
+      "timestamp": "2025-11-24T22:24:20.933056"
+    }
+  ]
+}
