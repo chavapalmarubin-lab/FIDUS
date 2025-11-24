@@ -92,45 +92,9 @@ jobs:
             Write-Host "=== Testing MongoDB Connection ===" -ForegroundColor Cyan
             Write-Host ""
             
-            # Test Python MongoDB connection
-            $pythonScript = @'
-import sys
-try:
-    from pymongo import MongoClient
-    import os
-    
-    # Get MongoDB URL from environment or use default
-    mongo_url = os.environ.get("MONGO_URL", "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
-    
-    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
-    db = client.get_database()
-    
-    # Test connection
-    client.admin.command("ping")
-    print("✅ MongoDB connection: SUCCESS")
-    
-    # Check for account 2198 in mt5_account_config
-    account = db.mt5_account_config.find_one({"account": 2198})
-    if account:
-        print(f"✅ Account 2198 found in mt5_account_config")
-        print(f"   - Name: {account.get('name')}")
-        print(f"   - Server: {account.get('server')}")
-        print(f"   - Broker: {account.get('broker')}")
-        print(f"   - Active: {account.get('is_active')}")
-    else:
-        print("❌ Account 2198 NOT found in mt5_account_config")
-    
-    # Check total active accounts
-    total = db.mt5_account_config.count_documents({"is_active": True})
-    print(f"\nℹ️  Total active accounts in config: {total}")
-    
-    client.close()
-except Exception as e:
-    print(f"❌ MongoDB connection FAILED: {e}")
-    sys.exit(1)
-'@
+            $pythonCode = "import sys; from pymongo import MongoClient; mongo_url='mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'; client=MongoClient(mongo_url, serverSelectionTimeoutMS=5000); db=client.get_database(); client.admin.command('ping'); print('MongoDB connection: SUCCESS'); account=db.mt5_account_config.find_one({'account':2198}); print(f'Account 2198: {account.get(\"name\") if account else \"NOT FOUND\"}'); print(f'Active: {account.get(\"is_active\") if account else \"N/A\"}'); total=db.mt5_account_config.count_documents({'is_active':True}); print(f'Total active accounts: {total}'); client.close()"
             
-            $pythonScript | python -
+            python -c $pythonCode
       
       - name: Check MT5 API Response
         uses: appleboy/ssh-action@master
