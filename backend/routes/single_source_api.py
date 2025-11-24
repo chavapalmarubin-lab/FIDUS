@@ -221,8 +221,10 @@ async def get_money_managers_derived():
                     "fund_type": "$fund_type",
                     "balance": "$balance",
                     "equity": "$equity",
+                    "initial_allocation": "$initial_allocation",
                     "status": "$status"
                 }},
+                "total_allocation": {"$sum": "$initial_allocation"},
                 "total_balance": {"$sum": "$balance"},
                 "total_equity": {"$sum": "$equity"},
                 "funds": {"$addToSet": "$fund_type"},
