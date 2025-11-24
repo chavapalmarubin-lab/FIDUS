@@ -557,6 +557,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="mt5-accounts" className="flex-shrink-0">
               📈 MT5 Accounts
             </TabsTrigger>
+            <TabsTrigger value="bridge-health" className="flex-shrink-0">
+              🔌 Bridge Monitor
+            </TabsTrigger>
             <TabsTrigger value="clients" className="flex-shrink-0">
               <Users size={16} className="mr-2" />
               Clients
