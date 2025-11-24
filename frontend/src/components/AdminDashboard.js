@@ -37,6 +37,7 @@ import SimpleIndividualGoogleWorkspace from './SimpleIndividualGoogleWorkspace';
 import TechnicalDocumentation from './TechnicalDocumentation';
 import Phase4Documentation from './Phase4Documentation';
 import Referrals from '../pages/admin/Referrals';
+import BridgeHealthMonitor from './BridgeHealthMonitor';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
