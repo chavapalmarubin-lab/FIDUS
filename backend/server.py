@@ -27927,6 +27927,13 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include Investment Committee router: {e}")
 
+# Import and include bridge health monitoring router (3-Bridge Architecture)
+try:
+    app.include_router(bridge_health_router)
+    logging.info("✅ Bridge Health Monitoring router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Bridge Health Monitoring router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
