@@ -509,6 +509,295 @@ System:
 22.	system_health - Health monitoring
 9.2 Critical Collections Detail
 See FIELD_REGISTRY.md for complete field definitions for all collections.
+
+9.3 SINGLE SOURCE OF TRUTH ARCHITECTURE
+Last Updated: November 24, 2025
+Status: ✅ Production Implementation
+
+9.3.1 Overview
+FIDUS implements a Single Source of Truth (SSOT) pattern where ALL account data flows from one master collection. This eliminates data duplication, prevents synchronization issues, and ensures data consistency across all dashboard views.
+
+9.3.2 Architecture Diagram
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    MASTER ACCOUNTS TABLE (Source of Truth)                  │
+│                       Collection: mt5_accounts                              │
+│                                                                             │
+│  All MT5/MT4 accounts with: platform, broker, fund_type, manager_name      │
+│  Real-time data from VPS bridges (balance, equity, positions)              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+┌─────────────────────────────────┐   ┌─────────────────────────────────────┐
+│  MONEY MANAGERS COLLECTION      │   │  DERIVED VIEWS (Read Only)          │
+│  (Manager metadata ONLY)        │   │                                     │
+│                                 │   │  - Accounts Management (editable)   │
+│  - profile_url                  │   │  - Fund Portfolio (by fund_type)    │
+│  - rating_url                   │   │  - Money Managers (by manager_name) │
+│  - execution_method             │   │  - Cash Flow (all accounts)         │
+│  - performance_fee_rate         │   │  - Trading Analytics (all accounts) │
+│  - notes                        │   │                                     │
+│                                 │   │  All query mt5_accounts collection  │
+│  Links to accounts via          │   │  + join with money_managers         │
+│  manager_name field             │   │                                     │
+└─────────────────────────────────┘   └─────────────────────────────────────┘
+```
+
+9.3.3 Data Flow
+```
+VPS Bridges (3 scripts on Windows VPS)
+    │
+    │  Sync every 120 seconds
+    ▼
+┌─────────────────────────────────┐
+│  MongoDB: mt5_accounts          │ ◄── Source of Truth (account data)
+│  - Account identity             │
+│  - Real-time balance/equity     │
+│  - Assignments (fund_type,      │
+│    manager_name, status)        │
+└─────────────────────────────────┘
+    │
+    │  Linked via manager_name field
+    ▼
+┌─────────────────────────────────┐
+│  MongoDB: money_managers        │ ◄── Manager metadata (NO account data)
+│  - profile_url, rating_url      │
+│  - execution_method             │
+│  - performance_fee_rate         │
+└─────────────────────────────────┘
+    │
+    │  All tabs query mt5_accounts + join money_managers for metadata
+    ▼
+┌─────────────┬─────────────┬─────────────┬─────────────┐
+│ Accounts    │ Fund        │ Money       │ Cash Flow   │
+│ Management  │ Portfolio   │ Managers    │ & Analytics │
+│ (editable)  │ (derived)   │ (derived)   │ (derived)   │
+└─────────────┴─────────────┴─────────────┴─────────────┘
+```
+
+9.3.4 Collection: mt5_accounts (Source of Truth)
+**Purpose:** Master table for ALL account data - identity, assignments, and real-time metrics
+
+**Schema:**
+```javascript
+{
+  // ===== IDENTITY =====
+  account: 885822,                    // MT5/MT4 account number (unique)
+  platform: "MT5",                    // Platform type: "MT5" or "MT4"
+  broker: "MEXAtlantic",              // Broker name
+  server: "MEXAtlantic-Real",         // Server name
+  
+  // ===== ASSIGNMENTS (Editable in Accounts Management Tab) =====
+  fund_type: "CORE",                  // Fund assignment: CORE, BALANCE, SEPARATION, DYNAMIC, UNLIMITED
+  manager_name: "CP Strategy",        // Manager assignment (links to money_managers)
+  status: "active",                   // Account status: "active" or "inactive"
+  
+  // ===== REAL-TIME DATA (From VPS Bridges) =====
+  balance: 20510.43,                  // Account balance (USD)
+  equity: 20510.43,                   // Account equity (USD)
+  margin: 0,                          // Used margin (USD)
+  free_margin: 20510.43,              // Free margin (USD)
+  profit: 0,                          // Floating profit/loss (USD)
+  
+  // ===== POSITIONS & TRADES =====
+  open_positions: [],                 // Array of open positions
+  open_positions_count: 0,            // Count of open positions
+  pending_orders: [],                 // Array of pending orders
+  pending_orders_count: 0,            // Count of pending orders
+  
+  // ===== SYNC METADATA =====
+  last_sync_timestamp: ISODate(),     // Last sync from VPS bridge
+  data_source: "MT5_BRIDGE",          // Data source identifier
+  sync_status: "success",             // Sync status
+  sync_error: null                    // Last sync error (if any)
+}
+```
+
+**Key Rules:**
+- ✅ This collection is the ONLY source for account numbers, balances, and equity
+- ✅ fund_type, manager_name, status are editable via Accounts Management tab
+- ✅ Real-time data (balance, equity, positions) updated by VPS bridges every 120 seconds
+- ❌ NEVER duplicate this data to other collections
+
+9.3.5 Collection: money_managers (Manager Metadata ONLY)
+**Purpose:** Store manager-specific metadata (profiles, URLs, fees) - NO account data
+
+**Schema:**
+```javascript
+{
+  // ===== IDENTITY =====
+  manager_id: "manager_cp_strategy",  // Unique manager ID
+  name: "CP Strategy",                // Manager name (MUST match mt5_accounts.manager_name)
+  display_name: "CP Strategy",        // Display name for UI
+  
+  // ===== METADATA =====
+  execution_method: "Copy Trade",     // Execution type: Copy Trade, MAM, HFT Rebate, etc.
+  profile_url: "https://...",         // Manager profile URL
+  rating_url: "https://...",          // Manager rating URL
+  performance_fee_rate: 0.20,         // Performance fee rate (20%)
+  notes: "Active CORE fund manager",  // Admin notes
+  status: "active",                   // Manager status
+  
+  // ===== TIMESTAMPS =====
+  created_at: ISODate(),
+  updated_at: ISODate()
+}
+```
+
+**Key Rules:**
+- ✅ Contains ONLY manager metadata (profiles, links, fees)
+- ❌ NEVER store account numbers or account lists (assigned_accounts field is FORBIDDEN)
+- ❌ NEVER store balances, equity, or any account data
+- ✅ Links to mt5_accounts via manager_name field
+- ✅ To get manager's accounts: Query mt5_accounts WHERE manager_name = "CP Strategy"
+
+**CRITICAL - What NOT to Store:**
+```javascript
+// ❌ FORBIDDEN - These fields violate SSOT pattern:
+{
+  "assigned_accounts": [885822, 897590],  // ❌ NO - Query mt5_accounts instead
+  "total_balance": 50000,                 // ❌ NO - Calculate from mt5_accounts
+  "account_count": 2                      // ❌ NO - Count from mt5_accounts
+}
+```
+
+9.3.6 Master Accounts Table (15 Accounts)
+| Account  | Platform | Broker         | Server               | Fund Type  | Manager Name        | Status   |
+|----------|----------|----------------|----------------------|------------|---------------------|----------|
+| 885822   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | CORE       | CP Strategy         | active   |
+| 886066   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | GoldenTrade         | inactive |
+| 886528   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | SEPARATION | Reserve Account     | active   |
+| 886557   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | TradingHub Gold     | active   |
+| 886602   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | UNO14 Manager       | active   |
+| 891215   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | TradingHub Gold     | active   |
+| 891234   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | CORE       | GoldenTrade         | inactive |
+| 897589   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | Provider1-Assev     | active   |
+| 897590   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | CORE       | CP Strategy         | active   |
+| 897591   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | SEPARATION | alefloreztrader     | active   |
+| 897599   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | SEPARATION | alefloreztrader     | active   |
+| 901351   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | Spaniard Stock CFDs | active   |
+| 901353   | MT5      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | Spaniard Stock CFDs | active   |
+| 2198     | MT5      | LUCRUM Capital | LucrumCapital-Trade  | SEPARATION | JOSE                | active   |
+| 33200931 | MT4      | MEXAtlantic    | MEXAtlantic-Real     | BALANCE    | Money Manager       | active   |
+
+9.3.7 Money Managers (Metadata Only - 9 Active Managers)
+| Manager Name        | Execution Method | Profile URL                                              | Status   |
+|---------------------|------------------|----------------------------------------------------------|----------|
+| CP Strategy         | Copy Trade       | https://ratings.mexatlantic.com/widgets/ratings/3157     | active   |
+| UNO14 Manager       | MAM              | https://www.fxblue.com/users/gestion_global              | active   |
+| TradingHub Gold     | Copy Trade       | https://ratings.multibankfx.com/widgets/ratings/1359     | active   |
+| Provider1-Assev     | Copy Trade       | https://ratings.mexatlantic.com/widgets/ratings/5201     | active   |
+| Spaniard Stock CFDs | Copy Trade       | (pending)                                                | active   |
+| Money Manager       | MT4 Manager      | (pending)                                                | active   |
+| alefloreztrader     | Copy Trade       | https://ratings.multibankfx.com/widgets/ratings/4119     | active   |
+| JOSE                | HFT Rebate       | (pending)                                                | active   |
+| Reserve Account     | Internal         | (N/A)                                                    | active   |
+| GoldenTrade         | Copy Trade       | (pending)                                                | inactive |
+
+9.3.8 Fund Type Distribution
+| Fund Type  | Account Count | Accounts                                  |
+|------------|---------------|-------------------------------------------|
+| CORE       | 2             | 885822, 897590                            |
+| BALANCE    | 7             | 886557, 886602, 891215, 897589, 901351, 901353, 33200931 |
+| SEPARATION | 4             | 886528, 897591, 897599, 2198              |
+| DYNAMIC    | 0             | (none currently)                          |
+| UNLIMITED  | 0             | (none currently)                          |
+
+9.3.9 How Dashboard Tabs Work
+
+**Accounts Management Tab (Editable)**
+- **Data Source:** Direct query of mt5_accounts collection
+- **Purpose:** Edit fund_type, manager_name, status assignments
+- **API:** GET /api/v2/accounts/all
+- **Query:**
+```javascript
+db.mt5_accounts.find({}, { _id: 0 }).sort({ account: 1 })
+```
+- **Editable Fields:** fund_type, manager_name, status
+- **Effect:** When you edit an account here, ALL other tabs automatically reflect changes
+
+**Fund Portfolio Tab (Derived - Read Only)**
+- **Data Source:** mt5_accounts grouped by fund_type
+- **Purpose:** Show fund-level aggregations and performance
+- **API:** GET /api/v2/derived/fund-portfolio
+- **Query:**
+```javascript
+db.mt5_accounts.aggregate([
+  { $match: { status: "active" } },
+  { $group: { 
+      _id: "$fund_type", 
+      total_balance: { $sum: "$balance" },
+      total_equity: { $sum: "$equity" },
+      accounts: { $push: "$$ROOT" }
+  }}
+])
+```
+
+**Money Managers Tab (Derived - Read Only)**
+- **Data Source:** mt5_accounts grouped by manager_name + joined with money_managers
+- **Purpose:** Show manager-level aggregations with metadata
+- **API:** GET /api/v2/derived/money-managers
+- **Query:**
+```javascript
+db.mt5_accounts.aggregate([
+  { $match: { status: "active" } },
+  { $group: { 
+      _id: "$manager_name", 
+      total_balance: { $sum: "$balance" },
+      total_equity: { $sum: "$equity" },
+      account_count: { $sum: 1 },
+      accounts: { $push: "$$ROOT" }
+  }},
+  { $lookup: { 
+      from: "money_managers", 
+      localField: "_id", 
+      foreignField: "name", 
+      as: "manager_metadata" 
+  }}
+])
+```
+
+**Cash Flow Tab (Derived - Read Only)**
+- **Data Source:** All active accounts from mt5_accounts
+- **Purpose:** Show cash flow analysis across all accounts
+- **API:** GET /api/v2/derived/cash-flow
+- **Query:**
+```javascript
+db.mt5_accounts.find({ status: "active" }, { _id: 0 })
+```
+
+**Trading Analytics Tab (Derived - Read Only)**
+- **Data Source:** mt5_accounts with positions/history
+- **Purpose:** Trading performance analysis
+- **API:** GET /api/v2/derived/trading-analytics
+- **Query:**
+```javascript
+db.mt5_accounts.find({ status: "active" }, { _id: 0 })
+```
+
+9.3.10 SSOT Benefits
+✅ **Data Consistency:** One source of truth means no conflicting data
+✅ **No Duplication:** Account data exists in exactly one place
+✅ **Auto-Sync:** Edit once in Accounts Management → all tabs update automatically
+✅ **Real-time Accuracy:** VPS bridges update one collection → entire system reflects changes
+✅ **Simpler Maintenance:** No complex sync logic between collections
+✅ **Audit Trail:** All changes tracked in one place
+
+9.3.11 SSOT Critical Rules
+❌ **NEVER:**
+- Store account numbers in money_managers collection
+- Duplicate balance/equity data across collections
+- Create separate collections for fund or manager aggregations
+- Mix editable and derived data in same collection
+
+✅ **ALWAYS:**
+- Query mt5_accounts for ALL account data
+- Use aggregation pipelines for grouping/filtering
+- Join with money_managers ONLY for metadata
+- Validate edits in Accounts Management before applying
+- Use transactions when updating account assignments
  
 10. FIELD NAMING STANDARDS
 10.1 Naming Convention Rules
