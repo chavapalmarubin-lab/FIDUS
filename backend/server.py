@@ -27961,6 +27961,13 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include Bridge Health Monitoring router: {e}")
 
+# Import and include single source of truth router
+try:
+    app.include_router(single_source_router)
+    logging.info("✅ Single Source of Truth API router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Single Source of Truth router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
