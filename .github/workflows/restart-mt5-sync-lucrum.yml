@@ -29,22 +29,9 @@ jobs:
             }
             
             # Check MongoDB for account 2198
-            $pythonCheck = @'
-import sys
-try:
-    from pymongo import MongoClient
-    client = MongoClient("mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
-    db = client.get_database()
-    account = db.mt5_account_config.find_one({"account": 2198})
-    if account and account.get("is_active"):
-        print("✅ Account 2198 configured in MongoDB (is_active: True)")
-    else:
-        print("❌ Account 2198 NOT configured or inactive")
-    client.close()
-except Exception as e:
-    print(f"❌ Error: {e}")
-'@
-            $pythonCheck | python -
+            $pythonCode = "import sys; from pymongo import MongoClient; client=MongoClient('mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'); db=client.get_database(); account=db.mt5_account_config.find_one({'account':2198}); print('Account 2198 configured in MongoDB (is_active: True)' if account and account.get('is_active') else 'Account 2198 NOT configured or inactive'); client.close()"
+            
+            python -c $pythonCode
       
       - name: Stop MT5 Sync Service
         uses: appleboy/ssh-action@master
