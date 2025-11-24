@@ -98,20 +98,25 @@ async def get_all_accounts():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/funds")
+@router.get("/derived/fund-portfolio")
 async def get_fund_portfolio_derived():
     """
-    Get fund portfolio data (derived from master accounts).
+    FUND PORTFOLIO TAB - Get fund portfolio data (derived from mt5_accounts).
     
-    Groups master accounts by fund_type and calculates totals.
-    This replaces the old fund-portfolio endpoint.
+    Groups mt5_accounts by fund_type and calculates aggregations.
+    This is a READ-ONLY derived view - edits happen in Accounts Management tab.
+    
+    Returns:
+    - Accounts grouped by fund_type (CORE, BALANCE, SEPARATION, etc.)
+    - Total balance, equity per fund
+    - Manager assignments per fund
     """
     try:
         db = await get_database()
         
-        # Aggregate by fund type
+        # Aggregate by fund type - derive from mt5_accounts
         pipeline = [
-            {"$match": {"is_master_account": True}},
+            {"$match": {"status": "active"}},  # Only active accounts
             {"$group": {
                 "_id": "$fund_type",
                 "account_count": {"$sum": 1},
