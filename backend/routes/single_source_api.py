@@ -31,26 +31,28 @@ async def get_database():
     return client['fidus_production']
 
 
-@router.get("/accounts")
-async def get_master_accounts():
+@router.get("/accounts/all")
+async def get_all_accounts():
     """
-    Get all master accounts (Single Source of Truth).
+    ACCOUNTS MANAGEMENT TAB - Get all 15 accounts (Single Source of Truth).
     
     This is the primary data source - all other endpoints derive from this.
+    This endpoint powers the Accounts Management tab where admins can edit assignments.
     
     Returns all 15 accounts with complete metadata:
     - Platform (MT4/MT5)
     - Broker (MEXAtlantic/LUCRUM Capital) 
-    - Fund assignments
-    - Manager assignments
-    - Real-time balances and positions
+    - Fund assignments (editable)
+    - Manager assignments (editable)
+    - Status (editable)
+    - Real-time balances and positions (read-only, from VPS bridges)
     """
     try:
         db = await get_database()
         
-        # Get all master accounts
+        # Get ALL accounts from mt5_accounts (Single Source of Truth)
         accounts = await db.mt5_accounts.find(
-            {"is_master_account": True},
+            {},
             {"_id": 0}
         ).sort("account", 1).to_list(100)
         
