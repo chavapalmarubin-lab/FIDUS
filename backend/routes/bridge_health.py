@@ -348,7 +348,7 @@ async def get_all_bridge_accounts():
 @router.get("/alerts")
 async def get_bridge_alerts():
     """
-    Get alerts for bridges with issues.
+    Get current alerts for bridges with issues.
     
     Checks for:
     - Stale data (no sync in >5 minutes)
@@ -408,4 +408,93 @@ async def get_bridge_alerts():
         
     except Exception as e:
         logger.error(f"❌ Error getting bridge alerts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/alerts/history")
+async def get_alert_history(
+    hours: int = Query(24, description="Number of hours to look back"),
+    bridge_id: Optional[str] = Query(None, description="Filter by specific bridge")
+):
+    """
+    Get historical alerts from the database.
+    
+    Parameters:
+    - hours: Number of hours to look back (default: 24)
+    - bridge_id: Optional filter for specific bridge
+    
+    Response:
+    ```json
+    {
+      "alerts": [
+        {
+          "bridge_id": "lucrum_mt5",
+          "bridge_name": "Lucrum MT5",
+          "severity": "warning",
+          "status": "stale_data",
+          "issues": ["Data not synced in 12 minutes"],
+          "timestamp": "2025-11-24T18:56:30Z",
+          "acknowledged": false
+        }
+      ],
+      "total_alerts": 1,
+      "period_hours": 24
+    }
+    ```
+    """
+    try:
+        db = await get_database()
+        service = await get_monitoring_service(db)
+        
+        alerts = await service.get_recent_alerts(hours=hours, bridge_id=bridge_id)
+        
+        # Convert datetime objects to ISO strings
+        for alert in alerts:
+            if "timestamp" in alert and not isinstance(alert["timestamp"], str):
+                alert["timestamp"] = alert["timestamp"].isoformat()
+            if "last_sync" in alert and alert["last_sync"] and not isinstance(alert["last_sync"], str):
+                alert["last_sync"] = alert["last_sync"].isoformat()
+        
+        return {
+            "alerts": alerts,
+            "total_alerts": len(alerts),
+            "period_hours": hours,
+            "bridge_filter": bridge_id
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting alert history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/monitoring/status")
+async def get_monitoring_status():
+    """
+    Get the status of the monitoring service.
+    
+    Response:
+    ```json
+    {
+      "service_running": true,
+      "check_interval_seconds": 60,
+      "alert_threshold_minutes": 5,
+      "bridges_monitored": 3,
+      "last_check": "2025-11-24T19:00:00Z"
+    }
+    ```
+    """
+    try:
+        db = await get_database()
+        service = await get_monitoring_service(db)
+        
+        return {
+            "service_running": service.is_running,
+            "check_interval_seconds": service.check_interval_seconds,
+            "alert_threshold_minutes": service.alert_threshold_minutes,
+            "bridges_monitored": len(service.bridges_config),
+            "bridge_list": list(service.bridges_config.keys())
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting monitoring status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
