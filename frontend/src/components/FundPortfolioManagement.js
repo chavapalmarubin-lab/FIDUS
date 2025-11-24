@@ -328,11 +328,39 @@ const FundPortfolioManagement = () => {
         <Card className="dashboard-card">
           <CardContent className="p-6">
             <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-blue-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">Total Allocation</p>
+                <p className="text-2xl font-bold text-white">
+                  {formatCurrency(portfolioStats.total_allocation || 0)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-green-400" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-slate-400">Total AUM</p>
+                <p className="text-sm font-medium text-slate-400">Total AUM (Balance)</p>
                 <p className="text-2xl font-bold text-white">
                   {formatCurrency(portfolioStats.aum)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className={`h-8 w-8 ${(portfolioStats.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`} />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-slate-400">Total P&L</p>
+                <p className={`text-2xl font-bold ${(portfolioStats.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(portfolioStats.total_pnl || 0)}
                 </p>
               </div>
             </div>
