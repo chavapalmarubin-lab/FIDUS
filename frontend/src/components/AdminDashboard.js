@@ -711,6 +711,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          <TabsContent value="bridge-health" className="mt-6">
+            <BridgeHealthMonitor />
+          </TabsContent>
+
           {/* MT5 Config tab removed - functionality merged into MT5 Accounts */}
 
           <TabsContent value="redemptions" className="mt-6">
