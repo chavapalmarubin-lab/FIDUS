@@ -170,20 +170,25 @@ async def get_fund_portfolio_derived():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/managers")
+@router.get("/derived/money-managers")
 async def get_money_managers_derived():
     """
-    Get money managers data (derived from master accounts).
+    MONEY MANAGERS TAB - Get money managers data (derived from mt5_accounts + joined with money_managers).
     
-    Groups master accounts by manager_name and calculates totals.
-    No separate money_managers collection needed.
+    Groups mt5_accounts by manager_name and joins with money_managers collection for metadata.
+    This is a READ-ONLY derived view - account assignments edited in Accounts Management tab.
+    
+    Returns:
+    - Accounts grouped by manager_name
+    - Total balance, equity per manager
+    - Manager metadata (profile_url, rating_url, execution_method, fees) from money_managers collection
     """
     try:
         db = await get_database()
         
-        # Aggregate by manager
+        # Aggregate by manager - derive from mt5_accounts
         pipeline = [
-            {"$match": {"is_master_account": True}},
+            {"$match": {"status": "active"}},  # Only active accounts
             {"$group": {
                 "_id": "$manager_name",
                 "account_count": {"$sum": 1},
