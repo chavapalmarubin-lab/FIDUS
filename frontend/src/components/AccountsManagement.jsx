@@ -360,14 +360,20 @@ export default function AccountsManagement() {
                                                     <span className="text-xs">{account.manager_name}</span>
                                                 )}
                                             </td>
+                                            <td className="p-2 text-right font-medium text-gray-600">
+                                                ${(account.initial_allocation || 0).toLocaleString('en-US', {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2
+                                                })}
+                                            </td>
                                             <td className="p-2 text-right font-medium">
                                                 ${(account.balance || 0).toLocaleString('en-US', {
                                                     minimumFractionDigits: 2,
                                                     maximumFractionDigits: 2
                                                 })}
                                             </td>
-                                            <td className="p-2 text-right font-medium">
-                                                ${(account.equity || 0).toLocaleString('en-US', {
+                                            <td className={`p-2 text-right font-medium ${(account.pnl || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                ${(account.pnl || 0).toLocaleString('en-US', {
                                                     minimumFractionDigits: 2,
                                                     maximumFractionDigits: 2
                                                 })}
