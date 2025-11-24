@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://alloc-refresh.preview.emergentagent.com/api'
+BACKEND_URL = 'https://mt5-sync.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 
 class ReferralDataChecker:
     def __init__(self):
-        self.base_url = "https://alloc-refresh.preview.emergentagent.com/api"
+        self.base_url = "https://mt5-sync.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

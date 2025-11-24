@@ -39,7 +39,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-sync.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

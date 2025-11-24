@@ -18,7 +18,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com/api"
+BACKEND_URL = "https://mt5-sync.preview.emergentagent.com/api"
 
 class LilianLimonLeiteTest:
     def __init__(self):

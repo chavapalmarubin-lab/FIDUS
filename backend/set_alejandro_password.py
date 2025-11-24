@@ -33,7 +33,7 @@ async def set_password():
     print(f"Username: alejandro_mariscal")
     print(f"Password: Alejandro123")
     print()
-    print("Login URL: https://alloc-refresh.preview.emergentagent.com")
+    print("Login URL: https://mt5-sync.preview.emergentagent.com")
     print()
     
     client.close()

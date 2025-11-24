@@ -4,7 +4,7 @@ Test Render Production API
 import requests
 import json
 
-BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-sync.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

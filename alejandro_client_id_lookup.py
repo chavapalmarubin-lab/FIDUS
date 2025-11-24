@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://alloc-refresh.preview.emergentagent.com"
+BACKEND_URL = "https://mt5-sync.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv
