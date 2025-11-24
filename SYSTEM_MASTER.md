@@ -160,7 +160,7 @@ Auto-Healing:
 Provider: MongoDB Atlas
 Cluster: FIDUS (M0 Free Tier)
 Database: fidus_production
-Connection: mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production
+Connection: mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production
 Collections: 35+ (see Section 9 for complete list)
  
 4. MT5 TRADING ACCOUNTS
@@ -928,7 +928,7 @@ Cluster: FIDUS (M0 Free Tier)
 Region: AWS us-east-1
 Database: fidus_production
 Connection String:
-mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production
+mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production
 Access:
 •	Read/Write: emergent-ops user
 •	Admin: Chava's MongoDB Atlas account
@@ -982,10 +982,10 @@ curl -X POST \
 ## YOUR MONGODB API ACCESS
 
 **Connection String:**
-mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production
+mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production
 
 **User:** emergent-ops
-**Password:** BpzaxqxDCjz1yWY4
+**Password:** ***SANITIZED***
 **Database:** fidus_production
 
 **Access Level:** Full read/write to ANY database

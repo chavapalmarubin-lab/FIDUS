@@ -171,7 +171,7 @@ Invoke-RestMethod http://localhost:8000/api/mt5/accounts/summary
 **Check MongoDB has fresh data:**
 ```python
 from pymongo import MongoClient
-client = MongoClient("mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
+client = MongoClient("mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production")
 db = client['fidus_production']
 
 accounts = list(db.mt5_accounts.find({}, {"account_number": 1, "balance": 1, "last_sync": 1}))

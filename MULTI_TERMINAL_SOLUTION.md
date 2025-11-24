@@ -42,7 +42,7 @@ System with 2 Terminals
 {
   _id: ObjectId('6920b31d07f4b0d609b1ddf4'),
   account: 2198,
-  password: 'Fidus13!',
+  password: '***SANITIZED***',
   name: 'BALANCE - JOSE (LUCRUM)',
   server: 'Lucrumcapital-Live',
   is_active: true,
@@ -207,7 +207,7 @@ On VPS:
 1. Open: Start Menu > Lucrum Capital MT5 Terminal
 2. Login:
    - Account: 2198
-   - Password: Fidus13!
+   - Password: ***SANITIZED***
    - Server: Lucrumcapital-Live
 3. Keep terminal running (minimized)
 
@@ -268,7 +268,7 @@ Bridge 2: LUCRUM Bridge
 
 1. RDP into VPS: `217.197.163.11`
 2. Open: Start Menu > Lucrum Capital MT5 Terminal
-3. Login with credentials (account 2198, password Fidus13!, server Lucrumcapital-Live)
+3. Login with credentials (account 2198, password ***SANITIZED***, server Lucrumcapital-Live)
 4. Minimize terminal (keep running)
 
 ---
@@ -393,7 +393,7 @@ If modifying the main bridge is complex, we could use the file-based approach we
 - Current accounts: 13 (all MEXAtlantic)
 
 **MongoDB:**
-- Connection: `mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production`
+- Connection: `mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production`
 - Config collection: `mt5_account_config`
 - Accounts collection: `mt5_accounts`
 

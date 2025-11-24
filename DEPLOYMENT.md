@@ -120,7 +120,7 @@ curl -I https://fidus-invest.emergent.host
 ```powershell
 # RDP to VPS: 217.197.163.11
 # Username: Administrator
-# Password: 2170Tenoch!
+# Password: ***SANITIZED***
 
 # Navigate to bridge directory
 cd C:\mt5_bridge_service
@@ -290,7 +290,7 @@ db.mt5_deals_history.aggregate([
 
 **Backend (.env):**
 ```bash
-MONGO_URL=mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production
+MONGO_URL=mongodb+srv://emergent-ops:***SANITIZED***@fidus.ylp9be2.mongodb.net/fidus_production
 PORT=8001
 ```
 
@@ -301,7 +301,7 @@ REACT_APP_BACKEND_URL=https://fidus-api.onrender.com
 
 **VPS (.env):**
 ```bash
-MONGODB_URI=mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production
+MONGODB_URI=mongodb+srv://emergent-ops:***SANITIZED***@fidus.ylp9be2.mongodb.net/fidus_production
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 UPDATE_INTERVAL=300
 DEAL_SYNC_INTERVAL=86400

@@ -163,7 +163,7 @@ Account Details:
 4. If not logged in:
    - Click File → Login to Trade Account
    - Enter: 2198
-   - Password: `Fidus13!`
+   - Password: `***SANITIZED***`
    - Server: `Lucrumcapital-Live`
 5. After logging in, wait 2 minutes and run Step 1 (Verify) again
 
@@ -245,12 +245,12 @@ Get-Process python | Where-Object {$_.Path -like "*mt5*"}
 
 ### Check MongoDB Connection:
 ```powershell
-python -c "from pymongo import MongoClient; client = MongoClient('mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'); print(client.admin.command('ping'))"
+python -c "from pymongo import MongoClient; client = MongoClient('mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production'); print(client.admin.command('ping'))"
 ```
 
 ### Check Account 2198 in MongoDB:
 ```powershell
-python -c "from pymongo import MongoClient; db = MongoClient('mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production').get_database(); print(db.mt5_account_config.find_one({'account': 2198}))"
+python -c "from pymongo import MongoClient; db = MongoClient('mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production').get_database(); print(db.mt5_account_config.find_one({'account': 2198}))"
 ```
 
 ### Test API Response:
@@ -319,7 +319,7 @@ db.mt5_accounts.findOne({account: 2198})
 - **RDP:** Use Remote Desktop Connection
 
 ### MongoDB Access:
-- **Connection String:** `mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production`
+- **Connection String:** `mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production`
 - **Database:** fidus_production
 - **Collections:** mt5_accounts, mt5_account_config
 

@@ -37,11 +37,11 @@ python-dateutil==2.8.2
 
 **Content:**
 ```
-MONGODB_URI=mongodb+srv://fidus_admin:FIDUS2024secureDB!@fiduscluster.qscrf.mongodb.net/fidus_production?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://fidus_admin:***SANITIZED***@fiduscluster.qscrf.mongodb.net/fidus_production?retryWrites=true&w=majority
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 MT5_SERVER=MEXAtlantic-Real
 MT5_ACCOUNT=886557
-MT5_PASSWORD=Fidus13!
+MT5_PASSWORD=***SANITIZED***
 ```
 
 ---

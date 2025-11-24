@@ -10,7 +10,7 @@ Set up automatic MT5 → MongoDB sync every 5 minutes using `mt5_bridge_service_
 ### 1. Verify MongoDB Connection
 ```powershell
 # Test MongoDB connection from VPS
-$MONGODB_URI = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+$MONGODB_URI = "mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 
 # Using Python to test
 python -c "from pymongo import MongoClient; client = MongoClient('$MONGODB_URI'); print('Connected:', client.admin.command('ping')); client.close()"
@@ -58,7 +58,7 @@ Create `C:\mt5_bridge_service\.env` with this content:
 
 ```env
 # MongoDB Configuration
-MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
 
 # MT5 Configuration
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe

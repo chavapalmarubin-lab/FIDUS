@@ -2,11 +2,11 @@
 # Copy-paste this ENTIRE command in PowerShell (as Administrator) on VPS 92.118.45.135
 
 cd C:\mt5_bridge_service; if (Test-Path '.env') { Copy-Item '.env' ".env.backup.$(Get-Date -Format 'yyyyMMddHHmmss')" }; @'
-MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
 MONGODB_DATABASE=fidus_production
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 MT5_SERVER=MEXAtlantic-Real
-MT5_PASSWORD=Fidus13!
+MT5_PASSWORD=***SANITIZED***
 MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
 SYNC_INTERVAL=300
 LOG_LEVEL=INFO

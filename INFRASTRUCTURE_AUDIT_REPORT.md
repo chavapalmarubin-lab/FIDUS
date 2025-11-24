@@ -124,19 +124,19 @@ VERIFY COMPLETE CHAIN!
 ### ✅ **MongoDB Credentials (Verified Correct):**
 ```
 Username: chavapalmarubin_db_user
-Password: 2170Tenoch!
+Password: ***SANITIZED***
 Cluster: fidus.ylp9be2.mongodb.net
 Database: fidus_production
-Connection String: mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+Connection String: mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
 ```
 
 ### ✅ **VPS .env File (Verified Correct):**
 ```
-MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
 MONGODB_DATABASE=fidus_production
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 MT5_SERVER=MEXAtlantic-Real
-MT5_PASSWORD=Fidus13!
+MT5_PASSWORD=***SANITIZED***
 MT5_ACCOUNTS=886557,886066,886602,885822,886528,891215,891234
 SYNC_INTERVAL=300
 LOG_LEVEL=INFO

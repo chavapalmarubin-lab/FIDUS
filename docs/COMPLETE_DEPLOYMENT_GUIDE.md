@@ -23,7 +23,7 @@ This deployment fully automates the MT5 Bridge setup with:
 **Location:** `/app/vps-scripts/mt5_bridge_multi_account_fixed.py`
 
 **Features:**
-- Logs into all 7 MT5 accounts using investor password `Fidus13!`
+- Logs into all 7 MT5 accounts using investor password `***SANITIZED***`
 - Background task refreshes account data every 5 minutes
 - Proper session handling (Interactive session for MT5 compatibility)
 - Comprehensive logging and error handling
@@ -178,7 +178,7 @@ curl http://92.118.45.135:8000/api/mt5/bridge/health
 ```python
 from pymongo import MongoClient
 
-client = MongoClient("mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production")
+client = MongoClient("mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production")
 db = client['fidus_production']
 
 accounts = list(db.mt5_accounts.find({}, {"account_number": 1, "balance": 1, "last_sync": 1}))

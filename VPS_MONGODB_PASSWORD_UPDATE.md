@@ -7,10 +7,10 @@
 ## 🔒 New MongoDB Credentials
 
 **Username:** `chavapalmarubin_db_user`  
-**New Password:** `2170Tenoch!@`  
+**New Password:** `***SANITIZED***`  
 **Connection String:**
 ```
-mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
 ```
 
 **Note:** The `@` symbol in the password must be URL-encoded as `%40` in the connection string.
@@ -60,7 +60,7 @@ MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:OLD_PASSWORD@fidus.y1p9be2.mo
 
 Replace with:
 ```python
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 ```
 
 **Files to update:**
@@ -149,7 +149,7 @@ pymongo.errors.OperationFailure: bad auth : authentication failed
 ```
 
 **Solutions:**
-1. Double-check password is exactly: `2170Tenoch!@`
+1. Double-check password is exactly: `***SANITIZED***`
 2. Ensure `@` is encoded as `%40` in connection string
 3. Verify username is: `chavapalmarubin_db_user`
 4. Wait 1-2 minutes after changing password in MongoDB Atlas

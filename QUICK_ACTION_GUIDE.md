@@ -7,7 +7,7 @@
 
 ## ✅ WHAT I'VE DONE
 
-1. ✅ Changed MongoDB password (`BpzaxqxDCjz1yWY4` → `2170Tenoch!@`)
+1. ✅ Changed MongoDB password (`***SANITIZED***` → `***SANITIZED***`)
 2. ✅ Updated backend/.env with new MongoDB password
 3. ✅ Cleaned 44 GitHub workflow files (removed all hardcoded credentials)
 4. ✅ Cleaned 8 Python files (removed hardcoded MongoDB fallbacks)
@@ -20,7 +20,7 @@
 
 ### 🔴 Priority 1: Change Broker Passwords (30 min)
 
-**Why:** Your trading passwords (`Fidus13!`) were exposed on GitHub
+**Why:** Your trading passwords (`***SANITIZED***`) were exposed on GitHub
 
 **Steps:**
 1. Log into MEXAtlantic portal: https://my.mexatlantic.com
@@ -77,7 +77,7 @@ MONGO_URL = "old_value"
 
 **Replace with:**
 ```python
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 ```
 
 **Restart services:**
@@ -97,7 +97,7 @@ Start-ScheduledTask -TaskName "MEXAtlanticBridge", "LucrumBridge", "MT4Bridge"
 3. Environment tab
 4. Update `MONGO_URL` to:
    ```
-   mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+   mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
    ```
 5. Save (service will auto-restart)
 
@@ -110,7 +110,7 @@ Start-ScheduledTask -TaskName "MEXAtlanticBridge", "LucrumBridge", "MT4Bridge"
 
 **Secret 1:**
 - Name: `MONGO_URL`
-- Value: `mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority`
+- Value: `mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority`
 
 **Secret 2:**
 - Name: `MT5_PASSWORD`

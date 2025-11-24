@@ -106,7 +106,7 @@ In MT4 Terminal:
 #### Check MongoDB
 
 1. Open MongoDB Compass
-2. Connect to: `mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/`
+2. Connect to: `mongodb+srv://emergent-ops:***SANITIZED***@fidus.ylp9be2.mongodb.net/`
 3. Navigate to `fidus_production` → `mt5_accounts`
 4. Look for document with `_id: "MT4_33200931"`
 

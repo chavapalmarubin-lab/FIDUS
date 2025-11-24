@@ -13,8 +13,8 @@ MongoDB Atlas detected that database credentials were publicly accessible in the
 ### Exposed Credentials (OLD - Now Invalid)
 ```
 Username: emergent-ops
-Password: BpzaxqxDCjz1yWY4 (COMPROMISED)
-Connection: mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production
+Password: ***SANITIZED*** (COMPROMISED)
+Connection: mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production
 ```
 
 ### Files Affected
@@ -26,7 +26,7 @@ Connection: mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.ne
 
 ### 1. Password Changed ✅
 - **User:** `chavapalmarubin_db_user`
-- **New Password:** `2170Tenoch!@` (URL-encoded as `2170Tenoch!%40`)
+- **New Password:** `***SANITIZED***` (URL-encoded as `***SANITIZED***`)
 - **Changed in:** MongoDB Atlas Dashboard
 - **Status:** ✅ COMPLETE
 
@@ -71,7 +71,7 @@ C:\mt5_bridge_service\mt4_bridge_mexatlantic.py
 3. Go to "Environment" tab
 4. Update `MONGO_URL` to:
    ```
-   mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+   mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
    ```
 5. Click "Save Changes"
 6. Service will auto-restart
@@ -87,7 +87,7 @@ C:\mt5_bridge_service\mt4_bridge_mexatlantic.py
 3. Name: `MONGO_URL`
 4. Value:
    ```
-   mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+   mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
    ```
 5. Click "Add secret"
 

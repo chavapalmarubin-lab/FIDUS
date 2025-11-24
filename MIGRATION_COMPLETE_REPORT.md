@@ -146,9 +146,9 @@ Service Path: C:\mt5_bridge_service\
 ```
 Cluster: fidus.y1p9be2.mongodb.net (NUMBER 1, not letter L)
 Username: chavapalmarubin_db_user
-Password: 2170Tenoch!
+Password: ***SANITIZED***
 Database: fidus_production
-Connection String: mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
+Connection String: mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS
 ```
 
 ### **MT5 Accounts (7 Total):**
@@ -156,7 +156,7 @@ Connection String: mongodb+srv://chavapalmarubin_db_user:2170Tenoch%21@fidus.y1p
 886557, 886066, 886602, 885822, 886528, 891215, 891234
 Broker: MEXAtlantic
 Server: MEXAtlantic-Real
-Password: Fidus13! (INVESTOR PASSWORD ONLY)
+Password: ***SANITIZED*** (INVESTOR PASSWORD ONLY)
 ```
 
 ---

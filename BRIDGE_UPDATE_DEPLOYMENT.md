@@ -203,7 +203,7 @@ Get-Content "C:\mt5_bridge_service\logs\api_service.log" -Tail 50 -Wait
 # Create quick test script
 @"
 from pymongo import MongoClient
-client = MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production')
+client = MongoClient('mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production')
 db = client.get_database()
 account = db.mt5_accounts.find_one({'account': 2198})
 print(f'Account 2198:')
@@ -347,7 +347,7 @@ TERMINALS = {
 
 2. **Account not in config:**
    ```powershell
-   python -c "from pymongo import MongoClient; db = MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production').get_database(); print(db.mt5_account_config.find_one({'account': 2198}))"
+   python -c "from pymongo import MongoClient; db = MongoClient('mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production').get_database(); print(db.mt5_account_config.find_one({'account': 2198}))"
    ```
    **Fix:** Verify `is_active: true` in MongoDB
 

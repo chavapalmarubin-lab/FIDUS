@@ -25,7 +25,7 @@ existing MT5 sync infrastructure.
 **New Account Details:**
 - Broker: LUCRUM Capital
 - Account: 2198
-- Password: Fidus13!
+- Password: ***SANITIZED***
 - Server: Lucrumcapital-Live
 - Terminal: Already installed and LAUNCHED on VPS (Lucrum Capital MT5 Terminal)
 - Status: Terminal is running with live connection (Balance: $11,299.25 as of Nov 24)
@@ -38,7 +38,7 @@ existing MT5 sync infrastructure.
 - Current Performance: 13 MEXAtlantic accounts syncing successfully
 
 **MongoDB Configuration:**
-- Connection: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production
+- Connection: mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production
 - Collection: mt5_account_config
 - Account 2198 Status: Already configured with is_active: true ✅
 - Collection: mt5_accounts
@@ -162,7 +162,7 @@ Integration complete when:
 - Bridge: C:\mt5_bridge_service\mt5_bridge_api_service.py
 
 **MongoDB:**
-- Connection: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production
+- Connection: mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production
 
 **LUCRUM Account:**
 - Account: 2198

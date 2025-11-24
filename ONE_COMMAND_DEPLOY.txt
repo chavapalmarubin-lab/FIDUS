@@ -20,7 +20,7 @@ import time
 import logging
 import sys
 
-MONGODB_URI = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS"
+MONGODB_URI = "mongodb+srv://emergent-ops:***SANITIZED***@fidus.ylp9be2.mongodb.net/fidus_production?retryWrites=true&w=majority&appName=FIDUS"
 MONGODB_DATABASE = "fidus_production"
 ZMQ_HOST = "localhost"
 ZMQ_PORT = 32768

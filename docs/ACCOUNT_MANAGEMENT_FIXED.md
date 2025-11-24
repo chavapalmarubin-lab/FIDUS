@@ -163,7 +163,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 async def check():
-    client = AsyncIOMotorClient("mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority")
+    client = AsyncIOMotorClient("mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority")
     db = client['fidus_production']
     
     count_config = await db.mt5_account_config.count_documents({})

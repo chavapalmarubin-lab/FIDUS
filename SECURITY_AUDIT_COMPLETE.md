@@ -15,12 +15,12 @@ After discovering the GitHub repository was made public (likely for Render/Mongo
 
 ### 1. MongoDB Credentials
 - **Username:** `emergent-ops` and `chavapalmarubin_db_user`
-- **Old Password:** `BpzaxqxDCjz1yWY4` (COMPROMISED)
+- **Old Password:** `***SANITIZED***` (COMPROMISED)
 - **Exposed in:** 23 GitHub workflow files
 - **Status:** ✅ **SECURED** - Password changed, workflows cleaned
 
 ### 2. MT5/MT4 Trading Account Passwords
-- **Password:** `Fidus13!` (COMPROMISED)
+- **Password:** `***SANITIZED***` (COMPROMISED)
 - **Exposed in:** 90+ files (workflows + Python scripts)
 - **Accounts Affected:** All 15 trading accounts
 - **Status:** ⚠️ **AWAITING USER ACTION** - Must change broker passwords
@@ -41,7 +41,7 @@ After discovering the GitHub repository was made public (likely for Render/Mongo
 
 ### 1. **MongoDB Secured** ✅
 **Actions Taken:**
-- Changed password from `BpzaxqxDCjz1yWY4` to `2170Tenoch!@`
+- Changed password from `***SANITIZED***` to `***SANITIZED***`
 - Updated backend/.env with new credentials
 - Cleaned 23 GitHub workflow files (removed hardcoded credentials)
 - Cleaned 8 Python files with hardcoded fallback credentials
@@ -63,7 +63,7 @@ After discovering the GitHub repository was made public (likely for Render/Mongo
 
 ### 2. **MT5/MT4 Passwords Secured** ✅
 **Actions Taken:**
-- Removed `Fidus13!` from 21 GitHub workflow files
+- Removed `***SANITIZED***` from 21 GitHub workflow files
 - Replaced with `${{ secrets.MT5_PASSWORD }}` placeholder
 - Verified no hardcoded passwords in workflows
 
@@ -167,7 +167,7 @@ C:\mt5_bridge_service\mt4_bridge_mexatlantic.py
 
 **Secrets to add:**
 ```
-MONGO_URL: mongodb+srv://chavapalmarubin_db_user:2170Tenoch!%40@...
+MONGO_URL: mongodb+srv://chavapalmarubin_db_user:***SANITIZED***...
 MT5_PASSWORD: [Your new broker password]
 ```
 

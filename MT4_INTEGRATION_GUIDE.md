@@ -225,7 +225,7 @@ Get-Content "C:\mt5_bridge_service\logs\mt4_mexatlantic.log" -Tail 20 -Wait
 
 **6.3 Check MongoDB is updating:**
 ```powershell
-python -c "from pymongo import MongoClient; db=MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production').get_database(); acc=db.mt5_accounts.find_one({'account':33200931}); print(f'Balance: {acc[\"balance\"]}, Last Sync: {acc.get(\"last_sync_timestamp\")}')"
+python -c "from pymongo import MongoClient; db=MongoClient('mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production').get_database(); acc=db.mt5_accounts.find_one({'account':33200931}); print(f'Balance: {acc[\"balance\"]}, Last Sync: {acc.get(\"last_sync_timestamp\")}')"
 ```
 
 ---
@@ -282,7 +282,7 @@ Get-ChildItem "C:\Users\Administrator\AppData\Roaming\MetaQuotes\" -Recurse -Fil
 **Check connection:**
 ```python
 from pymongo import MongoClient
-client = MongoClient('mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production')
+client = MongoClient('mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production')
 client.admin.command('ping')
 print("MongoDB OK")
 ```

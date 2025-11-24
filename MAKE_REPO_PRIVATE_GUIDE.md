@@ -4,8 +4,8 @@
 ## ✅ Code is NOW CLEAN!
 
 I've just cleaned **ALL** passwords from your codebase:
-- ✅ 0 instances of `Fidus13!` 
-- ✅ 0 instances of `2170Tenoch`
+- ✅ 0 instances of `***SANITIZED***` 
+- ✅ 0 instances of `***SANITIZED***`
 - ✅ All hardcoded MongoDB URLs replaced with placeholders
 
 **Your code is now safe to be public, but let's make it private properly.**
@@ -63,7 +63,7 @@ Sometimes the issue is Render can't clone private repos. Fix:
 
 **You need to update VPS scripts with new password:**
 ```
-2170TenochSecure
+***SANITIZED***
 ```
 
 **Files to update on VPS (`217.197.163.11`):**
@@ -75,7 +75,7 @@ C:\mt5_bridge_service\mt4_bridge_mexatlantic.py
 
 **New MONGO_URL:**
 ```
-mongodb+srv://chavapalmarubin_db_user:2170TenochSecure@fidus.y1p9be2.mongodb.net/fidus_production
+mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production
 ```
 
 ---

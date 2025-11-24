@@ -121,7 +121,7 @@ dir C:\mt5_bridge_service\
 ```bash
 # C:\mt5_bridge_service\.env
 
-MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://chavapalmarubin_db_user:***SANITIZED***.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 
 # Account sync (every 5 minutes)
