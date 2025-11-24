@@ -3,7 +3,7 @@
 ## 🖥️ VPS Information
 - **IP Address**: 217.197.163.11
 - **Username**: chavapalmarubin@gmail.com
-- **Password**: 2170Tenoch!
+- **Password**: ***SANITIZED***
 - **OS**: Windows Server
 - **Service Port**: 8000
 
@@ -18,7 +18,7 @@
 
 Host: 217.197.163.11
 Username: chavapalmarubin@gmail.com
-Password: 2170Tenoch!
+Password: ***SANITIZED***
 ```
 
 ### 2. Install Python (if not already installed)

@@ -56,7 +56,7 @@ Connect to VPS and manually deploy:
 **Via RDP:**
 1. Connect: `217.197.163.11:42014`
 2. Username: `Administrator`
-3. Password: `2170Tenoch!`
+3. Password: `***SANITIZED***`
 
 **Then run in PowerShell:**
 ```powershell

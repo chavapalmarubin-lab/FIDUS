@@ -6,7 +6,7 @@
 - **Hostname:** VMI0594978015651953-1.forexvps.net
 - **IP:** 217.197.163.11
 - **Username:** chavapalmarubin@gmail.com
-- **Password:** 2170Tenoch!
+- **Password:** ***SANITIZED***
 
 ### Setup Steps:
 
@@ -14,7 +14,7 @@
 ```bash
 # Use Windows Remote Desktop Connection
 # Or from Linux/Mac:
-rdesktop -u chavapalmarubin@gmail.com -p 2170Tenoch! 217.197.163.11
+rdesktop -u chavapalmarubin@gmail.com -p ***SANITIZED*** 217.197.163.11
 ```
 
 #### 2. Install Python on Windows VPS
