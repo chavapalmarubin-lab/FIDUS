@@ -96,8 +96,9 @@ void WriteAccountData()
    
    int totalOrders = OrdersTotal();
    int positionCount = 0;
+   int i;
    
-   for(int i = 0; i < totalOrders; i++)
+   for(i = 0; i < totalOrders; i++)
    {
       if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
       {
@@ -131,7 +132,7 @@ void WriteAccountData()
    
    int orderCount = 0;
    
-   for(int i = 0; i < totalOrders; i++)
+   for(i = 0; i < totalOrders; i++)
    {
       if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
       {
