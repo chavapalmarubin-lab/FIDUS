@@ -58,11 +58,26 @@ jobs:
             Write-Host "=== Testing MongoDB Connection ===" -ForegroundColor Cyan
             Write-Host ""
             
-            $mongoUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
-            
-            $pythonCode = "import sys; from pymongo import MongoClient; mongo_url='mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'; client=MongoClient(mongo_url, serverSelectionTimeoutMS=5000); db=client.get_database(); client.admin.command('ping'); print('MongoDB connection: SUCCESS'); total=db.mt5_account_config.count_documents({'is_active':True}); print(f'Active accounts in config: {total}'); account=db.mt5_account_config.find_one({'account':2198}); print(f'Account 2198: {account.get(\"name\") if account else \"NOT FOUND\"}'); print(f'Server: {account.get(\"server\") if account else \"N/A\"}'); print(f'Active: {account.get(\"is_active\") if account else \"N/A\"}'); client.close()"
-            
-            python -c $pythonCode
+            # Test MongoDB connection
+            @"
+import sys
+from pymongo import MongoClient
+mongo_url = 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'
+client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+db = client.get_database()
+client.admin.command('ping')
+print('MongoDB connection: SUCCESS')
+total = db.mt5_account_config.count_documents({'is_active': True})
+print('Active accounts in config: ' + str(total))
+account = db.mt5_account_config.find_one({'account': 2198})
+if account:
+    print('Account 2198: ' + account.get('name', 'UNKNOWN'))
+    print('Server: ' + account.get('server', 'N/A'))
+    print('Active: ' + str(account.get('is_active', False)))
+else:
+    print('Account 2198: NOT FOUND')
+client.close()
+"@ | python -
       
       - name: Update Sync Script with Correct MongoDB URL
         uses: appleboy/ssh-action@master
