@@ -790,6 +790,14 @@ MT5 CORRECTED P&L INTEGRATION: Integrate corrected MT5 data (TRUE P&L with profi
     stuck_count: 0
     priority: "critical"
     needs_retesting: false
+
+  - task: "Initial Allocation & P&L Display Verification"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/AccountsManagement.jsx, /app/frontend/src/components/FundPortfolioManagement.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
