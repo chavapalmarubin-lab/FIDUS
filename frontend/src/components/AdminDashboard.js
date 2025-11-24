@@ -555,8 +555,8 @@ const AdminDashboard = ({ user, onLogout }) => {
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
-            <TabsTrigger value="mt5-accounts" className="flex-shrink-0">
-              📈 Multi-Broker MT5/MT4 Management
+            <TabsTrigger value="accounts-management" className="flex-shrink-0">
+              🗄️ Accounts Management
             </TabsTrigger>
             <TabsTrigger value="bridge-health" className="flex-shrink-0">
               🔌 Bridge Monitor
