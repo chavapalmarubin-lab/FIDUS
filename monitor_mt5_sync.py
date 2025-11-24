@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
 # MongoDB connection
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 
 async def check_sync_status():
     """Check current MT5 sync status"""

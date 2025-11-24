@@ -53,13 +53,13 @@ INITIAL_BACKFILL_DAYS = int(os.getenv('INITIAL_BACKFILL_DAYS', '90'))  # 90 days
 
 # Fallback accounts (if MongoDB query fails)
 FALLBACK_ACCOUNTS = [
-    {"account": 886557, "password": "Fidus13@", "name": "Main Balance Account", "fund_type": "BALANCE", "target_amount": 100000.0},
-    {"account": 886066, "password": "Fidus13@", "name": "Secondary Balance Account", "fund_type": "BALANCE", "target_amount": 210000.0},
-    {"account": 886602, "password": "Fidus13@", "name": "Tertiary Balance Account", "fund_type": "BALANCE", "target_amount": 50000.0},
-    {"account": 885822, "password": "Fidus13@", "name": "Core Account", "fund_type": "CORE", "target_amount": 128151.41},
-    {"account": 886528, "password": "Fidus13@", "name": "Separation Account", "fund_type": "SEPARATION", "target_amount": 10000.0},
-    {"account": 891215, "password": "Fidus13@", "name": "Interest Earnings Trading", "fund_type": "SEPARATION", "target_amount": 10000.0},
-    {"account": 891234, "password": "Fidus13@", "name": "CORE Fund", "fund_type": "CORE", "target_amount": 10000.0}
+    {"account": 886557, "password": ""[CLEANED_PASSWORD]"", "name": "Main Balance Account", "fund_type": "BALANCE", "target_amount": 100000.0},
+    {"account": 886066, "password": ""[CLEANED_PASSWORD]"", "name": "Secondary Balance Account", "fund_type": "BALANCE", "target_amount": 210000.0},
+    {"account": 886602, "password": ""[CLEANED_PASSWORD]"", "name": "Tertiary Balance Account", "fund_type": "BALANCE", "target_amount": 50000.0},
+    {"account": 885822, "password": ""[CLEANED_PASSWORD]"", "name": "Core Account", "fund_type": "CORE", "target_amount": 128151.41},
+    {"account": 886528, "password": ""[CLEANED_PASSWORD]"", "name": "Separation Account", "fund_type": "SEPARATION", "target_amount": 10000.0},
+    {"account": 891215, "password": ""[CLEANED_PASSWORD]"", "name": "Interest Earnings Trading", "fund_type": "SEPARATION", "target_amount": 10000.0},
+    {"account": 891234, "password": ""[CLEANED_PASSWORD]"", "name": "CORE Fund", "fund_type": "CORE", "target_amount": 10000.0}
 ]
 
 class MT5BridgeEnhanced:

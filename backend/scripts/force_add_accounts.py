@@ -7,7 +7,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 
 async def force_add():
     print("Connecting to MongoDB...")
@@ -35,7 +35,7 @@ async def force_add():
     # Account 901351
     account_901351 = {
         "account": 901351,
-        "password": "Fidus13!",
+        "password": ""[CLEANED_PASSWORD]"",
         "server": "MEXAtlantic-Real",
         "broker": "MEXAtlantic",
         "manager_assigned": None,
@@ -61,7 +61,7 @@ async def force_add():
     # Account 901353
     account_901353 = {
         "account": 901353,
-        "password": "Fidus13!",
+        "password": ""[CLEANED_PASSWORD]"",
         "server": "MEXAtlantic-Real",
         "broker": "MEXAtlantic",
         "manager_assigned": None,

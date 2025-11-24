@@ -1,6 +1,6 @@
 """
 MT5 Bridge API Service - WORKING VERSION WITH HARDCODED PASSWORD
-All accounts use same password: Fidus13!
+All accounts use same password: "[CLEANED_PASSWORD]"
 Cycles every 15 minutes
 """
 
@@ -28,7 +28,7 @@ MT5_INITIALIZED = False
 ACCOUNT_CACHE = {}
 
 # ALL accounts use same password
-MT5_PASSWORD = "Fidus13!"
+MT5_PASSWORD = ""[CLEANED_PASSWORD]""
 MT5_SERVER = "MEXAtlantic-Demo"
 
 MANAGED_ACCOUNTS = {

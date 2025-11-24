@@ -41,7 +41,7 @@ ACCOUNT_CACHE = {}  # Cache account data
 ACCOUNT_PASSWORDS = {}  # Loaded from MongoDB
 
 # MongoDB connection
-MONGO_URL = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.ylp9be2.mongodb.net/fidus_production"
+MONGO_URL = ""[CLEANED_MONGO_URL]""
 ENCRYPTION_KEY = "zJe8Q5W1xN_vK4RmPq7sL2dF9HtYbGn3-cXaVwUoIp0="  # From VPS env
 
 # Account configuration

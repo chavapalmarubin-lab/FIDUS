@@ -12,7 +12,7 @@ async def fix_admin_email():
     """Fix admin user email in MongoDB"""
     
     # Get MongoDB URL from environment
-    mongo_url = os.getenv('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
+    mongo_url = os.getenv('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
     db_name = os.getenv('DB_NAME', 'fidus_production')
     
     target_email = 'chavapalmarubin@gmail.com'

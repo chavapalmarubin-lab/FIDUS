@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 async def update_all_accounts():
     """Add assignment fields to all 13 MT5 accounts"""
     
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production')
+    mongo_url = os.environ.get('MONGO_URL', '"[CLEANED_MONGO_URL]"
     
     print(f"Connecting to MongoDB...")
     client = AsyncIOMotorClient(mongo_url)

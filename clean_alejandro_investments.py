@@ -78,7 +78,7 @@ def create_correct_investments(token):
             "bank_reference": "ALEJANDRO-INV1-80K-BALANCE-MT5-886557",
             "mt5_login": "886557",
             "mt5_server": "MEXAtlantic-Real",
-            "mt5_password": "Fidus13@"
+            "mt5_password": ""[CLEANED_PASSWORD]""
         },
         {
             "client_id": "client_11aed9e2",
@@ -90,7 +90,7 @@ def create_correct_investments(token):
             "bank_reference": "ALEJANDRO-INV2-10K-BALANCE-MT5-886602",
             "mt5_login": "886602", 
             "mt5_server": "MEXAtlantic-Real",
-            "mt5_password": "Fidus13@"
+            "mt5_password": ""[CLEANED_PASSWORD]""
         },
         {
             "client_id": "client_11aed9e2",
@@ -102,7 +102,7 @@ def create_correct_investments(token):
             "bank_reference": "ALEJANDRO-INV3-10K-BALANCE-MT5-886066",
             "mt5_login": "886066",
             "mt5_server": "MEXAtlantic-Real", 
-            "mt5_password": "Fidus13@"
+            "mt5_password": ""[CLEANED_PASSWORD]""
         },
         {
             "client_id": "client_11aed9e2",
@@ -114,7 +114,7 @@ def create_correct_investments(token):
             "bank_reference": "ALEJANDRO-INV4-18151-CORE-MT5-885822",
             "mt5_login": "885822",
             "mt5_server": "MEXAtlantic-Real",
-            "mt5_password": "Fidus13@"
+            "mt5_password": ""[CLEANED_PASSWORD]""
         }
     ]
     

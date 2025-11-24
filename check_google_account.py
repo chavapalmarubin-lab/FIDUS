@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 async def check_google_account():
     """Check Google account associated with OAuth"""
     
-    mongo_url = os.getenv('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
+    mongo_url = os.getenv('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
     db_name = os.getenv('DB_NAME', 'fidus_production')
     
     print(f"\n{'='*60}")

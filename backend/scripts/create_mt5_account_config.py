@@ -27,7 +27,7 @@ async def create_mt5_account_config():
     mt5_account_configs = [
         {
             "account": 886557,
-            "password": "Fidus13@",  # Real password from VPS
+            "password": ""[CLEANED_PASSWORD]"",  # Real password from VPS
             "name": "Main Balance Account",
             "fund_type": "BALANCE",
             "server": "MEXAtlantic-Real",
@@ -39,7 +39,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 886066,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Secondary Balance Account",
             "fund_type": "BALANCE",
             "server": "MEXAtlantic-Real",
@@ -51,7 +51,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 886602,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Tertiary Balance Account",
             "fund_type": "BALANCE",
             "server": "MEXAtlantic-Real",
@@ -63,7 +63,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 885822,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Core Account",
             "fund_type": "CORE",
             "server": "MEXAtlantic-Real",
@@ -75,7 +75,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 886528,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Separation Account",
             "fund_type": "SEPARATION",
             "server": "MEXAtlantic-Real",
@@ -87,7 +87,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 891215,
-            "password": "Fidus13@",  # Need to verify this password on VPS
+            "password": ""[CLEANED_PASSWORD]"",  # Need to verify this password on VPS
             "name": "Account 891215 - Interest Earnings Trading",
             "fund_type": "SEPARATION",
             "server": "MEXAtlantic-Real",
@@ -99,7 +99,7 @@ async def create_mt5_account_config():
         },
         {
             "account": 891234,
-            "password": "Fidus13@",  # Need to verify this password on VPS
+            "password": ""[CLEANED_PASSWORD]"",  # Need to verify this password on VPS
             "name": "Account 891234 - CORE Fund",
             "fund_type": "CORE",
             "server": "MEXAtlantic-Real",

@@ -29,7 +29,7 @@ async def update_accounts():
     result1 = await db.mt5_accounts.update_one(
         {"account": 901351},
         {"$set": {
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             "manager_assigned": None,
@@ -47,7 +47,7 @@ async def update_accounts():
     result2 = await db.mt5_accounts.update_one(
         {"account": 901353},
         {"$set": {
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             "manager_assigned": None,
@@ -95,7 +95,7 @@ async def update_accounts():
     print("✅ PHASE 0 COMPLETE!")
     print("="*60)
     print("Both accounts updated with:")
-    print("  ✅ Password: Fidus13!")
+    print("  ✅ Password: "[CLEANED_PASSWORD]"")
     print("  ✅ New assignment fields (manager, fund, platform)")
     print("  ✅ Account 901353 configured as copy account")
     print("\nReady for Phase 1: Backend API Development! 🚀")

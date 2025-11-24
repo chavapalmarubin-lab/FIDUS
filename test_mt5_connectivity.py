@@ -142,7 +142,7 @@ def main():
     
     print(f"\n📋 Server Details:")
     print(f"   Server: MEXAtlantic-Real")
-    print(f"   Password: Fidus13@ (for all accounts)")
+    print(f"   Password: "[CLEANED_PASSWORD]"")
     print(f"   Total Investment Value: $118,151.41")
 
 if __name__ == "__main__":

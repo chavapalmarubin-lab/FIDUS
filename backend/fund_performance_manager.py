@@ -76,8 +76,8 @@ class FundPerformanceManager:
         mongo_url = os.environ.get('MONGO_URL')
         if not mongo_url:
             raise Exception("MONGO_URL environment variable is required for production")
-        if not mongo_url.startswith('mongodb+srv://'):
-            raise Exception("Production requires MongoDB Atlas connection string (mongodb+srv://)")
+        if not mongo_url.startswith('"[CLEANED_MONGO_URL]"
+            raise Exception("Production requires MongoDB Atlas connection string ("[CLEANED_MONGO_URL]"")
             
         # Use production database name
         db_name = os.environ.get('DB_NAME', 'fidus_production')

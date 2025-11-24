@@ -92,7 +92,7 @@ def main():
         for acc in mt5_accounts:
             print(f"  - MT5: {acc['login']} → {acc['fund']} Fund ({acc['amount']})")
             print(f"    Server: MEXAtlantic-Real")
-            print(f"    Password: Fidus13@")
+            print(f"    Password: "[CLEANED_PASSWORD]"")
         
         print("\n⚡ Ready for MT5 API connectivity testing!")
     else:

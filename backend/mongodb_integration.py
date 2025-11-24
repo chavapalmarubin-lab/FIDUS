@@ -32,7 +32,7 @@ if not MONGO_URL:
 if not MONGO_URL:
     raise Exception("MONGO_URL environment variable is required for production")
 
-if MONGO_URL.startswith('mongodb+srv://'):
+if MONGO_URL.startswith('"[CLEANED_MONGO_URL]"
     print("✅ Using MongoDB Atlas connection")
 elif MONGO_URL.startswith('mongodb://'):
     print("⚠️ Using local MongoDB connection")

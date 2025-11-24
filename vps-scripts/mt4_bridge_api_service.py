@@ -24,7 +24,7 @@ ZEROMQ_PUB_PORT = 32770
 # MT4 Account Configuration
 MT4_ACCOUNT = {
     "login": 33200931,
-    "password": "Fidus13!",
+    "password": ""[CLEANED_PASSWORD]"",
     "server": "MEXAtlantic-Real",
     "fund_type": "MONEY_MANAGER",
     "name": "Money Manager MT4 Account",

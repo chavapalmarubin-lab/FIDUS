@@ -36,7 +36,7 @@ ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
 # MongoDB Atlas Configuration (from backend/.env)
-MONGO_URL = "mongodb+srv://chavapalmarubin_db_user:HlX8kJaF38fIOVHi@fidus.ylp9be2.mongodb.net/?retryWrites=true&w=majority&appName=FIDUS"
+MONGO_URL = ""[CLEANED_MONGO_URL]""
 DB_NAME = "fidus_production"  # Fixed the typo from backend/.env
 
 class MongoDBAtlasProductionTest:

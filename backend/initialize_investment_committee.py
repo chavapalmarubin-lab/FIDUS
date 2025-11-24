@@ -12,7 +12,7 @@ async def initialize_investment_committee():
     """Initialize Investment Committee collections with current state"""
     
     # Connect to MongoDB
-    mongo_url = os.getenv('MONGO_URL', 'mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production')
+    mongo_url = os.getenv('MONGO_URL', '"[CLEANED_MONGO_URL]"
     client = AsyncIOMotorClient(mongo_url)
     db = client.get_database('fidus_production')
     

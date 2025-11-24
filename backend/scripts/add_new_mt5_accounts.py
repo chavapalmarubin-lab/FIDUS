@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script to add two new MT5 accounts to the database: 901351 and 901353
-Password: Fidus13! (with exclamation mark)
+Password: "[CLEANED_PASSWORD]"
 
 This is Phase 0 of the Investment Committee Drag-and-Drop feature.
 """
@@ -40,7 +40,7 @@ async def add_new_accounts():
         account_901351 = {
             # Account Info
             "account": 901351,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             
@@ -78,7 +78,7 @@ async def add_new_accounts():
         account_901353 = {
             # Account Info
             "account": 901353,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             

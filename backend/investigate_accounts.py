@@ -8,7 +8,7 @@ from pymongo import MongoClient
 import os
 
 # Get MongoDB connection from environment or use provided one
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
 
 print("Connecting to MongoDB...")
 client = MongoClient(MONGO_URL)

@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 
 # MongoDB connection
-MONGODB_URI = os.getenv("MONGO_URL", "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority")
+MONGODB_URI = os.getenv("MONGO_URL", "mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority")
 client = MongoClient(MONGODB_URI)
 db = client.fidus_production
 

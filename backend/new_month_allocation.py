@@ -81,7 +81,7 @@ def main():
     new_accounts = [
         {
             "account": 897590,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "CORE - CP Strategy 2",
             "fund_type": "CORE",
             "fund_code": "CORE",
@@ -96,7 +96,7 @@ def main():
         },
         {
             "account": 897589,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "BALANCE - MEXAtlantic Provider",
             "fund_type": "BALANCE",
             "fund_code": "BALANCE",
@@ -111,7 +111,7 @@ def main():
         },
         {
             "account": 897591,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Interest Segregation 1 - alefloreztrader",
             "fund_type": "SEPARATION",  # Interest Segregation
             "fund_code": "SEPARATION",
@@ -126,7 +126,7 @@ def main():
         },
         {
             "account": 897599,
-            "password": "Fidus13!",
+            "password": ""[CLEANED_PASSWORD]"",
             "name": "Interest Segregation 2 - alefloreztrader",
             "fund_type": "SEPARATION",  # Interest Segregation
             "fund_code": "SEPARATION",

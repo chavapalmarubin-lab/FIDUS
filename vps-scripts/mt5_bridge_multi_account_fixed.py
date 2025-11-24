@@ -38,7 +38,7 @@ app.add_middleware(
 # Global MT5 connection state
 MT5_INITIALIZED = False
 MT5_SERVER = "MEXAtlantic-Real"
-MT5_INVESTOR_PASSWORD = "Fidus13!"  # Investor password for ALL accounts
+MT5_INVESTOR_PASSWORD = ""[CLEANED_PASSWORD]""  # Investor password for ALL accounts
 
 # All 7 MT5 accounts with complete configuration
 MANAGED_ACCOUNTS = {

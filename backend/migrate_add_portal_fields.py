@@ -22,7 +22,7 @@ async def migrate_add_portal_fields():
     """Add portal fields to existing salespeople"""
     
     # Connect to MongoDB
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
     client = AsyncIOMotorClient(mongo_url)
     db = client.fidus_production
     

@@ -11,7 +11,7 @@ from datetime import datetime
 import json
 
 # MongoDB connection
-mongo_url = "mongodb+srv://chavapalmarubin_db_user:2170Tenoch!@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
+mongo_url = "mongodb+srv://chavapalmarubin_db_user:"[CLEANED_PASSWORD]"@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority"
 client = AsyncIOMotorClient(mongo_url)
 db = client["fidus_production"]
 

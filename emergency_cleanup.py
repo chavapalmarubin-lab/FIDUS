@@ -66,7 +66,7 @@ def cleanup_alejandro_investments():
                 "mt5_account": {
                     "login": "886557",
                     "server": "MEXAtlantic-Real",
-                    "password": "Fidus13@"
+                    "password": ""[CLEANED_PASSWORD]""
                 }
             },
             {
@@ -83,7 +83,7 @@ def cleanup_alejandro_investments():
                 "mt5_account": {
                     "login": "886602",
                     "server": "MEXAtlantic-Real",
-                    "password": "Fidus13@"
+                    "password": ""[CLEANED_PASSWORD]""
                 }
             },
             {
@@ -100,7 +100,7 @@ def cleanup_alejandro_investments():
                 "mt5_account": {
                     "login": "886066", 
                     "server": "MEXAtlantic-Real",
-                    "password": "Fidus13@"
+                    "password": ""[CLEANED_PASSWORD]""
                 }
             },
             {
@@ -117,7 +117,7 @@ def cleanup_alejandro_investments():
                 "mt5_account": {
                     "login": "885822",
                     "server": "MEXAtlantic-Real",
-                    "password": "Fidus13@"
+                    "password": ""[CLEANED_PASSWORD]""
                 }
             }
         ]

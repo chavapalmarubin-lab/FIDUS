@@ -53,7 +53,7 @@ async def add_new_accounts():
     new_accounts = [
         {
             "account": 901351,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             "name": "Spaniard Stock CFDs - Master Account",
@@ -92,7 +92,7 @@ async def add_new_accounts():
         },
         {
             "account": 901353,
-            "password": "Fidus13@",
+            "password": ""[CLEANED_PASSWORD]"",
             "server": "MEXAtlantic-Real",
             "broker": "MEXAtlantic",
             "name": "Spaniard Stock CFDs - Copy Account",
