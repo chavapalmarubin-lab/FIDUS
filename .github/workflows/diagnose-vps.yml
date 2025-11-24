@@ -127,7 +127,7 @@ pydantic==2.10.3
             
             `$envContent = @'
 MONGODB_URI=${{ secrets.MONGO_URL }}
-MT5_PASSWORD=Fidus13!
+MT5_PASSWORD=${{ secrets.MT5_PASSWORD }}
 '@
             
             Set-Content -Path '.env' -Value `$envContent

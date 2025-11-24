@@ -8,9 +8,9 @@ on:
         required: true
         default: '901351,901353'
       password:
-        description: 'MT5 Password (default: Fidus13!)'
+        description: 'MT5 Password (default: ${{ secrets.MT5_PASSWORD }})'
         required: false
-        default: 'Fidus13!'
+        default: '${{ secrets.MT5_PASSWORD }}'
 
 jobs:
   add-accounts-system-wide:
@@ -327,7 +327,7 @@ jobs:
           IFS=',' read -ra ACCOUNTS <<< "${{ github.event.inputs.accounts }}"
           for account in "${ACCOUNTS[@]}"; do
             account=$(echo $account | xargs)
-            echo "| $account | Fidus13! | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
+            echo "| $account | ${{ secrets.MT5_PASSWORD }} | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
           done
           
           echo "" >> $GITHUB_STEP_SUMMARY

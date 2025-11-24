@@ -14,7 +14,7 @@ on:
       password:
         description: 'MT5 Password'
         required: false
-        default: 'Fidus13!'
+        default: '${{ secrets.MT5_PASSWORD }}'
 
 jobs:
   add-to-vps:
@@ -187,8 +187,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Account | Password | Broker | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ${{ github.event.inputs.account1 }} | Fidus13! | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
-          echo "| ${{ github.event.inputs.account2 }} | Fidus13! | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ github.event.inputs.account1 }} | ${{ secrets.MT5_PASSWORD }} | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ github.event.inputs.account2 }} | ${{ secrets.MT5_PASSWORD }} | MEXAtlantic | Unassigned |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Actions Performed:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

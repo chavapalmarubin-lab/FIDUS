@@ -43,7 +43,7 @@ MONGODB_URI=${{ secrets.MONGO_URL }}
 MT5_PATH=C:\Program Files\MEX Atlantic MT5 Terminal\terminal64.exe
 MT5_SERVER=MEXAtlantic-Real
 MT5_ACCOUNT=886557
-MT5_PASSWORD=Fidus13!
+MT5_PASSWORD=${{ secrets.MT5_PASSWORD }}
 '@
             
             Set-Content -Path '.env' -Value \$envContent -Force

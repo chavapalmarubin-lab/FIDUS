@@ -14,7 +14,7 @@ on:
       password:
         description: 'MT5 Password'
         required: false
-        default: 'Fidus13!'
+        default: '${{ secrets.MT5_PASSWORD }}'
 
 jobs:
   add-to-vps:

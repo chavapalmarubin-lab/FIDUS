@@ -34,7 +34,7 @@ jobs:
             if [ $i -gt 0 ]; then
               ACCOUNTS_JSON+=","
             fi
-            ACCOUNTS_JSON+="{\"login\":$account,\"password\":\"Fidus13!\",\"fund_type\":\"UNASSIGNED\",\"target_amount\":0,\"client_name\":\"Account $account - Unassigned\"}"
+            ACCOUNTS_JSON+="{\"login\":$account,\"password\":\"${{ secrets.MT5_PASSWORD }}\",\"fund_type\":\"UNASSIGNED\",\"target_amount\":0,\"client_name\":\"Account $account - Unassigned\"}"
           done
           ACCOUNTS_JSON+="]"
           

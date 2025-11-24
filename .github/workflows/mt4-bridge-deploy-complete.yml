@@ -103,7 +103,7 @@ jobs:
             # MT4 Account Configuration
             MT4_ACCOUNT = {
                 \"login\": 33200931,
-                \"password\": \"Fidus13!\",
+                \"password\": \"${{ secrets.MT5_PASSWORD }}\",
                 \"server\": \"MEXAtlantic-Real\",
                 \"fund_type\": \"MONEY_MANAGER\",
                 \"platform\": \"MT4\"

@@ -270,7 +270,7 @@ client.close()
           echo "If account 2198 is still not syncing after restart:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "1. **Check MT5 Terminal:** Manually open LUCRUM MT5 terminal on VPS" >> $GITHUB_STEP_SUMMARY
-          echo "2. **Login:** Ensure logged into account 2198 with password 'Fidus13!'" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Login:** Ensure logged into account 2198 with password '${{ secrets.MT5_PASSWORD }}'" >> $GITHUB_STEP_SUMMARY
           echo "3. **Server Name:** Verify server is exactly 'Lucrumcapital-Live' (case-sensitive)" >> $GITHUB_STEP_SUMMARY
           echo "4. **Check Logs:** SSH into VPS and check C:\\mt5_bridge_service\\logs\\api_service.log" >> $GITHUB_STEP_SUMMARY
           echo "5. **Wait:** Sometimes sync takes 2-3 cycles (5-10 minutes) to pick up new accounts" >> $GITHUB_STEP_SUMMARY
