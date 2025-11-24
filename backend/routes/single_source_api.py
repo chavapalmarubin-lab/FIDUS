@@ -186,7 +186,7 @@ async def get_money_managers_derived():
     try:
         db = await get_database()
         
-        # Aggregate by manager - derive from mt5_accounts
+        # Aggregate by manager - derive from mt5_accounts + join money_managers for metadata
         pipeline = [
             {"$match": {"status": "active"}},  # Only active accounts
             {"$group": {
@@ -206,12 +206,22 @@ async def get_money_managers_derived():
                 "funds": {"$addToSet": "$fund_type"},
                 "platforms": {"$addToSet": "$platform"},
                 "brokers": {"$addToSet": "$broker"},
-                "execution_method": {"$first": "$execution_method"},
                 "active_accounts": {
                     "$sum": {"$cond": [{"$eq": ["$status", "active"]}, 1, 0]}
                 }
             }},
-            {"$sort": {"account_count": -1}}
+            # Join with money_managers collection for metadata ONLY
+            {"$lookup": {
+                "from": "money_managers",
+                "localField": "_id",
+                "foreignField": "name",
+                "as": "manager_metadata"
+            }},
+            {"$unwind": {
+                "path": "$manager_metadata",
+                "preserveNullAndEmptyArrays": True  # Keep managers even if no metadata exists
+            }},
+            {"$sort": {"total_balance": -1}}
         ]
         
         managers = await db.mt5_accounts.aggregate(pipeline).to_list(100)
@@ -222,6 +232,8 @@ async def get_money_managers_derived():
         
         for manager in managers:
             manager_name = manager['_id']
+            metadata = manager.get('manager_metadata', {})
+            
             manager_data[manager_name] = {
                 "manager_name": manager_name,
                 "account_count": manager['account_count'],
@@ -232,7 +244,12 @@ async def get_money_managers_derived():
                 "funds": manager['funds'],
                 "platforms": manager['platforms'], 
                 "brokers": manager['brokers'],
-                "execution_method": manager['execution_method'],
+                # Metadata from money_managers collection
+                "profile_url": metadata.get('profile_url'),
+                "rating_url": metadata.get('rating_url'),
+                "execution_method": metadata.get('execution_method', 'Unknown'),
+                "performance_fee_rate": metadata.get('performance_fee_rate', 0),
+                "notes": metadata.get('notes', ''),
                 "performance": {
                     "total_pnl": manager['total_equity'] - manager['total_balance'],
                     "roi_percentage": (manager['total_equity'] - manager['total_balance']) / manager['total_balance'] * 100 if manager['total_balance'] > 0 else 0
