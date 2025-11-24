@@ -60,40 +60,9 @@ jobs:
             
             $mongoUrl = "mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production"
             
-            $pythonTest = @"
-import sys
-try:
-    from pymongo import MongoClient
-    
-    mongo_url = "$mongoUrl"
-    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
-    db = client.get_database()
-    
-    # Test connection
-    client.admin.command('ping')
-    print('✅ MongoDB connection: SUCCESS')
-    
-    # Count accounts in mt5_account_config
-    total = db.mt5_account_config.count_documents({'is_active': True})
-    print(f'ℹ️  Active accounts in config: {total}')
-    
-    # Check for account 2198
-    account = db.mt5_account_config.find_one({'account': 2198})
-    if account:
-        print('✅ Account 2198 found in mt5_account_config')
-        print(f'   - Name: {account.get("name")}')
-        print(f'   - Server: {account.get("server")}')
-        print(f'   - Active: {account.get("is_active")}')
-    else:
-        print('❌ Account 2198 NOT found')
-    
-    client.close()
-except Exception as e:
-    print(f'❌ Connection FAILED: {e}')
-    sys.exit(1)
-"@
+            $pythonCode = "import sys; from pymongo import MongoClient; mongo_url='mongodb+srv://emergent-ops:BpzaxqxDCjz1yWY4@fidus.y1p9be2.mongodb.net/fidus_production'; client=MongoClient(mongo_url, serverSelectionTimeoutMS=5000); db=client.get_database(); client.admin.command('ping'); print('MongoDB connection: SUCCESS'); total=db.mt5_account_config.count_documents({'is_active':True}); print(f'Active accounts in config: {total}'); account=db.mt5_account_config.find_one({'account':2198}); print(f'Account 2198: {account.get(\"name\") if account else \"NOT FOUND\"}'); print(f'Server: {account.get(\"server\") if account else \"N/A\"}'); print(f'Active: {account.get(\"is_active\") if account else \"N/A\"}'); client.close()"
             
-            $pythonTest | python -
+            python -c $pythonCode
       
       - name: Update Sync Script with Correct MongoDB URL
         uses: appleboy/ssh-action@master
