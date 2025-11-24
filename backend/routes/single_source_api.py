@@ -1,9 +1,15 @@
 """
 Single Source of Truth API Endpoints
-November 2025
+November 24, 2025 - SSOT Architecture Implementation
 
-All endpoints query the single mt5_accounts collection.
+All endpoints query the single mt5_accounts collection (master source).
 No duplicate data - all tabs derive from this one source.
+
+Architecture:
+- mt5_accounts = Single source of truth for ALL account data
+- money_managers = Manager metadata ONLY (no account lists, no balances)
+- All aggregations computed on-the-fly from mt5_accounts
+- Join with money_managers ONLY for metadata (profile URLs, fees, etc.)
 """
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -15,7 +21,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/master", tags=["Single Source of Truth"])
+router = APIRouter(prefix="/api/v2", tags=["Single Source of Truth V2"])
 
 
 async def get_database():
