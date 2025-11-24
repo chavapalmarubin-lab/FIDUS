@@ -45,7 +45,9 @@ async def get_all_accounts():
     - Fund assignments (editable)
     - Manager assignments (editable)
     - Status (editable)
+    - Initial allocation (starting capital)
     - Real-time balances and positions (read-only, from VPS bridges)
+    - Calculated P&L (balance - initial_allocation)
     """
     try:
         db = await get_database()
@@ -55,6 +57,12 @@ async def get_all_accounts():
             {},
             {"_id": 0}
         ).sort("account", 1).to_list(100)
+        
+        # Calculate P&L for each account
+        for account in accounts:
+            initial_allocation = account.get('initial_allocation', 0)
+            balance = account.get('balance', 0)
+            account['pnl'] = balance - initial_allocation
         
         # Calculate totals
         total_balance = sum(acc.get('balance', 0) for acc in accounts)
