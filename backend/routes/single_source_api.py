@@ -274,19 +274,58 @@ async def get_money_managers_derived():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/analytics")
-async def get_trading_analytics_derived():
+@router.get("/derived/cash-flow")
+async def get_cash_flow_derived():
     """
-    Get trading analytics (derived from master accounts).
+    CASH FLOW TAB - Get cash flow data (derived from mt5_accounts).
     
-    Analyzes all accounts for performance metrics.
+    Returns all active accounts for cash flow analysis.
+    This is a READ-ONLY derived view.
     """
     try:
         db = await get_database()
         
-        # Get all accounts with positions data
+        # Get all active accounts
         accounts = await db.mt5_accounts.find(
-            {"is_master_account": True, "status": "active"},
+            {"status": "active"},
+            {"_id": 0}
+        ).sort("account", 1).to_list(100)
+        
+        # Calculate cash flow metrics
+        total_balance = sum(acc.get('balance', 0) for acc in accounts)
+        total_equity = sum(acc.get('equity', 0) for acc in accounts)
+        
+        return {
+            "success": True,
+            "accounts": accounts,
+            "summary": {
+                "total_accounts": len(accounts),
+                "total_balance": total_balance,
+                "total_equity": total_equity,
+                "total_pnl": total_equity - total_balance,
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting cash flow: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/derived/trading-analytics")
+async def get_trading_analytics_derived():
+    """
+    TRADING ANALYTICS TAB - Get trading analytics (derived from mt5_accounts).
+    
+    Analyzes all active accounts for performance metrics.
+    This is a READ-ONLY derived view.
+    """
+    try:
+        db = await get_database()
+        
+        # Get all active accounts with positions data
+        accounts = await db.mt5_accounts.find(
+            {"status": "active"},
             {"_id": 0}
         ).to_list(100)
         
