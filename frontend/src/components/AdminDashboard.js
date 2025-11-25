@@ -15,7 +15,7 @@ import CRMDashboard from "./CRMDashboard";
 import AdminInvestmentManagement from "./AdminInvestmentManagement";
 import AdminRedemptionManagement from "./AdminRedemptionManagement";
 import FundPortfolioManagement from "./FundPortfolioManagement";
-import CashFlowManagement from "./CashFlowManagement";
+import SimpleCashFlowDashboard from "./SimpleCashFlowDashboard";
 import MT5Management from "./MT5Management";
 import MT5Dashboard from "./MT5Dashboard";
 import MT5AccountManagement from "../pages/admin/MT5AccountManagement";
