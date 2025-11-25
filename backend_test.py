@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-class FidusCommissionTester:
+class FidusBackendTester:
     def __init__(self):
         self.base_url = "https://truth-fincore.preview.emergentagent.com/api"
         self.session = requests.Session()
