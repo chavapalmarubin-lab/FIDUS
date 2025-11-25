@@ -984,22 +984,23 @@ class FidusBackendTester:
             return False
     
     def run_all_tests(self) -> bool:
-        """Run all FIDUS commission verification tests"""
-        print("🚀 Starting FIDUS Backend Commission Verification Tests")
-        print("=" * 70)
+        """Run all FIDUS backend comprehensive tests"""
+        print("🚀 Starting FIDUS Backend Comprehensive Testing - All Today's Changes")
+        print("=" * 80)
         
         # Authenticate first
         if not self.authenticate_admin():
             print("\n❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Run all commission verification tests
+        # Run all comprehensive backend tests
         tests = [
-            ("Salvador Palma Data", self.test_salvador_palma_data),
-            ("Referrals Overview", self.test_referrals_overview),
-            ("Commission Calendar", self.test_commission_calendar),
-            ("Investment Data", self.test_investment_data),
-            ("Commission Calculations", self.test_commission_calculations)
+            ("Money Managers API", self.test_money_managers_api),
+            ("Investment Committee API", self.test_investment_committee_api),
+            ("Accounts Management API", self.test_accounts_management_api),
+            ("Cash Flow API", self.test_cash_flow_api),
+            ("Account 2198 Password", self.test_account_2198_password),
+            ("Manager Allocations", self.test_manager_allocations)
         ]
         
         passed_tests = 0
