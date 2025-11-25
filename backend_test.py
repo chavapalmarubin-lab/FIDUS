@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
 """
-FIDUS Backend Commission Verification Test Suite
-Testing comprehensive verification of FIDUS backend after commission fixes.
+FIDUS Backend Comprehensive Testing Suite - All Today's Changes
+Testing comprehensive verification of FIDUS backend after today's critical updates.
 
 Test Coverage:
-1. Salvador Palma Data - GET /api/admin/referrals/salespeople/sp_6909e8eaaaf69606babea151
-2. Referrals Overview - GET /api/admin/referrals/overview
-3. Commission Calendar/Schedule - Any endpoint that shows payment dates
-4. Investment Data - GET /api/admin/investments or similar
+1. Money Managers API Test - GET /api/v2/derived/money-managers
+2. Investment Committee API Test - GET /api/admin/investment-committee/mt5-accounts  
+3. Accounts Management API Test - GET /api/v2/derived/accounts
+4. Cash Flow API Test - GET /api/admin/cashflow/complete
+5. Account 2198 Password Test - Database check
+6. Manager Allocations Test - Database verification
 
 Expected Results:
-- Salvador Palma: totalCommissions = $3,326.76, clients = 1, activeInvestments = 2
-- Referrals Overview: Total sales volume = $118,151.41, Total commissions = $3,326.76
-- Commission Calendar: BALANCE first payment = Feb 28, 2026, CORE first payment = Dec 30, 2025
-- Investment Data: Total investment = $118,151.41, CORE = $18,151.41, BALANCE = $100,000
-
-CRITICAL VALIDATIONS:
-- Verify BALANCE quarterly commission = $750 (NOT $250)
-- Verify CORE monthly commission = $27.23
-- Verify total = $3,326.76 (NOT $1,326.73)
-- Verify BALANCE first payment date = February 28, 2026
+- Money Managers: 8+ active managers with real data (not $0.00)
+- Investment Committee: Exactly 15 accounts (14 MT5 + 1 MT4)
+- Accounts Management: All 15 accounts with correct managers
+- Cash Flow: Real calculations with separation interest
+- Account 2198: Password "Fidus13!!" and correct details
+- Manager Allocations: Japanese $15,000, Viking Gold $20,000, Internal BOT $15,506
 """
 
 import requests
