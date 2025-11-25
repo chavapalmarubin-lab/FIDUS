@@ -299,7 +299,103 @@ class FidusBackendTester:
             self.log_test("Investment Committee API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_commission_calendar(self) -> bool:
+    def test_accounts_management_api(self) -> bool:
+        """Test 3: Accounts Management API - GET /api/v2/derived/accounts"""
+        try:
+            print("\n📋 Testing Accounts Management API...")
+            
+            response = self.session.get(f"{self.base_url}/v2/derived/accounts", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test("Accounts Management API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            
+            if not data.get("success"):
+                self.log_test("Accounts Management API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                return False
+            
+            accounts = data.get("accounts", [])
+            summary = data.get("summary", {})
+            success = True
+            
+            # Check all 15 accounts returned
+            if len(accounts) == 15:
+                self.log_test("Accounts Management Count", "PASS", 
+                            f"Found all 15 accounts as expected", 
+                            15, 
+                            len(accounts))
+            else:
+                self.log_test("Accounts Management Count", "FAIL", 
+                            f"Expected 15 accounts, found {len(accounts)}", 
+                            15, 
+                            len(accounts))
+                success = False
+            
+            # Check total allocation = $129,657.41
+            total_allocation = summary.get("total_allocation", 0)
+            expected_allocation = 129657.41
+            
+            if abs(total_allocation - expected_allocation) < 100.0:  # Allow $100 tolerance
+                self.log_test("Total Allocation", "PASS", 
+                            f"Total allocation close to expected value", 
+                            f"${expected_allocation:,.2f}", 
+                            f"${total_allocation:,.2f}")
+            else:
+                self.log_test("Total Allocation", "FAIL", 
+                            f"Total allocation differs significantly from expected", 
+                            f"${expected_allocation:,.2f}", 
+                            f"${total_allocation:,.2f}")
+                success = False
+            
+            # Check all accounts have initial_allocation field
+            accounts_with_allocation = [acc for acc in accounts if "initial_allocation" in acc]
+            if len(accounts_with_allocation) == len(accounts):
+                self.log_test("Initial Allocation Fields", "PASS", 
+                            f"All {len(accounts)} accounts have initial_allocation field")
+            else:
+                self.log_test("Initial Allocation Fields", "FAIL", 
+                            f"Only {len(accounts_with_allocation)}/{len(accounts)} accounts have initial_allocation field")
+                success = False
+            
+            # Check active accounts have real balance and equity values
+            active_accounts = [acc for acc in accounts if acc.get("status") == "active"]
+            real_balance_count = 0
+            real_equity_count = 0
+            
+            for account in active_accounts:
+                balance = account.get("balance", 0)
+                equity = account.get("equity", 0)
+                
+                if balance > 0:
+                    real_balance_count += 1
+                if equity > 0:
+                    real_equity_count += 1
+            
+            if real_balance_count >= len(active_accounts) * 0.7:  # At least 70% should have real balance
+                self.log_test("Real Balance Values", "PASS", 
+                            f"{real_balance_count}/{len(active_accounts)} active accounts have real balance")
+            else:
+                self.log_test("Real Balance Values", "FAIL", 
+                            f"Only {real_balance_count}/{len(active_accounts)} active accounts have real balance")
+                success = False
+            
+            if real_equity_count >= len(active_accounts) * 0.7:  # At least 70% should have real equity
+                self.log_test("Real Equity Values", "PASS", 
+                            f"{real_equity_count}/{len(active_accounts)} active accounts have real equity")
+            else:
+                self.log_test("Real Equity Values", "FAIL", 
+                            f"Only {real_equity_count}/{len(active_accounts)} active accounts have real equity")
+                success = False
+            
+            return success
+            
+        except Exception as e:
+            self.log_test("Accounts Management API Test", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_cash_flow_api(self) -> bool:
         """Test 3: Commission Calendar/Schedule - Any endpoint that shows payment dates"""
         try:
             print("\n📅 Testing Commission Calendar/Schedule...")
