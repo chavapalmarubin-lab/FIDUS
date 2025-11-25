@@ -4,7 +4,7 @@ Test Render Production API
 import requests
 import json
 
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

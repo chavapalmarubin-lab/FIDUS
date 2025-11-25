@@ -3,8 +3,8 @@
 REFERRAL AGENT PORTAL COMPREHENSIVE TESTING SUITE
 Testing production MongoDB Atlas & Render API integration
 
-Portal URL: https://truth-fincore.preview.emergentagent.com/referral-agent/login
-Production API: https://truth-fincore.preview.emergentagent.com/api
+Portal URL: https://dashboard-unify.preview.emergentagent.com/referral-agent/login
+Production API: https://dashboard-unify.preview.emergentagent.com/api
 
 Test Coverage:
 1. Salvador Palma Login & Dashboard
@@ -33,7 +33,7 @@ from typing import Dict, Any, List, Optional
 
 class ReferralAgentPortalTester:
     def __init__(self):
-        self.base_url = "https://truth-fincore.preview.emergentagent.com/api"
+        self.base_url = "https://dashboard-unify.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.salvador_token = None
         self.josselyn_token = None
@@ -818,7 +818,7 @@ class ReferralAgentPortalTester:
         """Run all Referral Agent Portal tests"""
         print("🚀 Starting Referral Agent Portal Comprehensive Testing")
         print("=" * 80)
-        print(f"Portal URL: https://truth-fincore.preview.emergentagent.com/referral-agent/login")
+        print(f"Portal URL: https://dashboard-unify.preview.emergentagent.com/referral-agent/login")
         print(f"Production API: {self.base_url}")
         print("=" * 80)
         

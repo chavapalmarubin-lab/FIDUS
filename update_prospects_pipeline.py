@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com/api"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com/api"
 
 def authenticate_admin():
     """Authenticate as admin user"""

@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

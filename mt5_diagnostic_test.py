@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com/api"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com/api"
 
 class MT5DiagnosticTester:
     def __init__(self):

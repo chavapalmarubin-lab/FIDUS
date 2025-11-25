@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com/api"
-FRONTEND_URL = "https://truth-fincore.preview.emergentagent.com"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com/api"
+FRONTEND_URL = "https://dashboard-unify.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

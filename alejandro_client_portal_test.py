@@ -31,7 +31,7 @@ from typing import Dict, Any, List, Optional
 class AlejandroClientPortalTester:
     def __init__(self):
         # Use the frontend environment URL for testing
-        self.base_url = "https://truth-fincore.preview.emergentagent.com/api"
+        self.base_url = "https://dashboard-unify.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.client_token = None
         self.test_results = []

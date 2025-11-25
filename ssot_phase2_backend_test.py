@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://truth-fincore.preview.emergentagent.com"
+BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials

@@ -30,7 +30,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Configuration
-BASE_URL = "https://truth-fincore.preview.emergentagent.com"
+BASE_URL = "https://dashboard-unify.preview.emergentagent.com"
 TIMEOUT = 30
 
 class SSotArchitectureTest:

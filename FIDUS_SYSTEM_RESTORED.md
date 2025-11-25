@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://truth-fincore.preview.emergentagent.com`
+`https://dashboard-unify.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation
