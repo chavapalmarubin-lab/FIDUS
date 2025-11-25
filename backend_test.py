@@ -1222,7 +1222,7 @@ class FidusBackendTester:
 
 def main():
     """Main test execution"""
-    tester = FidusCommissionTester()
+    tester = FidusBackendTester()
     success = tester.run_all_tests()
     
     # Exit with appropriate code
