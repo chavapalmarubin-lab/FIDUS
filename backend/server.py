@@ -16610,20 +16610,26 @@ async def get_complete_cashflow(days: int = 30):
         return {
             'success': True,
             
-            # ✅ PHASE 2 TASK #3: FLAT STRUCTURE (primary access)
-            # All fields accessible at top level - no nesting required
-            'total_profit_loss': round(mt5_trading_pnl, 2),
-            'separation_interest': round(separation_balance, 2),
-            'broker_interest': round(broker_interest, 2),
+            # SIMPLIFIED RESPONSE - Only essential metrics
+            'account_count': account_count,
+            'total_equity': round(total_equity, 2),
+            'total_balance': round(total_balance, 2),
+            'total_allocation': round(total_allocation, 2),
             'broker_rebates': round(broker_rebates, 2),
-            'total_inflows': round(total_inflows, 2),
-            'net_profit': round(net_profit, 2),
-            'client_interest_obligations': round(client_interest_obligations, 2),
-            'client_principal_redemptions': round(client_principal_redemptions, 2),
-            'referral_commissions': round(referral_commissions, 2),
-            'total_liabilities': round(total_liabilities, 2),
-            'profit_withdrawals': round(profit_withdrawals, 2),
-            'total_volume_lots': round(total_volume, 2),
+            'total_fund_assets': round(total_fund_assets, 2),
+            
+            # Legacy fields for backward compatibility (set to 0 or simple values)
+            'total_profit_loss': round(total_balance - total_allocation, 2),
+            'separation_interest': 0,
+            'broker_interest': 0,
+            'total_inflows': round(total_fund_assets, 2),
+            'net_profit': round(total_balance - total_allocation, 2),
+            'client_interest_obligations': 0,
+            'client_principal_redemptions': 0,
+            'referral_commissions': 0,
+            'total_liabilities': 0,
+            'profit_withdrawals': 0,
+            'total_volume_lots': 0,
             
             # Account breakdown for transparency
             'account_breakdown': account_breakdown,
