@@ -16575,58 +16575,25 @@ async def get_complete_cashflow(days: int = 30):
         mt5_accounts_cursor = db.mt5_accounts.find({})
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         
-        # Calculate true P&L for ALL active accounts: current_equity - initial_allocation
-        # CRITICAL: Include BOTH positive AND negative P&L
-        # Use the initial_allocation field from SSOT (not hardcoded)
-        mt5_trading_pnl = 0
-        account_breakdown = []
+        # SIMPLIFIED CALCULATION #1: Total Equity (Sum of all accounts)
+        # This is the ONLY number we need from accounts
+        total_equity = 0
+        total_balance = 0
+        total_allocation = 0
+        account_count = len(mt5_accounts)
         
         for acc in mt5_accounts:
-            account_num = acc.get('account')
             equity = float(acc.get('equity', 0))
             balance = float(acc.get('balance', 0))
-            initial = float(acc.get('initial_allocation', 0))  # From SSOT
+            initial = float(acc.get('initial_allocation', 0))
             
-            # TRUE P&L = Current Balance - Initial Allocation (from SSOT)
-            pnl = balance - initial
-            mt5_trading_pnl += pnl
-            
-            account_breakdown.append({
-                'account': account_num,
-                'manager': acc.get('manager_name', 'Unknown'),
-                'fund_type': acc.get('fund_type', 'Unknown'),
-                'initial_allocation': initial,
-                'current_balance': balance,
-                'current_equity': equity,
-                'pnl': pnl,
-                'return_pct': (pnl / initial * 100) if initial > 0 else 0
-            })
-            
-            logging.info(f"  Account {account_num}: ${balance:,.2f} - ${initial:,.2f} = ${pnl:+,.2f} ({(pnl/initial*100) if initial > 0 else 0:+.2f}%)")
+            total_equity += equity
+            total_balance += balance
+            total_allocation += initial
         
-        logging.info(f"💰 MT5 Trading P&L: ${mt5_trading_pnl:,.2f} from {len(mt5_accounts)} trading accounts")
-        
-        # ✅ CORRECTED: Get current separation accounts (897591 AND 897599) from MongoDB
-        # NOTE: Account 886528 is NO LONGER a separation account per SYSTEM_MASTER.md Section 4.1
-        separation_accounts = await db.mt5_accounts.find({
-            'account': {'$in': [897591, 897599]}
-        }).to_list(length=10)
-        separation_balance = sum(acc.get('balance', 0) for acc in separation_accounts)
-        
-        # ✅ Get profit withdrawals from REAL withdrawal records in MongoDB
-        # Check if withdrawals collection exists
-        collections = await db.list_collection_names()
-        if 'withdrawals' in collections:
-            withdrawals_cursor = db.withdrawals.find({'type': 'profit_withdrawal'})
-            withdrawals = await withdrawals_cursor.to_list(length=None)
-            profit_withdrawals = sum(w.get('amount', 0) for w in withdrawals)
-        else:
-            # No withdrawals collection yet - use 0
-            profit_withdrawals = 0
-        
-        # ✅ CALCULATION #1: Broker Interest (moved from frontend Line 126)
-        # Same logic as frontend: separation_balance - profit_withdrawals
-        broker_interest = separation_balance - profit_withdrawals
+        logging.info(f"💰 Total Equity: ${total_equity:,.2f} from {account_count} accounts (15 total)")
+        logging.info(f"💰 Total Balance: ${total_balance:,.2f}")
+        logging.info(f"💰 Total Allocation: ${total_allocation:,.2f}")
         
         # ✅ BROKER REBATES: Calculate from START OF CURRENT MONTH to TODAY
         # Business logic: Rebates reset monthly and used for operational expenses
