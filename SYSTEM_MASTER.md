@@ -1783,5 +1783,56 @@ If something is unclear, ASK. Don't guess.
  
 Now continue with Priority 3: Fix Cash Flow using THIS data structure! 🚀
 
+---
+
+## 14. SECURITY & AUTHENTICATION
+
+### 14.1 Admin User Credentials
+
+**Created:** November 25, 2025  
+**Last Updated:** November 25, 2025
+
+| Field | Value |
+|-------|-------|
+| Username | admin |
+| Password | admin123 |
+| Type | admin |
+| Email | chavany@me.com |
+| Status | active |
+| Collection | users |
+
+**Login Endpoint:** `/api/auth/login`
+
+**Authentication Method:**
+- JWT-based authentication
+- Password stored in `temp_password` field (plaintext as per system design)
+- Fallback to "password123" if temp_password doesn't match
+- Token expires after configured duration
+
+**Usage:**
+```bash
+# Login via API
+curl -X POST http://localhost:8001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "admin123",
+    "user_type": "admin"
+  }'
+```
+
+**Frontend Login:**
+1. Navigate to Admin Login page
+2. Enter username: `admin`
+3. Enter password: `admin123`
+4. System returns JWT token for authenticated requests
+
+**Security Notes:**
+- Admin account has full access to all dashboard features
+- Password should be changed after first login for production use
+- JWT tokens must be included in Authorization header for protected endpoints
+- Format: `Authorization: Bearer <token>`
+
+---
 
 <img width="468" height="625" alt="image" src="https://github.com/user-attachments/assets/e405fe15-fcdd-4db6-b38c-464d0fc84c58" />
