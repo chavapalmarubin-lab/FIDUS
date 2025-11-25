@@ -517,10 +517,17 @@ class FidusBackendTester:
                 data = response.json()
                 
                 if data.get("success"):
-                    account = data.get("account", {})
+                    accounts = data.get("accounts", [])
+                    
+                    # Find account 2198
+                    account_2198 = None
+                    for account in accounts:
+                        if str(account.get("account", "")) == "2198" or account.get("account_number") == 2198:
+                            account_2198 = account
+                            break
                     
                     # Check account exists
-                    if account:
+                    if account_2198:
                         self.log_test("Account 2198 Exists", "PASS", 
                                     "Account 2198 found in database")
                         
