@@ -16650,6 +16650,9 @@ async def get_complete_cashflow(days: int = 30):
         
         logging.info(f"💰 Net Profit (Revenue - Obligations): ${net_profit:,.2f}")
         
+        # Get current time for metadata
+        now = datetime.now(timezone.utc)
+        
         return {
             'success': True,
             
@@ -16683,38 +16686,20 @@ async def get_complete_cashflow(days: int = 30):
             'profit_withdrawals': 0,
             'total_volume_lots': 0,
             
-            # Account breakdown for transparency
-            'account_breakdown': account_breakdown,
-            
             # Metadata
-            'calculation_period_days': days,  # For backward compatibility (not used for rebates)
-            'broker_rebates_period': 'monthly',  # NEW: Indicates monthly calculation
-            'broker_rebates_start_date': start_of_month.isoformat(),  # NEW: Start of current month
-            'broker_rebates_end_date': now.isoformat(),  # NEW: Today
-            'broker_rebates_days': days_in_month,  # NEW: Days elapsed in month
-            'current_month': now.strftime('%B %Y'),  # NEW: "November 2025"
-            'trades_count': len(deals),
+            'calculation_period_days': days,
+            'current_month': now.strftime('%B %Y'),
+            'trades_count': 0,
             'mt5_accounts_count': len(mt5_accounts),
-            'separation_accounts_count': len(separation_accounts),
             'active_investments_count': len(investments),
-            'total_deals_count': len(deals),
-            'last_updated': datetime.now(timezone.utc).isoformat(),
-            
-            # Separation account details
-            'separation_accounts': [
-                {
-                    'account': acc.get('account'),
-                    'name': acc.get('name', f"Account {acc.get('account')}"),
-                    'balance': round(acc.get('balance', 0), 2)
-                } for acc in separation_accounts
-            ],
+            'last_updated': now.isoformat(),
             
             # ⚠️ DEPRECATED: Nested structure kept for backward compatibility
             # Prefer flat fields above. These will be removed in future versions.
             'fund_assets': {
-                'total_profit_loss': round(mt5_trading_pnl, 2),
-                'separation_interest': round(separation_balance, 2),
-                'broker_interest': round(broker_interest, 2),
+                'total_profit_loss': round(fund_revenue, 2),
+                'separation_interest': 0,
+                'broker_interest': 0,
                 'broker_rebates': round(broker_rebates, 2)
             },
             'liabilities': {
