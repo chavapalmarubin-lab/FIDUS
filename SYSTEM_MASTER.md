@@ -1792,14 +1792,28 @@ Now continue with Priority 3: Fix Cash Flow using THIS data structure! 🚀
 **Created:** November 25, 2025  
 **Last Updated:** November 25, 2025
 
+#### Primary Admin (Existing - DO NOT MODIFY)
+
 | Field | Value |
 |-------|-------|
 | Username | admin |
-| Password | admin123 |
+| Password | password123 |
 | Type | admin |
-| Email | chavany@me.com |
 | Status | active |
 | Collection | users |
+| Notes | Production admin account |
+
+#### Test Admin (Created 2025-11-25)
+
+| Field | Value |
+|-------|-------|
+| Username | emergent_admin |
+| Password | admin123 |
+| Email | chavany@me.com |
+| Type | admin |
+| Status | active |
+| Collection | users |
+| Purpose | Testing and development |
 
 **Login Endpoint:** `/api/auth/login`
 
