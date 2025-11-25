@@ -91,19 +91,14 @@ const CashFlowManagement = () => {
       setLoading(true);
       setError("");
       
-      // Fetch cash flow data from new SSOT endpoint
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/cash-flow`);
-      const data = await response.json();
+      // ✅ PHASE 1: All calculations now done by backend API
       
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch cash flow data');
-      }
-      
-      // For backward compatibility, also fetch old cash flow and calendar endpoints
+      // Fetch fund accounting cash flow data
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
       
+      // Fetch cash flow calendar data
       const calendarResponse = await apiAxios.get(`/admin/cashflow/calendar`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
