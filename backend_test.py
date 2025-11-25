@@ -85,81 +85,107 @@ class FidusBackendTester:
             self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
             return False
     
-    def test_salvador_palma_data(self) -> bool:
-        """Test 1: Salvador Palma Data - GET /api/admin/referrals/salespeople/sp_6909e8eaaaf69606babea151"""
+    def test_money_managers_api(self) -> bool:
+        """Test 1: Money Managers API - GET /api/v2/derived/money-managers"""
         try:
-            print("\n📊 Testing Salvador Palma Data...")
+            print("\n💼 Testing Money Managers API...")
             
-            salvador_id = "sp_6909e8eaaaf69606babea151"
-            response = self.session.get(f"{self.base_url}/admin/referrals/salespeople/{salvador_id}")
+            response = self.session.get(f"{self.base_url}/v2/derived/money-managers", timeout=30)
             
             if response.status_code != 200:
-                self.log_test("Salvador Palma API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Money Managers API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
             
             if not data.get("success"):
-                self.log_test("Salvador Palma API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                self.log_test("Money Managers API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            salesperson = data.get("salesperson", {})
-            investments = data.get("investments", [])
-            
+            managers = data.get("managers", [])
             success = True
             
-            # Check total commissions = $3,326.76
-            total_commissions = salesperson.get("totalCommissions", 0)
-            expected_commissions = 3326.76
-            
-            if abs(total_commissions - expected_commissions) < 0.01:
-                self.log_test("Salvador Total Commissions", "PASS", 
-                            f"Commissions match expected value", 
-                            f"${expected_commissions:,.2f}", 
-                            f"${total_commissions:,.2f}")
+            # Check we have 8+ active managers
+            if len(managers) >= 8:
+                self.log_test("Money Managers Count", "PASS", 
+                            f"Found {len(managers)} managers (expected 8+)", 
+                            "8+", 
+                            len(managers))
             else:
-                self.log_test("Salvador Total Commissions", "FAIL", 
-                            f"Commissions do not match expected value", 
-                            f"${expected_commissions:,.2f}", 
-                            f"${total_commissions:,.2f}")
+                self.log_test("Money Managers Count", "FAIL", 
+                            f"Only found {len(managers)} managers (expected 8+)", 
+                            "8+", 
+                            len(managers))
                 success = False
             
-            # Check clients = 1
-            clients_count = salesperson.get("totalClientsReferred", 0)
-            expected_clients = 1
+            # Check specific managers and their allocations
+            expected_managers = {
+                "Viking Gold": 20000,
+                "Internal BOT": 15506,
+                "Japanese": 15000,
+                "Provider1-Assev": 20000
+            }
             
-            if clients_count == expected_clients:
-                self.log_test("Salvador Clients Count", "PASS", 
-                            f"Clients count matches expected value", 
-                            expected_clients, 
-                            clients_count)
+            found_managers = {}
+            non_zero_count = 0
+            
+            for manager in managers:
+                manager_name = manager.get("manager_name", "")
+                performance = manager.get("performance", {})
+                total_allocated = performance.get("total_allocated", 0)
+                current_equity = performance.get("current_equity", 0)
+                total_pnl = performance.get("total_pnl", 0)
+                
+                # Count managers with non-zero values
+                if total_allocated > 0 or current_equity > 0 or abs(total_pnl) > 0:
+                    non_zero_count += 1
+                
+                # Check specific expected managers
+                if manager_name in expected_managers:
+                    found_managers[manager_name] = total_allocated
+                    expected_allocation = expected_managers[manager_name]
+                    
+                    if abs(total_allocated - expected_allocation) < 1.0:
+                        self.log_test(f"{manager_name} Allocation", "PASS", 
+                                    f"Allocation matches expected value", 
+                                    f"${expected_allocation:,.2f}", 
+                                    f"${total_allocated:,.2f}")
+                    else:
+                        self.log_test(f"{manager_name} Allocation", "FAIL", 
+                                    f"Allocation does not match expected value", 
+                                    f"${expected_allocation:,.2f}", 
+                                    f"${total_allocated:,.2f}")
+                        success = False
+                
+                # Check account_details field exists
+                if "account_details" not in manager:
+                    self.log_test(f"{manager_name} Account Details", "FAIL", 
+                                f"Missing account_details field")
+                    success = False
+            
+            # Check that most managers have non-zero values (not $0.00)
+            if non_zero_count >= len(managers) * 0.7:  # At least 70% should have real data
+                self.log_test("Managers Real Data", "PASS", 
+                            f"{non_zero_count}/{len(managers)} managers have non-zero values")
             else:
-                self.log_test("Salvador Clients Count", "FAIL", 
-                            f"Clients count does not match expected value", 
-                            expected_clients, 
-                            clients_count)
+                self.log_test("Managers Real Data", "FAIL", 
+                            f"Only {non_zero_count}/{len(managers)} managers have non-zero values")
                 success = False
             
-            # Check active investments = 2
-            active_investments = len([inv for inv in investments if inv.get("status") == "active"])
-            expected_investments = 2
-            
-            if active_investments == expected_investments:
-                self.log_test("Salvador Active Investments", "PASS", 
-                            f"Active investments count matches expected value", 
-                            expected_investments, 
-                            active_investments)
+            # Check that all expected managers were found
+            missing_managers = set(expected_managers.keys()) - set(found_managers.keys())
+            if not missing_managers:
+                self.log_test("Expected Managers Found", "PASS", 
+                            f"All expected managers found: {list(expected_managers.keys())}")
             else:
-                self.log_test("Salvador Active Investments", "FAIL", 
-                            f"Active investments count does not match expected value", 
-                            expected_investments, 
-                            active_investments)
+                self.log_test("Expected Managers Found", "FAIL", 
+                            f"Missing managers: {list(missing_managers)}")
                 success = False
             
             return success
             
         except Exception as e:
-            self.log_test("Salvador Palma Data Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Money Managers API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_referrals_overview(self) -> bool:
