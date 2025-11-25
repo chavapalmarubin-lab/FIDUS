@@ -16566,53 +16566,43 @@ async def get_complete_cashflow(days: int = 30):
         days: Number of days to calculate rebates for (default: 30)
     """
     try:
-        # ✅ Get MT5 trading P&L from ALL TRADING accounts (CORRECTED)
-        # Exclude ONLY separation accounts (897591, 897599)
-        # TRADING ACCOUNTS (per November 2025 allocations):
-        # - CORE: 897590 ($16k), 885822 ($2,151.41) - CP Strategy
-        # - BALANCE: 886602 ($15k UNO14), 897589 ($5k Provider1-Assev), 886557 ($10k TradingHub), 891215 ($70k TradingHub)
-        trading_account_numbers = [897590, 885822, 886602, 897589, 886557, 891215]
-        
-        # Define correct initial allocations (from user specifications)
-        initial_allocations = {
-            897590: 16000.00,      # CP Strategy - CORE
-            885822: 2151.41,       # CP Strategy - CORE
-            886602: 15000.00,      # UNO14 Manager - BALANCE (MAM)
-            897589: 5000.00,       # Provider1-Assev - BALANCE
-            886557: 10000.00,      # TradingHub Gold - BALANCE
-            891215: 70000.00       # TradingHub Gold - BALANCE
-        }
+        # ✅ Get MT5 trading P&L from ALL ACTIVE accounts using SSOT
+        # Use mt5_accounts collection as single source of truth
+        # Get ALL active accounts and use their initial_allocation field
         
         mt5_accounts_cursor = db.mt5_accounts.find({
-            'account': {'$in': trading_account_numbers}
+            'status': 'active'
         })
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         
-        # Calculate true P&L for ALL trading accounts: current_equity - initial_allocation
+        # Calculate true P&L for ALL active accounts: current_equity - initial_allocation
         # CRITICAL: Include BOTH positive AND negative P&L
+        # Use the initial_allocation field from SSOT (not hardcoded)
         mt5_trading_pnl = 0
         account_breakdown = []
         
         for acc in mt5_accounts:
             account_num = acc.get('account')
             equity = float(acc.get('equity', 0))
-            initial = initial_allocations.get(account_num, 0)
+            balance = float(acc.get('balance', 0))
+            initial = float(acc.get('initial_allocation', 0))  # From SSOT
             
-            # TRUE P&L = Current Equity - Initial Allocation
-            # Note: This doesn't include withdrawals yet - that's tracked separately
-            pnl = equity - initial
+            # TRUE P&L = Current Balance - Initial Allocation (from SSOT)
+            pnl = balance - initial
             mt5_trading_pnl += pnl
             
             account_breakdown.append({
                 'account': account_num,
-                'manager': acc.get('manager', 'Unknown'),
+                'manager': acc.get('manager_name', 'Unknown'),
+                'fund_type': acc.get('fund_type', 'Unknown'),
                 'initial_allocation': initial,
+                'current_balance': balance,
                 'current_equity': equity,
                 'pnl': pnl,
                 'return_pct': (pnl / initial * 100) if initial > 0 else 0
             })
             
-            logging.info(f"  Account {account_num}: ${equity:,.2f} - ${initial:,.2f} = ${pnl:+,.2f} ({(pnl/initial*100) if initial > 0 else 0:+.2f}%)")
+            logging.info(f"  Account {account_num}: ${balance:,.2f} - ${initial:,.2f} = ${pnl:+,.2f} ({(pnl/initial*100) if initial > 0 else 0:+.2f}%)")
         
         logging.info(f"💰 MT5 Trading P&L: ${mt5_trading_pnl:,.2f} from {len(mt5_accounts)} trading accounts")
         
