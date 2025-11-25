@@ -16607,6 +16607,49 @@ async def get_complete_cashflow(days: int = 30):
         
         logging.info(f"💰 Total Fund Assets: ${total_fund_assets:,.2f} (Equity + Rebates)")
         
+        # NEW CALCULATION #4: Fund Revenue
+        # Fund Revenue = Total Equity - Client Money
+        # Client Money is the total amount clients invested (fixed value)
+        client_money = 118151.41  # Total client investment (from investments collection)
+        fund_revenue = total_equity - client_money
+        
+        logging.info(f"💰 Client Money (Total Investment): ${client_money:,.2f}")
+        logging.info(f"💰 Fund Revenue (Equity - Client Money): ${fund_revenue:,.2f}")
+        
+        # NEW CALCULATION #5: Fund Obligations
+        # Get client interest obligations from investments collection
+        investments_cursor = db.investments.find({'status': 'active'})
+        investments = await investments_cursor.to_list(length=None)
+        
+        client_interest_obligations = 0
+        
+        for inv in investments:
+            principal = inv.get('principal_amount', 0)
+            interest_rate = inv.get('interest_rate', 0)
+            fund_type = inv.get('fund_type', '')
+            
+            # Calculate interest obligations per SYSTEM_MASTER.md
+            if 'CORE' in fund_type.upper():
+                # CORE: 1.5% monthly × 12 months
+                total_interest = principal * interest_rate * 12
+            elif 'BALANCE' in fund_type.upper():
+                # BALANCE: 2.5% monthly rate but paid quarterly
+                total_interest = principal * interest_rate * 12
+            else:
+                total_interest = 0
+            
+            client_interest_obligations += total_interest
+        
+        fund_obligations = client_interest_obligations
+        
+        logging.info(f"💰 Fund Obligations (Client Interest): ${fund_obligations:,.2f}")
+        
+        # NEW CALCULATION #6: Net Profit
+        # Net Profit = Fund Revenue - Fund Obligations
+        net_profit = fund_revenue - fund_obligations
+        
+        logging.info(f"💰 Net Profit (Revenue - Obligations): ${net_profit:,.2f}")
+        
         return {
             'success': True,
             
