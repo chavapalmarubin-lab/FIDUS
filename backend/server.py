@@ -16558,21 +16558,21 @@ async def calculate_cash_flow_calendar():
 @api_router.get("/admin/cashflow/complete")
 async def get_complete_cashflow(days: int = 30):
     """
-    Get complete cash flow analysis with all 3 calculations
-    ✅ PHASE 1: Replaces frontend calculations in CashFlowManagement.js
-    Uses REAL MongoDB data - NO hardcoded values
+    SIMPLIFIED Cash Flow Analysis - SSOT Approach
+    ✅ Shows only essential metrics from mt5_accounts collection
+    
+    Returns:
+    - Total Equity: Sum of equity from all 15 accounts
+    - Broker Rebates: Commission from trading volume
+    - Total Fund Assets: Equity + Rebates
     
     Args:
         days: Number of days to calculate rebates for (default: 30)
     """
     try:
-        # ✅ Get MT5 trading P&L from ALL ACTIVE accounts using SSOT
-        # Use mt5_accounts collection as single source of truth
-        # Get ALL active accounts and use their initial_allocation field
-        
-        mt5_accounts_cursor = db.mt5_accounts.find({
-            'status': 'active'
-        })
+        # ✅ Get ALL accounts (active and inactive) from SSOT
+        # User wants TOTAL EQUITY from ALL 15 accounts
+        mt5_accounts_cursor = db.mt5_accounts.find({})
         mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
         
         # Calculate true P&L for ALL active accounts: current_equity - initial_allocation
