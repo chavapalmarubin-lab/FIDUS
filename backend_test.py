@@ -1031,17 +1031,18 @@ class FidusBackendTester:
                 print(f"   Expected: {result['expected']}")
                 print(f"   Actual: {result['actual']}")
         
-        print("\n" + "=" * 70)
+        print("\n" + "=" * 80)
         
         if success_rate >= 80:
-            print("🎉 FIDUS COMMISSION VERIFICATION: SUCCESSFUL")
-            print("✅ Salvador Palma commission data verified")
-            print("✅ Referrals overview totals verified") 
-            print("✅ Commission calculations validated")
+            print("🎉 FIDUS BACKEND COMPREHENSIVE TESTING: SUCCESSFUL")
+            print("✅ Money Managers API showing real data (not $0.00)")
+            print("✅ Investment Committee showing all 15 accounts")
+            print("✅ Cash Flow calculations working correctly")
+            print("✅ Account 2198 and manager allocations verified")
             return True
         else:
-            print("🚨 FIDUS COMMISSION VERIFICATION: NEEDS ATTENTION")
-            print("❌ Critical commission issues found")
+            print("🚨 FIDUS BACKEND COMPREHENSIVE TESTING: NEEDS ATTENTION")
+            print("❌ Critical backend issues found")
             return False
     
     def test_client_pnl_endpoint(self) -> bool:
