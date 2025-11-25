@@ -263,12 +263,26 @@ async def get_money_managers_derived():
             equity = manager['total_equity']
             pnl = balance - allocation
             
+            # Format account details with proper structure for frontend
+            account_details = []
+            for acc in manager['accounts']:
+                account_details.append({
+                    "account": acc['account'],
+                    "name": f"{acc['fund_type']} - {acc['broker']}",
+                    "allocation": acc['initial_allocation'],
+                    "balance": acc['balance'],
+                    "equity": acc['equity']
+                })
+            
             manager_data[manager_name] = {
                 "manager_name": manager_name,
+                "manager_id": manager_name.lower().replace(' ', '_'),  # Frontend expects this
+                "display_name": manager_name,
                 "account_count": manager['account_count'],
                 "active_accounts": manager['active_accounts'],
                 "accounts": manager['accounts'],
                 "assigned_accounts": manager['accounts'],  # Frontend expects this field
+                "account_details": account_details,  # Frontend expects this for displaying account list
                 "total_allocation": allocation,
                 "total_balance": balance,
                 "total_equity": equity,
@@ -282,6 +296,9 @@ async def get_money_managers_derived():
                 "execution_method": metadata.get('execution_method', 'Unknown'),
                 "execution_type": 'copy_trade' if metadata.get('execution_method') == 'Copy Trade' else 'mam',
                 "status": 'active' if manager['active_accounts'] > 0 else 'inactive',
+                "risk_profile": "medium",  # TODO: Calculate from actual data
+                "strategy": "Active Trading",  # TODO: Get from metadata
+                "broker": manager['brokers'][0] if manager['brokers'] else 'Unknown',
                 "performance_fee_rate": metadata.get('performance_fee_rate', 0),
                 "notes": metadata.get('notes', ''),
                 # Performance object with all fields frontend expects
