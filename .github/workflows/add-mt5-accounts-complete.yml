@@ -347,4 +347,4 @@ jobs:
           echo "## Verification URLs:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Backend Logs: https://dashboard.render.com/web/srv-csd5gna3esus73assh5g/logs" >> $GITHUB_STEP_SUMMARY
-          echo "- Investment Committee: https://securedash-5.preview.emergentagent.com" >> $GITHUB_STEP_SUMMARY
+          echo "- Investment Committee: https://truth-fincore.preview.emergentagent.com" >> $GITHUB_STEP_SUMMARY

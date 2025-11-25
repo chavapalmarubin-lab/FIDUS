@@ -29,7 +29,7 @@ from datetime import datetime
 import os
 
 # Configuration
-BACKEND_URL = "https://securedash-5.preview.emergentagent.com/api"
+BACKEND_URL = "https://truth-fincore.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

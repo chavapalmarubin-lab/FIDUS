@@ -4,7 +4,7 @@ Test Render Production API Endpoints
 import requests
 import json
 
-BACKEND_URL = "https://securedash-5.preview.emergentagent.com"
+BACKEND_URL = "https://truth-fincore.preview.emergentagent.com"
 
 print("="*80)
 print("RENDER PRODUCTION API VERIFICATION")

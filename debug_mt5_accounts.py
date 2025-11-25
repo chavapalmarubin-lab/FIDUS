@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://securedash-5.preview.emergentagent.com"
+BACKEND_URL = "https://truth-fincore.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
