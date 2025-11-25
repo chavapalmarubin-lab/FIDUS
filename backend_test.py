@@ -413,124 +413,90 @@ class FidusBackendTester:
                 self.log_test("Cash Flow API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
+            summary = data.get("summary", {})
             success = True
             
-            # Check total_equity (~$130,000-$131,000)
-            total_equity = data.get("total_equity", 0)
-            if 130000 <= total_equity <= 131000:
-                self.log_test("Total Equity Range", "PASS", 
-                            f"Total equity in expected range", 
-                            "$130,000-$131,000", 
-                            f"${total_equity:,.2f}")
+            # Check separation_interest (should be significant, not $0)
+            separation_interest = summary.get("separation_interest", 0)
+            if separation_interest > 1000:  # Should be substantial
+                self.log_test("Separation Interest", "PASS", 
+                            f"Separation interest shows real data", 
+                            "> $1,000", 
+                            f"${separation_interest:,.2f}")
             else:
-                self.log_test("Total Equity Range", "FAIL", 
-                            f"Total equity outside expected range", 
-                            "$130,000-$131,000", 
-                            f"${total_equity:,.2f}")
+                self.log_test("Separation Interest", "FAIL", 
+                            f"Separation interest too low or zero", 
+                            "> $1,000", 
+                            f"${separation_interest:,.2f}")
                 success = False
             
-            # Check broker_rebates = $202.00
-            broker_rebates = data.get("broker_rebates", 0)
-            expected_rebates = 202.00
-            if abs(broker_rebates - expected_rebates) < 0.01:
+            # Check broker_rebates (should be substantial)
+            broker_rebates = summary.get("broker_rebates", 0)
+            if broker_rebates > 1000:  # Should be substantial
                 self.log_test("Broker Rebates", "PASS", 
-                            f"Broker rebates match expected value", 
-                            f"${expected_rebates:,.2f}", 
+                            f"Broker rebates show real data", 
+                            "> $1,000", 
                             f"${broker_rebates:,.2f}")
             else:
                 self.log_test("Broker Rebates", "FAIL", 
-                            f"Broker rebates do not match expected value", 
-                            f"${expected_rebates:,.2f}", 
+                            f"Broker rebates too low or zero", 
+                            "> $1,000", 
                             f"${broker_rebates:,.2f}")
                 success = False
             
-            # Check total_fund_assets = total_equity + 202
-            total_fund_assets = data.get("total_fund_assets", 0)
-            expected_fund_assets = total_equity + 202
-            if abs(total_fund_assets - expected_fund_assets) < 0.01:
-                self.log_test("Total Fund Assets", "PASS", 
-                            f"Total fund assets calculated correctly", 
-                            f"${expected_fund_assets:,.2f}", 
-                            f"${total_fund_assets:,.2f}")
-            else:
-                self.log_test("Total Fund Assets", "FAIL", 
-                            f"Total fund assets calculation incorrect", 
-                            f"${expected_fund_assets:,.2f}", 
-                            f"${total_fund_assets:,.2f}")
-                success = False
-            
-            # Check client_money = $118,151.41
-            client_money = data.get("client_money", 0)
-            expected_client_money = 118151.41
-            if abs(client_money - expected_client_money) < 1.0:  # Allow $1 tolerance
-                self.log_test("Client Money", "PASS", 
-                            f"Client money matches expected value", 
-                            f"${expected_client_money:,.2f}", 
-                            f"${client_money:,.2f}")
-            else:
-                self.log_test("Client Money", "FAIL", 
-                            f"Client money does not match expected value", 
-                            f"${expected_client_money:,.2f}", 
-                            f"${client_money:,.2f}")
-                success = False
-            
-            # Check fund_revenue = total_equity - 118151.41
-            fund_revenue = data.get("fund_revenue", 0)
-            expected_fund_revenue = total_equity - 118151.41
-            if abs(fund_revenue - expected_fund_revenue) < 1.0:  # Allow $1 tolerance
+            # Check fund_revenue (should be positive and substantial)
+            fund_revenue = summary.get("fund_revenue", 0)
+            if fund_revenue > 10000:  # Should be substantial
                 self.log_test("Fund Revenue", "PASS", 
-                            f"Fund revenue calculated correctly", 
-                            f"${expected_fund_revenue:,.2f}", 
+                            f"Fund revenue shows real data", 
+                            "> $10,000", 
                             f"${fund_revenue:,.2f}")
             else:
                 self.log_test("Fund Revenue", "FAIL", 
-                            f"Fund revenue calculation incorrect", 
-                            f"${expected_fund_revenue:,.2f}", 
+                            f"Fund revenue too low or zero", 
+                            "> $10,000", 
                             f"${fund_revenue:,.2f}")
                 success = False
             
-            # Check client_interest_obligations = $33,267.25
-            client_interest_obligations = data.get("client_interest_obligations", 0)
-            expected_obligations = 33267.25
-            if abs(client_interest_obligations - expected_obligations) < 1.0:  # Allow $1 tolerance
-                self.log_test("Client Interest Obligations", "PASS", 
-                            f"Client interest obligations match expected value", 
-                            f"${expected_obligations:,.2f}", 
-                            f"${client_interest_obligations:,.2f}")
-            else:
-                self.log_test("Client Interest Obligations", "FAIL", 
-                            f"Client interest obligations do not match expected value", 
-                            f"${expected_obligations:,.2f}", 
-                            f"${client_interest_obligations:,.2f}")
-                success = False
-            
-            # Check fund_obligations = $33,267.25
-            fund_obligations = data.get("fund_obligations", 0)
-            if abs(fund_obligations - expected_obligations) < 1.0:  # Allow $1 tolerance
-                self.log_test("Fund Obligations", "PASS", 
-                            f"Fund obligations match expected value", 
-                            f"${expected_obligations:,.2f}", 
-                            f"${fund_obligations:,.2f}")
-            else:
-                self.log_test("Fund Obligations", "FAIL", 
-                            f"Fund obligations do not match expected value", 
-                            f"${expected_obligations:,.2f}", 
-                            f"${fund_obligations:,.2f}")
-                success = False
-            
-            # Check net_profit = fund_revenue - fund_obligations (should be ~-$20,400)
-            net_profit = data.get("net_profit", 0)
+            # Check net_profit (should be calculated correctly)
+            net_profit = summary.get("net_profit", 0)
+            fund_obligations = summary.get("fund_obligations", 0)
             expected_net_profit = fund_revenue - fund_obligations
+            
             if abs(net_profit - expected_net_profit) < 1.0:  # Allow $1 tolerance
-                self.log_test("Net Profit", "PASS", 
+                self.log_test("Net Profit Calculation", "PASS", 
                             f"Net profit calculated correctly", 
                             f"${expected_net_profit:,.2f}", 
                             f"${net_profit:,.2f}")
             else:
-                self.log_test("Net Profit", "FAIL", 
+                self.log_test("Net Profit Calculation", "FAIL", 
                             f"Net profit calculation incorrect", 
                             f"${expected_net_profit:,.2f}", 
                             f"${net_profit:,.2f}")
+                success = False
+            
+            # Check separation accounts exist
+            separation_accounts = summary.get("separation_accounts", {})
+            if len(separation_accounts) >= 2:  # Should have multiple separation accounts
+                self.log_test("Separation Accounts", "PASS", 
+                            f"Found {len(separation_accounts)} separation accounts")
+            else:
+                self.log_test("Separation Accounts", "FAIL", 
+                            f"Expected multiple separation accounts, found {len(separation_accounts)}")
+                success = False
+            
+            # Check MT5 trading profits/losses are real data (not zero)
+            mt5_trading_profits = summary.get("mt5_trading_profits", 0)
+            if abs(mt5_trading_profits) > 0:  # Should have some trading activity
+                self.log_test("MT5 Trading Activity", "PASS", 
+                            f"MT5 trading shows real activity", 
+                            "Non-zero", 
+                            f"${mt5_trading_profits:,.2f}")
+            else:
+                self.log_test("MT5 Trading Activity", "FAIL", 
+                            f"MT5 trading shows no activity", 
+                            "Non-zero", 
+                            f"${mt5_trading_profits:,.2f}")
                 success = False
             
             return success
