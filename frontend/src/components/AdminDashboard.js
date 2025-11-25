@@ -621,7 +621,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   Export to Excel
                 </Button>
               </div>
-              <CashFlowManagement />
+              <SimpleCashFlowDashboard />
             </div>
           </TabsContent>
 
