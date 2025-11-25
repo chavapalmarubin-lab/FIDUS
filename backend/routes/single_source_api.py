@@ -268,6 +268,7 @@ async def get_money_managers_derived():
                 "account_count": manager['account_count'],
                 "active_accounts": manager['active_accounts'],
                 "accounts": manager['accounts'],
+                "assigned_accounts": manager['accounts'],  # Frontend expects this field
                 "total_allocation": allocation,
                 "total_balance": balance,
                 "total_equity": equity,
@@ -279,11 +280,25 @@ async def get_money_managers_derived():
                 "profile_url": metadata.get('profile_url'),
                 "rating_url": metadata.get('rating_url'),
                 "execution_method": metadata.get('execution_method', 'Unknown'),
+                "execution_type": 'copy_trade' if metadata.get('execution_method') == 'Copy Trade' else 'mam',
+                "status": 'active' if manager['active_accounts'] > 0 else 'inactive',
                 "performance_fee_rate": metadata.get('performance_fee_rate', 0),
                 "notes": metadata.get('notes', ''),
+                # Performance object with all fields frontend expects
                 "performance": {
                     "pnl": pnl,
-                    "roi_percentage": (pnl / allocation * 100) if allocation > 0 else 0
+                    "true_pnl": pnl,  # Frontend looks for this
+                    "total_pnl": pnl,  # Frontend looks for this
+                    "roi_percentage": (pnl / allocation * 100) if allocation > 0 else 0,
+                    "return_percentage": (pnl / allocation * 100) if allocation > 0 else 0,  # Frontend looks for this
+                    "return_pct": (pnl / allocation * 100) if allocation > 0 else 0,  # Frontend looks for this
+                    "total_allocated": allocation,  # Frontend looks for this
+                    "current_equity": equity,  # Frontend looks for this
+                    "total_withdrawals": 0,  # TODO: Calculate from deals
+                    "win_rate": 0,  # TODO: Calculate from deals
+                    "winning_trades": 0,  # TODO: Calculate from deals
+                    "total_trades": 0,  # TODO: Calculate from deals
+                    "profit_factor": 0  # TODO: Calculate from deals
                 }
             }
             total_allocation += allocation
