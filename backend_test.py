@@ -532,7 +532,7 @@ class FidusBackendTester:
                                     "Account 2198 found in database")
                         
                         # Check password (if available in response)
-                        password = account.get("password", "")
+                        password = account_2198.get("password", "")
                         expected_password = "Fidus13!!"
                         
                         if password == expected_password:
@@ -550,7 +550,7 @@ class FidusBackendTester:
                                         "Password field not exposed in API (security)")
                         
                         # Check broker
-                        broker = account.get("broker", "")
+                        broker = account_2198.get("broker", "")
                         if "LUCRUM" in broker:
                             self.log_test("Account 2198 Broker", "PASS", 
                                         f"Broker is LUCRUM Capital: {broker}")
@@ -560,7 +560,7 @@ class FidusBackendTester:
                             return False
                         
                         # Check server
-                        server = account.get("server", "")
+                        server = account_2198.get("server", "")
                         if "LucrumCapital-Trade" in server:
                             self.log_test("Account 2198 Server", "PASS", 
                                         f"Server is LucrumCapital-Trade: {server}")
@@ -570,7 +570,7 @@ class FidusBackendTester:
                             return False
                         
                         # Check manager
-                        manager = account.get("manager", "")
+                        manager = account_2198.get("manager_name", "") or account_2198.get("manager", "")
                         if "JOSE" in manager:
                             self.log_test("Account 2198 Manager", "PASS", 
                                         f"Manager is JOSE: {manager}")
@@ -580,7 +580,7 @@ class FidusBackendTester:
                             return False
                         
                         # Check initial allocation
-                        initial_allocation = account.get("initial_allocation", 0)
+                        initial_allocation = account_2198.get("initial_allocation", 0)
                         expected_allocation = 10000.00
                         if abs(initial_allocation - expected_allocation) < 1.0:
                             self.log_test("Account 2198 Initial Allocation", "PASS", 
