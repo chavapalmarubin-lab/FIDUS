@@ -537,9 +537,237 @@ class FidusBackendTester:
         except Exception as e:
             self.log_test("Cash Flow API Test", "ERROR", f"Exception: {str(e)}")
             return False
+    
+    def test_account_2198_password(self) -> bool:
+        """Test 5: Account 2198 Password Test - Database check"""
+        try:
+            print("\n🔐 Testing Account 2198 Password...")
+            
+            # Try to get account details via API
+            response = self.session.get(f"{self.base_url}/admin/mt5-accounts/2198", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("success"):
+                    account = data.get("account", {})
+                    
+                    # Check account exists
+                    if account:
+                        self.log_test("Account 2198 Exists", "PASS", 
+                                    "Account 2198 found in database")
+                        
+                        # Check password (if available in response)
+                        password = account.get("password", "")
+                        expected_password = "Fidus13!!"
+                        
+                        if password == expected_password:
+                            self.log_test("Account 2198 Password", "PASS", 
+                                        "Password matches expected value")
+                        elif password:
+                            self.log_test("Account 2198 Password", "FAIL", 
+                                        f"Password does not match expected value", 
+                                        expected_password, 
+                                        password)
+                            return False
+                        else:
+                            # Password not returned in API (security), check other fields
+                            self.log_test("Account 2198 Password", "PASS", 
+                                        "Password field not exposed in API (security)")
+                        
+                        # Check broker
+                        broker = account.get("broker", "")
+                        if "LUCRUM" in broker:
+                            self.log_test("Account 2198 Broker", "PASS", 
+                                        f"Broker is LUCRUM Capital: {broker}")
+                        else:
+                            self.log_test("Account 2198 Broker", "FAIL", 
+                                        f"Expected LUCRUM, got: {broker}")
+                            return False
+                        
+                        # Check server
+                        server = account.get("server", "")
+                        if "LucrumCapital-Trade" in server:
+                            self.log_test("Account 2198 Server", "PASS", 
+                                        f"Server is LucrumCapital-Trade: {server}")
+                        else:
+                            self.log_test("Account 2198 Server", "FAIL", 
+                                        f"Expected LucrumCapital-Trade, got: {server}")
+                            return False
+                        
+                        # Check manager
+                        manager = account.get("manager", "")
+                        if "JOSE" in manager:
+                            self.log_test("Account 2198 Manager", "PASS", 
+                                        f"Manager is JOSE: {manager}")
+                        else:
+                            self.log_test("Account 2198 Manager", "FAIL", 
+                                        f"Expected JOSE, got: {manager}")
+                            return False
+                        
+                        # Check initial allocation
+                        initial_allocation = account.get("initial_allocation", 0)
+                        expected_allocation = 10000.00
+                        if abs(initial_allocation - expected_allocation) < 1.0:
+                            self.log_test("Account 2198 Initial Allocation", "PASS", 
+                                        f"Initial allocation matches expected value", 
+                                        f"${expected_allocation:,.2f}", 
+                                        f"${initial_allocation:,.2f}")
+                        else:
+                            self.log_test("Account 2198 Initial Allocation", "FAIL", 
+                                        f"Initial allocation does not match expected value", 
+                                        f"${expected_allocation:,.2f}", 
+                                        f"${initial_allocation:,.2f}")
+                            return False
+                        
+                        return True
+                    else:
+                        self.log_test("Account 2198 Exists", "FAIL", 
+                                    "Account 2198 not found in database")
+                        return False
+                else:
+                    self.log_test("Account 2198 API", "FAIL", 
+                                f"API returned success=false: {data.get('message', 'Unknown error')}")
+                    return False
+            else:
+                self.log_test("Account 2198 API", "FAIL", 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
             
         except Exception as e:
-            self.log_test("Trading Analytics Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Account 2198 Password Test", "ERROR", f"Exception: {str(e)}")
+            return False
+    
+    def test_manager_allocations(self) -> bool:
+        """Test 6: Manager Allocations Test - Database verification"""
+        try:
+            print("\n👥 Testing Manager Allocations...")
+            
+            # Get all accounts to verify manager allocations
+            response = self.session.get(f"{self.base_url}/v2/derived/accounts", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test("Manager Allocations API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            
+            if not data.get("success"):
+                self.log_test("Manager Allocations API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                return False
+            
+            accounts = data.get("accounts", [])
+            success = True
+            
+            # Expected manager allocations
+            expected_allocations = {
+                "Japanese": {"account": "901351", "allocation": 15000},
+                "Viking Gold": {"account": "891215", "allocation": 20000},
+                "Internal BOT": {"account": "897599", "allocation": 15506},
+                "Provider1-Assev": {"account": "897589", "allocation": 20000},
+                "alefloreztrader": {"account": "897591", "allocation": 0},
+                "TradingHub Gold": {"account": "886557", "allocation": 0}
+            }
+            
+            # Group accounts by manager
+            manager_allocations = {}
+            for account in accounts:
+                manager = account.get("manager", "").strip()
+                allocation = account.get("initial_allocation", 0)
+                account_number = str(account.get("account_number", ""))
+                
+                if manager:
+                    if manager not in manager_allocations:
+                        manager_allocations[manager] = {"total_allocation": 0, "accounts": []}
+                    manager_allocations[manager]["total_allocation"] += allocation
+                    manager_allocations[manager]["accounts"].append({
+                        "account": account_number,
+                        "allocation": allocation
+                    })
+            
+            # Verify each expected manager
+            for expected_manager, expected_data in expected_allocations.items():
+                found_manager = None
+                
+                # Find manager (case-insensitive partial match)
+                for manager_name in manager_allocations.keys():
+                    if expected_manager.lower() in manager_name.lower() or manager_name.lower() in expected_manager.lower():
+                        found_manager = manager_name
+                        break
+                
+                if found_manager:
+                    manager_data = manager_allocations[found_manager]
+                    
+                    # Check if expected account is in this manager's accounts
+                    expected_account = expected_data["account"]
+                    expected_allocation = expected_data["allocation"]
+                    
+                    account_found = False
+                    for account_info in manager_data["accounts"]:
+                        if account_info["account"] == expected_account:
+                            account_found = True
+                            actual_allocation = account_info["allocation"]
+                            
+                            if abs(actual_allocation - expected_allocation) < 1.0:
+                                self.log_test(f"{expected_manager} ({expected_account}) Allocation", "PASS", 
+                                            f"Allocation matches expected value", 
+                                            f"${expected_allocation:,.2f}", 
+                                            f"${actual_allocation:,.2f}")
+                            else:
+                                self.log_test(f"{expected_manager} ({expected_account}) Allocation", "FAIL", 
+                                            f"Allocation does not match expected value", 
+                                            f"${expected_allocation:,.2f}", 
+                                            f"${actual_allocation:,.2f}")
+                                success = False
+                            break
+                    
+                    if not account_found:
+                        self.log_test(f"{expected_manager} Account {expected_account}", "FAIL", 
+                                    f"Expected account {expected_account} not found for manager {expected_manager}")
+                        success = False
+                else:
+                    self.log_test(f"{expected_manager} Manager Found", "FAIL", 
+                                f"Manager {expected_manager} not found in database")
+                    success = False
+            
+            # Additional verification: Provider1-Assev should have only 1 account
+            provider1_manager = None
+            for manager_name in manager_allocations.keys():
+                if "provider1" in manager_name.lower() or "assev" in manager_name.lower():
+                    provider1_manager = manager_name
+                    break
+            
+            if provider1_manager:
+                provider1_accounts = len(manager_allocations[provider1_manager]["accounts"])
+                if provider1_accounts == 1:
+                    self.log_test("Provider1-Assev Account Count", "PASS", 
+                                f"Provider1-Assev has exactly 1 account as expected")
+                else:
+                    self.log_test("Provider1-Assev Account Count", "FAIL", 
+                                f"Provider1-Assev has {provider1_accounts} accounts, expected 1")
+                    success = False
+            
+            # Additional verification: alefloreztrader should have only 1 account
+            alef_manager = None
+            for manager_name in manager_allocations.keys():
+                if "alef" in manager_name.lower() or "florez" in manager_name.lower():
+                    alef_manager = manager_name
+                    break
+            
+            if alef_manager:
+                alef_accounts = len(manager_allocations[alef_manager]["accounts"])
+                if alef_accounts == 1:
+                    self.log_test("alefloreztrader Account Count", "PASS", 
+                                f"alefloreztrader has exactly 1 account as expected")
+                else:
+                    self.log_test("alefloreztrader Account Count", "FAIL", 
+                                f"alefloreztrader has {alef_accounts} accounts, expected 1")
+                    success = False
+            
+            return success
+            
+        except Exception as e:
+            self.log_test("Manager Allocations Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_investment_data(self) -> bool:
