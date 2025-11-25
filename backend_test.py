@@ -396,7 +396,7 @@ class FidusBackendTester:
             return False
     
     def test_cash_flow_api(self) -> bool:
-        """Test 3: Commission Calendar/Schedule - Any endpoint that shows payment dates"""
+        """Test 4: Cash Flow API - GET /api/admin/cashflow/complete"""
         try:
             print("\n📅 Testing Commission Calendar/Schedule...")
             
