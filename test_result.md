@@ -5522,3 +5522,62 @@ backend:
           comment: "🎉 COMPREHENSIVE BACKEND TESTING COMPLETED SUCCESSFULLY - 83% SUCCESS RATE! Conducted comprehensive testing of all backend endpoints after today's critical updates as specifically requested in review. CRITICAL VERIFICATION RESULTS: (1) ✅ MONEY MANAGERS API FULLY OPERATIONAL: GET /api/v2/derived/money-managers working perfectly - Found 11 managers (exceeds expected 8+) ✓, All expected managers found with correct allocations: Viking Gold $20,000 ✓, Internal BOT $15,506 ✓, Japanese $15,000 ✓, Provider1-Assev $20,000 ✓. Real data confirmed: 8/11 managers have non-zero values (not $0.00) ✓, All managers have account_details field ✓, Performance objects with total_allocated, current_equity, total_pnl ✓. (2) ✅ INVESTMENT COMMITTEE API VERIFIED: GET /api/v2/accounts/all working correctly - Exactly 15 accounts found as expected ✓, Account 2198 (JOSE - LUCRUM Capital) present ✓, Account 33200931 (MT4 - Spaniard Stock CFDs) present ✓. Minor issue: Manager name case sensitivity (jose vs JOSE) but functionally correct. (3) ⚠️ ACCOUNTS MANAGEMENT PARTIAL SUCCESS: GET /api/v2/accounts/all working - All 15 accounts returned ✓, All accounts have initial_allocation field ✓, Issue: Total allocation shows $0.00 instead of expected $129,657.41, Real balance/equity values present in 9/13 active accounts (69% coverage). (4) ✅ CASH FLOW API WORKING CORRECTLY: GET /api/admin/cashflow/overview working (complete endpoint had errors) - Separation Interest: $22,396.32 (substantial real data) ✓, Broker Rebates: $9,858.21 (substantial real data) ✓, Fund Revenue: $32,214.78 (substantial real data) ✓, Net Profit calculation correct ✓, 3 separation accounts found ✓, MT5 trading activity confirmed (-$39.75) ✓. (5) ✅ ACCOUNT 2198 PASSWORD VERIFICATION COMPLETE: Account 2198 found in database ✓, Password matches expected 'Fidus13!!' ✓, Broker is LUCRUM Capital ✓, Server is LucrumCapital-Trade ✓, Manager is JOSE ✓, Initial allocation $10,000.00 ✓. (6) ⚠️ MANAGER ALLOCATIONS PARTIAL SUCCESS: Some expected account numbers not found in current data structure, but manager allocations verified through Money Managers API. Provider1-Assev and alefloreztrader have exactly 1 account each as expected ✓. TECHNICAL ACHIEVEMENTS: Authentication working correctly, All major endpoints operational, Real-time data integration confirmed, Account 2198 password update successful, Cash Flow calculations working with separation interest, Money Managers showing real performance data (not $0.00). ISSUES IDENTIFIED: Some account numbers in different format than expected (account vs account_number fields), Total allocation calculation needs verification in accounts endpoint, Manager name case sensitivity in some responses. CONCLUSION: The backend updates have been LARGELY SUCCESSFUL with 83% success rate. All critical functionality working: Money Managers API showing real data, Investment Committee displaying all 15 accounts, Account 2198 properly configured, Cash Flow calculations operational. Minor data structure inconsistencies identified but core functionality verified."
 
 ---
+
+---
+
+## NEW FORK - E1 Agent Session (November 25, 2025)
+
+**Agent Actions:**
+1. Fixed Critical MT5 `tzinfo` Bug - MT5 watchdog now operational
+2. Created SimpleCashFlowDashboard component - 6-metric simplified view
+3. Updated AdminDashboard to use new simplified component
+4. Identified admin authentication blocking issue
+
+**Status**: ⚠️ **Cash Flow simplification COMPLETE but BLOCKED by missing admin user for visual verification**
+
+backend:
+  - task: "Fix MT5 Watchdog tzinfo Datetime Bug"
+    implemented: true
+    working: true
+    file: "/app/backend/services/mt5_watchdog.py, /app/backend/mt5_watchdog.py, /app/backend/health_checks.py"
+    stuck_count: 0
+    priority: "P0 - Critical"
+    needs_retesting: false
+    testing_method: "Backend logs verification"
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRITICAL BUG IDENTIFIED: MT5 watchdog failing with 'str' object has no attribute 'tzinfo' error. This prevented all real-time financial data from syncing, making entire application data stale. Root cause: Code attempting to access .tzinfo attribute on datetime fields that were strings (ISO format) instead of Python datetime objects."
+        - working: true
+          agent: "main"
+          comment: "✅ MT5 WATCHDOG TZINFO BUG FIXED SUCCESSFULLY! Applied string-to-datetime conversion in 4 critical locations: (1) /app/backend/services/mt5_watchdog.py line 283 - added isinstance(last_sync, str) check with datetime.fromisoformat() parsing before accessing .tzinfo, (2) /app/backend/mt5_watchdog.py line 116 - same fix for data freshness check, (3) /app/backend/health_checks.py lines 101 and 200 - applied to both MT5 account checks and terminal status checks. VERIFICATION: Backend restarted, monitored logs for 70 seconds, NO MORE 'tzinfo' ERRORS ✓. MT5 watchdog monitoring loop running successfully ✓. Data freshness checks working correctly ✓. RESULT: Code is now robust and handles both string and datetime objects. MT5 sync service functional again. Current issue is VPS connectivity (92.118.45.135:8000 unreachable) - this is infrastructure, not code bug."
+
+frontend:
+  - task: "Simplify Cash Flow & Performance Analysis Frontend"
+    implemented: true
+    working: "UNKNOWN - Blocked by auth"
+    file: "/app/frontend/src/components/SimpleCashFlowDashboard.js, /app/frontend/src/components/AdminDashboard.js"
+    stuck_count: 0
+    priority: "P0 - High"
+    needs_retesting: true
+    testing_method: "Frontend testing agent + Screenshot tool"
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "FRONTEND SIMPLIFICATION REQUESTED: User wants Cash Flow page to show ONLY 6 essential metrics (Total Equity, Broker Rebates, Total Fund Assets, Fund Revenue, Fund Obligations, Net Profit). Backend API already simplified to return flat structure. Need to update 2055-line CashFlowManagement.js component with complex nested breakdowns."
+        - working: "UNKNOWN"
+          agent: "main"
+          comment: "✅ CASH FLOW FRONTEND SIMPLIFICATION COMPLETE! Created new SimpleCashFlowDashboard.js (210 lines) to replace old 2055-line complex component. NEW COMPONENT FEATURES: (1) Clean 6-metric card layout showing Fund Assets (Total Equity, Broker Rebates, Total Fund Assets) and Fund Performance (Fund Revenue, Fund Obligations, Net Profit), (2) Direct consumption of simplified backend API /api/admin/cashflow/complete, (3) Removed all complex breakdowns: MT5 Trading Profits, Separation Balance, nested calculations, multiple charts/graphs, deal history tables, (4) Responsive design with hover effects and proper color coding for negative values, (5) Summary banner showing fund status and trade count. INTEGRATION: Updated AdminDashboard.js - replaced import from CashFlowManagement to SimpleCashFlowDashboard, component now used in Cash Flow tab. Frontend restarted successfully. BLOCKING ISSUE: Cannot verify UI visually - NO ADMIN USER exists in admin_users collection. Login attempts fail with 'Invalid username or password'. This blocks screenshot testing and visual verification. RECOMMENDATION: Create admin user in database OR have user test manually after authentication is fixed. The component code is complete and should work correctly once auth is resolved."
+
+**Testing Notes:**
+- MT5 watchdog fix verified via backend logs - no more tzinfo errors
+- Cash Flow frontend created but cannot be visually tested due to missing admin user
+- Frontend authentication failure is a known issue from previous session (Issue #4 in handoff summary)
+
+**Next Priority Tasks:**
+1. Fix frontend authentication (P1) - blocking all UI testing
+2. Resolve GitHub push block (P0) - user needs to click GitHub URLs
+3. Update SYSTEM_MASTER.md documentation (P1)
+4. Test all completed work comprehensively
+
+---
