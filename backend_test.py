@@ -618,7 +618,7 @@ class FidusBackendTester:
             print("\n👥 Testing Manager Allocations...")
             
             # Get all accounts to verify manager allocations
-            response = self.session.get(f"{self.base_url}/v2/derived/accounts", timeout=30)
+            response = self.session.get(f"{self.base_url}/v2/accounts/all", timeout=30)
             
             if response.status_code != 200:
                 self.log_test("Manager Allocations API", "FAIL", f"HTTP {response.status_code}: {response.text}")
