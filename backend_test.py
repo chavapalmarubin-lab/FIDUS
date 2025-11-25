@@ -194,7 +194,7 @@ class FidusBackendTester:
         try:
             print("\n🏛️ Testing Investment Committee API...")
             
-            response = self.session.get(f"{self.base_url}/admin/investment-committee/mt5-accounts", timeout=30)
+            response = self.session.get(f"{self.base_url}/v2/accounts/all", timeout=30)
             
             if response.status_code != 200:
                 self.log_test("Investment Committee API", "FAIL", f"HTTP {response.status_code}: {response.text}")
