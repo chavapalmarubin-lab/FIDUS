@@ -16653,7 +16653,7 @@ async def get_complete_cashflow(days: int = 30):
         return {
             'success': True,
             
-            # SIMPLIFIED RESPONSE - Only essential metrics
+            # SIMPLIFIED RESPONSE - Top Section (Fund Assets)
             'account_count': account_count,
             'total_equity': round(total_equity, 2),
             'total_balance': round(total_balance, 2),
@@ -16661,16 +16661,25 @@ async def get_complete_cashflow(days: int = 30):
             'broker_rebates': round(broker_rebates, 2),
             'total_fund_assets': round(total_fund_assets, 2),
             
-            # Legacy fields for backward compatibility (set to 0 or simple values)
-            'total_profit_loss': round(total_balance - total_allocation, 2),
+            # NEW: Bottom Section (Fund Revenue & Obligations)
+            'client_money': round(client_money, 2),
+            'fund_revenue': round(fund_revenue, 2),
+            'fund_obligations': round(fund_obligations, 2),
+            'net_profit': round(net_profit, 2),
+            
+            # Updated: Fund Liabilities (Obligations)
+            'client_interest_obligations': round(client_interest_obligations, 2),
+            'upcoming_redemptions': 0,
+            'manager_performance_fees': 0,
+            'total_liabilities': round(fund_obligations, 2),
+            
+            # Legacy fields for backward compatibility
+            'total_profit_loss': round(fund_revenue, 2),  # Map to fund_revenue
             'separation_interest': 0,
             'broker_interest': 0,
-            'total_inflows': round(total_fund_assets, 2),
-            'net_profit': round(total_balance - total_allocation, 2),
-            'client_interest_obligations': 0,
+            'total_inflows': round(fund_revenue, 2),
             'client_principal_redemptions': 0,
             'referral_commissions': 0,
-            'total_liabilities': 0,
             'profit_withdrawals': 0,
             'total_volume_lots': 0,
             
