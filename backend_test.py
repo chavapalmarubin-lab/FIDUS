@@ -1014,9 +1014,9 @@ class FidusBackendTester:
                 self.log_test(f"{test_name} Exception", "ERROR", f"Test failed with exception: {str(e)}")
         
         # Print summary
-        print("\n" + "=" * 70)
-        print("📊 FIDUS COMMISSION VERIFICATION SUMMARY")
-        print("=" * 70)
+        print("\n" + "=" * 80)
+        print("📊 FIDUS BACKEND COMPREHENSIVE TESTING SUMMARY")
+        print("=" * 80)
         
         success_rate = (passed_tests / total_tests) * 100
         print(f"Tests Passed: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
