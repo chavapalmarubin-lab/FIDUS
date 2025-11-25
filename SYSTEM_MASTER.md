@@ -1833,6 +1833,16 @@ curl -X POST http://localhost:8001/api/auth/login \
 - JWT tokens must be included in Authorization header for protected endpoints
 - Format: `Authorization: Bearer <token>`
 
+### 14.2 Recent Changes
+
+**November 25, 2025 - Cash Flow Simplification Complete**
+- Fixed critical MT5 watchdog `tzinfo` bug (datetime string parsing)
+- Created new `SimpleCashFlowDashboard.js` component (210 lines)
+- Replaced old complex component (2055 lines) with simplified 6-metric view
+- Fixed `/api/admin/cashflow/complete` endpoint undefined variable errors
+- Updated admin user credentials for testing (username: admin, password: password123)
+- All services operational, Cash Flow UI verified and working
+
 ---
 
 <img width="468" height="625" alt="image" src="https://github.com/user-attachments/assets/e405fe15-fcdd-4db6-b38c-464d0fc84c58" />
