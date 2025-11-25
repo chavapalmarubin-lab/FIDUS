@@ -278,8 +278,14 @@ class MT5Watchdog:
                     "message": "No sync timestamp found"
                 }
             
-            # Calculate age (handle timezone-aware and naive datetimes)
+            # Calculate age (handle timezone-aware and naive datetimes, and strings)
             now = datetime.now(timezone.utc)
+            
+            # Convert string to datetime if needed
+            if isinstance(last_sync, str):
+                # Parse ISO format string (handles both with and without 'Z')
+                last_sync = datetime.fromisoformat(last_sync.replace('Z', '+00:00'))
+            
             if last_sync.tzinfo is None:
                 # Make timezone-naive datetime timezone-aware (assume UTC)
                 last_sync = last_sync.replace(tzinfo=timezone.utc)
