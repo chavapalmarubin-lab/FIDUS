@@ -77,7 +77,7 @@ async def get_current_admin_user(request: Request):
 ALL_MT5_ACCOUNTS = [
     885822, 886066, 886528, 886557, 886602,
     891215, 891234, 897589, 897590, 897591,
-    897599, 901351, 901353
+    897599, 901351, 901353, 2198
 ]
 
 # MT4 Accounts
@@ -85,7 +85,7 @@ ALL_MT4_ACCOUNTS = [
     33200931  # Money Manager MT4 Account
 ]
 
-# Combined accounts
+# Combined accounts - Total: 15 accounts (14 MT5 + 1 MT4)
 ALL_ACCOUNTS = ALL_MT5_ACCOUNTS + ALL_MT4_ACCOUNTS
 
 VALID_MANAGERS = [
