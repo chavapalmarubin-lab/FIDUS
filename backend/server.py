@@ -16704,23 +16704,14 @@ async def get_complete_cashflow(days: int = 30):
             },
             'liabilities': {
                 'client_interest_obligations': round(client_interest_obligations, 2),
-                'client_principal_redemptions': round(client_principal_redemptions, 2),
-                'referral_commissions': round(referral_commissions, 2),
-                'total': round(total_liabilities, 2)
+                'client_principal_redemptions': 0,
+                'referral_commissions': 0,
+                'total': round(fund_obligations, 2)
             },
             'summary': {
-                'total_profit_withdrawals': round(profit_withdrawals, 2),
-                'total_inflows': round(total_inflows, 2),
+                'total_profit_withdrawals': 0,
+                'total_inflows': round(fund_revenue, 2),
                 'net_profit': round(net_profit, 2)
-            },
-            
-            # Source data (for debugging)
-            'source_data': {
-                'total_profit_loss': round(mt5_trading_pnl, 2),
-                'separation_balance': round(separation_balance, 2),
-                'profit_withdrawals': round(profit_withdrawals, 2),
-                'broker_rebates': round(broker_rebates, 2),
-                'client_interest_obligations': round(client_interest_obligations, 2)
             }
         }
     
