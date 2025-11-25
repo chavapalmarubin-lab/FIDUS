@@ -1854,8 +1854,23 @@ curl -X POST http://localhost:8001/api/auth/login \
 - Created new `SimpleCashFlowDashboard.js` component (210 lines)
 - Replaced old complex component (2055 lines) with simplified 6-metric view
 - Fixed `/api/admin/cashflow/complete` endpoint undefined variable errors
-- Updated admin user credentials for testing (username: admin, password: password123)
+- Created two admin users: `admin` (password123) and `emergent_admin` (admin123)
 - All services operational, Cash Flow UI verified and working
+
+### 14.3 Future Configuration Tasks
+
+**GITHUB_TOKEN Configuration (Low Priority)**
+- Purpose: Enable MT5 Watchdog auto-healing feature
+- Current Status: Not configured
+- Impact: Auto-healing attempts will fail but system continues to operate
+- Action Required: Configure GITHUB_TOKEN environment variable for automated VPS service restarts
+- Priority: Low (system functions without this)
+
+**VPS Bridge Notes**
+- VPS bridges run on Windows VPS (217.197.163.11)
+- Bridges push data directly to MongoDB
+- Connection errors to 92.118.45.135:8000 are expected when VPS is offline
+- Backend does NOT need to connect to VPS - data flow is one-way (VPS → MongoDB)
 
 ---
 
