@@ -112,12 +112,18 @@ class MT5Watchdog:
             if not last_update:
                 return False
             
+            # DEBUG: Log the type and value
+            logger.debug(f"[MT5 WATCHDOG DEBUG] last_update type: {type(last_update)}, value: {last_update}")
+            
             # Convert string to datetime if needed
             if isinstance(last_update, str):
+                logger.debug(f"[MT5 WATCHDOG DEBUG] Converting string to datetime")
                 last_update = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+                logger.debug(f"[MT5 WATCHDOG DEBUG] After conversion: {type(last_update)}, tzinfo: {last_update.tzinfo}")
             
             # Ensure timezone aware
             if last_update.tzinfo is None:
+                logger.debug(f"[MT5 WATCHDOG DEBUG] Adding timezone")
                 last_update = last_update.replace(tzinfo=timezone.utc)
             
             # Check if data is within threshold
