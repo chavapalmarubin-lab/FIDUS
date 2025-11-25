@@ -401,7 +401,7 @@ class FidusBackendTester:
         try:
             print("\n💰 Testing Cash Flow API...")
             
-            response = self.session.get(f"{self.base_url}/admin/cashflow/complete", timeout=30)
+            response = self.session.get(f"{self.base_url}/admin/cashflow/overview", timeout=30)
             
             if response.status_code != 200:
                 self.log_test("Cash Flow API", "FAIL", f"HTTP {response.status_code}: {response.text}")
