@@ -196,6 +196,11 @@ async def perform_all_health_checks(mongo_client, db) -> Dict[str, Dict[str, Any
             last_update = terminal_status.get('timestamp')
             if last_update:
                 now = datetime.now(timezone.utc)
+                
+                # Convert string to datetime if needed
+                if isinstance(last_update, str):
+                    last_update = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+                
                 # Handle timezone-aware datetime
                 if last_update.tzinfo is None:
                     last_update = last_update.replace(tzinfo=timezone.utc)
