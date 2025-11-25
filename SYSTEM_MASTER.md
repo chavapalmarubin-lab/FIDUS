@@ -1808,12 +1808,13 @@ Now continue with Priority 3: Fix Cash Flow using THIS data structure! 🚀
 | Field | Value |
 |-------|-------|
 | Username | emergent_admin |
-| Password | admin123 |
+| Password | admin123 ✅ |
 | Email | chavany@me.com |
 | Type | admin |
 | Status | active |
 | Collection | users |
 | Purpose | Testing and development |
+| Notes | Uses temp_password field for login |
 
 **Login Endpoint:** `/api/auth/login`
 
