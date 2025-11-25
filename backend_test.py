@@ -102,7 +102,8 @@ class FidusBackendTester:
                 self.log_test("Money Managers API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            managers = data.get("managers", [])
+            managers_dict = data.get("managers", {})
+            managers = list(managers_dict.values())  # Convert dict to list
             success = True
             
             # Check we have 8+ active managers
