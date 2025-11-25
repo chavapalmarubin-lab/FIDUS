@@ -398,109 +398,144 @@ class FidusBackendTester:
     def test_cash_flow_api(self) -> bool:
         """Test 4: Cash Flow API - GET /api/admin/cashflow/complete"""
         try:
-            print("\n📅 Testing Commission Calendar/Schedule...")
+            print("\n💰 Testing Cash Flow API...")
             
-            # Try multiple potential endpoints for commission calendar
-            endpoints_to_try = [
-                "/admin/cashflow/calendar",
-                "/admin/commissions/schedule", 
-                "/admin/referrals/commission-schedule",
-                "/admin/cashflow/overview"
-            ]
+            response = self.session.get(f"{self.base_url}/admin/cashflow/complete", timeout=30)
             
-            calendar_found = False
+            if response.status_code != 200:
+                self.log_test("Cash Flow API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            
+            if not data.get("success"):
+                self.log_test("Cash Flow API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                return False
+            
             success = True
             
-            for endpoint in endpoints_to_try:
-                try:
-                    response = self.session.get(f"{self.base_url}{endpoint}")
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        
-                        if data.get("success"):
-                            calendar_found = True
-                            self.log_test("Commission Calendar Endpoint", "PASS", 
-                                        f"Found working calendar endpoint: {endpoint}")
-                            
-                            # Look for payment schedule data
-                            monthly_obligations = data.get("monthly_obligations", [])
-                            milestones = data.get("milestones", {})
-                            
-                            if monthly_obligations:
-                                # Check for BALANCE first payment (Feb 28, 2026)
-                                balance_payments = [
-                                    payment for payment in monthly_obligations 
-                                    if payment.get("balance_interest", 0) > 0
-                                ]
-                                
-                                if balance_payments:
-                                    first_balance = balance_payments[0]
-                                    balance_date = first_balance.get("date", "")
-                                    
-                                    if "2026-02" in balance_date or "Feb" in balance_date:
-                                        self.log_test("BALANCE First Payment Date", "PASS", 
-                                                    f"BALANCE first payment scheduled correctly", 
-                                                    "February 2026", 
-                                                    balance_date)
-                                    else:
-                                        self.log_test("BALANCE First Payment Date", "FAIL", 
-                                                    f"BALANCE first payment date incorrect", 
-                                                    "February 2026", 
-                                                    balance_date)
-                                        success = False
-                                
-                                # Check for CORE first payment (Dec 30, 2025)
-                                core_payments = [
-                                    payment for payment in monthly_obligations 
-                                    if payment.get("core_interest", 0) > 0
-                                ]
-                                
-                                if core_payments:
-                                    first_core = core_payments[0]
-                                    core_date = first_core.get("date", "")
-                                    
-                                    if "2025-12" in core_date or "Dec" in core_date:
-                                        self.log_test("CORE First Payment Date", "PASS", 
-                                                    f"CORE first payment scheduled correctly", 
-                                                    "December 2025", 
-                                                    core_date)
-                                    else:
-                                        self.log_test("CORE First Payment Date", "FAIL", 
-                                                    f"CORE first payment date incorrect", 
-                                                    "December 2025", 
-                                                    core_date)
-                                        success = False
-                                
-                                # Check total commission payments count (16 total: 12 CORE + 4 BALANCE)
-                                total_payments = len(monthly_obligations)
-                                expected_payments = 16
-                                
-                                if total_payments >= expected_payments:
-                                    self.log_test("Total Commission Payments", "PASS", 
-                                                f"Total commission payments count adequate", 
-                                                f">= {expected_payments}", 
-                                                total_payments)
-                                else:
-                                    self.log_test("Total Commission Payments", "FAIL", 
-                                                f"Total commission payments count low", 
-                                                f">= {expected_payments}", 
-                                                total_payments)
-                                    success = False
-                            
-                            break
-                            
-                except Exception as e:
-                    continue
+            # Check total_equity (~$130,000-$131,000)
+            total_equity = data.get("total_equity", 0)
+            if 130000 <= total_equity <= 131000:
+                self.log_test("Total Equity Range", "PASS", 
+                            f"Total equity in expected range", 
+                            "$130,000-$131,000", 
+                            f"${total_equity:,.2f}")
+            else:
+                self.log_test("Total Equity Range", "FAIL", 
+                            f"Total equity outside expected range", 
+                            "$130,000-$131,000", 
+                            f"${total_equity:,.2f}")
+                success = False
             
-            if not calendar_found:
-                self.log_test("Commission Calendar", "FAIL", "No working commission calendar endpoint found")
-                return False
+            # Check broker_rebates = $202.00
+            broker_rebates = data.get("broker_rebates", 0)
+            expected_rebates = 202.00
+            if abs(broker_rebates - expected_rebates) < 0.01:
+                self.log_test("Broker Rebates", "PASS", 
+                            f"Broker rebates match expected value", 
+                            f"${expected_rebates:,.2f}", 
+                            f"${broker_rebates:,.2f}")
+            else:
+                self.log_test("Broker Rebates", "FAIL", 
+                            f"Broker rebates do not match expected value", 
+                            f"${expected_rebates:,.2f}", 
+                            f"${broker_rebates:,.2f}")
+                success = False
+            
+            # Check total_fund_assets = total_equity + 202
+            total_fund_assets = data.get("total_fund_assets", 0)
+            expected_fund_assets = total_equity + 202
+            if abs(total_fund_assets - expected_fund_assets) < 0.01:
+                self.log_test("Total Fund Assets", "PASS", 
+                            f"Total fund assets calculated correctly", 
+                            f"${expected_fund_assets:,.2f}", 
+                            f"${total_fund_assets:,.2f}")
+            else:
+                self.log_test("Total Fund Assets", "FAIL", 
+                            f"Total fund assets calculation incorrect", 
+                            f"${expected_fund_assets:,.2f}", 
+                            f"${total_fund_assets:,.2f}")
+                success = False
+            
+            # Check client_money = $118,151.41
+            client_money = data.get("client_money", 0)
+            expected_client_money = 118151.41
+            if abs(client_money - expected_client_money) < 1.0:  # Allow $1 tolerance
+                self.log_test("Client Money", "PASS", 
+                            f"Client money matches expected value", 
+                            f"${expected_client_money:,.2f}", 
+                            f"${client_money:,.2f}")
+            else:
+                self.log_test("Client Money", "FAIL", 
+                            f"Client money does not match expected value", 
+                            f"${expected_client_money:,.2f}", 
+                            f"${client_money:,.2f}")
+                success = False
+            
+            # Check fund_revenue = total_equity - 118151.41
+            fund_revenue = data.get("fund_revenue", 0)
+            expected_fund_revenue = total_equity - 118151.41
+            if abs(fund_revenue - expected_fund_revenue) < 1.0:  # Allow $1 tolerance
+                self.log_test("Fund Revenue", "PASS", 
+                            f"Fund revenue calculated correctly", 
+                            f"${expected_fund_revenue:,.2f}", 
+                            f"${fund_revenue:,.2f}")
+            else:
+                self.log_test("Fund Revenue", "FAIL", 
+                            f"Fund revenue calculation incorrect", 
+                            f"${expected_fund_revenue:,.2f}", 
+                            f"${fund_revenue:,.2f}")
+                success = False
+            
+            # Check client_interest_obligations = $33,267.25
+            client_interest_obligations = data.get("client_interest_obligations", 0)
+            expected_obligations = 33267.25
+            if abs(client_interest_obligations - expected_obligations) < 1.0:  # Allow $1 tolerance
+                self.log_test("Client Interest Obligations", "PASS", 
+                            f"Client interest obligations match expected value", 
+                            f"${expected_obligations:,.2f}", 
+                            f"${client_interest_obligations:,.2f}")
+            else:
+                self.log_test("Client Interest Obligations", "FAIL", 
+                            f"Client interest obligations do not match expected value", 
+                            f"${expected_obligations:,.2f}", 
+                            f"${client_interest_obligations:,.2f}")
+                success = False
+            
+            # Check fund_obligations = $33,267.25
+            fund_obligations = data.get("fund_obligations", 0)
+            if abs(fund_obligations - expected_obligations) < 1.0:  # Allow $1 tolerance
+                self.log_test("Fund Obligations", "PASS", 
+                            f"Fund obligations match expected value", 
+                            f"${expected_obligations:,.2f}", 
+                            f"${fund_obligations:,.2f}")
+            else:
+                self.log_test("Fund Obligations", "FAIL", 
+                            f"Fund obligations do not match expected value", 
+                            f"${expected_obligations:,.2f}", 
+                            f"${fund_obligations:,.2f}")
+                success = False
+            
+            # Check net_profit = fund_revenue - fund_obligations (should be ~-$20,400)
+            net_profit = data.get("net_profit", 0)
+            expected_net_profit = fund_revenue - fund_obligations
+            if abs(net_profit - expected_net_profit) < 1.0:  # Allow $1 tolerance
+                self.log_test("Net Profit", "PASS", 
+                            f"Net profit calculated correctly", 
+                            f"${expected_net_profit:,.2f}", 
+                            f"${net_profit:,.2f}")
+            else:
+                self.log_test("Net Profit", "FAIL", 
+                            f"Net profit calculation incorrect", 
+                            f"${expected_net_profit:,.2f}", 
+                            f"${net_profit:,.2f}")
+                success = False
             
             return success
             
         except Exception as e:
-            self.log_test("Commission Calendar Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Cash Flow API Test", "ERROR", f"Exception: {str(e)}")
             return False
             
         except Exception as e:
