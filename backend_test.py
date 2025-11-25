@@ -510,8 +510,8 @@ class FidusBackendTester:
         try:
             print("\n🔐 Testing Account 2198 Password...")
             
-            # Try to get account details via API
-            response = self.session.get(f"{self.base_url}/admin/mt5-accounts/2198", timeout=30)
+            # Get all accounts and find account 2198
+            response = self.session.get(f"{self.base_url}/v2/accounts/all", timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
