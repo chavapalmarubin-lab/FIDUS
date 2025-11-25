@@ -16,8 +16,14 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 ALL_MT5_ACCOUNTS = [
     885822, 886066, 886528, 886557, 886602,
     891215, 891234, 897589, 897590, 897591,
-    897599, 901351, 901353
+    897599, 901351, 901353, 2198
 ]
+
+ALL_MT4_ACCOUNTS = [
+    33200931
+]
+
+ALL_ACCOUNTS = ALL_MT5_ACCOUNTS + ALL_MT4_ACCOUNTS  # Total: 15 accounts
 
 async def test_all_endpoints():
     """Test all 7 Investment Committee endpoints"""
