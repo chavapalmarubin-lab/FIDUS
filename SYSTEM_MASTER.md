@@ -43,8 +43,8 @@ Read the documents before starting any work.
 - Chava
 ```
 FIDUS INVESTMENT MANAGEMENT - SYSTEM MASTER DOCUMENTATION
-Last Updated: November 17, 2025
-Version: 2.1
+Last Updated: November 25, 2025
+Version: 2.2
 Maintained By: Chava Palma (Founder & CEO)
  
 TABLE OF CONTENTS
