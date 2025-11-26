@@ -875,11 +875,24 @@ const CashFlowManagement = () => {
               {/* Divider line */}
               <div className="border-t-2 border-cyan-500/50 my-2"></div>
               
+              {/* Broker Rebates (add) */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span className="text-slate-300 font-medium">+ Broker Rebates</span>
+                <span className="text-green-400 font-bold text-lg">
+                  +{formatCurrency(fundAccounting?.assets?.broker_rebates || 0)}
+                </span>
+              </div>
+              
+              {/* Divider line */}
+              <div className="border-t-2 border-cyan-500/50 my-2"></div>
+              
               {/* Current Fund Revenue (result) */}
               <div className="flex items-center justify-between bg-cyan-900/20 rounded-lg p-3">
                 <span className="text-cyan-400 font-bold text-lg">= Current Fund Revenue</span>
                 <span className="text-cyan-400 font-bold text-2xl">
-                  {formatCurrency((fundAccounting?.total_equity || 0) - 118151.41)}
+                  {formatCurrency(
+                    (fundAccounting?.total_equity || 0) - 118151.41 + (fundAccounting?.assets?.broker_rebates || 0)
+                  )}
                 </span>
               </div>
               
