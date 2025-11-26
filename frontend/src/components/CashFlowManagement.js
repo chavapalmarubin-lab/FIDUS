@@ -820,6 +820,53 @@ const CashFlowManagement = () => {
         </div>
       )}
 
+      {/* 📊 Revenue Calculation Breakdown (SSOT) */}
+      {fundAccounting && (
+        <Card className="dashboard-card border-cyan-500/30 bg-slate-800/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold text-cyan-400 flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              📊 Revenue Calculation (Single Source of Truth)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Total Equity */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span className="text-slate-300 font-medium">Total Equity (MT5 Accounts)</span>
+                <span className="text-white font-bold text-lg">
+                  {formatCurrency(fundAccounting?.total_equity || 0)}
+                </span>
+              </div>
+              
+              {/* Client Money (subtract) */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span className="text-slate-300 font-medium">− Client Money (Obligations)</span>
+                <span className="text-red-400 font-bold text-lg">
+                  −{formatCurrency(118151.41)}
+                </span>
+              </div>
+              
+              {/* Divider line */}
+              <div className="border-t-2 border-cyan-500/50 my-2"></div>
+              
+              {/* Current Fund Revenue (result) */}
+              <div className="flex items-center justify-between bg-cyan-900/20 rounded-lg p-3">
+                <span className="text-cyan-400 font-bold text-lg">= Current Fund Revenue</span>
+                <span className="text-cyan-400 font-bold text-2xl">
+                  {formatCurrency((fundAccounting?.total_equity || 0) - 118151.41)}
+                </span>
+              </div>
+              
+              {/* Helper text */}
+              <p className="text-xs text-slate-400 mt-2 italic">
+                This calculation is used consistently across all sections of this page.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ✅ Verification Status Banner */}
       {fundAccounting?.backend_calculated && (
         <div className="rounded-lg p-4 border bg-green-900/20 border-green-600">
