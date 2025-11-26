@@ -107,7 +107,8 @@ const CashFlowManagement = () => {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
-        // ✅ PHASE 1: Fetch complete cashflow from backend with all calculations
+        // ✅ Use SAME data source as Fund Portfolio - /api/v2/derived/fund-portfolio
+        let totalEquity = 0;
         let mt5TruePnl = 0;
         let brokerInterest = 0;
         let totalInflows = 0;
@@ -117,9 +118,19 @@ const CashFlowManagement = () => {
         let totalLiabilities = 0;
         let separationBalance = 0;
         let profitWithdrawals = 0;
-        let totalEquity = 0;  // NEW: For revenue calculation breakdown
         
         try {
+          // Fetch from SAME endpoint as Fund Portfolio (working tab)
+          const portfolioResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/fund-portfolio`);
+          const portfolioData = await portfolioResponse.json();
+          
+          if (portfolioData.success && portfolioData.funds) {
+            // Calculate total equity from all funds (same as Fund Portfolio)
+            totalEquity = Object.values(portfolioData.funds).reduce((sum, fund) => sum + (fund.total_equity || 0), 0);
+            console.log(`✅ Total Equity from Fund Portfolio API: $${totalEquity.toFixed(2)}`);
+          }
+          
+          // Also fetch cashflow complete for other data
           const token = localStorage.getItem('fidus_token');
           const completeResponse = await fetch(
             `${process.env.REACT_APP_BACKEND_URL}/api/admin/cashflow/complete`,
@@ -129,19 +140,16 @@ const CashFlowManagement = () => {
           if (completeResponse.ok) {
             const data = await completeResponse.json();
             if (data.success) {
-              // ✅ PHASE 2 TASK #3: Use FLAT structure (with backward compatibility fallback)
+              // Get other metrics
               mt5TruePnl = data.total_profit_loss || data.fund_assets?.total_profit_loss || 0;
-              brokerInterest = data.broker_interest || 0;  // Already flat
-              totalInflows = data.total_inflows || 0;      // Already flat
-              netProfit = data.net_profit || 0;            // Already flat
+              brokerInterest = data.broker_interest || 0;
+              totalInflows = data.total_inflows || 0;
+              netProfit = data.net_profit || 0;
               brokerRebates = data.broker_rebates || data.fund_assets?.broker_rebates || 0;
               clientObligations = data.client_interest_obligations || data.liabilities?.client_interest_obligations || 0;
-              totalLiabilities = data.total_liabilities || 0;  // Already flat
+              totalLiabilities = data.total_liabilities || 0;
               separationBalance = data.separation_interest || data.fund_assets?.separation_interest || 0;
               profitWithdrawals = data.profit_withdrawals || data.summary?.total_profit_withdrawals || 0;
-              
-              // NEW: Extract total_equity for revenue calculation breakdown
-              totalEquity = data.total_equity || 0;
               
               console.log("✅ PHASE 2 TASK #3: Using FLAT structure (no nesting):", {
                 total_profit_loss: mt5TruePnl,
