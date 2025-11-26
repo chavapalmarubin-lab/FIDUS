@@ -117,6 +117,7 @@ const CashFlowManagement = () => {
         let totalLiabilities = 0;
         let separationBalance = 0;
         let profitWithdrawals = 0;
+        let totalEquity = 0;  // NEW: For revenue calculation breakdown
         
         try {
           const token = localStorage.getItem('fidus_token');
@@ -140,7 +141,7 @@ const CashFlowManagement = () => {
               profitWithdrawals = data.profit_withdrawals || data.summary?.total_profit_withdrawals || 0;
               
               // NEW: Extract total_equity for revenue calculation breakdown
-              const totalEquity = data.total_equity || 0;
+              totalEquity = data.total_equity || 0;
               
               console.log("✅ PHASE 2 TASK #3: Using FLAT structure (no nesting):", {
                 total_profit_loss: mt5TruePnl,
