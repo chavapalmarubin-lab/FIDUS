@@ -205,7 +205,8 @@ const CashFlowManagement = () => {
           backend_calculated: true,
           separation_balance: separationBalance,
           profit_withdrawals: profitWithdrawals,
-          separation_accounts: separationAccounts  // PHASE 1 FIX: Individual account balances
+          separation_accounts: separationAccounts,  // PHASE 1 FIX: Individual account balances
+          total_equity: totalEquity                 // NEW: For revenue calculation breakdown
         };
         
         setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
