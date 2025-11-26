@@ -107,7 +107,8 @@ const CashFlowManagement = () => {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
-        // ✅ Use SAME data source as Fund Portfolio - /api/v2/derived/fund-portfolio
+        // ✅ Use SAME data source as Fund Portfolio with proper error handling
+        const CLIENT_MONEY = 118151.41;
         let totalEquity = 0;
         let mt5TruePnl = 0;
         let brokerInterest = 0;
@@ -122,12 +123,22 @@ const CashFlowManagement = () => {
         try {
           // Fetch from SAME endpoint as Fund Portfolio (working tab)
           const portfolioResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/fund-portfolio`);
+          
+          if (!portfolioResponse.ok) {
+            throw new Error(`Fund portfolio API returned ${portfolioResponse.status}`);
+          }
+          
           const portfolioData = await portfolioResponse.json();
           
           if (portfolioData.success && portfolioData.funds) {
             // Calculate total equity from all funds (same as Fund Portfolio)
-            totalEquity = Object.values(portfolioData.funds).reduce((sum, fund) => sum + (fund.total_equity || 0), 0);
+            const funds = Object.values(portfolioData.funds);
+            totalEquity = funds.reduce((sum, fund) => {
+              return sum + (parseFloat(fund.total_equity) || 0);
+            }, 0);
             console.log(`✅ Total Equity from Fund Portfolio API: $${totalEquity.toFixed(2)}`);
+          } else {
+            console.warn('⚠️ Fund Portfolio API returned no funds data');
           }
           
           // Also fetch cashflow complete for other data
@@ -140,30 +151,31 @@ const CashFlowManagement = () => {
           if (completeResponse.ok) {
             const data = await completeResponse.json();
             if (data.success) {
-              // Get other metrics
-              mt5TruePnl = data.total_profit_loss || data.fund_assets?.total_profit_loss || 0;
-              brokerInterest = data.broker_interest || 0;
-              totalInflows = data.total_inflows || 0;
-              netProfit = data.net_profit || 0;
-              brokerRebates = data.broker_rebates || data.fund_assets?.broker_rebates || 0;
-              clientObligations = data.client_interest_obligations || data.liabilities?.client_interest_obligations || 0;
-              totalLiabilities = data.total_liabilities || 0;
-              separationBalance = data.separation_interest || data.fund_assets?.separation_interest || 0;
-              profitWithdrawals = data.profit_withdrawals || data.summary?.total_profit_withdrawals || 0;
+              // Get other metrics with null checks
+              mt5TruePnl = parseFloat(data.total_profit_loss || data.fund_assets?.total_profit_loss || 0);
+              brokerInterest = parseFloat(data.broker_interest || 0);
+              totalInflows = parseFloat(data.total_inflows || 0);
+              netProfit = parseFloat(data.net_profit || 0);
+              brokerRebates = parseFloat(data.broker_rebates || data.fund_assets?.broker_rebates || 0);
+              clientObligations = parseFloat(data.client_interest_obligations || data.liabilities?.client_interest_obligations || 0);
+              totalLiabilities = parseFloat(data.total_liabilities || 0);
+              separationBalance = parseFloat(data.separation_interest || data.fund_assets?.separation_interest || 0);
+              profitWithdrawals = parseFloat(data.profit_withdrawals || data.summary?.total_profit_withdrawals || 0);
               
-              console.log("✅ PHASE 2 TASK #3: Using FLAT structure (no nesting):", {
-                total_profit_loss: mt5TruePnl,
-                broker_interest: brokerInterest,
-                total_inflows: totalInflows,
-                net_profit: netProfit,
-                broker_rebates: brokerRebates,
-                structure: 'FLAT (preferred)',
-                source: 'backend API /api/admin/cashflow/complete'
+              console.log("✅ Cash Flow Metrics Loaded:", {
+                totalEquity: totalEquity.toFixed(2),
+                clientMoney: CLIENT_MONEY.toFixed(2),
+                currentRevenue: (totalEquity - CLIENT_MONEY).toFixed(2),
+                mt5TruePnl: mt5TruePnl.toFixed(2),
+                brokerRebates: brokerRebates.toFixed(2)
               });
             }
           }
         } catch (error) {
-          console.error('Error loading complete cashflow:', error);
+          console.error('❌ Cash flow API error:', error);
+          // Set fallback state with meaningful defaults
+          totalEquity = 0;
+          console.warn(`⚠️ Using fallback: totalEquity=0, currentRevenue=-${CLIENT_MONEY}`);
         }
 
         // PHASE 1 FIX: Fetch individual separation account balances
