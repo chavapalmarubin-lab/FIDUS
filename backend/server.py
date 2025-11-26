@@ -16276,9 +16276,23 @@ async def calculate_cash_flow_calendar():
                 print(f"  Re-queried - has referral_salesperson_id: {'referral_salesperson_id' in requeried}")
                 print(f"  Re-queried - value: {requeried.get('referral_salesperson_id')}")
         
-        # Get current fund revenue (real-time earnings)
-        separation_data = await get_separation_account_interest()
-        current_revenue = await get_total_mt5_profits() + separation_data.get('total', 0)
+        # Get current fund revenue using SSOT calculation
+        # SSOT: Fund Revenue = Total Equity - Client Money ($118,151.41)
+        CLIENT_MONEY = 118151.41
+        
+        # Get all MT5 accounts for total equity
+        mt5_accounts = await db.mt5_accounts.find({
+            "status": "active",
+            "fund_type": {"$nin": ["INTEREST_SEPARATION", "GAINS_SEPARATION", "SEPARATION"]}
+        }).to_list(length=None)
+        
+        total_equity = sum(float(acc.get('equity', 0)) for acc in mt5_accounts)
+        current_revenue = total_equity - CLIENT_MONEY
+        
+        logging.info(f"💰 Calendar Revenue Calculation (SSOT):")
+        logging.info(f"   Total Equity: ${total_equity:,.2f}")
+        logging.info(f"   Client Money: ${CLIENT_MONEY:,.2f}")
+        logging.info(f"   Fund Revenue: ${current_revenue:,.2f}")
         
         # Get current month's performance fees (assumed to be paid monthly)
         from services.performance_fee_calculator import PerformanceFeeCalculator
