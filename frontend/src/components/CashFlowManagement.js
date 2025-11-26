@@ -997,7 +997,10 @@ const CashFlowManagement = () => {
                 <div className="flex justify-between items-center">
                   <p className="text-white font-semibold">Total Fund Assets</p>
                   <p className="text-xl font-bold text-green-400">
-                    {formatCurrency(fundAccounting?.assets?.total_inflows || 0)}
+                    {formatCurrency(
+                      (fundAccounting?.assets?.mt5_trading_profits || 0) + 
+                      (fundAccounting?.assets?.broker_rebates || 0)
+                    )}
                   </p>
                 </div>
               </div>
