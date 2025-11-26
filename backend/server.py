@@ -21758,7 +21758,19 @@ async def get_balance_operations(
         }
         
     except Exception as e:
-        logging.error(f"Get balance operations error: {str(e)}")
+        import traceback
+        error_details = {
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "traceback": traceback.format_exc(),
+            "params": {
+                "account_number": account_number,
+                "start_date": start_date,
+                "end_date": end_date
+            }
+        }
+        logging.error(f"❌ balance-operations error: {type(e).__name__}: {e}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch operations: {str(e)}")
 
 @api_router.get("/mt5/daily-pnl")
