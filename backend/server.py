@@ -16277,8 +16277,9 @@ async def calculate_cash_flow_calendar():
                 print(f"  Re-queried - value: {requeried.get('referral_salesperson_id')}")
         
         # Get current fund revenue using SSOT calculation
-        # SSOT: Fund Revenue = Total Equity - Client Money ($118,151.41)
+        # SSOT: Fund Revenue = (Total Equity - Client Money) + Broker Rebates
         CLIENT_MONEY = 118151.41
+        BROKER_REBATES = 202.00  # Monthly rebates
         
         # Get all MT5 accounts for total equity
         mt5_accounts = await db.mt5_accounts.find({
@@ -16287,11 +16288,12 @@ async def calculate_cash_flow_calendar():
         }).to_list(length=None)
         
         total_equity = sum(float(acc.get('equity', 0)) for acc in mt5_accounts)
-        current_revenue = total_equity - CLIENT_MONEY
+        current_revenue = (total_equity - CLIENT_MONEY) + BROKER_REBATES
         
         logging.info(f"💰 Calendar Revenue Calculation (SSOT):")
         logging.info(f"   Total Equity: ${total_equity:,.2f}")
         logging.info(f"   Client Money: ${CLIENT_MONEY:,.2f}")
+        logging.info(f"   Broker Rebates: ${BROKER_REBATES:,.2f}")
         logging.info(f"   Fund Revenue: ${current_revenue:,.2f}")
         
         # Get current month's performance fees (assumed to be paid monthly)
