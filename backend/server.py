@@ -16278,20 +16278,20 @@ async def calculate_cash_flow_calendar():
         
         # Get current fund revenue using SSOT calculation
         # SSOT: Fund Revenue = (Total Equity - Client Money) + Broker Rebates
+        # ✅ Use SAME query as Fund Portfolio (ALL active accounts, no exclusions)
         CLIENT_MONEY = 118151.41
         BROKER_REBATES = 202.00  # Monthly rebates
         
-        # Get all MT5 accounts for total equity
+        # Get ALL active MT5 accounts for total equity (same as Fund Portfolio)
         mt5_accounts = await db.mt5_accounts.find({
-            "status": "active",
-            "fund_type": {"$nin": ["INTEREST_SEPARATION", "GAINS_SEPARATION", "SEPARATION"]}
+            "status": "active"
         }).to_list(length=None)
         
         total_equity = sum(float(acc.get('equity', 0)) for acc in mt5_accounts)
         current_revenue = (total_equity - CLIENT_MONEY) + BROKER_REBATES
         
-        logging.info(f"💰 Calendar Revenue Calculation (SSOT):")
-        logging.info(f"   Total Equity: ${total_equity:,.2f}")
+        logging.info(f"💰 Calendar Revenue Calculation (SSOT - matches Fund Portfolio):")
+        logging.info(f"   Total Equity (ALL active accounts): ${total_equity:,.2f}")
         logging.info(f"   Client Money: ${CLIENT_MONEY:,.2f}")
         logging.info(f"   Broker Rebates: ${BROKER_REBATES:,.2f}")
         logging.info(f"   Fund Revenue: ${current_revenue:,.2f}")
