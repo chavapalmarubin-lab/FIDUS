@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
+BACKEND_URL = "https://trader-hub-27.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

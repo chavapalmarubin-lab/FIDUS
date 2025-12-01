@@ -6,7 +6,7 @@ Context:
 Testing all Google Workspace OAuth endpoints to verify Calendar, Drive, and Sheets APIs 
 are working correctly after recent fixes.
 
-Backend URL: https://dashboard-unify.preview.emergentagent.com/api
+Backend URL: https://trader-hub-27.preview.emergentagent.com/api
 Auth: Admin token (login with username: admin, password: password123)
 
 Test Endpoints:
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
+BACKEND_URL = "https://trader-hub-27.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

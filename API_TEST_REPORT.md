@@ -2,7 +2,7 @@
 
 **Test Date:** November 10, 2025  
 **Environment:** Production (Render)  
-**API URL:** https://dashboard-unify.preview.emergentagent.com  
+**API URL:** https://trader-hub-27.preview.emergentagent.com  
 **Status:** ✅ ALL SYSTEMS OPERATIONAL
 
 ---

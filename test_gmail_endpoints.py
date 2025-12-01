@@ -21,7 +21,7 @@ Document Content:
     return io.BytesIO(content.encode('utf-8'))
 
 def test_gmail_endpoints():
-    base_url = "https://dashboard-unify.preview.emergentagent.com"
+    base_url = "https://trader-hub-27.preview.emergentagent.com"
     
     print("🚀 Testing Gmail Integration Endpoints...")
     print("=" * 60)

@@ -66,7 +66,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from frontend environment
-BACKEND_URL = "https://dashboard-unify.preview.emergentagent.com"
+BACKEND_URL = "https://trader-hub-27.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://dashboard-unify.preview.emergentagent.com'
+base_url = 'https://trader-hub-27.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

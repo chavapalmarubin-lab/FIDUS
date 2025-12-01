@@ -18,7 +18,7 @@ def check_api_response():
     print("=" * 30)
     
     # Authenticate first
-    base_url = "https://dashboard-unify.preview.emergentagent.com"
+    base_url = "https://trader-hub-27.preview.emergentagent.com"
     
     # Login
     login_response = requests.post(f"{base_url}/api/auth/login", json={
