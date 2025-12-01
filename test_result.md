@@ -5630,3 +5630,22 @@ The following fixes are complete in local development but need to be deployed:
 
 ---
 
+
+  - task: "Fix Export to Excel Button - Fund Portfolio Tab"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/AdminDashboard.js"
+    stuck_count: 0
+    priority: "P1 - High"
+    needs_retesting: false
+    testing_method: "API verification + Code review"
+    status_history:
+        - working: "NA"
+          agent: "E1"
+          comment: "USER-REPORTED BUG: Export to Excel button in Fund Portfolio tab not working. User clicked the button but nothing happened. ROOT CAUSE: exportPortfolioData() function was using wrong data source - attempting to export 'investmentCommitteeData' (for Investment Committee tab) instead of actual fund portfolio data from FundPortfolioManagement component which fetches from /api/v2/derived/fund-portfolio endpoint."
+        - working: true
+          agent: "E1"
+          comment: "✅ EXPORT TO EXCEL FIX COMPLETE! Modified exportPortfolioData() function in AdminDashboard.js: (1) Made function async to fetch data from API, (2) Now fetches actual fund portfolio data from /api/v2/derived/fund-portfolio endpoint, (3) Creates comprehensive export with fund summaries AND individual account details, (4) Added proper error handling for API failures. EXPORT STRUCTURE: Fund Summary rows show fund-level aggregates (Total Accounts, Allocation, Balance, Equity, P&L, P&L %), Individual Account rows show account details (Account #, Manager, Broker, Platform, individual metrics), Overall Summary row shows totals across all funds, Separator rows for readability. VERIFICATION: API endpoint tested successfully - returns 3 funds (BALANCE, CORE, SEPARATION) with 13 total accounts ✓, XLSX package already installed (v0.18.5) ✓, Frontend compiled successfully ✓. EXPECTED BEHAVIOR: User clicks Export to Excel → function fetches current fund data → Excel file downloads with name FIDUS_Fund_Portfolio_YYYY-MM-DD.xlsx → file contains comprehensive breakdown with all funds and accounts. TECHNICAL DETAILS: Export includes columns: Type, Fund Code, Fund Name, Total Accounts, Total Allocation, Total Balance, Total Equity, Total P&L, P&L %, Account, Manager, Broker, Platform. Each fund gets a summary row + individual rows for all accounts + separator. File includes overall totals at end."
+
+---
+
