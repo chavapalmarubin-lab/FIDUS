@@ -519,7 +519,7 @@ const MoneyManagersDashboard = () => {
                             {formatCurrency(performance.total_allocated)}
                           </td>
                           <td className="py-4 text-right text-cyan-400 font-medium">
-                            {formatCurrency(performance.current_equity || 0)}
+                            {formatCurrency(manager.total_equity || 0)}
                           </td>
                           <td className="py-4 text-right text-blue-400 font-medium">
                             {formatCurrency(performance.total_withdrawals || 0)}
