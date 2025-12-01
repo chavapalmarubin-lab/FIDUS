@@ -215,12 +215,13 @@ const MoneyManagersDashboard = () => {
                     data={managers
                       .map(manager => ({
                         name: manager.manager_name || 'Unknown',
+                        total_equity: manager.total_equity || 0,
                         true_pnl: manager.performance?.true_pnl || 0,
                         return_pct: manager.performance?.return_pct || 0,
                         win_rate: manager.performance?.win_rate || 0,
                         manager_id: manager.manager_id
                       }))
-                      .sort((a, b) => b.true_pnl - a.true_pnl)
+                      .sort((a, b) => b.total_equity - a.total_equity)
                     }
                     layout="vertical"
                     margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
