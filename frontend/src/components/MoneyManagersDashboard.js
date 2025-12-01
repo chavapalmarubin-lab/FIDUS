@@ -356,18 +356,18 @@ const MoneyManagersDashboard = () => {
 
                       {/* Performance Metrics */}
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400 text-sm">Initial Allocation:</span>
-                          <span className="text-white font-bold">
-                            {formatCurrency(performance.total_allocated)}
+                        {/* SSOT: Display Total Equity as primary metric */}
+                        <div className="flex items-center justify-between bg-cyan-900/20 p-3 rounded-lg border border-cyan-700/30">
+                          <span className="text-cyan-300 text-sm font-semibold">Total Equity:</span>
+                          <span className="text-cyan-400 font-bold text-lg">
+                            {formatCurrency(manager.total_equity || 0)}
                           </span>
                         </div>
                         
-                        {/* NEW: Current Equity */}
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 text-sm">Current Equity:</span>
-                          <span className="text-cyan-400 font-medium">
-                            {formatCurrency(performance.current_equity || 0)}
+                          <span className="text-slate-400 text-sm">Initial Allocation:</span>
+                          <span className="text-white font-medium">
+                            {formatCurrency(performance.total_allocated)}
                           </span>
                         </div>
                         
