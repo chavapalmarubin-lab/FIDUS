@@ -248,6 +248,7 @@ const MoneyManagersDashboard = () => {
                         color: '#fff'
                       }}
                       formatter={(value, name) => {
+                        if (name === 'total_equity') return [`$${value.toLocaleString()}`, 'Total Equity'];
                         if (name === 'true_pnl') return [`$${value.toLocaleString()}`, 'TRUE P&L'];
                         if (name === 'return_pct') return [`${value.toFixed(2)}%`, 'Return'];
                         if (name === 'win_rate') return [`${value.toFixed(2)}%`, 'Win Rate'];
@@ -257,6 +258,7 @@ const MoneyManagersDashboard = () => {
                     <Legend 
                       wrapperStyle={{ color: '#94a3b8' }}
                       formatter={(value) => {
+                        if (value === 'total_equity') return 'Total Equity';
                         if (value === 'true_pnl') return 'TRUE P&L';
                         if (value === 'return_pct') return 'Return %';
                         if (value === 'win_rate') return 'Win Rate %';
@@ -264,14 +266,14 @@ const MoneyManagersDashboard = () => {
                       }}
                     />
                     <Bar 
-                      dataKey="true_pnl" 
-                      fill="#10b981"
+                      dataKey="total_equity" 
+                      fill="#06b6d4"
                       radius={[0, 8, 8, 0]}
                     >
                       {managers.map((manager, index) => (
                         <Cell 
                           key={`cell-${index}`}
-                          fill={manager.performance?.true_pnl >= 0 ? '#10b981' : '#ef4444'}
+                          fill="#06b6d4"
                         />
                       ))}
                     </Bar>
