@@ -347,20 +347,99 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   }
 
-  function exportPortfolioData() {
-    const portfolioExportData = investmentCommitteeData.map(fund => ({
-      'Fund Code': fund.fund_code || 'N/A',
-      'Fund Name': fund.fund_name || 'N/A',
-      'Fund Manager': fund.fund_manager || 'N/A',
-      'AUM (USD)': fund.aum_current ? `$${fund.aum_current.toLocaleString()}` : '$0',
-      'Performance YTD': fund.performance_ytd || '0%',
-      'NAV per Unit': fund.nav_per_unit ? `$${fund.nav_per_unit}` : '$0',
-      'Management Fee': fund.management_fee || '0%',
-      'Inception Date': fund.inception_date || 'N/A',
-      'Status': fund.status || 'Active'
-    }));
-    
-    exportToExcel(portfolioExportData, 'FIDUS_Fund_Portfolio', 'Fund Portfolio');
+  async function exportPortfolioData() {
+    try {
+      // Fetch the actual fund portfolio data from the API
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/fund-portfolio`);
+      const data = await response.json();
+      
+      if (!data.success || !data.funds) {
+        alert('No fund portfolio data available to export');
+        return;
+      }
+      
+      // Create export data from each fund with its accounts
+      const portfolioExportData = [];
+      
+      Object.entries(data.funds).forEach(([fundCode, fund]) => {
+        // Add fund summary row
+        portfolioExportData.push({
+          'Type': 'FUND SUMMARY',
+          'Fund Code': fundCode,
+          'Fund Name': fund.fund_name || fundCode,
+          'Total Accounts': fund.accounts?.length || 0,
+          'Total Allocation': fund.total_allocation || 0,
+          'Total Balance': fund.total_balance || 0,
+          'Total Equity': fund.total_equity || 0,
+          'Total P&L': fund.total_pnl || 0,
+          'P&L %': fund.total_allocation ? ((fund.total_pnl / fund.total_allocation) * 100).toFixed(2) + '%' : '0%',
+          'Account': '',
+          'Manager': '',
+          'Broker': '',
+          'Platform': ''
+        });
+        
+        // Add individual account rows for this fund
+        if (fund.accounts && fund.accounts.length > 0) {
+          fund.accounts.forEach(account => {
+            portfolioExportData.push({
+              'Type': 'ACCOUNT',
+              'Fund Code': fundCode,
+              'Fund Name': '',
+              'Total Accounts': '',
+              'Total Allocation': account.initial_allocation || 0,
+              'Total Balance': account.balance || 0,
+              'Total Equity': account.equity || 0,
+              'Total P&L': account.pnl || 0,
+              'P&L %': account.initial_allocation ? ((account.pnl / account.initial_allocation) * 100).toFixed(2) + '%' : '0%',
+              'Account': account.account || '',
+              'Manager': account.manager_name || '',
+              'Broker': account.broker || '',
+              'Platform': account.platform || ''
+            });
+          });
+        }
+        
+        // Add separator row
+        portfolioExportData.push({
+          'Type': '─'.repeat(15),
+          'Fund Code': '',
+          'Fund Name': '',
+          'Total Accounts': '',
+          'Total Allocation': '',
+          'Total Balance': '',
+          'Total Equity': '',
+          'Total P&L': '',
+          'P&L %': '',
+          'Account': '',
+          'Manager': '',
+          'Broker': '',
+          'Platform': ''
+        });
+      });
+      
+      // Add overall summary at the end
+      portfolioExportData.push({
+        'Type': 'OVERALL TOTAL',
+        'Fund Code': '',
+        'Fund Name': '',
+        'Total Accounts': data.summary?.total_accounts || 0,
+        'Total Allocation': data.summary?.total_allocation || 0,
+        'Total Balance': data.summary?.total_balance || 0,
+        'Total Equity': data.summary?.total_equity || 0,
+        'Total P&L': data.summary?.total_pnl || 0,
+        'P&L %': data.summary?.total_allocation ? ((data.summary.total_pnl / data.summary.total_allocation) * 100).toFixed(2) + '%' : '0%',
+        'Account': '',
+        'Manager': '',
+        'Broker': '',
+        'Platform': ''
+      });
+      
+      exportToExcel(portfolioExportData, 'FIDUS_Fund_Portfolio', 'Fund Portfolio');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export fund portfolio data. Please try again.');
+    }
   }
 
   function exportFundPortfolioData() {
