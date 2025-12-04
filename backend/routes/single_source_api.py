@@ -131,7 +131,13 @@ async def get_fund_portfolio_derived():
         total_client_obligations = 0
         
         for inv in active_investments:
-            principal = float(inv.get('principal_amount', 0))
+            principal_raw = inv.get('principal_amount', 0)
+            # Handle Decimal128 objects
+            if hasattr(principal_raw, 'to_decimal'):
+                principal = float(principal_raw.to_decimal())
+            else:
+                principal = float(principal_raw)
+            
             fund_type = inv.get('fund_type', 'UNKNOWN')
             
             if fund_type not in client_obligations_by_fund:
