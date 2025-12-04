@@ -109,45 +109,22 @@ async def get_all_accounts():
 @router.get("/derived/fund-portfolio")
 async def get_fund_portfolio_derived():
     """
-    FUND PORTFOLIO TAB - Get fund portfolio data using SSOT principle.
+    FUND PORTFOLIO TAB - Get fund portfolio data (derived from mt5_accounts).
     
-    SSOT: Total Allocation comes from investments collection (client obligations).
-    MT5 accounts provide current balance/equity for performance tracking.
+    Groups mt5_accounts by fund_type and calculates aggregations.
+    This is a READ-ONLY derived view - edits happen in Accounts Management tab.
     
     Returns:
     - Accounts grouped by fund_type (CORE, BALANCE, SEPARATION, etc.)
-    - Total allocation (from investments - SSOT)
-    - Total balance, equity per fund (from MT5 accounts)
+    - Total balance, equity per fund
     - Manager assignments per fund
     """
     try:
         db = await get_database()
         
-        # SSOT: Get client obligations from investments collection
-        active_investments = await db.investments.find({"status": "active"}).to_list(length=None)
-        
-        # Calculate total allocation per fund from investments (SSOT)
-        client_obligations_by_fund = {}
-        total_client_obligations = 0
-        
-        for inv in active_investments:
-            principal_raw = inv.get('principal_amount', 0)
-            # Handle Decimal128 objects
-            if hasattr(principal_raw, 'to_decimal'):
-                principal = float(principal_raw.to_decimal())
-            else:
-                principal = float(principal_raw)
-            
-            fund_type = inv.get('fund_type', 'UNKNOWN')
-            
-            if fund_type not in client_obligations_by_fund:
-                client_obligations_by_fund[fund_type] = 0
-            client_obligations_by_fund[fund_type] += principal
-            total_client_obligations += principal
-        
-        # Get MT5 accounts for balance/equity tracking
+        # Aggregate by fund type - derive from mt5_accounts
         pipeline = [
-            {"$match": {"status": "active"}},
+            {"$match": {"status": "active"}},  # Only active accounts
             {"$group": {
                 "_id": "$fund_type",
                 "account_count": {"$sum": 1},
@@ -160,6 +137,7 @@ async def get_fund_portfolio_derived():
                     "equity": "$equity",
                     "initial_allocation": "$initial_allocation"
                 }},
+                "total_allocation": {"$sum": "$initial_allocation"},
                 "total_balance": {"$sum": "$balance"},
                 "total_equity": {"$sum": "$equity"},
                 "managers": {"$addToSet": "$manager_name"}
@@ -169,16 +147,14 @@ async def get_fund_portfolio_derived():
         
         funds = await db.mt5_accounts.aggregate(pipeline).to_list(100)
         
-        # Format for frontend - merge SSOT allocations with MT5 data
+        # Format for frontend
         fund_data = {}
+        total_allocation = 0
         total_aum = 0
         
         for fund in funds:
             fund_type = fund['_id']
-            
-            # Use client obligations from investments (SSOT) instead of MT5 initial_allocation
-            allocation = client_obligations_by_fund.get(fund_type, 0)
-            
+            allocation = fund.get('total_allocation', 0)
             balance = fund['total_balance']
             pnl = balance - allocation
             
@@ -186,37 +162,23 @@ async def get_fund_portfolio_derived():
                 "fund_type": fund_type,
                 "account_count": fund['account_count'],
                 "accounts": fund['accounts'],
-                "total_allocation": allocation,  # From investments (SSOT)
+                "total_allocation": allocation,
                 "total_balance": balance,
                 "total_equity": fund['total_equity'],
                 "total_pnl": pnl,
                 "managers": fund['managers'],
                 "manager_count": len(fund['managers'])
             }
+            total_allocation += allocation
             total_aum += balance
         
-        # If there are funds in investments but not in MT5 accounts (new investments)
-        for fund_type, allocation in client_obligations_by_fund.items():
-            if fund_type not in fund_data:
-                fund_data[fund_type] = {
-                    "fund_type": fund_type,
-                    "account_count": 0,
-                    "accounts": [],
-                    "total_allocation": allocation,
-                    "total_balance": 0,
-                    "total_equity": 0,
-                    "total_pnl": -allocation,  # Negative because no trading accounts allocated yet
-                    "managers": [],
-                    "manager_count": 0
-                }
-        
-        total_pnl = total_aum - total_client_obligations
+        total_pnl = total_aum - total_allocation
         
         return {
             "success": True,
             "funds": fund_data,
             "summary": {
-                "total_allocation": total_client_obligations,  # From investments (SSOT)
+                "total_allocation": total_allocation,
                 "total_aum": total_aum,
                 "total_pnl": total_pnl,
                 "fund_count": len(fund_data),
