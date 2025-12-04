@@ -16629,11 +16629,15 @@ async def get_complete_cashflow(days: int = 30):
         
         # NEW CALCULATION #4: Fund Revenue
         # Fund Revenue = Total Equity - Client Money
-        # Client Money is the total amount clients invested (fixed value)
-        client_money = 118151.41  # Total client investment (from investments collection)
+        # Client Money calculated dynamically from investments collection (SSOT)
+        
+        # Get active investments to calculate total client money
+        active_investments_for_revenue = await db.investments.find({'status': 'active'}).to_list(length=None)
+        client_money = sum(float(inv.get('principal_amount', 0)) for inv in active_investments_for_revenue)
+        
         fund_revenue = total_equity - client_money
         
-        logging.info(f"💰 Client Money (Total Investment): ${client_money:,.2f}")
+        logging.info(f"💰 Client Money (from {len(active_investments_for_revenue)} active investments): ${client_money:,.2f}")
         logging.info(f"💰 Fund Revenue (Equity - Client Money): ${fund_revenue:,.2f}")
         
         # NEW CALCULATION #5: Fund Obligations
