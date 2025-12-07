@@ -333,49 +333,52 @@ class GuillermoOnboardingTester:
         try:
             print("\n👥 Testing Javier Gonzalez Referral Update...")
             
-            # Try multiple endpoints to find referral data
-            endpoints_to_try = [
-                "/admin/referrals",
-                "/admin/agents",
-                "/v2/referrals/all"
-            ]
+            # Use the referrals overview endpoint which we know works
+            response = self.session.get(f"{self.base_url}/admin/referrals/overview", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test("Referrals API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            
+            # Also try the salespeople endpoint
+            salespeople_response = self.session.get(f"{self.base_url}/admin/referrals/salespeople", timeout=30)
             
             javier_data = None
             
-            for endpoint in endpoints_to_try:
-                try:
-                    response = self.session.get(f"{self.base_url}{endpoint}", timeout=30)
+            if salespeople_response.status_code == 200:
+                salespeople_data = salespeople_response.json()
+                salespeople = salespeople_data.get("salespeople", [])
+                
+                # Search for Javier Gonzalez
+                for agent in salespeople:
+                    agent_name = agent.get("name", "").lower()
+                    agent_code = agent.get("referralCode", "")
                     
-                    if response.status_code == 200:
-                        data = response.json()
-                        
-                        # Look for referral agents data
-                        agents = data.get("agents", [])
-                        if not agents:
-                            agents = data.get("referrals", [])
-                        if not agents:
-                            agents = data.get("data", [])
-                        if not agents and isinstance(data, list):
-                            agents = data
-                        
-                        # Search for Javier Gonzalez
-                        for agent in agents:
-                            agent_name = agent.get("name", "").lower()
-                            agent_code = agent.get("agent_code", "")
-                            
-                            if ("javier" in agent_name and "gonzalez" in agent_name) or agent_code == "JG-2025":
-                                javier_data = agent
-                                break
-                        
-                        if javier_data:
-                            break
-                            
-                except Exception as e:
-                    continue
+                    if ("javier" in agent_name and "gonzalez" in agent_name) or agent_code == "JG-2025":
+                        javier_data = agent
+                        break
             
             if not javier_data:
-                self.log_test("Javier Gonzalez Found", "FAIL", 
-                            "Javier Gonzalez (JG-2025) not found in referral system")
+                # Check if Guillermo Garcia is listed as a referral agent instead
+                guillermo_as_agent = None
+                if salespeople_response.status_code == 200:
+                    salespeople_data = salespeople_response.json()
+                    salespeople = salespeople_data.get("salespeople", [])
+                    
+                    for agent in salespeople:
+                        agent_name = agent.get("name", "").lower()
+                        if "guillermo" in agent_name and "garcia" in agent_name:
+                            guillermo_as_agent = agent
+                            break
+                
+                if guillermo_as_agent:
+                    self.log_test("Javier Gonzalez Found", "FAIL", 
+                                f"Javier Gonzalez (JG-2025) not found, but Guillermo Garcia found as referral agent: {guillermo_as_agent.get('referralCode')}")
+                else:
+                    self.log_test("Javier Gonzalez Found", "FAIL", 
+                                "Javier Gonzalez (JG-2025) not found in referral system - may not be created yet")
                 return False
             
             success = True
