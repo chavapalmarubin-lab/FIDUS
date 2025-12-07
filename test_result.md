@@ -5569,6 +5569,22 @@ backend:
           agent: "main"
           comment: "✅ MT5 WATCHDOG TZINFO BUG FIXED SUCCESSFULLY! Applied string-to-datetime conversion in 4 critical locations: (1) /app/backend/services/mt5_watchdog.py line 283 - added isinstance(last_sync, str) check with datetime.fromisoformat() parsing before accessing .tzinfo, (2) /app/backend/mt5_watchdog.py line 116 - same fix for data freshness check, (3) /app/backend/health_checks.py lines 101 and 200 - applied to both MT5 account checks and terminal status checks. VERIFICATION: Backend restarted, monitored logs for 70 seconds, NO MORE 'tzinfo' ERRORS ✓. MT5 watchdog monitoring loop running successfully ✓. Data freshness checks working correctly ✓. RESULT: Code is now robust and handles both string and datetime objects. MT5 sync service functional again. Current issue is VPS connectivity (92.118.45.135:8000 unreachable) - this is infrastructure, not code bug."
 
+  - task: "Guillermo Garcia Onboarding Verification"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py, /app/backend/routes/referrals.py"
+    stuck_count: 1
+    priority: "P1 - High"
+    needs_retesting: false
+    testing_method: "Comprehensive API testing with curl and Python test suite"
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "GUILLERMO GARCIA ONBOARDING VERIFICATION REQUESTED: Test that Guillermo Garcia's onboarding was successful and all systems reflect the new data. Expected results: (1) Client Money API should return $349,663.05 (was $134,145.41, added $215,517.64), (2) Should show 4 active investments, (3) Should include Guillermo Garcia in breakdown, (4) Cash Flow Overview should include Guillermo's payment schedule, (5) Investments Endpoint should verify Guillermo's investment exists with Principal: $215,517.64, Fund: FIDUS DYNAMIC, Status: active, (6) Referral Agent Update should verify Javier Gonzalez (JG-2025) shows 1 client, Total sales: $215,517.64, Total commissions: $9,051.74."
+        - working: false
+          agent: "testing"
+          comment: "🎯 GUILLERMO GARCIA ONBOARDING VERIFICATION COMPLETED - 50% SUCCESS RATE (2/4 tests passed). SUCCESSFUL VERIFICATIONS: (1) ✅ CLIENT MONEY API WORKING PERFECTLY: Total Client Money shows exactly $349,663.05 as expected (was $134,145.41, added $215,517.64) ✓, Shows exactly 4 active investments as expected ✓, Guillermo Garcia found in investments list with correct $215,517.64 amount ✓, Investment fund type correctly shows FIDUS DYNAMIC ✓, Investment exists and data is accurate ✓. (2) ✅ GUILLERMO'S INVESTMENT DATA VERIFIED: Principal amount matches expected $215,517.64 exactly ✓, Fund type is FIDUS DYNAMIC as expected ✓, Investment record exists in system ✓. CRITICAL ISSUES IDENTIFIED: (3) ❌ CASH FLOW OVERVIEW API FAILING: Returns HTTP 500 with 'Failed to fetch cash flow overview' error. Backend logs show 'unsupported format string passed to Decimal128.__format__' error indicating Decimal128 formatting issue in cash flow calculations. This prevents verification of Guillermo's payment schedule integration. (4) ❌ JAVIER GONZALEZ (JG-2025) REFERRAL AGENT NOT FOUND: Referrals system shows 14 total salespeople and 9 active, but Javier Gonzalez with referral code JG-2025 is not present. Found Guillermo Garcia as referral agent with code GG-2025-5AAF instead. This suggests the referral agent creation step may not be complete or the wrong agent was created. CONCLUSION: Guillermo Garcia's investment onboarding is SUCCESSFUL (investment exists with correct amount and fund type), but supporting systems have issues: Cash Flow API has Decimal128 formatting bug preventing payment schedule verification, and Javier Gonzalez referral agent (JG-2025) was not created as expected."
+
 frontend:
   - task: "Simplify Cash Flow & Performance Analysis Frontend"
     implemented: true
