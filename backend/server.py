@@ -16282,7 +16282,15 @@ async def calculate_cash_flow_calendar():
         
         # Calculate CLIENT_MONEY from investments collection (SSOT)
         active_investments = await db.investments.find({'status': 'active'}).to_list(length=None)
-        CLIENT_MONEY = sum(float(inv.get('principal_amount', 0)) for inv in active_investments)
+        
+        # Handle Decimal128 properly
+        CLIENT_MONEY = 0
+        for inv in active_investments:
+            principal = inv.get('principal_amount', 0)
+            if hasattr(principal, 'to_decimal'):
+                CLIENT_MONEY += float(principal.to_decimal())
+            else:
+                CLIENT_MONEY += float(principal) if principal else 0
         
         BROKER_REBATES = 202.00  # Monthly rebates
         
