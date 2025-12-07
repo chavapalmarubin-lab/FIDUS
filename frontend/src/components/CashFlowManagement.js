@@ -107,8 +107,8 @@ const CashFlowManagement = () => {
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
-        // ✅ Use SAME data source as Fund Portfolio with proper error handling
-        const CLIENT_MONEY = 118151.41;
+        // ✅ DYNAMICALLY fetch client money from backend API (Single Source of Truth)
+        let CLIENT_MONEY = 0;
         let totalEquity = 0;
         let mt5TruePnl = 0;
         let brokerInterest = 0;
