@@ -124,7 +124,7 @@ class GuillermoOnboardingTester:
                 success = False
             
             # Check active investments count
-            active_investments = data.get("active_investments", 0)
+            active_investments = data.get("investment_count", 0)
             expected_investments = 4
             
             if active_investments == expected_investments:
