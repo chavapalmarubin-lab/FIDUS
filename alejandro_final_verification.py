@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://trader-hub-27.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-finance-4.preview.emergentagent.com/api"
 
 def get_admin_token():
     """Get admin JWT token"""

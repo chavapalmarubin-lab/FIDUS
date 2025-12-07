@@ -37,7 +37,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://trader-hub-27.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-finance-4.preview.emergentagent.com/api"
 
 class CurrencyConversionTest:
     def __init__(self):
