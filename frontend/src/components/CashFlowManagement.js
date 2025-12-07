@@ -122,7 +122,11 @@ const CashFlowManagement = () => {
         
         try {
           // First, fetch client money dynamically from investments (SSOT)
-          const clientMoneyResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/client-money/total`);
+          const token = localStorage.getItem('fidus_token');
+          const clientMoneyResponse = await fetch(
+            `${process.env.REACT_APP_BACKEND_URL}/api/admin/client-money/total`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
           if (clientMoneyResponse.ok) {
             const clientMoneyData = await clientMoneyResponse.json();
             if (clientMoneyData.success) {
