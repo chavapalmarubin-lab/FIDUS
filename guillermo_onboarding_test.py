@@ -139,16 +139,16 @@ class GuillermoOnboardingTester:
                             active_investments)
                 success = False
             
-            # Check if Guillermo Garcia appears in breakdown
-            breakdown = data.get("breakdown", [])
+            # Check if Guillermo Garcia appears in investments list
+            investments = data.get("investments", [])
             guillermo_found = False
             guillermo_amount = 0
             
-            for client in breakdown:
-                client_name = client.get("client_name", "").lower()
+            for investment in investments:
+                client_name = investment.get("client_name", "").lower()
                 if "guillermo" in client_name and "garcia" in client_name:
                     guillermo_found = True
-                    guillermo_amount = client.get("total_investment", 0)
+                    guillermo_amount = investment.get("principal_amount", 0)
                     break
             
             if guillermo_found:
