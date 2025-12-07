@@ -16759,9 +16759,15 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         # Generate cash flow obligations from investments
         for investment in investments:
             fund_code = investment.get('fund_code')
-            principal = investment.get('principal_amount', 0)
+            principal_raw = investment.get('principal_amount', 0)
             interest_start_str = investment.get('interest_start_date')
             client_id = investment.get('client_id')
+            
+            # Convert Decimal128 to float
+            if hasattr(principal_raw, 'to_decimal'):
+                principal = float(principal_raw.to_decimal())
+            else:
+                principal = float(principal_raw) if principal_raw else 0
             
             # Get fund configuration for interest rate and redemption frequency
             fund_config = FIDUS_FUND_CONFIG.get(fund_code)
