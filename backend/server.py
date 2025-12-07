@@ -16981,6 +16981,49 @@ async def get_cash_flow_overview(timeframe: str = "12_months", fund: str = "all"
         logging.error(f"Cash flow overview error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch cash flow overview")
 
+
+@api_router.get("/admin/client-money/total")
+async def get_total_client_money():
+    """
+    Get total client money (obligations) from active investments.
+    This is the Single Source of Truth for client obligations.
+    """
+    try:
+        # Query all active investments
+        active_investments = await db.investments.find({'status': 'active'}).to_list(length=None)
+        
+        # Calculate total principal amount
+        total_client_money = 0
+        investment_details = []
+        
+        for inv in active_investments:
+            principal = inv.get('principal_amount', 0)
+            # Handle Decimal128 type from MongoDB
+            if hasattr(principal, 'to_decimal'):
+                amount = float(principal.to_decimal())
+            else:
+                amount = float(principal)
+            
+            total_client_money += amount
+            investment_details.append({
+                'client_name': inv.get('client_name'),
+                'fund_code': inv.get('fund_code'),
+                'principal_amount': amount
+            })
+        
+        logging.info(f"💰 Total Client Money: ${total_client_money:,.2f} from {len(active_investments)} active investments")
+        
+        return {
+            "success": True,
+            "total_client_money": round(total_client_money, 2),
+            "investment_count": len(active_investments),
+            "investments": investment_details
+        }
+        
+    except Exception as e:
+        logging.error(f"Error calculating total client money: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to calculate total client money")
+
 # ===============================================================================
 # REDEMPTION SYSTEM ENDPOINTS
 # ===============================================================================
