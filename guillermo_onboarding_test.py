@@ -242,45 +242,27 @@ class GuillermoOnboardingTester:
         try:
             print("\n🎯 Testing Guillermo's Investment...")
             
-            # Try multiple endpoints to find Guillermo's investment
-            endpoints_to_try = [
-                "/admin/investments",
-                "/admin/clients/investments",
-                "/v2/investments/all"
-            ]
+            # Use the client-money endpoint which we know works
+            response = self.session.get(f"{self.base_url}/admin/client-money/total", timeout=30)
             
+            if response.status_code != 200:
+                self.log_test("Guillermo Investment API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            investments = data.get("investments", [])
+            
+            # Search for Guillermo's investment
             guillermo_investment = None
-            
-            for endpoint in endpoints_to_try:
-                try:
-                    response = self.session.get(f"{self.base_url}{endpoint}", timeout=30)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        
-                        # Look for investments data
-                        investments = data.get("investments", [])
-                        if not investments:
-                            investments = data.get("data", [])
-                        if not investments and isinstance(data, list):
-                            investments = data
-                        
-                        # Search for Guillermo's investment
-                        for investment in investments:
-                            client_name = investment.get("client_name", "").lower()
-                            if "guillermo" in client_name and "garcia" in client_name:
-                                guillermo_investment = investment
-                                break
-                        
-                        if guillermo_investment:
-                            break
-                            
-                except Exception as e:
-                    continue
+            for investment in investments:
+                client_name = investment.get("client_name", "").lower()
+                if "guillermo" in client_name and "garcia" in client_name:
+                    guillermo_investment = investment
+                    break
             
             if not guillermo_investment:
                 self.log_test("Guillermo Investment Found", "FAIL", 
-                            "Guillermo Garcia's investment not found in any endpoint")
+                            "Guillermo Garcia's investment not found")
                 return False
             
             success = True
