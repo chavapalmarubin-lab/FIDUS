@@ -152,8 +152,8 @@ class GuillermoOnboardingTester:
                     break
             
             if guillermo_found:
-                self.log_test("Guillermo Garcia in Breakdown", "PASS", 
-                            f"Guillermo Garcia found in client breakdown with ${guillermo_amount:,.2f}")
+                self.log_test("Guillermo Garcia in Investments", "PASS", 
+                            f"Guillermo Garcia found in investments list with ${guillermo_amount:,.2f}")
                 
                 # Check Guillermo's investment amount
                 expected_guillermo_amount = 215517.64
@@ -169,8 +169,8 @@ class GuillermoOnboardingTester:
                                 f"${guillermo_amount:,.2f}")
                     success = False
             else:
-                self.log_test("Guillermo Garcia in Breakdown", "FAIL", 
-                            "Guillermo Garcia not found in client breakdown")
+                self.log_test("Guillermo Garcia in Investments", "FAIL", 
+                            "Guillermo Garcia not found in investments list")
                 success = False
             
             return success
