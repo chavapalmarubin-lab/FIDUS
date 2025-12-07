@@ -108,7 +108,7 @@ class GuillermoOnboardingTester:
             success = True
             
             # Check total client money
-            total_amount = data.get("total_amount", 0)
+            total_amount = data.get("total_client_money", 0)
             expected_total = 349663.05
             
             if abs(total_amount - expected_total) < 100.0:  # Allow $100 tolerance
