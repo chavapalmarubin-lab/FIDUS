@@ -5741,3 +5741,21 @@ The following fixes are complete in local development but need to be deployed:
 
 ---
 
+  - task: "Production FIDUS Platform Cash Flow Tab Testing"
+    implemented: true
+    working: false
+    file: "https://fidus-investment-platform.onrender.com"
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "PRODUCTION CASH FLOW TAB TESTING REQUESTED: Test production FIDUS platform at https://fidus-investment-platform.onrender.com with credentials emergent_admin/admin123. Verify Cash Flow & Performance tab shows Client Money (Obligations) of $349,663.05 or $118,151 (not $0). Check console for 401 Unauthorized errors, CORS errors, and /api/admin/client-money/total API issues."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL PRODUCTION TESTING FAILED - AUTHENTICATION DEADLOCK IDENTIFIED! Conducted comprehensive testing of production FIDUS platform at https://fidus-investment-platform.onrender.com as specifically requested. AUTHENTICATION VERIFICATION RESULTS: (1) ✅ LOGIN CREDENTIALS VALID: Successfully verified that emergent_admin/admin123 credentials are valid - they trigger the password change dialog, confirming basic authentication works. (2) ❌ MANDATORY PASSWORD CHANGE BLOCKING ACCESS: The production system requires a mandatory password change before allowing dashboard access. Despite multiple attempts to complete the password change form (filling current password: admin123, new password: NewSecure123!, confirm password: NewSecure123!), the form consistently shows 'Please fill in all fields' validation error and prevents progression to dashboard. (3) ❌ CASH FLOW TAB COMPLETELY INACCESSIBLE: Cannot test the Cash Flow & Performance tab or verify Client Money (Obligations) values ($349,663.05 vs $118,151 vs $0) because the password change requirement creates an authentication barrier that blocks all dashboard access. (4) ❌ CONSOLE ERROR TESTING IMPOSSIBLE: Cannot check for 401 Unauthorized errors, CORS errors, or /api/admin/client-money/total API issues because authentication is stuck at the password change step, preventing any API calls to the dashboard endpoints. ROOT CAUSE ANALYSIS: The production system implements a mandatory password change policy for temporary credentials. However, the password change form has validation issues that prevent successful completion even with properly formatted passwords (meeting minimum 6 characters, secure password requirements). This creates an authentication deadlock where valid credentials cannot progress past the password change screen. URGENT FIXES REQUIRED: (1) Fix password change form validation logic to properly accept valid new passwords, (2) OR provide alternative admin credentials that don't require mandatory password change, (3) OR temporarily disable the mandatory password change policy for testing purposes, (4) Complete Cash Flow functionality testing after authentication barrier is resolved. CONCLUSION: The requested Cash Flow tab testing CANNOT BE COMPLETED due to a critical authentication barrier. While the login credentials are valid, the broken password change process prevents all dashboard access, making it impossible to verify Cash Flow data or check for API errors. This is a production-blocking issue that requires immediate resolution."
+
+agent_communication:
+    -agent: "testing"
+    -message: "🚨 URGENT: Production FIDUS platform testing FAILED due to authentication deadlock. Login credentials (emergent_admin/admin123) are valid but mandatory password change form has validation issues preventing dashboard access. Cannot test Cash Flow tab or verify Client Money values. Need either: (1) Fix password change validation, (2) Alternative credentials without password change requirement, or (3) Temporary disable of password change policy. This blocks all production testing."
