@@ -121,6 +121,16 @@ const CashFlowManagement = () => {
         let profitWithdrawals = 0;
         
         try {
+          // First, fetch client money dynamically from investments (SSOT)
+          const clientMoneyResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/client-money/total`);
+          if (clientMoneyResponse.ok) {
+            const clientMoneyData = await clientMoneyResponse.json();
+            if (clientMoneyData.success) {
+              CLIENT_MONEY = clientMoneyData.total_client_money;
+              console.log(`✅ Client Money (from ${clientMoneyData.investment_count} active investments): $${CLIENT_MONEY.toFixed(2)}`);
+            }
+          }
+          
           // Fetch from SAME endpoint as Fund Portfolio (working tab)
           const portfolioResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/fund-portfolio`);
           
