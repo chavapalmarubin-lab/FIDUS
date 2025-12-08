@@ -635,10 +635,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               Investments
             </TabsTrigger>
             <TabsTrigger value="accounts-management" className="flex-shrink-0">
-              🗄️ Accounts Management
-            </TabsTrigger>
-            <TabsTrigger value="bridge-health" className="flex-shrink-0">
-              🔌 Bridge Monitor
+              🗄️ Account Management
             </TabsTrigger>
             <TabsTrigger value="clients" className="flex-shrink-0">
               <Users size={16} className="mr-2" />
@@ -779,10 +776,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             <AccountsManagement />
           </TabsContent>
 
-          <TabsContent value="bridge-health" className="mt-6">
-            <BridgeHealthMonitor />
-          </TabsContent>
-
+          {/* Bridge Monitor merged into Account Management */}
           {/* MT5 Config tab removed - functionality merged into MT5 Accounts */}
 
           <TabsContent value="redemptions" className="mt-6">
