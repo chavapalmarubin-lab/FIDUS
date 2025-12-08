@@ -16641,7 +16641,14 @@ async def get_complete_cashflow(days: int = 30):
         
         # Get active investments to calculate total client money
         active_investments_for_revenue = await db.investments.find({'status': 'active'}).to_list(length=None)
-        client_money = sum(float(inv.get('principal_amount', 0)) for inv in active_investments_for_revenue)
+        client_money = 0
+        for inv in active_investments_for_revenue:
+            principal_raw = inv.get('principal_amount', 0)
+            # Handle Decimal128 type from MongoDB
+            if hasattr(principal_raw, 'to_decimal'):
+                client_money += float(principal_raw.to_decimal())
+            else:
+                client_money += float(principal_raw) if principal_raw else 0
         
         fund_revenue = total_equity - client_money
         
