@@ -19570,34 +19570,18 @@ async def get_fund_portfolio_overview():
         # Get weighted performance for all funds
         all_performance = await get_all_funds_performance(db)
         
+        # SSOT: Use central calculations
+        from services.calculations import convert_decimal128, get_fund_pnl
+        
         for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
-            # Calculate fund AUM from investments
-            # FIXED: Investments use 'fund_type' not 'fund_code'
+            # Calculate fund AUM from investments using SSOT
             fund_investments = [inv for inv in all_investments if inv.get('fund_type') == fund_code]
-            
-            # Handle Decimal128 for principal_amount
-            fund_aum = 0
-            for inv in fund_investments:
-                principal_raw = inv.get('principal_amount', 0)
-                if hasattr(principal_raw, 'to_decimal'):
-                    fund_aum += float(principal_raw.to_decimal())
-                else:
-                    fund_aum += float(principal_raw) if principal_raw else 0
-            
+            fund_aum = sum(convert_decimal128(inv.get('principal_amount', 0)) for inv in fund_investments)
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
-            # Get MT5 allocations for this fund - ALL ACTIVE ACCOUNTS
-            # Updated: Include all active accounts (15 total) by fund_type
+            # Get MT5 allocations for this fund using SSOT
             fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
-            
-            # Handle Decimal128 for balance
-            total_mt5_allocation = 0
-            for mt5 in fund_mt5_accounts:
-                balance_raw = mt5.get('balance', 0)
-                if hasattr(balance_raw, 'to_decimal'):
-                    total_mt5_allocation += float(balance_raw.to_decimal())
-                else:
-                    total_mt5_allocation += float(balance_raw) if balance_raw else 0
+            total_mt5_allocation = sum(convert_decimal128(mt5.get('balance', 0)) for mt5 in fund_mt5_accounts)
             mt5_account_count = len(fund_mt5_accounts)
             
             # Get account details for debugging
@@ -19853,73 +19837,20 @@ async def get_all_accounts_v2():
     Used by Account Management tab - MUST match Fund Portfolio numbers exactly
     """
     try:
-        # Query the SAME data as fund-portfolio/overview endpoint
-        mt5_cursor = db.mt5_accounts.find({
-            "$or": [
-                {"status": "active"},
-                {"status": {"$exists": False}}  # Legacy accounts without status field
-            ]
-        })
-        all_mt5_accounts = await mt5_cursor.to_list(length=None)
+        # SSOT: Use central calculation service
+        from services.calculations import get_all_accounts_summary
         
-        # Calculate totals with proper Decimal128 handling
-        total_balance = 0
-        total_equity = 0
-        total_allocation = 0
-        active_count = 0
-        
-        accounts_data = []
-        
-        for acc in all_mt5_accounts:
-            # Handle Decimal128 for all numeric fields
-            balance_raw = acc.get('balance', 0)
-            equity_raw = acc.get('equity', 0)
-            allocation_raw = acc.get('initial_allocation', 0)
-            
-            if hasattr(balance_raw, 'to_decimal'):
-                balance = float(balance_raw.to_decimal())
-            else:
-                balance = float(balance_raw) if balance_raw else 0
-                
-            if hasattr(equity_raw, 'to_decimal'):
-                equity = float(equity_raw.to_decimal())
-            else:
-                equity = float(equity_raw) if equity_raw else 0
-                
-            if hasattr(allocation_raw, 'to_decimal'):
-                allocation = float(allocation_raw.to_decimal())
-            else:
-                allocation = float(allocation_raw) if allocation_raw else 0
-            
-            total_balance += balance
-            total_equity += equity
-            total_allocation += allocation
-            
-            if acc.get('status') == 'active' or not acc.get('status'):
-                active_count += 1
-            
-            accounts_data.append({
-                'account': str(acc.get('account', '')),
-                'manager_name': acc.get('manager_name', ''),
-                'fund_type': acc.get('fund_type', ''),
-                'broker': acc.get('broker', ''),
-                'platform': acc.get('platform', 'MT5'),
-                'balance': round(balance, 2),
-                'equity': round(equity, 2),
-                'initial_allocation': round(allocation, 2),
-                'status': acc.get('status', 'active'),
-                'description': acc.get('description', '')
-            })
+        result = await get_all_accounts_summary(db)
         
         return {
             'success': True,
-            'accounts': accounts_data,
+            'accounts': result['accounts'],
             'summary': {
-                'total_accounts': len(all_mt5_accounts),
-                'active_accounts': active_count,
-                'total_balance': round(total_balance, 2),
-                'total_equity': round(total_equity, 2),
-                'total_allocation': round(total_allocation, 2)
+                'total_accounts': result['totals']['total_accounts'],
+                'active_accounts': result['totals']['total_accounts'],  # All returned are active
+                'total_balance': result['totals']['total_balance'],
+                'total_equity': result['totals']['total_equity'],
+                'total_allocation': result['totals']['total_allocation']
             }
         }
     except Exception as e:
