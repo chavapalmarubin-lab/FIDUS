@@ -665,16 +665,94 @@ const AdminInvestmentManagement = () => {
 
         <TabsContent value="clients" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* This would show individual client portfolios */}
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Client Portfolio Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-400">Client portfolio analysis coming soon...</p>
-              </CardContent>
-            </Card>
+            {/* Group investments by client */}
+            {overviewData?.all_investments && (() => {
+              // Group investments by client
+              const clientGroups = overviewData.all_investments.reduce((acc, inv) => {
+                const clientKey = inv.client_id || inv.client_name;
+                if (!acc[clientKey]) {
+                  acc[clientKey] = {
+                    client_name: inv.client_name,
+                    client_id: inv.client_id,
+                    investments: []
+                  };
+                }
+                acc[clientKey].investments.push(inv);
+                return acc;
+              }, {});
+              
+              return Object.values(clientGroups).map((client, index) => {
+                const totalPrincipal = client.investments.reduce((sum, inv) => sum + (inv.principal_amount || 0), 0);
+                const totalCurrent = client.investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+                const totalInterest = client.investments.reduce((sum, inv) => sum + (inv.earned_interest || 0), 0);
+                
+                return (
+                  <Card key={client.client_id || index} className="bg-slate-800 border-slate-700 hover:border-cyan-500 transition-colors">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-white text-lg">{client.client_name}</CardTitle>
+                        <Badge variant="outline" className="text-cyan-400 border-cyan-400">
+                          {client.investments.length} {client.investments.length === 1 ? 'Investment' : 'Investments'}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-slate-400 text-sm">Total Invested</p>
+                        <p className="text-white font-bold text-xl">{formatCurrency(totalPrincipal)}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400 text-sm">Current Value</p>
+                        <p className="text-white font-semibold">{formatCurrency(totalCurrent)}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400 text-sm">Interest Earned</p>
+                        <p className="text-green-400 font-semibold">+{formatCurrency(totalInterest)}</p>
+                      </div>
+                      <div className="pt-2 border-t border-slate-700">
+                        <p className="text-slate-400 text-xs mb-2">Investments:</p>
+                        <div className="space-y-1">
+                          {client.investments.map((inv, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-sm">
+                              <Badge 
+                                className="text-white text-xs"
+                                style={{ backgroundColor: FUND_COLORS[inv.fund_code] }}
+                              >
+                                {inv.fund_code}
+                              </Badge>
+                              <span className="text-slate-300">{formatCurrency(inv.principal_amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Show first investment details for this client
+                          if (client.investments[0]) {
+                            setSelectedInvestment(client.investments[0].investment_id);
+                          }
+                        }}
+                        className="w-full mt-3 text-cyan-400 border-cyan-400 hover:bg-cyan-400/10"
+                      >
+                        <Eye size={16} className="mr-2" />
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
           </div>
+          
+          {(!overviewData?.all_investments || overviewData.all_investments.length === 0) && (
+            <div className="text-center py-12">
+              <Users size={48} className="mx-auto mb-4 text-slate-400" />
+              <h3 className="text-lg font-medium text-white mb-2">No Client Portfolios Yet</h3>
+              <p className="text-slate-400">Client portfolios will appear here once investments are created</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
