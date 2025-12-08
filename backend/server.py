@@ -16611,9 +16611,25 @@ async def get_complete_cashflow(days: int = 30):
         account_count = len(mt5_accounts)
         
         for acc in mt5_accounts:
-            equity = float(acc.get('equity', 0))
-            balance = float(acc.get('balance', 0))
-            initial = float(acc.get('initial_allocation', 0))
+            equity_raw = acc.get('equity', 0)
+            balance_raw = acc.get('balance', 0)
+            initial_raw = acc.get('initial_allocation', 0)
+            
+            # Handle Decimal128 type from MongoDB
+            if hasattr(equity_raw, 'to_decimal'):
+                equity = float(equity_raw.to_decimal())
+            else:
+                equity = float(equity_raw) if equity_raw else 0
+                
+            if hasattr(balance_raw, 'to_decimal'):
+                balance = float(balance_raw.to_decimal())
+            else:
+                balance = float(balance_raw) if balance_raw else 0
+                
+            if hasattr(initial_raw, 'to_decimal'):
+                initial = float(initial_raw.to_decimal())
+            else:
+                initial = float(initial_raw) if initial_raw else 0
             
             total_equity += equity
             total_balance += balance
