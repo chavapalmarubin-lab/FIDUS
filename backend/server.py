@@ -16688,14 +16688,20 @@ async def get_complete_cashflow(days: int = 30):
         
         for inv in investments:
             principal_raw = inv.get('principal_amount', 0)
-            interest_rate = inv.get('interest_rate', 0)
+            interest_rate_raw = inv.get('interest_rate', 0)
             fund_type = inv.get('fund_type', '')
             
-            # Handle Decimal128 type from MongoDB
+            # Handle Decimal128 type from MongoDB for principal
             if hasattr(principal_raw, 'to_decimal'):
                 principal = float(principal_raw.to_decimal())
             else:
                 principal = float(principal_raw) if principal_raw else 0
+            
+            # Handle Decimal128 type from MongoDB for interest_rate
+            if hasattr(interest_rate_raw, 'to_decimal'):
+                interest_rate = float(interest_rate_raw.to_decimal())
+            else:
+                interest_rate = float(interest_rate_raw) if interest_rate_raw else 0
             
             # Calculate interest obligations per SYSTEM_MASTER.md
             if 'CORE' in fund_type.upper():
