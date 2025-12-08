@@ -19750,6 +19750,130 @@ async def get_all_funds_performance_endpoint(current_user: dict = Depends(get_cu
         logging.error(f"Update fund real-time data error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update real-time data")
 
+@api_router.get("/admin/investment-committee/mt5-accounts")
+async def get_investment_committee_accounts():
+    """
+    Investment Committee - Get ALL MT5 accounts for drag-and-drop allocation
+    Returns complete list of all accounts across all brokers with Decimal128 handling
+    """
+    try:
+        # Query ALL mt5_accounts (same as Account Management)
+        mt5_cursor = db.mt5_accounts.find({})
+        all_accounts = await mt5_cursor.to_list(length=None)
+        
+        accounts_list = []
+        total_balance = 0
+        total_equity = 0
+        
+        for acc in all_accounts:
+            # Handle Decimal128 for numeric fields
+            balance_raw = acc.get('balance', 0)
+            equity_raw = acc.get('equity', 0)
+            initial_raw = acc.get('initial_allocation', 0)
+            
+            if hasattr(balance_raw, 'to_decimal'):
+                balance = float(balance_raw.to_decimal())
+            else:
+                balance = float(balance_raw) if balance_raw else 0
+                
+            if hasattr(equity_raw, 'to_decimal'):
+                equity = float(equity_raw.to_decimal())
+            else:
+                equity = float(equity_raw) if equity_raw else 0
+                
+            if hasattr(initial_raw, 'to_decimal'):
+                initial = float(initial_raw.to_decimal())
+            else:
+                initial = float(initial_raw) if initial_raw else 0
+            
+            total_balance += balance
+            total_equity += equity
+            
+            accounts_list.append({
+                'account': str(acc.get('account', '')),
+                'balance': round(balance, 2),
+                'equity': round(equity, 2),
+                'initial_allocation': round(initial, 2),
+                'manager_name': acc.get('manager_name', 'Unassigned'),
+                'fund_type': acc.get('fund_type', ''),
+                'broker': acc.get('broker', acc.get('broker_name', '')),
+                'platform': acc.get('platform', 'MT5'),
+                'status': acc.get('status', 'active')
+            })
+        
+        return {
+            'success': True,
+            'data': {
+                'accounts': accounts_list,
+                'summary': {
+                    'total_accounts': len(accounts_list),
+                    'total_balance': round(total_balance, 2),
+                    'total_equity': round(total_equity, 2)
+                }
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error in investment-committee/mt5-accounts: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/investment-committee/allocations")
+async def get_investment_committee_allocations():
+    """
+    Investment Committee - Get current allocations grouped by manager, fund, broker
+    """
+    try:
+        # Query ALL mt5_accounts
+        mt5_cursor = db.mt5_accounts.find({})
+        all_accounts = await mt5_cursor.to_list(length=None)
+        
+        # Group by manager
+        managers = {}
+        funds = {}
+        brokers = {}
+        platforms = {}
+        
+        for acc in all_accounts:
+            account_num = str(acc.get('account', ''))
+            manager = acc.get('manager_name', 'Unassigned')
+            fund = acc.get('fund_type', '')
+            broker = acc.get('broker', acc.get('broker_name', ''))
+            platform = acc.get('platform', 'MT5')
+            
+            # Group by manager
+            if manager not in managers:
+                managers[manager] = {'accounts': [], 'total': 0}
+            managers[manager]['accounts'].append(account_num)
+            
+            # Group by fund
+            if fund and fund not in funds:
+                funds[fund] = {'accounts': [], 'total': 0}
+            if fund:
+                funds[fund]['accounts'].append(account_num)
+            
+            # Group by broker
+            if broker and broker not in brokers:
+                brokers[broker] = {'accounts': [], 'total': 0}
+            if broker:
+                brokers[broker]['accounts'].append(account_num)
+            
+            # Group by platform
+            if platform not in platforms:
+                platforms[platform] = {'accounts': [], 'total': 0}
+            platforms[platform]['accounts'].append(account_num)
+        
+        return {
+            'success': True,
+            'data': {
+                'managers': managers,
+                'funds': funds,
+                'brokers': brokers,
+                'platforms': platforms
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error in investment-committee/allocations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/v2/accounts/all")
 async def get_all_accounts_v2():
     """
