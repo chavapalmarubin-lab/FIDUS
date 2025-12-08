@@ -15627,11 +15627,28 @@ async def get_admin_investments_overview():
                 "average_investment": 0.0
             }
         
-        # Get all clients directly from MongoDB
-        logging.info("📋 Fetching clients from users collection...")
-        clients_cursor = db.users.find({"type": "client", "status": "active"})
-        all_clients = await clients_cursor.to_list(length=None)
-        logging.info(f"📋 Found {len(all_clients)} clients with type='client' and status='active'")
+        # Get all clients directly from investments collection (SSOT for client investments)
+        logging.info("📋 Fetching active investments from investments collection...")
+        active_investments_cursor = db.investments.find({"status": "active"})
+        all_active_investments = await active_investments_cursor.to_list(length=None)
+        logging.info(f"📋 Found {len(all_active_investments)} active investments")
+        
+        # Get unique clients from active investments
+        unique_client_ids = set()
+        unique_clients_map = {}
+        for inv in all_active_investments:
+            client_id = inv.get('client_id')
+            client_name = inv.get('client_name', 'Unknown')
+            if client_id:
+                unique_client_ids.add(client_id)
+                if client_id not in unique_clients_map:
+                    unique_clients_map[client_id] = {
+                        'id': client_id,
+                        'name': client_name
+                    }
+        
+        all_clients = list(unique_clients_map.values())
+        logging.info(f"📋 Found {len(all_clients)} unique clients with active investments")
         
         for client in all_clients:
             client_id = client.get('id')
