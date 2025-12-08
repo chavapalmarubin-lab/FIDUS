@@ -16638,73 +16638,21 @@ async def get_complete_cashflow(days: int = 30):
         days: Number of days to calculate rebates for (default: 30)
     """
     try:
-        # ✅ Get ALL accounts (active and inactive) from SSOT
-        # User wants TOTAL EQUITY from ALL 15 accounts
-        mt5_accounts_cursor = db.mt5_accounts.find({})
-        mt5_accounts = await mt5_accounts_cursor.to_list(length=None)
+        # SSOT: Use central calculation service
+        from services.calculations import get_total_equity, get_client_money, get_fund_revenue
         
-        # SIMPLIFIED CALCULATION #1: Total Equity (Sum of all accounts)
-        # This is the ONLY number we need from accounts
-        total_equity = 0
-        total_balance = 0
-        total_allocation = 0
-        account_count = len(mt5_accounts)
+        # Get core metrics from central service
+        total_equity = await get_total_equity(db)
+        client_money = await get_client_money(db)
+        fund_revenue = await get_fund_revenue(db)
+        total_balance = total_equity
+        total_allocation = total_equity - fund_revenue
         
-        for acc in mt5_accounts:
-            equity_raw = acc.get('equity', 0)
-            balance_raw = acc.get('balance', 0)
-            initial_raw = acc.get('initial_allocation', 0)
-            
-            # Handle Decimal128 type from MongoDB
-            if hasattr(equity_raw, 'to_decimal'):
-                equity = float(equity_raw.to_decimal())
-            else:
-                equity = float(equity_raw) if equity_raw else 0
-                
-            if hasattr(balance_raw, 'to_decimal'):
-                balance = float(balance_raw.to_decimal())
-            else:
-                balance = float(balance_raw) if balance_raw else 0
-                
-            if hasattr(initial_raw, 'to_decimal'):
-                initial = float(initial_raw.to_decimal())
-            else:
-                initial = float(initial_raw) if initial_raw else 0
-            
-            total_equity += equity
-            total_balance += balance
-            total_allocation += initial
+        # Broker Rebates (keep existing value)
+        broker_rebates = 202
         
-        logging.info(f"💰 Total Equity: ${total_equity:,.2f} from {account_count} accounts (15 total)")
-        logging.info(f"💰 Total Balance: ${total_balance:,.2f}")
-        logging.info(f"💰 Total Allocation: ${total_allocation:,.2f}")
-        
-        # SIMPLIFIED CALCULATION #2: Broker Rebates (keep existing logic)
-        # Keep the $202 value or calculate from deals if needed
-        broker_rebates = 202  # Hardcoded as user requested to "keep as-is"
-        
-        logging.info(f"💰 Broker Rebates: ${broker_rebates:,.2f}")
-        
-        # SIMPLIFIED CALCULATION #3: Total Fund Assets
-        # Just add equity + rebates
+        # Total Fund Assets
         total_fund_assets = total_equity + broker_rebates
-        
-        logging.info(f"💰 Total Fund Assets: ${total_fund_assets:,.2f} (Equity + Rebates)")
-        
-        # NEW CALCULATION #4: Fund Revenue
-        # Fund Revenue = Total Equity - Client Money
-        # Client Money calculated dynamically from investments collection (SSOT)
-        
-        # Get active investments to calculate total client money
-        active_investments_for_revenue = await db.investments.find({'status': 'active'}).to_list(length=None)
-        client_money = 0
-        for inv in active_investments_for_revenue:
-            principal_raw = inv.get('principal_amount', 0)
-            # Handle Decimal128 type from MongoDB
-            if hasattr(principal_raw, 'to_decimal'):
-                client_money += float(principal_raw.to_decimal())
-            else:
-                client_money += float(principal_raw) if principal_raw else 0
         
         fund_revenue = total_equity - client_money
         
