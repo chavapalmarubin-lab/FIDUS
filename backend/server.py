@@ -19603,13 +19603,30 @@ async def get_fund_portfolio_overview():
             # Calculate fund AUM from investments
             # FIXED: Investments use 'fund_type' not 'fund_code'
             fund_investments = [inv for inv in all_investments if inv.get('fund_type') == fund_code]
-            fund_aum = sum(float(inv.get('principal_amount', 0)) for inv in fund_investments)
+            
+            # Handle Decimal128 for principal_amount
+            fund_aum = 0
+            for inv in fund_investments:
+                principal_raw = inv.get('principal_amount', 0)
+                if hasattr(principal_raw, 'to_decimal'):
+                    fund_aum += float(principal_raw.to_decimal())
+                else:
+                    fund_aum += float(principal_raw) if principal_raw else 0
+            
             total_investors = len(set(inv.get('client_id') for inv in fund_investments))
             
             # Get MT5 allocations for this fund - ALL ACTIVE ACCOUNTS
             # Updated: Include all active accounts (15 total) by fund_type
             fund_mt5_accounts = [mt5 for mt5 in all_mt5_accounts if mt5.get('fund_type') == fund_code]
-            total_mt5_allocation = sum(mt5.get('balance', 0) for mt5 in fund_mt5_accounts)
+            
+            # Handle Decimal128 for balance
+            total_mt5_allocation = 0
+            for mt5 in fund_mt5_accounts:
+                balance_raw = mt5.get('balance', 0)
+                if hasattr(balance_raw, 'to_decimal'):
+                    total_mt5_allocation += float(balance_raw.to_decimal())
+                else:
+                    total_mt5_allocation += float(balance_raw) if balance_raw else 0
             mt5_account_count = len(fund_mt5_accounts)
             
             # Get account details for debugging
