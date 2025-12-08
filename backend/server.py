@@ -16299,7 +16299,15 @@ async def calculate_cash_flow_calendar():
             "status": "active"
         }).to_list(length=None)
         
-        total_equity = sum(float(acc.get('equity', 0)) for acc in mt5_accounts)
+        # Handle Decimal128 for equity
+        total_equity = 0
+        for acc in mt5_accounts:
+            equity_raw = acc.get('equity', 0)
+            if hasattr(equity_raw, 'to_decimal'):
+                total_equity += float(equity_raw.to_decimal())
+            else:
+                total_equity += float(equity_raw) if equity_raw else 0
+        
         current_revenue = (total_equity - CLIENT_MONEY) + BROKER_REBATES
         
         logging.info(f"💰 Calendar Revenue Calculation (SSOT - matches Fund Portfolio):")
