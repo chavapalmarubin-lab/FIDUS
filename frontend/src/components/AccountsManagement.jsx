@@ -40,13 +40,30 @@ export default function AccountsManagement() {
     
     // Summary stats
     const [summary, setSummary] = useState({});
+    
+    // Bridge health data (merged from BridgeHealthMonitor)
+    const [bridgeHealth, setBridgeHealth] = useState(null);
 
     useEffect(() => {
         fetchAccounts();
+        fetchBridgeHealth();
         // Auto-refresh every 30 seconds for balance updates
-        const interval = setInterval(fetchAccounts, 30000);
+        const interval = setInterval(() => {
+            fetchAccounts();
+            fetchBridgeHealth();
+        }, 30000);
         return () => clearInterval(interval);
     }, []);
+    
+    const fetchBridgeHealth = async () => {
+        try {
+            const healthRes = await fetch(`${BACKEND_URL}/api/bridges/health`);
+            const healthJson = await healthRes.json();
+            setBridgeHealth(healthJson);
+        } catch (err) {
+            console.error('Error fetching bridge health:', err);
+        }
+    };
 
     const fetchAccounts = async () => {
         try {
