@@ -15628,12 +15628,17 @@ async def get_admin_investments_overview():
             }
         
         # SSOT: Use central calculation service
-        from services.calculations import get_all_investments_summary
+        try:
+            from services.calculations import get_all_investments_summary
+            logging.info("✅ SSOT investments summary imported successfully")
+        except ImportError as ie:
+            logging.error(f"❌ Failed to import SSOT investments: {ie}")
+            raise HTTPException(status_code=500, detail=f"Import error: {str(ie)}")
         
         investments_data = await get_all_investments_summary(db)
         all_clients = investments_data['clients']
         
-        logging.info(f"📋 SSOT: Found {len(all_clients)} unique clients with active investments")
+        logging.info(f"📋 SSOT: Found {len(all_clients)} unique clients, Total AUM: ${investments_data['totals']['total_aum']:,.2f}")
         
         for client in all_clients:
             client_id = client.get('client_id')
@@ -16624,7 +16629,12 @@ async def get_complete_cashflow(days: int = 30):
     """
     try:
         # SSOT: Use central calculation service
-        from services.calculations import get_total_equity, get_client_money, get_fund_revenue
+        try:
+            from services.calculations import get_total_equity, get_client_money, get_fund_revenue
+            logging.info("✅ SSOT calculations imported successfully")
+        except ImportError as ie:
+            logging.error(f"❌ Failed to import SSOT calculations: {ie}")
+            raise HTTPException(status_code=500, detail=f"Import error: {str(ie)}")
         
         # Get core metrics from central service
         total_equity = await get_total_equity(db)
