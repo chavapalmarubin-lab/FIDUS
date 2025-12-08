@@ -905,7 +905,7 @@ const CashFlowManagement = () => {
                 <span className="text-cyan-400 font-bold text-lg">= Current Fund Revenue</span>
                 <span className="text-cyan-400 font-bold text-2xl">
                   {formatCurrency(
-                    (fundAccounting?.total_equity || 0) - 118151.41 + (fundAccounting?.assets?.broker_rebates || 0)
+                    (fundAccounting?.total_equity || 0) - (fundAccounting?.client_money || 0) + (fundAccounting?.assets?.broker_rebates || 0)
                   )}
                 </span>
               </div>
