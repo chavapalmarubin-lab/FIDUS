@@ -16626,6 +16626,7 @@ async def calculate_cash_flow_calendar():
 async def get_complete_cashflow(days: int = 30):
     """
     SIMPLIFIED Cash Flow Analysis - SSOT Approach
+    NOW USES: services.calculations for all financial calculations
     ✅ Shows only essential metrics from mt5_accounts collection
     
     Returns:
