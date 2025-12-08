@@ -16641,7 +16641,7 @@ async def get_complete_cashflow(days: int = 30):
         
         fund_revenue = total_equity - client_money
         
-        logging.info(f"💰 Client Money (from {len(active_investments_for_revenue)} active investments): ${client_money:,.2f}")
+        logging.info(f"💰 Client Money (SSOT): ${client_money:,.2f}")
         logging.info(f"💰 Fund Revenue (Equity - Client Money): ${fund_revenue:,.2f}")
         
         # NEW CALCULATION #5: Fund Obligations
@@ -16730,7 +16730,7 @@ async def get_complete_cashflow(days: int = 30):
             'calculation_period_days': days,
             'current_month': now.strftime('%B %Y'),
             'trades_count': 0,
-            'mt5_accounts_count': len(mt5_accounts),
+            'mt5_accounts_count': 0,  # SSOT: Count not needed for this endpoint
             'active_investments_count': len(investments),
             'last_updated': now.isoformat(),
             
