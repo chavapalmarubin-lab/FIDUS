@@ -15636,8 +15636,8 @@ async def get_admin_investments_overview():
         logging.info(f"📋 SSOT: Found {len(all_clients)} unique clients with active investments")
         
         for client in all_clients:
-            client_id = client.get('id')
-            client_name = client.get('name', 'Unknown')
+            client_id = client.get('client_id')
+            client_name = client.get('client_name', 'Unknown')
             
             logging.info(f"Processing client: {client_name} (ID: {client_id})")
             
