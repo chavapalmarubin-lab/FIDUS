@@ -156,7 +156,6 @@ const CashFlowManagement = () => {
           }
           
           // Also fetch cashflow complete for other data
-          const token = localStorage.getItem('fidus_token');
           const completeResponse = await fetch(
             `${process.env.REACT_APP_BACKEND_URL}/api/admin/cashflow/complete`,
             { headers: { 'Authorization': `Bearer ${token}` } }
