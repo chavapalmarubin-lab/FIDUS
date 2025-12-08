@@ -19749,6 +19749,88 @@ async def get_all_funds_performance_endpoint(current_user: dict = Depends(get_cu
     except Exception as e:
         logging.error(f"Update fund real-time data error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update real-time data")
+
+@api_router.get("/v2/accounts/all")
+async def get_all_accounts_v2():
+    """
+    V2 Accounts API - Single Source of Truth (SSoT)
+    Returns ALL mt5_accounts data with Decimal128 handling
+    Used by Account Management tab - MUST match Fund Portfolio numbers exactly
+    """
+    try:
+        # Query the SAME data as fund-portfolio/overview endpoint
+        mt5_cursor = db.mt5_accounts.find({
+            "$or": [
+                {"status": "active"},
+                {"status": {"$exists": False}}  # Legacy accounts without status field
+            ]
+        })
+        all_mt5_accounts = await mt5_cursor.to_list(length=None)
+        
+        # Calculate totals with proper Decimal128 handling
+        total_balance = 0
+        total_equity = 0
+        total_allocation = 0
+        active_count = 0
+        
+        accounts_data = []
+        
+        for acc in all_mt5_accounts:
+            # Handle Decimal128 for all numeric fields
+            balance_raw = acc.get('balance', 0)
+            equity_raw = acc.get('equity', 0)
+            allocation_raw = acc.get('initial_allocation', 0)
+            
+            if hasattr(balance_raw, 'to_decimal'):
+                balance = float(balance_raw.to_decimal())
+            else:
+                balance = float(balance_raw) if balance_raw else 0
+                
+            if hasattr(equity_raw, 'to_decimal'):
+                equity = float(equity_raw.to_decimal())
+            else:
+                equity = float(equity_raw) if equity_raw else 0
+                
+            if hasattr(allocation_raw, 'to_decimal'):
+                allocation = float(allocation_raw.to_decimal())
+            else:
+                allocation = float(allocation_raw) if allocation_raw else 0
+            
+            total_balance += balance
+            total_equity += equity
+            total_allocation += allocation
+            
+            if acc.get('status') == 'active' or not acc.get('status'):
+                active_count += 1
+            
+            accounts_data.append({
+                'account': str(acc.get('account', '')),
+                'manager_name': acc.get('manager_name', ''),
+                'fund_type': acc.get('fund_type', ''),
+                'broker': acc.get('broker', ''),
+                'platform': acc.get('platform', 'MT5'),
+                'balance': round(balance, 2),
+                'equity': round(equity, 2),
+                'initial_allocation': round(allocation, 2),
+                'status': acc.get('status', 'active'),
+                'description': acc.get('description', '')
+            })
+        
+        return {
+            'success': True,
+            'accounts': accounts_data,
+            'summary': {
+                'total_accounts': len(all_mt5_accounts),
+                'active_accounts': active_count,
+                'total_balance': round(total_balance, 2),
+                'total_equity': round(total_equity, 2),
+                'total_allocation': round(total_allocation, 2)
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error in v2/accounts/all: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/fund-performance/corrected")
 async def get_corrected_fund_performance(current_user: dict = Depends(get_current_admin_user)):
     """
