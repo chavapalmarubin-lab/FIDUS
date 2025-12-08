@@ -882,7 +882,7 @@ const CashFlowManagement = () => {
               <div className="flex items-center justify-between pb-2 border-b border-slate-700">
                 <span className="text-slate-300 font-medium">− Client Money (Obligations)</span>
                 <span className="text-red-400 font-bold text-lg">
-                  −{formatCurrency(118151.41)}
+                  −{formatCurrency(fundAccounting?.client_money || 0)}
                 </span>
               </div>
               
