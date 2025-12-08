@@ -156,13 +156,25 @@ const CashFlowManagement = () => {
           }
           
           // Also fetch cashflow complete for other data
+          if (!token) {
+            console.error('❌ No auth token found - user may need to re-login');
+          }
+          
           const completeResponse = await fetch(
             `${process.env.REACT_APP_BACKEND_URL}/api/admin/cashflow/complete`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
+            { 
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              } 
+            }
           );
+          
+          console.log(`🔍 Complete endpoint response status: ${completeResponse.status}`);
           
           if (completeResponse.ok) {
             const data = await completeResponse.json();
+            console.log('✅ Complete endpoint data received:', data);
             if (data.success) {
               // Get other metrics with null checks
               mt5TruePnl = parseFloat(data.total_profit_loss || data.fund_assets?.total_profit_loss || 0);
