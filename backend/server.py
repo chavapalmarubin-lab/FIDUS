@@ -16643,6 +16643,14 @@ async def get_complete_cashflow(days: int = 30):
         total_balance = total_equity
         total_allocation = total_equity - fund_revenue
         
+        # Get account count
+        account_count = await db.mt5_accounts.count_documents({
+            "$or": [
+                {"status": "active"},
+                {"status": {"$exists": False}}
+            ]
+        })
+        
         # Broker Rebates (keep existing value)
         broker_rebates = 202
         
