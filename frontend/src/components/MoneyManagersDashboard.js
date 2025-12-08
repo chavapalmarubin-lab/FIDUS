@@ -199,14 +199,14 @@ const MoneyManagersDashboard = () => {
 
       {viewMode === 'overview' && (
         <>
-          {/* PHASE 2: Performance Comparison Bar Chart */}
+          {/* PHASE 2: Performance Comparison Bar Chart - Initial Allocation vs Current Equity */}
           <Card className="dashboard-card mb-8">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <BarChart3 className="mr-2 h-5 w-5 text-cyan-400" />
                 Manager Performance Comparison
               </CardTitle>
-              <p className="text-slate-400 text-sm">TRUE P&L and return percentage by manager</p>
+              <p className="text-slate-400 text-sm">Initial Allocation vs Current Equity - Shows which managers are outperforming</p>
             </CardHeader>
             <CardContent>
               {managers && managers.length > 0 ? (
@@ -215,13 +215,12 @@ const MoneyManagersDashboard = () => {
                     data={managers
                       .map(manager => ({
                         name: manager.manager_name || 'Unknown',
-                        total_equity: manager.total_equity || 0,
-                        true_pnl: manager.performance?.true_pnl || 0,
+                        initial_allocation: manager.performance?.total_allocated || 0,
+                        current_equity: manager.performance?.current_equity || 0,
                         return_pct: manager.performance?.return_pct || 0,
-                        win_rate: manager.performance?.win_rate || 0,
                         manager_id: manager.manager_id
                       }))
-                      .sort((a, b) => b.total_equity - a.total_equity)
+                      .sort((a, b) => b.current_equity - a.current_equity)
                     }
                     layout="vertical"
                     margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
@@ -248,34 +247,44 @@ const MoneyManagersDashboard = () => {
                         color: '#fff'
                       }}
                       formatter={(value, name) => {
-                        if (name === 'total_equity') return [`$${value.toLocaleString()}`, 'Total Equity'];
-                        if (name === 'true_pnl') return [`$${value.toLocaleString()}`, 'TRUE P&L'];
+                        if (name === 'initial_allocation') return [`$${value.toLocaleString()}`, 'Initial Allocation'];
+                        if (name === 'current_equity') return [`$${value.toLocaleString()}`, 'Current Equity'];
                         if (name === 'return_pct') return [`${value.toFixed(2)}%`, 'Return'];
-                        if (name === 'win_rate') return [`${value.toFixed(2)}%`, 'Win Rate'];
                         return [value, name];
                       }}
                     />
                     <Legend 
                       wrapperStyle={{ color: '#94a3b8' }}
                       formatter={(value) => {
-                        if (value === 'total_equity') return 'Total Equity';
-                        if (value === 'true_pnl') return 'TRUE P&L';
-                        if (value === 'return_pct') return 'Return %';
-                        if (value === 'win_rate') return 'Win Rate %';
+                        if (value === 'initial_allocation') return 'Initial Allocation';
+                        if (value === 'current_equity') return 'Current Equity';
                         return value;
                       }}
                     />
                     <Bar 
-                      dataKey="total_equity" 
+                      dataKey="initial_allocation" 
+                      fill="#64748b"
+                      radius={[0, 4, 4, 0]}
+                      name="initial_allocation"
+                    />
+                    <Bar 
+                      dataKey="current_equity" 
                       fill="#06b6d4"
                       radius={[0, 8, 8, 0]}
+                      name="current_equity"
                     >
-                      {managers.map((manager, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          fill="#06b6d4"
-                        />
-                      ))}
+                      {managers.map((manager, index) => {
+                        const performance = manager.performance || {};
+                        const returnPct = performance.return_pct || 0;
+                        // Color code based on performance: green if positive, red if negative
+                        const color = returnPct >= 0 ? '#10b981' : '#ef4444';
+                        return (
+                          <Cell 
+                            key={`cell-${index}`}
+                            fill={color}
+                          />
+                        );
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
