@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://fiddash.preview.emergentagent.com"
+BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

@@ -4,7 +4,7 @@ GOOGLE OAUTH CONNECTION TEST AFTER BACKEND URL FIX
 =================================================
 
 This test verifies Google OAuth connection functionality after fixing the backend URL from:
-- OLD: https://fiddash.preview.emergentagent.com
+- OLD: https://data-integrity-13.preview.emergentagent.com
 - NEW: https://fidus-invest.emergent.host
 
 Test Objectives:
@@ -315,7 +315,7 @@ class GoogleOAuthURLFixTest:
         """Run all Google OAuth URL fix verification tests"""
         print("🎯 GOOGLE OAUTH CONNECTION TEST AFTER BACKEND URL FIX")
         print("=" * 65)
-        print(f"OLD Backend URL: https://fiddash.preview.emergentagent.com")
+        print(f"OLD Backend URL: https://data-integrity-13.preview.emergentagent.com")
         print(f"NEW Backend URL: {BACKEND_URL}")
         print(f"Test Time: {datetime.now().isoformat()}")
         print()

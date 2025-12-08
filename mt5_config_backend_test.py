@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://fiddash.preview.emergentagent.com"
+BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
