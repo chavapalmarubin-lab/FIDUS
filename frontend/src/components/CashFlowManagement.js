@@ -240,7 +240,8 @@ const CashFlowManagement = () => {
           separation_balance: separationBalance,
           profit_withdrawals: profitWithdrawals,
           separation_accounts: separationAccounts,  // PHASE 1 FIX: Individual account balances
-          total_equity: totalEquity                 // NEW: For revenue calculation breakdown
+          total_equity: totalEquity,                // NEW: For revenue calculation breakdown
+          client_money: CLIENT_MONEY                // SSOT: Dynamic client money from investments
         };
         
         setCashFlowData(cashFlowResponse.data.monthly_breakdown || []);
