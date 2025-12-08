@@ -15702,6 +15702,9 @@ async def get_admin_investments_overview():
                     interest_earned = float(interest_earned_raw) if interest_earned_raw else 0.0
                 
                 # Add to all investments
+                deposit_date = investment.get("deposit_date")
+                deposit_date_str = deposit_date.isoformat() if deposit_date and hasattr(deposit_date, 'isoformat') else str(deposit_date) if deposit_date else None
+                
                 investment_record = {
                     "investment_id": investment.get("investment_id"),
                     "client_id": client_id,
@@ -15711,7 +15714,7 @@ async def get_admin_investments_overview():
                     "principal_amount": principal_amount,
                     "current_value": current_value,
                     "interest_earned": interest_earned,
-                    "deposit_date": investment.get("deposit_date").isoformat() if investment.get("deposit_date") else None,
+                    "deposit_date": deposit_date_str,
                     "status": investment.get("status", "active"),
                     "monthly_interest_rate": fund_config.interest_rate if fund_config else 0,
                     "can_redeem_interest": False,  # Simplified for overview
