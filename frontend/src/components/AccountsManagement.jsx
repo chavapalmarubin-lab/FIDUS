@@ -224,6 +224,54 @@ export default function AccountsManagement() {
                 </Alert>
             )}
 
+            {/* Bridge Health Status (Merged from Bridge Monitor) */}
+            {bridgeHealth && (
+                <Card className="border-cyan-500/30 bg-slate-800">
+                    <CardHeader>
+                        <CardTitle className="flex items-center justify-between text-white">
+                            <span className="flex items-center gap-2">
+                                🔌 Bridge Health Status
+                                <Badge variant={bridgeHealth.status === 'healthy' ? 'success' : 'warning'} className="ml-2">
+                                    {bridgeHealth.status === 'healthy' ? '✅ All Systems Operational' : '⚠️ Attention Required'}
+                                </Badge>
+                            </span>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-3 gap-4">
+                            {Object.entries(bridgeHealth.bridges || {}).map(([bridgeId, bridge]) => {
+                                const bridgeNames = {
+                                    mexatlantic_mt5: 'MEXAtlantic MT5',
+                                    lucrum_mt5: 'Lucrum MT5',
+                                    mexatlantic_mt4: 'MEXAtlantic MT4'
+                                };
+                                const name = bridgeNames[bridgeId] || bridgeId;
+                                const isHealthy = bridge.healthy;
+                                
+                                return (
+                                    <div key={bridgeId} className={`p-3 rounded-lg border-2 ${isHealthy ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-semibold text-white">{name}</span>
+                                            {isHealthy ? (
+                                                <CheckCircle className="h-5 w-5 text-green-500" />
+                                            ) : (
+                                                <AlertCircle className="h-5 w-5 text-red-500" />
+                                            )}
+                                        </div>
+                                        <div className="text-sm text-slate-300">
+                                            <div>{bridge.account_count || 0} accounts</div>
+                                            <div className="text-xs text-slate-400 mt-1">
+                                                {bridge.last_heartbeat ? `Updated ${Math.floor((Date.now() - new Date(bridge.last_heartbeat)) / 60000)}m ago` : 'No data'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
