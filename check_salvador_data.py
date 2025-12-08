@@ -2,7 +2,7 @@
 import requests
 import json
 
-base_url = 'https://fidus-finance-4.preview.emergentagent.com'
+base_url = 'https://fiddash.preview.emergentagent.com'
 
 # Login as admin
 login_response = requests.post(f'{base_url}/api/auth/login', json={

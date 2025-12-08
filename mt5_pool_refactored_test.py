@@ -23,7 +23,7 @@ import uuid
 from decimal import Decimal
 
 # Backend URL Configuration (from frontend .env)
-BACKEND_URL = "https://fidus-finance-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://fiddash.preview.emergentagent.com/api"
 
 # Test Admin Credentials
 ADMIN_CREDENTIALS = {

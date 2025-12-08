@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidus-finance-4.preview.emergentagent.com`
+`https://fiddash.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

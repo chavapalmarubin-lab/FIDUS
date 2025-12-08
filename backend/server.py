@@ -16663,9 +16663,15 @@ async def get_complete_cashflow(days: int = 30):
         client_interest_obligations = 0
         
         for inv in investments:
-            principal = inv.get('principal_amount', 0)
+            principal_raw = inv.get('principal_amount', 0)
             interest_rate = inv.get('interest_rate', 0)
             fund_type = inv.get('fund_type', '')
+            
+            # Handle Decimal128 type from MongoDB
+            if hasattr(principal_raw, 'to_decimal'):
+                principal = float(principal_raw.to_decimal())
+            else:
+                principal = float(principal_raw) if principal_raw else 0
             
             # Calculate interest obligations per SYSTEM_MASTER.md
             if 'CORE' in fund_type.upper():
@@ -25028,7 +25034,7 @@ if not cors_origins or cors_origins == '*':
     # Default allowed origins if not specified
     cors_origins = [
         "https://fidus-investment-platform.onrender.com",
-        "https://fidus-finance-4.preview.emergentagent.com",
+        "https://fiddash.preview.emergentagent.com",
         "http://localhost:3000",
         "http://localhost:3001"
     ]
