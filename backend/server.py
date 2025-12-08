@@ -16201,14 +16201,25 @@ def generate_payment_schedule(investment):
     else:
         investment_date = investment_date_str or datetime.now()
     
-    amount = investment.get('principal_amount', 0)
+    amount_raw = investment.get('principal_amount', 0)
+    # Handle Decimal128 for amount
+    if hasattr(amount_raw, 'to_decimal'):
+        amount = float(amount_raw.to_decimal())
+    else:
+        amount = float(amount_raw) if amount_raw else 0
+    
     # CRITICAL FIX: Database uses 'fund_type' not 'fund_code'
     fund_code = investment.get('fund_type') or investment.get('fund_code', '')
     product = f'FIDUS_{fund_code}' if fund_code else 'FIDUS_CORE'
     
     # CRITICAL: Use interest_rate from investment record (from DATABASE_FIELD_STANDARDS.md)
     # Don't use hardcoded rates - rates come from database
-    interest_rate_per_period = investment.get('interest_rate', 0)
+    interest_rate_raw = investment.get('interest_rate', 0)
+    # Handle Decimal128 for interest_rate
+    if hasattr(interest_rate_raw, 'to_decimal'):
+        interest_rate_per_period = float(interest_rate_raw.to_decimal())
+    else:
+        interest_rate_per_period = float(interest_rate_raw) if interest_rate_raw else 0
     
     # Fallback to defaults if not in database (should never happen)
     if not interest_rate_per_period:
