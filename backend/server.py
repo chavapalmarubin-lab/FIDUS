@@ -15636,34 +15636,29 @@ async def get_admin_investments_overview():
                 "average_investment": 0.0
             }
         
-        for client in all_clients:
-            client_id = client.get('client_id')
-            client_name = client.get('client_name', 'Unknown')
+        for client_data in all_clients_data:
+            client_id = client_data.get('client_id')
+            client_name = client_data.get('client_name', 'Unknown')
+            total_invested = client_data.get('total_invested', 0)
+            investments_list = client_data.get('investments', [])
             
-            logging.info(f"Processing client: {client_name} (ID: {client_id})")
+            logging.info(f"Processing client: {client_name}, Total: ${total_invested:,.2f}")
             
-            # Get investments for this client directly from MongoDB
-            investments_cursor = db.investments.find({"client_id": client_id})
-            client_investments = await investments_cursor.to_list(length=None)
-            
-            logging.info(f"Found {len(client_investments)} investments for client {client_id}")
-            
-            if not client_investments:
-                logging.info(f"Skipping client {client_name} - no investments")
+            if not investments_list:
                 continue
-                
+            
             # Initialize client summary
             client_summary = {
                 "client_id": client_id,
                 "client_name": client_name,
-                "total_invested": 0.0,
-                "current_value": 0.0,
+                "total_invested": total_invested,
+                "current_value": total_invested,  # Use principal as current value
                 "total_interest": 0.0,
-                "investment_count": len(client_investments),
+                "investment_count": len(investments_list),
                 "funds": []
             }
             
-            for investment in client_investments:
+            for investment in investments_list:
                 fund_code = investment.get("fund_code", "")
                 fund_config = FIDUS_FUND_CONFIG.get(fund_code)
                 fund_name = fund_config.name if fund_config else f"FIDUS {fund_code} Fund"
