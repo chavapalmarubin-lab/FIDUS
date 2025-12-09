@@ -15766,7 +15766,9 @@ async def get_admin_investments_overview():
         
     except Exception as e:
         logging.error(f"Get admin investments overview error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch admin investments overview")
+        import traceback
+        logging.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch admin investments overview: {str(e)}")
 
 # ===============================================================================
 # MULTI-ACCOUNT MT5 DATA INTEGRATION ENDPOINTS
