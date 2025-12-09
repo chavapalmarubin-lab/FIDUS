@@ -170,6 +170,7 @@ const CashFlowManagement = () => {
             console.error('❌ No auth token found - user may need to re-login');
           }
           
+          console.log('🔄 Cash Flow: Fetching complete data...');
           const completeResponse = await fetch(
             `${process.env.REACT_APP_BACKEND_URL}/api/admin/cashflow/complete`,
             { 
@@ -180,7 +181,7 @@ const CashFlowManagement = () => {
             }
           );
           
-          console.log(`🔍 Complete endpoint response status: ${completeResponse.status}`);
+          console.log(`✅ Cash Flow: Complete endpoint response status: ${completeResponse.status}`);
           
           if (completeResponse.ok) {
             const data = await completeResponse.json();
