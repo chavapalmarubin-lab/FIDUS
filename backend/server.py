@@ -15702,7 +15702,8 @@ async def get_admin_investments_overview():
             clients_summary.append(client_summary)
         
         # Calculate averages and round fund summaries
-        for fund_summary in fund_summaries.values():
+        for fund_code, fund_summary in fund_summaries.items():
+            fund_summary["total_investors"] = len(fund_client_sets[fund_code])
             if fund_summary["total_investors"] > 0:
                 fund_summary["average_investment"] = fund_summary["total_invested"] / fund_summary["total_investors"]
             fund_summary["total_invested"] = round(fund_summary["total_invested"], 2)
