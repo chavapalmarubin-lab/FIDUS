@@ -15659,33 +15659,12 @@ async def get_admin_investments_overview():
             }
             
             for investment in investments_list:
-                fund_code = investment.get("fund_code", "")
+                fund_code = investment.get("fund_type", "")
                 fund_config = FIDUS_FUND_CONFIG.get(fund_code)
                 fund_name = fund_config.name if fund_config else f"FIDUS {fund_code} Fund"
-                
-                # Handle Decimal128 values from MongoDB
-                principal_amount_raw = investment.get("principal_amount", investment.get("amount", 0))
-                if hasattr(principal_amount_raw, 'to_decimal'):
-                    principal_amount = float(principal_amount_raw.to_decimal())
-                else:
-                    principal_amount = float(principal_amount_raw) if principal_amount_raw else 0.0
-                
-                current_value_raw = investment.get("current_value", principal_amount_raw)
-                if hasattr(current_value_raw, 'to_decimal'):
-                    current_value = float(current_value_raw.to_decimal())
-                else:
-                    current_value = float(current_value_raw) if current_value_raw else principal_amount
-                
-                interest_earned_raw = investment.get("total_interest_earned", 0)
-                if hasattr(interest_earned_raw, 'to_decimal'):
-                    interest_earned = float(interest_earned_raw.to_decimal())
-                else:
-                    interest_earned = float(interest_earned_raw) if interest_earned_raw else 0.0
+                principal_amount = investment.get("principal_amount", 0)
                 
                 # Add to all investments
-                deposit_date = investment.get("deposit_date")
-                deposit_date_str = deposit_date.isoformat() if deposit_date and hasattr(deposit_date, 'isoformat') else str(deposit_date) if deposit_date else None
-                
                 investment_record = {
                     "investment_id": investment.get("investment_id"),
                     "client_id": client_id,
@@ -15693,38 +15672,31 @@ async def get_admin_investments_overview():
                     "fund_code": fund_code,
                     "fund_name": fund_name,
                     "principal_amount": principal_amount,
-                    "current_value": current_value,
-                    "interest_earned": interest_earned,
-                    "deposit_date": deposit_date_str,
+                    "current_value": principal_amount,
+                    "interest_earned": 0.0,
+                    "deposit_date": None,
                     "status": investment.get("status", "active"),
                     "monthly_interest_rate": fund_config.interest_rate if fund_config else 0,
-                    "can_redeem_interest": False,  # Simplified for overview
-                    "can_redeem_principal": False  # Simplified for overview
+                    "can_redeem_interest": False,
+                    "can_redeem_principal": False
                 }
                 
                 all_investments.append(investment_record)
-                
-                # Update client summary
-                client_summary["total_invested"] += principal_amount
-                client_summary["current_value"] += current_value
-                client_summary["total_interest"] += interest_earned
                 
                 # Add fund to client summary
                 fund_info = {
                     "fund_code": fund_code,
                     "fund_name": fund_name,
-                    "amount": current_value
+                    "amount": principal_amount
                 }
                 client_summary["funds"].append(fund_info)
                 
                 # Update fund summaries
                 if fund_code in fund_summaries:
                     fund_summaries[fund_code]["total_invested"] += principal_amount
-                    fund_summaries[fund_code]["total_current_value"] += current_value
-                    fund_summaries[fund_code]["total_investors"] += 1
-                    fund_summaries[fund_code]["total_interest_paid"] += interest_earned
-                
-                total_aum += current_value
+                    fund_summaries[fund_code]["total_current_value"] += principal_amount
+                    fund_summaries[fund_code]["total_investors"] = len(set(c['client_id'] for c in all_clients_data if any(i.get('fund_type') == fund_code for i in c.get('investments', []))))
+                    fund_summaries[fund_code]["total_interest_paid"] += 0.0
             
             # Round and add client summary
             client_summary["total_invested"] = round(client_summary["total_invested"], 2)
