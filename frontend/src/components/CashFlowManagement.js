@@ -315,6 +315,7 @@ const CashFlowManagement = () => {
         net_fund_profitability: 0
       });
     } finally {
+      console.log('✅ Cash Flow: Setting loading to false');
       setLoading(false);
     }
   };
