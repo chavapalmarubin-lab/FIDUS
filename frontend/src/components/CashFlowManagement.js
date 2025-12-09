@@ -129,10 +129,12 @@ const CashFlowManagement = () => {
         try {
           // First, fetch client money dynamically from investments (SSOT)
           const token = localStorage.getItem('fidus_token');
+          console.log('🔄 Cash Flow: Fetching client money...');
           const clientMoneyResponse = await fetch(
             `${process.env.REACT_APP_BACKEND_URL}/api/admin/client-money/total`,
             { headers: { 'Authorization': `Bearer ${token}` } }
           );
+          console.log(`✅ Cash Flow: Client money response: ${clientMoneyResponse.status}`);
           if (clientMoneyResponse.ok) {
             const clientMoneyData = await clientMoneyResponse.json();
             if (clientMoneyData.success) {
