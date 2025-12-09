@@ -15698,10 +15698,6 @@ async def get_admin_investments_overview():
                     fund_summaries[fund_code]["total_investors"] = len(set(c['client_id'] for c in all_clients_data if any(i.get('fund_type') == fund_code for i in c.get('investments', []))))
                     fund_summaries[fund_code]["total_interest_paid"] += 0.0
             
-            # Round and add client summary
-            client_summary["total_invested"] = round(client_summary["total_invested"], 2)
-            client_summary["current_value"] = round(client_summary["current_value"], 2)
-            client_summary["total_interest"] = round(client_summary["total_interest"], 2)
             clients_summary.append(client_summary)
         
         # Calculate averages and round fund summaries
@@ -15710,18 +15706,17 @@ async def get_admin_investments_overview():
                 fund_summary["average_investment"] = fund_summary["total_invested"] / fund_summary["total_investors"]
             fund_summary["total_invested"] = round(fund_summary["total_invested"], 2)
             fund_summary["total_current_value"] = round(fund_summary["total_current_value"], 2)
-            fund_summary["total_interest_paid"] = round(fund_summary["total_interest_paid"], 2)
             fund_summary["average_investment"] = round(fund_summary["average_investment"], 2)
         
-        # ✅ PHASE 1: Calculate overall average investment (moved from frontend Line 407)
-        avg_investment = (total_aum / len(all_investments)) if len(all_investments) > 0 else 0.0
+        # Calculate overall average investment
+        avg_investment = (totals['total_aum'] / len(all_investments)) if len(all_investments) > 0 else 0.0
         
         return {
             "success": True,
-            "total_aum": round(total_aum, 2),
+            "total_aum": round(totals['total_aum'], 2),
             "total_investments": len(all_investments),
-            "total_clients": len(clients_summary),
-            "avg_investment": round(avg_investment, 2),  # ✅ NEW: Overall average calculation
+            "total_clients": totals['total_clients'],
+            "avg_investment": round(avg_investment, 2),
             "clients": clients_summary,
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
