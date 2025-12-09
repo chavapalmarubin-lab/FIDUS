@@ -15623,6 +15623,7 @@ async def get_admin_investments_overview():
         all_investments = []
         clients_summary = []
         fund_summaries = {}
+        fund_client_sets = {}  # Track unique clients per fund
         
         # Initialize fund summaries
         for fund_code, config in FIDUS_FUND_CONFIG.items():
@@ -15635,6 +15636,7 @@ async def get_admin_investments_overview():
                 "total_interest_paid": 0.0,
                 "average_investment": 0.0
             }
+            fund_client_sets[fund_code] = set()
         
         for client_data in all_clients_data:
             client_id = client_data.get('client_id')
