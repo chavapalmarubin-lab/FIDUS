@@ -15695,8 +15695,7 @@ async def get_admin_investments_overview():
                 if fund_code in fund_summaries:
                     fund_summaries[fund_code]["total_invested"] += principal_amount
                     fund_summaries[fund_code]["total_current_value"] += principal_amount
-                    fund_summaries[fund_code]["total_investors"] = len(set(c['client_id'] for c in all_clients_data if any(i.get('fund_type') == fund_code for i in c.get('investments', []))))
-                    fund_summaries[fund_code]["total_interest_paid"] += 0.0
+                    fund_summaries[fund_code]["total_investors"] += 1
             
             clients_summary.append(client_summary)
         
