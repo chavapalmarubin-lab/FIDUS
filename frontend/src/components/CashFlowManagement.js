@@ -88,22 +88,28 @@ const CashFlowManagement = () => {
 
   const fetchCashFlowData = async () => {
     try {
+      console.log('🔄 Cash Flow: Starting data fetch...');
       setLoading(true);
       setError("");
       
       // ✅ PHASE 1: All calculations now done by backend API
       
       // Fetch fund accounting cash flow data
+      console.log('🔄 Cash Flow: Fetching overview...');
       const cashFlowResponse = await apiAxios.get(`/admin/cashflow/overview`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
+      console.log('✅ Cash Flow: Overview response received:', cashFlowResponse.data.success);
       
       // Fetch cash flow calendar data
+      console.log('🔄 Cash Flow: Fetching calendar...');
       const calendarResponse = await apiAxios.get(`/admin/cashflow/calendar`, {
         params: { timeframe: selectedTimeframe, fund: selectedFund }
       });
+      console.log('✅ Cash Flow: Calendar response received:', calendarResponse.data.success);
       
       if (cashFlowResponse.data.success) {
+        console.log('🔄 Cash Flow: Processing data...');
         // Map API summary data to fund accounting structure
         const summary = cashFlowResponse.data.summary || {};
         
