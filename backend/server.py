@@ -15608,12 +15608,21 @@ async def delete_all_client_investments(client_id: str):
 
 @api_router.get("/investments/admin/overview")
 async def get_admin_investments_overview():
-    """Get comprehensive investment overview for admin - Direct MongoDB version"""
+    """Get comprehensive investment overview for admin - SIMPLIFIED SSOT VERSION"""
     try:
+        # SSOT: Use central calculation service
+        from services.calculations import get_all_investments_summary, convert_decimal128
+        
+        investments_data = await get_all_investments_summary(db)
+        all_clients_data = investments_data['clients']
+        totals = investments_data['totals']
+        
+        logging.info(f"📋 SSOT: Found {len(all_clients_data)} unique clients, Total AUM: ${totals['total_aum']:,.2f}")
+        
+        # Build response directly from SSOT data
         all_investments = []
-        fund_summaries = {}
         clients_summary = []
-        total_aum = 0.0
+        fund_summaries = {}
         
         # Initialize fund summaries
         for fund_code, config in FIDUS_FUND_CONFIG.items():
@@ -15626,19 +15635,6 @@ async def get_admin_investments_overview():
                 "total_interest_paid": 0.0,
                 "average_investment": 0.0
             }
-        
-        # SSOT: Use central calculation service
-        try:
-            from services.calculations import get_all_investments_summary
-            logging.info("✅ SSOT investments summary imported successfully")
-        except ImportError as ie:
-            logging.error(f"❌ Failed to import SSOT investments: {ie}")
-            raise HTTPException(status_code=500, detail=f"Import error: {str(ie)}")
-        
-        investments_data = await get_all_investments_summary(db)
-        all_clients = investments_data['clients']
-        
-        logging.info(f"📋 SSOT: Found {len(all_clients)} unique clients, Total AUM: ${investments_data['totals']['total_aum']:,.2f}")
         
         for client in all_clients:
             client_id = client.get('client_id')
