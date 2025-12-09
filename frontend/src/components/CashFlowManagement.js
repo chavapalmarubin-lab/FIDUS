@@ -144,7 +144,9 @@ const CashFlowManagement = () => {
           }
           
           // Fetch from SAME endpoint as Fund Portfolio (working tab)
+          console.log('🔄 Cash Flow: Fetching fund portfolio...');
           const portfolioResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/derived/fund-portfolio`);
+          console.log(`✅ Cash Flow: Portfolio response: ${portfolioResponse.status}`);
           
           if (!portfolioResponse.ok) {
             throw new Error(`Fund portfolio API returned ${portfolioResponse.status}`);
