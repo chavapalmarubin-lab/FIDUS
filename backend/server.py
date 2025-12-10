@@ -16492,6 +16492,57 @@ async def calculate_cash_flow_calendar():
                     'commissions': []  # NEW: Array of commission payment objects
                 }
         
+        # Restructure data to group by CLIENT instead of fund type
+        for month_key in monthly_obligations.keys():
+            month_data = monthly_obligations[month_key]
+            
+            # Group payments and commissions by client
+            clients_map = {}
+            
+            # Process payments
+            for payment in month_data.get('payments', []):
+                client_name = payment.get('client_name', 'Unknown Client')
+                
+                if client_name not in clients_map:
+                    clients_map[client_name] = {
+                        'client_name': client_name,
+                        'client_id': payment.get('client_id'),
+                        'payments': [],
+                        'total_interest': 0,
+                        'principal_return': 0,
+                        'referral_commissions': []
+                    }
+                
+                # Add payment to client
+                clients_map[client_name]['payments'].append({
+                    'fund_type': payment.get('fund_code'),
+                    'amount': payment.get('amount', 0),
+                    'type': payment.get('type'),
+                    'interest': payment.get('interest', payment.get('amount', 0)),
+                    'principal': payment.get('principal', 0)
+                })
+                
+                # Track totals
+                if payment.get('type') == 'final_payment':
+                    clients_map[client_name]['total_interest'] += payment.get('interest', 0)
+                    clients_map[client_name]['principal_return'] += payment.get('principal', 0)
+                else:
+                    clients_map[client_name]['total_interest'] += payment.get('amount', 0)
+            
+            # Process commissions
+            for commission in month_data.get('commissions', []):
+                client_name = commission.get('client_name', 'Unknown Client')
+                
+                if client_name in clients_map:
+                    clients_map[client_name]['referral_commissions'].append({
+                        'agent_name': commission.get('salesperson_name'),
+                        'fund_type': commission.get('fund_code'),
+                        'amount': commission.get('amount', 0)
+                    })
+            
+            # Convert clients_map to array and add to month data
+            month_data['clients_breakdown'] = list(clients_map.values())
+        
         # Calculate running balance
         running_balance = current_revenue
         sorted_months = sorted(monthly_obligations.keys())
