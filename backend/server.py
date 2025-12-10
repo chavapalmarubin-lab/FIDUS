@@ -16545,7 +16545,8 @@ async def calculate_cash_flow_calendar():
                 
                 # Add payment to client
                 clients_map[client_name]['payments'].append({
-                    'fund_type': payment.get('fund_code'),
+                    'fund_code': payment.get('fund_code'),  # Use fund_code consistently
+                    'fund_type': payment.get('fund_code'),  # Also add fund_type for compatibility
                     'amount': payment.get('amount', 0),
                     'type': payment.get('type'),
                     'interest': payment.get('interest', payment.get('amount', 0)),
