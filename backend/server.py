@@ -15612,13 +15612,15 @@ async def get_admin_investments_overview():
     try:
         logging.info("🔍 Starting investments admin overview endpoint...")
         # SSOT: Use central calculation service
+        logging.info("🔍 Importing SSOT functions...")
         from services.calculations import get_all_investments_summary, convert_decimal128
         
+        logging.info("🔍 Getting investments summary from SSOT...")
         investments_data = await get_all_investments_summary(db)
         all_clients_data = investments_data['clients']
         totals = investments_data['totals']
         
-        logging.info(f"📋 SSOT: Found {len(all_clients_data)} unique clients, Total AUM: ${totals['total_aum']:,.2f}")
+        logging.info(f"✅ SSOT: Found {len(all_clients_data)} unique clients, Total AUM: ${totals['total_aum']:,.2f}")
         
         # Build response directly from SSOT data
         all_investments = []
