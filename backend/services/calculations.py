@@ -46,12 +46,13 @@ async def get_total_equity(db):
     Used by: Cash Flow, Fund Portfolio, Money Managers, Trading Analytics
     """
     try:
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
         accounts = await db.mt5_accounts.find({
             "$or": [
                 {"status": "active"},
                 {"status": {"$exists": False}}
             ]
-        }).to_list(length=None)
+        }, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(acc.get('equity', 0)) for acc in accounts)
         logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} accounts")
@@ -69,7 +70,8 @@ async def get_client_money(db):
     Used by: Cash Flow, Investment, Fund Portfolio
     """
     try:
-        investments = await db.investments.find({"status": "active"}).to_list(length=None)
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        investments = await db.investments.find({"status": "active"}, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(inv.get('principal_amount', 0)) for inv in investments)
         logger.info(f"💰 Client Money (SSOT): ${total:,.2f} from {len(investments)} active investments")
