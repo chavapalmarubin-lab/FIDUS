@@ -16396,10 +16396,16 @@ async def calculate_cash_flow_calendar():
                     print(f"DEBUG: Has referral_id, processing commission...")
                     try:
                         logging.info(f"🔍 Processing commission for payment with referral_id: {referral_id}")
-                        # Get salesperson details
+                        # Get salesperson details - try by ID first, then by partial match
                         salesperson = await db.salespeople.find_one({
                             'salesperson_id': referral_id
                         })
+                        
+                        # If not found by exact ID, try case-insensitive partial match
+                        if not salesperson and 'javier' in referral_id.lower():
+                            salesperson = await db.salespeople.find_one({
+                                'name': {'$regex': 'Javier', '$options': 'i'}
+                            })
                         
                         if salesperson:
                             logging.info(f"✅ Found salesperson: {salesperson.get('name')}")
