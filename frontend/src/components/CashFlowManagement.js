@@ -1674,6 +1674,12 @@ const CashFlowManagement = () => {
                               <span className="text-purple-400 ml-2 font-medium">{formatCurrency(monthData.balance_interest)}</span>
                             </div>
                           )}
+                          {monthData.dynamic_interest > 0 && (
+                            <div className="text-sm">
+                              <span className="text-slate-400">DYNAMIC Interest:</span>
+                              <span className="text-emerald-400 ml-2 font-medium">{formatCurrency(monthData.dynamic_interest)}</span>
+                            </div>
+                          )}
                           {monthData.performance_fees > 0 && (
                             <div className="text-sm">
                               <div className="flex items-center gap-2">
@@ -1708,6 +1714,69 @@ const CashFlowManagement = () => {
                             </div>
                           )}
                         </div>
+                        
+                        {/* NEW: Client-by-Client Breakdown */}
+                        {monthData.clients_breakdown && monthData.clients_breakdown.length > 0 && (
+                          <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                            <p className="text-xs font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                              <span>👤</span> Payment Breakdown by Client
+                            </p>
+                            <div className="space-y-3">
+                              {monthData.clients_breakdown.map((client, clientIdx) => (
+                                <div key={clientIdx} className="p-2 bg-slate-700/30 rounded border border-slate-600/30">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="text-white font-semibold text-sm flex items-center gap-2">
+                                      <span className="text-cyan-400">👤</span>
+                                      {client.client_name}
+                                    </span>
+                                    <span className="text-cyan-400 font-bold text-sm">
+                                      {formatCurrency(client.total_interest + (client.principal_return || 0))}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Fund payments for this client */}
+                                  <div className="ml-4 space-y-1">
+                                    {client.payments && client.payments.map((payment, payIdx) => (
+                                      <div key={payIdx} className="flex justify-between items-center text-xs">
+                                        <span className="text-slate-400">
+                                          {payment.fund_code} {payment.type === 'final_payment' ? 'Final Payment' : 'Interest'}
+                                        </span>
+                                        <span className={`font-medium ${
+                                          payment.fund_code === 'CORE' ? 'text-blue-400' :
+                                          payment.fund_code === 'BALANCE' ? 'text-purple-400' :
+                                          'text-emerald-400'
+                                        }`}>
+                                          {formatCurrency(payment.interest || payment.amount || 0)}
+                                          {payment.type === 'final_payment' && payment.principal > 0 && (
+                                            <span className="text-red-400 ml-1">
+                                              + {formatCurrency(payment.principal)} principal
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    ))}
+                                    
+                                    {/* Referral commissions for this client */}
+                                    {client.referral_commissions && client.referral_commissions.length > 0 && (
+                                      <div className="mt-2 pt-2 border-t border-slate-600/30">
+                                        {client.referral_commissions.map((comm, commIdx) => (
+                                          <div key={commIdx} className="flex justify-between items-center text-xs">
+                                            <span className="text-green-400/80 flex items-center gap-1">
+                                              <span>💰</span> {comm.agent_name}
+                                            </span>
+                                            <span className="text-green-400 font-medium">
+                                              {formatCurrency(comm.amount)}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
                         {/* NEW: Display individual commission payments */}
                         {monthData.commissions && monthData.commissions.length > 0 && (
