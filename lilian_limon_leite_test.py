@@ -18,7 +18,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com/api"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
 
 class LilianLimonLeiteTest:
     def __init__(self):

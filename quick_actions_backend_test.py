@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend configuration
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Admin credentials for testing

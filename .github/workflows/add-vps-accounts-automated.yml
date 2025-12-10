@@ -214,7 +214,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "3. **Test Investment Committee UI:**" >> $GITHUB_STEP_SUMMARY
           echo "   - Clear browser cache (Ctrl+Shift+R)" >> $GITHUB_STEP_SUMMARY
-          echo "   - Login to: https://data-integrity-13.preview.emergentagent.com" >> $GITHUB_STEP_SUMMARY
+          echo "   - Login to: https://ssot-finance.preview.emergentagent.com" >> $GITHUB_STEP_SUMMARY
           echo "   - Navigate to Investment Committee" >> $GITHUB_STEP_SUMMARY
           echo "   - Should see: \"🆕 UNASSIGNED ACCOUNTS (2)\"" >> $GITHUB_STEP_SUMMARY
           echo "   - Accounts ${{ github.event.inputs.account1 }} and ${{ github.event.inputs.account2 }} should be visible" >> $GITHUB_STEP_SUMMARY

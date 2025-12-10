@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials

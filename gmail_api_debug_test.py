@@ -26,7 +26,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com/api"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {

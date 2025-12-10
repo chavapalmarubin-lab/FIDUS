@@ -35,7 +35,7 @@ import traceback
 class November2025DataVerificationTester:
     def __init__(self):
         # Use the backend URL from frontend .env
-        self.base_url = "https://data-integrity-13.preview.emergentagent.com/api"
+        self.base_url = "https://ssot-finance.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

@@ -60,7 +60,7 @@ OVERALL TOTAL   |            | 13             | $134,657        | $130,312     |
 
 ### API Response Verified:
 ```bash
-$ curl https://data-integrity-13.preview.emergentagent.com/api/v2/derived/fund-portfolio
+$ curl https://ssot-finance.preview.emergentagent.com/api/v2/derived/fund-portfolio
 ✅ Success: true
 ✅ Funds: BALANCE, CORE, SEPARATION
 ✅ Total Accounts: 13

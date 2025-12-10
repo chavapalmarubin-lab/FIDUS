@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com/api"
-FRONTEND_URL = "https://data-integrity-13.preview.emergentagent.com"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
+FRONTEND_URL = "https://ssot-finance.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

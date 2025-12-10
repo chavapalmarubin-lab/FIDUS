@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

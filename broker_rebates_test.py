@@ -2,7 +2,7 @@
 """
 BROKER REBATES CALCULATION FIX TESTING
 Testing Date: December 18, 2025
-Backend URL: https://data-integrity-13.preview.emergentagent.com/api
+Backend URL: https://ssot-finance.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 ISSUE: Broker rebates showing $9,457 (all-time) instead of time-period specific amounts
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -9,7 +9,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://data-integrity-13.preview.emergentagent.com/api"
+BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
 
 class DatabaseInvestigator:
     def __init__(self):

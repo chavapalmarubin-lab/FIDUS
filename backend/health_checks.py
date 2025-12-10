@@ -158,7 +158,7 @@ async def perform_all_health_checks(mongo_client, db) -> Dict[str, Dict[str, Any
     # Frontend check - use preview URL
     logger.info("Checking frontend health...")
     health_results['frontend'] = await check_url_health(
-        url='https://data-integrity-13.preview.emergentagent.com',
+        url='https://ssot-finance.preview.emergentagent.com',
         timeout=5,
         expected_status=200
     )
