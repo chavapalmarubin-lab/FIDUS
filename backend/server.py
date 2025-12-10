@@ -16204,6 +16204,9 @@ def generate_payment_schedule(investment):
     # Get referral salesperson ID from investment record (no fallback)
     referral_salesperson_id = investment.get('referral_salesperson_id')
     
+    # Get client name for display
+    client_name = investment.get('client_name', 'Unknown Client')
+    
     for i in range(1, number_of_payments + 1):
         schedule.append({
             'payment_number': i,
@@ -16212,6 +16215,7 @@ def generate_payment_schedule(investment):
             'type': 'interest_payment',
             'product': product,
             'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
+            'client_name': client_name,  # NEW: Include client name in payment
             'fund_code': fund_code,
             'days_from_investment': (current_date - investment_date).days,
             'investment_id': investment_id,  # NEW: For commission tracking
@@ -16230,6 +16234,7 @@ def generate_payment_schedule(investment):
         'interest': interest_per_payment,
         'product': product,
         'client_id': str(investment.get('client_id')),  # Convert ObjectId to string
+        'client_name': client_name,  # NEW: Include client name in payment
         'fund_code': fund_code,
         'days_from_investment': 426,
         'investment_id': investment_id,  # NEW: For commission tracking
