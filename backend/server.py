@@ -19515,6 +19515,80 @@ async def send_gmail_message_oauth(
         logger.error(f"❌ Send Gmail error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/v2/derived/fund-portfolio")
+async def get_fund_portfolio_v2():
+    """
+    V2 Fund Portfolio - SSOT Based on Investment Records
+    Returns fund allocation based on CLIENT INVESTMENTS, not MT5 accounts
+    """
+    try:
+        from services.calculations import get_all_investments_summary, get_total_equity
+        
+        # Get investment data (SSOT)
+        investments_data = await get_all_investments_summary(db)
+        total_equity = await get_total_equity(db)
+        
+        # Calculate fund allocation from investments
+        fund_breakdown = {}
+        
+        for client in investments_data['clients']:
+            for investment in client.get('investments', []):
+                fund_type = investment.get('fund_type', 'UNKNOWN')
+                principal = investment.get('principal_amount', 0)
+                
+                if fund_type not in fund_breakdown:
+                    fund_breakdown[fund_type] = {
+                        'fund_code': fund_type,
+                        'total_invested': 0,
+                        'investors': set()
+                    }
+                
+                fund_breakdown[fund_type]['total_invested'] += principal
+                fund_breakdown[fund_type]['investors'].add(client.get('client_id'))
+        
+        # Build response with fund config details
+        funds_list = []
+        total_allocation = 0
+        
+        for fund_code, fund_config in FIDUS_FUND_CONFIG.items():
+            if fund_code in fund_breakdown:
+                data = fund_breakdown[fund_code]
+                total_invested = data['total_invested']
+                total_allocation += total_invested
+                
+                funds_list.append({
+                    'fund_code': fund_code,
+                    'fund_name': fund_config.name,
+                    'total_invested': round(total_invested, 2),
+                    'total_investors': len(data['investors']),
+                    'interest_rate': fund_config.interest_rate,
+                    'percentage': 0  # Will calculate after totals
+                })
+        
+        # Calculate percentages
+        for fund in funds_list:
+            if total_allocation > 0:
+                fund['percentage'] = round((fund['total_invested'] / total_allocation) * 100, 2)
+        
+        # Calculate P&L (Total Equity - Total Allocation)
+        total_pnl = total_equity - total_allocation
+        
+        return {
+            'success': True,
+            'total_allocation': round(total_allocation, 2),
+            'total_aum': round(total_equity, 2),
+            'total_pnl': round(total_pnl, 2),
+            'total_returns': round((total_pnl / total_allocation * 100) if total_allocation > 0 else 0, 2),
+            'total_clients': investments_data['totals']['total_clients'],
+            'active_funds': len([f for f in funds_list if f['total_invested'] > 0]),
+            'funds': funds_list
+        }
+    except Exception as e:
+        logging.error(f"Error in v2/derived/fund-portfolio: {str(e)}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/fund-portfolio/overview")
 async def get_fund_portfolio_overview():
     """Get fund portfolio overview for the dashboard - With WEIGHTED PERFORMANCE"""
