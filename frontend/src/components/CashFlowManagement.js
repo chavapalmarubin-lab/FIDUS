@@ -1739,11 +1739,11 @@ const CashFlowManagement = () => {
                                     {client.payments && client.payments.map((payment, payIdx) => (
                                       <div key={payIdx} className="flex justify-between items-center text-xs">
                                         <span className="text-slate-400">
-                                          {payment.fund_code} {payment.type === 'final_payment' ? 'Final Payment' : 'Interest'}
+                                          {payment.fund_type || payment.fund_code} {payment.type === 'final_payment' ? 'Final Payment' : 'Interest'}
                                         </span>
                                         <span className={`font-medium ${
-                                          payment.fund_code === 'CORE' ? 'text-blue-400' :
-                                          payment.fund_code === 'BALANCE' ? 'text-purple-400' :
+                                          (payment.fund_type || payment.fund_code) === 'CORE' ? 'text-blue-400' :
+                                          (payment.fund_type || payment.fund_code) === 'BALANCE' ? 'text-purple-400' :
                                           'text-emerald-400'
                                         }`}>
                                           {formatCurrency(payment.interest || payment.amount || 0)}
