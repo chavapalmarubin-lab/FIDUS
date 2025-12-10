@@ -16201,8 +16201,8 @@ def generate_payment_schedule(investment):
     
     # Get referral info for commission calculations
     investment_id = investment.get('investment_id', str(investment.get('_id')))
-    # TEMP FIX: Hardcode for testing - TODO: Fix why DB field not coming through
-    referral_salesperson_id = investment.get('referral_salesperson_id') or 'sp_6909e8eaaaf69606babea151'
+    # Get referral salesperson ID from investment record (no fallback)
+    referral_salesperson_id = investment.get('referral_salesperson_id')
     
     for i in range(1, number_of_payments + 1):
         schedule.append({
