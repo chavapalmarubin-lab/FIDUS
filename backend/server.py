@@ -15716,7 +15716,7 @@ async def get_admin_investments_overview():
         # Calculate overall average investment
         avg_investment = (totals['total_aum'] / len(all_investments)) if len(all_investments) > 0 else 0.0
         
-        return {
+        response = {
             "success": True,
             "total_aum": round(totals['total_aum'], 2),
             "total_investments": len(all_investments),
@@ -15726,6 +15726,9 @@ async def get_admin_investments_overview():
             "fund_summaries": list(fund_summaries.values()),
             "all_investments": all_investments
         }
+        
+        logging.info(f"✅ Returning response with {len(clients_summary)} clients")
+        return response
         
     except Exception as e:
         logging.error(f"Get admin investments overview error: {str(e)}")
