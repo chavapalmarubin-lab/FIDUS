@@ -229,7 +229,8 @@ async def get_all_investments_summary(db):
     Used by: Investment Tab, Cash Flow
     """
     try:
-        investments = await db.investments.find({"status": "active"}).to_list(length=None)
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        investments = await db.investments.find({"status": "active"}, {"_id": 0}).to_list(length=None)
         
         clients = {}
         total_aum = 0.0
