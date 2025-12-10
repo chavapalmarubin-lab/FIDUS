@@ -127,7 +127,8 @@ async def get_manager_pnl(db, manager_name):
     Used by: Money Managers, Fund Portfolio
     """
     try:
-        accounts = await db.mt5_accounts.find({"manager_name": manager_name}).to_list(length=None)
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        accounts = await db.mt5_accounts.find({"manager_name": manager_name}, {"_id": 0}).to_list(length=None)
         
         total_pnl = 0.0
         for acc in accounts:
@@ -150,7 +151,8 @@ async def get_fund_pnl(db, fund_type):
     Used by: Fund Portfolio, Cash Flow
     """
     try:
-        accounts = await db.mt5_accounts.find({"fund_type": fund_type}).to_list(length=None)
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        accounts = await db.mt5_accounts.find({"fund_type": fund_type}, {"_id": 0}).to_list(length=None)
         
         total_pnl = 0.0
         for acc in accounts:
@@ -173,12 +175,13 @@ async def get_all_accounts_summary(db):
     Used by: Account Management, Investment Committee, Fund Portfolio
     """
     try:
+        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
         accounts = await db.mt5_accounts.find({
             "$or": [
                 {"status": "active"},
                 {"status": {"$exists": False}}
             ]
-        }).to_list(length=None)
+        }, {"_id": 0}).to_list(length=None)
         
         summary = []
         total_equity = 0.0
