@@ -4768,19 +4768,21 @@ async def get_investment_ready_clients():
         
         # Also check MongoDB client_readiness collection for additional ready clients
         readiness_records = await db.client_readiness.find({"investment_ready": True}, {"_id": 0}).to_list(length=None)
-        print(f"🔍 DEBUG: Found {len(readiness_records)} ready clients in MongoDB")
+        print(f"🔍 DEBUG: Found {len(readiness_records)} ready clients in client_readiness collection")
         
         for readiness in readiness_records:
             client_id = readiness.get('client_id')
-            if client_id:
+            # Skip if already added from investments
+            if client_id and client_id not in seen_client_ids:
                 # Get client details from MongoDB
                 try:
                     # Try both possible client_id formats
-                    client_doc = await db.users.find_one({"id": client_id, "type": "client"})
+                    client_doc = await db.users.find_one({"id": client_id, "type": "client"}, {"_id": 0})
                     if not client_doc:
-                        client_doc = await db.users.find_one({"client_id": client_id, "type": "client"})
+                        client_doc = await db.users.find_one({"client_id": client_id, "type": "client"}, {"_id": 0})
                     
                     if client_doc:
+                        seen_client_ids.add(client_id)
                         ready_clients_list.append({
                             'client_id': client_id,
                             'name': client_doc.get('name', 'Unknown'),
@@ -4789,7 +4791,7 @@ async def get_investment_ready_clients():
                             'account_creation_date': readiness.get('account_creation_date', ''),
                             'total_investments': 0  # Could calculate from investments collection
                         })
-                        print(f"✅ Found ready client: {client_doc.get('name')} ({client_id})")
+                        print(f"✅ Found ready client from client_readiness: {client_doc.get('name')} ({client_id})")
                     else:
                         print(f"⚠️ Client record not found for {client_id}")
                 except Exception as e:
@@ -4797,26 +4799,25 @@ async def get_investment_ready_clients():
         
         # Fallback: Also check in-memory client_readiness for backward compatibility
         for client_id, readiness in client_readiness.items():
-            if readiness.get('investment_ready', False):
-                # Check if already added
-                if not any(c['client_id'] == client_id for c in ready_clients_list):
-                    try:
-                        client_doc = await db.users.find_one({"id": client_id, "type": "client"})
-                        if not client_doc:
-                            client_doc = await db.users.find_one({"client_id": client_id, "type": "client"})
-                        
-                        if client_doc:
-                            ready_clients_list.append({
-                                'client_id': client_id,
-                                'name': client_doc.get('name', 'Unknown'),
-                                'email': client_doc.get('email', ''),
-                                'username': client_doc.get('username', ''),
-                                'account_creation_date': readiness.get('account_creation_date', ''),
-                                'total_investments': 0
-                            })
-                            print(f"✅ Found ready client (in-memory): {client_doc.get('name')} ({client_id})")
-                    except Exception as e:
-                        logging.warning(f"Failed to get client details for {client_id}: {str(e)}")
+            if readiness.get('investment_ready', False) and client_id not in seen_client_ids:
+                try:
+                    client_doc = await db.users.find_one({"id": client_id, "type": "client"}, {"_id": 0})
+                    if not client_doc:
+                        client_doc = await db.users.find_one({"client_id": client_id, "type": "client"}, {"_id": 0})
+                    
+                    if client_doc:
+                        seen_client_ids.add(client_id)
+                        ready_clients_list.append({
+                            'client_id': client_id,
+                            'name': client_doc.get('name', 'Unknown'),
+                            'email': client_doc.get('email', ''),
+                            'username': client_doc.get('username', ''),
+                            'account_creation_date': readiness.get('account_creation_date', ''),
+                            'total_investments': 0
+                        })
+                        print(f"✅ Found ready client (in-memory): {client_doc.get('name')} ({client_id})")
+                except Exception as e:
+                    logging.warning(f"Failed to get client details for {client_id}: {str(e)}")
         
         print(f"🔍 DEBUG: Found {len(ready_clients_list)} ready clients in total")
         
