@@ -4735,16 +4735,39 @@ async def update_client_details(client_id: str, update_data: dict):
 
 @api_router.get("/clients/ready-for-investment")
 async def get_investment_ready_clients():
-    """Get clients who are ready for investment (for dropdown in investment creation)"""
+    """Get clients who are ready for investment (for dropdown in investment creation)
+    
+    SSOT Fix: Now gets all clients with active investments, not just those in client_readiness collection.
+    This ensures all investors (Alejandro, Zurya, Guillermo) are returned.
+    """
     print("🔍 DEBUG: get_investment_ready_clients endpoint called - CONSOLE OUTPUT")
     logging.info("🔍 DEBUG: get_investment_ready_clients endpoint called - LOGGING OUTPUT")
     
     try:
-        # Check MongoDB client_readiness collection directly for investment-ready clients
         ready_clients_list = []
+        seen_client_ids = set()
         
-        # Find all investment-ready clients from MongoDB
-        readiness_records = await db.client_readiness.find({"investment_ready": True}).to_list(length=None)
+        # SSOT FIX: First get all clients who have active investments
+        # This is the most reliable source of truth - if they have investments, they're "ready"
+        active_investments = await db.investments.find({"status": "active"}, {"_id": 0}).to_list(length=None)
+        print(f"🔍 DEBUG: Found {len(active_investments)} active investments")
+        
+        for inv in active_investments:
+            client_id = inv.get('client_id')
+            if client_id and client_id not in seen_client_ids:
+                seen_client_ids.add(client_id)
+                ready_clients_list.append({
+                    'client_id': client_id,
+                    'name': inv.get('client_name', 'Unknown'),
+                    'email': '',  # Can be enriched from users collection if needed
+                    'username': '',
+                    'account_creation_date': '',
+                    'total_investments': 1
+                })
+                print(f"✅ Found client with investment: {inv.get('client_name')} ({client_id})")
+        
+        # Also check MongoDB client_readiness collection for additional ready clients
+        readiness_records = await db.client_readiness.find({"investment_ready": True}, {"_id": 0}).to_list(length=None)
         print(f"🔍 DEBUG: Found {len(readiness_records)} ready clients in MongoDB")
         
         for readiness in readiness_records:
