@@ -19890,59 +19890,90 @@ async def get_investment_committee_accounts():
 @api_router.get("/admin/investment-committee/allocations")
 async def get_investment_committee_allocations():
     """
-    Investment Committee - Get current allocations grouped by manager, fund, broker
+    Investment Committee - CORRECTED to use INVESTMENT RECORDS, not MT5 fund_type labels
+    Shows actual client investment allocations by fund type
     """
     try:
-        # Query ALL mt5_accounts
-        mt5_cursor = db.mt5_accounts.find({})
+        from services.calculations import get_all_investments_summary, convert_decimal128
+        
+        # Get investment data from SSOT
+        investments_data = await get_all_investments_summary(db)
+        
+        # Get MT5 accounts for account-level details
+        mt5_cursor = db.mt5_accounts.find({"status": "active"})
         all_accounts = await mt5_cursor.to_list(length=None)
         
-        # Group by manager
-        managers = {}
-        funds = {}
-        brokers = {}
-        platforms = {}
+        # Build fund allocations from INVESTMENT RECORDS
+        fund_allocations = {}
         
+        for client_data in investments_data['clients']:
+            for investment in client_data.get('investments', []):
+                fund_type = investment.get('fund_type', 'UNKNOWN')
+                principal = investment.get('principal_amount', 0)
+                client_name = client_data.get('client_name')
+                
+                if fund_type not in fund_allocations:
+                    fund_allocations[fund_type] = {
+                        'fund_code': fund_type,
+                        'fund_name': FIDUS_FUND_CONFIG.get(fund_type, {}).name if fund_type in FIDUS_FUND_CONFIG else fund_type,
+                        'total_allocated': 0,
+                        'account_count': 0,
+                        'accounts': [],
+                        'clients': []
+                    }
+                
+                fund_allocations[fund_type]['total_allocated'] += principal
+                fund_allocations[fund_type]['clients'].append({
+                    'client_name': client_name,
+                    'amount': principal
+                })
+        
+        # Add MT5 account details to each fund
         for acc in all_accounts:
-            account_num = str(acc.get('account', ''))
-            manager = acc.get('manager_name', 'Unassigned')
-            fund = acc.get('fund_type', '')
-            broker = acc.get('broker', acc.get('broker_name', ''))
-            platform = acc.get('platform', 'MT5')
+            account_num = acc.get('account')
+            client_name = acc.get('client_name', 'Unassigned')
+            allocation = convert_decimal128(acc.get('initial_allocation', 0))
             
-            # Group by manager
-            if manager not in managers:
-                managers[manager] = {'accounts': [], 'total': 0}
-            managers[manager]['accounts'].append(account_num)
+            # Find which fund this client belongs to
+            fund_for_account = None
+            for client_data in investments_data['clients']:
+                if client_name.lower() in client_data.get('client_name', '').lower():
+                    # Get the fund type from their investment
+                    for investment in client_data.get('investments', []):
+                        fund_for_account = investment.get('fund_type')
+                        break
+                    break
             
-            # Group by fund
-            if fund and fund not in funds:
-                funds[fund] = {'accounts': [], 'total': 0}
-            if fund:
-                funds[fund]['accounts'].append(account_num)
-            
-            # Group by broker
-            if broker and broker not in brokers:
-                brokers[broker] = {'accounts': [], 'total': 0}
-            if broker:
-                brokers[broker]['accounts'].append(account_num)
-            
-            # Group by platform
-            if platform not in platforms:
-                platforms[platform] = {'accounts': [], 'total': 0}
-            platforms[platform]['accounts'].append(account_num)
+            # If we found a matching fund, add account details
+            if fund_for_account and fund_for_account in fund_allocations:
+                fund_allocations[fund_for_account]['accounts'].append({
+                    'account': account_num,
+                    'client_name': client_name,
+                    'allocation': allocation,
+                    'manager': acc.get('manager_name', 'Unassigned'),
+                    'broker': acc.get('broker', 'N/A')
+                })
+                fund_allocations[fund_for_account]['account_count'] += 1
+        
+        # Convert to sorted list
+        funds_list = []
+        for fund_code in ['CORE', 'BALANCE', 'DYNAMIC', 'SEPARATION ACCOUNT', 'REBATE ACCOUNT']:
+            if fund_code in fund_allocations:
+                funds_list.append(fund_allocations[fund_code])
         
         return {
             'success': True,
-            'data': {
-                'managers': managers,
-                'funds': funds,
-                'brokers': brokers,
-                'platforms': platforms
+            'funds': funds_list,
+            'summary': {
+                'total_allocated': sum(f['total_allocated'] for f in funds_list),
+                'total_accounts': sum(f['account_count'] for f in funds_list),
+                'total_clients': investments_data['totals']['total_clients']
             }
         }
     except Exception as e:
         logging.error(f"Error in investment-committee/allocations: {str(e)}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/v2/accounts/all")
