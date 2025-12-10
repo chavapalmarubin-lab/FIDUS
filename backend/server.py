@@ -15610,6 +15610,7 @@ async def delete_all_client_investments(client_id: str):
 async def get_admin_investments_overview():
     """Get comprehensive investment overview for admin - SIMPLIFIED SSOT VERSION"""
     try:
+        logging.info("🔍 Starting investments admin overview endpoint...")
         # SSOT: Use central calculation service
         from services.calculations import get_all_investments_summary, convert_decimal128
         
