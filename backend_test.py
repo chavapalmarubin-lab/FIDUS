@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """
-FIDUS Backend Comprehensive Testing Suite - All Today's Changes
-Testing comprehensive verification of FIDUS backend after today's critical updates.
+FIDUS Platform Data Integrity Verification Suite
+Testing specific data integrity requirements for FIDUS platform.
 
 Test Coverage:
-1. Money Managers API Test - GET /api/v2/derived/money-managers
-2. Investment Committee API Test - GET /api/admin/investment-committee/mt5-accounts  
-3. Accounts Management API Test - GET /api/v2/derived/accounts
-4. Cash Flow API Test - GET /api/admin/cashflow/complete
-5. Account 2198 Password Test - Database check
-6. Manager Allocations Test - Database verification
+1. Investments Overview API - POST /api/auth/login then GET /api/investments/admin/overview
+2. Client Money API - GET /api/admin/client-money/total
+3. Salespeople API - GET /api/admin/referrals/salespeople?active_only=true
+4. MT5 Accounts for Guillermo Garcia - verify accounts 2205 and 2209
 
 Expected Results:
-- Money Managers: 8+ active managers with real data (not $0.00)
-- Investment Committee: Exactly 15 accounts (14 MT5 + 1 MT4)
-- Accounts Management: All 15 accounts with correct managers
-- Cash Flow: Real calculations with separation interest
-- Account 2198: Password "Fidus13!!" and correct details
-- Manager Allocations: Japanese $15,000, Viking Gold $20,000, Internal BOT $15,506
+- Total AUM: $380,536.05
+- 3 clients total: Alejandro Mariscal Romero (~$118,151), Zurya Josselyn Lopez Arellano (~$15,994), Guillermo Garcia (~$246,390)
+- Total Client Money: $380,536.05
+- Javier Gonzalez: 2 clients, $262,384.64 sales, $8,911.56 commissions
+- Salvador Palma: 1 client, $118,151.41 sales, $3,272.27 commissions
+- Guillermo Garcia accounts: 2205 ($8,612 Viking Gold - Jared), 2209 ($22,261 Japones)
 """
 
 import requests
