@@ -140,10 +140,12 @@ class FidusBackendTester:
                 client_total = client.get("total_investment", 0)
                 investment_count = client.get("investment_count", 0)
                 
-                # Check for expected clients (exact name matching)
+                # Check for expected clients (exact name matching from API response)
+                found_clients[client_name] = client_total
+                
+                # Map to expected names for validation
                 for expected_name, expected_amount in expected_clients.items():
                     if client_name == expected_name:
-                        found_clients[expected_name] = client_total
                         
                         if abs(client_total - expected_amount) < 1000:  # Allow $1000 tolerance
                             self.log_test(f"{expected_name} Investment", "PASS", 
