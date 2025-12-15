@@ -699,14 +699,12 @@ class FidusBackendTester:
             print("\n❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Run all comprehensive backend tests
+        # Run all FIDUS data integrity tests
         tests = [
-            ("Money Managers API", self.test_money_managers_api),
-            ("Investment Committee API", self.test_investment_committee_api),
-            ("Accounts Management API", self.test_accounts_management_api),
-            ("Cash Flow API", self.test_cash_flow_api),
-            ("Account 2198 Password", self.test_account_2198_password),
-            ("Manager Allocations", self.test_manager_allocations)
+            ("Investments Overview API", self.test_investments_overview_api),
+            ("Client Money API", self.test_client_money_api),
+            ("Salespeople API", self.test_salespeople_api),
+            ("MT5 Accounts Guillermo Garcia", self.test_mt5_accounts_guillermo_garcia)
         ]
         
         passed_tests = 0
