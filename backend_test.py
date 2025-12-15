@@ -379,7 +379,7 @@ class FidusBackendTester:
                 if account_number in expected_accounts:
                     balance = account.get("balance", 0)
                     equity = account.get("equity", 0)
-                    manager = account.get("manager", "")
+                    manager = account.get("manager_name", "") or account.get("manager", "")
                     
                     found_accounts[account_number] = {
                         "balance": balance,
