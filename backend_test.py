@@ -336,113 +336,115 @@ class FidusBackendTester:
             self.log_test("Salespeople API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_cash_flow_api(self) -> bool:
-        """Test 4: Cash Flow API - GET /api/admin/cashflow/complete"""
+    def test_mt5_accounts_guillermo_garcia(self) -> bool:
+        """Test 4: MT5 Accounts for Guillermo Garcia - verify accounts 2205 and 2209"""
         try:
-            print("\n💰 Testing Cash Flow API...")
+            print("\n🏦 Testing MT5 Accounts for Guillermo Garcia...")
             
-            response = self.session.get(f"{self.base_url}/admin/cashflow/overview", timeout=30)
+            # First, try to get all accounts to find Guillermo Garcia's accounts
+            response = self.session.get(f"{self.base_url}/v2/accounts/all", timeout=30)
             
             if response.status_code != 200:
-                self.log_test("Cash Flow API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("MT5 Accounts API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
             
             if not data.get("success"):
-                self.log_test("Cash Flow API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
+                self.log_test("MT5 Accounts API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
                 return False
             
-            summary = data.get("summary", {})
+            accounts = data.get("accounts", [])
             success = True
             
-            # Check separation_interest (should be significant, not $0)
-            separation_interest = summary.get("separation_interest", 0)
-            if separation_interest > 1000:  # Should be substantial
-                self.log_test("Separation Interest", "PASS", 
-                            f"Separation interest shows real data", 
-                            "> $1,000", 
-                            f"${separation_interest:,.2f}")
+            # Expected accounts for Guillermo Garcia
+            expected_accounts = {
+                "2205": {
+                    "balance": 8612,
+                    "manager": "Viking Gold - Jared"
+                },
+                "2209": {
+                    "balance": 22261,
+                    "manager": "Japones"
+                }
+            }
+            
+            found_accounts = {}
+            
+            for account in accounts:
+                account_number = str(account.get("account_number", ""))
+                
+                if account_number in expected_accounts:
+                    balance = account.get("balance", 0)
+                    equity = account.get("equity", 0)
+                    manager = account.get("manager", "")
+                    
+                    found_accounts[account_number] = {
+                        "balance": balance,
+                        "equity": equity,
+                        "manager": manager
+                    }
+                    
+                    expected_data = expected_accounts[account_number]
+                    
+                    # Check balance (allow some tolerance)
+                    if abs(balance - expected_data["balance"]) < 100:  # Allow $100 tolerance
+                        self.log_test(f"Account {account_number} Balance", "PASS", 
+                                    f"Balance close to expected value", 
+                                    f"${expected_data['balance']:,.0f}", 
+                                    f"${balance:,.2f}")
+                    else:
+                        self.log_test(f"Account {account_number} Balance", "FAIL", 
+                                    f"Balance differs significantly from expected", 
+                                    f"${expected_data['balance']:,.0f}", 
+                                    f"${balance:,.2f}")
+                        success = False
+                    
+                    # Check manager (partial matching)
+                    expected_manager = expected_data["manager"]
+                    if any(part.lower() in manager.lower() for part in expected_manager.split()):
+                        self.log_test(f"Account {account_number} Manager", "PASS", 
+                                    f"Manager matches expected", 
+                                    expected_manager, 
+                                    manager)
+                    else:
+                        self.log_test(f"Account {account_number} Manager", "FAIL", 
+                                    f"Manager does not match expected", 
+                                    expected_manager, 
+                                    manager)
+                        success = False
+            
+            # Check both accounts were found
+            missing_accounts = set(expected_accounts.keys()) - set(found_accounts.keys())
+            if not missing_accounts:
+                self.log_test("Guillermo Garcia Accounts Found", "PASS", 
+                            f"Both accounts 2205 and 2209 found")
             else:
-                self.log_test("Separation Interest", "FAIL", 
-                            f"Separation interest too low or zero", 
-                            "> $1,000", 
-                            f"${separation_interest:,.2f}")
+                self.log_test("Guillermo Garcia Accounts Found", "FAIL", 
+                            f"Missing accounts: {list(missing_accounts)}")
                 success = False
             
-            # Check broker_rebates (should be substantial)
-            broker_rebates = summary.get("broker_rebates", 0)
-            if broker_rebates > 1000:  # Should be substantial
-                self.log_test("Broker Rebates", "PASS", 
-                            f"Broker rebates show real data", 
-                            "> $1,000", 
-                            f"${broker_rebates:,.2f}")
-            else:
-                self.log_test("Broker Rebates", "FAIL", 
-                            f"Broker rebates too low or zero", 
-                            "> $1,000", 
-                            f"${broker_rebates:,.2f}")
-                success = False
-            
-            # Check fund_revenue (should be positive and substantial)
-            fund_revenue = summary.get("fund_revenue", 0)
-            if fund_revenue > 10000:  # Should be substantial
-                self.log_test("Fund Revenue", "PASS", 
-                            f"Fund revenue shows real data", 
-                            "> $10,000", 
-                            f"${fund_revenue:,.2f}")
-            else:
-                self.log_test("Fund Revenue", "FAIL", 
-                            f"Fund revenue too low or zero", 
-                            "> $10,000", 
-                            f"${fund_revenue:,.2f}")
-                success = False
-            
-            # Check net_profit (should be calculated correctly)
-            net_profit = summary.get("net_profit", 0)
-            fund_obligations = summary.get("fund_obligations", 0)
-            expected_net_profit = fund_revenue - fund_obligations
-            
-            if abs(net_profit - expected_net_profit) < 1.0:  # Allow $1 tolerance
-                self.log_test("Net Profit Calculation", "PASS", 
-                            f"Net profit calculated correctly", 
-                            f"${expected_net_profit:,.2f}", 
-                            f"${net_profit:,.2f}")
-            else:
-                self.log_test("Net Profit Calculation", "FAIL", 
-                            f"Net profit calculation incorrect", 
-                            f"${expected_net_profit:,.2f}", 
-                            f"${net_profit:,.2f}")
-                success = False
-            
-            # Check separation accounts exist
-            separation_accounts = summary.get("separation_accounts", {})
-            if len(separation_accounts) >= 2:  # Should have multiple separation accounts
-                self.log_test("Separation Accounts", "PASS", 
-                            f"Found {len(separation_accounts)} separation accounts")
-            else:
-                self.log_test("Separation Accounts", "FAIL", 
-                            f"Expected multiple separation accounts, found {len(separation_accounts)}")
-                success = False
-            
-            # Check MT5 trading profits/losses are real data (not zero)
-            mt5_trading_profits = summary.get("mt5_trading_profits", 0)
-            if abs(mt5_trading_profits) > 0:  # Should have some trading activity
-                self.log_test("MT5 Trading Activity", "PASS", 
-                            f"MT5 trading shows real activity", 
-                            "Non-zero", 
-                            f"${mt5_trading_profits:,.2f}")
-            else:
-                self.log_test("MT5 Trading Activity", "FAIL", 
-                            f"MT5 trading shows no activity", 
-                            "Non-zero", 
-                            f"${mt5_trading_profits:,.2f}")
-                success = False
+            # Verify total for Guillermo Garcia accounts
+            if len(found_accounts) == 2:
+                total_balance = sum(acc["balance"] for acc in found_accounts.values())
+                expected_total = 8612 + 22261  # $30,873
+                
+                if abs(total_balance - expected_total) < 200:  # Allow $200 tolerance
+                    self.log_test("Guillermo Garcia Total Balance", "PASS", 
+                                f"Total balance close to expected", 
+                                f"${expected_total:,.0f}", 
+                                f"${total_balance:,.2f}")
+                else:
+                    self.log_test("Guillermo Garcia Total Balance", "FAIL", 
+                                f"Total balance differs from expected", 
+                                f"${expected_total:,.0f}", 
+                                f"${total_balance:,.2f}")
+                    success = False
             
             return success
             
         except Exception as e:
-            self.log_test("Cash Flow API Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("MT5 Accounts Guillermo Garcia Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_account_2198_password(self) -> bool:
