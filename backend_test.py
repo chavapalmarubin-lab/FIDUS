@@ -372,7 +372,7 @@ class FidusBackendTester:
             found_accounts = {}
             
             for account in accounts:
-                account_number = str(account.get("account_number", ""))
+                account_number = str(account.get("account", "") or account.get("account_number", ""))
                 
                 if account_number in expected_accounts:
                     balance = account.get("balance", 0)
