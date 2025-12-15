@@ -482,11 +482,25 @@ async def get_all_salespeople(active_only: bool = True):
     # Then salespeople with no sales, ordered alphabetically
     def get_sort_key(sp):
         sales = sp.get("total_sales_volume", 0)
+        # Handle various types for sales value
         if isinstance(sales, Decimal128):
             sales = float(sales.to_decimal())
+        elif isinstance(sales, str):
+            try:
+                sales = float(sales)
+            except:
+                sales = 0
         elif sales is None:
             sales = 0
-        name = sp.get("name", sp.get("full_name", "ZZZ")).lower()
+        else:
+            sales = float(sales) if sales else 0
+        
+        name = sp.get("name", sp.get("full_name", "ZZZ"))
+        if name:
+            name = name.lower()
+        else:
+            name = "zzz"
+        
         # Negative sales so highest sales comes first, then name for alphabetical
         return (-sales, name)
     
