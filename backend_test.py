@@ -719,7 +719,7 @@ class FidusBackendTester:
         
         # Print summary
         print("\n" + "=" * 80)
-        print("📊 FIDUS BACKEND COMPREHENSIVE TESTING SUMMARY")
+        print("📊 FIDUS PLATFORM DATA INTEGRITY VERIFICATION SUMMARY")
         print("=" * 80)
         
         success_rate = (passed_tests / total_tests) * 100
