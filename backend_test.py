@@ -136,8 +136,8 @@ class FidusBackendTester:
             
             found_clients = {}
             for client in clients:
-                client_name = client.get("name", "")
-                client_total = client.get("total_investment", 0)
+                client_name = client.get("client_name", "")
+                client_total = client.get("total_invested", 0)
                 investment_count = client.get("investment_count", 0)
                 
                 # Check for expected clients (exact name matching from API response)
