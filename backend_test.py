@@ -690,8 +690,8 @@ class FidusBackendTester:
     # Old test methods removed - replaced with comprehensive backend tests above
     
     def run_all_tests(self) -> bool:
-        """Run all FIDUS backend comprehensive tests"""
-        print("🚀 Starting FIDUS Backend Comprehensive Testing - All Today's Changes")
+        """Run all FIDUS platform data integrity tests"""
+        print("🚀 Starting FIDUS Platform Data Integrity Verification")
         print("=" * 80)
         
         # Authenticate first
