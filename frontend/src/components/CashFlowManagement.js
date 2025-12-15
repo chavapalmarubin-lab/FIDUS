@@ -35,6 +35,7 @@ import {
 } from 'recharts';
 import apiAxios from "../utils/apiAxios";
 import mt5Service from "../services/mt5Service"; // PHASE 4A
+import WealthCalendar from "./WealthCalendar"; // NEW: Wealth Calendar Component
 
 const CashFlowManagement = () => {
   const [cashFlowData, setCashFlowData] = useState([]);
