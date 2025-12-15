@@ -187,115 +187,49 @@ class FidusBackendTester:
             self.log_test("Investments Overview API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
-    def test_investment_committee_api(self) -> bool:
-        """Test 2: Investment Committee API - GET /api/admin/investment-committee/mt5-accounts"""
+    def test_client_money_api(self) -> bool:
+        """Test 2: Client Money API - GET /api/admin/client-money/total"""
         try:
-            print("\n🏛️ Testing Investment Committee API...")
+            print("\n💰 Testing Client Money API...")
             
-            response = self.session.get(f"{self.base_url}/v2/accounts/all", timeout=30)
+            response = self.session.get(f"{self.base_url}/admin/client-money/total", timeout=30)
             
             if response.status_code != 200:
-                self.log_test("Investment Committee API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Client Money API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            
-            if not data.get("success"):
-                self.log_test("Investment Committee API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
-                return False
-            
-            accounts = data.get("accounts", [])
             success = True
             
-            # Check exactly 15 accounts (14 MT5 + 1 MT4)
-            if len(accounts) == 15:
-                self.log_test("Investment Committee Accounts Count", "PASS", 
-                            f"Found exactly 15 accounts as expected", 
-                            15, 
-                            len(accounts))
+            # Check Total Client Money: $380,536.05
+            total_client_money = data.get("total_client_money", 0)
+            expected_total = 380536.05
+            
+            if abs(total_client_money - expected_total) < 1.0:
+                self.log_test("Total Client Money", "PASS", 
+                            f"Total Client Money matches expected value", 
+                            f"${expected_total:,.2f}", 
+                            f"${total_client_money:,.2f}")
             else:
-                self.log_test("Investment Committee Accounts Count", "FAIL", 
-                            f"Expected 15 accounts, found {len(accounts)}", 
-                            15, 
-                            len(accounts))
+                self.log_test("Total Client Money", "FAIL", 
+                            f"Total Client Money does not match expected value", 
+                            f"${expected_total:,.2f}", 
+                            f"${total_client_money:,.2f}")
                 success = False
             
-            # Check for specific accounts
-            account_numbers = [str(acc.get("account_number", "")) for acc in accounts]
-            
-            # Check Account 2198 (JOSE - LUCRUM Capital)
-            if "2198" in account_numbers:
-                self.log_test("Account 2198 Present", "PASS", 
-                            "Account 2198 (JOSE - LUCRUM Capital) found")
-                
-                # Find account 2198 details
-                account_2198 = next((acc for acc in accounts if str(acc.get("account_number", "")) == "2198"), None)
-                if account_2198:
-                    manager = account_2198.get("manager", "")
-                    broker = account_2198.get("broker", "")
-                    
-                    if "JOSE" in manager:
-                        self.log_test("Account 2198 Manager", "PASS", f"Manager is JOSE: {manager}")
-                    else:
-                        self.log_test("Account 2198 Manager", "FAIL", f"Expected JOSE, got: {manager}")
-                        success = False
-                    
-                    if "LUCRUM" in broker:
-                        self.log_test("Account 2198 Broker", "PASS", f"Broker is LUCRUM Capital: {broker}")
-                    else:
-                        self.log_test("Account 2198 Broker", "FAIL", f"Expected LUCRUM, got: {broker}")
-                        success = False
+            # Check response structure
+            if "total_client_money" in data:
+                self.log_test("Client Money Response Structure", "PASS", 
+                            "Response contains total_client_money field")
             else:
-                self.log_test("Account 2198 Present", "FAIL", 
-                            "Account 2198 (JOSE - LUCRUM Capital) not found")
+                self.log_test("Client Money Response Structure", "FAIL", 
+                            "Response missing total_client_money field")
                 success = False
-            
-            # Check Account 33200931 (MT4 - Spaniard Stock CFDs)
-            if "33200931" in account_numbers:
-                self.log_test("Account 33200931 Present", "PASS", 
-                            "Account 33200931 (MT4 - Spaniard Stock CFDs) found")
-            else:
-                self.log_test("Account 33200931 Present", "FAIL", 
-                            "Account 33200931 (MT4 - Spaniard Stock CFDs) not found")
-                success = False
-            
-            # Check specific manager allocations
-            expected_allocations = {
-                "901351": ("Japanese", 15000),
-                "891215": ("Viking Gold", 20000),
-                "897599": ("Internal BOT", 15506)
-            }
-            
-            for account_num, (expected_manager, expected_allocation) in expected_allocations.items():
-                account = next((acc for acc in accounts if str(acc.get("account_number", "")) == account_num), None)
-                if account:
-                    manager = account.get("manager", "")
-                    allocation = account.get("initial_allocation", 0)
-                    
-                    if expected_manager.lower() in manager.lower():
-                        self.log_test(f"Account {account_num} Manager", "PASS", 
-                                    f"Manager matches: {manager}")
-                    else:
-                        self.log_test(f"Account {account_num} Manager", "FAIL", 
-                                    f"Expected {expected_manager}, got: {manager}")
-                        success = False
-                    
-                    if abs(allocation - expected_allocation) < 1.0:
-                        self.log_test(f"Account {account_num} Allocation", "PASS", 
-                                    f"Allocation matches: ${allocation:,.2f}")
-                    else:
-                        self.log_test(f"Account {account_num} Allocation", "FAIL", 
-                                    f"Expected ${expected_allocation:,.2f}, got: ${allocation:,.2f}")
-                        success = False
-                else:
-                    self.log_test(f"Account {account_num} Found", "FAIL", 
-                                f"Account {account_num} not found")
-                    success = False
             
             return success
             
         except Exception as e:
-            self.log_test("Investment Committee API Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Client Money API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_accounts_management_api(self) -> bool:
