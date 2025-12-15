@@ -83,108 +83,108 @@ class FidusBackendTester:
             self.log_test("Admin Authentication", "ERROR", f"Exception during authentication: {str(e)}")
             return False
     
-    def test_money_managers_api(self) -> bool:
-        """Test 1: Money Managers API - GET /api/v2/derived/money-managers"""
+    def test_investments_overview_api(self) -> bool:
+        """Test 1: Investments Overview API - GET /api/investments/admin/overview"""
         try:
-            print("\n💼 Testing Money Managers API...")
+            print("\n💼 Testing Investments Overview API...")
             
-            response = self.session.get(f"{self.base_url}/v2/derived/money-managers", timeout=30)
+            response = self.session.get(f"{self.base_url}/investments/admin/overview", timeout=30)
             
             if response.status_code != 200:
-                self.log_test("Money Managers API", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Investments Overview API", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 return False
             
             data = response.json()
-            
-            if not data.get("success"):
-                self.log_test("Money Managers API", "FAIL", f"API returned success=false: {data.get('message', 'Unknown error')}")
-                return False
-            
-            managers_dict = data.get("managers", {})
-            managers = list(managers_dict.values())  # Convert dict to list
             success = True
             
-            # Check we have 8+ active managers
-            if len(managers) >= 8:
-                self.log_test("Money Managers Count", "PASS", 
-                            f"Found {len(managers)} managers (expected 8+)", 
-                            "8+", 
-                            len(managers))
+            # Check Total AUM: $380,536.05
+            total_aum = data.get("total_aum", 0)
+            expected_aum = 380536.05
+            
+            if abs(total_aum - expected_aum) < 1.0:
+                self.log_test("Total AUM", "PASS", 
+                            f"Total AUM matches expected value", 
+                            f"${expected_aum:,.2f}", 
+                            f"${total_aum:,.2f}")
             else:
-                self.log_test("Money Managers Count", "FAIL", 
-                            f"Only found {len(managers)} managers (expected 8+)", 
-                            "8+", 
-                            len(managers))
+                self.log_test("Total AUM", "FAIL", 
+                            f"Total AUM does not match expected value", 
+                            f"${expected_aum:,.2f}", 
+                            f"${total_aum:,.2f}")
                 success = False
             
-            # Check specific managers and their allocations
-            expected_managers = {
-                "Viking Gold": 20000,
-                "Internal BOT": 15506,
-                "Japanese": 15000,
-                "Provider1-Assev": 20000
+            # Check 3 clients total
+            clients = data.get("clients", [])
+            if len(clients) == 3:
+                self.log_test("Client Count", "PASS", 
+                            f"Found exactly 3 clients as expected", 
+                            3, 
+                            len(clients))
+            else:
+                self.log_test("Client Count", "FAIL", 
+                            f"Expected 3 clients, found {len(clients)}", 
+                            3, 
+                            len(clients))
+                success = False
+            
+            # Check specific clients and their amounts
+            expected_clients = {
+                "Alejandro Mariscal Romero": 118151,
+                "Zurya Josselyn Lopez Arellano": 15994,
+                "Guillermo Garcia": 246390
             }
             
-            found_managers = {}
-            non_zero_count = 0
+            found_clients = {}
+            for client in clients:
+                client_name = client.get("name", "")
+                client_total = client.get("total_investment", 0)
+                investment_count = client.get("investment_count", 0)
+                
+                # Check for expected clients (partial name matching)
+                for expected_name, expected_amount in expected_clients.items():
+                    if any(name_part.lower() in client_name.lower() for name_part in expected_name.split()):
+                        found_clients[expected_name] = client_total
+                        
+                        if abs(client_total - expected_amount) < 1000:  # Allow $1000 tolerance
+                            self.log_test(f"{expected_name} Investment", "PASS", 
+                                        f"Investment amount close to expected", 
+                                        f"~${expected_amount:,.0f}", 
+                                        f"${client_total:,.2f}")
+                        else:
+                            self.log_test(f"{expected_name} Investment", "FAIL", 
+                                        f"Investment amount differs significantly", 
+                                        f"~${expected_amount:,.0f}", 
+                                        f"${client_total:,.2f}")
+                            success = False
+                        
+                        # Check Alejandro has 2 investments
+                        if "Alejandro" in expected_name and investment_count == 2:
+                            self.log_test(f"{expected_name} Investment Count", "PASS", 
+                                        f"Has 2 investments as expected", 
+                                        2, 
+                                        investment_count)
+                        elif "Alejandro" in expected_name:
+                            self.log_test(f"{expected_name} Investment Count", "FAIL", 
+                                        f"Expected 2 investments, found {investment_count}", 
+                                        2, 
+                                        investment_count)
+                            success = False
+                        break
             
-            for manager in managers:
-                manager_name = manager.get("manager_name", "")
-                performance = manager.get("performance", {})
-                total_allocated = performance.get("total_allocated", 0)
-                current_equity = performance.get("current_equity", 0)
-                total_pnl = performance.get("total_pnl", 0)
-                
-                # Count managers with non-zero values
-                if total_allocated > 0 or current_equity > 0 or abs(total_pnl) > 0:
-                    non_zero_count += 1
-                
-                # Check specific expected managers
-                if manager_name in expected_managers:
-                    found_managers[manager_name] = total_allocated
-                    expected_allocation = expected_managers[manager_name]
-                    
-                    if abs(total_allocated - expected_allocation) < 1.0:
-                        self.log_test(f"{manager_name} Allocation", "PASS", 
-                                    f"Allocation matches expected value", 
-                                    f"${expected_allocation:,.2f}", 
-                                    f"${total_allocated:,.2f}")
-                    else:
-                        self.log_test(f"{manager_name} Allocation", "FAIL", 
-                                    f"Allocation does not match expected value", 
-                                    f"${expected_allocation:,.2f}", 
-                                    f"${total_allocated:,.2f}")
-                        success = False
-                
-                # Check account_details field exists
-                if "account_details" not in manager:
-                    self.log_test(f"{manager_name} Account Details", "FAIL", 
-                                f"Missing account_details field")
-                    success = False
-            
-            # Check that most managers have non-zero values (not $0.00)
-            if non_zero_count >= len(managers) * 0.7:  # At least 70% should have real data
-                self.log_test("Managers Real Data", "PASS", 
-                            f"{non_zero_count}/{len(managers)} managers have non-zero values")
+            # Check all expected clients were found
+            missing_clients = set(expected_clients.keys()) - set(found_clients.keys())
+            if not missing_clients:
+                self.log_test("Expected Clients Found", "PASS", 
+                            f"All expected clients found: {list(expected_clients.keys())}")
             else:
-                self.log_test("Managers Real Data", "FAIL", 
-                            f"Only {non_zero_count}/{len(managers)} managers have non-zero values")
-                success = False
-            
-            # Check that all expected managers were found
-            missing_managers = set(expected_managers.keys()) - set(found_managers.keys())
-            if not missing_managers:
-                self.log_test("Expected Managers Found", "PASS", 
-                            f"All expected managers found: {list(expected_managers.keys())}")
-            else:
-                self.log_test("Expected Managers Found", "FAIL", 
-                            f"Missing managers: {list(missing_managers)}")
+                self.log_test("Expected Clients Found", "FAIL", 
+                            f"Missing clients: {list(missing_clients)}")
                 success = False
             
             return success
             
         except Exception as e:
-            self.log_test("Money Managers API Test", "ERROR", f"Exception: {str(e)}")
+            self.log_test("Investments Overview API Test", "ERROR", f"Exception: {str(e)}")
             return False
     
     def test_investment_committee_api(self) -> bool:
