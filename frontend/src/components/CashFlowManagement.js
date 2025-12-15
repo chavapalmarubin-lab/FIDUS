@@ -1543,6 +1543,19 @@ const CashFlowManagement = () => {
         </CardContent>
       </Card>
       
+      {/* NEW: WEALTH CALENDAR - Fund Health & Projections */}
+      {cashFlowCalendar && (
+        <Card className="dashboard-card">
+          <CardContent className="p-6">
+            <WealthCalendar 
+              calendarData={cashFlowCalendar}
+              clientMoney={fundAccounting?.liabilities?.client_obligations || 380536.05}
+              totalEquity={fundAccounting?.assets?.total_equity || 0}
+            />
+          </CardContent>
+        </Card>
+      )}
+      
       {/* CASH FLOW OBLIGATIONS CALENDAR */}
       {cashFlowCalendar && (
         <Card className="dashboard-card">
