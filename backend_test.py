@@ -174,6 +174,10 @@ class FidusBackendTester:
                         break
             
             # Check all expected clients were found
+            # Debug: print actual client names found
+            print(f"DEBUG: Found clients: {list(found_clients.keys())}")
+            print(f"DEBUG: Expected clients: {list(expected_clients.keys())}")
+            
             missing_clients = set(expected_clients.keys()) - set(found_clients.keys())
             if not missing_clients:
                 self.log_test("Expected Clients Found", "PASS", 
