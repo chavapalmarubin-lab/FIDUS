@@ -267,9 +267,9 @@ class FidusBackendTester:
             
             for salesperson in salespeople:
                 name = salesperson.get("name", "")
-                clients = salesperson.get("clients", 0)
-                sales = salesperson.get("sales", 0)
-                commissions = salesperson.get("commissions", 0)
+                clients = salesperson.get("totalClientsReferred", 0)
+                sales = salesperson.get("totalSalesVolume", 0)
+                commissions = salesperson.get("totalCommissionsEarned", 0)
                 
                 # Check for expected salespeople (exact name matching)
                 for expected_name, expected_data in expected_salespeople.items():
