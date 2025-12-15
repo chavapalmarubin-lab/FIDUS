@@ -423,14 +423,20 @@ async def get_referrals_overview():
 
 @router.get("/admin/referrals/salespeople")
 async def get_all_salespeople(active_only: bool = True):
-    """Get all salespeople with performance metrics"""
+    """Get all salespeople with performance metrics
+    
+    Sorted by: 
+    1. Salespeople with clients/sales first (by total_sales_volume descending)
+    2. Then alphabetically by name for those with no sales
+    """
     from bson import Decimal128
     
     query = {}
     if active_only:
         query["active"] = True
     
-    salespeople = await db.salespeople.find(query).sort("name", 1).to_list(None)
+    # Get all salespeople (we'll sort in Python for complex sorting)
+    salespeople = await db.salespeople.find(query).to_list(None)
     
     # Enrich with real-time metrics
     for sp in salespeople:
@@ -470,6 +476,21 @@ async def get_all_salespeople(active_only: bool = True):
                 sp["actual_pending"] = float(pending_total)
         else:
             sp["actual_pending"] = 0
+    
+    # Sort by: 1) total_sales_volume descending, 2) name alphabetically
+    # This puts salespeople with sales first, ordered by sales amount
+    # Then salespeople with no sales, ordered alphabetically
+    def get_sort_key(sp):
+        sales = sp.get("total_sales_volume", 0)
+        if isinstance(sales, Decimal128):
+            sales = float(sales.to_decimal())
+        elif sales is None:
+            sales = 0
+        name = sp.get("name", sp.get("full_name", "ZZZ")).lower()
+        # Negative sales so highest sales comes first, then name for alphabetical
+        return (-sales, name)
+    
+    salespeople.sort(key=get_sort_key)
     
     return {"salespeople": [transform_salesperson(sp) for sp in salespeople]}
 
