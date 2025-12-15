@@ -271,9 +271,9 @@ class FidusBackendTester:
                 sales = salesperson.get("sales", 0)
                 commissions = salesperson.get("commissions", 0)
                 
-                # Check for expected salespeople (partial name matching)
+                # Check for expected salespeople (exact name matching)
                 for expected_name, expected_data in expected_salespeople.items():
-                    if any(name_part.lower() in name.lower() for name_part in expected_name.split()):
+                    if name == expected_name:
                         found_salespeople[expected_name] = {
                             "clients": clients,
                             "sales": sales,
