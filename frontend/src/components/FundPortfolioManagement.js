@@ -146,7 +146,8 @@ const FundPortfolioManagement = () => {
         investments.forEach(inv => {
           const product = inv.fund_code || inv.fund_type || 'UNKNOWN';
           const amount = parseFloat(inv.principal_amount) || 0;
-          const clientId = inv.client_id;
+          // Use client_name as fallback if client_id is missing
+          const clientId = inv.client_id || inv.client_name;
           
           if (obligations[product]) {
             obligations[product].amount += amount;
