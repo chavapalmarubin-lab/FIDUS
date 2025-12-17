@@ -80,13 +80,23 @@ const FundPortfolioManagement = () => {
     try {
       setLoading(true);
       
+      // Get auth token
+      const token = localStorage.getItem('fidus_token') || localStorage.getItem('token');
+      
+      if (!token) {
+        console.warn('No auth token found');
+        setError("Please log in to view fund portfolio data");
+        setLoading(false);
+        return;
+      }
+      
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
       // Fetch MT5 accounts (THE FUND)
-      const token = localStorage.getItem('token');
-      const mt5Response = await fetch(`${BACKEND_URL}/api/mt5/accounts/corrected`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const mt5Response = await fetch(`${BACKEND_URL}/api/mt5/accounts/corrected`, { headers });
       const mt5Data = await mt5Response.json();
       
       if (mt5Data.success && mt5Data.accounts) {
