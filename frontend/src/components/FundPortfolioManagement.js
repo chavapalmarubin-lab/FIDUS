@@ -131,11 +131,7 @@ const FundPortfolioManagement = () => {
       }
       
       // Fetch Client Obligations (from investments)
-      const investResponse = await fetch(`${BACKEND_URL}/api/admin/client-money/total`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const investResponse = await fetch(`${BACKEND_URL}/api/admin/client-money/total`, { headers });
       const investData = await investResponse.json();
       
       if (investData.success) {
