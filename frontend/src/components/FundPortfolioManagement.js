@@ -81,7 +81,12 @@ const FundPortfolioManagement = () => {
       setLoading(true);
       
       // Fetch MT5 accounts (THE FUND)
-      const mt5Response = await fetch(`${BACKEND_URL}/api/mt5/accounts/corrected`);
+      const token = localStorage.getItem('token');
+      const mt5Response = await fetch(`${BACKEND_URL}/api/mt5/accounts/corrected`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const mt5Data = await mt5Response.json();
       
       if (mt5Data.success && mt5Data.accounts) {
