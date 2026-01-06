@@ -163,11 +163,6 @@ const ProspectsPortalNew = () => {
       desc: t('prospects.benefits.returns.description') 
     },
     { 
-      icon: '🔒', 
-      title: t('prospects.benefits.security.title'), 
-      desc: t('prospects.benefits.security.description') 
-    },
-    { 
       icon: '💰', 
       title: t('prospects.benefits.accessible.title'), 
       desc: t('prospects.benefits.accessible.description') 
