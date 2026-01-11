@@ -1,0 +1,229 @@
+# ============================================================
+# VIKING MT4 Bridge Deployment Workflow
+# ============================================================
+# Deploys VIKING bridge components to VPS
+# COMPLETELY SEPARATE from FIDUS MT5 bridge
+# ============================================================
+
+name: Deploy VIKING MT4 Bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_ea:
+        description: 'Deploy MT4 EA to terminal'
+        required: false
+        default: 'true'
+        type: boolean
+      deploy_service:
+        description: 'Deploy Python bridge service'
+        required: false
+        default: 'true'
+        type: boolean
+      restart_service:
+        description: 'Restart bridge service after deploy'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USER: ${{ secrets.VPS_USER }}
+  VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+  
+  # VIKING specific paths
+  VIKING_BRIDGE_PATH: /opt/viking_bridge
+  MT4_EXPERTS_PATH: 'C:\Program Files\MEXAtlantic MT4 Terminal\MQL4\Experts'
+
+jobs:
+  deploy-viking-bridge:
+    runs-on: ubuntu-latest
+    name: Deploy VIKING MT4 Bridge
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Validate files exist
+        run: |
+          echo "🔍 Validating VIKING bridge files..."
+          
+          if [ ! -f "backend/mt4_bridge/VIKING_MT4_Bridge.mq4" ]; then
+            echo "❌ EA file not found!"
+            exit 1
+          fi
+          
+          if [ ! -f "backend/mt4_bridge/viking_mt4_bridge_service.py" ]; then
+            echo "❌ Python service not found!"
+            exit 1
+          fi
+          
+          echo "✅ All files validated"
+      
+      - name: Deploy Python Bridge Service
+        if: ${{ inputs.deploy_service }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          script: |
+            echo "🚀 Deploying VIKING Bridge Service..."
+            
+            # Create directory if not exists
+            mkdir -p ${{ env.VIKING_BRIDGE_PATH }}
+            
+            # Stop existing service if running
+            if pgrep -f "viking_mt4_bridge_service" > /dev/null; then
+              echo "⏹️ Stopping existing VIKING bridge..."
+              pkill -f "viking_mt4_bridge_service" || true
+              sleep 2
+            fi
+            
+            echo "✅ Directory prepared: ${{ env.VIKING_BRIDGE_PATH }}"
+      
+      - name: Copy service files to VPS
+        if: ${{ inputs.deploy_service }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          source: "backend/mt4_bridge/viking_mt4_bridge_service.py,backend/mt4_bridge/requirements_viking.txt,backend/mt4_bridge/start_viking_bridge.sh"
+          target: ${{ env.VIKING_BRIDGE_PATH }}
+          strip_components: 2
+      
+      - name: Install dependencies and start service
+        if: ${{ inputs.deploy_service && inputs.restart_service }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          script: |
+            cd ${{ env.VIKING_BRIDGE_PATH }}
+            
+            echo "📦 Installing Python dependencies..."
+            pip3 install -r requirements_viking.txt
+            
+            echo "🚀 Starting VIKING bridge service..."
+            chmod +x start_viking_bridge.sh
+            
+            # Start service in background with nohup
+            nohup python3 viking_mt4_bridge_service.py > viking_bridge.log 2>&1 &
+            
+            sleep 3
+            
+            # Verify service started
+            if pgrep -f "viking_mt4_bridge_service" > /dev/null; then
+              echo "✅ VIKING bridge service started successfully"
+              echo "📊 Service running on port 8001"
+            else
+              echo "❌ Failed to start service"
+              cat viking_bridge.log
+              exit 1
+            fi
+      
+      - name: Deploy MT4 EA file
+        if: ${{ inputs.deploy_ea }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          script: |
+            echo "📝 Deploying VIKING MT4 EA..."
+            
+            # Note: EA deployment to Windows MT4 terminal requires 
+            # copying to the MQL4/Experts folder
+            # This assumes the VPS has access to the MT4 terminal folder
+            
+            EA_SOURCE="${{ env.VIKING_BRIDGE_PATH }}/VIKING_MT4_Bridge.mq4"
+            EA_DEST="${{ env.MT4_EXPERTS_PATH }}/VIKING_MT4_Bridge.mq4"
+            
+            if [ -f "$EA_SOURCE" ]; then
+              cp "$EA_SOURCE" "$EA_DEST" 2>/dev/null || \
+                echo "⚠️ Could not copy EA to MT4 folder (may need manual copy)"
+            fi
+            
+            echo "📋 EA deployment notes:"
+            echo "  1. EA file is at: $EA_SOURCE"
+            echo "  2. Copy to MT4 Experts folder if not done automatically"
+            echo "  3. Compile in MetaEditor"
+            echo "  4. Attach to XAUUSD chart (or any chart)"
+            echo "  5. Enable 'Allow WebRequest' for localhost:8001"
+      
+      - name: Copy EA file to VPS
+        if: ${{ inputs.deploy_ea }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          source: "backend/mt4_bridge/VIKING_MT4_Bridge.mq4"
+          target: ${{ env.VIKING_BRIDGE_PATH }}
+          strip_components: 2
+      
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_KEY }}
+          script: |
+            echo ""
+            echo "============================================================"
+            echo "   VIKING MT4 Bridge Deployment Summary"
+            echo "============================================================"
+            echo ""
+            
+            echo "📁 Files deployed to: ${{ env.VIKING_BRIDGE_PATH }}"
+            ls -la ${{ env.VIKING_BRIDGE_PATH }}/ 2>/dev/null || echo "Directory not found"
+            
+            echo ""
+            echo "🔄 Service Status:"
+            if pgrep -f "viking_mt4_bridge_service" > /dev/null; then
+              echo "  ✅ VIKING bridge service is RUNNING"
+              echo "  📊 Port: 8001"
+              
+              # Test health endpoint
+              curl -s http://localhost:8001/api/viking/health 2>/dev/null || \
+                echo "  ⚠️ Could not reach health endpoint"
+            else
+              echo "  ⚠️ Service is NOT running"
+            fi
+            
+            echo ""
+            echo "📋 Next Steps:"
+            echo "  1. Copy EA to MT4 terminal: MQL4/Experts/"
+            echo "  2. Compile EA in MetaEditor"
+            echo "  3. Enable WebRequest: Tools > Options > Expert Advisors"
+            echo "     Add URL: http://localhost:8001"
+            echo "  4. Attach EA to any chart on account 33627673"
+            echo ""
+            echo "============================================================"
+      
+      - name: Post deployment summary
+        run: |
+          echo "## 🚀 VIKING MT4 Bridge Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Deployed:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`viking_mt4_bridge_service.py\` - Python bridge service" >> $GITHUB_STEP_SUMMARY
+          echo "- \`VIKING_MT4_Bridge.mq4\` - MT4 Expert Advisor" >> $GITHUB_STEP_SUMMARY
+          echo "- \`requirements_viking.txt\` - Python dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Service Configuration:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Port:** 8001 (separate from FIDUS on 8000)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Account:** 33627673 (VIKING CORE)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Collections:** viking_accounts, viking_deals_history" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Manual Steps Required:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Copy EA to MT4 MQL4/Experts folder" >> $GITHUB_STEP_SUMMARY
+          echo "2. Compile in MetaEditor" >> $GITHUB_STEP_SUMMARY
+          echo "3. Enable WebRequest for \`http://localhost:8001\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Attach EA to chart" >> $GITHUB_STEP_SUMMARY
