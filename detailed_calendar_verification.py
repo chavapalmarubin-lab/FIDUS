@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
+BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com/api"
 
 def authenticate_and_get_calendar():
     """Authenticate and get detailed calendar data"""

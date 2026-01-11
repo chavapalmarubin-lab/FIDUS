@@ -18,7 +18,7 @@ After thorough investigation of the 4 reported bugs, here's what was found:
 ```python
 cors_origins = [
     "https://fidus-investment-platform.onrender.com",  # ✅ Present
-    "https://ssot-finance.preview.emergentagent.com",
+    "https://fintech-dashboard-60.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:3001"
 ]
@@ -50,7 +50,7 @@ export const getAuthHeaders = () => {
 **Problem Found:**
 ```bash
 # BEFORE (WRONG):
-REACT_APP_BACKEND_URL=https://ssot-finance.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://fintech-dashboard-60.preview.emergentagent.com
 
 # AFTER (CORRECT):
 REACT_APP_BACKEND_URL=https://fidus-api.onrender.com
@@ -156,7 +156,7 @@ diff --git a/frontend/.env b/frontend/.env
 index abc123..def456 100644
 --- a/frontend/.env
 +++ b/frontend/.env
--REACT_APP_BACKEND_URL=https://ssot-finance.preview.emergentagent.com
+-REACT_APP_BACKEND_URL=https://fintech-dashboard-60.preview.emergentagent.com
 +REACT_APP_BACKEND_URL=https://fidus-api.onrender.com
 ```
 

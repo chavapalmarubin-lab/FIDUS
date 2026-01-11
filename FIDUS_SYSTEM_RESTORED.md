@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://ssot-finance.preview.emergentagent.com`
+`https://fintech-dashboard-60.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

@@ -31,7 +31,7 @@ from datetime import datetime
 
 class BalanceFundBugTester:
     def __init__(self):
-        self.base_url = "https://ssot-finance.preview.emergentagent.com/api"
+        self.base_url = "https://fintech-dashboard-60.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

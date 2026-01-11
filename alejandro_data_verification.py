@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and get JWT token"""

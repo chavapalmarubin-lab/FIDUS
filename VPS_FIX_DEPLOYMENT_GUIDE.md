@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://ssot-finance.preview.emergentagent.com/api/system/status
+   curl https://fintech-dashboard-60.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://ssot-finance.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://fintech-dashboard-60.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

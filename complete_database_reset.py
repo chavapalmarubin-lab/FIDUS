@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://ssot-finance.preview.emergentagent.com"
+        self.base_url = "https://fintech-dashboard-60.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

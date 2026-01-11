@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Production API URL
-BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
 API_ENDPOINT = f"{BACKEND_URL}/api/admin/money-managers"
 LOGIN_ENDPOINT = f"{BACKEND_URL}/api/auth/login"
 

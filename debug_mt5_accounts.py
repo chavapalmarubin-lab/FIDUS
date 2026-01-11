@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://ssot-finance.preview.emergentagent.com"
+BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

@@ -33,7 +33,7 @@ import base64
 import tempfile
 
 # Configuration
-BACKEND_URL = "https://ssot-finance.preview.emergentagent.com/api"
+BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -7,7 +7,7 @@ import requests
 import json
 
 def check_system_data():
-    base_url = "https://ssot-finance.preview.emergentagent.com"
+    base_url = "https://fintech-dashboard-60.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={
