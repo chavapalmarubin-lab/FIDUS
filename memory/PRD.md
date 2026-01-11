@@ -59,9 +59,21 @@ VIKING is a **completely separate trading operation** from FIDUS Funds. It manag
 - `viking_analytics` - Calculated performance metrics
 
 ### Next Steps (Phase 2 - VPS Configuration)
-1. Configure MT4 bridge on VPS to sync VIKING CORE account (33627673) data
-2. Set up Traders Trust MT4 terminal for PRO account (1309411)
-3. Attach MT4 EA to sync data to MongoDB `viking_*` collections
+1. Deploy VIKING MT4 Bridge service to VPS (port 8001)
+2. Copy EA to MEXAtlantic MT4 terminal MQL4/Experts folder
+3. Compile EA in MetaEditor
+4. Enable WebRequest for `http://localhost:8001` in MT4 Options
+5. Attach EA to any chart on account 33627673
+
+### VIKING MT4 Bridge Files (Created Jan 11, 2026)
+| File | Location | Description |
+|------|----------|-------------|
+| `VIKING_MT4_Bridge.mq4` | `/app/backend/mt4_bridge/` | MT4 Expert Advisor |
+| `viking_mt4_bridge_service.py` | `/app/backend/mt4_bridge/` | Python service (port 8001) |
+| `start_viking_bridge.bat` | `/app/backend/mt4_bridge/` | Windows startup script |
+| `start_viking_bridge.sh` | `/app/backend/mt4_bridge/` | Linux startup script |
+| `requirements_viking.txt` | `/app/backend/mt4_bridge/` | Python dependencies |
+| `deploy-viking-mt4-bridge.yml` | `/.github/workflows/` | GitHub Actions deployment |
 
 ---
 
