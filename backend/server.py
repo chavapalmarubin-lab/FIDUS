@@ -28303,6 +28303,15 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include Single Source of Truth router: {e}")
 
+# Import and include VIKING trading operations router (SEPARATE from FIDUS)
+try:
+    from routes.viking import router as viking_router, init_db as init_viking_db
+    init_viking_db(db)
+    app.include_router(viking_router)
+    logging.info("✅ VIKING Trading router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include VIKING router: {e}")
+
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
