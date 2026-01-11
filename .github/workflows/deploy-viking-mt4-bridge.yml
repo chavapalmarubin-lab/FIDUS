@@ -27,11 +27,7 @@ on:
         type: boolean
 
 env:
-  VPS_HOST: ${{ secrets.VPS_HOST }}
-  VPS_USER: ${{ secrets.VPS_USER }}
-  VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
-  
-  # VIKING specific paths
+  # Using your EXACT secret names with PASSWORD authentication
   VIKING_BRIDGE_PATH: /opt/viking_bridge
   MT4_EXPERTS_PATH: 'C:\Program Files\MEXAtlantic MT4 Terminal\MQL4\Experts'
 
@@ -69,14 +65,15 @@ jobs:
         if: ${{ inputs.deploy_service }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             echo "🚀 Deploying VIKING Bridge Service..."
             
             # Create directory if not exists
-            mkdir -p ${{ env.VIKING_BRIDGE_PATH }}
+            mkdir -p /opt/viking_bridge
             
             # Stop existing service if running
             if pgrep -f "viking_mt4_bridge_service" > /dev/null; then
@@ -85,28 +82,30 @@ jobs:
               sleep 2
             fi
             
-            echo "✅ Directory prepared: ${{ env.VIKING_BRIDGE_PATH }}"
+            echo "✅ Directory prepared: /opt/viking_bridge"
       
       - name: Copy service files to VPS
         if: ${{ inputs.deploy_service }}
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
           source: "backend/mt4_bridge/viking_mt4_bridge_service.py,backend/mt4_bridge/requirements_viking.txt,backend/mt4_bridge/start_viking_bridge.sh"
-          target: ${{ env.VIKING_BRIDGE_PATH }}
+          target: /opt/viking_bridge
           strip_components: 2
       
       - name: Install dependencies and start service
         if: ${{ inputs.deploy_service && inputs.restart_service }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ${{ env.VIKING_BRIDGE_PATH }}
+            cd /opt/viking_bridge
             
             echo "📦 Installing Python dependencies..."
             pip3 install -r requirements_viking.txt
@@ -129,52 +128,48 @@ jobs:
               exit 1
             fi
       
-      - name: Deploy MT4 EA file
-        if: ${{ inputs.deploy_ea }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
-          script: |
-            echo "📝 Deploying VIKING MT4 EA..."
-            
-            # Note: EA deployment to Windows MT4 terminal requires 
-            # copying to the MQL4/Experts folder
-            # This assumes the VPS has access to the MT4 terminal folder
-            
-            EA_SOURCE="${{ env.VIKING_BRIDGE_PATH }}/VIKING_MT4_Bridge.mq4"
-            EA_DEST="${{ env.MT4_EXPERTS_PATH }}/VIKING_MT4_Bridge.mq4"
-            
-            if [ -f "$EA_SOURCE" ]; then
-              cp "$EA_SOURCE" "$EA_DEST" 2>/dev/null || \
-                echo "⚠️ Could not copy EA to MT4 folder (may need manual copy)"
-            fi
-            
-            echo "📋 EA deployment notes:"
-            echo "  1. EA file is at: $EA_SOURCE"
-            echo "  2. Copy to MT4 Experts folder if not done automatically"
-            echo "  3. Compile in MetaEditor"
-            echo "  4. Attach to XAUUSD chart (or any chart)"
-            echo "  5. Enable 'Allow WebRequest' for localhost:8001"
-      
       - name: Copy EA file to VPS
         if: ${{ inputs.deploy_ea }}
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
           source: "backend/mt4_bridge/VIKING_MT4_Bridge.mq4"
-          target: ${{ env.VIKING_BRIDGE_PATH }}
+          target: /opt/viking_bridge
           strip_components: 2
+      
+      - name: Deploy MT4 EA file
+        if: ${{ inputs.deploy_ea }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "📝 Deploying VIKING MT4 EA..."
+            
+            EA_SOURCE="/opt/viking_bridge/VIKING_MT4_Bridge.mq4"
+            
+            echo "📋 EA deployment notes:"
+            echo "  1. EA file is at: $EA_SOURCE"
+            echo "  2. Copy to MT4 Experts folder manually or via script"
+            echo "  3. Compile in MetaEditor"
+            echo "  4. Attach to XAUUSD chart (or any chart)"
+            echo "  5. Enable 'Allow WebRequest' for localhost:8001"
+            
+            # List the file to confirm it exists
+            ls -la "$EA_SOURCE"
       
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             echo ""
             echo "============================================================"
@@ -182,8 +177,8 @@ jobs:
             echo "============================================================"
             echo ""
             
-            echo "📁 Files deployed to: ${{ env.VIKING_BRIDGE_PATH }}"
-            ls -la ${{ env.VIKING_BRIDGE_PATH }}/ 2>/dev/null || echo "Directory not found"
+            echo "📁 Files deployed to: /opt/viking_bridge"
+            ls -la /opt/viking_bridge/ 2>/dev/null || echo "Directory not found"
             
             echo ""
             echo "🔄 Service Status:"
