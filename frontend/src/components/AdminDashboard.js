@@ -39,6 +39,7 @@ import Phase4Documentation from './Phase4Documentation';
 import Referrals from '../pages/admin/Referrals';
 import AccountsManagement from './AccountsManagement';
 import BridgeHealthMonitor from './BridgeHealthMonitor';
+import VikingDashboard from './VikingDashboard';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
