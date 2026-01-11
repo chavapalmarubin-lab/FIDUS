@@ -189,11 +189,11 @@ def parse_mt4_datetime(dt_str: str) -> datetime:
     try:
         # MT4 format: "2026.01.11 22:45:30"
         return datetime.strptime(dt_str, "%Y.%m.%d %H:%M:%S").replace(tzinfo=timezone.utc)
-    except:
+    except ValueError:
         try:
             # Alternative format
             return datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-        except:
+        except ValueError:
             return datetime.now(timezone.utc)
 
 
